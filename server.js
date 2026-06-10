@@ -34325,6 +34325,105 @@ app.get("/api/super/gate-pass-details", requireSuperAdmin, async (req, res) => {
   }
 });
 
+// ✅ 학부모 공유용: 관문 상세 페이지 (로그인 불필요)
+app.get("/parent/gate-detail", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "parent", "gate-detail.html"));
+});
+
+// ✅ 학부모 공유용: 관문 상세 데이터 API (로그인 불필요, URL이 토큰 역할)
+app.get("/api/parent/gate-pass-details", async (req, res) => {
+  try {
+    const { grade, name, gate } = req.query;
+    if (!grade || !name || !gate) {
+      return res.json({ ok: false, message: "필수 정보가 부족합니다." });
+    }
+
+    const attempts = await GateAttempt.find({
+      grade, name, gate: parseInt(gate)
+    }).sort({ attemptAt: 1 }).lean();
+
+    const passRecord = await GatePass.findOne({
+      grade, name, gate: parseInt(gate)
+    }).lean();
+
+    const retryCount = attempts.filter(a => !a.passed).length;
+
+    let totalTimeAll = 0;
+    let totalWrongClicksAll = 0;
+    const questionTimeMap = {};
+
+    attempts.forEach(attempt => {
+      totalTimeAll += attempt.totalTime || 0;
+      totalWrongClicksAll += attempt.totalWrongClicks || 0;
+      if (attempt.questionDetails) {
+        attempt.questionDetails.forEach(q => {
+          if (q.questionNo == null || isNaN(q.questionNo)) return;
+          const key = q.questionNo;
+          if (!questionTimeMap[key]) {
+            questionTimeMap[key] = {
+              time: 0, wrongs: 0,
+              unitCode: q.unitCode,
+              unitTitle: q.unitTitle || '',
+              qType: q.qType || 'q1'
+            };
+          }
+          if (q.unitTitle) questionTimeMap[key].unitTitle = q.unitTitle;
+          if (q.qType) questionTimeMap[key].qType = q.qType;
+          questionTimeMap[key].time += q.timeSpent || 0;
+          questionTimeMap[key].wrongs += q.wrongClicks || 0;
+        });
+      }
+    });
+
+    const finalAttempt = attempts.find(a => a.passed) || attempts[attempts.length - 1];
+
+    res.json({
+      ok: true,
+      data: {
+        grade, name, gate: parseInt(gate),
+        passedAt: passRecord?.passedAt,
+        retryCount,
+        totalAttempts: attempts.length,
+        cumulativeTime: totalTimeAll,
+        cumulativeWrongClicks: totalWrongClicksAll,
+        questionDetails: Object.entries(questionTimeMap).map(([no, data]) => {
+          let unitTitle = data.unitTitle || UNIT_TITLES[data.unitCode];
+          if (!unitTitle && data.unitCode) {
+            let normalizedCode = data.unitCode;
+            if (data.unitCode.startsWith('fit_')) normalizedCode = data.unitCode.substring(4);
+            else if (data.unitCode.startsWith('deep_')) normalizedCode = data.unitCode.substring(5);
+            else if (data.unitCode.startsWith('on_')) normalizedCode = data.unitCode.substring(3);
+            unitTitle = UNIT_TITLES[normalizedCode];
+          }
+          return {
+            questionNo: parseInt(no),
+            unitCode: data.unitCode,
+            unitTitle: unitTitle || '',
+            qType: data.qType || 'q1',
+            cumulativeTime: data.time,
+            cumulativeWrongClicks: data.wrongs
+          };
+        }),
+        finalAttempt: finalAttempt ? {
+          totalTime: finalAttempt.totalTime,
+          totalWrongClicks: finalAttempt.totalWrongClicks,
+          passed: finalAttempt.passed,
+          attemptAt: finalAttempt.attemptAt
+        } : null,
+        attempts: attempts.map(a => ({
+          attemptAt: a.attemptAt,
+          passed: a.passed,
+          totalTime: a.totalTime,
+          totalWrongClicks: a.totalWrongClicks
+        }))
+      }
+    });
+  } catch (err) {
+    console.error("[parent/gate-pass-details] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
 // 특정 날짜에 통과한 관문 조회 API
 app.get("/api/gate-quiz/passed-by-date", async (req, res) => {
   try {

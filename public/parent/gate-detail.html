@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>관문 상세 - BRAIN문해력</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      color: #212529;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .student-header {
+      background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);
+      color: #fff;
+      padding: 20px 24px;
+      border-radius: 14px 14px 0 0;
+      box-shadow: 0 2px 8px rgba(107,91,149,.15);
+    }
+    .student-header h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+    .student-header .sub {
+      font-size: 13px;
+      opacity: .92;
+    }
+    .card {
+      background: #fff;
+      border-radius: 0 0 14px 14px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      margin-bottom: 14px;
+    }
+    .section { margin-bottom: 22px; }
+    .section:last-child { margin-bottom: 0; }
+    .section-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #343a40;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e9ecef;
+      margin-bottom: 12px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .item {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .item .label {
+      font-size: 11px;
+      color: #868e96;
+      margin-bottom: 4px;
+    }
+    .item .value {
+      font-size: 18px;
+      font-weight: 800;
+      color: #212529;
+    }
+    .item .value.hl { color: #6B5B95; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid #e9ecef;
+    }
+    th {
+      background: #e9ecef;
+      font-size: 11px;
+      font-weight: 700;
+      color: #495057;
+    }
+    tbody tr:nth-child(even) { background: #fafbfc; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-q1 { background: #fff3e0; color: #e65100; }
+    .badge-q2 { background: #e3f2fd; color: #1565c0; }
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #868e96;
+      font-size: 14px;
+    }
+    .error {
+      text-align: center;
+      padding: 40px 20px;
+      color: #dc3545;
+      font-size: 14px;
+    }
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: #868e96;
+      font-size: 12px;
+    }
+    .footer .logo {
+      font-weight: 800;
+      color: #6B5B95;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      .student-header { padding: 16px 18px; }
+      .student-header h1 { font-size: 18px; }
+      .card { padding: 14px; }
+      th, td { padding: 6px 8px; font-size: 11px; }
+      .item .value { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="content">
+      <div class="loading">📡 데이터를 불러오는 중입니다...</div>
+    </div>
+    <div class="footer">
+      <div class="logo">🧠 BRAIN문해력</div>
+      <div>학습 상세 기록을 학부모님께 공유해드립니다.</div>
+    </div>
+  </div>
+
+  <script>
+    const getIndexName = (qType) => qType === 'q2' ? '구조파악력' : '핵심이해력';
+
+    function getSubjectCode(unitName) {
+      if (!unitName) return null;
+      let code = unitName.replace(/^(on_|fit_|deep_)/, '');
+      code = code.replace(/_\d+$/, '');
+      return code || null;
+    }
+
+    function getSubjectName(unitName) {
+      const code = getSubjectCode(unitName);
+      if (!code) return '-';
+      const subjectMap = {
+        'chem': '화학', 'physics': '물리', 'bio': '생물', 'earth': '지구과학',
+        'pol': '정치경제', 'law': '법', 'soc': '사회문화', 'eco': '경제',
+        'geo': '지리', 'eth': '윤리', 'world1': '세계문학1', 'world2': '세계문학2',
+        'kor1': '한국사1', 'kor2': '한국사2', 'kh': '한국사',
+        'classic': '고전문학', 'modern': '현대문학',
+        'people1': '인물1', 'people2': '인물2',
+        'tech': '기술', 'art': '예술', 'sports': '체육', 'math': '수학'
+      };
+      return subjectMap[code] || code;
+    }
+
+    function formatTime(seconds) {
+      if (!seconds || seconds < 0) return '-';
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      if (m > 0) return `${m}분 ${s}초`;
+      return `${s}초`;
+    }
+
+    function formatDate(d) {
+      if (!d) return '-';
+      const date = new Date(d);
+      return date.toLocaleString('ko-KR', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    async function loadData() {
+      const params = new URLSearchParams(location.search);
+      const grade = params.get('grade');
+      const name = params.get('name');
+      const gate = params.get('gate');
+      const content = document.getElementById('content');
+
+      if (!grade || !name || !gate) {
+        content.innerHTML = '<div class="error">⚠️ 유효하지 않은 링크입니다.</div>';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/parent/gate-pass-details?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&gate=${encodeURIComponent(gate)}`);
+        const json = await res.json();
+        if (!json.ok || !json.data) {
+          content.innerHTML = `<div class="error">⚠️ ${json.message || '데이터를 불러올 수 없습니다.'}</div>`;
+          return;
+        }
+        renderDetail(json.data);
+      } catch (err) {
+        console.error(err);
+        content.innerHTML = '<div class="error">⚠️ 데이터 로딩 중 오류가 발생했습니다.</div>';
+      }
+    }
+
+    function renderDetail(data) {
+      const validQuestions = (data.questionDetails || []).filter(q => q.questionNo && !isNaN(q.questionNo));
+      const sortedByWeakness = [...validQuestions].sort((a, b) => {
+        const aScore = (a.cumulativeWrongClicks || 0) * 10 + (a.cumulativeTime || 0);
+        const bScore = (b.cumulativeWrongClicks || 0) * 10 + (b.cumulativeTime || 0);
+        return bScore - aScore;
+      });
+      const weakestTwo = sortedByWeakness.slice(0, 2);
+      const weakestNos = new Set(weakestTwo.map(q => q.questionNo));
+
+      let weakestHtml = '';
+      if (weakestTwo.length > 0) {
+        weakestHtml = `
+          <div class="section">
+            <div class="section-title" style="color:#dc3545;">⚠️ 가장 미흡한 문항 (상위 ${weakestTwo.length}개)</div>
+            <table style="border:2px solid #ffcdd2; border-radius:8px;">
+              <thead style="background:#ffebee;">
+                <tr>
+                  <th style="color:#c62828;">문항</th>
+                  <th style="color:#c62828;">과목</th>
+                  <th style="color:#c62828;">단원명</th>
+                  <th style="color:#c62828;">지수</th>
+                  <th style="color:#c62828;">누적 시간</th>
+                  <th style="color:#c62828;">오답</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${weakestTwo.map(q => `
+                  <tr style="background:#fff8f8;">
+                    <td style="font-weight:600; color:#c62828;">문항 ${q.questionNo}</td>
+                    <td style="font-weight:600; color:#495057;">${getSubjectName(q.unitCode || q.unitTitle || '')}</td>
+                    <td>${q.unitTitle || q.unitCode || '-'}</td>
+                    <td><span class="badge ${q.qType === 'q2' ? 'badge-q2' : 'badge-q1'}">${getIndexName(q.qType)}</span></td>
+                    <td style="font-weight:600;">${formatTime(q.cumulativeTime)}</td>
+                    <td style="font-weight:600; color:#c62828;">${q.cumulativeWrongClicks}회</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      const questionRowsHtml = validQuestions.length > 0 ? `
+        <div class="section">
+          <div class="section-title">각 문항별 누적 기록</div>
+          <table>
+            <thead>
+              <tr>
+                <th>문항</th>
+                <th>과목</th>
+                <th>단원명</th>
+                <th>지수</th>
+                <th>누적 시간</th>
+                <th>오답</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${validQuestions.sort((a, b) => a.questionNo - b.questionNo).map(q => `
+                <tr style="${weakestNos.has(q.questionNo) ? 'background:#fff8f8;' : ''}">
+                  <td style="${weakestNos.has(q.questionNo) ? 'color:#c62828; font-weight:600;' : ''}">문항 ${q.questionNo}</td>
+                  <td style="font-weight:600; color:#495057;">${getSubjectName(q.unitCode || q.unitTitle || '')}</td>
+                  <td>${q.unitTitle || q.unitCode || '-'}</td>
+                  <td><span class="badge ${q.qType === 'q2' ? 'badge-q2' : 'badge-q1'}">${getIndexName(q.qType)}</span></td>
+                  <td>${formatTime(q.cumulativeTime)}</td>
+                  <td style="${weakestNos.has(q.questionNo) ? 'color:#c62828; font-weight:600;' : ''}">${q.cumulativeWrongClicks}회</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : '';
+
+      const finalAttempt = data.finalAttempt;
+      const finalAttemptHtml = finalAttempt ? `
+        <div class="section">
+          <div class="section-title">최종 시도 (통과)</div>
+          <div class="grid">
+            <div class="item">
+              <div class="label">통과 일시</div>
+              <div class="value" style="font-size:14px;">${formatDate(finalAttempt.attemptAt)}</div>
+            </div>
+            <div class="item">
+              <div class="label">최종 풀이 시간</div>
+              <div class="value">${formatTime(finalAttempt.totalTime)}</div>
+            </div>
+          </div>
+        </div>
+      ` : '';
+
+      document.getElementById('content').innerHTML = `
+        <div class="student-header">
+          <h1>🎯 ${data.grade} ${data.name} - 관문 ${data.gate} 상세</h1>
+          <div class="sub">형성평가 관문 통과 상세 기록</div>
+        </div>
+        <div class="card">
+          <div class="section">
+            <div class="section-title">요약 정보</div>
+            <div class="grid">
+              <div class="item">
+                <div class="label">재도전 횟수</div>
+                <div class="value hl">${data.retryCount}회</div>
+              </div>
+              <div class="item">
+                <div class="label">총 시도 횟수</div>
+                <div class="value">${data.totalAttempts}회</div>
+              </div>
+              <div class="item">
+                <div class="label">누적 전체 풀이 시간</div>
+                <div class="value">${formatTime(data.cumulativeTime)}</div>
+              </div>
+              <div class="item">
+                <div class="label">누적 전체 오답 클릭</div>
+                <div class="value">${data.cumulativeWrongClicks}회</div>
+              </div>
+            </div>
+          </div>
+          ${finalAttemptHtml}
+          ${weakestHtml}
+          ${questionRowsHtml}
+        </div>
+      `;
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
