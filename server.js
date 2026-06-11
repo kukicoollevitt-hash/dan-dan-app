@@ -23427,6 +23427,21 @@ app.get("/my-learning", async (req, res) => {
               body.style.overflow = 'visible';
               html.style.overflow = 'visible';
 
+              // 페이지 자르기 안전 분기점 수집 (DOM 좌표) - 큰 섹션·카드·헤딩·행
+              const targetRect = target.getBoundingClientRect();
+              const breakNodes = target.querySelectorAll(
+                '.today-section, .record-section, .progress-section, .ai-feedback-section, ' +
+                '.subject-bar-section, .today-radar-section, .index-trend-section, ' +
+                '.vocab-score-section, .field-progress-card, .total-progress-card, ' +
+                '.ai-feedback-item, h1, h2, h3, tr, thead, .today-table tbody tr'
+              );
+              const safeBreaksDom = new Set([0, target.offsetHeight]);
+              breakNodes.forEach(n => {
+                const r = n.getBoundingClientRect();
+                safeBreaksDom.add(Math.round(r.top - targetRect.top));
+                safeBreaksDom.add(Math.round(r.bottom - targetRect.top));
+              });
+
               console.log('🎨 캔버스 생성 중... (스크롤 없음 모드)');
               const canvas = await html2canvas(target, {
                 scale: 1.5,
@@ -23446,39 +23461,56 @@ app.get("/my-learning", async (req, res) => {
 
               console.log('✅ 캔버스 생성 완료:', canvas.width, 'x', canvas.height);
 
-              // PNG 대신 JPEG 사용 (품질 0.5, 용량 대폭 감소)
-              const imgData = canvas.toDataURL('image/jpeg', 0.5);
-              console.log('📸 이미지 데이터 생성 완료 (JPEG, 품질 0.5)');
-
               // jsPDF로 PDF 생성
               const { jsPDF } = window.jspdf;
               const pdf = new jsPDF('p', 'mm', 'a4');
               const pdfW = pdf.internal.pageSize.getWidth();
               const pdfH = pdf.internal.pageSize.getHeight();
 
-              const imgW = pdfW;
-              const imgH = canvas.height * imgW / canvas.width;
+              // 한 페이지가 차지하는 캔버스 픽셀 높이
+              const pageHpx = canvas.width * (pdfH / pdfW);
 
-              let heightLeft = imgH;
-              let position = 0;
+              // DOM Y → Canvas Y 변환 후 안전 분기점 정렬
+              const scaleY = canvas.height / target.offsetHeight;
+              const safeBreaks = Array.from(safeBreaksDom)
+                .map(y => Math.round(y * scaleY))
+                .filter(y => y > 0 && y <= canvas.height)
+                .sort((a, b) => a - b);
 
-              console.log('📄 PDF 생성 중... (페이지 높이:', imgH, 'mm)');
+              console.log('📄 PDF 생성 중... (페이지당 캔버스 ' + Math.round(pageHpx) + 'px, 안전 분기점 ' + safeBreaks.length + '개)');
 
-              // 첫 페이지 (JPEG 형식 사용)
-              pdf.addImage(imgData, 'JPEG', 0, position, imgW, imgH);
-              heightLeft -= pdfH;
+              let off = 0;
+              let pageCount = 0;
+              while (off < canvas.height) {
+                if (pageCount > 0) pdf.addPage();
+                const maxEnd = Math.min(off + pageHpx, canvas.height);
+                // off보다 크고 maxEnd 이하인 가장 큰 안전 분기점에서 자르기
+                let cutAt = maxEnd;
+                for (let i = safeBreaks.length - 1; i >= 0; i--) {
+                  if (safeBreaks[i] > off + 10 && safeBreaks[i] <= maxEnd) {
+                    cutAt = safeBreaks[i];
+                    break;
+                  }
+                }
+                if (cutAt <= off) cutAt = maxEnd;
 
-              // 추가 페이지
-              while (heightLeft > 0) {
-                position = heightLeft - imgH;
-                pdf.addPage();
-                pdf.addImage(imgData, 'JPEG', 0, position, imgW, imgH);
-                heightLeft -= pdfH;
+                const slice = cutAt - off;
+                const tc = document.createElement('canvas');
+                tc.width = canvas.width;
+                tc.height = slice;
+                tc.getContext('2d', { willReadFrequently: true })
+                  .drawImage(canvas, 0, off, canvas.width, slice, 0, 0, canvas.width, slice);
+
+                const sliceImgH = slice * (pdfW / canvas.width);
+                pdf.addImage(tc.toDataURL('image/jpeg', 0.5), 'JPEG', 0, 0, pdfW, sliceImgH);
+
+                off = cutAt;
+                pageCount++;
               }
 
               // PDF 저장
               pdf.save(filename);
-              console.log('✅ PDF 다운로드 완료!');
+              console.log('✅ PDF 다운로드 완료! (' + pageCount + ' 페이지)');
 
             } catch (error) {
               console.error('❌ PDF 생성 오류:', error);

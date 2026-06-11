@@ -3,8 +3,8 @@
  * 우선순위: ?unit=geo_XX → 파일명 geo_XX.html → 제목 숫자
  */
 (function () {
-  // 이미 설정된 CUR_UNIT이 있고, geo_로 시작하면 덮어쓰지 않음
-  if (window.CUR_UNIT && window.CUR_UNIT.startsWith('kh_')) {
+  // 이미 설정된 CUR_UNIT이 있고, kh_ 또는 khadv_로 시작하면 덮어쓰지 않음
+  if (window.CUR_UNIT && (window.CUR_UNIT.startsWith('kh_') || window.CUR_UNIT.startsWith('khadv_'))) {
     console.log('[korhistory_content.js] CUR_UNIT 이미 설정됨:', window.CUR_UNIT);
     return;
 }
@@ -2333,8 +2333,13 @@ function applyContentPack(unitKey) {
 }
 
   const labelNoEl = document.querySelector('.passage-label strong');
+  const labelSpanEl = document.querySelector('.passage-label span');
   const titleEl   = document.querySelector('.passage-title');
   if (labelNoEl) labelNoEl.textContent = pack.labelNo;
+  // 심화한국사(khadv_) 단원이면 라벨을 "BRAIN특강ㅣ한국사심화"로 자동 표기
+  if (labelSpanEl && typeof unitKey === 'string' && unitKey.startsWith('khadv_')) {
+    labelSpanEl.textContent = 'BRAIN특강ㅣ한국사심화';
+  }
   if (titleEl)   titleEl.innerHTML = pack.title;
 
   // 성취기준 렌더링
@@ -2366,7 +2371,18 @@ function applyContentPack(unitKey) {
       }).join(' ');
     };
 
-    const html = pack.passage.map(p => `<p>${wrapSentences(p)}</p>`).join('');
+    // 문단별 이미지 경로 생성 (kh_NN → /images/한국사/기본한국사/NN/01~04.png)
+    // 이미지가 없는 단원은 onerror로 자동 숨김 처리
+    const khMatch = (unitKey || '').match(/^kh_(\d+)$/);
+    const html = pack.passage.map((p, idx) => {
+      const num = String(idx + 1).padStart(2, '0');
+      let imgHtml = '';
+      if (khMatch) {
+        const unitFolder = khMatch[1].padStart(2, '0');
+        imgHtml = `<img class="passage-para-img" src="/images/한국사/기본한국사/${unitFolder}/${num}.png" alt="${num}문단 이미지" onerror="this.style.display='none'">`;
+      }
+      return `${imgHtml}<p>${wrapSentences(p)}</p>`;
+    }).join('');
     console.log('[applyContentPack] 생성된 HTML 길이:', html.length);
     passageBox.innerHTML = html;
     console.log('[applyContentPack] passageBox.innerHTML 설정 완료');
@@ -2389,6 +2405,16 @@ function applyContentPack(unitKey) {
         .passage-text .sentence.selected {
           background-color: rgba(211, 90, 26, 0.2);
           font-weight: 600;
+        }
+        /* 문단 위 이미지 — 본문 폭에 맞춤 + 둥근 모서리 */
+        .passage-text .passage-para-img {
+          display: block;
+          width: 100%;
+          max-width: 100%;
+          height: auto;
+          border-radius: 16px;
+          margin: 12px 0 14px 0;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
         }
       `;
       document.head.appendChild(style);

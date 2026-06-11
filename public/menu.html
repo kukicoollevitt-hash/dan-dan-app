@@ -15019,6 +15019,18 @@ async function performLogout() {
       './BRAINUP/korhistory/kh_18.html': true,
       './BRAINUP/korhistory/kh_19.html': true,
       './BRAINUP/korhistory/kh_20.html': true,
+      './BRAINUP/korhistory/khadv_01.html': true,
+      './BRAINUP/korhistory/khadv_02.html': true,
+      './BRAINUP/korhistory/khadv_03.html': true,
+      './BRAINUP/korhistory/khadv_04.html': true,
+      './BRAINUP/korhistory/khadv_05.html': true,
+      './BRAINUP/korhistory/khadv_06.html': true,
+      './BRAINUP/korhistory/khadv_07.html': true,
+      './BRAINUP/korhistory/khadv_08.html': true,
+      './BRAINUP/korhistory/khadv_09.html': true,
+      './BRAINUP/korhistory/khadv_10.html': true,
+      './BRAINUP/korhistory/khadv_11.html': true,
+      './BRAINUP/korhistory/khadv_12.html': true,
       './BRAINUP/worldlit/deep_world1_01.html': true,
       './BRAINUP/worldlit/deep_world1_02.html': true,
       './BRAINUP/worldlit/deep_world1_03.html': true,
@@ -34266,7 +34278,7 @@ ${content}
       <div class="kh-modal-header">
         <div>
           <h2 id="khModalTitle">📜 BRAIN한국사</h2>
-          <div class="kh-modal-sub">☀️ 방학특강 · 기본 20강 + 심화 12강(준비 중)</div>
+          <div class="kh-modal-sub">☀️ 방학특강 · 기본 20강 + 심화 12강(한국사검정 3/4급)</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <button id="khReportBtn" class="kh-report-btn" type="button" onclick="openKhReportModal()">📋 나의 한국사 리포트</button>
@@ -35157,13 +35169,29 @@ ${content}
             ${allDone ? '<div class="kh-unit-sub">1~20강 종합 · 20문항 랜덤 출제 · 90점 이상 통과</div>' : ''}
           </div>`;
 
-        // 🎓 심화한국사 (한국사검정 3/4급) 섹션 — 구분선 + 12강 카드 (준비 중)
-        const advCards = KH_ADV_UNITS.map(u => `
-          <div class="kh-unit-card kh-adv-card kh-coming" role="button" tabindex="0" data-kh-adv="${u.no}">
-            <span class="kh-coming-badge">준비 중</span>
+        // 🎓 심화한국사 (한국사검정 3/4급) 섹션 — 구분선 + 12강 카드
+        // 베타 테스터(초3 김윤슬)는 현재 작성 완료된 강만 실제로 열 수 있음
+        const KH_ADV_BETA_TESTERS = [{ grade: '초3', name: '김윤슬' }];
+        let _khAdvIsBeta = false;
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          _khAdvIsBeta = KH_ADV_BETA_TESTERS.some(t => t.grade === cs.grade && t.name === cs.name);
+        } catch {}
+        // 현재 콘텐츠 작성이 완료된 강 번호 (작성 끝나는 대로 여기에 추가)
+        const KH_ADV_READY_UNITS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+        const advCards = KH_ADV_UNITS.map(u => {
+          const ready = KH_ADV_READY_UNITS.includes(u.no);
+          const canOpen = _khAdvIsBeta && ready;
+          const badge = canOpen
+            ? '<span class="kh-coming-badge" style="background:linear-gradient(135deg,#059669,#047857);">베타 열람</span>'
+            : '<span class="kh-coming-badge">준비 중</span>';
+          return `
+          <div class="kh-unit-card kh-adv-card${canOpen ? ' kh-adv-open' : ' kh-coming'}" role="button" tabindex="0" data-kh-adv="${u.no}" data-kh-adv-path="./BRAINUP/korhistory/khadv_${u.no}.html" data-kh-adv-ready="${canOpen ? '1' : '0'}">
+            ${badge}
             <div class="kh-unit-title">${u.title}</div>
             <div class="kh-unit-sub">${u.subs.join(' · ')}</div>
-          </div>`).join('');
+          </div>`;
+        }).join('');
         const advSection = `
           <div class="kh-section-divider">
             <div class="kh-section-divider-line"></div>
@@ -35196,9 +35224,22 @@ ${content}
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
           });
         });
-        // 심화한국사 카드 클릭 → "준비 중" 안내
+        // 심화한국사 카드 클릭 → 베타+ready면 학습 모달 열기, 아니면 "준비 중" 안내
         grid.querySelectorAll('.kh-adv-card').forEach(card => {
-          const open = () => showKhComingSoonToast();
+          const open = () => {
+            if (card.dataset.khAdvReady === '1') {
+              const path = card.dataset.khAdvPath;
+              const ov = document.getElementById('khModalOverlay');
+              if (ov) {
+                ov.dataset.bgMode = '1';
+                ov.style.zIndex = '5000';
+              }
+              if (typeof openUnitModal === 'function') openUnitModal(path);
+              else window.location.href = path;
+            } else {
+              showKhComingSoonToast();
+            }
+          };
           card.addEventListener('click', open);
           card.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
