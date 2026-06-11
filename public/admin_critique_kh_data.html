@@ -226,6 +226,55 @@
     </div>
     <div class="info-line" id="khExamInfo"></div>
     <div class="more-bar"><button class="more-btn" id="khExamMoreBtn" style="display:none;">더보기 (+10)</button></div>
+
+    <!-- ===== 한국사 예비검정시험 (5/4/3급) 시도 기록 ===== -->
+    <h2 class="section-title" style="margin-top:30px;">
+      🏛️ BRAIN한국사 예비검정시험 시도 기록
+      <span class="count" id="khCertCount">0건</span>
+    </h2>
+    <div class="filter-row">
+      <input type="text" id="khCertSearchName" placeholder="👤 학생 이름 검색" />
+      <input type="text" id="khCertGrade" placeholder="🎓 학년 검색 (예: 초3)" />
+      <input type="text" id="khCertAcademy" placeholder="🏫 센터(학원) 검색" />
+      <select id="khCertLevel">
+        <option value="">전체 급수</option>
+        <option value="5급">5급</option>
+        <option value="4급">4급</option>
+        <option value="3급">3급</option>
+      </select>
+      <select id="khCertSort">
+        <option value="date-desc">최근 응시 순</option>
+        <option value="date-asc">오래된 순</option>
+        <option value="score-desc">점수 높은 순</option>
+        <option value="score-asc">점수 낮은 순</option>
+        <option value="level-asc">급수 (5→3급)</option>
+        <option value="level-desc">급수 (3→5급)</option>
+        <option value="name-asc">이름 가나다순</option>
+      </select>
+      <button class="reset-btn" onclick="resetKhCertFilter()">초기화</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th data-sort-section="khCert" data-sort="grade" style="width:70px;">학년</th>
+            <th data-sort-section="khCert" data-sort="name" style="width:90px;">학생명</th>
+            <th style="width:120px;">학교</th>
+            <th data-sort-section="khCert" data-sort="academy">센터(학원)</th>
+            <th data-sort-section="khCert" data-sort="level" style="width:60px;text-align:center;">급수</th>
+            <th data-sort-section="khCert" data-sort="score" style="width:60px;text-align:center;">점수</th>
+            <th style="width:70px;">정답</th>
+            <th style="width:90px;">결과</th>
+            <th data-sort-section="khCert" data-sort="date" style="width:140px;">응시일</th>
+            <th style="width:130px;white-space:nowrap;">시험지</th>
+          </tr>
+        </thead>
+        <tbody id="khCertTbody"><tr><td colspan="11" class="empty">불러오는 중…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="info-line" id="khCertInfo"></div>
+    <div class="more-bar"><button class="more-btn" id="khCertMoreBtn" style="display:none;">더보기 (+10)</button></div>
   </div>
 </div>
 
@@ -240,7 +289,8 @@
   const state = {
     crit:   { sort: 'date', dir: 'desc', offset: 0, total: 0, searchTimer: null },
     kh:     { sort: 'date', dir: 'desc', offset: 0, total: 0, searchTimer: null },
-    khExam: { sort: 'date', dir: 'desc', offset: 0, total: 0, searchTimer: null }
+    khExam: { sort: 'date', dir: 'desc', offset: 0, total: 0, searchTimer: null },
+    khCert: { sort: 'date', dir: 'desc', offset: 0, total: 0, searchTimer: null }
   };
 
   // ===== 헤더 정렬 클릭 =====
@@ -368,8 +418,12 @@
         <span class="badge ${it.vocabDone ? 'done' : 'miss'}">${it.vocabDone ? '✓' : '·'} 어휘</span>
         <span class="badge ${it.creativeDone ? 'done' : 'miss'}">${it.creativeDone ? '✓' : '·'} 창의</span>`;
       const unitKor = (() => {
-        const m = String(it.unit).match(/^kh_(\d{1,2})$/);
-        return m ? `<span class="badge kh">${parseInt(m[1])}강</span>` : esc(it.unit);
+        const u = String(it.unit);
+        const mAdv = u.match(/^khadv_(\d{1,2})$/);
+        if (mAdv) return `<span class="badge kh" style="background:linear-gradient(135deg,#8c5a00,#ff8f00);color:#fff;">심화 ${parseInt(mAdv[1])}강</span>`;
+        const mBasic = u.match(/^kh_(\d{1,2})$/);
+        if (mBasic) return `<span class="badge kh">${parseInt(mBasic[1])}강</span>`;
+        return esc(u);
       })();
       return `
         <tr>
@@ -528,6 +582,110 @@
     window.open(`/menu?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&autoOpen=khReport&khExamId=${encodeURIComponent(examId)}`, '_blank');
   };
 
+  // ===== 한국사 예비검정시험 (5/4/3급) 시도 기록 =====
+  async function loadKhCert(reset) {
+    const st = state.khCert;
+    if (reset) { st.offset = 0; $('khCertTbody').innerHTML = ''; }
+    document.querySelectorAll(`th[data-sort-section="khCert"]`).forEach(th => {
+      th.classList.remove('sorted-asc','sorted-desc');
+      if (th.dataset.sort === st.sort) th.classList.add(st.dir==='asc'?'sorted-asc':'sorted-desc');
+    });
+    const params = new URLSearchParams({
+      search: $('khCertSearchName').value.trim(),
+      grade: $('khCertGrade').value.trim(),
+      academy: $('khCertAcademy').value.trim(),
+      level: $('khCertLevel').value || '',
+      sort: st.sort, dir: st.dir, limit: PAGE_SIZE, offset: st.offset
+    });
+    try {
+      const res = await fetch(`/api/admin/kh-cert-list?${params}`);
+      const data = await res.json();
+      if (!data.ok) {
+        $('khCertTbody').innerHTML = `<tr><td colspan="11" class="empty" style="color:#c00;">${esc(data.message||'오류')}</td></tr>`;
+        return;
+      }
+      st.total = data.total;
+      $('khCertCount').textContent = `${data.total}건`;
+      $('khCertInfo').textContent = `총 ${data.total}건 중 ${st.offset + data.items.length}건 표시`;
+      renderKhCertRows(data.items);
+      st.offset += data.items.length;
+      $('khCertMoreBtn').style.display = st.offset < st.total ? 'inline-block' : 'none';
+    } catch (err) {
+      console.error(err);
+      $('khCertTbody').innerHTML = '<tr><td colspan="11" class="empty" style="color:#c00;">네트워크 오류</td></tr>';
+    }
+  }
+
+  function renderKhCertRows(items) {
+    const tbody = $('khCertTbody');
+    if (state.khCert.offset === 0 && items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="11" class="empty">예비검정시험 응시 기록이 없습니다.</td></tr>';
+      return;
+    }
+    const LEVEL_BADGE = {
+      '5급': 'background:linear-gradient(135deg,#4facfe,#2196f3);color:#fff;',
+      '4급': 'background:linear-gradient(135deg,#2196f3,#0d47a1);color:#fff;',
+      '3급': 'background:linear-gradient(135deg,#8c5a00,#ff8f00);color:#fff;'
+    };
+    const html = items.map((it, idx) => {
+      const dt = new Date(it.submittedAt);
+      const dtStr = dt.toLocaleDateString('ko-KR') + ' ' + dt.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+      const badge = it.passed
+        ? `<span class="badge" style="background:linear-gradient(135deg,#ffd54f,#ff8f00);color:#fff;">🏆 합격</span>`
+        : `<span class="badge" style="background:linear-gradient(135deg,#94a3b8,#64748b);color:#fff;">📚 재도전</span>`;
+      const levelBadge = `<span class="badge" style="${LEVEL_BADGE[it.level] || ''};font-weight:800;">${esc(it.level)}</span>`;
+      return `<tr>
+        <td class="num">${state.khCert.offset + idx + 1}</td>
+        <td>${esc(it.grade)}</td>
+        <td><b>${esc(it.name)}</b></td>
+        <td>${esc(it.school || '-')}</td>
+        <td>${esc(it.academyName || '-')}</td>
+        <td style="text-align:center;">${levelBadge}</td>
+        <td style="font-weight:800;color:${it.passed?'#c47200':'#64748b'};font-size:15px;text-align:center;padding-left:4px;padding-right:4px;">${it.score100}점</td>
+        <td>${it.correctCount}/${it.total}</td>
+        <td>${badge}</td>
+        <td style="font-size:12px;color:#6b7280;">${dtStr}</td>
+        <td style="white-space:nowrap;"><button class="report-btn" style="background:linear-gradient(135deg,#2196f3,#0d47a1);white-space:nowrap;" onclick="openCertViewer('${esc(it.grade)}','${esc(it.name)}','${esc(it.id)}')">🧾 시험지 보기</button></td>
+      </tr>`;
+    }).join('');
+    if (state.khCert.offset === 0) tbody.innerHTML = html;
+    else tbody.insertAdjacentHTML('beforeend', html);
+  }
+
+  function bindKhCertControls() {
+    $('khCertSearchName').oninput = debounce('khCert', () => loadKhCert(true));
+    $('khCertGrade').oninput      = debounce('khCert', () => loadKhCert(true));
+    $('khCertAcademy').oninput    = debounce('khCert', () => loadKhCert(true));
+    $('khCertLevel').onchange     = () => loadKhCert(true);
+    $('khCertSort').onchange = () => {
+      const [s, d] = $('khCertSort').value.split('-');
+      state.khCert.sort = s; state.khCert.dir = d;
+      loadKhCert(true);
+    };
+    $('khCertMoreBtn').onclick = () => loadKhCert(false);
+    document.querySelectorAll('th[data-sort-section="khCert"]').forEach(th => {
+      th.onclick = () => {
+        const key = th.dataset.sort;
+        const st = state.khCert;
+        if (st.sort === key) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
+        else { st.sort = key; st.dir = 'desc'; }
+        st.offset = 0;
+        loadKhCert(true);
+      };
+    });
+  }
+  window.resetKhCertFilter = function() {
+    $('khCertSearchName').value = ''; $('khCertGrade').value = '';
+    $('khCertAcademy').value = ''; $('khCertLevel').value = '';
+    $('khCertSort').value = 'date-desc';
+    state.khCert.sort = 'date'; state.khCert.dir = 'desc';
+    loadKhCert(true);
+  };
+  // 예비검정 시험지 보기 — 학생 메뉴 자동 오픈으로 표시
+  window.openCertViewer = function(grade, name, certId) {
+    window.open(`/menu?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&autoOpen=khCert&khCertId=${encodeURIComponent(certId)}`, '_blank');
+  };
+
   // 탭 전환
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.onclick = () => {
@@ -550,9 +708,11 @@
   bindCritControls();
   bindKhControls();
   bindKhExamControls();
+  bindKhCertControls();
   loadCrit(true);
   loadKh(true);
   loadKhExam(true);
+  loadKhCert(true);
 </script>
 </body>
 </html>

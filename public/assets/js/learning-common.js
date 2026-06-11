@@ -188,8 +188,8 @@
           console.error('[saveUnitProgressToServer] 저장 실패:', result.message);
         }
 
-        // 🇰🇷 BRAIN한국사(kh_*) — 어휘/창의를 전용 KhSubmission에도 저장
-        if (typeof unit === 'string' && unit.startsWith('kh_')) {
+        // 🇰🇷 BRAIN한국사(kh_*, khadv_*) — 어휘/창의를 전용 KhSubmission에도 저장
+        if (typeof unit === 'string' && (unit.startsWith('kh_') || unit.startsWith('khadv_'))) {
           // 어휘
           if (data && data.vocabState) {
             const vs = data.vocabState;
@@ -2892,10 +2892,10 @@
       // ✅ 어휘학습 채점 완료 플래그 설정
       window.isVocabGraded = true;
 
-      // 🇰🇷 BRAIN한국사(kh_*) 어휘학습 — 전용 KhSubmission에 저장
+      // 🇰🇷 BRAIN한국사(kh_*, khadv_*) 어휘학습 — 전용 KhSubmission에 저장
       try {
         const _khUnit = window.CUR_UNIT || '';
-        if (typeof _khUnit === 'string' && _khUnit.startsWith('kh_')) {
+        if (typeof _khUnit === 'string' && (_khUnit.startsWith('kh_') || _khUnit.startsWith('khadv_'))) {
           const _khStu = getCurrentStudent();
           if (_khStu) {
             const answers = Array.from(blanks).map(bw => (bw.querySelector('.blank-input').value || '').trim());
@@ -3477,7 +3477,7 @@
         // 🇰🇷 BRAIN한국사(kh_*) 창의활동 — 전용 KhSubmission에 저장
         try {
           const _khUnit = window.CUR_UNIT || '';
-          if (typeof _khUnit === 'string' && _khUnit.startsWith('kh_')) {
+          if (typeof _khUnit === 'string' && (_khUnit.startsWith('kh_') || _khUnit.startsWith('khadv_'))) {
             const _khStu = getCurrentStudent();
             if (_khStu) {
               // 주제(질문) 추출

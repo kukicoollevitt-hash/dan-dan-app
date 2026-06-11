@@ -7778,8 +7778,19 @@
       }
     }
 
-    // 학습완료 버튼 클릭 시 모달 닫기
-    function completeQuizAndSaveHistory() {
+    // 학습완료 버튼 클릭 시 모달 닫기 (서버 저장 보장 후 부모창 알림)
+    async function completeQuizAndSaveHistory() {
+      // 🔧 race condition 방지: saveVocabularyHistory()가 아직 끝나지 않았을 수 있음
+      // historySaved 플래그가 true가 될 때까지 대기 (idempotent하게 재호출)
+      try {
+        if (!historySaved) {
+          console.log('⏳ 학습 이력 저장 대기 중...');
+          await saveVocabularyHistory();
+        }
+      } catch (err) {
+        console.warn('학습 이력 저장 대기 오류:', err);
+      }
+
       // 모달 닫기 (부모 창에 메시지 전송)
       try {
         // iframe이므로 부모 창에 완료 메시지 전송

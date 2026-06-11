@@ -380,6 +380,7 @@ const CenterContract = require("./models/CenterContract");
 const CritiqueSubmission = require("./models/CritiqueSubmission");
 const KhSubmission = require("./models/KhSubmission");
 const KhExamResult = require("./models/KhExamResult");
+const KhCertExam = require("./models/KhCertExam");
 
 // ===== 콘텐츠 파일에서 단원 제목 가져오기 =====
 const contentTitleCache = new Map(); // 콘텐츠 제목 캐시
@@ -38652,8 +38653,9 @@ app.get('/api/admin/kh-list', requireAdminLogin, async (req, res) => {
     const schoolMap = {};
     users.forEach(u => { schoolMap[`${u.grade}|${u.name}`] = u.school || ''; });
 
-    // 단원 제목 매핑 (서버 측 상수)
+    // 단원 제목 매핑 (서버 측 상수) — 기본 20강 + 심화 12강
     const KH_TITLES = {
+      // 기본 한국사
       kh_01: '역사는 왜 배워야 할까?', kh_02: '선사 시대와 인류의 시작',
       kh_03: '청동기와 고조선',       kh_04: '여러 나라의 성장',
       kh_05: '삼국의 건국과 경쟁',    kh_06: '삼국의 전성기',
@@ -38663,7 +38665,14 @@ app.get('/api/admin/kh-list', requireAdminLogin, async (req, res) => {
       kh_13: '세종과 조선의 전성기',  kh_14: '사림과 붕당 정치',
       kh_15: '임진왜란과 병자호란',   kh_16: '조선 후기의 변화',
       kh_17: '개항과 근대화의 시작',  kh_18: '대한제국과 국권 침탈',
-      kh_19: '일제강점기와 독립운동', kh_20: '광복과 대한민국의 성장'
+      kh_19: '일제강점기와 독립운동', kh_20: '광복과 대한민국의 성장',
+      // 심화 한국사 (한국사검정 3/4급)
+      khadv_01: '골품제와 고대 정치 제도',         khadv_02: '삼국·통일신라 문화와 불교 미술',
+      khadv_03: '고려의 정치 제도',                khadv_04: '고려의 경제와 신분 사회',
+      khadv_05: '조선의 정치 변동',                khadv_06: '조선의 토지·세제',
+      khadv_07: '조선의 신분·향촌 사회 변화',      khadv_08: '성리학·실학·서학·동학',
+      khadv_09: '개항기 조약과 개혁',              khadv_10: '일제강점기 통치 3단계',
+      khadv_11: '독립운동의 전개',                 khadv_12: '현대 대한민국의 형성'
     };
 
     const baseForFilters = acFilter ? { academyName: acFilter.academyName } : {};
@@ -38770,7 +38779,289 @@ app.get('/api/kh/exam/detail', async (req, res) => {
   }
 });
 
+// ===================== BRAIN한국사 예비검정시험 (5/4/3급) =====================
+// 베타 테스터 — 32강 완료·이전 급수 합격 검증 우회 (문제 점검용)
+const KH_CERT_BETA_TESTERS = [
+  { grade: '초3', name: '김윤슬' }
+];
+function isKhCertBetaTester(grade, name) {
+  return KH_CERT_BETA_TESTERS.some(t => t.grade === grade && t.name === name);
+}
+
+// 문항 캐시 (서버 시작 시 1회 로드)
+let _khCertBank = null;
+function loadKhCertBank() {
+  if (_khCertBank) return _khCertBank;
+  const dir = path.join(__dirname, 'public', 'BRAINUP', 'korhistory', 'cert');
+  _khCertBank = {
+    '5급': require(path.join(dir, 'kh-cert-5.json')),
+    '4급': require(path.join(dir, 'kh-cert-4.json')),
+    '3급': require(path.join(dir, 'kh-cert-3.json'))
+  };
+  console.log('🏛️ [kh-cert] 문항 로드 완료: 5급', _khCertBank['5급'].questions.length, '· 4급', _khCertBank['4급'].questions.length, '· 3급', _khCertBank['3급'].questions.length);
+  return _khCertBank;
+}
+loadKhCertBank();
+
+// 응시 시 문항 가져오기 (정답은 제외하고 학생에게 전송)
+app.get('/api/kh-cert/questions', async (req, res) => {
+  try {
+    const { level } = req.query;
+    const bank = loadKhCertBank();
+    if (!bank[level]) return res.status(400).json({ ok: false, message: '잘못된 급수' });
+    const pack = bank[level];
+    // 정답·해설은 빼고 보내기 (제출 시 서버에서 채점). reference(보기 박스)는 포함
+    const safeQuestions = pack.questions.map(q => ({
+      no: q.no, type: q.type, sourceUnit: q.sourceUnit,
+      question: q.question, options: q.options,
+      reference: q.reference || null
+    }));
+    res.json({
+      ok: true,
+      level: pack.level,
+      total: pack.total,
+      duration_min: pack.duration_min,
+      pass_score: pack.pass_score,
+      version: pack.version,
+      questions: safeQuestions
+    });
+  } catch (err) {
+    console.error('[kh-cert] questions 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 시험 제출 — 서버에서 채점 후 저장
+app.post('/api/kh-cert/submit', async (req, res) => {
+  try {
+    const { grade, name, phone, level, answers, startedAt, durationSeconds } = req.body;
+    if (!grade || !name || !level || !Array.isArray(answers)) {
+      return res.status(400).json({ ok: false, message: '학생/답안 정보 필요' });
+    }
+    const bank = loadKhCertBank();
+    const pack = bank[level];
+    if (!pack) return res.status(400).json({ ok: false, message: '잘못된 급수' });
+
+    const isBeta = isKhCertBetaTester(grade, name);
+
+    // 32강 완료 체크 (안전 장치) — 베타 테스터는 우회
+    if (!isBeta) {
+      const subs = await KhSubmission.find({ grade, name }, { unit: 1, 'passage.completed': 1 }).lean();
+      const completedUnits = new Set(subs.filter(s => s.passage && s.passage.completed).map(s => s.unit));
+      const basicAll = Array.from({length:20}, (_,i) => `kh_${String(i+1).padStart(2,'0')}`);
+      const advAll = Array.from({length:12}, (_,i) => `khadv_${String(i+1).padStart(2,'0')}`);
+      const allRequired = [...basicAll, ...advAll];
+      const incomplete = allRequired.filter(u => !completedUnits.has(u));
+      if (incomplete.length > 0) {
+        return res.status(403).json({ ok: false, message: '32강 완료 후 응시 가능합니다.', incompleteCount: incomplete.length });
+      }
+
+      // 순차 잠금: 4급은 5급 합격, 3급은 4급 합격 필요 (베타 테스터는 우회)
+      if (level === '4급' || level === '3급') {
+        const prevLevel = level === '4급' ? '5급' : '4급';
+        const prevPassed = await KhCertExam.exists({ grade, name, level: prevLevel, passed: true });
+        if (!prevPassed) {
+          return res.status(403).json({ ok: false, message: `${prevLevel} 합격 후 응시 가능합니다.`, requiredPrev: prevLevel });
+        }
+      }
+    }
+
+    // 채점
+    let correctCount = 0;
+    const questions = pack.questions.map((q, idx) => {
+      const picked = answers[idx]; // 1~4 (학생이 고른 번호) 또는 null
+      const isCorrect = picked === q.answer;
+      if (isCorrect) correctCount++;
+      return {
+        no: q.no, type: q.type, sourceUnit: q.sourceUnit,
+        question: q.question, options: q.options,
+        reference: q.reference || null,
+        correctAnswer: q.answer,
+        pickedAnswer: typeof picked === 'number' ? picked : null,
+        isCorrect,
+        explanation: q.explanation
+      };
+    });
+    const score100 = Math.round((correctCount / pack.total) * 100);
+    const passed = score100 >= pack.pass_score;
+
+    // 학생 학원명 자동 조회
+    const _user = await User.findOne({ grade, name }, { academyName: 1 }).lean();
+    const _academyName = _user?.academyName || '';
+
+    const doc = await KhCertExam.create({
+      grade, name, phone: phone || '',
+      academyName: _academyName,
+      level, version: pack.version,
+      score100, correctCount, total: pack.total,
+      passed,
+      durationSeconds: durationSeconds || 0,
+      questions,
+      startedAt: startedAt ? new Date(startedAt) : new Date(),
+      submittedAt: new Date()
+    });
+
+    res.json({
+      ok: true,
+      id: doc._id,
+      score100, correctCount, total: pack.total, passed,
+      passScore: pack.pass_score,
+      questions  // 결과 화면에서 즉시 해설 보여주기 위해 함께 반환
+    });
+  } catch (err) {
+    console.error('[kh-cert] submit 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 학생 본인 응시 이력 (합격 여부 등)
+app.get('/api/kh-cert/my-status', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
+
+    const exams = await KhCertExam.find({ grade, name }, { questions: 0 })
+      .sort({ submittedAt: -1 }).lean();
+
+    // 급수별 최고 점수·합격 여부 산출
+    const byLevel = {};
+    for (const lv of ['5급','4급','3급']) {
+      const lvExams = exams.filter(e => e.level === lv);
+      const bestScore = lvExams.reduce((m, e) => Math.max(m, e.score100 || 0), 0);
+      const passed = lvExams.some(e => e.passed);
+      byLevel[lv] = {
+        attempts: lvExams.length,
+        bestScore,
+        passed,
+        lastAttemptAt: lvExams[0]?.submittedAt || null
+      };
+    }
+
+    // 32강 완료 상태 (응시 가능 여부)
+    const subs = await KhSubmission.find({ grade, name }, { unit: 1, 'passage.completed': 1 }).lean();
+    const completedUnits = new Set(subs.filter(s => s.passage && s.passage.completed).map(s => s.unit));
+    const basicAll = Array.from({length:20}, (_,i) => `kh_${String(i+1).padStart(2,'0')}`);
+    const advAll = Array.from({length:12}, (_,i) => `khadv_${String(i+1).padStart(2,'0')}`);
+    const allRequired = [...basicAll, ...advAll];
+    const completedCount = allRequired.filter(u => completedUnits.has(u)).length;
+    const eligible = completedCount >= 32;
+
+    // 베타 테스터는 모든 잠금 우회 (문제 점검용)
+    const isBeta = isKhCertBetaTester(grade, name);
+    if (isBeta) {
+      byLevel['5급'].canTake = true; byLevel['5급'].lockReason = null;
+      byLevel['4급'].canTake = true; byLevel['4급'].lockReason = null;
+      byLevel['3급'].canTake = true; byLevel['3급'].lockReason = null;
+    } else {
+      // 순차 잠금: 5급은 32강 완료만, 4급은 5급 합격 추가, 3급은 4급 합격 추가
+      byLevel['5급'].canTake = eligible;
+      byLevel['5급'].lockReason = !eligible ? 'units' : null;
+      byLevel['4급'].canTake = eligible && byLevel['5급'].passed;
+      byLevel['4급'].lockReason = !eligible ? 'units' : (!byLevel['5급'].passed ? 'prev' : null);
+      byLevel['3급'].canTake = eligible && byLevel['4급'].passed;
+      byLevel['3급'].lockReason = !eligible ? 'units' : (!byLevel['4급'].passed ? 'prev' : null);
+    }
+
+    res.json({ ok: true, byLevel, completedCount, totalRequired: 32, eligible, isBeta });
+  } catch (err) {
+    console.error('[kh-cert] my-status 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 학생 본인 예비검정 응시 기록 목록 (questions 제외)
+app.get('/api/kh-cert/my-history', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
+    const results = await KhCertExam.find(
+      { grade, name },
+      { questions: 0, __v: 0 }
+    ).sort({ submittedAt: -1 }).lean();
+    res.json({ ok: true, results });
+  } catch (err) {
+    console.error('[kh-cert] my-history 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 시험 1건 상세 (시험지 다시 보기)
+app.get('/api/kh-cert/detail', async (req, res) => {
+  try {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ ok: false, message: 'id 필요' });
+    const doc = await KhCertExam.findById(id, { __v: 0 }).lean();
+    if (!doc) return res.status(404).json({ ok: false, message: '기록 없음' });
+    res.json({ ok: true, result: doc });
+  } catch (err) {
+    console.error('[kh-cert] detail 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+// ===================== /BRAIN한국사 예비검정시험 =====================
+
 // 관리자: 시험 기록 목록 (학원 필터 자동)
+// 관리자: 예비검정시험 (5/4/3급) 응시 기록 목록
+app.get('/api/admin/kh-cert-list', requireAdminLogin, async (req, res) => {
+  try {
+    const acFilter = getAdminAcademyFilter(req);
+    if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
+
+    const { search, grade, academy, level, sort = 'date', dir = 'desc', limit = 10, offset = 0 } = req.query;
+    const query = {};
+    if (acFilter) query.academyName = acFilter.academyName;
+    else if (academy && academy.trim()) query.academyName = { $regex: academy.trim(), $options: 'i' };
+    if (grade && grade.trim()) query.grade = { $regex: grade.trim(), $options: 'i' };
+    if (search) query.name = { $regex: search.trim(), $options: 'i' };
+    if (level && ['5급','4급','3급'].includes(level)) query.level = level;
+
+    const sortObj = {};
+    if (sort === 'date') sortObj.submittedAt = dir === 'asc' ? 1 : -1;
+    else if (sort === 'score') sortObj.score100 = dir === 'asc' ? 1 : -1;
+    else if (sort === 'name') sortObj.name = dir === 'asc' ? 1 : -1;
+    else if (sort === 'grade') sortObj.grade = dir === 'asc' ? 1 : -1;
+    else if (sort === 'level') sortObj.level = dir === 'asc' ? 1 : -1;
+    else sortObj.submittedAt = -1;
+
+    const lim = Math.min(parseInt(limit) || 10, 200);
+    const off = Math.max(parseInt(offset) || 0, 0);
+
+    const total = await KhCertExam.countDocuments(query);
+    const items = await KhCertExam.find(query, {
+      grade: 1, name: 1, academyName: 1, level: 1, score100: 1, correctCount: 1,
+      total: 1, passed: 1, submittedAt: 1, durationSeconds: 1
+    }).sort(sortObj).skip(off).limit(lim).lean();
+
+    // 학교 정보 join
+    const keys = [...new Set(items.map(i => `${i.grade}|${i.name}`))];
+    const users = keys.length ? await User.find({
+      $or: keys.map(k => { const [g, n] = k.split('|'); return { grade: g, name: n }; })
+    }, { grade: 1, name: 1, school: 1 }).lean() : [];
+    const schoolMap = {};
+    users.forEach(u => { schoolMap[`${u.grade}|${u.name}`] = u.school || ''; });
+
+    res.json({
+      ok: true,
+      items: items.map(i => ({
+        id: i._id,
+        grade: i.grade, name: i.name,
+        school: schoolMap[`${i.grade}|${i.name}`] || '',
+        academyName: i.academyName || '',
+        level: i.level,
+        score100: i.score100,
+        correctCount: i.correctCount,
+        total: i.total,
+        passed: i.passed,
+        submittedAt: i.submittedAt
+      })),
+      total
+    });
+  } catch (err) {
+    console.error('[admin/kh-cert-list] 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
 app.get('/api/admin/kh-exam-list', requireAdminLogin, async (req, res) => {
   try {
     const acFilter = getAdminAcademyFilter(req);

@@ -7316,7 +7316,7 @@ canvas[id^="confetti-canvas"] {
         <li class="series-item active" data-series="BRAINUP"><span>BRAIN업</span><span class="meta">성장문해</span></li>
         <li class="series-item" data-series="BRAINFIT"><span>BRAIN핏</span><span class="meta">확장문해</span></li>
         <li class="series-item" data-series="BRAINDEEP"><span>BRAIN딥</span><span class="meta">심화문해</span></li>
-        <li class="series-item" data-series="BRAINCRITIQUE"><span>BRAIN비평</span><span class="meta">시사문해</span></li>
+        <li class="series-item daily-special" data-series="BRAINCRITIQUE"><span>BRAIN비평</span><span class="meta">시사문해</span></li>
         <li class="series-item" data-series="BRAINM"><span>BRAIN실전</span><span class="meta">모의고사</span></li>
         <li class="series-item summer-special kh-coming-soon" data-series="BRAINKORHIST"><span>BRAIN한국사</span><span class="meta">방학특강</span></li>
         <li class="series-item" data-series="BRAINNAESIN" style="display:none;"><span>📝 BRAIN내신</span><span class="meta">내신대비</span></li>
@@ -16429,10 +16429,30 @@ async function performLogout() {
       if (radarIcon && learningModal && learningIframe) {
         // ✅ 학습 분석 모달 열기 함수
         function openLearningModal() {
-          const user = JSON.parse(sessionStorage.getItem('user') || '{}');
-          console.log('🔍 sessionStorage user:', user);
-          const grade = user.grade || '학년미지정';
-          const name = user.name || '이름미지정';
+          // 🔥 학생 정보 우선순위: URL 파라미터 → localStorage.currentStudent → sessionStorage.user
+          // (브랜치 관리자에서 새 탭으로 열 때 sessionStorage.user는 비동기 fetch 완료 전이라 race condition 발생)
+          const urlP = new URLSearchParams(window.location.search);
+          const urlGrade = urlP.get('grade');
+          const urlName = urlP.get('name');
+          let grade = '학년미지정';
+          let name = '이름미지정';
+          if (urlGrade && urlName) {
+            grade = urlGrade;
+            name = urlName;
+            console.log('📊 학생 정보 출처: URL 파라미터');
+          } else {
+            const cs = (typeof getCurrentStudent === 'function') ? getCurrentStudent() : null;
+            if (cs && cs.grade && cs.name) {
+              grade = cs.grade;
+              name = cs.name;
+              console.log('📊 학생 정보 출처: localStorage.currentStudent');
+            } else {
+              const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+              if (user.grade) grade = user.grade;
+              if (user.name) name = user.name;
+              console.log('📊 학생 정보 출처: sessionStorage.user (fallback)');
+            }
+          }
           console.log('📊 Opening learning page:', { grade, name });
 
           // ✅ 현재 선택된 시리즈 가져오기
@@ -16895,31 +16915,72 @@ async function performLogout() {
     }
 
     // 어휘퀴즈 어휘력 지수 뱃지 업데이트
+    // 🔥 학생 정보 우선순위: localStorage.currentStudent → sessionStorage.user
+    //   (브랜치 관리자에서 새 탭으로 열 때 sessionStorage.user는 비어 있어서 키가 어긋남)
     function updateVocabAvgBadge() {
       const badge = document.getElementById('vocabAvgBadge');
       console.log('🎯 updateVocabAvgBadge 실행, badge 요소:', badge);
+      if (!badge) {
+        console.error('❌ vocabAvgBadge 요소를 찾을 수 없습니다');
+        return;
+      }
 
-      if (badge) {
+      let grade = '', name = '';
+      const cs = (typeof getCurrentStudent === 'function') ? getCurrentStudent() : null;
+      if (cs && cs.grade && cs.name) {
+        grade = cs.grade;
+        name = cs.name;
+        console.log('👤 학생 정보 출처: localStorage.currentStudent', { grade, name });
+      } else {
         const userStr = sessionStorage.getItem('user');
-        let storageKey = 'vocabRatingScore'; // 어휘력 지수
         if (userStr) {
           try {
             const user = JSON.parse(userStr);
-            // 어휘퀴즈와 동일한 형식: baseKey_grade_name
-            storageKey = `vocabRatingScore_${user.grade}_${user.name}`;
-            console.log('👤 사용자 정보:', user, '키:', storageKey);
-          } catch(e) {
+            grade = user.grade || '';
+            name = user.name || '';
+            console.log('👤 학생 정보 출처: sessionStorage.user (fallback)', { grade, name });
+          } catch (e) {
             console.error('❌ User parse error:', e);
           }
         }
+      }
 
-        const ratingScore = localStorage.getItem(storageKey);
-        console.log('📊 localStorage 키:', storageKey, '값:', ratingScore);
+      const storageKey = (grade && name) ? `vocabRatingScore_${grade}_${name}` : 'vocabRatingScore';
+      const ratingScore = localStorage.getItem(storageKey);
+      console.log('📊 localStorage 키:', storageKey, '값:', ratingScore);
 
-        badge.innerHTML = ratingScore ? ratingScore + '<span class="badge-unit">점</span>' : '0<span class="badge-unit">점</span>';
-        console.log('✅ 뱃지 업데이트 완료:', badge.textContent);
-      } else {
-        console.error('❌ vocabAvgBadge 요소를 찾을 수 없습니다');
+      badge.innerHTML = ratingScore ? ratingScore + '<span class="badge-unit">점</span>' : '0<span class="badge-unit">점</span>';
+      console.log('✅ 뱃지 업데이트 완료:', badge.textContent);
+
+      // 🔥 로컬 캐시가 없으면 서버에서 즉시 동기화 (관리자→학생 첫 진입 케이스)
+      if (!ratingScore && grade && name) {
+        console.log('🔄 로컬 캐시 없음 → 서버에서 어휘지수 동기화 시작');
+        syncVocabRatingFromServer(grade, name);
+      }
+    }
+
+    // 서버에서 어휘력 지수를 가져와 localStorage·뱃지에 반영
+    async function syncVocabRatingFromServer(grade, name) {
+      try {
+        const res = await fetch(`/api/user-progress?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`);
+        const result = await res.json();
+        if (!result.ok || !result.data || !result.data.vocabularyQuiz) {
+          console.log('ℹ️ 서버 어휘퀴즈 데이터 없음');
+          return;
+        }
+        const vq = result.data.vocabularyQuiz;
+        const rating = (vq.totalScore / 100) * (vq.avgScore / 10);
+        const ratingStr = rating.toFixed(1);
+        const ratingKey = `vocabRatingScore_${grade}_${name}`;
+        localStorage.setItem(ratingKey, ratingStr);
+
+        const badge = document.getElementById('vocabAvgBadge');
+        if (badge) {
+          badge.innerHTML = ratingStr + '<span class="badge-unit">점</span>';
+          console.log('✅ 서버 동기화 후 어휘지수 뱃지 갱신:', ratingStr);
+        }
+      } catch (e) {
+        console.error('❌ syncVocabRatingFromServer 오류:', e);
       }
     }
 
@@ -33187,6 +33248,23 @@ ${content}
       letter-spacing: 0.3px;
     }
 
+    /* 매일학습 시리즈 타일 배지 (BRAIN비평 시사문해) */
+    .series-item.daily-special { position: relative; }
+    .series-item.daily-special::after {
+      content: '📅 매일학습';
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: linear-gradient(135deg, #60a5fa 0%, #6366f1 100%);
+      color: #fff;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
+      letter-spacing: 0.3px;
+    }
+
     /* 오픈 예정 상태 (BRAIN한국사) — 비활성 외관이지만 클릭은 가능 */
     .series-item.kh-coming-soon {
       opacity: 0.55;
@@ -33494,17 +33572,27 @@ ${content}
 
     /* 심화 카드 — 노란/주황 계열로 기본 카드와 구분 */
     .kh-adv-card {
-      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
-      border: 2px solid #fcd34d !important;
+      background: #fff;
+      border: 1.5px solid #ffe1cc;
       position: relative;
     }
     .kh-adv-card:hover {
-      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
-      border-color: #d97706 !important;
+      border-color: #ff7e5f;
       transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(255, 126, 95, 0.2);
     }
-    .kh-adv-card .kh-unit-title { color: #78350f !important; }
-    .kh-adv-card .kh-unit-sub { color: #92400e !important; }
+    /* 심화 완료 카드 — 기본과 동일한 초록 톤 */
+    .kh-adv-card.kh-completed {
+      background: linear-gradient(135deg, #e7f7e1 0%, #c9efc0 100%);
+      border-color: #6cbf5a;
+      box-shadow: 0 2px 8px rgba(108, 191, 90, 0.18);
+    }
+    .kh-adv-card.kh-completed:hover {
+      border-color: #4ea63a;
+      box-shadow: 0 6px 14px rgba(78, 166, 58, 0.25);
+    }
+    .kh-adv-card.kh-completed .kh-unit-title { color: #1f4d12; }
+    .kh-adv-card.kh-completed .kh-unit-sub { color: #3f6a32; }
     .kh-adv-card.kh-coming {
       cursor: pointer;
       opacity: 0.85;
@@ -34079,6 +34167,520 @@ ${content}
       color: #1f4d12;
     }
     .kh-chart-svg { width: 100%; height: 220px; }
+    /* 섹션 헤더 (기본/심화 한국사) */
+    .kh-section-header {
+      font-size: 14px;
+      font-weight: 800;
+      color: #1f4d12;
+      margin: 10px 0 10px;
+      padding: 6px 12px;
+      background: linear-gradient(90deg, rgba(46,155,63,0.1), rgba(46,155,63,0));
+      border-left: 4px solid #2e9b3f;
+      border-radius: 4px;
+    }
+    .kh-section-header .kh-section-count {
+      font-size: 12px;
+      font-weight: 600;
+      color: #5a7c4a;
+      margin-left: 6px;
+    }
+    .kh-section-header:nth-of-type(2),
+    .kh-report-grid + .kh-section-header {
+      color: #8c5a1c;
+      background: linear-gradient(90deg, rgba(180,120,40,0.1), rgba(180,120,40,0));
+      border-left-color: #b47828;
+    }
+    .kh-adv-card { border-color: rgba(180,120,40,0.35) !important; }
+    .kh-adv-card.kh-has-record { box-shadow: 0 2px 8px rgba(180,120,40,0.12); }
+
+    /* ─── 한국사 예비검정시험 카드 — 기본·심화 카드와 동일 그리드 패턴 ─── */
+    .kh-cert-grid {
+      grid-column: 1 / -1;          /* 부모 grid 전체 폭 차지 */
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+    @media (max-width: 600px) {
+      .kh-cert-grid { grid-template-columns: 1fr; }
+    }
+    .kh-cert-card {
+      position: relative;
+      background: linear-gradient(135deg, #fff 0%, #f0f8ff 100%);
+      border: 2px solid rgba(33, 150, 243, 0.35);
+      border-radius: 14px;
+      padding: 16px 18px 14px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      box-shadow: 0 2px 8px rgba(33, 150, 243, 0.08);
+    }
+    .kh-cert-card:hover {
+      transform: translateY(-2px);
+      border-color: #2196f3;
+      box-shadow: 0 6px 18px rgba(33, 150, 243, 0.22);
+    }
+    .kh-cert-card.kh-cert-locked {
+      background: #f7f7f5;
+      border-color: rgba(150, 150, 150, 0.35);
+      opacity: 0.78;
+      cursor: pointer;
+    }
+    .kh-cert-card.kh-cert-locked:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .kh-cert-card.kh-cert-passed {
+      background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+      border-color: #ffb300;
+      box-shadow: 0 4px 14px rgba(255, 179, 0, 0.25);
+    }
+    .kh-cert-badge {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg, #4facfe 0%, #2196f3 50%, #0d47a1 100%);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+    .kh-cert-card.kh-cert-passed .kh-cert-badge {
+      background: linear-gradient(135deg, #ffd54f 0%, #ffb300 50%, #ff8f00 100%);
+    }
+    .kh-cert-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0d47a1;
+      margin-bottom: 4px;
+    }
+    .kh-cert-card.kh-cert-passed .kh-cert-title { color: #6d4c00; }
+    .kh-cert-sub {
+      font-size: 12px;
+      color: #5b7e9c;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+    .kh-cert-meta {
+      font-size: 11px;
+      color: #6b8aa5;
+      margin-bottom: 8px;
+    }
+    .kh-cert-status {
+      font-size: 12px;
+      font-weight: 700;
+      color: #2196f3;
+      padding: 6px 10px;
+      background: rgba(33, 150, 243, 0.08);
+      border-radius: 8px;
+      text-align: center;
+    }
+    .kh-cert-card.kh-cert-passed .kh-cert-status {
+      color: #ff8f00;
+      background: rgba(255, 179, 0, 0.15);
+    }
+    .kh-cert-card.kh-cert-locked .kh-cert-status {
+      color: #777;
+      background: rgba(0,0,0,0.04);
+    }
+
+    /* ─── 예비검정시험 모달 ─── */
+    .kh-cert-exam-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 1000400;  /* 한국사 모달(1000100~1000300) 위에 표시 */
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .kh-cert-exam-modal {
+      background: #fff;
+      width: 100%; max-width: 720px;
+      max-height: 92vh;
+      border-radius: 16px;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+    .kh-cert-exam-header {
+      padding: 14px 20px;
+      background: linear-gradient(135deg, #4facfe 0%, #2196f3 50%, #0d47a1 100%);
+      color: #fff;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-shrink: 0;
+    }
+    .kh-cert-exam-title { font-size: 16px; font-weight: 800; }
+    .kh-cert-exam-meta {
+      display: flex; gap: 14px; align-items: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .kh-cert-exam-timer {
+      background: rgba(255,255,255,0.2);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-variant-numeric: tabular-nums;
+    }
+    .kh-cert-exam-timer.kh-cert-timer-warn {
+      background: rgba(220, 38, 38, 0.9);
+      animation: khCertTimerPulse 1s ease-in-out infinite;
+    }
+    @keyframes khCertTimerPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+    .kh-cert-exam-body {
+      flex: 1;
+      padding: 22px 24px;
+      overflow-y: auto;
+    }
+    .kh-cert-q-num { font-size: 12px; color: #2196f3; font-weight: 700; margin-bottom: 8px; }
+    .kh-cert-q-text {
+      font-size: 15px; line-height: 1.6;
+      color: #1f2937;
+      margin-bottom: 18px;
+      white-space: pre-wrap;
+    }
+    /* 🏛️ 보기 박스 — 시기 순서·사료 인용 */
+    .kh-cert-ref {
+      margin: 0 0 18px;
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1.5px solid #cbd5e1;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+    .kh-cert-ref-head {
+      font-size: 13px;
+      font-weight: 800;
+      color: #475569;
+      margin-bottom: 10px;
+      letter-spacing: 0.3px;
+    }
+    /* events 박스 */
+    .kh-cert-ref-events { background: linear-gradient(135deg, #eef4ff 0%, #e0eaff 100%); border-color: #94a3ff; }
+    .kh-cert-ref-events .kh-cert-ref-head { color: #4338ca; }
+    .kh-cert-ref-event {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.75);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+    .kh-cert-ref-event:last-child { margin-bottom: 0; }
+    .kh-cert-ref-label {
+      flex-shrink: 0;
+      font-weight: 800;
+      color: #4338ca;
+      min-width: 28px;
+      font-size: 15px;
+    }
+    .kh-cert-ref-text { color: #1e293b; line-height: 1.6; }
+    /* quote 박스 */
+    .kh-cert-ref-quote { background: linear-gradient(135deg, #fffbf0 0%, #fef3c7 100%); border-color: #fbbf24; }
+    .kh-cert-ref-quote .kh-cert-ref-intro {
+      font-size: 14px;
+      color: #78350f;
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+    .kh-cert-ref-quote .kh-cert-ref-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #92400e;
+      margin-bottom: 8px;
+    }
+    .kh-cert-ref-quote .kh-cert-ref-content {
+      margin: 0;
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.75);
+      border-left: 4px solid #d97706;
+      border-radius: 0 8px 8px 0;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #1f2937;
+      font-style: italic;
+      font-family: "Apple SD Gothic Neo", "Noto Serif KR", "Nanum Myeongjo", serif;
+    }
+    /* note 박스 */
+    .kh-cert-ref-note {
+      background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+      border-color: #67e8f9;
+      color: #155e75;
+      font-size: 15px;
+      line-height: 1.7;
+      padding: 16px 18px;
+    }
+
+    .kh-cert-q-options { display: flex; flex-direction: column; gap: 10px; }
+    .kh-cert-q-opt {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 12px 14px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .kh-cert-q-opt:hover { border-color: #93c5fd; background: #f0f9ff; }
+    .kh-cert-q-opt.selected { border-color: #2196f3; background: #e3f2fd; }
+    .kh-cert-q-opt input { display: none; }
+    .kh-cert-q-opt-num { font-weight: 800; font-size: 16px; color: #2196f3; flex-shrink: 0; }
+    .kh-cert-q-opt-text { font-size: 14px; line-height: 1.5; color: #1f2937; }
+    .kh-cert-exam-footer {
+      padding: 14px 20px;
+      border-top: 1px solid #e5e7eb;
+      display: flex; align-items: center; gap: 12px;
+      flex-shrink: 0;
+      background: #fafafa;
+    }
+    .kh-cert-pagination {
+      flex: 1; display: flex; gap: 4px; flex-wrap: wrap; justify-content: center;
+    }
+    .kh-cert-pag-dot {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      font-size: 11px; font-weight: 700;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .kh-cert-pag-dot.answered { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+    .kh-cert-pag-dot.current { background: #2196f3; color: #fff; border-color: #0d47a1; }
+    .kh-cert-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px; font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .kh-cert-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .kh-cert-btn-secondary { background: #e5e7eb; color: #374151; }
+    .kh-cert-btn-secondary:hover:not(:disabled) { background: #d1d5db; }
+    .kh-cert-btn-primary {
+      background: linear-gradient(135deg, #4facfe 0%, #2196f3 50%, #0d47a1 100%);
+      color: #fff;
+    }
+    .kh-cert-btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(33,150,243,0.4); }
+    .kh-cert-btn-submit {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+    }
+    .kh-cert-btn-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(217,119,6,0.45); }
+
+    /* 결과 화면 */
+    .kh-cert-result { text-align: center; padding: 20px 0; }
+    .kh-cert-result-badge {
+      display: inline-block;
+      font-size: 22px; font-weight: 800;
+      padding: 10px 28px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+    .kh-cert-result-badge.pass {
+      background: linear-gradient(135deg, #ffd54f 0%, #ffb300 50%, #ff8f00 100%);
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(255, 143, 0, 0.45);
+    }
+    .kh-cert-result-badge.fail {
+      background: linear-gradient(135deg, #94a3b8, #64748b);
+      color: #fff;
+    }
+    .kh-cert-result-score {
+      font-size: 36px; font-weight: 900;
+      color: #0d47a1;
+      margin-bottom: 6px;
+    }
+    .kh-cert-result-score span { font-size: 18px; color: #6b8aa5; font-weight: 700; }
+    .kh-cert-result-detail { font-size: 14px; color: #475569; margin-bottom: 18px; }
+    .kh-cert-result-explain {
+      text-align: left;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .kh-cert-result-explain summary {
+      cursor: pointer; font-weight: 700; color: #2196f3;
+      list-style: none;
+    }
+    .kh-cert-result-explain summary::-webkit-details-marker { display: none; }
+    .kh-cert-explain-list { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; }
+    .kh-cert-explain-item {
+      padding: 12px; border-radius: 8px;
+      border-left: 3px solid;
+    }
+    .kh-cert-explain-item.correct { background: #f0fdf4; border-left-color: #22c55e; }
+    .kh-cert-explain-item.wrong { background: #fef2f2; border-left-color: #ef4444; }
+    .kh-cert-explain-q { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .kh-cert-explain-picked, .kh-cert-explain-correct { font-size: 12px; margin: 2px 0; }
+    .kh-cert-explain-correct { color: #15803d; font-weight: 600; }
+    .kh-cert-explain-text { font-size: 12px; color: #475569; margin-top: 6px; line-height: 1.5; }
+
+    @media (max-width: 600px) {
+      .kh-cert-exam-modal { max-height: 100vh; border-radius: 0; }
+      .kh-cert-exam-body { padding: 16px; }
+      .kh-cert-pag-dot { width: 24px; height: 24px; font-size: 10px; }
+    }
+
+    /* ─── 예비검정 안내·확인 팝업 ─── */
+    .kh-cert-popup-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15, 30, 60, 0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 1000500;  /* 시험 모달(1000400)보다도 위 — 가장 앞에 표시 */
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      animation: khCertPopupFadeIn 0.2s ease;
+    }
+    @keyframes khCertPopupFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .kh-cert-popup {
+      width: 100%; max-width: 420px;
+      background: #fff;
+      border-radius: 18px;
+      padding: 28px 26px 22px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(13, 71, 161, 0.35);
+      animation: khCertPopupPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border-top: 5px solid #2196f3;
+    }
+    .kh-cert-popup-gold { border-top-color: #ffb300; }
+    .kh-cert-popup-gray { border-top-color: #94a3b8; }
+    .kh-cert-popup-warn { border-top-color: #f57c00; }
+    .kh-cert-popup-warn .kh-cert-popup-title { color: #e65100; }
+    .kh-cert-popup-warn .kh-cert-popup-msg b { color: #e65100; }
+    @keyframes khCertPopupPop {
+      from { opacity: 0; transform: scale(0.85) translateY(20px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .kh-cert-popup-icon {
+      font-size: 56px;
+      line-height: 1;
+      margin-bottom: 14px;
+      animation: khCertPopupIconBob 2s ease-in-out infinite;
+    }
+    @keyframes khCertPopupIconBob {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-4px); }
+    }
+    .kh-cert-popup-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0d47a1;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    .kh-cert-popup-gold .kh-cert-popup-title { color: #8c5a00; }
+    .kh-cert-popup-msg {
+      font-size: 14px;
+      color: #475569;
+      line-height: 1.55;
+      margin: 0 0 18px;
+    }
+    .kh-cert-popup-msg b { color: #0d47a1; }
+    .kh-cert-popup-gold .kh-cert-popup-msg b { color: #c47200; }
+
+    /* 진행도 */
+    .kh-cert-popup-progress-wrap {
+      background: linear-gradient(135deg, #f0f7ff 0%, #e3f2fd 100%);
+      border: 1px solid rgba(33, 150, 243, 0.22);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin: 0 0 18px;
+      text-align: left;
+    }
+    .kh-cert-popup-progress-label {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; font-weight: 700; color: #0d47a1;
+      margin-bottom: 8px;
+    }
+    .kh-cert-popup-progress-label b { font-size: 16px; }
+    .kh-cert-popup-progress-bar {
+      height: 10px;
+      background: rgba(33, 150, 243, 0.18);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .kh-cert-popup-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4facfe 0%, #2196f3 50%, #0d47a1 100%);
+      border-radius: 999px;
+      transition: width 0.6s ease;
+      box-shadow: 0 0 8px rgba(33, 150, 243, 0.45);
+    }
+    .kh-cert-popup-remaining {
+      font-size: 12px;
+      font-weight: 600;
+      color: #2563eb;
+      text-align: center;
+    }
+    .kh-cert-popup-remaining b { font-size: 14px; color: #0d47a1; }
+
+    /* 버튼 */
+    .kh-cert-popup-close-btn {
+      width: 100%;
+      padding: 12px 0;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg, #4facfe 0%, #2196f3 50%, #0d47a1 100%);
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(33, 150, 243, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .kh-cert-popup-close-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(33, 150, 243, 0.45);
+    }
+    .kh-cert-popup-gold .kh-cert-popup-close-btn {
+      background: linear-gradient(135deg, #ffd54f 0%, #ffb300 50%, #ff8f00 100%);
+      box-shadow: 0 6px 16px rgba(255, 143, 0, 0.4);
+    }
+
+    .kh-cert-popup-actions {
+      display: flex; gap: 10px;
+    }
+    .kh-cert-popup-btn {
+      flex: 1;
+      padding: 12px 0;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px; font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .kh-cert-popup-btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+    }
+    .kh-cert-popup-btn-secondary:hover { background: #e2e8f0; }
+    .kh-cert-popup-btn-primary {
+      background: linear-gradient(135deg, #ffd54f 0%, #ffb300 50%, #ff8f00 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(255, 143, 0, 0.35);
+    }
+    .kh-cert-popup-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255, 143, 0, 0.45);
+    }
+    .kh-cert-popup-btn-warn {
+      background: linear-gradient(135deg, #ffb74d 0%, #f57c00 50%, #e65100 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(245, 124, 0, 0.4);
+    }
+    .kh-cert-popup-btn-warn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(245, 124, 0, 0.5);
+    }
     /* 강별 카드 그리드 */
     .kh-report-grid {
       display: grid;
@@ -34316,7 +34918,11 @@ ${content}
           <h2>📝 단원평가기록</h2>
           <div class="kh-report-sub" id="khExamHistorySub">시도별 시험지 보관함</div>
         </div>
-        <button class="kh-modal-close" type="button" onclick="closeKhExamHistoryModal()">×</button>
+        <div style="display:flex;gap:8px;">
+          <button onclick="khExamHistoryPrint()" style="background:#fff;color:#1f4d12;border:none;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;">🖨️ 인쇄</button>
+          <button onclick="khExamHistoryPdf(this)" style="background:#fff;color:#1f4d12;border:none;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;">📥 PDF</button>
+          <button class="kh-modal-close" type="button" onclick="closeKhExamHistoryModal()">×</button>
+        </div>
       </div>
       <div class="kh-report-body" id="khExamHistoryBody">
         <div style="padding:40px;text-align:center;color:#666;">불러오는 중…</div>
@@ -35182,11 +35788,19 @@ ${content}
         const advCards = KH_ADV_UNITS.map(u => {
           const ready = KH_ADV_READY_UNITS.includes(u.no);
           const canOpen = _khAdvIsBeta && ready;
-          const badge = canOpen
-            ? '<span class="kh-coming-badge" style="background:linear-gradient(135deg,#059669,#047857);">베타 열람</span>'
-            : '<span class="kh-coming-badge">준비 중</span>';
+          const advCode = `khadv_${u.no}`;
+          const advDone = canOpen && isKhUnitCompleted(advCode);
+          let badge = '';
+          let extraClass = '';
+          if (advDone) {
+            badge = '<span class="kh-done-badge">완료 ✓</span>';
+            extraClass = ' kh-completed';
+          } else if (!canOpen) {
+            badge = '<span class="kh-coming-badge">준비 중</span>';
+          }
+          // 베타 열람 배지는 표시하지 않음 (배지 없는 상태 = 학습 가능)
           return `
-          <div class="kh-unit-card kh-adv-card${canOpen ? ' kh-adv-open' : ' kh-coming'}" role="button" tabindex="0" data-kh-adv="${u.no}" data-kh-adv-path="./BRAINUP/korhistory/khadv_${u.no}.html" data-kh-adv-ready="${canOpen ? '1' : '0'}">
+          <div class="kh-unit-card kh-adv-card${canOpen ? ' kh-adv-open' : ' kh-coming'}${extraClass}" role="button" tabindex="0" data-kh-adv="${u.no}" data-kh-adv-path="./BRAINUP/korhistory/khadv_${u.no}.html" data-kh-adv-ready="${canOpen ? '1' : '0'}" data-kh-unit="${advCode}">
             ${badge}
             <div class="kh-unit-title">${u.title}</div>
             <div class="kh-unit-sub">${u.subs.join(' · ')}</div>
@@ -35203,7 +35817,52 @@ ${content}
           </div>
           ${advCards}
         `;
-        grid.innerHTML = unitCards + examCard + advSection;
+
+        // 🏛️ 한국사 예비검정시험 섹션 (5/4/3급 카드)
+        const certSection = `
+          <div class="kh-section-divider" id="khCertDivider">
+            <div class="kh-section-divider-line"></div>
+            <div class="kh-section-divider-label">
+              <span class="kh-section-icon">🏛️</span>
+              <span class="kh-section-title">한국사 예비검정시험 <span class="kh-section-sub">(32강 완료 후 응시 가능)</span></span>
+            </div>
+            <div class="kh-section-divider-line"></div>
+          </div>
+          <div class="kh-cert-grid" id="khCertGrid">
+            <div class="kh-cert-card" data-cert-level="5급">
+              <div class="kh-cert-badge">📜 5급</div>
+              <div class="kh-cert-title">한국사 예비검정 <b>5급</b></div>
+              <div class="kh-cert-sub">기본 20강 범위 · 사실 확인 + 시기 순서</div>
+              <div class="kh-cert-meta">20문항 · 25분 · 90점 합격</div>
+              <div class="kh-cert-status" data-status>응시 상태 확인 중…</div>
+            </div>
+            <div class="kh-cert-card" data-cert-level="4급">
+              <div class="kh-cert-badge">📘 4급</div>
+              <div class="kh-cert-title">한국사 예비검정 <b>4급</b></div>
+              <div class="kh-cert-sub">기본 12 + 심화 8강 · 4사건 정렬·인과 추론</div>
+              <div class="kh-cert-meta">20문항 · 25분 · 90점 합격</div>
+              <div class="kh-cert-status" data-status>응시 상태 확인 중…</div>
+            </div>
+            <div class="kh-cert-card" data-cert-level="3급">
+              <div class="kh-cert-badge">📕 3급</div>
+              <div class="kh-cert-title">한국사 예비검정 <b>3급</b></div>
+              <div class="kh-cert-sub">기본 8 + 심화 12강 · 5사건 정렬·사료 해석</div>
+              <div class="kh-cert-meta">20문항 · 25분 · 90점 합격</div>
+              <div class="kh-cert-status" data-status>응시 상태 확인 중…</div>
+            </div>
+          </div>
+        `;
+
+        grid.innerHTML = unitCards + examCard + advSection + certSection;
+        // 검정시험 카드 상태 비동기 로드 (학생의 32강 완료 + 합격 이력)
+        updateKhCertCards();
+        // 검정시험 카드 클릭
+        grid.querySelectorAll('.kh-cert-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const lv = card.dataset.certLevel;
+            if (typeof openKhCertExam === 'function') openKhCertExam(lv);
+          });
+        });
         // 단원 카드 클릭 → 학습 모달
         grid.querySelectorAll('.kh-unit-card').forEach(card => {
           const open = () => {
@@ -35483,6 +36142,453 @@ ${content}
 
       window.renderKhGrid = renderKhGrid;
 
+      // ─── 🏛️ 한국사 예비검정시험 — 카드 상태 갱신 ───
+      async function updateKhCertCards() {
+        try {
+          const stu = getKhCurrentStudent();
+          if (!stu) return;
+          const res = await fetch(`/api/kh-cert/my-status?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
+          const data = await res.json();
+          if (!data.ok) return;
+          const cards = document.querySelectorAll('#khCertGrid .kh-cert-card');
+          cards.forEach(card => {
+            const lv = card.dataset.certLevel;
+            const lvData = data.byLevel?.[lv] || { attempts: 0, bestScore: 0, passed: false, canTake: false, lockReason: 'units' };
+            const statusEl = card.querySelector('[data-status]');
+            card.classList.remove('kh-cert-locked', 'kh-cert-passed');
+            if (lvData.passed) {
+              card.classList.add('kh-cert-passed');
+              if (statusEl) statusEl.textContent = `🏆 합격 · 최고 ${lvData.bestScore}점 (${lvData.attempts}회 응시)`;
+            } else if (lvData.canTake) {
+              if (lvData.attempts > 0) {
+                if (statusEl) statusEl.textContent = `📚 재도전 · 최고 ${lvData.bestScore}점 (${lvData.attempts}회)`;
+              } else {
+                if (statusEl) statusEl.textContent = data.isBeta ? '🧪 베타 테스트 — 시작하기' : '✨ 응시 가능 — 시작하기';
+              }
+            } else {
+              card.classList.add('kh-cert-locked');
+              if (lvData.lockReason === 'units') {
+                if (statusEl) statusEl.textContent = `🔒 ${data.completedCount} / ${data.totalRequired}강 완료 시 응시 가능`;
+              } else {
+                const prev = lv === '4급' ? '5급' : '4급';
+                if (statusEl) statusEl.textContent = `🔒 ${prev} 합격 후 응시 가능`;
+              }
+            }
+          });
+        } catch (e) {
+          console.warn('[kh-cert] 카드 상태 갱신 실패:', e);
+        }
+      }
+      window.updateKhCertCards = updateKhCertCards;
+
+      // ─── 🏛️ 예비검정시험 — 안내 팝업 (잠금/에러) ───
+      function showKhCertPopup({ type, title, message, level, completedCount, totalRequired }) {
+        const existing = document.getElementById('khCertPopupOverlay');
+        if (existing) existing.remove();
+        const overlay = document.createElement('div');
+        overlay.id = 'khCertPopupOverlay';
+        overlay.className = 'kh-cert-popup-overlay';
+
+        let icon = '🏛️', accent = 'blue', bodyHtml = '';
+        if (type === 'locked') {
+          icon = '🔒';
+          accent = 'blue';
+          title = title || `${level} 응시 자격이 필요해요`;
+          const remaining = totalRequired - completedCount;
+          const pct = Math.round((completedCount / totalRequired) * 100);
+          bodyHtml = `
+            <p class="kh-cert-popup-msg">기본 한국사 20강 + 심화 한국사 12강을 모두 완료하면 응시할 수 있어요.</p>
+            <div class="kh-cert-popup-progress-wrap">
+              <div class="kh-cert-popup-progress-label">
+                <span>나의 학습 진행도</span>
+                <span><b>${completedCount}</b> / ${totalRequired}강 (${pct}%)</span>
+              </div>
+              <div class="kh-cert-popup-progress-bar">
+                <div class="kh-cert-popup-progress-fill" style="width: ${pct}%;"></div>
+              </div>
+              <div class="kh-cert-popup-remaining">앞으로 <b>${remaining}강</b> 더 학습하면 응시 가능해요 ✨</div>
+            </div>
+          `;
+        } else if (type === 'prev') {
+          icon = '🪜';
+          accent = 'blue';
+          title = `${arguments[0].prevLevel}을 먼저 합격해야 해요`;
+          bodyHtml = `
+            <p class="kh-cert-popup-msg">예비검정시험은 <b>5급 → 4급 → 3급</b> 순서로 응시할 수 있어요.<br>
+              아직 <b>${arguments[0].prevLevel}</b>에 합격하지 못해서<br>
+              <b>${level}</b>은 잠겨 있어요.</p>
+            <div class="kh-cert-popup-progress-wrap">
+              <div class="kh-cert-popup-remaining">먼저 <b>${arguments[0].prevLevel}</b>에서 90점 이상 합격하면 ${level}이 열려요 ✨</div>
+            </div>
+          `;
+        } else if (type === 'error') {
+          icon = '⚠️';
+          accent = 'gray';
+          bodyHtml = `<p class="kh-cert-popup-msg">${message || ''}</p>`;
+        } else {
+          bodyHtml = `<p class="kh-cert-popup-msg">${message || ''}</p>`;
+        }
+        overlay.innerHTML = `
+          <div class="kh-cert-popup kh-cert-popup-${accent}">
+            <div class="kh-cert-popup-icon">${icon}</div>
+            <div class="kh-cert-popup-title">${title || ''}</div>
+            ${bodyHtml}
+            <button type="button" class="kh-cert-popup-close-btn">확인</button>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+        const close = () => overlay.remove();
+        overlay.querySelector('.kh-cert-popup-close-btn').addEventListener('click', close);
+        overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+      }
+
+      function showKhCertConfirm(opt) {
+        const { type, level, bestScore, unansweredCount, totalCount } = opt;
+        return new Promise(resolve => {
+          const existing = document.getElementById('khCertPopupOverlay');
+          if (existing) existing.remove();
+          const overlay = document.createElement('div');
+          overlay.id = 'khCertPopupOverlay';
+          overlay.className = 'kh-cert-popup-overlay';
+
+          let html = '';
+          if (type === 'unanswered') {
+            const answered = totalCount - unansweredCount;
+            const pct = Math.round((answered / totalCount) * 100);
+            html = `
+              <div class="kh-cert-popup kh-cert-popup-warn">
+                <div class="kh-cert-popup-icon">📝</div>
+                <div class="kh-cert-popup-title">아직 풀지 않은 문항이 있어요</div>
+                <p class="kh-cert-popup-msg">총 ${totalCount}문항 중<br><b>${unansweredCount}문항</b>이 비어 있어요.<br>지금 제출할까요?</p>
+                <div class="kh-cert-popup-progress-wrap" style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-color:#ffb74d;">
+                  <div class="kh-cert-popup-progress-label">
+                    <span>풀이 진행도</span>
+                    <span><b>${answered}</b> / ${totalCount}문항 (${pct}%)</span>
+                  </div>
+                  <div class="kh-cert-popup-progress-bar" style="background:rgba(245,124,0,0.2);">
+                    <div class="kh-cert-popup-progress-fill" style="width:${pct}%;background:linear-gradient(90deg,#ffb74d,#f57c00);box-shadow:0 0 8px rgba(245,124,0,0.45);"></div>
+                  </div>
+                  <div class="kh-cert-popup-remaining" style="color:#e65100;">미응답 문항은 <b>오답으로 처리</b>돼요</div>
+                </div>
+                <div class="kh-cert-popup-actions">
+                  <button type="button" class="kh-cert-popup-btn kh-cert-popup-btn-secondary" data-action="cancel">계속 풀기</button>
+                  <button type="button" class="kh-cert-popup-btn kh-cert-popup-btn-warn" data-action="ok">그래도 제출</button>
+                </div>
+              </div>
+            `;
+          } else {
+            html = `
+              <div class="kh-cert-popup kh-cert-popup-gold">
+                <div class="kh-cert-popup-icon">🏆</div>
+                <div class="kh-cert-popup-title">이미 <b>${level}</b>에 합격했어요!</div>
+                <p class="kh-cert-popup-msg">최고 <b>${bestScore}점</b>으로 합격했어요.<br>다시 응시해서 더 좋은 점수에 도전해 볼까요?</p>
+                <div class="kh-cert-popup-actions">
+                  <button type="button" class="kh-cert-popup-btn kh-cert-popup-btn-secondary" data-action="cancel">취소</button>
+                  <button type="button" class="kh-cert-popup-btn kh-cert-popup-btn-primary" data-action="ok">다시 응시</button>
+                </div>
+              </div>
+            `;
+          }
+          overlay.innerHTML = html;
+          document.body.appendChild(overlay);
+          const close = (ok) => { overlay.remove(); resolve(ok); };
+          overlay.querySelector('[data-action="cancel"]').addEventListener('click', () => close(false));
+          overlay.querySelector('[data-action="ok"]').addEventListener('click', () => close(true));
+          overlay.addEventListener('click', e => { if (e.target === overlay) close(false); });
+        });
+      }
+
+      // ─── 🏛️ 예비검정시험 응시 시작 ───
+      async function openKhCertExam(level) {
+        try {
+          const stu = getKhCurrentStudent();
+          if (!stu) {
+            showKhCertPopup({ type: 'error', title: '로그인 필요', message: '학생 정보가 없습니다.<br>다시 로그인해 주세요.' });
+            return;
+          }
+          // 응시 자격 재확인 (잠금 우회 방지)
+          const statusRes = await fetch(`/api/kh-cert/my-status?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
+          const statusData = await statusRes.json();
+          if (!statusData.ok) {
+            showKhCertPopup({ type: 'error', title: '상태 확인 실패', message: '잠시 후 다시 시도해 주세요.' });
+            return;
+          }
+          const lvDataPre = statusData.byLevel?.[level];
+          // 잠금 분기 (베타 테스터는 서버가 canTake=true로 우회)
+          if (lvDataPre && !lvDataPre.canTake) {
+            if (lvDataPre.lockReason === 'prev') {
+              const prev = level === '4급' ? '5급' : '4급';
+              showKhCertPopup({ type: 'prev', level, prevLevel: prev });
+            } else {
+              showKhCertPopup({
+                type: 'locked',
+                level,
+                completedCount: statusData.completedCount,
+                totalRequired: statusData.totalRequired
+              });
+            }
+            return;
+          }
+          // 이미 합격한 시험은 재응시 확인
+          const lvData = statusData.byLevel?.[level];
+          if (lvData?.passed) {
+            const ok = await showKhCertConfirm({
+              type: 'retry',
+              level,
+              bestScore: lvData.bestScore
+            });
+            if (!ok) return;
+          }
+          // 문항 가져오기
+          const qRes = await fetch(`/api/kh-cert/questions?level=${encodeURIComponent(level)}`);
+          const qData = await qRes.json();
+          if (!qData.ok) {
+            showKhCertPopup({ type: 'error', title: '문항 불러오기 실패', message: qData.message || '잠시 후 다시 시도해 주세요.' });
+            return;
+          }
+          renderKhCertExamModal(qData, stu);
+        } catch (e) {
+          console.error('[kh-cert] 응시 시작 오류:', e);
+          alert('네트워크 오류가 발생했어요. 다시 시도해 주세요.');
+        }
+      }
+      window.openKhCertExam = openKhCertExam;
+
+      // ─── 🏛️ 예비검정시험 모달 렌더링 ───
+      function renderKhCertExamModal(pack, stu) {
+        // 기존 모달 제거
+        let existing = document.getElementById('khCertExamOverlay');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'khCertExamOverlay';
+        overlay.className = 'kh-cert-exam-overlay';
+        const startedAt = new Date();
+        const totalSeconds = pack.duration_min * 60;
+
+        overlay.innerHTML = `
+          <div class="kh-cert-exam-modal">
+            <div class="kh-cert-exam-header">
+              <div class="kh-cert-exam-title">🏛️ 한국사 예비검정 <b>${pack.level}</b></div>
+              <div class="kh-cert-exam-meta">
+                <span id="khCertProgress">1 / ${pack.total}</span>
+                <span class="kh-cert-exam-timer" id="khCertTimer">${pack.duration_min}:00</span>
+              </div>
+            </div>
+            <div class="kh-cert-exam-body" id="khCertExamBody"></div>
+            <div class="kh-cert-exam-footer">
+              <button type="button" class="kh-cert-btn kh-cert-btn-secondary" id="khCertPrevBtn" disabled>← 이전</button>
+              <div class="kh-cert-pagination" id="khCertPagination"></div>
+              <button type="button" class="kh-cert-btn kh-cert-btn-primary" id="khCertNextBtn">다음 →</button>
+              <button type="button" class="kh-cert-btn kh-cert-btn-submit" id="khCertSubmitBtn" style="display:none;">제출하기</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // 상태
+        const state = {
+          pack, stu,
+          idx: 0,
+          answers: new Array(pack.questions.length).fill(null),
+          startedAt,
+          timerInterval: null,
+          remainingSec: totalSeconds,
+          submitted: false
+        };
+
+        // 페이지네이션 (1~20 dot)
+        const pagDiv = document.getElementById('khCertPagination');
+        pagDiv.innerHTML = pack.questions.map((_, i) =>
+          `<button type="button" class="kh-cert-pag-dot" data-pidx="${i}">${i+1}</button>`
+        ).join('');
+        pagDiv.querySelectorAll('.kh-cert-pag-dot').forEach(btn => {
+          btn.addEventListener('click', () => { state.idx = parseInt(btn.dataset.pidx); showQuestion(state); });
+        });
+
+        // 타이머
+        state.timerInterval = setInterval(() => {
+          state.remainingSec--;
+          const m = Math.floor(state.remainingSec / 60);
+          const s = state.remainingSec % 60;
+          document.getElementById('khCertTimer').textContent = `${m}:${String(s).padStart(2,'0')}`;
+          if (state.remainingSec <= 60) {
+            document.getElementById('khCertTimer').classList.add('kh-cert-timer-warn');
+          }
+          if (state.remainingSec <= 0) {
+            clearInterval(state.timerInterval);
+            submitKhCertExam(state, true);
+          }
+        }, 1000);
+
+        // 이전/다음/제출 핸들러
+        document.getElementById('khCertPrevBtn').addEventListener('click', () => {
+          if (state.idx > 0) { state.idx--; showQuestion(state); }
+        });
+        document.getElementById('khCertNextBtn').addEventListener('click', () => {
+          if (state.idx < state.pack.questions.length - 1) { state.idx++; showQuestion(state); }
+        });
+        document.getElementById('khCertSubmitBtn').addEventListener('click', async () => {
+          const unanswered = state.answers.filter(a => a === null).length;
+          if (unanswered > 0) {
+            const ok = await showKhCertConfirm({
+              type: 'unanswered',
+              unansweredCount: unanswered,
+              totalCount: state.pack.total
+            });
+            if (!ok) return;
+          }
+          submitKhCertExam(state, false);
+        });
+
+        // 첫 문항 표시
+        showQuestion(state);
+      }
+
+      // 🏛️ 보기 박스 렌더 (events / quote / note) — 배열도 지원
+      function renderKhCertReference(ref) {
+        if (!ref) return '';
+        if (Array.isArray(ref)) return ref.map(r => renderKhCertReference(r)).join('');
+        if (!ref.kind) return '';
+        if (ref.kind === 'events') {
+          const rows = (ref.items || []).map(it =>
+            `<div class="kh-cert-ref-event"><span class="kh-cert-ref-label">${escKh(it.label)}</span><span class="kh-cert-ref-text">${escKh(it.text)}</span></div>`
+          ).join('');
+          return `<div class="kh-cert-ref kh-cert-ref-events">
+            <div class="kh-cert-ref-head">📋 ${ref.items.length}개 사건</div>
+            ${rows}
+          </div>`;
+        }
+        if (ref.kind === 'quote') {
+          const intro = ref.intro ? `<div class="kh-cert-ref-intro">${escKh(ref.intro)}</div>` : '';
+          const title = ref.title ? `<div class="kh-cert-ref-title">📜 ${escKh(ref.title)}</div>` : '';
+          return `<div class="kh-cert-ref kh-cert-ref-quote">
+            ${intro}${title}
+            <blockquote class="kh-cert-ref-content">${escKh(ref.content).replace(/\n/g, '<br>')}</blockquote>
+          </div>`;
+        }
+        if (ref.kind === 'note') {
+          return `<div class="kh-cert-ref kh-cert-ref-note">💡 ${escKh(ref.content).replace(/\n/g, '<br>')}</div>`;
+        }
+        return '';
+      }
+
+      function showQuestion(state) {
+        const q = state.pack.questions[state.idx];
+        const body = document.getElementById('khCertExamBody');
+        const picked = state.answers[state.idx];
+        const refHtml = renderKhCertReference(q.reference);
+        body.innerHTML = `
+          <div class="kh-cert-q-num">문항 ${q.no}</div>
+          <div class="kh-cert-q-text">${escKh(q.question).replace(/\n/g, '<br>')}</div>
+          ${refHtml}
+          <div class="kh-cert-q-options">
+            ${q.options.map((opt, i) => `
+              <label class="kh-cert-q-opt ${picked === (i+1) ? 'selected' : ''}">
+                <input type="radio" name="khCertOpt" value="${i+1}" ${picked === (i+1) ? 'checked' : ''}>
+                <span class="kh-cert-q-opt-num">${'①②③④'[i]}</span>
+                <span class="kh-cert-q-opt-text">${escKh(opt)}</span>
+              </label>
+            `).join('')}
+          </div>
+        `;
+        body.querySelectorAll('input[name="khCertOpt"]').forEach(input => {
+          input.addEventListener('change', () => {
+            state.answers[state.idx] = parseInt(input.value);
+            body.querySelectorAll('.kh-cert-q-opt').forEach((el, i) => {
+              el.classList.toggle('selected', i === parseInt(input.value) - 1);
+            });
+            updateKhCertPagination(state);
+          });
+        });
+        // 진행 표시 갱신
+        document.getElementById('khCertProgress').textContent = `${state.idx + 1} / ${state.pack.total}`;
+        document.getElementById('khCertPrevBtn').disabled = state.idx === 0;
+        const isLast = state.idx === state.pack.total - 1;
+        document.getElementById('khCertNextBtn').style.display = isLast ? 'none' : '';
+        document.getElementById('khCertSubmitBtn').style.display = isLast ? '' : 'none';
+        updateKhCertPagination(state);
+      }
+
+      function updateKhCertPagination(state) {
+        document.querySelectorAll('#khCertPagination .kh-cert-pag-dot').forEach((btn, i) => {
+          btn.classList.toggle('answered', state.answers[i] !== null);
+          btn.classList.toggle('current', i === state.idx);
+        });
+      }
+
+      async function submitKhCertExam(state, autoSubmitted) {
+        if (state.submitted) return;
+        state.submitted = true;
+        clearInterval(state.timerInterval);
+        try {
+          const durationSeconds = Math.round((Date.now() - state.startedAt.getTime()) / 1000);
+          const res = await fetch('/api/kh-cert/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              grade: state.stu.grade,
+              name: state.stu.name,
+              phone: state.stu.phone || '',
+              level: state.pack.level,
+              answers: state.answers,
+              startedAt: state.startedAt.toISOString(),
+              durationSeconds
+            })
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            alert('제출 실패: ' + (data.message || '서버 오류'));
+            state.submitted = false;
+            return;
+          }
+          renderKhCertResult(data, state.pack.level, autoSubmitted);
+          // 카드 상태 갱신
+          if (typeof updateKhCertCards === 'function') updateKhCertCards();
+        } catch (e) {
+          console.error('[kh-cert] 제출 오류:', e);
+          alert('제출 오류가 발생했어요.');
+          state.submitted = false;
+        }
+      }
+
+      // 결과 화면 렌더링
+      function renderKhCertResult(data, level, autoSubmitted) {
+        const body = document.getElementById('khCertExamBody');
+        const footer = document.querySelector('#khCertExamOverlay .kh-cert-exam-footer');
+        const header = document.querySelector('#khCertExamOverlay .kh-cert-exam-header');
+        if (header) header.querySelector('.kh-cert-exam-meta').style.display = 'none';
+        body.innerHTML = `
+          <div class="kh-cert-result">
+            <div class="kh-cert-result-badge ${data.passed ? 'pass' : 'fail'}">
+              ${data.passed ? '🏆 합격' : '📚 다시 도전'}
+            </div>
+            <div class="kh-cert-result-score">${data.score100}점 <span>/ 100점</span></div>
+            <div class="kh-cert-result-detail">
+              정답 ${data.correctCount} / ${data.total}문항 · 합격선 ${data.passScore}점
+              ${autoSubmitted ? '<br><span style="color:#dc2626;">⏰ 시간 종료로 자동 제출되었어요</span>' : ''}
+            </div>
+            <details class="kh-cert-result-explain">
+              <summary>📖 문항별 해설 보기</summary>
+              <div class="kh-cert-explain-list">
+                ${data.questions.map(q => `
+                  <div class="kh-cert-explain-item ${q.isCorrect ? 'correct' : 'wrong'}">
+                    <div class="kh-cert-explain-q"><b>Q${q.no}.</b> ${escKh(q.question).replace(/\n/g,'<br>')}</div>
+                    ${renderKhCertReference(q.reference)}
+                    <div class="kh-cert-explain-picked">내 답: ${q.pickedAnswer ? '①②③④'[q.pickedAnswer-1] + ' ' + escKh(q.options[q.pickedAnswer-1] || '') : '미응답'}</div>
+                    <div class="kh-cert-explain-correct">정답: ${'①②③④'[q.correctAnswer-1]} ${escKh(q.options[q.correctAnswer-1])}</div>
+                    <div class="kh-cert-explain-text">${escKh(q.explanation).replace(/\n/g,'<br>')}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </details>
+          </div>
+        `;
+        footer.innerHTML = `
+          <button type="button" class="kh-cert-btn kh-cert-btn-primary" onclick="document.getElementById('khCertExamOverlay').remove()">닫기</button>
+        `;
+      }
+
       // 🔁 한국사(kh_*) 완료 상태 서버 동기화 — KhSubmission.passage.completed=true 단원을 localStorage에 반영
       async function syncKhCompletionFromServer() {
         try {
@@ -35551,7 +36657,14 @@ ${content}
         kh_13: '세종과 조선의 전성기',  kh_14: '사림과 붕당 정치',
         kh_15: '임진왜란과 병자호란',   kh_16: '조선 후기의 변화',
         kh_17: '개항과 근대화의 시작',  kh_18: '대한제국과 국권 침탈',
-        kh_19: '일제강점기와 독립운동', kh_20: '광복과 대한민국의 성장'
+        kh_19: '일제강점기와 독립운동', kh_20: '광복과 대한민국의 성장',
+        // 심화 한국사 (1~12강)
+        khadv_01: '골품제와 고대 정치 제도',         khadv_02: '삼국·통일신라 문화와 불교 미술',
+        khadv_03: '고려의 정치 제도',                khadv_04: '고려의 경제와 신분 사회',
+        khadv_05: '조선의 정치 변동',                khadv_06: '조선의 토지·세제',
+        khadv_07: '조선의 신분·향촌 사회 변화',      khadv_08: '성리학·실학·서학·동학',
+        khadv_09: '개항기 조약과 개혁',              khadv_10: '일제강점기 통치 3단계',
+        khadv_11: '독립운동의 전개',                 khadv_12: '현대 대한민국의 형성'
       };
 
       function getKhCurrentStudent() {
@@ -35615,7 +36728,9 @@ ${content}
         // submissions: [{unit, passage, vocab, creative}]
         const byUnit = {};
         submissions.forEach(s => { byUnit[s.unit] = s; });
-        const allUnits = Array.from({length: 20}, (_, i) => `kh_${String(i+1).padStart(2,'0')}`);
+        const basicUnits = Array.from({length: 20}, (_, i) => `kh_${String(i+1).padStart(2,'0')}`);
+        const advUnits   = Array.from({length: 12}, (_, i) => `khadv_${String(i+1).padStart(2,'0')}`);
+        const allUnits = [...basicUnits, ...advUnits];
 
         // ---- 커버 ----
         const now = new Date();
@@ -35631,7 +36746,7 @@ ${content}
         // ---- 통계 카드 ----
         const statsHtml = `
           <div class="kh-stats-row">
-            <div class="kh-stat-card"><div class="label">완료 강의</div><div class="value">${stats.total || 0}<span class="unit"> / 20</span></div></div>
+            <div class="kh-stat-card"><div class="label">완료 강의</div><div class="value">${stats.total || 0}<span class="unit"> / 32</span></div></div>
             <div class="kh-stat-card"><div class="label">본문 평균</div><div class="value">${stats.passageAvg !== null ? stats.passageAvg : '-'}<span class="unit"> / 10</span></div></div>
             <div class="kh-stat-card"><div class="label">어휘 정답률</div><div class="value">${stats.vocabAvgRate !== null ? stats.vocabAvgRate : '-'}<span class="unit"> %</span></div></div>
             <div class="kh-stat-card"><div class="label">창의활동</div><div class="value">${stats.creativeDone || 0}<span class="unit"> 회 제출</span></div></div>
@@ -35691,9 +36806,13 @@ ${content}
             </div>`;
 
           const hasAny = passDone || vocDone || creDone;
+          // 심화 단원이면 라벨 앞에 "심화" + 인덱스 재계산
+          const isAdv = u.startsWith('khadv_');
+          const num = isAdv ? (i - basicUnits.length + 1) : (i + 1);
+          const prefix = isAdv ? '심화 ' : '';
           return `
-            <div class="kh-report-card ${hasAny ? 'kh-has-record' : ''}" onclick="openKhReportDetail('${u}')">
-              <div class="card-title">${i+1}강. ${escKh(title)}</div>
+            <div class="kh-report-card ${hasAny ? 'kh-has-record' : ''} ${isAdv ? 'kh-adv-card' : ''}" onclick="openKhReportDetail('${u}')">
+              <div class="card-title">${prefix}${num}강. ${escKh(title)}</div>
               <div class="card-rows">
                 ${row(passDone, '본문', passValue)}
                 ${row(vocDone,  '어휘', vocValue)}
@@ -35701,8 +36820,15 @@ ${content}
               </div>
             </div>
           `;
-        }).join('');
-        const grid = `<div class="kh-report-grid">${cards}</div>`;
+        });
+        const basicCards = cards.slice(0, basicUnits.length).join('');
+        const advCards   = cards.slice(basicUnits.length).join('');
+        const grid = `
+          <div class="kh-section-header">📘 기본 한국사 <span class="kh-section-count">${basicUnits.length}강</span></div>
+          <div class="kh-report-grid">${basicCards}</div>
+          <div class="kh-section-header" style="margin-top:24px;">🎓 심화 한국사 <span class="kh-section-count">${advUnits.length}강</span></div>
+          <div class="kh-report-grid">${advCards}</div>
+        `;
 
         const actions = `
           <div class="kh-report-actions" id="khReportActions">
@@ -35742,13 +36868,24 @@ ${content}
           gridLines += `<line x1="${PAD_L}" y1="${y}" x2="${W-PAD_R}" y2="${y}" stroke="#e8efe2" stroke-width="1"/>`;
           gridLines += `<text x="${PAD_L-6}" y="${y+4}" text-anchor="end" font-size="10" fill="#7a8c6f">${10 - i*2}</text>`;
         }
-        // X축 라벨 (5개씩)
+        // X축 라벨 (기본 5강 단위, 심화 진입점 표시)
         let xLabels = '';
+        const BASIC_N = 20;
         points.forEach((p, i) => {
-          if ((i+1) % 5 === 0 || i === 0) {
-            xLabels += `<text x="${p.x}" y="${H-10}" text-anchor="middle" font-size="10" fill="#5a7c4a">${p.label}강</text>`;
+          const isAdvStart = i === BASIC_N;
+          if (i === 0 || (i + 1) % 5 === 0 || isAdvStart) {
+            const isAdv = i >= BASIC_N;
+            const labelNum = isAdv ? (i - BASIC_N + 1) : (i + 1);
+            const prefix = isAdv ? '심화' : '';
+            const color = isAdv ? '#9b6b2e' : '#5a7c4a';
+            xLabels += `<text x="${p.x}" y="${H-10}" text-anchor="middle" font-size="10" fill="${color}">${prefix}${labelNum}강</text>`;
           }
         });
+        // 기본/심화 구분 세로 점선
+        const divX = points[BASIC_N] ? points[BASIC_N].x : null;
+        const divider = divX
+          ? `<line x1="${divX}" y1="${PAD_T}" x2="${divX}" y2="${H-PAD_B}" stroke="#d4b88a" stroke-width="1" stroke-dasharray="4 4"/>`
+          : '';
 
         // 라인 + 점
         const valid = points.filter(p => p.y !== null);
@@ -35762,7 +36899,7 @@ ${content}
           : `<circle cx="${p.x}" cy="${p.y}" r="4" fill="#2e9b3f" stroke="#fff" stroke-width="1.5"/>`
         ).join('');
 
-        return gridLines + line + dots + xLabels;
+        return gridLines + divider + line + dots + xLabels;
       }
 
       window.openKhReportDetail = function (unit) {
@@ -35902,10 +37039,13 @@ ${content}
         if (!stu) { body.innerHTML = '<div style="padding:40px;text-align:center;color:#c0392b;">학생 정보가 없습니다.</div>'; return; }
         sub.textContent = `${stu.grade} ${stu.name} 학생 — 시도별 시험지`;
         try {
-          const res = await fetch(`/api/kh/exam/my-results?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
-          const data = await res.json();
-          if (!data.ok) { body.innerHTML = `<div style="padding:40px;text-align:center;color:#c0392b;">${escKh(data.message || '실패')}</div>`; return; }
-          renderKhExamHistory(body, data.results || []);
+          // 두 종류 시험 기록을 동시에 가져옴
+          const [resExam, resCert] = await Promise.all([
+            fetch(`/api/kh/exam/my-results?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`).then(r => r.json()),
+            fetch(`/api/kh-cert/my-history?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`).then(r => r.json())
+          ]);
+          if (!resExam.ok) { body.innerHTML = `<div style="padding:40px;text-align:center;color:#c0392b;">${escKh(resExam.message || '실패')}</div>`; return; }
+          renderKhExamHistory(body, resExam.results || [], resCert.ok ? (resCert.results || []) : []);
         } catch (err) {
           console.error(err);
           body.innerHTML = '<div style="padding:40px;text-align:center;color:#c0392b;">네트워크 오류</div>';
@@ -35917,9 +37057,11 @@ ${content}
         if (ov && e.target === ov) closeKhExamHistoryModal();
       });
 
-      function renderKhExamHistory(body, results) {
-        if (!results.length) {
-          body.innerHTML = '<div style="padding:60px;text-align:center;color:#999;">아직 단원평가 기록이 없어요.<br>한국사 단원 페이지 맨 아래의 "단원평가" 카드에서 응시할 수 있어요.</div>';
+      function renderKhExamHistory(body, results, certResults) {
+        certResults = certResults || [];
+        // 단원평가도 없고 검정시험도 없으면 안내
+        if (!results.length && !certResults.length) {
+          body.innerHTML = '<div style="padding:60px;text-align:center;color:#999;">아직 시험 기록이 없어요.<br>한국사 단원 페이지 맨 아래의 "단원평가" 또는 "예비검정시험"에서 응시할 수 있어요.</div>';
           return;
         }
         // 통계 카드
@@ -35955,18 +37097,454 @@ ${content}
           </tr>`;
         }).join('');
 
-        body.innerHTML = statsHtml + `<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #b6daa1;">
-          <thead><tr style="background:#eaf6e3;">
-            <th style="padding:10px 8px;text-align:left;font-size:12px;color:#1f4d12;width:50px;">#</th>
-            <th style="padding:10px 8px;text-align:left;font-size:12px;color:#1f4d12;">시도일시</th>
-            <th style="padding:10px 8px;text-align:center;font-size:12px;color:#1f4d12;width:80px;">점수</th>
-            <th style="padding:10px 8px;text-align:left;font-size:12px;color:#1f4d12;width:80px;">정답</th>
-            <th style="padding:10px 8px;text-align:left;font-size:12px;color:#1f4d12;width:90px;">결과</th>
-            <th style="padding:10px 8px;text-align:right;font-size:12px;color:#1f4d12;width:120px;">시험지</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>`;
+        // 단원평가 섹션 — 결과 없으면 안내
+        const examTable = results.length
+          ? statsHtml + `<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #b6daa1;">
+              <thead><tr style="background:#eaf6e3;">
+                <th style="padding:10px 8px;text-align:left;font-size:12px;color:#1f4d12;width:50px;">#</th>
+                <th style="padding:10px 8px;text-align:left;font-size:12px;color:#1f4d12;">시도일시</th>
+                <th style="padding:10px 8px;text-align:center;font-size:12px;color:#1f4d12;width:80px;">점수</th>
+                <th style="padding:10px 8px;text-align:left;font-size:12px;color:#1f4d12;width:80px;">정답</th>
+                <th style="padding:10px 8px;text-align:left;font-size:12px;color:#1f4d12;width:90px;">결과</th>
+                <th style="padding:10px 8px;text-align:right;font-size:12px;color:#1f4d12;width:120px;">시험지</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>`
+          : '<div style="padding:24px;text-align:center;color:#9ca3af;background:#f9fafb;border-radius:10px;border:1px dashed #e5e7eb;">아직 단원평가 기록이 없어요.</div>';
+
+        // 🏛️ 예비검정시험 섹션 — 5/4/3급 응시 기록
+        const certSection = renderKhCertHistorySection(certResults);
+
+        body.innerHTML = `
+          <div style="font-size:14px;font-weight:800;color:#1f4d12;margin-bottom:10px;padding-left:4px;">📝 단원평가 기록</div>
+          ${examTable}
+          <div style="height:24px;"></div>
+          <div style="font-size:14px;font-weight:800;color:#0d47a1;margin-bottom:10px;padding-left:4px;">🏛️ 예비검정시험 기록 <span style="font-size:11px;font-weight:600;color:#6b8aa5;">(5급 / 4급 / 3급)</span></div>
+          ${certSection}
+        `;
       }
+
+      // 🏛️ 예비검정시험 응시 이력 섹션 렌더
+      function renderKhCertHistorySection(certResults) {
+        if (!certResults.length) {
+          return '<div style="padding:24px;text-align:center;color:#9ca3af;background:#f7fbff;border-radius:10px;border:1px dashed #b6daed;">아직 예비검정시험 응시 기록이 없어요.</div>';
+        }
+        // 급수별 그룹핑 (5급 → 4급 → 3급 순)
+        const LEVEL_ORDER = ['5급', '4급', '3급'];
+        const LEVEL_META = {
+          '5급': { color: '#0d47a1', bg: '#e3f2fd', emoji: '📜', desc: '기본 20강' },
+          '4급': { color: '#0d47a1', bg: '#e3f2fd', emoji: '📘', desc: '기본 12 + 심화 8강' },
+          '3급': { color: '#8c5a00', bg: '#fff3e0', emoji: '📕', desc: '기본 8 + 심화 12강' }
+        };
+        const byLevel = { '5급': [], '4급': [], '3급': [] };
+        certResults.forEach(r => { if (byLevel[r.level]) byLevel[r.level].push(r); });
+
+        let sections = '';
+        for (const lv of LEVEL_ORDER) {
+          const list = byLevel[lv];
+          if (!list.length) continue;
+          const meta = LEVEL_META[lv];
+          const passed = list.filter(r => r.passed).length;
+          const best = Math.max(...list.map(r => r.score100));
+
+          const rows = list.map((r, i) => {
+            const dt = new Date(r.submittedAt);
+            const dtStr = dt.toLocaleDateString('ko-KR') + ' ' + dt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+            const badge = r.passed
+              ? `<span style="background:linear-gradient(135deg,#ffd54f,#ff8f00);color:#fff;padding:3px 10px;border-radius:11px;font-size:11px;font-weight:800;white-space:nowrap;">🏆 합격</span>`
+              : `<span style="background:linear-gradient(135deg,#94a3b8,#64748b);color:#fff;padding:3px 10px;border-radius:11px;font-size:11px;font-weight:800;white-space:nowrap;">📚 재도전</span>`;
+            return `<tr style="border-bottom:1px solid #e2e8f0;">
+              <td style="padding:10px 8px;color:#888;font-weight:600;">${list.length - i}</td>
+              <td style="padding:10px 8px;font-size:13px;color:#555;">${dtStr}</td>
+              <td style="padding:10px 8px;text-align:center;font-weight:800;color:${r.passed?'#c47200':'#64748b'};font-size:18px;">${r.score100}점</td>
+              <td style="padding:10px 8px;color:#666;font-size:13px;">${r.correctCount}/${r.total}</td>
+              <td style="padding:10px 8px;">${badge}</td>
+              <td style="padding:10px 8px;text-align:right;">
+                <button onclick="openKhCertViewer('${r._id}')" style="background:linear-gradient(135deg,#4facfe,#2196f3,#0d47a1);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">🧾 시험지 보기</button>
+              </td>
+            </tr>`;
+          }).join('');
+
+          sections += `
+            <div style="margin-bottom:18px;background:#fff;border:1px solid ${meta.bg === '#fff3e0' ? '#ffd699' : '#b6daed'};border-radius:12px;overflow:hidden;">
+              <div style="padding:12px 16px;background:${meta.bg};display:flex;align-items:center;gap:10px;">
+                <span style="font-size:16px;">${meta.emoji}</span>
+                <span style="font-weight:800;color:${meta.color};font-size:14px;">한국사 예비검정 ${lv}</span>
+                <span style="font-size:11px;color:#6b8aa5;">· ${meta.desc}</span>
+                <span style="margin-left:auto;font-size:11px;font-weight:700;color:${meta.color};">
+                  ${list.length}회 응시 · 합격 ${passed}회 · 최고 ${best}점
+                </span>
+              </div>
+              <table style="width:100%;border-collapse:collapse;">
+                <thead><tr style="background:#fafafa;">
+                  <th style="padding:8px;text-align:left;font-size:11px;color:#666;width:42px;">#</th>
+                  <th style="padding:8px;text-align:left;font-size:11px;color:#666;">시도일시</th>
+                  <th style="padding:8px;text-align:center;font-size:11px;color:#666;width:72px;">점수</th>
+                  <th style="padding:8px;text-align:left;font-size:11px;color:#666;width:62px;">정답</th>
+                  <th style="padding:8px;text-align:left;font-size:11px;color:#666;width:108px;">결과</th>
+                  <th style="padding:8px;text-align:right;font-size:11px;color:#666;width:120px;">시험지</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>`;
+        }
+        return sections;
+      }
+
+      // 🏛️ 예비검정 시험지 보기 (해설 포함)
+      window.openKhCertViewer = async function (id) {
+        // 기존 예비검정 viewer overlay 사용 (없으면 생성)
+        let ov = document.getElementById('khCertViewerOverlay');
+        if (!ov) {
+          ov = document.createElement('div');
+          ov.id = 'khCertViewerOverlay';
+          ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,30,60,0.6);backdrop-filter:blur(4px);z-index:1000550;display:flex;align-items:center;justify-content:center;padding:20px;';
+          ov.innerHTML = `<div style="background:#fff;width:100%;max-width:720px;max-height:92vh;border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);">
+            <div style="padding:14px 20px;background:linear-gradient(135deg,#4facfe,#2196f3,#0d47a1);color:#fff;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:8px;">
+              <div id="khCertViewerTitle" style="font-size:16px;font-weight:800;flex:1;">🏛️ 예비검정 시험지</div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <button onclick="khCertViewerPrint()" style="background:#fff;color:#0d47a1;border:none;padding:6px 12px;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;">🖨️ 인쇄</button>
+                <button onclick="khCertViewerPdf(this)" style="background:#fff;color:#0d47a1;border:none;padding:6px 12px;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;">📥 PDF</button>
+                <button onclick="document.getElementById('khCertViewerOverlay').remove()" style="background:rgba(255,255,255,0.18);color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;">✕</button>
+              </div>
+            </div>
+            <div id="khCertViewerBody" style="flex:1;padding:20px 24px;overflow-y:auto;"></div>
+          </div>`;
+          ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+          document.body.appendChild(ov);
+        } else {
+          document.getElementById('khCertViewerBody').innerHTML = '<div style="padding:40px;text-align:center;color:#666;">불러오는 중…</div>';
+          ov.style.display = 'flex';
+        }
+        try {
+          const res = await fetch(`/api/kh-cert/detail?id=${encodeURIComponent(id)}`);
+          const data = await res.json();
+          if (!data.ok) {
+            document.getElementById('khCertViewerBody').innerHTML = `<div style="padding:40px;text-align:center;color:#c0392b;">${escKh(data.message || '실패')}</div>`;
+            return;
+          }
+          renderKhCertViewer(data.result);
+        } catch (e) {
+          console.error(e);
+          document.getElementById('khCertViewerBody').innerHTML = '<div style="padding:40px;text-align:center;color:#c0392b;">네트워크 오류</div>';
+        }
+      };
+
+      // 예비검정 유형 메타
+      const KH_CERT_TYPE_META = {
+        mc:     { label: '사실 확인', emoji: '✅', color: '#2196f3' },
+        chron:  { label: '시기 순서', emoji: '⏳', color: '#7c3aed' },
+        cause:  { label: '인과·추론', emoji: '🧠', color: '#ea580c' },
+        interp: { label: '사료 해석', emoji: '📜', color: '#0d9488' }
+      };
+
+      function renderKhCertViewer(r) {
+        const titleEl = document.getElementById('khCertViewerTitle');
+        const body = document.getElementById('khCertViewerBody');
+        const dt = new Date(r.submittedAt);
+        const dtStr = dt.toLocaleDateString('ko-KR') + ' ' + dt.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+        if (titleEl) titleEl.innerHTML = `🏛️ 예비검정 <b>${r.level}</b> · ${r.score100}점`;
+
+        // 점수 커버
+        const cover = `<div style="background:${r.passed ? 'linear-gradient(135deg,#fff8e1,#ffecb3)' : 'linear-gradient(135deg,#f1f5f9,#e2e8f0)'};border:2px solid ${r.passed?'#ffb300':'#94a3b8'};border-radius:14px;padding:18px;text-align:center;margin-bottom:18px;">
+          <div style="font-size:14px;color:${r.passed?'#6d4c00':'#475569'};font-weight:700;">${r.passed ? `🏆 ${r.level} 합격!` : '📚 다시 도전해 보세요'}</div>
+          <div style="font-size:42px;font-weight:900;color:${r.passed?'#c47200':'#475569'};line-height:1;margin:8px 0;">${r.score100}점</div>
+          <div style="font-size:13px;color:${r.passed?'#8c5a00':'#64748b'};">맞힌 문제: ${r.correctCount} / ${r.total}문항 · 응시일 ${dtStr}</div>
+        </div>`;
+
+        // 유형별 통계 집계
+        const typeStats = {};
+        (r.questions || []).forEach(q => {
+          const t = q.type || 'mc';
+          if (!typeStats[t]) typeStats[t] = { correct: 0, total: 0 };
+          typeStats[t].total++;
+          if (q.isCorrect) typeStats[t].correct++;
+        });
+        const typeKeys = Object.keys(typeStats).filter(k => KH_CERT_TYPE_META[k]);
+
+        // 🔷 5각형(또는 N각형) 레이더 — 3가지 이상일 때만
+        const radarSVG = (() => {
+          if (typeKeys.length < 3) return '';
+          const W = 360, H = 320, cx = W/2, cy = H/2, R = 100;
+          const N = typeKeys.length;
+          const ang = (i) => -Math.PI/2 + (2*Math.PI*i)/N;
+          const v = (i, rad) => ({ x: cx + rad*Math.cos(ang(i)), y: cy + rad*Math.sin(ang(i)) });
+          // 격자
+          let grid = '';
+          for (let s = 1; s <= 4; s++) {
+            const pts = typeKeys.map((_, i) => { const p = v(i, R*s/4); return `${p.x},${p.y}`; }).join(' ');
+            grid += `<polygon points="${pts}" fill="none" stroke="rgba(33,150,243,0.18)" stroke-width="1"/>`;
+          }
+          // 축
+          let axes = '';
+          typeKeys.forEach((_, i) => {
+            const p = v(i, R);
+            axes += `<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="rgba(33,150,243,0.22)" stroke-width="1"/>`;
+          });
+          // 데이터
+          const dataPts = typeKeys.map((k, i) => {
+            const acc = typeStats[k].total ? typeStats[k].correct / typeStats[k].total : 0;
+            const p = v(i, R * acc);
+            return `${p.x},${p.y}`;
+          }).join(' ');
+          const dots = typeKeys.map((k, i) => {
+            const acc = typeStats[k].total ? typeStats[k].correct / typeStats[k].total : 0;
+            const p = v(i, R * acc);
+            return `<circle cx="${p.x}" cy="${p.y}" r="4" fill="${KH_CERT_TYPE_META[k].color}" stroke="#fff" stroke-width="2"/>`;
+          }).join('');
+          // 라벨
+          const labs = typeKeys.map((k, i) => {
+            const p = v(i, R + 24);
+            const m = KH_CERT_TYPE_META[k];
+            return `<text x="${p.x}" y="${p.y}" text-anchor="middle" font-size="12" font-weight="700" fill="${m.color}">${m.emoji} ${m.label}</text>`;
+          }).join('');
+          return `<div style="text-align:center;margin-bottom:8px;">
+            <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:360px;height:auto;">
+              ${grid}${axes}
+              <polygon points="${dataPts}" fill="rgba(33,150,243,0.28)" stroke="#2196f3" stroke-width="2.5" stroke-linejoin="round"/>
+              ${dots}${labs}
+            </svg>
+          </div>`;
+        })();
+
+        // 📊 영역별 정답률 (모든 급수 공통)
+        const TYPE_ORDER = ['mc', 'chron', 'cause', 'interp'];
+        const catCards = TYPE_ORDER.filter(k => typeStats[k]).map(k => {
+          const s = typeStats[k];
+          const m = KH_CERT_TYPE_META[k];
+          const pct = Math.round((s.correct / s.total) * 100);
+          return `<div style="background:#fff;border:1px solid rgba(33,150,243,0.2);border-radius:10px;padding:10px;text-align:center;">
+            <div style="font-size:18px;line-height:1;margin-bottom:4px;">${m.emoji}</div>
+            <div style="font-size:11px;color:${m.color};font-weight:700;">${m.label}</div>
+            <div style="font-size:16px;font-weight:800;color:#1f2937;margin-top:4px;">${s.correct} / ${s.total}</div>
+            <div style="font-size:11px;color:#64748b;">${pct}%</div>
+          </div>`;
+        }).join('');
+        const catCount = TYPE_ORDER.filter(k => typeStats[k]).length;
+        const catSection = catCards ? `<div style="margin-bottom:18px;">
+          ${radarSVG}
+          <h4 style="margin:0 0 10px;font-size:14px;color:#0d47a1;font-weight:800;">📊 영역별 정답률</h4>
+          <div style="display:grid;grid-template-columns:repeat(${catCount},1fr);gap:8px;">${catCards}</div>
+        </div>` : '';
+
+        // 문항별 정답·해설 (유형 뱃지 + 보기 박스 포함)
+        const questions = (r.questions || []).map(q => {
+          const tm = KH_CERT_TYPE_META[q.type] || KH_CERT_TYPE_META.mc;
+          const typeBadge = `<span style="display:inline-block;background:${tm.color};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle;">${tm.emoji} ${tm.label}</span>`;
+          const refHtml = (typeof renderKhCertReference === 'function') ? renderKhCertReference(q.reference) : '';
+          return `<div style="background:${q.isCorrect ? '#f0fdf4' : '#fef2f2'};border-left:3px solid ${q.isCorrect ? '#22c55e' : '#ef4444'};border-radius:8px;padding:12px 14px;margin-bottom:10px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:#1f2937;">
+              ${q.isCorrect ? '✅' : '❌'} <b>Q${q.no}.</b> ${typeBadge}<br>
+              <span style="display:block;margin-top:6px;">${escKh(q.question).replace(/\n/g,'<br>')}</span>
+            </div>
+            ${refHtml}
+            ${(q.options || []).map((opt, i) => {
+              const isCorrect = (i+1) === q.correctAnswer;
+              const isPicked = (i+1) === q.pickedAnswer;
+              let style = 'color:#475569;';
+              if (isCorrect) style = 'color:#15803d;font-weight:700;background:rgba(34,197,94,0.1);border-radius:4px;padding:2px 6px;';
+              else if (isPicked) style = 'color:#b91c1c;font-weight:700;background:rgba(239,68,68,0.1);border-radius:4px;padding:2px 6px;';
+              return `<div style="font-size:12px;margin:2px 0;${style}">${'①②③④'[i]} ${escKh(opt)}${isPicked ? ' ← 내 답' : ''}${isCorrect ? ' ← 정답' : ''}</div>`;
+            }).join('')}
+            <div style="font-size:12px;color:#64748b;margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,0.06);line-height:1.5;">${escKh(q.explanation || '').replace(/\n/g,'<br>')}</div>
+          </div>`;
+        }).join('');
+
+        body.innerHTML = `<div id="khCertViewerContent">${cover}${catSection}<h4 style="margin:0 0 10px;font-size:14px;color:#0d47a1;font-weight:800;">📖 문항별 정답·해설</h4>${questions}</div>`;
+      }
+
+      // 🖨️ 예비검정 시험지 인쇄
+      window.khCertViewerPrint = function () {
+        const content = document.getElementById('khCertViewerContent');
+        if (!content) { alert('시험지가 없어요.'); return; }
+        const titleEl = document.getElementById('khCertViewerTitle');
+        const titleText = (titleEl?.textContent || '예비검정 시험지').trim();
+        const w = window.open('', '_blank');
+        if (!w) { alert('팝업이 차단되었어요. 팝업 허용 후 다시 시도해 주세요.'); return; }
+        w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${titleText}</title>
+          <style>
+            body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;padding:20px;color:#1f2937;background:#fff;}
+            h4{margin:14px 0 8px;font-size:14px;color:#0d47a1;}
+            svg{max-width:360px;}
+            * { box-sizing: border-box; }
+            @media print { body{padding:0;} }
+          </style></head><body>
+          <h2 style="font-size:18px;color:#0d47a1;margin:0 0 14px;">${titleText}</h2>
+          ${content.innerHTML}
+          </body></html>`);
+        w.document.close();
+        setTimeout(() => { w.focus(); w.print(); }, 400);
+      };
+
+      // 📥 예비검정 시험지 PDF
+      window.khCertViewerPdf = async function (btn) {
+        if (!window.html2canvas || !window.jspdf) { alert('PDF 라이브러리 로딩 중'); return; }
+        const content = document.getElementById('khCertViewerContent');
+        if (!content) return;
+        const titleEl = document.getElementById('khCertViewerTitle');
+        const titleText = (titleEl?.textContent || '예비검정').trim();
+        const titleFileName = titleText.replace(/\s+/g, '_');
+        const scrollBody = document.getElementById('khCertViewerBody');
+        const stu = (typeof getKhCurrentStudent === 'function') ? getKhCurrentStudent() : null;
+        const subTitle = stu ? `${stu.grade} ${stu.name} 학생` : '';
+        const orig = btn.textContent; btn.disabled = true; btn.textContent = '⏳ 생성 중…';
+
+        // 🔧 스크롤 영역 임시 해제 (전체 콘텐츠 캡처용)
+        const saved = scrollBody ? {
+          maxHeight: scrollBody.style.maxHeight,
+          height: scrollBody.style.height,
+          overflow: scrollBody.style.overflow,
+          overflowY: scrollBody.style.overflowY
+        } : null;
+        if (scrollBody) {
+          scrollBody.style.maxHeight = 'none';
+          scrollBody.style.height = 'auto';
+          scrollBody.style.overflow = 'visible';
+          scrollBody.style.overflowY = 'visible';
+          scrollBody.scrollTop = 0;
+        }
+
+        // 🔧 PDF 헤더(시험명·학년·이름) 임시 삽입
+        const tempHeader = document.createElement('div');
+        tempHeader.id = '__khCertPdfTempHeader';
+        tempHeader.style.cssText = 'margin:0 0 16px;padding:14px 16px;background:linear-gradient(135deg,#e3f2fd,#bbdefb);border-radius:10px;';
+        tempHeader.innerHTML = `
+          <div style="font-size:18px;font-weight:800;color:#0d47a1;margin-bottom:4px;">${titleText.replace(/^🏛️\s*/, '🏛️ ')}</div>
+          ${subTitle ? `<div style="font-size:13px;color:#1565c0;font-weight:600;">${subTitle}</div>` : ''}
+        `;
+        content.insertBefore(tempHeader, content.firstChild);
+
+        try {
+          const fullHeight = content.scrollHeight;
+          const canvas = await html2canvas(content, {
+            scale: 2, useCORS: true, backgroundColor: '#fff',
+            height: fullHeight, windowHeight: fullHeight, scrollY: 0
+          });
+          const { jsPDF } = window.jspdf; const pdf = new jsPDF('p','mm','a4');
+          const W=210,H=297,M=10,CW=W-2*M; const totalH = canvas.height/canvas.width*CW;
+          if (totalH <= H-2*M) {
+            pdf.addImage(canvas.toDataURL('image/jpeg',0.94),'JPEG',M,M,CW,totalH);
+          } else {
+            const pageHpx = ((H-2*M)/CW)*canvas.width; let off=0,pc=0;
+            while (off<canvas.height) {
+              if (pc>0) pdf.addPage();
+              const slice = Math.min(pageHpx, canvas.height-off);
+              const tc = document.createElement('canvas'); tc.width=canvas.width; tc.height=slice;
+              tc.getContext('2d',{willReadFrequently:true}).drawImage(canvas,0,off,canvas.width,slice,0,0,canvas.width,slice);
+              pdf.addImage(tc.toDataURL('image/jpeg',0.94),'JPEG',M,M,CW,(slice/canvas.width)*CW);
+              off+=slice; pc++;
+            }
+          }
+          pdf.save(`BRAIN한국사_${titleFileName}_${Date.now()}.pdf`);
+        } catch (err) { alert('PDF 생성 실패'); console.error(err); }
+        finally {
+          // 임시 헤더 제거
+          const th = document.getElementById('__khCertPdfTempHeader');
+          if (th) th.remove();
+          if (scrollBody && saved) {
+            scrollBody.style.maxHeight = saved.maxHeight;
+            scrollBody.style.height = saved.height;
+            scrollBody.style.overflow = saved.overflow;
+            scrollBody.style.overflowY = saved.overflowY;
+          }
+          btn.disabled=false; btn.textContent=orig;
+        }
+      };
+
+      // 🖨️ 단원평가기록 전체 리스트 인쇄
+      window.khExamHistoryPrint = function () {
+        const body = document.getElementById('khExamHistoryBody');
+        if (!body || !body.innerHTML.trim()) { alert('기록이 없어요.'); return; }
+        const stu = (typeof getKhCurrentStudent === 'function') ? getKhCurrentStudent() : null;
+        const subTitle = stu ? `${stu.grade} ${stu.name} 학생 — 시험 기록 전체` : '시험 기록 전체';
+        const w = window.open('', '_blank');
+        if (!w) { alert('팝업이 차단되었어요. 팝업 허용 후 다시 시도해 주세요.'); return; }
+        w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>BRAIN한국사 시험 기록</title>
+          <style>
+            body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;padding:20px;color:#1f2937;background:#fff;}
+            table{width:100%;border-collapse:collapse;}
+            button{display:none !important;}
+            @media print { body{padding:0;} }
+          </style></head><body>
+          <h2 style="font-size:18px;color:#0d47a1;margin:0 0 14px;">📝 BRAIN한국사 시험 기록 — ${subTitle}</h2>
+          ${body.innerHTML}
+          </body></html>`);
+        w.document.close();
+        setTimeout(() => { w.focus(); w.print(); }, 400);
+      };
+
+      // 📥 단원평가기록 전체 리스트 PDF
+      window.khExamHistoryPdf = async function (btn) {
+        if (!window.html2canvas || !window.jspdf) { alert('PDF 라이브러리 로딩 중'); return; }
+        const body = document.getElementById('khExamHistoryBody');
+        if (!body) return;
+        const stu = (typeof getKhCurrentStudent === 'function') ? getKhCurrentStudent() : null;
+        const fileTag = stu ? `${stu.grade}_${stu.name}` : '시험기록';
+        const subTitle = stu ? `${stu.grade} ${stu.name} 학생 — 시험 기록 전체` : '시험 기록 전체';
+        const orig = btn.textContent; btn.disabled = true; btn.textContent = '⏳ 생성 중…';
+
+        // 🔧 스크롤 영역 임시 해제 (전체 콘텐츠 캡처용)
+        const savedStyle = {
+          maxHeight: body.style.maxHeight,
+          height: body.style.height,
+          overflow: body.style.overflow,
+          overflowY: body.style.overflowY
+        };
+        body.style.maxHeight = 'none';
+        body.style.height = 'auto';
+        body.style.overflow = 'visible';
+        body.style.overflowY = 'visible';
+        body.scrollTop = 0;
+
+        // 🔧 PDF 헤더(학년·이름) 임시 삽입
+        const tempHeader = document.createElement('div');
+        tempHeader.id = '__khPdfTempHeader';
+        tempHeader.style.cssText = 'margin:0 0 16px;padding:14px 16px;background:linear-gradient(135deg,#e3f2fd,#bbdefb);border-radius:10px;';
+        tempHeader.innerHTML = `
+          <div style="font-size:18px;font-weight:800;color:#0d47a1;margin-bottom:4px;">📝 BRAIN한국사 시험 기록</div>
+          <div style="font-size:13px;color:#1565c0;font-weight:600;">${subTitle}</div>
+        `;
+        body.insertBefore(tempHeader, body.firstChild);
+
+        try {
+          // 전체 콘텐츠 높이로 캡처
+          const fullHeight = body.scrollHeight;
+          const canvas = await html2canvas(body, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#fff',
+            height: fullHeight,
+            windowHeight: fullHeight,
+            scrollY: 0
+          });
+          const { jsPDF } = window.jspdf; const pdf = new jsPDF('p','mm','a4');
+          const W=210,H=297,M=10,CW=W-2*M; const totalH = canvas.height/canvas.width*CW;
+          if (totalH <= H-2*M) {
+            pdf.addImage(canvas.toDataURL('image/jpeg',0.94),'JPEG',M,M,CW,totalH);
+          } else {
+            const pageHpx = ((H-2*M)/CW)*canvas.width; let off=0,pc=0;
+            while (off<canvas.height) {
+              if (pc>0) pdf.addPage();
+              const slice = Math.min(pageHpx, canvas.height-off);
+              const tc = document.createElement('canvas'); tc.width=canvas.width; tc.height=slice;
+              tc.getContext('2d',{willReadFrequently:true}).drawImage(canvas,0,off,canvas.width,slice,0,0,canvas.width,slice);
+              pdf.addImage(tc.toDataURL('image/jpeg',0.94),'JPEG',M,M,CW,(slice/canvas.width)*CW);
+              off+=slice; pc++;
+            }
+          }
+          pdf.save(`BRAIN한국사_시험기록_${fileTag}_${Date.now()}.pdf`);
+        } catch (err) { alert('PDF 생성 실패'); console.error(err); }
+        finally {
+          // 임시 헤더 제거 + 스타일 복원
+          const th = document.getElementById('__khPdfTempHeader');
+          if (th) th.remove();
+          body.style.maxHeight = savedStyle.maxHeight;
+          body.style.height = savedStyle.height;
+          body.style.overflow = savedStyle.overflow;
+          body.style.overflowY = savedStyle.overflowY;
+          btn.disabled=false; btn.textContent=orig;
+        }
+      };
 
       // ===== 시험지 보기 모달 =====
       window.openKhExamViewer = async function (id) {
@@ -36083,7 +37661,21 @@ ${content}
       window.khExamViewerPdf = async function (btn) {
         if (!window.html2canvas || !window.jspdf) { alert('PDF 라이브러리 로딩 중'); return; }
         const content = document.getElementById('khExamViewerContent'); if (!content) return;
+        const sub = document.getElementById('khExamViewerSub');
+        const stu = (typeof getKhCurrentStudent === 'function') ? getKhCurrentStudent() : null;
+        const subTitle = stu ? `${stu.grade} ${stu.name} 학생` : (sub?.textContent || '');
         const orig = btn.textContent; btn.disabled = true; btn.textContent = '⏳ 생성 중…';
+
+        // 🔧 PDF 헤더(학년·이름) 임시 삽입
+        const tempHeader = document.createElement('div');
+        tempHeader.id = '__khExamPdfTempHeader';
+        tempHeader.style.cssText = 'margin:0 0 16px;padding:14px 16px;background:linear-gradient(135deg,#eaf6e3,#d9eecf);border-radius:10px;';
+        tempHeader.innerHTML = `
+          <div style="font-size:18px;font-weight:800;color:#1f4d12;margin-bottom:4px;">🧾 BRAIN한국사 시험지</div>
+          ${subTitle ? `<div style="font-size:13px;color:#2e9b3f;font-weight:600;">${subTitle}</div>` : ''}
+        `;
+        content.insertBefore(tempHeader, content.firstChild);
+
         try {
           const canvas = await html2canvas(content, { scale: 2, useCORS: true, backgroundColor: '#f9fbf7' });
           const { jsPDF } = window.jspdf; const pdf = new jsPDF('p','mm','a4');
@@ -36102,7 +37694,11 @@ ${content}
           }
           pdf.save(`BRAIN한국사_시험지_${Date.now()}.pdf`);
         } catch (err) { alert('PDF 생성 실패'); console.error(err); }
-        finally { btn.disabled=false; btn.textContent=orig; }
+        finally {
+          const th = document.getElementById('__khExamPdfTempHeader');
+          if (th) th.remove();
+          btn.disabled=false; btn.textContent=orig;
+        }
       };
 
       // 자동 오픈 (admin 페이지에서 시험지 보기 클릭 시)
@@ -36112,6 +37708,10 @@ ${content}
           const id = params.get('khExamId');
           if (id) {
             setTimeout(() => window.openKhExamViewer(id), 800);
+          }
+          const certId = params.get('khCertId');
+          if (certId && typeof window.openKhCertViewer === 'function') {
+            setTimeout(() => window.openKhCertViewer(certId), 800);
           }
         } catch {}
       })();
