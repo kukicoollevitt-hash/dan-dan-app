@@ -1578,7 +1578,7 @@ body:has(.wb-live-banner:hover) .wb-launcher {
   opacity: 0.9;
 }
 
-/* 어휘퀴즈 어휘력 지수 뱃지 */
+/* 어휘퀴즈 정답률 뱃지 (누적 정답률 %) */
 .vocab-avg-badge {
   position: absolute;
   top: -5px;
@@ -1597,6 +1597,24 @@ body:has(.wb-live-banner:hover) .wb-launcher {
   border: 2px solid white;
   animation: badge-pulse 2s ease-in-out infinite;
   padding: 0 6px;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+/* 정답률 색상 4단계 */
+.vocab-avg-badge.rate-gold {
+  background: linear-gradient(135deg, #facc15 0%, #d97706 100%);
+  box-shadow: 0 3px 10px rgba(217,119,6,0.55);
+}
+.vocab-avg-badge.rate-green {
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+  box-shadow: 0 3px 10px rgba(5,150,105,0.55);
+}
+.vocab-avg-badge.rate-orange {
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+  box-shadow: 0 3px 10px rgba(234,88,12,0.55);
+}
+.vocab-avg-badge.rate-red {
+  background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+  box-shadow: 0 3px 10px rgba(220,38,38,0.55);
 }
 
 /* 학습실 아이콘 */
@@ -7507,24 +7525,35 @@ canvas[id^="confetti-canvas"] {
           // 서버에서 어휘퀴즈 데이터 불러와서 뱃지 업데이트
           const updateVocabBadgeFromServer = async () => {
             try {
-              const res = await fetch(`/api/user-progress?grade=${encodeURIComponent(data.user.grade)}&name=${encodeURIComponent(data.user.name)}`);
+              // 🔥 학생 정보 우선순위: localStorage.currentStudent (URL→view-as 학생) → data.user (서버 세션)
+              //   브랜치 관리자에서 학생 이름 클릭 시 보고 있는 학생 기준으로 어휘지수 가져오기
+              let bgGrade = data.user.grade;
+              let bgName = data.user.name;
+              try {
+                const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+                if (cs.grade && cs.name) {
+                  bgGrade = cs.grade;
+                  bgName = cs.name;
+                }
+              } catch {}
+
+              const res = await fetch(`/api/user-progress?grade=${encodeURIComponent(bgGrade)}&name=${encodeURIComponent(bgName)}`);
               const result = await res.json();
 
-              if (result.ok && result.data?.vocabularyQuiz) {
-                const vq = result.data.vocabularyQuiz;
-                // 어휘력 지수 계산: (총점 / 100) * (평균점수 / 10)
-                const rating = (vq.totalScore / 100) * (vq.avgScore / 10);
-                const ratingStr = rating.toFixed(1);
+              if (result.ok) {
+                // 🔥 누적 정답률 % (서버에서 vocabularyHistory 합산)
+                const rate = typeof result.vocabularyCorrectRate === 'number' ? result.vocabularyCorrectRate : 0;
+                const rateStr = String(rate);
 
-                // localStorage에도 저장 (다른 곳에서 사용)
-                const ratingKey = `vocabRatingScore_${data.user.grade}_${data.user.name}`;
-                localStorage.setItem(ratingKey, ratingStr);
+                // localStorage 캐시 (다음 진입 시 즉시 표시용)
+                const rateKey = `vocabCorrectRate_${bgGrade}_${bgName}`;
+                localStorage.setItem(rateKey, rateStr);
 
                 // 뱃지 업데이트
                 const badge = document.getElementById('vocabAvgBadge');
                 if (badge) {
-                  badge.innerHTML = ratingStr + '<span class="badge-unit">점</span>';
-                  console.log('✅ 어휘지수 뱃지 업데이트 (서버):', ratingStr);
+                  applyVocabBadgeRate(badge, rate);
+                  console.log('✅ 어휘 정답률 뱃지 업데이트 (서버):', rateStr + '%', '학생:', bgGrade, bgName);
                 }
               }
             } catch (e) {
@@ -11763,6 +11792,23 @@ if (logoutConfirmBtn) {
       try { return JSON.parse(saved); }
       catch(e) { return null; }
     }
+
+    // 🔥 view-as 모드 호환 학생 getter
+    //   브랜치 관리자가 학생 이름 클릭 시 새 탭에서 URL 파라미터로 currentStudent가 채워짐
+    //   sessionStorage.user는 서버 세션(=관리자 본인)이라 view-as에서는 학생과 다름
+    //   이 헬퍼는 두 곳 모두 점검해서 일관된 학생 정보를 반환
+    function getViewAsStudentUser() {
+      try {
+        const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+        if (cs && cs.grade && cs.name) return cs;
+      } catch {}
+      try {
+        const u = JSON.parse(sessionStorage.getItem('user') || '{}');
+        if (u && u.grade && u.name) return u;
+      } catch {}
+      return null;
+    }
+    window.getViewAsStudentUser = getViewAsStudentUser;
 
     /* 🧹 다른 학생의 localStorage 캐시 자동 정리 (학생 전환 시 혼선 방지) */
     function cleanupOtherStudentCache() {
@@ -16945,39 +16991,50 @@ async function performLogout() {
         }
       }
 
-      const storageKey = (grade && name) ? `vocabRatingScore_${grade}_${name}` : 'vocabRatingScore';
-      const ratingScore = localStorage.getItem(storageKey);
-      console.log('📊 localStorage 키:', storageKey, '값:', ratingScore);
+      const storageKey = (grade && name) ? `vocabCorrectRate_${grade}_${name}` : 'vocabCorrectRate';
+      const cachedRate = localStorage.getItem(storageKey);
+      console.log('📊 localStorage 키:', storageKey, '값:', cachedRate);
 
-      badge.innerHTML = ratingScore ? ratingScore + '<span class="badge-unit">점</span>' : '0<span class="badge-unit">점</span>';
+      const rate = cachedRate != null ? parseInt(cachedRate, 10) || 0 : 0;
+      applyVocabBadgeRate(badge, rate);
       console.log('✅ 뱃지 업데이트 완료:', badge.textContent);
 
       // 🔥 로컬 캐시가 없으면 서버에서 즉시 동기화 (관리자→학생 첫 진입 케이스)
-      if (!ratingScore && grade && name) {
-        console.log('🔄 로컬 캐시 없음 → 서버에서 어휘지수 동기화 시작');
+      if (cachedRate == null && grade && name) {
+        console.log('🔄 로컬 캐시 없음 → 서버에서 어휘 정답률 동기화 시작');
         syncVocabRatingFromServer(grade, name);
       }
     }
 
-    // 서버에서 어휘력 지수를 가져와 localStorage·뱃지에 반영
+    // 🎨 정답률에 따라 배지 색상·텍스트 일관 적용
+    function applyVocabBadgeRate(badge, rate) {
+      if (!badge) return;
+      badge.innerHTML = `${rate}<span class="badge-unit">%</span>`;
+      // 색상 단계 (90+ 골드 / 70+ 초록 / 50+ 주황 / 그 외 빨강)
+      badge.classList.remove('rate-gold', 'rate-green', 'rate-orange', 'rate-red');
+      if (rate >= 90) badge.classList.add('rate-gold');
+      else if (rate >= 70) badge.classList.add('rate-green');
+      else if (rate >= 50) badge.classList.add('rate-orange');
+      else badge.classList.add('rate-red');
+    }
+
+    // 서버에서 어휘 정답률(%)을 가져와 localStorage·뱃지에 반영
     async function syncVocabRatingFromServer(grade, name) {
       try {
         const res = await fetch(`/api/user-progress?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`);
         const result = await res.json();
-        if (!result.ok || !result.data || !result.data.vocabularyQuiz) {
-          console.log('ℹ️ 서버 어휘퀴즈 데이터 없음');
+        if (!result.ok) {
+          console.log('ℹ️ 서버 응답 실패');
           return;
         }
-        const vq = result.data.vocabularyQuiz;
-        const rating = (vq.totalScore / 100) * (vq.avgScore / 10);
-        const ratingStr = rating.toFixed(1);
-        const ratingKey = `vocabRatingScore_${grade}_${name}`;
-        localStorage.setItem(ratingKey, ratingStr);
+        const rate = typeof result.vocabularyCorrectRate === 'number' ? result.vocabularyCorrectRate : 0;
+        const rateKey = `vocabCorrectRate_${grade}_${name}`;
+        localStorage.setItem(rateKey, String(rate));
 
         const badge = document.getElementById('vocabAvgBadge');
         if (badge) {
-          badge.innerHTML = ratingStr + '<span class="badge-unit">점</span>';
-          console.log('✅ 서버 동기화 후 어휘지수 뱃지 갱신:', ratingStr);
+          applyVocabBadgeRate(badge, rate);
+          console.log('✅ 서버 동기화 후 어휘 정답률 뱃지 갱신:', rate + '%');
         }
       } catch (e) {
         console.error('❌ syncVocabRatingFromServer 오류:', e);
@@ -17180,9 +17237,8 @@ async function performLogout() {
     // 서버에서 설정 불러오기
     async function loadAutoTaskSettings() {
       try {
-        const userStr = sessionStorage.getItem('user');
-        if (!userStr) return;
-        const user = JSON.parse(userStr);
+        const user = getViewAsStudentUser();
+        if (!user) return;
 
         const response = await fetch(`/api/auto-task-settings?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`);
         const result = await response.json();
@@ -17308,12 +17364,11 @@ async function performLogout() {
     // 서버에 설정 저장
     async function saveAutoTaskSettings() {
       try {
-        const userStr = sessionStorage.getItem('user');
-        if (!userStr) {
+        const user = getViewAsStudentUser();
+        if (!user) {
           showErrorMessage('로그인이 필요합니다', '⚠️', '알림');
           return false;
         }
-        const user = JSON.parse(userStr);
 
         const response = await fetch('/api/auto-task-settings', {
           method: 'POST',
@@ -17683,13 +17738,11 @@ async function performLogout() {
     // 오늘 어휘퀴즈 완료 여부 확인
     async function checkVocabularyCompletedToday() {
       try {
-        const userStr = sessionStorage.getItem('user');
-        if (!userStr) {
+        const user = getViewAsStudentUser();
+        if (!user) {
           console.error('사용자 정보가 없습니다');
           return false;
         }
-
-        const user = JSON.parse(userStr);
 
         const response = await fetch(
           `/api/user-progress/vocabulary-history/today?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`
@@ -22078,10 +22131,9 @@ async function performLogout() {
     // 완료된 스토리 ID 목록 가져오기
     async function getCompletedStoryIds() {
       try {
-        const userStr = sessionStorage.getItem('user');
-        if (!userStr) return [];
+        const user = getViewAsStudentUser();
+        if (!user) return [];
 
-        const user = JSON.parse(userStr);
         const response = await fetch(
           `/api/user-progress/reading-reports/history?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`
         );
@@ -22573,10 +22625,9 @@ async function performLogout() {
     // 이번 달 제출 개수 확인
     async function getMonthlyReportCount() {
       try {
-        const userStr = sessionStorage.getItem('user');
-        if (!userStr) return 0;
+        const user = getViewAsStudentUser();
+        if (!user) return 0;
 
-        const user = JSON.parse(userStr);
         const response = await fetch(
           `/api/user-progress/reading-reports/monthly-count?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`
         );
@@ -22592,10 +22643,9 @@ async function performLogout() {
     // 히스토리 로드
     async function loadReadingHistory(showAll = false) {
       try {
-        const userStr = sessionStorage.getItem('user');
-        if (!userStr) return;
+        const user = getViewAsStudentUser();
+        if (!user) return;
 
-        const user = JSON.parse(userStr);
         const response = await fetch(
           `/api/user-progress/reading-reports/history?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`
         );
@@ -22655,10 +22705,9 @@ async function performLogout() {
     // 관문평가 결과 로드
     async function loadQuizResults() {
       try {
-        const userStr = sessionStorage.getItem('user');
-        if (!userStr) return;
+        const user = getViewAsStudentUser();
+        if (!user) return;
 
-        const user = JSON.parse(userStr);
         const response = await fetch(
           `/api/creative-quiz/results?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`
         );
@@ -23029,12 +23078,11 @@ async function performLogout() {
         async function() {
           // 확인 버튼 클릭 시
           try {
-            const userStr = sessionStorage.getItem('user');
-            if (!userStr) {
+            const user = getViewAsStudentUser();
+            if (!user) {
               window.showSuccessModal('로그인 필요', '로그인이 필요합니다.', null, 'warning');
               return;
             }
-            const user = JSON.parse(userStr);
 
             const response = await fetch('/api/reading-report/delete', {
               method: 'POST',
@@ -23384,13 +23432,11 @@ ${content}
       const story = allStories.find(s => s.id === storyId);
       const storyTitle = story ? story.title : '';
 
-      const userStr = sessionStorage.getItem('user');
-      if (!userStr) {
+      const user = getViewAsStudentUser();
+      if (!user) {
         alert('로그인 정보를 확인할 수 없습니다.');
         return;
       }
-
-      const user = JSON.parse(userStr);
 
       try {
         // 1. 공유용 ID 생성 및 저장
@@ -31114,16 +31160,21 @@ ${content}
       }, 3000);
     }
 
-    // 사용자 정보 가져오기 (sessionStorage 사용)
+    // 사용자 정보 가져오기
+    //   🔥 우선순위: localStorage.currentStudent (URL→view-as 학생) → sessionStorage.user (서버 세션)
+    //   브랜치 관리자에서 학생 클릭 시 보고 있는 학생 기준으로 고래 배지·확성기 코인 조회
     function getMegaphoneUser() {
-      const userStr = sessionStorage.getItem('user');
-      if (userStr) {
-        try {
-          return JSON.parse(userStr);
-        } catch(e) {
-          return null;
+      try {
+        const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+        if (cs.grade && cs.name) return cs;
+      } catch {}
+      try {
+        const userStr = sessionStorage.getItem('user');
+        if (userStr) {
+          const u = JSON.parse(userStr);
+          if (u && u.grade && u.name) return u;
         }
-      }
+      } catch {}
       return null;
     }
 
@@ -31553,12 +31604,25 @@ ${content}
     // ===== 월드컵 런처 — 좌측 하단 트로피 옆 순위 표시 =====
     async function loadWbLauncherRank() {
       try {
-        const userStr = sessionStorage.getItem('user');
-        if (!userStr) return;
-        const u = JSON.parse(userStr);
-        if (!u.grade || !u.name) return;
+        // 🔥 학생 정보 우선순위: localStorage.currentStudent (URL→view-as 학생) → sessionStorage.user
+        //   브랜치 관리자에서 학생 클릭 시 보고 있는 학생 기준으로 순위 조회
+        let grade = '', name = '';
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          if (cs.grade && cs.name) { grade = cs.grade; name = cs.name; }
+        } catch {}
+        if (!grade || !name) {
+          const userStr = sessionStorage.getItem('user');
+          if (userStr) {
+            try {
+              const u = JSON.parse(userStr);
+              if (u.grade && u.name) { grade = u.grade; name = u.name; }
+            } catch {}
+          }
+        }
+        if (!grade || !name) return;
 
-        const res = await fetch(`/api/word-battle/overall-ranking?grade=${encodeURIComponent(u.grade)}&name=${encodeURIComponent(u.name)}`);
+        const res = await fetch(`/api/word-battle/overall-ranking?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`);
         const data = await res.json();
         const el = document.getElementById('wbLauncherRank');
         if (!el || !data.ok) return;
@@ -31578,7 +31642,7 @@ ${content}
     }
 
     // ===== 전국 문해왕 선발전 (Coming Soon — 영상 안내) =====
-    function openLiteracyKing() {
+    function openLiteracyKing(fromBadgeMenu) {
       closeBadgeMenu();
       const existing = document.getElementById('literacyKingOverlay');
       if (existing) existing.remove();
@@ -31613,7 +31677,12 @@ ${content}
         font-size: 22px; font-weight: bold; cursor: pointer;
         display: flex; align-items: center; justify-content: center;
       `;
-      closeBtn.onclick = () => { overlay.remove(); if (typeof openBadgeMenu === 'function') openBadgeMenu(); };
+      // 🔥 배지 메뉴에서 진입한 경우에만 닫을 때 배지 메뉴 복귀
+      //   페넌트 깃발·단원 카드 등 직접 진입은 깨끗하게 닫음
+      closeBtn.onclick = () => {
+        overlay.remove();
+        if (fromBadgeMenu && typeof openBadgeMenu === 'function') openBadgeMenu();
+      };
 
       const title = document.createElement('div');
       title.innerHTML = '👑 전국 문해왕 선발전';
@@ -31818,7 +31887,7 @@ ${content}
     // 이벤트 메뉴 버튼용 진입점 — 오픈 전/후 자동 분기
     function openLiteracyKingMenuEntry() {
       if (isLkLaunched()) openLiteracyKingIntro();
-      else openLiteracyKing();
+      else openLiteracyKing(true); // 배지 메뉴 진입 — 닫을 때 배지 메뉴 복귀
     }
 
     // ===== 고래도서관 — 인트로 영상 팝업 → 입장하기 →  goToWhaleStory =====
@@ -38660,6 +38729,10 @@ ${content}
 
       // 세션에서 학생 정보 추출
       function getStudent() {
+        // 🔥 view-as 모드 호환: 공통 헬퍼 사용
+        if (typeof window.getViewAsStudentUser === 'function') {
+          return window.getViewAsStudentUser();
+        }
         try {
           const u = JSON.parse(sessionStorage.getItem('user') || '{}');
           return (u.grade && u.name) ? u : null;

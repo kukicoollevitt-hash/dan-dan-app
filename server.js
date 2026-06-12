@@ -26594,9 +26594,35 @@ app.get('/api/user-progress', async (req, res) => {
       delete progress.unitProgress;
     }
 
+    // 🔥 어휘퀴즈 누적 정답률 계산 (학생에게 보여줄 직관적 지표)
+    //   1순위: 신규 vocabularyHistory 회차별 합산 → 진짜 정답률
+    //   2순위: 옛 vocabularyQuiz.avgScore (100점 만점) 폴백 → 점진 마이그레이션
+    const history = progress.vocabularyHistory || [];
+    let totalCorrect = 0, totalQuestions = 0;
+    for (const h of history) {
+      totalCorrect += h.correctAnswers || 0;
+      totalQuestions += h.totalQuestions || 0;
+    }
+    let vocabularyCorrectRate;
+    let rateSource;
+    if (totalQuestions > 0) {
+      vocabularyCorrectRate = Math.round((totalCorrect / totalQuestions) * 100);
+      rateSource = 'history';
+    } else if (progress.vocabularyQuiz && typeof progress.vocabularyQuiz.avgScore === 'number' && progress.vocabularyQuiz.quizCount > 0) {
+      // 옛 시스템 폴백 — avgScore가 100점 만점 평균이라 그대로 % 사용
+      vocabularyCorrectRate = Math.min(100, Math.max(0, Math.round(progress.vocabularyQuiz.avgScore)));
+      rateSource = 'legacy-avgScore';
+    } else {
+      vocabularyCorrectRate = 0;
+      rateSource = 'none';
+    }
+
     res.json({
       ok: true,
-      data: progress
+      data: progress,
+      vocabularyCorrectRate,
+      vocabularyTotals: { correct: totalCorrect, total: totalQuestions },
+      vocabularyRateSource: rateSource
     });
   } catch (error) {
     console.error('사용자 데이터 조회 오류:', error);
