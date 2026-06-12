@@ -2655,7 +2655,7 @@ app.get("/api/textbook-orders/all", async (req, res) => {
 // ✅ 교재 신청 등록
 app.post("/api/textbook-orders", async (req, res) => {
   try {
-    const { applicantName, branchName, phone, items, memo } = req.body;
+    const { applicantName, branchName, phone, postcode, address, addressDetail, items, memo } = req.body;
 
     if (!applicantName || !branchName || !phone) {
       return res.status(400).json({ ok: false, message: "필수 정보를 입력해주세요." });
@@ -2669,6 +2669,9 @@ app.post("/api/textbook-orders", async (req, res) => {
       applicantName,
       branchName,
       phone,
+      postcode: postcode || '',
+      address: address || '',
+      addressDetail: addressDetail || '',
       items,
       memo: memo || ''
     });
@@ -2709,6 +2712,12 @@ app.post("/api/textbook-orders", async (req, res) => {
           <tr>
             <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">연락처</td>
             <td style="padding: 10px; border: 1px solid #ddd;">${phone}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">배송지</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">
+              ${postcode ? `(${postcode}) ` : ''}${address || ''}${addressDetail ? ` ${addressDetail}` : ''}
+            </td>
           </tr>
         </table>
 
@@ -2825,7 +2834,7 @@ app.get("/api/promotion-orders/all", async (req, res) => {
 // ✅ 홍보몰 신청 등록
 app.post("/api/promotion-orders", async (req, res) => {
   try {
-    const { applicantName, branchName, phone, items, memo } = req.body;
+    const { applicantName, branchName, phone, postcode, address, addressDetail, items, memo } = req.body;
 
     if (!applicantName || !branchName || !phone) {
       return res.status(400).json({ ok: false, message: "필수 정보를 입력해주세요." });
@@ -2838,6 +2847,9 @@ app.post("/api/promotion-orders", async (req, res) => {
       applicantName,
       branchName,
       phone,
+      postcode: postcode || '',
+      address: address || '',
+      addressDetail: addressDetail || '',
       items,
       memo: memo || ''
     });
@@ -2865,9 +2877,9 @@ app.post("/api/promotion-orders", async (req, res) => {
       subject: `[홍보몰신청] ${branchName} - ${applicantName}님`,
       html: `
         <h2>🛍️ 홍보몰 신청</h2>
-        <table style="border-collapse: collapse; width: 100%; max-width: 500px; margin-bottom: 20px;">
+        <table style="border-collapse: collapse; width: 100%; max-width: 600px; margin-bottom: 20px;">
           <tr>
-            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold; width: 100px;">지점명</td>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold; width: 100px;">센터명</td>
             <td style="padding: 10px; border: 1px solid #ddd;">${branchName}</td>
           </tr>
           <tr>
@@ -2877,6 +2889,12 @@ app.post("/api/promotion-orders", async (req, res) => {
           <tr>
             <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">연락처</td>
             <td style="padding: 10px; border: 1px solid #ddd;">${phone}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">주소</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">
+              ${postcode ? '(' + postcode + ') ' : ''}${address || ''}${addressDetail ? ' ' + addressDetail : ''}
+            </td>
           </tr>
         </table>
 

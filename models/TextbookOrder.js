@@ -50,6 +50,11 @@ const textbookOrderSchema = new mongoose.Schema({
     required: true
   },
 
+  // 배송지 정보
+  postcode: { type: String, default: '' },
+  address: { type: String, default: '' },          // 기본 주소 (도로명 또는 지번)
+  addressDetail: { type: String, default: '' },    // 상세 주소
+
   // 신청 교재 목록
   items: [textbookItemSchema],
 

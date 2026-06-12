@@ -58,6 +58,11 @@ const promotionOrderSchema = new mongoose.Schema({
     required: true
   },
 
+  // 주소 정보 (Daum 우편번호 서비스 — 도로명·지번 모두 지원)
+  postcode: { type: String, default: '' },
+  address: { type: String, default: '' },          // 기본 주소 (도로명 또는 지번)
+  addressDetail: { type: String, default: '' },    // 상세 주소
+
   items: [promotionItemSchema],
 
   totalQuantity: {
