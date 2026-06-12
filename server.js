@@ -2714,10 +2714,12 @@ app.post("/api/textbook-orders", async (req, res) => {
             <td style="padding: 10px; border: 1px solid #ddd;">${phone}</td>
           </tr>
           <tr>
-            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">배송지</td>
-            <td style="padding: 10px; border: 1px solid #ddd;">
-              ${postcode ? `(${postcode}) ` : ''}${address || ''}${addressDetail ? ` ${addressDetail}` : ''}
-            </td>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">우편번호</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${postcode || '-'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">주소</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${address || '-'}${addressDetail ? `<br><span style="color:#555;">${addressDetail}</span>` : ''}</td>
           </tr>
         </table>
 
@@ -2891,10 +2893,12 @@ app.post("/api/promotion-orders", async (req, res) => {
             <td style="padding: 10px; border: 1px solid #ddd;">${phone}</td>
           </tr>
           <tr>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">우편번호</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${postcode || '-'}</td>
+          </tr>
+          <tr>
             <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">주소</td>
-            <td style="padding: 10px; border: 1px solid #ddd;">
-              ${postcode ? '(' + postcode + ') ' : ''}${address || ''}${addressDetail ? ' ' + addressDetail : ''}
-            </td>
+            <td style="padding: 10px; border: 1px solid #ddd;">${address || '-'}${addressDetail ? '<br><span style="color:#555;">' + addressDetail + '</span>' : ''}</td>
           </tr>
         </table>
 
