@@ -2372,8 +2372,8 @@ function applyContentPack(unitKey) {
     };
 
     // 문단별 이미지 경로 생성
-    // kh_NN    → /images/한국사/기본한국사/NN/01~04.png
-    // khadv_NN → /images/한국사/심화한국사/NN/01~04.png
+    // kh_NN    → /images/한국사/기본한국사/NN/01~04.jpg
+    // khadv_NN → /images/한국사/심화한국사/NN/01~04.jpg
     // 이미지가 없는 단원은 onerror로 자동 숨김 처리
     const khBasicMatch = (unitKey || '').match(/^kh_(\d+)$/);
     const khAdvMatch = (unitKey || '').match(/^khadv_(\d+)$/);
@@ -2382,10 +2382,10 @@ function applyContentPack(unitKey) {
       let imgHtml = '';
       if (khBasicMatch) {
         const unitFolder = khBasicMatch[1].padStart(2, '0');
-        imgHtml = `<img class="passage-para-img" src="/images/한국사/기본한국사/${unitFolder}/${num}.png" alt="${num}문단 이미지" onerror="this.style.display='none'">`;
+        imgHtml = `<img class="passage-para-img" src="/images/한국사/기본한국사/${unitFolder}/${num}.jpg" alt="${num}문단 이미지" onerror="this.style.display='none'">`;
       } else if (khAdvMatch) {
         const unitFolder = khAdvMatch[1].padStart(2, '0');
-        imgHtml = `<img class="passage-para-img" src="/images/한국사/심화한국사/${unitFolder}/${num}.png" alt="${num}문단 이미지" onerror="this.style.display='none'">`;
+        imgHtml = `<img class="passage-para-img" src="/images/한국사/심화한국사/${unitFolder}/${num}.jpg" alt="${num}문단 이미지" onerror="this.style.display='none'">`;
       }
       return `${imgHtml}<p>${wrapSentences(p)}</p>`;
     }).join('');
