@@ -378,6 +378,9 @@
     }
     .lightbox-close:hover { background: rgba(255,255,255,0.3); }
   </style>
+
+  <!-- Daum 우편번호 서비스 (도로명·지번 검색) -->
+  <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 </head>
 <body>
   <div class="container">
@@ -397,12 +400,29 @@
           <input type="text" id="applicantName" placeholder="성함을 입력하세요">
         </div>
         <div class="form-group">
-          <label>지점명 *</label>
-          <input type="text" id="branchName" placeholder="지점명을 입력하세요">
+          <label>센터명 *</label>
+          <input type="text" id="branchName" placeholder="센터명을 입력하세요">
         </div>
         <div class="form-group">
           <label>연락처 *</label>
           <input type="tel" id="phone" placeholder="010-0000-0000">
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:10px;">
+        <div class="form-group" style="flex:0 0 200px;">
+          <label>우편번호 *</label>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="postcode" placeholder="우편번호" readonly style="flex:1;">
+            <button type="button" onclick="searchAddress()" style="white-space:nowrap; padding:0 14px; border:none; border-radius:8px; background:linear-gradient(135deg,#f5576c,#f093fb); color:#fff; font-weight:700; cursor:pointer;">주소 검색</button>
+          </div>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>기본 주소 (도로명/지번) *</label>
+          <input type="text" id="address" placeholder="주소 검색 버튼을 눌러 주세요" readonly>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>상세 주소</label>
+          <input type="text" id="addressDetail" placeholder="동/호수 등 상세 주소">
         </div>
       </div>
     </div>
@@ -672,14 +692,37 @@
       document.getElementById('totalQuantity').textContent = qty;
     }
 
+    // 다음(카카오) 우편번호 검색 팝업
+    function searchAddress() {
+      if (typeof daum === 'undefined' || !daum.Postcode) {
+        alert('주소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+      new daum.Postcode({
+        oncomplete: function(data) {
+          // 사용자가 선택한 타입(R=도로명, J=지번)에 맞춰 주소 채움
+          const addr = (data.userSelectedType === 'R')
+            ? data.roadAddress
+            : data.jibunAddress;
+          document.getElementById('postcode').value = data.zonecode || '';
+          document.getElementById('address').value = addr || '';
+          document.getElementById('addressDetail').focus();
+        }
+      }).open();
+    }
+
     async function submitOrder() {
       const applicantName = document.getElementById('applicantName').value.trim();
       const branchName = document.getElementById('branchName').value.trim();
       const phone = document.getElementById('phone').value.trim();
+      const postcode = document.getElementById('postcode').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const addressDetail = document.getElementById('addressDetail').value.trim();
 
       if (!applicantName) { alert('성함을 입력해주세요.'); return; }
-      if (!branchName) { alert('지점명을 입력해주세요.'); return; }
+      if (!branchName) { alert('센터명을 입력해주세요.'); return; }
       if (!phone) { alert('연락처를 입력해주세요.'); return; }
+      if (!postcode || !address) { alert('주소 검색 버튼을 눌러 주소를 입력해주세요.'); return; }
       if (cart.length === 0) { alert('신청할 홍보물을 추가해주세요.'); return; }
 
       const submitBtn = document.getElementById('submitBtn');
@@ -690,7 +733,7 @@
         const response = await fetch('/api/promotion-orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ applicantName, branchName, phone, items: cart })
+          body: JSON.stringify({ applicantName, branchName, phone, postcode, address, addressDetail, items: cart })
         });
         const result = await response.json();
         if (result.ok) {
