@@ -562,6 +562,24 @@ body {
       background: #d1fae5;
       color: #065f46;
     }
+    /* 오늘의 비평 시사문해 - ✏️ 미완료 */
+    .status-critique-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    /* 오늘의 비평 시사문해 - 🏆 제출완료 (다른 학습완료 카드와 동일 녹색) */
+    .status-critique-done {
+      background: #aef3ae;
+      color: #18622e;
+    }
+    /* 오늘의 비평 시사문해 - 시사 제목 한 줄 ellipsis */
+    .critique-title-line {
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
 
     /* 모달 (준비중) */
     .overlay {
@@ -1538,6 +1556,67 @@ body {
 }
 
 .vocab-quiz-modal-iframe {
+  flex: 1;
+  border: none;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+}
+
+/* 📰 오늘의 비평 시사문해 — 학습실 위에 띄우는 iframe 모달 */
+.critique-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10005;
+}
+.critique-modal.show {
+  display: flex;
+  animation: fadeIn 0.3s ease;
+}
+.critique-modal-content {
+  background: #fff;
+  width: 1100px;
+  max-width: 95vw;
+  height: 88vh;
+  max-height: 880px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.critique-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: #fff;
+  font-size: 28px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.critique-modal-close:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.1);
+}
+.critique-modal-iframe {
   flex: 1;
   border: none;
   width: 100%;
@@ -12991,11 +13070,16 @@ async function performLogout() {
         // 어휘퀴즈 완료 여부 확인
         const vocabCompleted = await checkVocabularyCompletedToday();
 
-        // 전체 과제 개수 = 기존 과제 + 어휘퀴즈(1개)
-        const totalCount = tasks.length + 1;
+        // 📰 오늘의 비평 시사문해 카드 반영 (오늘 기사 있을 때만 카운트)
+        const critiqueInfo = await getCritiqueTodayInfo();
+        const critiqueExists = !!critiqueInfo;
+        const critiqueDone = !!(critiqueInfo && critiqueInfo.submitted);
 
-        // 완료 개수 = 기존 완료 + 어휘퀴즈 완료 여부
-        const totalCompletedCount = completedCount + (vocabCompleted ? 1 : 0);
+        // 전체 과제 개수 = 기존 과제 + 어휘퀴즈(1개) + 비평(있을 때만)
+        const totalCount = tasks.length + 1 + (critiqueExists ? 1 : 0);
+
+        // 완료 개수 = 기존 완료 + 어휘퀴즈 완료 + 비평 제출완료
+        const totalCompletedCount = completedCount + (vocabCompleted ? 1 : 0) + (critiqueDone ? 1 : 0);
 
         badge.innerHTML = `${totalCompletedCount}/${totalCount}<span class="badge-unit">개</span>`;
       }
@@ -14098,17 +14182,88 @@ async function performLogout() {
     }
 
     // 학습실 목록 렌더링
+    // 학생 학년 → 비평 학년 콘텐츠 키 매핑
+    function mapStudentGradeToCritique(stuGrade) {
+      const g = String(stuGrade || '').trim();
+      if (/초\s*[34]|3학년|4학년/.test(g)) return 'elem34';
+      if (/초\s*[56]|5학년|6학년/.test(g)) return 'elem56';
+      if (/중\s*[12]|중1|중2/.test(g))   return 'mid12';
+      if (/중\s*3|고\s*1|중3|고1/.test(g)) return 'mid3high1';
+      return 'elem56';
+    }
+
+    // 📰 오늘의 비평 시사문해 — iframe 모달 열기/닫기
+    // ⚠️ 기존 openCritiqueModal()이 달력 모달용이라 이름 충돌 회피 위해 별도 이름 사용
+    function openCritiqueWriteModal(dateKey, gradeKey) {
+      const modal = document.getElementById('critiqueModal');
+      const iframe = document.getElementById('critiqueIframe');
+      if (!modal || !iframe) return;
+      let url = `/daily-critique.html?fromMenu=1&date=${encodeURIComponent(dateKey)}`;
+      if (gradeKey) url += `&grade=${encodeURIComponent(gradeKey)}`;
+      iframe.src = url;
+      modal.classList.add('show');
+    }
+    async function closeCritiqueWriteModal() {
+      const modal = document.getElementById('critiqueModal');
+      const iframe = document.getElementById('critiqueIframe');
+      if (modal) modal.classList.remove('show');
+      if (iframe) iframe.src = 'about:blank';
+      try {
+        if (typeof renderStudyRoomList === 'function') await renderStudyRoomList();
+        if (typeof updateStudyRoomBadge === 'function') await updateStudyRoomBadge();
+      } catch (e) {}
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const closeBtn = document.getElementById('closeCritiqueModal');
+      const modal = document.getElementById('critiqueModal');
+      if (closeBtn) closeBtn.addEventListener('click', closeCritiqueWriteModal);
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) closeCritiqueWriteModal();
+        });
+      }
+    });
+
+    // 📰 오늘의 비평 시사문해 — 시사 제목 + 학생 제출 여부 로드
+    async function getCritiqueTodayInfo() {
+      try {
+        const d = new Date();
+        const todayKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+        const stu = getCurrentStudent();
+
+        const [articlesRes, submissionRes] = await Promise.all([
+          fetch('/data/critique-articles.json').then(r => r.ok ? r.json() : null).catch(() => null),
+          stu
+            ? fetch(`/api/critique/load?grade=${encodeURIComponent(stu.grade||'')}&name=${encodeURIComponent(stu.name||'')}&date=${todayKey}`)
+                .then(r => r.ok ? r.json() : null).catch(() => null)
+            : Promise.resolve(null)
+        ]);
+
+        const article = articlesRes?.articles?.[todayKey];
+        if (!article) return null;
+
+        const submitted = !!(submissionRes?.ok && submissionRes?.submission?.submittedAt);
+
+        return { dateKey: todayKey, title: article.title || '', submitted };
+      } catch (e) {
+        console.warn('[critique] today info 로드 실패:', e);
+        return null;
+      }
+    }
+
     async function renderStudyRoomList() {
       const list = document.getElementById('studyRoomList');
       if (!list) return;
 
       // ⚡ 병렬 처리로 속도 개선: 모든 데이터를 동시에 로드
-      const [unitGrades, allTasks, vocabCompletedToday, monthlyReportCount, completedStoryIds] = await Promise.all([
+      const [unitGrades, allTasks, vocabCompletedToday, monthlyReportCount, completedStoryIds, critiqueInfo] = await Promise.all([
         fetchUnitGrades(),
         getStudyRoomTasks(),
         checkVocabularyCompletedToday(),
         getMonthlyReportCount(),
-        getCompletedStoryIds()
+        getCompletedStoryIds(),
+        getCritiqueTodayInfo()
       ]);
 
       unitGradesData = unitGrades;
@@ -14130,6 +14285,50 @@ async function performLogout() {
       const tasks = [...aiTasks, ...normalTasks];
 
       list.innerHTML = '';
+
+      // ========== 📰 오늘의 비평 시사문해 쓰기 섹션 (최상단) ==========
+      if (critiqueInfo) {
+        const critiqueHeader = document.createElement('li');
+        critiqueHeader.className = 'study-room-divider';
+        critiqueHeader.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 12px; padding: 16px 0;">
+            <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #f59e0b, transparent);"></div>
+            <span style="color: #b45309; font-size: 13px; font-weight: 600; white-space: nowrap;">📰 오늘의 비평 시사문해</span>
+            <div style="flex: 1; height: 2px; background: linear-gradient(to right, transparent, #f59e0b, transparent);"></div>
+          </div>
+        `;
+        list.appendChild(critiqueHeader);
+
+        const critiqueItem = document.createElement('li');
+        critiqueItem.className = 'study-room-item';
+        critiqueItem.style.cursor = 'pointer';
+        critiqueItem.dataset.isCritique = 'true';
+
+        const critBadgeClass = critiqueInfo.submitted ? 'status-critique-done' : 'status-critique-pending';
+        const critBadgeText = critiqueInfo.submitted ? '🏆 제출완료' : '✏️ 미완료';
+        const safeTitle = (critiqueInfo.title || '오늘의 시사 기사를 확인해 보세요').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        critiqueItem.innerHTML = `
+          <div class="task-info" style="min-width: 0;">
+            <div class="task-title" style="font-weight: 600;">📰 오늘의 비평 시사문해 쓰기</div>
+            <div class="task-meta critique-title-line" style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+              ${safeTitle}
+            </div>
+          </div>
+          <div class="task-status">
+            <span class="status-badge ${critBadgeClass}">${critBadgeText}</span>
+          </div>
+        `;
+
+        // 카드 클릭 → 학습실 위에 비평 모달(iframe)로 띄움 (학생 학년 매핑)
+        critiqueItem.addEventListener('click', () => {
+          const stu = (typeof getCurrentStudent === 'function') ? getCurrentStudent() : null;
+          const gradeKey = mapStudentGradeToCritique(stu?.grade || '');
+          openCritiqueWriteModal(critiqueInfo.dateKey, gradeKey);
+        });
+
+        list.appendChild(critiqueItem);
+      }
 
       // ========== 어휘력 데일리 과제 섹션 (최상단 고정) ==========
       const vocabDailyHeader = document.createElement('li');
@@ -16760,6 +16959,14 @@ ${content}
         <button class="vocab-quiz-modal-close" id="closeVocabModal">&times;</button>
       </div>
       <iframe class="vocab-quiz-modal-iframe" id="vocabQuizIframe"></iframe>
+    </div>
+  </div>
+
+  <!-- 📰 오늘의 비평 시사문해 모달 (학습실 위에 띄움) -->
+  <div class="critique-modal" id="critiqueModal">
+    <div class="critique-modal-content">
+      <button class="critique-modal-close" id="closeCritiqueModal" aria-label="닫기">&times;</button>
+      <iframe class="critique-modal-iframe" id="critiqueIframe" title="오늘의 비평 시사문해"></iframe>
     </div>
   </div>
 
