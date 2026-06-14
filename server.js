@@ -693,6 +693,73 @@ app.get("/login", (req, res) => {
   res.sendFile(path.join(__dirname, "login.html"));
 });
 
+// 🎤 여름학기 작사왕 도전 — 본사 이메일 전송
+app.post("/api/lyricist/submit", async (req, res) => {
+  try {
+    const { name, grade, center, songTitle, keywords, lyrics, message } = req.body || {};
+    if (!name || !grade || !center || !songTitle || !lyrics) {
+      return res.json({ ok: false, message: "필수 항목을 모두 입력해 주세요." });
+    }
+    const safe = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    const kwHtml = Array.isArray(keywords) && keywords.length
+      ? keywords.map(k => `<span style="display:inline-block;background:#e3f2fd;color:#1565c0;padding:3px 10px;border-radius:14px;font-size:12px;margin:2px 4px 2px 0;">${safe(k)}</span>`).join('')
+      : '<span style="color:#999;font-size:12px;">선택 없음</span>';
+
+    const mailOptions = {
+      from: process.env.NAVER_EMAIL,
+      to: "kukikukilove@naver.com",
+      subject: `[🎤 여름학기 작사왕 도전] ${center} · ${grade} ${name} — ${songTitle}`,
+      html: `
+        <h2>🎤 여름학기 작사왕 도전 작품 접수</h2>
+        <table style="border-collapse:collapse;width:100%;max-width:680px;font-family:'Noto Sans KR',sans-serif;">
+          <tr style="background:#f5f5f5;">
+            <td style="padding:10px;font-weight:bold;width:120px;border-bottom:1px solid #e0e0e0;">이름</td>
+            <td style="padding:10px;border-bottom:1px solid #e0e0e0;">${safe(name)}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;font-weight:bold;border-bottom:1px solid #e0e0e0;">학년</td>
+            <td style="padding:10px;border-bottom:1px solid #e0e0e0;">${safe(grade)}</td>
+          </tr>
+          <tr style="background:#f5f5f5;">
+            <td style="padding:10px;font-weight:bold;border-bottom:1px solid #e0e0e0;">센터</td>
+            <td style="padding:10px;border-bottom:1px solid #e0e0e0;">${safe(center)}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;font-weight:bold;border-bottom:1px solid #e0e0e0;">제목</td>
+            <td style="padding:10px;border-bottom:1px solid #e0e0e0;font-weight:bold;color:#e91e63;">${safe(songTitle)}</td>
+          </tr>
+          <tr style="background:#f5f5f5;">
+            <td style="padding:10px;font-weight:bold;border-bottom:1px solid #e0e0e0;">선택 키워드</td>
+            <td style="padding:10px;border-bottom:1px solid #e0e0e0;">${kwHtml}</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding:10px;font-weight:bold;background:#e3f2fd;color:#0d47a1;">🎵 노래 가사</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding:14px;border:1px solid #bbdefb;background:#fff;line-height:1.8;white-space:pre-wrap;">${safe(lyrics)}</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding:10px;font-weight:bold;background:#fce4ec;color:#880e4f;">💗 담고 싶은 메시지</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding:14px;border:1px solid #f8bbd0;background:#fff;line-height:1.8;white-space:pre-wrap;">${safe(message) || '<span style="color:#999;">(메시지 없음)</span>'}</td>
+          </tr>
+          <tr style="background:#fafafa;">
+            <td style="padding:10px;font-weight:bold;border-top:1px solid #e0e0e0;">접수 일시</td>
+            <td style="padding:10px;border-top:1px solid #e0e0e0;">${new Date().toLocaleString('ko-KR')}</td>
+          </tr>
+        </table>
+      `
+    };
+    await transporter.sendMail(mailOptions);
+    console.log(`📧 [작사왕] 접수: ${center} · ${grade} ${name} — ${songTitle}`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ [/api/lyricist/submit] 오류:", err);
+    res.status(500).json({ ok: false, message: "이메일 발송 중 오류가 발생했습니다." });
+  }
+});
+
 app.get("/signup", (req, res) => {
   console.log("✅ [GET] /signup -> 메인으로 이동");
   return res.redirect("/");   // ❗ 쿼리 없이 루트로만 보내기
@@ -33354,7 +33421,9 @@ const midtermEvalSchema = new mongoose.Schema({
     qType: String,                      // 지수 유형
     fromGate: Number,                   // 원래 관문 번호
     correct: Boolean,                   // 정답 여부
-    timeSpent: Number                   // 소요 시간 (초)
+    timeSpent: Number,                  // 소요 시간 (초)
+    userAnswer: Number,                 // 학생이 선택한 번호 (1~4)
+    correctAnswer: Number               // 정답 번호 (1~4)
   }]
 });
 const MidtermEval = mongoose.model("MidtermEval", midtermEvalSchema);
@@ -34202,6 +34271,142 @@ app.get("/api/midterm/history", async (req, res) => {
 
   } catch (err) {
     console.error("[midterm/history] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 중간평가 시험지 상세 조회 API (학원 관리자용)
+// — questionResults(저장된 학생답/정답) + 단원 JSON에서 본문/문제/옵션 매번 재로드
+app.get("/api/midterm/exam-detail", requireAdminLogin, async (req, res) => {
+  try {
+    const { grade, name, stage, attemptNumber } = req.query;
+    if (!grade || !name || !stage || !attemptNumber) {
+      return res.json({ ok: false, message: "필수 파라미터가 부족합니다." });
+    }
+    const evalDoc = await MidtermEval.findOne({
+      grade, name,
+      stage: parseInt(stage),
+      attemptNumber: parseInt(attemptNumber)
+    }).lean();
+    if (!evalDoc) {
+      return res.json({ ok: false, message: "해당 중간평가 기록을 찾을 수 없습니다." });
+    }
+
+    const fs = require('fs');
+    const path = require('path');
+
+    // 단원 JSON에서 한 문항의 본문/문제/옵션 추출 (라인 33950~ 의 로직과 동일 패턴)
+    function extractQuestionContent(unitCode, qType) {
+      if (!unitCode) return null;
+      const isFit = unitCode.startsWith('fit_');
+      const isOn = unitCode.startsWith('on_');
+      const isDeep = unitCode.startsWith('deep_');
+      let subject, num;
+      let m;
+      if (isFit)       m = unitCode.match(/fit_([a-z]+\d?)_(\d{1,2})/);
+      else if (isOn)   m = unitCode.match(/on_([a-z]+\d?)_(\d{1,2})/);
+      else if (isDeep) m = unitCode.match(/deep_([a-z]+\d?)_(\d{1,2})/);
+      else             m = unitCode.match(/([a-z]+\d?)_(\d{1,2})/);
+      if (!m) return null;
+      subject = m[1]; num = m[2].padStart(2, '0');
+
+      const dirMap = {
+        'physics':'science','chem':'science','bio':'science','earth':'science',
+        'law':'social','geo':'social','soc':'social','pol':'social','eco':'social',
+        'world1':'worldlit','world2':'worldlit',
+        'classic':'korlit','modern':'korlit','poem':'korlit','novel':'korlit',
+        'people1':'person','people2':'person'
+      };
+      const dir = dirMap[subject] || 'science';
+
+      let contentPath;
+      if (isFit)       contentPath = path.join(__dirname,'public','BRAINUP',dir,`fit_${subject}_content.js`);
+      else if (isOn)   contentPath = path.join(__dirname,'public','BRAINUP',dir,`on_${subject}_content.js`);
+      else if (isDeep) contentPath = path.join(__dirname,'public','BRAINUP',dir,`deep_${subject}_content.js`);
+      else             contentPath = path.join(__dirname,'public','BRAINUP',dir,`${subject}_content.js`);
+
+      if (!fs.existsSync(contentPath)) return null;
+      const content = fs.readFileSync(contentPath, 'utf-8');
+
+      const labelNoMatch = content.match(new RegExp(`labelNo:\\s*["']${num}["']`));
+      if (!labelNoMatch) return null;
+      const unitIndex = content.indexOf(labelNoMatch[0]);
+      const nextUnitMatch = content.slice(unitIndex + 100).match(/labelNo:\s*["']\d{2}["']/);
+      const endIndex = nextUnitMatch ? unitIndex + 100 + content.slice(unitIndex + 100).indexOf(nextUnitMatch[0]) : content.length;
+      const unitBlock = content.slice(unitIndex, endIndex);
+
+      const titleMatch = unitBlock.match(/title:\s*["'](.+?)["']/);
+      const unitTitle = titleMatch ? titleMatch[1] : '';
+
+      const answerKeyMatch = unitBlock.match(/answerKey:\s*\{([^}]+)\}/);
+      let answer = null;
+      if (answerKeyMatch) {
+        const ans = answerKeyMatch[1].match(new RegExp(`${qType}:\\s*['"]?(\\d)['"]?`));
+        if (ans) answer = parseInt(ans[1]);
+      }
+
+      const qTextMatch = unitBlock.match(new RegExp(`${qType}_text:\\s*'((?:\\\\'|[^'])+?)'`)) ||
+                         unitBlock.match(new RegExp(`${qType}_text:\\s*"((?:\\\\"|[^"])+?)"`));
+      const qOptsMatch = unitBlock.match(new RegExp(`${qType}_opts:\\s*\\[([\\s\\S]*?)\\]`));
+      if (!qTextMatch || !qOptsMatch) return { unitTitle, answer, question: null, options: [], passage: [], explanation: '' };
+
+      const question = qTextMatch[1].replace(/\\'/g, "'").replace(/\\"/g, '"');
+      const options = (qOptsMatch[1].match(/'((?:\\'|[^'])+)'|"((?:\\"|[^"])+)"/g) || []).map(s => {
+        let opt = s.slice(1,-1).replace(/\\'/g,"'").replace(/\\"/g,'"').trim();
+        opt = opt.replace(/^[①②③④]\s*/, '');
+        return opt;
+      });
+
+      const passageMatch = unitBlock.match(/passage:\s*\[([\s\S]*?)\],?\s*\n\s*vocab:/);
+      let passages = [];
+      if (passageMatch) {
+        passages = (passageMatch[1].match(/'((?:\\'|[^'])+)'/g) || []).map(s => s.slice(1,-1).replace(/\\'/g, "'"));
+      }
+
+      // 해설 추출 (q1_explain, q2_explain)
+      const expMatch = unitBlock.match(new RegExp(`${qType}_explain:\\s*'((?:\\\\'|[^'])+?)'`)) ||
+                      unitBlock.match(new RegExp(`${qType}_explain:\\s*"((?:\\\\"|[^"])+?)"`));
+      const explanation = expMatch ? expMatch[1].replace(/\\'/g,"'").replace(/\\"/g,'"') : '';
+
+      return { unitTitle, question, options, answer, passage: passages, explanation };
+    }
+
+    const questions = (evalDoc.questionResults || []).map((q, idx) => {
+      const content = extractQuestionContent(q.unitCode, q.qType || 'q1') || {};
+      return {
+        questionNo: q.questionNo || (idx + 1),
+        unitCode: q.unitCode,
+        unitTitle: q.unitTitle || content.unitTitle || '',
+        qType: q.qType,
+        fromGate: q.fromGate,
+        question: content.question || '',
+        options: content.options || [],
+        passage: content.passage || [],
+        explanation: content.explanation || '',
+        userAnswer: q.userAnswer ?? null,
+        correctAnswer: q.correctAnswer ?? content.answer ?? null,
+        correct: !!q.correct,
+        timeSpent: q.timeSpent || 0
+      };
+    });
+
+    res.json({
+      ok: true,
+      evaluation: {
+        grade: evalDoc.grade,
+        name: evalDoc.name,
+        stage: evalDoc.stage,
+        attemptNumber: evalDoc.attemptNumber,
+        passed: evalDoc.passed,
+        score: evalDoc.score,
+        correctCount: evalDoc.correctCount,
+        totalQuestions: evalDoc.totalQuestions,
+        completedAt: evalDoc.completedAt
+      },
+      questions
+    });
+  } catch (err) {
+    console.error("[midterm/exam-detail] error:", err);
     res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
   }
 });
