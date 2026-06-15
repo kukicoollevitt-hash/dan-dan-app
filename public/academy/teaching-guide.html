@@ -58682,8 +58682,8 @@
     // 📑 목차 페이지 (표지 다음) — 강 번호·제목·시작 페이지
     function generateTOCHTML(subjectKey, units) {
       const seriesLabel = subjectKey === 'khadv' ? '심화한국사' : '한국사';
-      // 표지(1p) + 목차(1p) = 2p 이후, 강당 4페이지
-      const FIRST_UNIT_PAGE = 3;
+      // 앞표지(1) + 목차(2) + 빈 페이지(3) → 1강 시작 = 4p, 강당 4페이지
+      const FIRST_UNIT_PAGE = 4;
       const PER_UNIT = 4;
       const rows = units.map(([unitKey, data], i) => {
         const pageNum = FIRST_UNIT_PAGE + i * PER_UNIT;
@@ -58939,7 +58939,8 @@
         // 페이지 추가 헬퍼
         //  - fullBleed=true: 페이지 가장자리까지 꽉 채움 (표지용, 여백 0)
         //  - fullBleed=false: A4 안쪽 영역에 여백 10mm 두고 비례 유지하며 fit (본문용)
-        async function appendPageFromHTML(html, isFirst, fullBleed) {
+        //  - pageNumber: 숫자면 하단 중앙에 작게 표시 (표지/목차/빈/뒷표지는 undefined)
+        async function appendPageFromHTML(html, isFirst, fullBleed, pageNumber) {
           wrap.innerHTML = html;
           // 이미지 로드 완료 대기 (강 표지 사료 4장 등)
           const imgs = wrap.querySelectorAll('img');
@@ -58970,38 +58971,56 @@
           const offsetX = baseX + (maxW - finalW) / 2;
           const offsetY = baseY + (maxH - finalH) / 2;
           pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', offsetX, offsetY, finalW, finalH);
+          // 페이지 번호 — 본문 페이지만 하단 중앙에 작게
+          if (typeof pageNumber === 'number' && pageNumber > 0) {
+            pdf.setFontSize(9);
+            pdf.setTextColor(140, 140, 140);
+            pdf.text(String(pageNumber), W / 2, H - 6, { align: 'center' });
+          }
         }
 
-        // 표지 — 페이지 끝까지 꽉 채움 (여백 0)
+        // 빈 페이지 HTML (표지/목차와 본문 사이 구분용)
+        function blankPageHTML() {
+          return '<div style="width:794px;height:1123px;background:#fff;"></div>';
+        }
+
+        // 1) 앞표지 — 페이지 끝까지 꽉 채움 (여백 0, 페이지 번호 없음)
         await appendPageFromHTML(generateCoverPageHTML(subjectKey, withAnswers, units.length), true, true);
 
-        // 목차 페이지 (표지 다음)
+        // 2) 목차 (페이지 번호 없음)
         await appendPageFromHTML(generateTOCHTML(subjectKey, units), false, false);
 
-        // 각 강 4페이지: 강 표지 → 본문 빈칸 → 자기 말로 소개 → 나만의 사료 추가
-        const totalPages = units.length * 4 + 3; // 앞표지 + 목차 + 강당 4페이지 + 뒷표지
-        let pageIdx = 3;
+        // 3) 빈 페이지 (표지/목차와 본문 구분, 페이지 번호 없음)
+        await appendPageFromHTML(blankPageHTML(), false, false);
+
+        // 4~) 각 강 4페이지: 강 표지 → 본문 빈칸 → 자기 말로 소개 → 나만의 사료 추가 (페이지 번호 표시)
+        const totalPages = units.length * 4 + 4; // 앞표지 + 목차 + 빈 + 강당 4페이지 + 뒷표지
+        let pageIdx = 4; // 4페이지부터 본문 시작
         for (let i = 0; i < units.length; i++) {
           const [unitKey, data] = units[i];
           if (!data.passage || data.passage.length === 0) continue;
-          // 1) 강 표지
-          if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx++}/${totalPages})...`;
-          await appendPageFromHTML(generateUnitCoverHTML(data, unitKey), false, false);
-          // 2) 본문 빈칸
-          if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx++}/${totalPages})...`;
-          await appendPageFromHTML(generateWorkbookHTML(data, unitKey, withAnswers), false, false);
-          // 3) 글쓰기 — 자기 말로 한국사 소개 (교사용은 답안 가이드, 학생용은 빈 줄)
-          if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx++}/${totalPages})...`;
-          await appendPageFromHTML(generateUnitWritingHTML(data, unitKey, withAnswers), false, false);
-          // 4) 나만의 사료 추가하기 (사진 2개 + 마인드맵)
-          if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx++}/${totalPages})...`;
-          await appendPageFromHTML(generateUnitExtraHTML(data, unitKey, withAnswers), false, false);
+          // a) 강 표지
+          if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx}/${totalPages})...`;
+          await appendPageFromHTML(generateUnitCoverHTML(data, unitKey), false, false, pageIdx);
+          pageIdx++;
+          // b) 본문 빈칸
+          if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx}/${totalPages})...`;
+          await appendPageFromHTML(generateWorkbookHTML(data, unitKey, withAnswers), false, false, pageIdx);
+          pageIdx++;
+          // c) 글쓰기 — 자기 말로 한국사 소개 (교사용은 답안 가이드, 학생용은 빈 줄)
+          if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx}/${totalPages})...`;
+          await appendPageFromHTML(generateUnitWritingHTML(data, unitKey, withAnswers), false, false, pageIdx);
+          pageIdx++;
+          // d) 나만의 사료 추가하기 (사진 2개 + 마인드맵)
+          if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx}/${totalPages})...`;
+          await appendPageFromHTML(generateUnitExtraHTML(data, unitKey, withAnswers), false, false, pageIdx);
+          pageIdx++;
         }
 
-        // 마지막 — 뒷표지 (앞표지와 동일하게 fullBleed로 페이지 끝까지)
+        // 마지막 — 뒷표지 (앞표지와 동일하게 fullBleed로 페이지 끝까지, 페이지 번호 없음)
         const backHtml = generateBackCoverHTML(subjectKey);
         if (backHtml) {
-          if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx++}/${totalPages})...`;
+          if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx}/${totalPages})...`;
           await appendPageFromHTML(backHtml, false, true);
         }
 
