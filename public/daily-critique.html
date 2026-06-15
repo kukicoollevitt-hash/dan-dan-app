@@ -3018,6 +3018,37 @@
       const bg = dimmed ? _wbBgDimmedDataUrl : _wbBgFullDataUrl;
       if (bg) pdf.addImage(bg, 'JPEG', 0, 0, W, H);
     }
+    // 📝 메모 페이지 — 옅은 모눈(오목판) + 상단 작은 라벨
+    function drawMemoGridPage(pdf) {
+      const W = 210, H = 297;
+      const M = 14;                  // 페이지 여백
+      const grid = 7;                // 격자 간격 (7mm = 자연스러운 노트 크기)
+      const startX = M;
+      const startY = M + 8;          // 상단 라벨 공간 확보
+      const endX = W - M;
+      const endY = H - M;
+
+      // 상단 라벨
+      pdf.setFontSize(9);
+      pdf.setTextColor(170, 170, 170);
+      pdf.text('📝 MEMO', startX, M + 4);
+      // 라벨 하단 옅은 구분선
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setLineWidth(0.15);
+      pdf.line(startX, M + 6, endX, M + 6);
+
+      // 옅은 모눈 (격자)
+      pdf.setDrawColor(230, 230, 230);  // 매우 옅은 회색
+      pdf.setLineWidth(0.1);
+      // 가로선
+      for (let y = startY; y <= endY + 0.01; y += grid) {
+        pdf.line(startX, y, endX, y);
+      }
+      // 세로선
+      for (let x = startX; x <= endX + 0.01; x += grid) {
+        pdf.line(x, startY, x, endY);
+      }
+    }
     async function generateWorkbookPDF(grade, month, validDates, withAnswers) {
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -3040,9 +3071,10 @@
       if (targetBadge) targetBadge.classList.add('active');
 
       try {
-        // === 표지 (배경 원본 풀강도) ===
+        // === 표지 (배경 원본 풀강도 + 학년별 색 오버레이) ===
         updateWorkbookProgress(0, validDates.length + 3, '표지 생성 중...');
         drawBgFullPage(false);
+        applyGradeColorOverlay(pdf, grade);
         pdf.addImage(await renderWorkbookCover(grade, month), 'PNG', M, M, CW, CH);
 
         // === 목차 (필요시 2페이지, 배경 흐리게) ===
@@ -3055,6 +3087,8 @@
         }
 
         // === 일별 콘텐츠 ===
+        // 양면 인쇄용 — 초3-4 제외, 나머지 학년은 단원 표지가 짝수 페이지에 오도록 빈 페이지 자동 삽입
+        // 현재 페이지 수가 짝수면 다음 페이지(=일자 표지)가 홀수가 되므로, 빈 페이지 1장 추가해 짝수에 맞춤
         for (let i = 0; i < validDates.length; i++) {
           const date = validDates[i];
           const d = new Date(date);
@@ -3062,6 +3096,11 @@
           document.getElementById('dateSelect').value = date;
           loadArticleByDate();
           await new Promise(r => setTimeout(r, 150));
+          // 초3-4 외 학년만 — 일자 표지를 짝수 페이지로 맞추기 위한 메모 페이지 삽입
+          if (grade !== 'elem34' && pdf.internal.getNumberOfPages() % 2 === 0) {
+            pdf.addPage();
+            drawMemoGridPage(pdf); // 옅은 모눈 + 메모 라벨
+          }
           await renderDayPagesForWorkbook(pdf, withAnswers);
           await new Promise(r => setTimeout(r, 30));
         }
@@ -3084,6 +3123,23 @@
       const [y, mm] = month.split('-');
       const fileName = `브레인문해력_매일비평_${GRADE_LABELS[grade]}_${y}년${parseInt(mm)}월_워크북.pdf`;
       pdf.save(fileName);
+    }
+
+    // 학년별 표지 색조 — 표지 위에 반투명 색 레이어를 깔아 학년을 시각적으로 구분
+    function applyGradeColorOverlay(pdf, grade) {
+      const colors = {
+        elem34:    [125, 211, 252], // 하늘 (초3~4)
+        elem56:    [134, 239, 172], // 연두 (초5~6)
+        mid12:     [253, 186, 116], // 살구 (중1~2)
+        mid3high1: [216, 180, 254]  // 라벤더 (중3~고1)
+      };
+      const c = colors[grade];
+      if (!c || !pdf.setGState || !pdf.GState) return;
+      pdf.saveGraphicsState();
+      pdf.setGState(new pdf.GState({ opacity: 0.22 }));
+      pdf.setFillColor(c[0], c[1], c[2]);
+      pdf.rect(0, 0, 210, 297, 'F');
+      pdf.restoreGraphicsState();
     }
     async function renderWorkbookCover(grade, month) {
       const [y, mm] = month.split('-');
@@ -3224,7 +3280,7 @@
           </div>
           <div style="flex:1;text-align:center;padding:0 4mm;">
             <div style="opacity:0.6;margin-bottom:3mm;">학습 영역</div>
-            <div style="font-family:'Noto Serif KR',serif;font-size:24px;font-weight:800;color:#1a1a1a;">기사·논리·작문</div>
+            <div style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:800;color:#1a1a1a;line-height:1.35;">기사·어휘<br>논리·작문</div>
           </div>
         </div>
         <!-- 편집자의 글 -->
