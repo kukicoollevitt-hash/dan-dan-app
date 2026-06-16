@@ -14224,28 +14224,31 @@ async function performLogout() {
       }
     });
 
-    // 📰 오늘의 비평 시사문해 — 시사 제목 + 학생 제출 여부 로드
+    // 📰 오늘의 비평 시사문해 — 시사 제목 + 학생 제출 여부 + 부여된 등급 로드
     async function getCritiqueTodayInfo() {
       try {
         const d = new Date();
         const todayKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const stu = (typeof getCurrentStudent === 'function') ? getCurrentStudent() : null;
+        if (!stu || !stu.grade || !stu.name) return null;
 
-        const stu = getCurrentStudent();
-
-        const [articlesRes, submissionRes] = await Promise.all([
+        const [articlesRes, submissionRes, initRes] = await Promise.all([
           fetch('/data/critique-articles.json').then(r => r.ok ? r.json() : null).catch(() => null),
-          stu
-            ? fetch(`/api/critique/load?grade=${encodeURIComponent(stu.grade||'')}&name=${encodeURIComponent(stu.name||'')}&date=${todayKey}`)
-                .then(r => r.ok ? r.json() : null).catch(() => null)
-            : Promise.resolve(null)
+          fetch(`/api/critique/load?grade=${encodeURIComponent(stu.grade||'')}&name=${encodeURIComponent(stu.name||'')}&date=${todayKey}`)
+              .then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch(`/api/critique/init?grade=${encodeURIComponent(stu.grade||'')}&name=${encodeURIComponent(stu.name||'')}`)
+              .then(r => r.ok ? r.json() : null).catch(() => null)
         ]);
 
         const article = articlesRes?.articles?.[todayKey];
         if (!article) return null;
 
-        const submitted = !!(submissionRes?.ok && submissionRes?.submission?.submittedAt);
+        // 🔒 등급(assignedSeries) 기반 — 비평 시리즈가 부여되지 않은 학생에게는 카드 숨김
+        const defaultGrade = initRes?.ok ? initRes.defaultGrade : null;
+        if (!defaultGrade) return null;
 
-        return { dateKey: todayKey, title: article.title || '', submitted };
+        const submitted = !!(submissionRes?.ok && submissionRes?.submission?.submittedAt);
+        return { dateKey: todayKey, title: article.title || '', submitted, defaultGrade };
       } catch (e) {
         console.warn('[critique] today info 로드 실패:', e);
         return null;
@@ -14320,11 +14323,9 @@ async function performLogout() {
           </div>
         `;
 
-        // 카드 클릭 → 학습실 위에 비평 모달(iframe)로 띄움 (학생 학년 매핑)
+        // 카드 클릭 → 학습실 위에 비평 모달(iframe)로 띄움 (부여된 등급 사용)
         critiqueItem.addEventListener('click', () => {
-          const stu = (typeof getCurrentStudent === 'function') ? getCurrentStudent() : null;
-          const gradeKey = mapStudentGradeToCritique(stu?.grade || '');
-          openCritiqueWriteModal(critiqueInfo.dateKey, gradeKey);
+          openCritiqueWriteModal(critiqueInfo.dateKey, critiqueInfo.defaultGrade);
         });
 
         list.appendChild(critiqueItem);
