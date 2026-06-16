@@ -441,6 +441,40 @@
       </div>
     </div>
 
+    <!-- 브레인비평 시사문해 월간 교재 -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">📰</span>
+        브레인비평 시사문해 월간 교재
+      </div>
+      <div class="book-section">
+        <div class="book-section-header">
+          <div class="book-section-title">교재 목록 <span style="font-size:11px;color:rgba(255,255,255,0.6);margin-left:6px;">(권당 최소 10권 신청)</span></div>
+          <button class="add-btn" onclick="addCritiqueItem()">+ 추가</button>
+        </div>
+        <div id="critiqueItems">
+          <div class="no-items">추가 버튼을 눌러 교재를 추가하세요</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 특강 교재 (기본한국사 + 심화한국사) -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">📜</span>
+        특강 교재 (기본한국사 + 심화한국사)
+      </div>
+      <div class="book-section">
+        <div class="book-section-header">
+          <div class="book-section-title">교재 목록 <span style="font-size:11px;color:rgba(255,255,255,0.6);margin-left:6px;">(통합 세트 = 기본+심화 2권, 권당 최소 10권 신청)</span></div>
+          <button class="add-btn" onclick="addSpecialItem()">+ 추가</button>
+        </div>
+        <div id="specialItems">
+          <div class="no-items">추가 버튼을 눌러 교재를 추가하세요</div>
+        </div>
+      </div>
+    </div>
+
     <!-- 주문 요약 -->
     <div class="order-summary">
       <div class="summary-title">신청 내역 요약</div>
@@ -484,6 +518,8 @@
     const UNIT_PRICE = 10000;
     let brainItemId = 0;
     let whaleItemId = 0;
+    let critiqueItemId = 0;
+    let specialItemId = 0;
 
     // 브레인문해력 아이템 추가
     function addBrainItem() {
@@ -542,6 +578,61 @@
       updateSummary();
     }
 
+    // 특강 교재 (한국사) 아이템 추가 — 통합 세트(기본+심화 2권), 최소 10권
+    function addSpecialItem() {
+      const container = document.getElementById('specialItems');
+      const noItems = container.querySelector('.no-items');
+      if (noItems) noItems.remove();
+
+      specialItemId++;
+      const itemHtml = `
+        <div class="book-item" id="special-${specialItemId}">
+          <select onchange="updateSummary()">
+            <option value="">시리즈 선택</option>
+            <option value="한국사">한국사</option>
+          </select>
+          <select onchange="updateSummary()">
+            <option value="">교재 선택</option>
+            <option value="1">기본+심화 통합 (2권)</option>
+          </select>
+          <input type="number" min="10" value="10" placeholder="권수 (최소 10권)" onchange="updateSummary()" oninput="updateSummary()">
+          <span class="item-subtotal">100,000원</span>
+          <button class="remove-btn" onclick="removeItem('special-${specialItemId}')">삭제</button>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', itemHtml);
+      updateSummary();
+    }
+
+    // 브레인비평 시사문해 월간 교재 아이템 추가 — 최소 10권
+    function addCritiqueItem() {
+      const container = document.getElementById('critiqueItems');
+      const noItems = container.querySelector('.no-items');
+      if (noItems) noItems.remove();
+
+      critiqueItemId++;
+      const itemHtml = `
+        <div class="book-item" id="critique-${critiqueItemId}">
+          <select onchange="updateSummary()">
+            <option value="">시리즈 선택</option>
+            <option value="초3~4">초3~4</option>
+            <option value="초5~6">초5~6</option>
+            <option value="중1~2">중1~2</option>
+            <option value="중3~고1">중3~고1</option>
+          </select>
+          <select onchange="updateSummary()">
+            <option value="">월 선택</option>
+            ${[...Array(12)].map((_, i) => `<option value="${i+1}">${i+1}월호</option>`).join('')}
+          </select>
+          <input type="number" min="10" value="10" placeholder="권수 (최소 10권)" onchange="updateSummary()" oninput="updateSummary()">
+          <span class="item-subtotal">100,000원</span>
+          <button class="remove-btn" onclick="removeItem('critique-${critiqueItemId}')">삭제</button>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', itemHtml);
+      updateSummary();
+    }
+
     // 아이템 삭제
     function removeItem(itemId) {
       document.getElementById(itemId).remove();
@@ -549,12 +640,20 @@
       // 비어있으면 안내 메시지 표시
       const brainContainer = document.getElementById('brainItems');
       const whaleContainer = document.getElementById('whaleItems');
+      const critiqueContainer = document.getElementById('critiqueItems');
+      const specialContainer = document.getElementById('specialItems');
 
       if (brainContainer.children.length === 0) {
         brainContainer.innerHTML = '<div class="no-items">추가 버튼을 눌러 교재를 추가하세요</div>';
       }
       if (whaleContainer.children.length === 0) {
         whaleContainer.innerHTML = '<div class="no-items">추가 버튼을 눌러 교재를 추가하세요</div>';
+      }
+      if (critiqueContainer && critiqueContainer.children.length === 0) {
+        critiqueContainer.innerHTML = '<div class="no-items">추가 버튼을 눌러 교재를 추가하세요</div>';
+      }
+      if (specialContainer && specialContainer.children.length === 0) {
+        specialContainer.innerHTML = '<div class="no-items">추가 버튼을 눌러 교재를 추가하세요</div>';
       }
 
       updateSummary();
@@ -622,20 +721,82 @@
         }
       });
 
+      // 브레인비평 시사문해 월간 교재 아이템 수집 (최소 10권)
+      document.querySelectorAll('#critiqueItems .book-item').forEach(item => {
+        const selects = item.querySelectorAll('select');
+        const input = item.querySelector('input');
+        const subtotalEl = item.querySelector('.item-subtotal');
+
+        const series = selects[0].value;
+        const issue = selects[1].value;
+        const qty = parseInt(input.value) || 0;
+
+        if (series && issue && qty >= 10) {
+          const subtotal = qty * UNIT_PRICE;
+          subtotalEl.textContent = subtotal.toLocaleString() + '원';
+          items.push({
+            bookType: '브레인비평',
+            series,
+            issueNumber: parseInt(issue),
+            quantity: qty,
+            unitPrice: UNIT_PRICE,
+            subtotal
+          });
+          totalQty += qty;
+          totalAmt += subtotal;
+        } else {
+          subtotalEl.textContent = qty > 0 && qty < 10 ? '⚠️ 최소 10권' : '-';
+        }
+      });
+
+      // 특강 교재 (한국사 통합) 아이템 수집 (최소 10권)
+      document.querySelectorAll('#specialItems .book-item').forEach(item => {
+        const selects = item.querySelectorAll('select');
+        const input = item.querySelector('input');
+        const subtotalEl = item.querySelector('.item-subtotal');
+
+        const series = selects[0].value;
+        const issue = selects[1].value;
+        const qty = parseInt(input.value) || 0;
+
+        if (series && issue && qty >= 10) {
+          const subtotal = qty * UNIT_PRICE;
+          subtotalEl.textContent = subtotal.toLocaleString() + '원';
+          items.push({
+            bookType: '특강교재',
+            series,
+            issueNumber: parseInt(issue),
+            quantity: qty,
+            unitPrice: UNIT_PRICE,
+            subtotal
+          });
+          totalQty += qty;
+          totalAmt += subtotal;
+        } else {
+          subtotalEl.textContent = qty > 0 && qty < 10 ? '⚠️ 최소 10권' : '-';
+        }
+      });
+
       // 요약 테이블 업데이트
       const summaryBody = document.getElementById('summaryBody');
       if (items.length === 0) {
         summaryBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: rgba(255,255,255,0.6);">신청할 교재가 없습니다</td></tr>';
       } else {
-        summaryBody.innerHTML = items.map(item => `
+        summaryBody.innerHTML = items.map(item => {
+          let issueLabel;
+          if (item.bookType === '브레인비평') issueLabel = `${item.issueNumber}월호`;
+          else if (item.bookType === '특강교재') issueLabel = '기본+심화 통합';
+          else issueLabel = `${item.issueNumber}호`;
+          return `
           <tr>
             <td>${item.bookType}</td>
             <td>${item.series}</td>
-            <td>${item.issueNumber}호</td>
+            <td>${issueLabel}</td>
             <td>${item.quantity}권</td>
             <td>${item.subtotal.toLocaleString()}원</td>
           </tr>
-        `).join('');
+          `;
+        }).join('');
       }
 
       document.getElementById('totalQuantity').textContent = totalQty.toLocaleString();

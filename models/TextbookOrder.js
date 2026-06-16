@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const textbookItemSchema = new mongoose.Schema({
   bookType: {
     type: String,
-    enum: ['브레인문해력', '고래도서관'],
+    enum: ['브레인문해력', '고래도서관', '브레인비평', '특강교재'],
     required: true
   },
   series: {
@@ -12,6 +12,8 @@ const textbookItemSchema = new mongoose.Schema({
     required: true
     // 브레인문해력: 브레인온, 업, 핏, 딥
     // 고래도서관: 시즌1, 시즌2, 시즌3
+    // 브레인비평: 초3~4, 초5~6, 중1~2, 중3~고1
+    // 특강교재: 한국사 (기본+심화 통합 2권 세트)
   },
   issueNumber: {
     type: Number,
