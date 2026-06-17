@@ -37556,6 +37556,88 @@ app.get('/api/reading-time/:studentKey/:unitKey', async (req, res) => {
   }
 });
 
+// ============================================
+// 🧪 설명회 시연용 — 김윤슬(초3) 생물01 단원만 학습 기록 초기화
+// (관문·코인·고래·어휘·중간평가는 유지)
+// ============================================
+app.post('/api/student/reset-bio01', async (req, res) => {
+  try {
+    const { grade, name } = req.body || {};
+    // 화이트리스트: 초3 김윤슬만 허용
+    if (grade !== '초3' || name !== '김윤슬') {
+      return res.status(403).json({ success: false, error: '허용되지 않은 학생입니다.' });
+    }
+
+    const TARGET_UNITS = ['on_bio_01', 'bio_01'];
+    const studentKey = `${grade}_${name}`;
+
+    const [logsRes, behaviorRes, readingRes] = await Promise.all([
+      LearningLog.deleteMany({ grade, name, unit: { $in: TARGET_UNITS } }),
+      LearningBehavior.deleteMany({ grade, name, unit: { $in: TARGET_UNITS } }),
+      mongoose.connection.db.collection('reading_times').deleteMany({
+        studentKey,
+        unitKey: { $in: TARGET_UNITS }
+      })
+    ]);
+
+    // UserProgress 정리: unitProgress / completedPages / menuCompletion 에서 해당 단원만 제거
+    const userProgress = await UserProgress.findOne({ grade, name });
+    let upChanges = { unitProgress: 0, completedPages: 0, menuCompletion: 0 };
+    if (userProgress) {
+      // unitProgress (Map) — 단원 키 자체와 단원_으로 시작하는 모든 서브키 제거
+      if (userProgress.unitProgress) {
+        for (const key of Array.from(userProgress.unitProgress.keys())) {
+          if (TARGET_UNITS.includes(key) || TARGET_UNITS.some(u => key.startsWith(`${u}_`))) {
+            userProgress.unitProgress.delete(key);
+            upChanges.unitProgress++;
+          }
+        }
+      }
+      // completedPages — 단원 키 포함된 항목 제거
+      if (Array.isArray(userProgress.completedPages)) {
+        const before = userProgress.completedPages.length;
+        userProgress.completedPages = userProgress.completedPages.filter(p =>
+          !TARGET_UNITS.some(u => String(p).includes(u))
+        );
+        upChanges.completedPages = before - userProgress.completedPages.length;
+      }
+      // menuCompletion (Map) — 단원 키 포함된 항목 제거
+      if (userProgress.menuCompletion) {
+        for (const key of Array.from(userProgress.menuCompletion.keys())) {
+          if (TARGET_UNITS.some(u => String(key).includes(u))) {
+            userProgress.menuCompletion.delete(key);
+            upChanges.menuCompletion++;
+          }
+        }
+      }
+      await userProgress.save();
+    }
+
+    // 🔥 서버 메모리 캐시 무효화 — 다음 completion-status 호출이 새 결과 반환하도록
+    const completionPrefix = `completion-status:{"grade":"${grade}","name":"${name}"`;
+    let cacheCleared = 0;
+    for (const key of cache.keys()) {
+      if (key.startsWith(completionPrefix)) {
+        cache.delete(key);
+        cacheCleared++;
+      }
+    }
+
+    const summary = {
+      learningLogs: logsRes.deletedCount,
+      learningBehavior: behaviorRes.deletedCount,
+      readingTimes: readingRes.deletedCount,
+      ...upChanges,
+      cacheCleared
+    };
+    console.log(`🧪 [reset-bio01] ${grade} ${name} — ${TARGET_UNITS.join(', ')}`, summary);
+    res.json({ success: true, summary });
+  } catch (err) {
+    console.error('reset-bio01 오류:', err);
+    res.status(500).json({ success: false, error: '서버 오류' });
+  }
+});
+
 // ===== 고래도서관 문의 API =====
 app.post("/api/whale-inquiry", async (req, res) => {
   try {
@@ -38242,10 +38324,39 @@ async function aiGradeCritique({ article, sixW, thinking, teacherGuide, gradeLab
   const tgAnswers = teacherGuide?.sixW
     ? Object.keys(sixWLabels).map(k => `[${sixWLabels[k]}] ${(teacherGuide.sixW[k] || '').trim()}`).join('\n')
     : '';
-  const myThinking = ['q1','q2','q3'].map(k => `${k}: ${(thinking[k] || '').trim()}`).join('\n');
-  const tgThinking = teacherGuide?.thinking
-    ? ['q1','q2','q3'].map(k => `${k}: ${(teacherGuide.thinking[k] || '').trim()}`).join('\n')
-    : '';
+  // 🎯 등급별 질문·답안 우선 사용 (elem34/elem56에만 byGrade가 있을 수 있음)
+  const gradeKey = (() => {
+    const g = (gradeLabel || '').trim();
+    if (g.includes('초3') || g.includes('초4') || g === 'elem34') return 'elem34';
+    if (g.includes('초5') || g.includes('초6') || g === 'elem56') return 'elem56';
+    if (g.includes('중1') || g.includes('중2') || g === 'mid12') return 'mid12';
+    if (g.includes('중3') || g.includes('고1') || g === 'mid3high1') return 'mid3high1';
+    return null;
+  })();
+  const byGrade = teacherGuide?.byGrade?.[gradeKey];
+  const customQuestions = byGrade?.questions;
+  const tgThinkingObj = byGrade?.thinking || teacherGuide?.thinking || {};
+
+  // 학생 답안 + 모범답안: 질문이 있으면 질문도 함께 표시
+  const myThinking = ['q1','q2','q3'].map(k => {
+    const q = customQuestions?.[k];
+    const a = (thinking[k] || '').trim();
+    return q ? `[${k} 질문] ${q}\n[${k} 학생답안] ${a}` : `${k}: ${a}`;
+  }).join('\n\n');
+  const tgThinking = ['q1','q2','q3'].map(k => {
+    const a = (tgThinkingObj[k] || '').trim();
+    return a ? `${k}: ${a}` : '';
+  }).filter(Boolean).join('\n');
+
+  // 자기 경험·예측 질문 안내 (elem34/elem56에서 byGrade 활성화 시 적용)
+  const personalQuestionNote = customQuestions ? `
+
+== 등급별 자기 경험 질문 안내 ==
+이 학생은 초3~4 또는 초5~6 학년이며, 질문 중 일부는 "자기 동네 경험", "자기가 좋아하는 일", "가족과의 약속" 같은 **학생 개인의 자기 경험·예측·약속**을 묻습니다.
+- 모범답안은 **예시 한 가지**일 뿐이며, 괄호 안의 "(예: ...)" 부분은 다양한 정답 예시를 보여 줍니다.
+- 학생이 모범답안과 **다른 자기 경험을 적었더라도** 질문 의도에 부합하고 의미 있게 작성했으면 **만점 인정**해야 합니다.
+- 예) 모범답안에 "○○ 공원 느티나무"가 있어도 학생이 "할머니 댁 감나무"라고 답하면 정답입니다.
+- 단, 질문과 무관한 동문서답이거나 의미 없는 답안은 기존 규칙대로 감점합니다.` : '';
 
   const systemPrompt = `당신은 어린이·청소년 시사 비평 학습을 평가하는 한국어 선생님입니다.
 대상: ${gradeLabel} 학생.
@@ -38277,7 +38388,7 @@ async function aiGradeCritique({ article, sixW, thinking, teacherGuide, gradeLab
 - improvement: 1문장 부드럽고 구체적으로. 점수가 낮으면 "다음엔 완전한 문장으로 답해보세요" 같은 명확한 안내.
 - 호칭 없이 ("여러분" 사용).
 
-stars는 반드시 0.5 단위 (1.0, 1.5, 2.0, ..., 5.0).`;
+stars는 반드시 0.5 단위 (1.0, 1.5, 2.0, ..., 5.0).${personalQuestionNote}`;
 
   const userPrompt = `기사 제목: ${article.title || '-'}
 기사 카테고리: ${article.category || '-'}
@@ -38366,15 +38477,23 @@ ${tgThinking || '(없음)'}
 }
 
 // 기사 본문 + teacherGuide 로드 (file system에서)
+// 🔄 파일 mtime 기반 캐시 — JSON이 바뀌면 자동 재로드
 let _critArticlesCache = null;
+let _critArticlesCacheMtime = 0;
 async function loadCritiqueArticles() {
-  if (_critArticlesCache) return _critArticlesCache;
   try {
     const fs = require('fs');
     const path = require('path');
     const file = path.join(__dirname, 'public', 'data', 'critique-articles.json');
+    const stat = fs.statSync(file);
+    const mtime = stat.mtimeMs;
+    if (_critArticlesCache && _critArticlesCacheMtime === mtime) {
+      return _critArticlesCache;
+    }
     const data = JSON.parse(fs.readFileSync(file, 'utf8'));
     _critArticlesCache = data;
+    _critArticlesCacheMtime = mtime;
+    console.log('[비평] 기사 재로드:', Object.keys(data.articles || {}).length, '건');
     return data;
   } catch (e) {
     console.error('[비평] 기사 로드 실패:', e.message);
@@ -38558,7 +38677,17 @@ app.post('/api/critique/submit', async (req, res) => {
         );
       }
     } catch (gradeErr) {
-      console.error('[비평] 채점 실패(저장 후 처리):', gradeErr.message);
+      console.error('[비평] 채점 실패(저장 후 처리):', gradeErr.message, gradeErr.stack);
+      // 🛟 AI 채점이 실패해도 학생에게 별점이 안 보이는 일이 없도록 폴백 별점 제공
+      try {
+        const articlesData2 = await loadCritiqueArticles();
+        const article2 = getCritiqueArticleByDateGrade(articlesData2, date, contentGrade);
+        const fb = fallbackGrade(sixW || {}, thinking || {}, article2?.teacherGuide || {});
+        grading = { ...fb, gradedAt: new Date(), gradedModel: 'fallback' };
+        await CritiqueSubmission.updateOne({ _id: doc._id }, { $set: { grading } });
+      } catch (fbErr) {
+        console.error('[비평] 폴백 채점도 실패:', fbErr.message);
+      }
     }
 
     res.json({ ok: true, submission: { ...doc.toObject(), grading } });
@@ -40860,6 +40989,99 @@ app.get("/api/creative-quiz/result", async (req, res) => {
     console.error("[creative-quiz/result] error:", err);
     res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
   }
+});
+
+// ===== 📷 BRAIN비평 워크북 OCR API (GPT-4o-mini Vision) =====
+// 학생이 종이 워크북에 손글씨로 쓴 6하 6칸 + Q1~Q3 손글씨를 자동 인식해 JSON으로 추출
+app.post("/api/critique-ocr", async (req, res) => {
+  try {
+    const { imageBase64 } = req.body;
+    if (!imageBase64) {
+      return res.status(400).json({ ok: false, message: "이미지가 전송되지 않았습니다." });
+    }
+
+    // data:image/jpeg;base64,... 또는 순수 base64 둘 다 허용
+    const dataUrl = imageBase64.startsWith('data:')
+      ? imageBase64
+      : `data:image/jpeg;base64,${imageBase64}`;
+
+    const OpenAI = require('openai');
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    const systemPrompt = `당신은 한글 손글씨 OCR 전문가입니다.
+첨부된 사진은 "BRAIN비평 시사문해 워크북" 한 페이지입니다.
+양식에는 다음 칸이 있습니다:
+- 6하 원칙 6칸: 누가(Who), 언제(When), 어디서(Where), 무엇을(What), 왜(Why), 어떻게(How)
+- 내 생각 글쓰기 3칸: Q1(핵심 짚기), Q2(내 생각 쓰기), Q3(실천·적용)
+
+각 칸에 적힌 학생의 손글씨를 정확히 읽어 JSON으로만 응답하세요.
+- 보이는 그대로 읽으세요 (오자도 그대로 — 예: '우나라'는 '우나라'로)
+- 빈 칸은 빈 문자열 ""
+- 줄바꿈은 공백으로 처리
+- 추측하지 말고 보이지 않으면 빈 문자열
+
+응답 형식 (JSON만, 다른 설명 없이):
+{
+  "who": "...",
+  "when": "...",
+  "where": "...",
+  "what": "...",
+  "why": "...",
+  "how": "...",
+  "q1": "...",
+  "q2": "...",
+  "q3": ""
+}`;
+
+    console.log("📷 [critique-ocr] GPT-4o-mini Vision 호출 시작");
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "이 워크북 사진에서 각 칸의 손글씨를 추출해 JSON으로 응답해주세요." },
+            { type: "image_url", image_url: { url: dataUrl } }
+          ]
+        }
+      ],
+      temperature: 0.1,
+      max_tokens: 2000,
+      response_format: { type: "json_object" }
+    });
+
+    const aiResponse = response.choices[0].message.content;
+    console.log("📷 [critique-ocr] 응답 길이:", aiResponse.length);
+
+    let parsed;
+    try {
+      parsed = JSON.parse(aiResponse);
+    } catch (e) {
+      // JSON 파싱 실패 시 raw 응답에서 중괄호 부분만 추출 시도
+      const m = aiResponse.match(/\{[\s\S]*\}/);
+      parsed = m ? JSON.parse(m[0]) : null;
+    }
+
+    if (!parsed) {
+      return res.status(500).json({ ok: false, message: "AI 응답을 파싱하지 못했습니다.", raw: aiResponse });
+    }
+
+    res.json({
+      ok: true,
+      data: parsed,
+      usage: response.usage
+    });
+  } catch (err) {
+    console.error("❌ [critique-ocr] 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 📷 PoC: 워크북 OCR 테스트 페이지
+app.get("/critique-ocr-test", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "critique-ocr-test.html"));
 });
 
   })

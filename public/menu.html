@@ -7400,6 +7400,10 @@ canvas[id^="confetti-canvas"] {
         <span class="whale-icon">🐋</span>
         <span class="whale-count" id="headerWhaleCount">--</span>
       </div>
+      <!-- 🧪 설명회 시연용 — 김윤슬 학생에게만 노출 -->
+      <button id="resetBio01Btn" type="button"
+        style="display:none; margin-right:8px; padding:6px 10px; background:#f3f4f6; border:1px solid #d1d5db; color:#6b7280; border-radius:6px; font-size:12px; cursor:pointer;"
+        onclick="resetBio01ForDemo()">🔄 생물01 초기화</button>
       <button id="logoutBtn" class="logout-btn" type="button">로그아웃</button>
     </div>
   </header>
@@ -7414,7 +7418,7 @@ canvas[id^="confetti-canvas"] {
         <li class="series-item" data-series="BRAINFIT"><span>BRAIN핏</span><span class="meta">확장문해</span></li>
         <li class="series-item" data-series="BRAINDEEP"><span>BRAIN딥</span><span class="meta">심화문해</span></li>
         <li class="series-item daily-special" data-series="BRAINCRITIQUE"><span>BRAIN비평</span><span class="meta">시사문해</span></li>
-        <li class="series-item" data-series="BRAINM"><span>BRAIN실전</span><span class="meta">모의고사</span></li>
+        <li class="series-item" data-series="BRAINM" style="display:none;"><span>BRAIN실전</span><span class="meta">모의고사</span></li>
         <li class="series-item summer-special kh-coming-soon" data-series="BRAINKORHIST"><span>BRAIN한국사</span><span class="meta">방학특강</span></li>
         <li class="series-item" data-series="BRAINNAESIN" style="display:none;"><span>📝 BRAIN내신</span><span class="meta">내신대비</span></li>
         <li class="series-item" data-series="BRAINSUNEUNG" style="display:none;"><span>🎯 BRAIN수능</span><span class="meta">수능대비</span></li>
@@ -13344,6 +13348,19 @@ async function performLogout() {
             return;
           }
 
+          // 🎯 BRAIN실전(BRAINM) — 현재 사용처 없음, 테스트 학생(초3 김윤슬)에게만 노출
+          if (seriesId === 'BRAINM') {
+            const MOCK_TESTERS = [{ grade: '초3', name: '김윤슬' }];
+            let isMockTester = false;
+            try {
+              const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+              isMockTester = MOCK_TESTERS.some(t => t.grade === cs.grade && t.name === cs.name);
+            } catch {}
+            li.style.display = isMockTester ? '' : 'none';
+            if (isMockTester) li.classList.remove("disabled");
+            return;
+          }
+
           if (allowedSeriesIds.includes(seriesId)) {
             // 활성화
             li.classList.remove("disabled");
@@ -13395,6 +13412,76 @@ async function performLogout() {
 
     // 시리즈 제한 적용
     applySeriesRestrictions();
+
+    // 🧪 설명회 시연용 — 김윤슬(초3) 학생 전용 "생물01 초기화" 버튼 토글
+    (function showResetBio01ForReviewer() {
+      try {
+        const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+        const isReviewer = (cs.grade === '초3' && cs.name === '김윤슬');
+        const btn = document.getElementById('resetBio01Btn');
+        if (btn && isReviewer) btn.style.display = 'inline-block';
+      } catch {}
+    })();
+
+    // 김윤슬 학생 전용 — BRAIN온·업 생물01 단원 학습 기록 초기화
+    window.resetBio01ForDemo = async function() {
+      try {
+        const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+        if (cs.grade !== '초3' || cs.name !== '김윤슬') {
+          alert('이 기능은 테스트 학생(초3 김윤슬)에게만 허용됩니다.');
+          return;
+        }
+        if (!confirm('BRAIN온·업 생물 01단원의 학습 기록을 초기화할까요?\n(관문·코인·고래·어휘·중간평가는 유지)')) return;
+
+        const btn = document.getElementById('resetBio01Btn');
+        if (btn) { btn.disabled = true; btn.textContent = '초기화 중...'; }
+
+        const resp = await fetch('/api/student/reset-bio01', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grade: cs.grade, name: cs.name })
+        });
+        const data = await resp.json();
+        if (!data.success) {
+          alert('초기화 실패: ' + (data.error || '서버 오류'));
+          if (btn) { btn.disabled = false; btn.textContent = '🔄 생물01 초기화'; }
+          return;
+        }
+        const s = data.summary || {};
+        console.log('🧪 [reset-bio01] 결과:', s);
+
+        // 🔥 클라이언트 캐시 정리 (3중 캐시 동기화)
+        try {
+          // 1) localStorage: dan-progress:{stuKey}:{on_bio_01|bio_01} 키 삭제
+          const TARGET_UNITS = ['on_bio_01', 'bio_01'];
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (!k) continue;
+            if (k.startsWith('dan-progress:') && TARGET_UNITS.some(u => k.endsWith(`:${u}`))) {
+              keysToRemove.push(k);
+            }
+          }
+          keysToRemove.forEach(k => localStorage.removeItem(k));
+          console.log('🗑️ localStorage 정리:', keysToRemove);
+          // 2) ApiCache: completion-status 응답 캐시 무효화
+          if (window.ApiCache && typeof ApiCache.invalidate === 'function') {
+            ApiCache.invalidate('completion-status');
+            ApiCache.invalidate('unit-grades');
+          }
+        } catch (e) {
+          console.warn('클라이언트 캐시 정리 중 일부 실패:', e);
+        }
+
+        alert(`초기화 완료!\n학습로그 ${s.learningLogs||0}건, 행동 ${s.learningBehavior||0}건, 독해시간 ${s.readingTimes||0}건 삭제.`);
+        location.reload();
+      } catch (err) {
+        console.error('reset-bio01 오류:', err);
+        alert('초기화 중 오류가 발생했습니다.');
+        const btn = document.getElementById('resetBio01Btn');
+        if (btn) { btn.disabled = false; btn.textContent = '🔄 생물01 초기화'; }
+      }
+    };
 
     // 페이지 처음 열릴 때도 이미 저장돼 있던 완료 내역 있으면 반영
     restoreProgressOnRenderedList();
@@ -38819,7 +38906,11 @@ ${content}
     <div class="crit-modal-card">
       <button class="crit-close-btn" onclick="closeCritiqueModal()" aria-label="닫기">×</button>
       <div class="crit-modal-header">
-        <h2>📰 BRAIN비평 시사문해 <span class="crit-month" id="critMonthLabel">2026. 6월</span></h2>
+        <h2>📰 BRAIN비평 시사문해
+          <button type="button" id="critMonthPrev" onclick="window.__critMonthShift(-1)" aria-label="이전 달" style="display:none; background:#f3f4f6; border:1px solid #d1d5db; color:#6b7280; width:26px; height:26px; border-radius:6px; cursor:pointer; font-size:11px; vertical-align:middle; margin-left:6px;">◀</button>
+          <span class="crit-month" id="critMonthLabel">2026. 6월</span>
+          <button type="button" id="critMonthNext" onclick="window.__critMonthShift(1)" aria-label="다음 달" style="display:none; background:#f3f4f6; border:1px solid #d1d5db; color:#6b7280; width:26px; height:26px; border-radius:6px; cursor:pointer; font-size:11px; vertical-align:middle;">▶</button>
+        </h2>
         <div class="crit-modal-sub">매일 한 편의 시사 기사, 매일 자라는 비평력</div>
         <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
           <div class="crit-level-toggle" id="critLevelToggle">
@@ -38980,6 +39071,20 @@ ${content}
           _critState.completed = data.completed || [];
           _critState.currentLevel = data.defaultGrade;
           _critState.currentMonth = currentMonthKey();
+
+          // 🎯 김윤슬 학생 검토 모드 — 7월 미리보기 + 월 이동 활성
+          const studentName = (data.user && data.user.name) || (typeof getCurrentStudent === 'function' && getCurrentStudent()?.name) || '';
+          const isReviewer = (studentName === '김윤슬');
+          _critState.isReviewer = isReviewer;
+          if (isReviewer) {
+            _critState.currentMonth = '2026-07';
+            document.getElementById('critMonthPrev').style.display = 'inline-block';
+            document.getElementById('critMonthNext').style.display = 'inline-block';
+          } else {
+            document.getElementById('critMonthPrev').style.display = 'none';
+            document.getElementById('critMonthNext').style.display = 'none';
+          }
+
           _critState.monthlyAvgStars = (typeof data.monthlyAvgStars === 'number') ? data.monthlyAvgStars : null;
           _critState.monthlyCount = data.monthlyCount || 0;
           await fetchArticles();
@@ -39907,6 +40012,19 @@ ${content}
         const [y, mm] = _critState.currentMonth.split('-');
         document.getElementById('critMonthLabel').textContent = `${y}. ${parseInt(mm)}월`;
       }
+
+      // 🎯 검토 모드 월 이동 (김윤슬 학생 전용)
+      window.__critMonthShift = function(delta) {
+        if (!_critState.isReviewer) return;
+        const [y, m] = _critState.currentMonth.split('-').map(Number);
+        let nm = m + delta;
+        let ny = y;
+        if (nm < 1) { nm = 12; ny--; }
+        if (nm > 12) { nm = 1; ny++; }
+        _critState.currentMonth = `${ny}-${String(nm).padStart(2,'0')}`;
+        renderLevelToggle();   // 월 라벨 + 등급 버튼 갱신
+        renderCalendar();
+      };
 
       function renderCalendar() {
         const cal = document.getElementById('critCalendar');
