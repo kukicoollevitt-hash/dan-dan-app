@@ -28159,8 +28159,14 @@ async function assignAITasksDaily() {
 
     // ========== 등급 기반 AI 추천과제 부여 ==========
     // 모든 LearningLog 조회 (completed된 것만)
-    const allLogs = await LearningLog.find({ completed: true, deleted: { $ne: true } });
-    console.log(`📚 조회된 학습 로그 수: ${allLogs.length}개`);
+    // 💰 비용 최적화 (2026-06-18): 최근 60일치만 + lean() — 2개월 이전 학습은 보완 추천 대상 X
+    const SIXTY_DAYS_AGO = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+    const allLogs = await LearningLog.find({
+      completed: true,
+      deleted: { $ne: true },
+      timestamp: { $gte: SIXTY_DAYS_AGO }
+    }).lean();
+    console.log(`📚 조회된 학습 로그 수: ${allLogs.length}개 (최근 60일치)`);
 
     // 학생별로 그룹화 (grade + name 조합)
     const studentLogsMap = {};
@@ -29251,15 +29257,15 @@ async function executeAutoTaskSchedules() {
 
 console.log('⏭️ 구버전 자동 과제 부여 스케줄러 비활성화됨 (신버전 사용)');
 
-// AI 추천과제 스케줄러 (30분마다 실행 - 놓침 방지)
-cron.schedule('0,30 * * * *', () => {
-  console.log('⏰ AI 추천과제 스케줄러 트리거 (30분마다)');
+// AI 추천과제 스케줄러 (1시간마다 실행 - 비용 최적화 2026-06-18)
+cron.schedule('0 * * * *', () => {
+  console.log('⏰ AI 추천과제 스케줄러 트리거 (1시간마다)');
   assignAITasksDaily();
 }, {
   timezone: "Asia/Seoul"
 });
 
-console.log('✅ AI 추천과제 스케줄러 등록 완료 (30분마다 실행)');
+console.log('✅ AI 추천과제 스케줄러 등록 완료 (1시간마다 실행)');
 
 // 서버 시작 시 10초 후 즉시 실행 (놓친 과제 복구)
 setTimeout(() => {
