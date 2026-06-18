@@ -28223,6 +28223,7 @@ async function assignAITasksDaily() {
             originalUnit: log.unit, // 원본 unit 코드 보존 (title 생성용)
             avgScore,
             finalCompletedAt,
+            aiReviewCompletedAt: log.aiReviewCompletedAt || null, // AI 복습 완료 도장 (재부여 차단용)
             series: log.series
           };
         }
@@ -28273,6 +28274,17 @@ async function assignAITasksDaily() {
         if (existingAIUnitIds.has(unitId)) {
           console.log(`⏭️ [${name}] ${unitId}: 이미 AI 추천과제로 있음 → 스킵`);
           continue;
+        }
+
+        // 🔥 AI 복습 완료 도장이 있고, 그 도장 이후에 추가 학습이 없다면 → 이미 보완 완료한 단원으로 간주 → 부여 안 함
+        // (학생이 객관식만 풀고 사라진 케이스 또는 일괄 정리 후 재발 방지)
+        if (unitInfo.aiReviewCompletedAt) {
+          const aiReviewTime = new Date(unitInfo.aiReviewCompletedAt).getTime();
+          const lastLearnTime = finalCompletedAt.getTime();
+          if (aiReviewTime >= lastLearnTime) {
+            console.log(`⏭️ [${name}] ${unitId}: AI 복습 도장 있음 (도장=${unitInfo.aiReviewCompletedAt}, 마지막학습=${finalCompletedAt.toISOString()}) → 스킵`);
+            continue;
+          }
         }
 
         // 등급별 대기 시간 계산
@@ -28420,6 +28432,20 @@ async function assignAITasksDaily() {
           console.log(`⏭️ [오답] ${name}: ${unitId} 이미 AI 추천과제로 있음 → 스킵`);
           continue;
         }
+
+        // 🔥 AI 복습 완료 도장이 있고, 그 이후 새 학습 기록이 없으면 → 부여 안 함 (재발 방지)
+        try {
+          const llog = await LearningLog.findOne({ grade, name, unit: unitId })
+            .select('aiReviewCompletedAt timestamp').lean();
+          if (llog?.aiReviewCompletedAt) {
+            const aiReviewTime = new Date(llog.aiReviewCompletedAt).getTime();
+            const lastLearnTime = llog.timestamp ? new Date(llog.timestamp).getTime() : 0;
+            if (aiReviewTime >= lastLearnTime) {
+              console.log(`⏭️ [오답] ${name}: ${unitId} AI 복습 도장 있음 → 스킵`);
+              continue;
+            }
+          }
+        } catch (e) { /* 조회 실패해도 부여 흐름은 진행 */ }
 
         // 1시간 경과 확인
         const createdAt = new Date(behavior.createdAt);
@@ -41010,17 +41036,26 @@ app.post("/api/critique-ocr", async (req, res) => {
 
     const systemPrompt = `당신은 한글 손글씨 OCR 전문가입니다.
 첨부된 사진은 "BRAIN비평 시사문해 워크북" 한 페이지입니다.
-양식에는 다음 칸이 있습니다:
-- 6하 원칙 6칸: 누가(Who), 언제(When), 어디서(Where), 무엇을(What), 왜(Why), 어떻게(How)
-- 내 생각 글쓰기 3칸: Q1(핵심 짚기), Q2(내 생각 쓰기), Q3(실천·적용)
 
-각 칸에 적힌 학생의 손글씨를 정확히 읽어 JSON으로만 응답하세요.
-- 보이는 그대로 읽으세요 (오자도 그대로 — 예: '우나라'는 '우나라'로)
-- 빈 칸은 빈 문자열 ""
-- 줄바꿈은 공백으로 처리
-- 추측하지 말고 보이지 않으면 빈 문자열
+양식 구조 (위치 파악용):
+1) 상단: 카테고리 배지, 날짜, 기사 제목 (인쇄된 글자 — 추출 대상 아님)
+2) "🔍 6하 원칙으로 정리하기" 6칸 (3행 × 2열)
+   - 1행: 누가(Who) [왼] / 언제(When) [오]
+   - 2행: 어디서(Where) [왼] / 무엇을(What) [오]
+   - 3행: 왜(Why) [왼] / 어떻게(How) [오]
+3) "✍️ 내 생각 글쓰기" 영역의 Q1(핵심 짚기) / Q2(내 생각 쓰기) / Q3(실천·적용) 세 칸
 
-응답 형식 (JSON만, 다른 설명 없이):
+== 인식 원칙 ==
+- 칸 안에 손으로 쓴 글자만 추출하세요. 인쇄된 라벨·헤더는 무시.
+- **보이는 그대로** 충실하게 읽으세요. 임의로 단어를 바꾸거나 글자를 만들어내지 마세요.
+- 한 글자가 명백히 흐려서 도저히 구분 안 되면 그 글자만 비워두거나 가장 가까운 후보 하나만 적으세요.
+- 띄어쓰기는 학생이 쓴 대로 유지 (예: 학생이 "회 사원"이라고 띄어 썼으면 그대로).
+- 줄바꿈은 공백으로 처리.
+- 빈 칸은 빈 문자열 "".
+- 영문/숫자/특수문자는 그대로 (예: "PPT", "AI").
+- 추측이 50% 미만이면 차라리 빈 문자열로 두세요.
+
+응답은 반드시 다음 JSON 한 객체로만 (다른 설명 없이):
 {
   "who": "...",
   "when": "...",
@@ -41030,25 +41065,25 @@ app.post("/api/critique-ocr", async (req, res) => {
   "how": "...",
   "q1": "...",
   "q2": "...",
-  "q3": ""
+  "q3": "..."
 }`;
 
-    console.log("📷 [critique-ocr] GPT-4o-mini Vision 호출 시작");
+    console.log("📷 [critique-ocr] GPT-4o Vision 호출 시작 (detail=high)");
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [
         { role: "system", content: systemPrompt },
         {
           role: "user",
           content: [
-            { type: "text", text: "이 워크북 사진에서 각 칸의 손글씨를 추출해 JSON으로 응답해주세요." },
-            { type: "image_url", image_url: { url: dataUrl } }
+            { type: "text", text: "이 워크북 사진에서 각 칸에 학생이 손으로 쓴 글자를 정확히 읽어 JSON으로 응답해주세요. 임의 추측은 하지 말고 보이는 대로 읽어주세요." },
+            { type: "image_url", image_url: { url: dataUrl, detail: "high" } }
           ]
         }
       ],
-      temperature: 0.1,
-      max_tokens: 2000,
+      temperature: 0,
+      max_tokens: 2500,
       response_format: { type: "json_object" }
     });
 
