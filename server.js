@@ -290,6 +290,7 @@ const MockExamUser = require("./models/MockExamUser");
 const MockExamConsultation = require("./models/MockExamConsultation");
 const MegaphoneMessage = require("./models/MegaphoneMessage");
 const Notice = require("./models/Notice");
+const AcademyNotice = require("./models/AcademyNotice");
 const SnackOrder = require("./models/SnackOrder");
 const SentenceRead = require("./models/SentenceRead");
 const SpeedVocabKing = require("./models/SpeedVocabKing");
@@ -31184,6 +31185,158 @@ app.get("/api/admin/info", async (req, res) => {
   } catch (error) {
     console.error("관리자 정보 조회 오류:", error);
     res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
+  }
+});
+
+// ====================================================
+// 📣 학원 대시보드 - 최신 교육 및 업데이트 소식
+// ====================================================
+const ACADEMY_NOTICE_WRITER = "브레인문해원_테스트";
+
+function getAdminAcademyName(req) {
+  if (req.session && req.session.viewingBranch) {
+    return req.session.viewingBranch.academyName || "";
+  }
+  if (req.session && req.session.admin) {
+    return req.session.admin.academyName || "";
+  }
+  return "";
+}
+
+function canWriteAcademyNotice(req) {
+  return getAdminAcademyName(req) === ACADEMY_NOTICE_WRITER;
+}
+
+// 목록 조회 — 모든 관리자에게 노출
+app.get("/api/academy-notice", requireAdminLogin, async (req, res) => {
+  try {
+    const notices = await AcademyNotice.find({ deleted: { $ne: true } })
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json({
+      ok: true,
+      notices,
+      canWrite: canWriteAcademyNotice(req)
+    });
+  } catch (err) {
+    console.error("[GET /api/academy-notice] 오류:", err);
+    res.status(500).json({ ok: false, message: "목록 조회 실패" });
+  }
+});
+
+// 작성 — '브레인문해원_테스트'만
+app.post("/api/academy-notice", requireAdminLogin, async (req, res) => {
+  try {
+    if (!canWriteAcademyNotice(req)) {
+      return res.status(403).json({ ok: false, message: "작성 권한이 없습니다." });
+    }
+    const { category, title, content } = req.body || {};
+    if (!category || !["정기교육", "업데이트"].includes(category)) {
+      return res.status(400).json({ ok: false, message: "카테고리가 올바르지 않습니다." });
+    }
+    if (!title || !title.trim()) {
+      return res.status(400).json({ ok: false, message: "제목을 입력해주세요." });
+    }
+    if (!content || !content.trim()) {
+      return res.status(400).json({ ok: false, message: "내용을 입력해주세요." });
+    }
+    const created = await AcademyNotice.create({
+      category,
+      title: title.trim().slice(0, 200),
+      content: content.trim().slice(0, 20000),
+      author: "브레인문해력",
+      createdBy: getAdminAcademyName(req)
+    });
+    res.json({ ok: true, notice: created });
+  } catch (err) {
+    console.error("[POST /api/academy-notice] 오류:", err);
+    res.status(500).json({ ok: false, message: "작성 실패" });
+  }
+});
+
+// 수정 — '브레인문해원_테스트'만
+app.put("/api/academy-notice/:id", requireAdminLogin, async (req, res) => {
+  try {
+    if (!canWriteAcademyNotice(req)) {
+      return res.status(403).json({ ok: false, message: "수정 권한이 없습니다." });
+    }
+    const { category, title, content } = req.body || {};
+    const update = {};
+    if (category && ["정기교육", "업데이트"].includes(category)) update.category = category;
+    if (typeof title === "string" && title.trim()) update.title = title.trim().slice(0, 200);
+    if (typeof content === "string" && content.trim()) update.content = content.trim().slice(0, 20000);
+    const updated = await AcademyNotice.findByIdAndUpdate(req.params.id, update, { new: true });
+    if (!updated) return res.status(404).json({ ok: false, message: "글을 찾을 수 없습니다." });
+    res.json({ ok: true, notice: updated });
+  } catch (err) {
+    console.error("[PUT /api/academy-notice] 오류:", err);
+    res.status(500).json({ ok: false, message: "수정 실패" });
+  }
+});
+
+// 📎 본문용 이미지 영구 업로드 — '브레인문해원_테스트'만
+const academyNoticeUploadsDir = path.join(__dirname, 'public', 'uploads', 'academy-notice');
+if (!fs.existsSync(academyNoticeUploadsDir)) {
+  fs.mkdirSync(academyNoticeUploadsDir, { recursive: true });
+}
+const academyNoticeStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, academyNoticeUploadsDir),
+  filename: (req, file, cb) => {
+    const safe = (path.extname(file.originalname || '') || '.png').toLowerCase();
+    cb(null, `notice-${Date.now()}-${Math.round(Math.random() * 1e9)}${safe}`);
+  }
+});
+const academyNoticeUpload = multer({
+  storage: academyNoticeStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|gif|webp/;
+    const ok = allowed.test(path.extname(file.originalname || '').toLowerCase())
+            && allowed.test(file.mimetype || '');
+    if (ok) cb(null, true);
+    else cb(new Error('이미지 파일만 업로드 가능합니다 (jpeg, jpg, png, gif, webp)'));
+  }
+});
+
+app.post("/api/academy-notice/upload-image",
+  requireAdminLogin,
+  (req, res, next) => {
+    if (!canWriteAcademyNotice(req)) {
+      return res.status(403).json({ ok: false, message: "업로드 권한이 없습니다." });
+    }
+    next();
+  },
+  academyNoticeUpload.single('image'),
+  (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ ok: false, message: "이미지 파일이 없습니다" });
+      }
+      const imageUrl = `/uploads/academy-notice/${req.file.filename}`;
+      res.json({ ok: true, imageUrl });
+    } catch (err) {
+      console.error("[POST /api/academy-notice/upload-image] 오류:", err);
+      res.status(500).json({ ok: false, message: "업로드 실패" });
+    }
+  }
+);
+
+// 삭제 (소프트) — '브레인문해원_테스트'만
+app.delete("/api/academy-notice/:id", requireAdminLogin, async (req, res) => {
+  try {
+    if (!canWriteAcademyNotice(req)) {
+      return res.status(403).json({ ok: false, message: "삭제 권한이 없습니다." });
+    }
+    const result = await AcademyNotice.findByIdAndUpdate(
+      req.params.id,
+      { deleted: true },
+      { new: true }
+    );
+    if (!result) return res.status(404).json({ ok: false, message: "글을 찾을 수 없습니다." });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[DELETE /api/academy-notice] 오류:", err);
+    res.status(500).json({ ok: false, message: "삭제 실패" });
   }
 });
 
