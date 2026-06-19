@@ -30178,11 +30178,11 @@ console.log('✅ 독서 감상문 월간 리셋 스케줄러 등록 완료 (매�
 // 생물 > 지구과학 > 사회문화 > 지리 > 현대문학 > 세계문학1 > 한국인물 > 물리 > 화학 > 법 > 정치 > 고전문학 > 세계문학2 > 세계인물
 const AUTO_TASK_SUBJECT_PRIORITY = ['bio', 'earth', 'soc', 'geo', 'modern', 'world1', 'people1', 'physics', 'chem', 'law', 'pol', 'classic', 'world2', 'people2'];
 
-// 각 과목별 최대 단원 수
+// 각 과목별 최대 단원 수 (BRAIN온/업/핏/딥 14과목 모두 24단원까지 부여 가능)
 const SUBJECT_MAX_UNITS = {
-  bio: 20, chem: 20, physics: 20, earth: 20,
-  geo: 20, soc: 20, law: 20, pol: 20, econ: 20,
-  classic: 30, modern: 30, world1: 20, world2: 20, people1: 20, people2: 20
+  bio: 24, chem: 24, physics: 24, earth: 24,
+  geo: 24, soc: 24, law: 24, pol: 24, econ: 24,
+  classic: 30, modern: 30, world1: 24, world2: 24, people1: 24, people2: 24
 };
 
 // 과목 정보 매핑 (field는 한글로 표시)

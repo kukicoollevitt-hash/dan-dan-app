@@ -458,6 +458,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ],
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: ['1문단 : 시민 단체의 역할', '2문단 : 주민 참여의 다양한 방법', '3문단 : 주민 참여의 중요성', '4문단 : 지방 자치 단체의 조직'],
+      q3_html: `주민이 공공 기관에 불편을 알려 해결을 요청하는 일을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅇ">이라 하고,
+                정책을 결정하기 전에 주민 의견을 공개적으로 듣는 회의를 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅊㅎ">라 합니다.`,
+      q4_html: `공익을 위해 자발적으로 모인 단체를 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅁㄷㅊ">라 하고,
+                지역 행정을 맡아 운영하는 기관(시·군·구 등)을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㅂㅈㅊㄷㅊ">라 합니다.`,
       q3_1_ph: 'ㅁㅇ', q3_2_ph: 'ㄱㅊㅎ',
       q4_1_ph: 'ㅅㅁㄷㅊ', q4_2_ph: 'ㅈㅂㅈㅊㄷㅊ',
       q5_text: '우리 동네에서 개선이 필요한 문제를 하나 찾고, 주민으로서 어떻게 참여할 수 있을지 구체적으로 설명해 보세요.'

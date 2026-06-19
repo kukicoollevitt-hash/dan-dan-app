@@ -263,6 +263,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 반란과 위기, 여공 부부에게 구조',
         '4문단 : 홍계월전 의의, 여성의 능력과 가치'
       ],
+      q3_html: `홍계월은 남장을 한 채 과거에 응시해 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅇ"> 급제했고,
+                나라가 위기에 처하자 군대의 가장 높은 장수인 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅅ">가 되어 전쟁을 이끌었습니다.`,
+      q4_html: `천자가 직접 두 사람의 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅁ">를 서서 홍계월과 여보국이 혼인하게 되고,
+                위기를 함께 넘긴 뒤에는 부부 사이의 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅅ">이 더욱 돈독해졌습니다.`,
       q3_1_ph: 'ㅈㅇ', q3_2_ph: 'ㅇㅅ',
       q4_1_ph: 'ㅈㅁ', q4_2_ph: 'ㄱㅅ',
       q5_text: '홍계월이 위험에 빠진 여보국을 구한 행동이 두 사람의 관계에 어떤 변화를 가져왔는지 본문 내용을 바탕으로 써 보세요.'
@@ -400,7 +404,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ['누명','사실이 아닌데 억울하게 뒤집어쓴 죄'],
       ['모함','상대를 해치려고 거짓을 꾸며 씌우는 일'],
       ['형리','예전 형벌을 집행하던 관리'],
-      ['천상','하늘나라, 신이나 선녀들이 머문다고 하는 세계']
+      ['천상','하늘나라, 신이나 선녀들이 머문다고 하는 세계'],
+      ['양녀','데려다가 친자식처럼 기른 딸'],
+      ['적강','천상의 존재가 죄를 지어 인간 세상으로 내려옴'],
+      ['비범하다','보통과 다르게 뛰어나고 특별하다'],
+      ['권선징악','착한 일은 권하고 악한 일은 벌하는 일']
     ],
     vocabFill: {
       instructions: '[숙향전 어휘]',
@@ -408,7 +416,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '사실이 아닌데 억울하게 뒤집어쓴 죄를 (      )이라고 한다.', answer: '누명', initials: 'ㄴㅁ', aliases: ['누명'] },
         { no: 2, text: '상대를 해치려고 거짓을 꾸며 씌우는 일을 (      )이라 한다.', answer: '모함', initials: 'ㅁㅎ', aliases: ['모함'] },
         { no: 3, text: '예전 형벌을 집행하던 관리를 (      )라고 한다.', answer: '형리', initials: 'ㅎㄹ', aliases: ['형리'] },
-        { no: 4, text: '하늘나라, 신이나 선녀들이 머문다고 하는 세계를 (      )이라고 한다.', answer: '천상', initials: 'ㅊㅅ', aliases: ['천상'] }
+        { no: 4, text: '하늘나라, 신이나 선녀들이 머문다고 하는 세계를 (      )이라고 한다.', answer: '천상', initials: 'ㅊㅅ', aliases: ['천상'] },
+        { no: 5, text: '데려다가 친자식처럼 기른 딸을 (      )라고 한다.', answer: '양녀', initials: 'ㅇㄴ', aliases: ['양녀'] },
+        { no: 6, text: '천상의 존재가 죄를 지어 인간 세상으로 내려옴을 (      )이라 한다.', answer: '적강', initials: 'ㅈㄱ', aliases: ['적강'] },
+        { no: 7, text: '보통과 다르게 뛰어나고 특별한 것을 (        )고 한다.', answer: '비범하다', initials: 'ㅂㅂㅎㄷ', aliases: ['비범하다','비범한','비범'] },
+        { no: 8, text: '착한 일은 권하고 악한 일은 벌하는 일을 (          )이라 한다.', answer: '권선징악', initials: 'ㄱㅅㅈㅇ', aliases: ['권선징악'] }
       ]
     },
     quiz: {
@@ -426,6 +438,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 숙향전 의의, 적강소설',
         '4문단 : 김전과 거북 이야기, 숙향 탄생'
       ],
+      q3_html: `사향이 숙향을 질투해 갖가지 거짓을 꾸민 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅎ"> 때문에,
+                숙향은 사실이 아닌 죄를 억울하게 뒤집어쓰는 <input class="inline-input" id="q3-2" type="text" placeholder="ㄴㅁ">을 쓰고 쫓겨났습니다.`,
+      q4_html: `이선은 숙향이 <input class="inline-input" id="q4-1" type="text" placeholder="ㅊㅅ">에서 노니는 모습을 수놓은 그림을 보고,
+                그 솜씨와 자태에서 숙향의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㅂㅎ"> 됨됨이를 알아차렸습니다.`,
       q3_1_ph: 'ㅁㅎ', q3_2_ph: 'ㄴㅁ',
       q4_1_ph: 'ㅊㅅ', q4_2_ph: 'ㅂㅂㅎ',
       q5_text: '숙향이 여러 번 위기에서 살아남을 수 있었던 이유를 본문 내용을 바탕으로 설명해 보세요.'
@@ -855,6 +871,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 원님과 만남, 혼인, 행복한 결말',
         '4문단 : 콩쥐 소개, 계모와 팥쥐 구박'
       ],
+      q3_html: `콩쥐는 아버지가 새로 맞이한 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅁ">와
+                그가 데려온 못된 딸 <input class="inline-input" id="q3-2" type="text" placeholder="ㅍㅈ"> 사이에서 온갖 구박을 받으며 살았습니다.`,
+      q4_html: `잔치 가는 길에 하늘에서 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㄴ">가 내려와 콩쥐에게 아름다운 옷과
+                <input class="inline-input" id="q4-2" type="text" placeholder="ㄲㅅ">을 건네주었고, 잃어버린 그 신발이 원님과의 인연을 이어 주었습니다.`,
       q3_1_ph: 'ㄱㅁ', q3_2_ph: 'ㅍㅈ',
       q4_1_ph: 'ㅅㄴ', q4_2_ph: 'ㄲㅅ',
       q5_text: '콩쥐가 행복해질 수 있었던 이유와 이 이야기가 주는 교훈을 설명해 보세요.'
@@ -940,6 +960,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 배 비장 소개, 제주 부임, 큰소리',
         '4문단 : 배비장전 의의, 풍자소설'
       ],
+      q3_html: `여색에 흔들리지 않겠다 큰소리치던 배 비장은 기생 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㄹ">의
+                갖가지 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅎ">에 빠져들면서 처음의 다짐을 끝내 지키지 못했습니다.`,
+      q4_html: `결국 배 비장은 커다란 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱ"> 속에 갇혀 망신을 당하게 되는데,
+                이 이야기는 양반 사대부의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅅ">을 통렬히 풍자합니다.`,
       q3_1_ph: 'ㅇㄹ', q3_2_ph: 'ㅇㅎ',
       q4_1_ph: 'ㄱ', q4_2_ph: 'ㅇㅅ',
       q5_text: '배 비장이 망신을 당하게 된 근본적인 이유와 이 이야기가 주는 교훈을 설명해 보세요.'
@@ -1025,6 +1049,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 옹고집전 의의, 교훈소설',
         '4문단 : 도승 쫓김, 가짜 옹고집 등장'
       ],
+      q3_html: `옹고집의 행패에 분노한 <input class="inline-input" id="q3-1" type="text" placeholder="ㄷㅅ">이 도술을 부려
+                옹고집과 똑같이 생긴 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅉ"> 옹고집을 만들어 집안에 보냈습니다.`,
+      q4_html: `진짜와 가짜를 가리는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅅ">에서 진짜 옹고집이 쫓겨난 뒤,
+                자기 잘못을 뉘우치고 착하게 살겠다고 굳게 <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅅ">한 뒤에야 본래 자리로 돌아왔습니다.`,
       q3_1_ph: 'ㄷㅅ', q3_2_ph: 'ㄱㅉ',
       q4_1_ph: 'ㅅㅅ', q4_2_ph: 'ㅁㅅ',
       q5_text: '옹고집이 변화하게 된 계기와 이 이야기가 주는 교훈을 설명해 보세요.'
@@ -1110,6 +1138,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 못생긴 박씨 시집옴, 남편 냉대',
         '4문단 : 박씨전 의의, 여성영웅소설'
       ],
+      q3_html: `못생긴 모습으로 시집 온 박씨는 어느 날 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅁ">을 벗고
+                빼어난 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㅇ">으로 변하면서 본래의 모습을 드러냈습니다.`,
+      q4_html: `병자호란이 일어나자 박씨는 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅅ">을 부려
+                청나라 장수 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㄱㄷ">를 물리치고 나라를 위기에서 구했습니다.`,
       q3_1_ph: 'ㅎㅁ', q3_2_ph: 'ㅁㅇ',
       q4_1_ph: 'ㄷㅅ', q4_2_ph: 'ㅇㄱㄷ',
       q5_text: '겉모습으로 사람을 판단했다가 잘못을 깨달은 경험이 있다면 이야기해 보세요.'
@@ -1195,6 +1227,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 유영이 혼령 만남, 신분 제도 비판',
         '4문단 : 운영과 김진사 만남, 사랑 금지'
       ],
+      q3_html: `궁녀 운영과 김진사는 사람들의 눈을 피해 몰래 만나는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅎ">를 가졌지만,
+                결국 안평대군에게 발각되어 거센 <input class="inline-input" id="q3-2" type="text" placeholder="ㅊㄱ">을 받게 되었습니다.`,
+      q4_html: `운영은 끝내 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅇ">을 받고 세상을 떠났고,
+                두 사람의 못다 한 사랑은 신분 제도 속 가장 슬픈 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㄱ">으로 남았습니다.`,
       q3_1_ph: 'ㅁㅎ', q3_2_ph: 'ㅊㄱ',
       q4_1_ph: 'ㅅㅇ', q4_2_ph: 'ㅂㄱ',
       q5_text: '운영과 김진사처럼 규칙 때문에 원하는 것을 하지 못한 경험이 있다면 이야기해 보세요.'
@@ -1280,6 +1316,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 부모 반대, 갈등, 정혼',
         '4문단 : 채봉감별곡 의의, 애정소설'
       ],
+      q3_html: `채봉과 필선의 사랑은 양반과 기생이라는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅂ">의 벽에 가로막혔고,
+                결국 필선은 부모의 뜻에 따라 다른 여인과 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅎ">하게 되었습니다.`,
+      q4_html: `필선이 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㄱ">에 급제해 다시 돌아왔을 때 채봉이 남긴 그림은
+                두 사람 사이에 끝내 이루지 못한 사랑과 깊은 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㄹㅇ">을 전해 주었습니다.`,
       q3_1_ph: 'ㅅㅂ', q3_2_ph: 'ㅈㅎ',
       q4_1_ph: 'ㄱㄱ', q4_2_ph: 'ㄱㄹㅇ',
       q5_text: '신분이나 지위 때문에 친구가 되지 못했거나 차별받은 경험이 있다면 이야기해 보세요.'
@@ -1363,6 +1403,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 양소유로 환생, 장원급제, 부귀영화',
         '4문단 : 구운몽 의의, 김만중'
       ],
+      q3_html: `성진이 양소유로 환생해 누렸던 <input class="inline-input" id="q3-1" type="text" placeholder="ㅂㄱㅇㅎ">의 삶은
+                알고 보니 잠시 꾸었던 한바탕 <input class="inline-input" id="q3-2" type="text" placeholder="ㄲ">에 지나지 않았습니다.`,
+      q4_html: `깨어난 성진은 세상의 모든 영화가 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅇ">이 없음을 알고,
+                참된 도의 길로 돌아가야 한다는 깊은 <input class="inline-input" id="q4-2" type="text" placeholder="ㄲㄷㅇ">을 얻었습니다.`,
       q3_1_ph: 'ㅂㄱㅇㅎ', q3_2_ph: 'ㄲ',
       q4_1_ph: 'ㄷㅇ', q4_2_ph: 'ㄲㄷㅇ',
       q5_text: '꿈에서 원하는 것을 모두 이루었다가 깨어난 경험이 있다면 그때의 느낌을 써 보세요.'
@@ -1447,6 +1491,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 사씨/교씨 소개, 교씨 모함 시작',
         '4문단 : 사씨 복귀, 권선징악'
       ],
+      q3_html: `착한 본부인 사씨는 첩 교씨의 갖은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅎ">에 휘말려
+                억울한 누명을 쓰고 집에서 <input class="inline-input" id="q3-2" type="text" placeholder="ㅉㄱㄴ">고 말았습니다.`,
+      q4_html: `시간이 지나 교씨의 악행이 드러나면서 사씨의 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅂ">이 밝혀졌고,
+                사씨는 잃었던 자리와 <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅇ">를 다시 되찾았습니다.`,
       q3_1_ph: 'ㅁㅎ', q3_2_ph: 'ㅉㄱㄴ',
       q4_1_ph: 'ㄱㅂ', q4_2_ph: 'ㅁㅇ',
       q5_text: '억울하게 누명을 쓴 경험이 있다면 그때의 기분과 어떻게 해결했는지 써 보세요.'
@@ -1531,6 +1579,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 심씨 반성, 형제 화해, 가문 번영',
         '4문단 : 창선감의록 의의, 효도와 우애'
       ],
+      q3_html: `화진은 계모 심씨의 모진 미움에도 흔들리지 않는 지극한 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅅ">으로
+                어머니를 끝까지 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㄱ">하며 모셨습니다.`,
+      q4_html: `시간이 흘러 심씨가 잘못을 뉘우치고 화진과 화춘 형제는 깊은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅇ">로 화해했으며,
+                두 형제는 어머니를 봉양하며 가문의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㄱ">을 드높였습니다.`,
       q3_1_ph: 'ㅎㅅ', q3_2_ph: 'ㄱㄱ',
       q4_1_ph: 'ㅇㅇ', q4_2_ph: 'ㅇㄱ',
       q5_text: '형제나 가족 사이에 갈등이 있었지만 화해한 경험이 있다면 이야기해 보세요.'
@@ -1616,6 +1668,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 임진왜란 발발, 선조 피난, 이순신 해전',
         '4문단 : 임진록 의의, 군담소설'
       ],
+      q3_html: `이순신 장군은 직접 설계한 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅂㅅ">을 앞세워 바다에서 왜군을 무찌르고,
+                일본군의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㄱㄹ">를 끊으며 전세를 뒤집었습니다.`,
+      q4_html: `육지에서는 백성들이 자발적으로 모여 일어선 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅂ">과 승병의 활약으로
+                조선은 마침내 임진왜란이라는 큰 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㄴ">을 이겨낼 수 있었습니다.`,
       q3_1_ph: 'ㄱㅂㅅ', q3_2_ph: 'ㅂㄱㄹ',
       q4_1_ph: 'ㅇㅂ', q4_2_ph: 'ㄱㄴ',
       q5_text: '나라가 어려울 때 국민이 힘을 합쳐야 하는 이유에 대해 자신의 생각을 써 보세요.'
@@ -1701,6 +1757,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 매점매석으로 이익, 상업 문제',
         '4문단 : 허생전 의의, 실학 비판'
       ],
+      q3_html: `허생은 변씨에게 빌린 돈으로 과일과 말총을 사들여 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅈㅁㅅ">을 하며 큰 이익을 챙기고,
+                이를 통해 작은 충격에도 흔들리는 조선 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅇ">의 허약함을 드러냈습니다.`,
+      q4_html: `또한 도둑들을 외딴 섬에 정착시켜 새 삶을 살게 하는 모습은 빈민 구제와 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅊ">의 필요성을 보여 주며,
+                벼슬아치의 헛된 권위를 꾸짖는 장면은 조선 사회 전체를 향한 날카로운 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㅍ">으로 다가옵니다.`,
       q3_1_ph: 'ㅁㅈㅁㅅ', q3_2_ph: 'ㅅㅇ',
       q4_1_ph: 'ㅅㅊ', q4_2_ph: 'ㅂㅍ',
       q5_text: '허생처럼 사회의 문제점을 발견하고 개선하고 싶은 것이 있다면 써 보세요.'

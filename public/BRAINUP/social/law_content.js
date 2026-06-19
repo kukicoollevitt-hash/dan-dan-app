@@ -275,8 +275,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '4문단 : 외국 인권 운동가들의 노력'
       ],
       /* 03. 어휘 맥락력 (빈칸 2개) */
+      q3_html: `홍길동전은 태어난 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅂ"> 때문에 능력을 펼치지 못한 인물을 통해,
+                당시 사회 속의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅊㅂ"> 문제를 드러냅니다.`,
       q3_1_ph: 'ㅅㅂ', q3_2_ph: 'ㅊㅂ',
       /* 04. 추론·통합력 (빈칸 2개) */
+      q4_html: `전태일은 열악한 환경의 <input class="inline-input" id="q4-1" type="text" placeholder="ㄴㄷㅈ">들 권리를 지키려 목소리를 높였고,
+                루이 브라유는 점자를 만들어 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄱ ㅈㅇ">인도 책을 읽을 수 있게 했습니다.`,
       q4_1_ph: 'ㄴㄷㅈ', q4_2_ph: 'ㅅㄱ ㅈㅇ',
       /* 05. 비판·적용력 (서술형) */
       q5_text: '본문에 나온 인물 중 한 명을 골라, 그 사람이 인권을 지키기 위해 어떤 노력을 했는지 설명해 보세요.'
@@ -462,6 +466,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 조선 시대 제도의 의의',
         '4문단 : 상언, 격쟁, 삼복 제도'
       ],
+      q3_html: `백성은 억울한 일을 글로 써서 임금에게 올리는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅇ">을 활용했고,
+                임금의 행차 때 징이나 꽹과리를 쳐 즉석에서 호소하는 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅈ">을 이용하기도 했습니다.`,
+      q4_html: `조선은 판결을 신중히 내리기 위해 세 번 다시 조사하는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅂ">을 두었고,
+                장애인과 가족에게는 경제적 부담을 덜어 주는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄱ ㅁㅈ"> 혜택도 주었습니다.`,
       q3_1_ph: 'ㅅㅇ', q3_2_ph: 'ㄱㅈ',
       q4_1_ph: 'ㅅㅂ', q4_2_ph: 'ㅅㄱ ㅁㅈ',
       q5_text: '조선 시대의 인권 보호 제도 중 하나를 골라 오늘날과 비교하여 어떤 점이 비슷하고 다른지 자신의 생각을 써 보세요.'

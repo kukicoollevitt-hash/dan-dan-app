@@ -452,6 +452,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       ],
       q2_text: '각 문단의 중심 내용으로 알맞은 것은?',
       q2_opts: ['1문단 : 상태 변화의 활용', '2문단 : 상태 변화의 외부요소', '3문단 : 상태 변화의 정의', '4문단 : 융해(고체→액체)'],
+      q3_html: `고체가 열을 받아 액체로 변하는 과정을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅎ">라 하고,
+                반대로 액체가 다시 고체로 굳는 현상을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㄱ">라 합니다.`,
+      q4_html: `얼음은 모양과 부피가 일정한 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅊ">이고,
+                그릇에 따라 모양이 달라지는 물은 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅊ">입니다.`,
       q3_1_ph: 'ㅇㅎ', q3_2_ph: 'ㅇㄱ',
       q4_1_ph: 'ㄱㅊ', q4_2_ph: 'ㅇㅊ',
       q5_text: '물이 얼음이나 수증기로 변해도 같은 물질인 이유를 본문 내용을 바탕으로 설명해 보세요.'

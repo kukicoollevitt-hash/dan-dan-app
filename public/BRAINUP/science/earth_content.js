@@ -1490,6 +1490,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 자원의 분포와 무역',
         '4문단 : 자원 보존과 재생 에너지'
       ],
+      q3_html: `인간 생활에 필요한 물질을
+                <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅇ">이라 하고, 자원이 지역마다 다르게 퍼져 있는 상태를 자원의
+                <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㅍ">라고 합니다.`,
+      q4_html: `자원은 양이 정해져 있어
+                <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅈㅈ">이기 때문에, 아끼고 지켜
+                <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㅈ">해야 합니다.`,
       q3_1_ph:'ㅈㅇ',q3_2_ph:'ㅂㅍ',q4_1_ph:'ㅎㅈㅈ',q4_2_ph:'ㅂㅈ',
       q5_text:'자원을 아껴 써야 하는 이유와 일상에서 실천할 수 있는 방법을 설명해 보세요.'
     },
@@ -1562,6 +1568,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 바다의 움직임 활용',
         '4문단 : 해류와 기후의 관계'
       ],
+      q3_html: `바닷물이 일정한 방향으로 흐르는 것을
+                <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㄹ">라고 하고, 그중 따뜻한 바닷물의 흐름을
+                <input class="inline-input" id="q3-2" type="text" placeholder="ㄴㄹ">라고 합니다.`,
+      q4_html: `바닷물 높이가 하루에 두 번씩 변하는 현상을
+                <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅅ">이라 하며, 이는 달과 태양의
+                <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㄹ"> 때문에 생깁니다.`,
       q3_1_ph:'ㅎㄹ',q3_2_ph:'ㄴㄹ',q4_1_ph:'ㅈㅅ',q4_2_ph:'ㅇㄹ',
       q5_text:'해류가 기후에 미치는 영향을 예를 들어 설명해 보세요.'
     },
@@ -1634,6 +1646,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 고생대와 중생대',
         '4문단 : 신생대와 인류의 등장'
       ],
+      q3_html: `지구 역사를 크게 나눈 시간 단위를
+                <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅈ ㅅㄷ">라 하며, 각 시대는 지층에 남아 있는
+                <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅅ">과 암석의 특징으로 구분합니다.`,
+      q4_html: `공룡이 지배한
+                <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅅㄷ">는 약 6600만 년 전 소행성 충돌로 공룡을 포함한 많은 생물이
+                <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅈ">하며 끝났습니다.`,
       q3_1_ph:'ㅈㅈ ㅅㄷ',q3_2_ph:'ㅎㅅ',q4_1_ph:'ㅈㅅㄷ',q4_2_ph:'ㅁㅈ',
       q5_text:'지질 시대를 구분하는 기준과 각 시대의 대표적인 생물을 설명해 보세요.'
     },
@@ -1706,6 +1724,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 우주 탐사의 중요성과 일상 기술',
         '4문단 : 민간 우주 개발과 우리나라 현황'
       ],
+      q3_html: `1957년 소련이 최초의
+                <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㄱㅇㅅ"> 스푸트니크 1호를 쏘아 올리며 우주 시대가 시작되었고, 스페이스X는 재사용 가능한
+                <input class="inline-input" id="q3-2" type="text" placeholder="ㄹㅋ">을 개발했습니다.`,
+      q4_html: `탐사 로버 퍼서비어런스는
+                <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅅ">에서 생명체 흔적을 조사하고, 통신
+                <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅅ">은 인터넷과 일기예보를 가능하게 합니다.`,
       q3_1_ph:'ㅇㄱㅇㅅ',q3_2_ph:'ㄹㅋ',q4_1_ph:'ㅎㅅ',q4_2_ph:'ㅇㅅ',
       q5_text:'우주 탐사가 중요한 이유와 우리 생활에 미치는 영향을 설명해 보세요.'
     },
@@ -1778,6 +1802,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 태풍과 화산',
         '4문단 : 방재 활동과 대처 방법'
       ],
+      q3_html: `자연에서 발생하여 사람에게 피해를 주는 현상을
+                <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅇㅈㅎ">라 하고, 그중 땅이 갑자기 흔들리는 현상을
+                <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅈ">이라 합니다.`,
+      q4_html: `재해를 예방하고 피해를 줄이는 활동을
+                <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅈ">라 하며, 위험을 피해 안전한 곳으로 이동하는 것을
+                <input class="inline-input" id="q4-2" type="text" placeholder="ㄷㅍ">라고 합니다.`,
       q3_1_ph:'ㅈㅇㅈㅎ',q3_2_ph:'ㅈㅈ',q4_1_ph:'ㅂㅈ',q4_2_ph:'ㄷㅍ',
       q5_text:'자연재해가 발생했을 때 안전하게 대처하는 방법을 설명해 보세요.'
     },
