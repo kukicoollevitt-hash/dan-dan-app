@@ -39760,6 +39760,89 @@ app.get('/api/word-battle/overall-ranking', async (req, res) => {
   }
 });
 
+// ===== 어휘퀴즈 전체 순위 (캐시 없이 항상 최신) =====
+// 기준: 1차 정답률 desc, 2차 회차 수 desc
+//   정답률: vocabularyHistory 합산 우선, 없으면 vocabularyQuiz.avgScore 폴백
+//   회차 수: vocabularyHistory.length 우선, 없으면 vocabularyQuiz.quizCount 폴백
+app.get('/api/vocabulary-quiz/ranking', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+
+    // 필요 필드만 lean — 전송 비용 최소화
+    const candidates = await UserProgress.find(
+      {
+        $or: [
+          { vocabularyHistory: { $exists: true, $not: { $size: 0 } } },
+          { 'vocabularyQuiz.quizCount': { $gt: 0 } }
+        ]
+      },
+      {
+        grade: 1, name: 1,
+        'vocabularyQuiz.avgScore': 1, 'vocabularyQuiz.quizCount': 1,
+        'vocabularyHistory.correctAnswers': 1, 'vocabularyHistory.totalQuestions': 1
+      }
+    ).lean();
+
+    const computed = [];
+    for (const u of candidates) {
+      if (!u.grade || !u.name) continue;
+      const history = u.vocabularyHistory || [];
+      let tc = 0, tq = 0;
+      for (const h of history) {
+        tc += h.correctAnswers || 0;
+        tq += h.totalQuestions || 0;
+      }
+      let correctRate = 0;
+      if (tq > 0) {
+        correctRate = Math.round((tc / tq) * 100);
+      } else if (u.vocabularyQuiz?.quizCount > 0 && typeof u.vocabularyQuiz?.avgScore === 'number') {
+        correctRate = Math.min(100, Math.max(0, Math.round(u.vocabularyQuiz.avgScore)));
+      } else {
+        continue; // 데이터 부족
+      }
+      const quizCount = (history.length > 0 ? history.length : (u.vocabularyQuiz?.quizCount || 0));
+      const score = correctRate * quizCount; // 종합 점수 = 정답률 × 학습 횟수
+      computed.push({
+        grade: u.grade,
+        name: u.name,
+        correctRate,
+        quizCount,
+        score
+      });
+    }
+
+    // 종합 점수 desc → 같으면 정답률 desc → 같으면 학습 횟수 desc
+    computed.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (b.correctRate !== a.correctRate) return b.correctRate - a.correctRate;
+      return b.quizCount - a.quizCount;
+    });
+
+    const topRanking = computed.slice(0, 10);
+
+    let myRank = null;
+    let myEntry = null;
+    if (grade && name) {
+      const idx = computed.findIndex(c => c.grade === grade && c.name === name);
+      if (idx >= 0) {
+        myRank = idx + 1;
+        myEntry = computed[idx];
+      }
+    }
+
+    res.json({
+      ok: true,
+      topRanking,
+      myRank,
+      myEntry,
+      totalStudents: computed.length
+    });
+  } catch (err) {
+    console.error('어휘퀴즈 순위 조회 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
 // ===== 월간 스피드 독서왕 API =====
 
 // 중복 참가 체크 API (같은 이벤트 + 같은 도서 + 같은 사람 = 중복 참가 불가)

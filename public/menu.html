@@ -2852,6 +2852,29 @@ body:has(.wb-live-banner:hover) .wb-launcher {
   justify-content: center;
 }
 
+/* 🔒 어휘퀴즈 미완료 시 일반과제 카드 잠금 표시 */
+.study-room-item.study-room-item-locked {
+  position: relative;
+  opacity: 0.62;
+  filter: grayscale(35%);
+  background: #fbfbfd;
+  border-color: #d6d6e0;
+}
+.study-room-item.study-room-item-locked::after {
+  content: '🔒';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 16px;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+  pointer-events: none;
+}
+.study-room-item.study-room-item-locked:hover {
+  border-color: #c4b8a8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transform: none;
+}
+
 .study-room-item.empty .empty-text {
   color: #999;
   font-size: 14px;
@@ -17168,11 +17191,11 @@ async function performLogout() {
 
       const rate = cachedRate != null ? parseInt(cachedRate, 10) || 0 : 0;
       applyVocabBadgeRate(badge, rate);
-      console.log('✅ 뱃지 업데이트 완료:', badge.textContent);
+      console.log('✅ 뱃지 업데이트 완료(캐시 우선):', badge.textContent);
 
-      // 🔥 로컬 캐시가 없으면 서버에서 즉시 동기화 (관리자→학생 첫 진입 케이스)
-      if (cachedRate == null && grade && name) {
-        console.log('🔄 로컬 캐시 없음 → 서버에서 어휘 정답률 동기화 시작');
+      // 🔥 항상 백그라운드 동기화 — 어휘퀴즈 팝업과 100% 일치 보장
+      //   캐시는 빠른 첫 표시용일 뿐, 단일 진실은 서버
+      if (grade && name) {
         syncVocabRatingFromServer(grade, name);
       }
     }
@@ -17928,6 +17951,102 @@ async function performLogout() {
         console.error('어휘퀴즈 완료 여부 확인 오류:', error);
         return false;
       }
+    }
+
+    // 일반과제 게이트: 어휘퀴즈 완료 여부 확인
+    // 네트워크/서버 오류 시 통과(관대 정책) — 정상 학생이 인터넷 문제로 막히는 것 방지
+    async function isVocabularyGateOpen() {
+      try {
+        const user = getViewAsStudentUser();
+        if (!user) return true; // 사용자 정보 없으면 통과
+        const response = await fetch(
+          `/api/user-progress/vocabulary-history/today?grade=${encodeURIComponent(user.grade)}&name=${encodeURIComponent(user.name)}`
+        );
+        if (!response.ok) return true; // HTTP 오류 시 통과
+        const result = await response.json();
+        if (result && result.ok) {
+          return result.completedToday === true;
+        }
+        return true; // 응답 형식 이상 시 통과
+      } catch (e) {
+        console.warn('[isVocabularyGateOpen] 오류 → 관대 정책으로 통과:', e);
+        return true;
+      }
+    }
+
+    // 어휘퀴즈 먼저 안내 팝업
+    function showVocabularyGatePopup() {
+      // 중복 생성 방지
+      const existing = document.getElementById('vocabGatePopup');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.id = 'vocabGatePopup';
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 10010;
+        animation: vgFadeIn 0.2s ease;
+      `;
+      overlay.innerHTML = `
+        <style>
+          @keyframes vgFadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes vgPop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+          @keyframes vgFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        </style>
+        <div style="
+          background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+          border-radius: 24px;
+          padding: 32px 28px 24px;
+          max-width: 360px;
+          width: 88%;
+          text-align: center;
+          box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+          animation: vgPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+          border: 2px solid rgba(102, 126, 234, 0.2);
+        ">
+          <div style="font-size: 72px; margin-bottom: 8px; animation: vgFloat 2s ease-in-out infinite;">🐋</div>
+          <div style="font-size: 20px; font-weight: 900; color: #4338ca; margin-bottom: 8px; letter-spacing: -0.3px;">
+            어휘력 향상 퀴즈를 먼저!
+          </div>
+          <div style="font-size: 14px; color: #6b7280; line-height: 1.6; margin-bottom: 22px; word-break: keep-all;">
+            오늘의 어휘력 향상 퀴즈를 완료해야<br>
+            문해 단원을 학습할 수 있어요 📘
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button id="vgCloseBtn" style="
+              flex: 1; padding: 14px 0;
+              border: 2px solid #e5e7eb; background: #fff;
+              color: #6b7280; font-size: 14px; font-weight: 700;
+              border-radius: 12px; cursor: pointer;
+              transition: all 0.2s ease;
+            ">닫기</button>
+            <button id="vgStartBtn" style="
+              flex: 1.4; padding: 14px 0;
+              border: none;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: #fff; font-size: 14px; font-weight: 800;
+              border-radius: 12px; cursor: pointer;
+              box-shadow: 0 6px 18px rgba(102, 126, 234, 0.45);
+              transition: all 0.2s ease;
+            ">🚀 지금 시작하기</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      const close = () => overlay.remove();
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+      document.getElementById('vgCloseBtn').addEventListener('click', close);
+      document.getElementById('vgStartBtn').addEventListener('click', () => {
+        close();
+        // 학습실 모달은 그대로 두고 어휘퀴즈 팝업만 위에 띄움
+        // → 어휘퀴즈 끝나면 closeVocabularyQuiz(true)가 학습실 리스트만 갱신해 자물쇠 해제
+        // → 학생은 바로 일반과제 클릭하여 진입 가능
+        if (typeof openVocabularyQuiz === 'function') openVocabularyQuiz();
+      });
     }
 
     // 단원 ID에서 content.js 파일 경로 생성
@@ -18825,6 +18944,11 @@ async function performLogout() {
         const li = document.createElement('li');
         li.className = 'study-room-item';
 
+        // 🔒 어휘퀴즈 미완료 시 일반과제 카드에 잠금 클래스
+        if (!task.isAI && !vocabCompletedToday) {
+          li.classList.add('study-room-item-locked');
+        }
+
         // AI 과제는 id, 관리자 과제는 unitId 사용
         const rawUnitId = task.id || task.unitId;
         // 구 형식 ID를 새 형식으로 정규화 (world_02 -> world1_02)
@@ -18963,7 +19087,7 @@ async function performLogout() {
         }
 
         // 과제 클릭 시 학습 페이지 열기
-        li.addEventListener('click', (e) => {
+        li.addEventListener('click', async (e) => {
           // 휴지통 버튼 클릭 시에는 열리지 않도록
           if (e.target.classList.contains('trash-btn') || e.target.closest('.trash-btn')) {
             return;
@@ -18971,6 +19095,14 @@ async function performLogout() {
           // 👑 문해왕 선발전 배지 클릭 시에는 단원 열기 방지
           if (e.target.classList.contains('lk-challenge-badge')) {
             return;
+          }
+          // 🔒 일반과제 게이트 — 어휘퀴즈 미완료면 안내 팝업 띄우고 차단
+          if (!task.isAI) {
+            const gateOpen = await isVocabularyGateOpen();
+            if (!gateOpen) {
+              showVocabularyGatePopup();
+              return;
+            }
           }
           // 학습실 모달 먼저 닫기
           closeStudyRoomModal();
