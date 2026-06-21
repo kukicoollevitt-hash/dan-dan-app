@@ -1016,6 +1016,12 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  // 🔹 학생에게 명시적으로 비활성화한 시리즈 목록 (디폴트 활성 시리즈용 — 비평/한국사 등)
+  //    비어 있으면 비평·한국사는 활성. 'BRAIN비평' / 'BRAIN한국사' 등이 들어 있으면 해당 시리즈만 학생 메뉴에서 숨김.
+  disabledSeries: {
+    type: [String],
+    default: []
+  },
   // 🔹 과목당 허용 단원 수 제한 (0 또는 미설정 = 제한 없음 / N = 각 과목 1~N단원만 활성)
   //    기업 시연용 계정 등 일부 학생에게만 부분 개방할 때 사용
   maxUnitsPerSubject: {
@@ -10405,7 +10411,7 @@ app.post("/admin/user-edit", async (req, res) => {
 
 // ===== 시리즈 부여 API (POST) =====
 app.post("/admin/assign-series", async (req, res) => {
-  const { key, userId, series } = req.body;
+  const { key, userId, series, disabledSeries } = req.body;
 
   if (key !== ADMIN_KEY) {
     return res.status(403).json({ success: false, message: "관리자 인증 실패" });
@@ -10418,6 +10424,8 @@ app.post("/admin/assign-series", async (req, res) => {
   if (!Array.isArray(series)) {
     return res.status(400).json({ success: false, message: "series는 배열이어야 합니다" });
   }
+  // disabledSeries는 선택값 — 안 보내면 기존 값 유지
+  const hasDisabledPayload = Array.isArray(disabledSeries);
 
   try {
     const user = await User.findById(userId);
@@ -10480,14 +10488,21 @@ app.post("/admin/assign-series", async (req, res) => {
     }
 
     user.assignedSeries = finalSeries;
+    // 🔹 disabledSeries 처리 — 비평/한국사처럼 디폴트 활성 시리즈를 학원이 명시적으로 끈 경우 저장
+    //    payload에 들어있을 때만 갱신 (기존 동작 보존)
+    if (hasDisabledPayload) {
+      const VALID_DISABLED_VALUES = new Set(['BRAIN비평', 'BRAIN한국사']);
+      user.disabledSeries = disabledSeries.filter(v => VALID_DISABLED_VALUES.has(v));
+    }
     await user.save();
 
-    console.log(`✅ 시리즈 부여 완료: ${user.name} (${user.id}) -> [${finalSeries.join(", ")}]${academyAllowedValues ? ` | 학원허용: [${academyAllowedValues.join(", ")}]` : ' | 학원 권한 제약 없음'}`);
+    console.log(`✅ 시리즈 부여 완료: ${user.name} (${user.id}) -> [${finalSeries.join(", ")}]${hasDisabledPayload ? ` | 비활성: [${(user.disabledSeries || []).join(", ")}]` : ''}${academyAllowedValues ? ` | 학원허용: [${academyAllowedValues.join(", ")}]` : ' | 학원 권한 제약 없음'}`);
 
     return res.json({
       success: true,
       message: "시리즈 부여 완료",
-      assignedSeries: finalSeries
+      assignedSeries: finalSeries,
+      disabledSeries: user.disabledSeries || []
     });
   } catch (err) {
     console.error("❌ /admin/assign-series 에러:", err);
@@ -13850,6 +13865,7 @@ app.get("/api/user-info", async (req, res) => {
       name: user.name,
       school: user.school,
       assignedSeries: user.assignedSeries || [],
+      disabledSeries: user.disabledSeries || [],
       maxUnitsPerSubject: user.maxUnitsPerSubject || 0
     });
   } catch (err) {
@@ -25266,6 +25282,7 @@ req.session.user = {
   school: user.school || user.academyName || "",
   role: "student",
   assignedSeries: user.assignedSeries || [],
+  disabledSeries: user.disabledSeries || [],
   maxUnitsPerSubject: user.maxUnitsPerSubject || 0,
 };
 
@@ -25454,6 +25471,7 @@ app.post("/academy-login", async (req, res) => {
       userType: "academy",
       role: "student",
       assignedSeries: user.assignedSeries || [],
+      disabledSeries: user.disabledSeries || [],
       maxUnitsPerSubject: user.maxUnitsPerSubject || 0,
     };
 

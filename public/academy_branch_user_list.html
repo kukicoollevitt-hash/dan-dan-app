@@ -1085,12 +1085,16 @@
     let approvedSeries = []; // 🔹 승인된 시리즈 목록 (슈퍼관리자가 승인한 시리즈)
 
     // 시리즈 키 → 모달 표시용 데이터 매핑
+    //  - 일반 시리즈(brainon~braindeep)는 학생의 assignedSeries 배열에 들어 있을 때만 활성으로 표시
+    //  - defaultOn:true 시리즈(비평·한국사)는 디폴트 활성, 학생의 disabledSeries에 들어 있으면 비활성으로 표시
+    //  - brain실전은 학생 메뉴에서 숨김 처리 중이라 이 모달에서도 노출하지 않음
     const SERIES_MAP = {
-      brainon: { value: 'BRAIN은', id: 'series-brainun', name: 'BRAIN ON', desc: '개념이해 (3/4/5학년 추천)' },
-      brainup: { value: 'BRAIN암', id: 'series-brainam', name: 'BRAIN UP', desc: '응용적용 (4/5/6학년 추천)' },
-      brainfit: { value: 'BRAIN빛', id: 'series-brainbit', name: 'BRAIN FIT', desc: '사고연결 (중1/중2 추천)' },
-      braindeep: { value: 'BRAIN답', id: 'series-braindap', name: 'BRAIN DEEP', desc: '심화추론 (중3/고1 추천)' },
-      brainreal: { value: 'BRAIN중등', id: 'series-brainjung', name: '실전', desc: '실전학습(수능모고)' }
+      brainon:    { value: 'BRAIN은',   id: 'series-brainun',     name: 'BRAIN ON',     desc: '개념이해 (3/4/5학년 추천)' },
+      brainup:    { value: 'BRAIN암',   id: 'series-brainam',     name: 'BRAIN UP',     desc: '응용적용 (4/5/6학년 추천)' },
+      brainfit:   { value: 'BRAIN빛',   id: 'series-brainbit',    name: 'BRAIN FIT',    desc: '사고연결 (중1/중2 추천)' },
+      braindeep:  { value: 'BRAIN답',   id: 'series-braindap',    name: 'BRAIN DEEP',   desc: '심화추론 (중3/고1 추천)' },
+      braincritique: { value: 'BRAIN비평',  id: 'series-braincritique', name: 'BRAIN 비평', desc: '매일학습 (시사문해)',     defaultOn: true },
+      brainkh:       { value: 'BRAIN한국사', id: 'series-brainkh',       name: 'BRAIN 한국사', desc: '역사특강 (문해특강)',    defaultOn: true }
     };
 
     // 삭제 모달 열기
@@ -1274,6 +1278,9 @@
         const escapedSeriesData = JSON.stringify(u.assignedSeries || [])
           .replace(/'/g, "\\'")
           .replace(/"/g, "&quot;");
+        const escapedDisabledSeriesData = JSON.stringify(u.disabledSeries || [])
+          .replace(/'/g, "\\'")
+          .replace(/"/g, "&quot;");
 
         // 학습실 상태 계산 (LearningLog 기반)
         const assignedTasks = u.studyRoom?.assignedTasks || [];
@@ -1372,11 +1379,11 @@
           </td>
           <td class="center">
             ${(u.assignedSeries && u.assignedSeries.length > 0)
-              ? `<a href="#" onclick="openSeriesModal('${u._id}', '${escapedName}', '${escapedSeriesData}'); return false;"
+              ? `<a href="#" onclick="openSeriesModal('${u._id}', '${escapedName}', '${escapedSeriesData}', '${escapedDisabledSeriesData}'); return false;"
                    style="display: inline-block; padding: 4px 10px; background: #10b981; color: white; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none;">
                   부여됨 (${u.assignedSeries.length})
                  </a>`
-              : `<a href="#" onclick="openSeriesModal('${u._id}', '${escapedName}', '${escapedSeriesData}'); return false;"
+              : `<a href="#" onclick="openSeriesModal('${u._id}', '${escapedName}', '${escapedSeriesData}', '${escapedDisabledSeriesData}'); return false;"
                    style="display: inline-block; padding: 4px 10px; background: #9ca3af; color: white; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none;">
                   미부여
                  </a>`
@@ -1569,7 +1576,7 @@
     let currentUserId = null;
     let currentUserName = '';
 
-    function openSeriesModal(userId, userName, assignedSeriesStr) {
+    function openSeriesModal(userId, userName, assignedSeriesStr, disabledSeriesStr) {
       currentUserId = userId;
       currentUserName = userName || '';
       document.getElementById("modal-student-name").textContent = "학생: " + userName;
@@ -1581,21 +1588,29 @@
 
       // 문자열을 배열로 파싱 (학생에게 이미 부여된 시리즈)
       let studentAssignedSeries = [];
-      try {
-        studentAssignedSeries = JSON.parse(assignedSeriesStr);
-      } catch (e) {
+      try { studentAssignedSeries = JSON.parse(assignedSeriesStr); } catch (e) {
         console.error('Failed to parse assignedSeries:', e);
       }
+      // 학생에게 명시적으로 비활성화된 시리즈 (디폴트 활성 시리즈용)
+      let studentDisabledSeries = [];
+      try { studentDisabledSeries = disabledSeriesStr ? JSON.parse(disabledSeriesStr) : []; } catch (e) {
+        console.error('Failed to parse disabledSeries:', e);
+      }
+      const disabledSet = new Set(Array.isArray(studentDisabledSeries) ? studentDisabledSeries : []);
 
-      // 현재 부여된 시리즈 체크
+      // 일반 시리즈: assignedSeries에 들어 있는 것만 체크
       if (Array.isArray(studentAssignedSeries)) {
         studentAssignedSeries.forEach(series => {
           const checkbox = document.querySelector(`#series-checkbox-list input[value="${series}"]`);
-          if (checkbox) {
-            checkbox.checked = true;
-          }
+          if (checkbox) checkbox.checked = true;
         });
       }
+      // 디폴트 활성 시리즈(비평/한국사): disabledSeries에 들어 있지 않으면 체크
+      Object.values(SERIES_MAP).forEach(s => {
+        if (!s.defaultOn) return;
+        const cb = document.querySelector(`#series-checkbox-list input[value="${s.value}"]`);
+        if (cb && !cb.disabled) cb.checked = !disabledSet.has(s.value);
+      });
 
       // 모달 표시
       document.getElementById("series-modal").classList.add("show");
@@ -1608,20 +1623,26 @@
 
     // 🔹 모든 시리즈를 표시하되, 학원 권한 외는 잠금(disabled) 처리
     //    → 본사가 부여한 시리즈가 학원 모달 저장으로 사라지지 않게 (서버에서도 추가 보호)
+    //    → 비평·한국사(defaultOn)는 본사 승인과 무관하게 모든 학원에서 활성/비활성 가능
     function renderSeriesCheckboxes() {
       const container = document.getElementById('series-checkbox-list');
 
-      const allSeriesKeys = ['brainon', 'brainup', 'brainfit', 'braindeep', 'brainreal'];
+      // 일반 시리즈(학원 권한 적용 대상). 비평/한국사는 권한 체크에서 제외.
+      const standardSeriesKeys = ['brainon', 'brainup', 'brainfit', 'braindeep'];
+      const defaultOnKeys = Object.keys(SERIES_MAP).filter(k => SERIES_MAP[k].defaultOn);
+      const allSeriesKeys = [...standardSeriesKeys, ...defaultOnKeys];
+
       // approvedSeries가 비어있으면 전체 허용 (기존 계정 호환)
       const approved = (!approvedSeries || approvedSeries.length === 0)
-        ? new Set(allSeriesKeys)
+        ? new Set(standardSeriesKeys)
         : new Set(approvedSeries);
 
       let html = '';
       allSeriesKeys.forEach(seriesKey => {
         const series = SERIES_MAP[seriesKey];
         if (!series) return;
-        const isAllowed = approved.has(seriesKey);
+        // 비평/한국사는 학원 승인과 무관하게 항상 활성
+        const isAllowed = series.defaultOn ? true : approved.has(seriesKey);
         const disabledAttr = isAllowed ? '' : 'disabled';
         const lockClass = isAllowed ? '' : 'series-locked';
         const lockBadge = isAllowed
@@ -1629,7 +1650,7 @@
           : ' <span class="lock-badge" title="학원 권한 외 — 본사가 부여한 항목으로 학원에서 변경 불가">🔒</span>';
         html += `
           <div class="checkbox-item ${lockClass}">
-            <input type="checkbox" id="${series.id}" value="${series.value}" ${disabledAttr} />
+            <input type="checkbox" id="${series.id}" value="${series.value}" data-default-on="${series.defaultOn ? '1' : '0'}" ${disabledAttr} />
             <label for="${series.id}">
               <span class="series-name">${series.name}${lockBadge}</span>
               <span class="series-desc">${series.desc}</span>
@@ -1714,10 +1735,17 @@
         return;
       }
 
-      // 선택된 시리즈 수집
-      const selectedSeries = [];
-      document.querySelectorAll('#series-checkbox-list input[type="checkbox"]:checked').forEach(cb => {
-        selectedSeries.push(cb.value);
+      // 선택된 시리즈 수집 — 일반 시리즈와 디폴트 활성(defaultOn) 시리즈를 분리
+      const selectedSeries = [];     // 일반 시리즈(assignedSeries로 저장)
+      const disabledSeries = [];     // defaultOn 시리즈 중 체크 해제된 것
+      document.querySelectorAll('#series-checkbox-list input[type="checkbox"]').forEach(cb => {
+        const isDefaultOn = cb.dataset.defaultOn === '1';
+        if (isDefaultOn) {
+          // 디폴트 활성 시리즈: 체크 해제 시 disabledSeries에 기록
+          if (!cb.checked) disabledSeries.push(cb.value);
+        } else {
+          if (cb.checked) selectedSeries.push(cb.value);
+        }
       });
 
       try {
@@ -1727,7 +1755,8 @@
           body: JSON.stringify({
             key: ADMIN_KEY,
             userId: currentUserId,
-            series: selectedSeries
+            series: selectedSeries,
+            disabledSeries: disabledSeries
           })
         });
 
