@@ -2363,6 +2363,7 @@
         <div class="score-item key-badge key-badge-field">
           <div class="score-label">⭐ 오늘의 분야</div>
           <div class="score-value" id="todayFieldLabel">-</div>
+          <div class="score-sublabel" id="todayUnitCountLabel" style="display:none; font-size: 10.5px; font-weight: 800; color: #fff; background: rgba(255,255,255,0.22); border-radius: 999px; padding: 2px 8px; margin-top: 3px; letter-spacing: 0.3px;">문해단원 0개</div>
         </div>
       </div>
       <!-- 호환용 hidden — 누적/평균/어휘력 지수 ID 유지 (JS 7곳 참조) -->
@@ -7464,13 +7465,27 @@
         taskVocabData = event.data.data || [];
         console.log('📥 과제 단어 데이터 수신:', taskVocabData.length, '개');
 
-        // 오늘의 분야 라벨 업데이트 (과제 단어가 있으면)
         if (taskVocabData.length > 0) {
+          // 오늘의 분야 라벨 업데이트
           const todayFieldEl = document.getElementById('todayFieldLabel');
-          if (todayFieldEl) {
-            todayFieldEl.textContent = '오늘 문해 단어';
+          if (todayFieldEl) todayFieldEl.textContent = '오늘 문해 단어';
+
+          // 📚 미완료 일반과제 단원 수 = 수집된 단어들의 distinct unitId 개수
+          const unitIds = new Set(taskVocabData.map(v => v.unitId).filter(Boolean));
+          const unitCount = unitIds.size;
+          const unitLabelEl = document.getElementById('todayUnitCountLabel');
+          if (unitLabelEl && unitCount > 0) {
+            unitLabelEl.textContent = `📘 문해단원 ${unitCount}개`;
+            unitLabelEl.style.display = 'inline-block';
           }
-          console.log('✅ 과제 단어 데이터 준비 완료 - 사용자가 문제 수 선택 시 사용됨');
+
+          // 📊 문제 수 입력칸 자동 셋팅 — 실제 수집 단어 수 기준, 20~50 clamp (학생이 수정 가능)
+          const suggested = Math.min(50, Math.max(20, taskVocabData.length));
+          const input = document.getElementById('questionCountInput');
+          if (input) {
+            input.value = suggested;
+            console.log(`✅ 문제 수 자동 셋팅: ${suggested}개 (단어 ${taskVocabData.length}, 단원 ${unitCount})`);
+          }
         }
       }
     });
