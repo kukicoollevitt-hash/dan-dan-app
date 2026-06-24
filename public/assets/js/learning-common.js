@@ -3126,7 +3126,15 @@
 
   /* ===== 창의활동 제출 ===== */
   let creativeBtn, creativeCheckBtn, creativeTextarea;
-  const MIN_CHAR_COUNT = 150; // 최소 글자수
+  const MIN_CHAR_COUNT = 150; // 기본 최소 글자수 (BRAIN 업/핏/딥)
+
+  // 단원 시리즈에 따른 최소 글자수
+  // - BRAIN 온 (on_* 단원, 저학년) → 100자
+  // - 그 외 (BRAIN 업/핏/딥) → 150자
+  function getMinCharCount() {
+    const u = (window.CUR_UNIT || '').toLowerCase();
+    return u.startsWith('on_') ? 100 : MIN_CHAR_COUNT;
+  }
 
   // 예쁜 커스텀 알림 팝업
   function showCreativeAlert(message) {
@@ -3267,6 +3275,333 @@
     }
   }
 
+  // ============================================
+  // 📷 창의활동 OCR — 사진으로 입력 (on_bio_01 PoC)
+  // ============================================
+  let _creativeOcrImageData = null;
+
+  function injectCreativeOcrButton(checkBtn) {
+    // 1) OCR 버튼 (📷 사진으로 입력) — 고래쌤 버튼 왼쪽에 삽입
+    const ocrBtn = document.createElement('button');
+    ocrBtn.type = 'button';
+    ocrBtn.id = 'creative-ocr-btn';
+    ocrBtn.className = checkBtn.className;          // 동일 스타일
+    ocrBtn.textContent = '📷 사진으로 입력';
+    ocrBtn.style.cssText = 'background:#fff7ed; color:#92400e; border:2px solid #fb923c;';
+    checkBtn.parentNode.insertBefore(ocrBtn, checkBtn);
+    ocrBtn.addEventListener('click', openCreativeOcrModal);
+
+    // 2) 모달 + 스타일 1회 주입
+    if (!document.getElementById('creativeOcrStyles')) {
+      const style = document.createElement('style');
+      style.id = 'creativeOcrStyles';
+      style.textContent = `
+        .creative-ocr-overlay {
+          display:none; position:fixed; inset:0; z-index:10000;
+          background:rgba(0,0,0,0.55); backdrop-filter:blur(4px);
+          align-items:center; justify-content:center;
+        }
+        .creative-ocr-overlay.show { display:flex; }
+        .creative-ocr-modal {
+          background:#fff; border-radius:18px; padding:22px;
+          max-width:480px; width:92%; max-height:88vh; overflow-y:auto;
+          box-shadow:0 20px 60px rgba(0,0,0,0.3);
+          border:2px solid rgba(217,119,6,0.2);
+        }
+        .creative-ocr-head {
+          display:flex; justify-content:space-between; align-items:center;
+          margin-bottom:14px;
+        }
+        .creative-ocr-title { font-size:17px; font-weight:800; color:#92400e; margin:0; }
+        .creative-ocr-close {
+          border:none; background:#f3f4f6; width:32px; height:32px;
+          border-radius:8px; cursor:pointer; font-size:18px; color:#6b7280;
+        }
+        .creative-ocr-close:hover { background:#e5e7eb; color:#111827; }
+        .creative-ocr-tabs {
+          display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;
+        }
+        .creative-ocr-source {
+          display:flex; flex-direction:column; align-items:center; gap:4px;
+          padding:18px 10px; border:2px dashed #fed7aa; border-radius:12px;
+          background:#fff7ed; color:#92400e; cursor:pointer;
+          font-size:13px; font-weight:700; transition:all 0.15s;
+        }
+        .creative-ocr-source:hover { background:#ffedd5; border-color:#f59e0b; }
+        .creative-ocr-source .icon { font-size:32px; }
+        .creative-ocr-source .hint { font-size:10px; color:#b45309; font-weight:500; }
+        .creative-ocr-preview {
+          margin-bottom:12px; text-align:center;
+          background:#f9fafb; border-radius:10px; padding:8px; max-height:280px;
+          overflow:auto;
+        }
+        .creative-ocr-preview img { max-width:100%; border-radius:8px; }
+        .creative-ocr-loading {
+          display:none; text-align:center; padding:16px;
+          background:#fff7ed; border-radius:10px; margin-bottom:12px;
+        }
+        .creative-ocr-loading.show { display:block; }
+        .creative-ocr-spinner {
+          width:32px; height:32px; margin:0 auto 8px;
+          border:3px solid #fed7aa; border-top-color:#f59e0b;
+          border-radius:50%; animation:creativeOcrSpin 0.8s linear infinite;
+        }
+        @keyframes creativeOcrSpin { to { transform:rotate(360deg); } }
+        .creative-ocr-actions {
+          display:flex; gap:8px; justify-content:flex-end;
+        }
+        .creative-ocr-btn {
+          padding:9px 18px; border-radius:10px; border:none;
+          font-size:13px; font-weight:700; cursor:pointer;
+          transition:all 0.15s;
+        }
+        .creative-ocr-btn-cancel {
+          background:#f3f4f6; color:#6b7280;
+        }
+        .creative-ocr-btn-cancel:hover { background:#e5e7eb; }
+        .creative-ocr-btn-primary {
+          background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff;
+        }
+        .creative-ocr-btn-primary:hover:not(:disabled) {
+          background:linear-gradient(135deg, #d97706, #b45309);
+        }
+        .creative-ocr-btn-primary:disabled {
+          background:#d1d5db; cursor:not-allowed; color:#9ca3af;
+        }
+        /* 덮어쓰기 확인 미니 팝업 */
+        .creative-ocr-confirm-overlay {
+          display:none; position:fixed; inset:0; z-index:10100;
+          background:rgba(0,0,0,0.5); align-items:center; justify-content:center;
+        }
+        .creative-ocr-confirm-overlay.show { display:flex; }
+        .creative-ocr-confirm-box {
+          background:#fff; border-radius:14px; padding:22px 24px;
+          max-width:360px; width:90%; text-align:center;
+          box-shadow:0 12px 40px rgba(0,0,0,0.3);
+        }
+        .creative-ocr-confirm-icon { font-size:36px; margin-bottom:10px; }
+        .creative-ocr-confirm-title { font-size:15px; font-weight:800; color:#1f2937; margin-bottom:6px; }
+        .creative-ocr-confirm-msg { font-size:13px; color:#6b7280; line-height:1.5; margin-bottom:16px; }
+        .creative-ocr-confirm-actions { display:flex; gap:8px; }
+        .creative-ocr-confirm-actions button {
+          flex:1; padding:10px; border:none; border-radius:8px;
+          font-size:13px; font-weight:700; cursor:pointer;
+        }
+        .creative-ocr-confirm-no  { background:#f3f4f6; color:#6b7280; }
+        .creative-ocr-confirm-yes { background:#f59e0b; color:#fff; }
+      `;
+      document.head.appendChild(style);
+    }
+
+    if (!document.getElementById('creativeOcrOverlay')) {
+      const overlay = document.createElement('div');
+      overlay.id = 'creativeOcrOverlay';
+      overlay.className = 'creative-ocr-overlay';
+      overlay.innerHTML = `
+        <div class="creative-ocr-modal" role="dialog" aria-modal="true">
+          <div class="creative-ocr-head">
+            <h3 class="creative-ocr-title">📷 글쓰기 사진 자동 입력</h3>
+            <button class="creative-ocr-close" onclick="closeCreativeOcrModal()" aria-label="닫기">✕</button>
+          </div>
+          <div class="creative-ocr-tabs">
+            <button class="creative-ocr-source" onclick="document.getElementById('creativeOcrCameraInput').click()">
+              <span class="icon">📸</span>
+              <span>직접 촬영하기</span>
+              <span class="hint">(찍자마자 자동 인식)</span>
+            </button>
+            <button class="creative-ocr-source" onclick="document.getElementById('creativeOcrFileInput').click()">
+              <span class="icon">🖼️</span>
+              <span>파일 불러오기</span>
+              <span class="hint">(갤러리/PC)</span>
+            </button>
+          </div>
+          <input type="file" id="creativeOcrCameraInput" accept="image/*" capture="environment" style="display:none;" />
+          <input type="file" id="creativeOcrFileInput" accept="image/*" style="display:none;" />
+          <div class="creative-ocr-preview" id="creativeOcrPreview" style="display:none;">
+            <img id="creativeOcrPreviewImg" alt="미리보기" />
+          </div>
+          <div class="creative-ocr-loading" id="creativeOcrLoading">
+            <div class="creative-ocr-spinner"></div>
+            <div style="color:#92400e; font-weight:600;">AI가 손글씨를 읽고 있어요...</div>
+            <div style="color:#b45309; font-size:11px; margin-top:4px;">보통 3~6초 정도 걸립니다</div>
+          </div>
+          <div class="creative-ocr-actions">
+            <button class="creative-ocr-btn creative-ocr-btn-cancel" onclick="closeCreativeOcrModal()">취소</button>
+            <button class="creative-ocr-btn creative-ocr-btn-primary" id="creativeOcrSubmitBtn" onclick="runCreativeOcr()" disabled>🤖 AI로 인식하기</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      // 입력 이벤트
+      document.getElementById('creativeOcrCameraInput').addEventListener('change', handleCreativeOcrCamera);
+      document.getElementById('creativeOcrFileInput').addEventListener('change', handleCreativeOcrFile);
+      // 바깥 클릭 닫기
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeCreativeOcrModal();
+      });
+    }
+
+    // 덮어쓰기 확인 미니 팝업도 1회 주입
+    if (!document.getElementById('creativeOcrConfirm')) {
+      const c = document.createElement('div');
+      c.id = 'creativeOcrConfirm';
+      c.className = 'creative-ocr-confirm-overlay';
+      c.innerHTML = `
+        <div class="creative-ocr-confirm-box">
+          <div class="creative-ocr-confirm-icon">⚠️</div>
+          <div class="creative-ocr-confirm-title">기존 글을 덮어쓸까요?</div>
+          <div class="creative-ocr-confirm-msg">이미 작성한 내용이 있어요.<br>사진으로 인식한 글로 바꾸시겠어요?</div>
+          <div class="creative-ocr-confirm-actions">
+            <button class="creative-ocr-confirm-no"  data-answer="no">취소</button>
+            <button class="creative-ocr-confirm-yes" data-answer="yes">덮어쓰기</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(c);
+    }
+  }
+
+  function openCreativeOcrModal() {
+    const overlay = document.getElementById('creativeOcrOverlay');
+    if (!overlay) return;
+    _creativeOcrImageData = null;
+    document.getElementById('creativeOcrPreview').style.display = 'none';
+    document.getElementById('creativeOcrSubmitBtn').disabled = true;
+    document.getElementById('creativeOcrLoading').classList.remove('show');
+    document.getElementById('creativeOcrCameraInput').value = '';
+    document.getElementById('creativeOcrFileInput').value = '';
+    overlay.classList.add('show');
+  }
+  window.openCreativeOcrModal = openCreativeOcrModal;
+
+  function closeCreativeOcrModal() {
+    const overlay = document.getElementById('creativeOcrOverlay');
+    if (overlay) overlay.classList.remove('show');
+  }
+  window.closeCreativeOcrModal = closeCreativeOcrModal;
+
+  function _creativeOcrResize(file, maxWidth, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const ratio = Math.min(1, maxWidth / img.width);
+          const w = Math.round(img.width * ratio);
+          const h = Math.round(img.height * ratio);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => reject(new Error('이미지를 읽을 수 없습니다.'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 파일 불러오기 — 미리보기 후 수동 인식
+  async function handleCreativeOcrFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { alert('이미지 파일만 선택할 수 있습니다.'); return; }
+    try {
+      const dataUrl = await _creativeOcrResize(file, 1600, 0.85);
+      _creativeOcrImageData = dataUrl;
+      document.getElementById('creativeOcrPreviewImg').src = dataUrl;
+      document.getElementById('creativeOcrPreview').style.display = 'block';
+      document.getElementById('creativeOcrSubmitBtn').disabled = false;
+    } catch (err) {
+      console.error('[Creative OCR file]', err);
+      alert('이미지 처리 중 오류: ' + err.message);
+    }
+  }
+
+  // 직접 촬영 — 자동 인식
+  async function handleCreativeOcrCamera(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { alert('이미지 파일만 선택할 수 있습니다.'); return; }
+    try {
+      const dataUrl = await _creativeOcrResize(file, 1600, 0.85);
+      _creativeOcrImageData = dataUrl;
+      document.getElementById('creativeOcrPreviewImg').src = dataUrl;
+      document.getElementById('creativeOcrPreview').style.display = 'block';
+      document.getElementById('creativeOcrSubmitBtn').disabled = false;
+      setTimeout(() => runCreativeOcr(), 100);
+    } catch (err) {
+      console.error('[Creative OCR camera]', err);
+      alert('이미지 처리 중 오류: ' + err.message);
+    }
+  }
+
+  function _creativeOcrConfirmOverwrite() {
+    return new Promise((resolve) => {
+      const c = document.getElementById('creativeOcrConfirm');
+      if (!c) { resolve(true); return; }
+      c.classList.add('show');
+      const handler = (ev) => {
+        const ans = ev.target.dataset.answer;
+        if (!ans) return;
+        c.classList.remove('show');
+        c.querySelectorAll('button').forEach(b => b.removeEventListener('click', handler));
+        resolve(ans === 'yes');
+      };
+      c.querySelectorAll('button').forEach(b => b.addEventListener('click', handler));
+    });
+  }
+
+  async function runCreativeOcr() {
+    if (!_creativeOcrImageData) return;
+
+    const ta = document.getElementById('creative-input');
+    if (ta && ta.value.trim().length > 0) {
+      const ok = await _creativeOcrConfirmOverwrite();
+      if (!ok) return;
+    }
+
+    const submitBtn = document.getElementById('creativeOcrSubmitBtn');
+    const loading = document.getElementById('creativeOcrLoading');
+    submitBtn.disabled = true;
+    loading.classList.add('show');
+
+    try {
+      const res = await fetch('/api/creative-ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: _creativeOcrImageData })
+      });
+      const json = await res.json();
+      if (!json.ok) {
+        alert('AI 인식 실패: ' + (json.message || '알 수 없는 오류'));
+        return;
+      }
+      const text = (json.text || '').trim();
+      if (ta) {
+        ta.value = text;
+        // input 이벤트 강제 발생 — 자동저장 + 글자수 갱신
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+        // 입력란으로 스크롤
+        ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        ta.focus();
+      }
+      closeCreativeOcrModal();
+    } catch (err) {
+      console.error('[Creative OCR]', err);
+      alert('네트워크 오류: ' + err.message);
+    } finally {
+      loading.classList.remove('show');
+      submitBtn.disabled = false;
+    }
+  }
+  window.runCreativeOcr = runCreativeOcr;
+
   function initCreativeButtons() {
     creativeBtn = document.getElementById('creative-submit-btn');
     creativeCheckBtn = document.getElementById('creative-check-btn');
@@ -3276,8 +3611,8 @@
     if (creativeTextarea && !document.getElementById('creative-char-counter')) {
       const counterEl = document.createElement('div');
       counterEl.id = 'creative-char-counter';
-      counterEl.style.cssText = 'text-align: right; font-size: 14px; color: #888; margin-top: 8px; margin-bottom: 4px;';
-      counterEl.innerHTML = '<span id="current-char-count">0</span> / <span style="color: #d16355; font-weight: 600;">' + MIN_CHAR_COUNT + '자 이상 입력해주세요</span>';
+      counterEl.style.cssText = 'display:block; clear:both; text-align: right; font-size: 14px; color: #888; margin-top: 10px; margin-bottom: 18px; line-height: 1.4;';
+      counterEl.innerHTML = '<span id="current-char-count">0</span> / <span style="color: #d16355; font-weight: 600;">' + getMinCharCount() + '자 이상 입력해주세요</span>';
       creativeTextarea.parentNode.insertBefore(counterEl, creativeTextarea.nextSibling);
     }
 
@@ -3290,8 +3625,8 @@
       const charCount = creativeTextarea.value.length;
       countEl.textContent = charCount;
 
-      // 150자 이상이면 초록색, 미만이면 빨간색
-      if (charCount >= MIN_CHAR_COUNT) {
+      // 기준 자수 이상이면 초록색, 미만이면 빨간색
+      if (charCount >= getMinCharCount()) {
         countEl.style.color = '#3a8755';
         countEl.style.fontWeight = '600';
       } else {
@@ -3308,6 +3643,11 @@
       });
       // 초기 글자수 표시
       updateCharCount();
+    }
+
+    // 📷 창의활동 OCR 버튼 동적 주입 (모든 단원 적용)
+    if (creativeCheckBtn && !document.getElementById('creative-ocr-btn')) {
+      injectCreativeOcrButton(creativeCheckBtn);
     }
 
     // 맞춤법 검사 + AI 다듬기 버튼 클릭 시
@@ -3422,9 +3762,10 @@
 
         const text = creativeTextarea ? creativeTextarea.value : '';
 
-        // 150자 미만 체크
-        if (text.length < MIN_CHAR_COUNT) {
-          showCreativeAlert(MIN_CHAR_COUNT + '자 이상 글쓰기를 완료해주세요.');
+        // 기준 자수 미만 체크 (BRAIN 온: 100자, 그 외: 150자)
+        const minChars = getMinCharCount();
+        if (text.length < minChars) {
+          showCreativeAlert(minChars + '자 이상 글쓰기를 완료해주세요.');
           return;
         }
 

@@ -376,48 +376,57 @@
       }
     }
 
-    // 실시간 검색 — DOM 기반 필터 (행을 표시/숨김)
+    // 실시간 검색 — 행을 표시/숨김
+    // hidden-row 클래스가 있는 행도 검색 결과에 포함되도록 임시로 클래스 제거
     function filterRows(tbodyId, hiddenClass, searchTerm, countBadgeId, moreBtnId) {
       const tbody = document.getElementById(tbodyId);
       if (!tbody) return;
       const rows = Array.from(tbody.querySelectorAll('tr'));
       const term = (searchTerm || '').toLowerCase().trim();
+      const moreBtn = document.getElementById(moreBtnId);
+
+      if (!term) {
+        // 검색어 없음 → 원래 hidden-row 상태 복원
+        rows.forEach(row => {
+          row.style.display = '';
+          if (row.dataset.wasHidden === '1') {
+            row.classList.add(hiddenClass);
+            // hidden-row 공통 클래스도 복원 (CSS 의존)
+            row.classList.add('hidden-row');
+            delete row.dataset.wasHidden;
+          }
+        });
+        // 더보기 버튼 복원
+        const stillHidden = tbody.querySelectorAll('.' + hiddenClass).length;
+        if (moreBtn) moreBtn.style.display = stillHidden > 0 ? 'block' : 'none';
+        // 카운트는 전체 데이터 수로 되돌림
+        const cb = document.getElementById(countBadgeId);
+        if (cb) cb.textContent = rows.length + '명';
+        return;
+      }
+
+      // 검색어 있음 → 모든 행에서 hidden-row 임시 제거 (원래 상태는 data-was-hidden 저장)
       let visible = 0;
       rows.forEach(row => {
-        if (!term) {
-          row.style.display = '';
-          row.classList.remove('search-filtered');
-          visible++;
-          return;
-        }
+        // 원래 숨겨져 있었는지 저장
+        const wasHidden = row.classList.contains(hiddenClass) || row.classList.contains('hidden-row');
+        if (wasHidden) row.dataset.wasHidden = '1';
+        // 임시로 클래스 제거 (검색 결과 표시 위해)
+        row.classList.remove(hiddenClass);
+        row.classList.remove('hidden-row');
+
         const text = row.textContent.toLowerCase();
         if (text.includes(term)) {
           row.style.display = '';
-          row.classList.add('search-filtered'); // 더보기 토글에 영향 안 받게
           visible++;
         } else {
           row.style.display = 'none';
         }
       });
-      // 검색 중일 때는 hidden-row 클래스로 인한 숨김 무시 (검색 결과 모두 노출)
-      if (term) {
-        document.querySelectorAll('.' + hiddenClass).forEach(r => {
-          if (r.classList.contains('search-filtered')) r.style.display = '';
-        });
-        // 더보기 버튼 숨김
-        const mb = document.getElementById(moreBtnId);
-        if (mb) mb.style.display = 'none';
-      } else {
-        // 검색 비웠을 때 원래 더보기 상태 복원
-        document.querySelectorAll('.' + hiddenClass).forEach(r => {
-          r.classList.remove('search-filtered');
-          // diagnosticExpanded/applicationExpanded 상태에 맞춰 표시 복원
-          const isExpanded = (hiddenClass === 'diagnostic-hidden') ? diagnosticExpanded : applicationExpanded;
-          if (!isExpanded) r.style.display = 'none';
-        });
-        const mb = document.getElementById(moreBtnId);
-        if (mb && document.querySelectorAll('.' + hiddenClass).length > 0) mb.style.display = 'block';
-      }
+
+      // 검색 중엔 더보기 숨김
+      if (moreBtn) moreBtn.style.display = 'none';
+
       // 카운트 갱신
       const cb = document.getElementById(countBadgeId);
       if (cb) cb.textContent = visible + '명';

@@ -41562,6 +41562,83 @@ app.get("/critique-ocr-test", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "critique-ocr-test.html"));
 });
 
+// 📷 창의활동 글쓰기 OCR (gpt-4o-mini)
+// 워크북의 "2단계 글쓰기" 영역만 인식해서 단일 텍스트로 반환
+app.post("/api/creative-ocr", async (req, res) => {
+  try {
+    const { imageBase64 } = req.body || {};
+    if (!imageBase64) {
+      return res.status(400).json({ ok: false, message: "이미지가 전송되지 않았습니다." });
+    }
+    const dataUrl = imageBase64.startsWith('data:')
+      ? imageBase64
+      : `data:image/jpeg;base64,${imageBase64}`;
+
+    const OpenAI = require('openai');
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    const systemPrompt = `당신은 한글 손글씨 OCR 전문가입니다.
+첨부된 사진은 "BRAIN문해력 학습실 창의활동 글쓰기 워크북" 한 페이지입니다.
+
+양식 구조:
+- 상단: "🖊 글쓰기 도전" 헤더 (인쇄)
+- "1단계 생각 정리": Q1/Q2/Q3 짧은 답안 영역 (인식 대상 아님 — 무시)
+- "2단계 글쓰기": 활용 키워드 체크박스 + 줄 라인 위에 학생이 손으로 쓴 본문
+- 인식 대상: **"2단계 글쓰기"의 줄 라인 위에 학생이 손으로 쓴 본문 텍스트만**
+
+== 인식 원칙 ==
+- 2단계 글쓰기 영역의 손글씨만 추출하세요. 1단계 Q1/Q2/Q3, 키워드 체크박스, 인쇄된 라벨·헤더는 모두 무시.
+- **보이는 그대로** 충실하게 읽으세요. 임의로 단어를 바꾸거나 글자를 만들어내지 마세요.
+- 한 글자가 명백히 흐려서 도저히 구분 안 되면 그 글자만 비워두거나 가장 가까운 후보 하나만 적으세요.
+- 학생이 쓴 띄어쓰기는 그대로 유지.
+- 줄바꿈(엔터)은 그대로 유지 — 학생이 줄을 바꿔서 썼으면 \\n로 표시.
+- 마침표·쉼표 등 문장 부호는 학생이 쓴 그대로.
+- 영문/숫자/특수문자는 그대로.
+- 추측이 50% 미만이면 차라리 빈 문자열로.
+- 학생이 2단계 글쓰기 영역에 아무 것도 안 썼으면 빈 문자열.
+
+응답은 반드시 다음 JSON 한 객체로만 (다른 설명 없이):
+{ "text": "..." }`;
+
+    console.log("📷 [creative-ocr] gpt-4o-mini 호출 시작");
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "이 워크북 사진에서 '2단계 글쓰기' 영역의 손글씨 본문만 정확히 읽어 JSON으로 응답해주세요. 1단계 답안과 키워드 체크박스는 무시하세요. 보이는 그대로 읽고 임의 추측은 하지 마세요." },
+            { type: "image_url", image_url: { url: dataUrl, detail: "high" } }
+          ]
+        }
+      ],
+      temperature: 0,
+      max_tokens: 1500,
+      response_format: { type: "json_object" }
+    });
+
+    const aiResponse = response.choices[0].message.content;
+    console.log("📷 [creative-ocr] 응답 길이:", aiResponse.length);
+
+    let parsed;
+    try { parsed = JSON.parse(aiResponse); }
+    catch (e) {
+      const m = aiResponse.match(/\{[\s\S]*\}/);
+      parsed = m ? JSON.parse(m[0]) : null;
+    }
+    if (!parsed || typeof parsed.text !== 'string') {
+      return res.status(500).json({ ok: false, message: "AI 응답을 파싱하지 못했습니다.", raw: aiResponse });
+    }
+
+    res.json({ ok: true, text: parsed.text, usage: response.usage });
+  } catch (err) {
+    console.error("❌ [creative-ocr] 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
   })
   .catch((err) => {
     console.error("❌ MongoDB 연결 실패:", err);
