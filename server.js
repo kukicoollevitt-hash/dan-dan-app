@@ -1121,7 +1121,7 @@ const adminSchema = new mongoose.Schema({
   overStudentCount: { type: Number, default: 0 },     // 직전 월말 기준 초과 인원
   currentCycleNumber: { type: Number, default: 0 },   // 현재 계약 사이클 번호 (0=첫해, 1=2년차, ...)
   lastSnapshotYearMonth: { type: String, default: null }, // 마지막 스냅샷 yearMonth ("2026-06")
-  maxStudentLimit: { type: Number, default: 120 }, // 최대 학생 수 제한
+  maxStudentLimit: { type: Number, default: 360 }, // 최대 학생 수 제한 (초기 도입 프로모션: 360명, 학원별 별도 지정 가능)
 });
 
 const Admin = mongoose.model("Admin", adminSchema);
@@ -3442,6 +3442,132 @@ app.get('/api/branch/ai-tasks', requireAdminLogin, async (req, res) => {
   }
 });
 
+// 학원 학생 영구 삭제 (모달 안내 문구와 동작 일치)
+// 안전장치: 요청한 학원 관리자의 academyName 과 일치하는 학생만 삭제 가능
+app.post('/api/branch/hard-delete-user', requireAdminLogin, async (req, res) => {
+  try {
+    const viewingBranch = req.session.viewingBranch;
+    const sessionAdmin = viewingBranch || req.session.admin;
+    if (!sessionAdmin || !sessionAdmin.academyName) {
+      return res.status(401).json({ ok: false, message: '관리자 세션 없음' });
+    }
+    const academyName = sessionAdmin.academyName;
+    const userType = viewingBranch ? 'academy' : (sessionAdmin.userType || 'school');
+
+    // ids: 단건/다건 모두 지원 (배열 권장)
+    const raw = req.body && (req.body.ids || req.body.id);
+    const idList = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+    const ids = idList.map(v => String(v || '').trim()).filter(Boolean);
+    if (ids.length === 0) {
+      return res.status(400).json({ ok: false, message: 'id 가 필요합니다.' });
+    }
+
+    const mongooseLib = require('mongoose');
+    const orClauses = [];
+    for (const id of ids) {
+      if (mongooseLib.Types.ObjectId.isValid(id) && id.length === 24) {
+        orClauses.push({ _id: id });
+      }
+      orClauses.push({ id }, { phone: id });
+    }
+
+    // 학원 일치 + userType 일치 + 위 id 조건 중 하나
+    const baseScope = (userType === 'academy')
+      ? { academyName, userType: 'academy' }
+      : { school: academyName };
+
+    const filter = { $and: [ baseScope, { $or: orClauses } ] };
+
+    const result = await User.deleteMany(filter);
+    console.log(`🗑️ [hard-delete] academy=${academyName} 요청=${ids.length}건 삭제=${result.deletedCount}건`);
+
+    return res.json({
+      ok: true,
+      requested: ids.length,
+      deleted: result.deletedCount || 0
+    });
+  } catch (err) {
+    console.error('❌ /api/branch/hard-delete-user 에러:', err);
+    return res.status(500).json({ ok: false, message: '삭제 중 오류' });
+  }
+});
+
+// 브랜치 관리자용 초과 인원 월별 스냅샷 + 가입 학생 명단
+// 정책: maxStudentLimit 초과한 월 목록 + 그 월에 가입한 학생들 (createdAt 기준)
+app.get('/api/branch/over-snapshots', requireAdminLogin, async (req, res) => {
+  try {
+    const viewingBranch = req.session.viewingBranch;
+    const sessionAdmin = viewingBranch || req.session.admin;
+    if (!sessionAdmin || !sessionAdmin.academyName) {
+      return res.status(401).json({ ok: false, message: '관리자 세션 없음' });
+    }
+    const academyName = sessionAdmin.academyName;
+
+    // 최신 maxStudentLimit 은 DB Admin 도큐먼트가 source of truth
+    const adminDoc = await Admin.findOne({ academyName, userType: 'academy' }).lean();
+    const maxStudentLimit = (adminDoc && adminDoc.maxStudentLimit) || 360;
+
+    // overThisMonth > 0 인 월만 조회 (최신월 먼저)
+    const overSnapshots = await MonthlyStudentSnapshot.find({
+      academyName,
+      overThisMonth: { $gt: 0 }
+    }).sort({ yearMonth: -1 }).lean();
+
+    // 각 over 월에 가입한 학생 명단 조회
+    const months = [];
+    for (const snap of overSnapshots) {
+      const [yy, mm] = snap.yearMonth.split('-').map(n => parseInt(n));
+      // KST 월 시작/끝 (UTC 기준 -9h)
+      const monthStartUTC = new Date(Date.UTC(yy, mm - 1, 1) - 9 * 3600000);
+      const monthEndUTC = new Date(Date.UTC(yy, mm, 1) - 9 * 3600000);
+
+      const users = await User.find({
+        academyName,
+        userType: 'academy',
+        deleted: { $ne: true },
+        createdAt: { $gte: monthStartUTC, $lt: monthEndUTC }
+      })
+        .select('grade name classNum phone id status createdAt')
+        .sort({ createdAt: 1 })
+        .lean();
+
+      // 사이클 누적 기준 초과 인원: 같은 월 가입자 중 뒤쪽(시간순 늦은) overThisMonth명
+      const over = snap.overThisMonth || 0;
+      const overFromIndex = Math.max(0, users.length - over);
+      const studentList = users.map((u, idx) => ({
+        grade: u.grade || '',
+        name: u.name || '',
+        classNum: u.classNum || '',
+        phone: u.phone || u.id || '',
+        status: u.status || '',
+        createdAt: u.createdAt,
+        isOver: idx >= overFromIndex
+      }));
+
+      months.push({
+        yearMonth: snap.yearMonth,
+        cycleNumber: snap.cycleNumber,
+        monthEndCount: snap.monthEndCount,
+        cumulativeAfter: snap.cumulativeAfter,
+        overThisMonth: snap.overThisMonth,
+        capturedAt: snap.capturedAt,
+        joinedCount: users.length,
+        students: studentList
+      });
+    }
+
+    res.json({
+      ok: true,
+      academyName,
+      maxStudentLimit,
+      months
+    });
+  } catch (err) {
+    console.error('❌ /api/branch/over-snapshots 에러:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
 // 관리자 회원가입 페이지 (GET)
 app.get("/admin-signup", (req, res) => {
   console.log("✅ [GET] /admin-signup -> public/admin_signup.html");
@@ -5055,7 +5181,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
           <td style="white-space: nowrap;">
             ${(() => {
               const rawCumulative = a.cumulativeStudentCount || 0;
-              const maxLimit = a.maxStudentLimit || 120;
+              const maxLimit = a.maxStudentLimit || 360;
               const displayCumulative = Math.min(rawCumulative, maxLimit);
               const currentCount = studentCountMap[a.academyName] || 0;
               // 초과 인원: 직전 월말 cron 결과 (월별 규칙 기반 산정)
@@ -25545,7 +25671,7 @@ app.get("/api/admin-session", async (req, res) => {
           contractType: admin ? (admin.contractType || null) : null,
           cumulativeStudentCount: admin ? (admin.cumulativeStudentCount || 0) : 0,
           overStudentCount: admin ? (admin.overStudentCount || 0) : 0,
-          maxStudentLimit: admin ? (admin.maxStudentLimit || 120) : 120
+          maxStudentLimit: admin ? (admin.maxStudentLimit || 360) : 360
         }
       });
     } catch (err) {
@@ -25562,7 +25688,7 @@ app.get("/api/admin-session", async (req, res) => {
           contractType: null,
           cumulativeStudentCount: 0,
           overStudentCount: 0,
-          maxStudentLimit: 120
+          maxStudentLimit: 360
         }
       });
     }
@@ -25582,7 +25708,7 @@ app.get("/api/admin-session", async (req, res) => {
           contractType: admin ? (admin.contractType || null) : null,
           cumulativeStudentCount: admin ? (admin.cumulativeStudentCount || 0) : 0,
           overStudentCount: admin ? (admin.overStudentCount || 0) : 0,
-          maxStudentLimit: admin ? (admin.maxStudentLimit || 120) : 120
+          maxStudentLimit: admin ? (admin.maxStudentLimit || 360) : 360
         }
       });
     } catch (err) {
@@ -25595,7 +25721,7 @@ app.get("/api/admin-session", async (req, res) => {
           contractType: null,
           cumulativeStudentCount: 0,
           overStudentCount: 0,
-          maxStudentLimit: 120
+          maxStudentLimit: 360
         }
       });
     }
@@ -29401,7 +29527,7 @@ async function runMonthlySnapshot(opts = {}) {
     });
 
     const newCum = prevCum + monthEndCount;
-    const maxLimit = admin.maxStudentLimit || 120;
+    const maxLimit = admin.maxStudentLimit || 360;
 
     // 초과 산정 (Q1·Q2)
     let overThisMonth = 0;
@@ -30835,10 +30961,12 @@ app.post("/api/diagnostic-test", async (req, res) => {
 // 수강신청(상담) 정보 저장 (상담신청 팝업에서 제출 시)
 app.post("/api/course-application", async (req, res) => {
   try {
-    const { branchName, studentGrade, studentClassNum, studentName, studentPhone, parentPhone, grade, series, answers, score, duration } = req.body;
+    const { branchName, studentGrade, studentClassNum, studentName, studentPhone, parentPhone, grade, series, answers, score, weightedScore, duration, userType, academyName } = req.body;
 
     const courseApplication = new CourseApplication({
       branchName,
+      academyName: academyName || '',
+      userType: userType || 'school',
       studentGrade,
       studentClassNum: studentClassNum || '',
       studentName,
@@ -30848,6 +30976,7 @@ app.post("/api/course-application", async (req, res) => {
       series,
       answers: answers || [],
       score: score || 0,
+      weightedScore: (typeof weightedScore === 'number') ? weightedScore : null,
       duration: duration || ''
     });
 
@@ -40302,7 +40431,7 @@ app.get("/api/academy-student-counts", async (req, res) => {
     admins.forEach(admin => {
       const academyName = admin.academyName;
       const rawCumulative = admin.cumulativeStudentCount || 0;
-      const maxLimit = admin.maxStudentLimit || 120;
+      const maxLimit = admin.maxStudentLimit || 360;
       const currentCount = studentCountMap[academyName] || 0;
       const overCount = admin.overStudentCount || 0;
 

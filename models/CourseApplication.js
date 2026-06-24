@@ -59,10 +59,17 @@ const CourseApplicationSchema = new mongoose.Schema({
     default: []
   },
 
-  // 점수
+  // 점수 (정답 개수 0~25, 기존 호환용)
   score: {
     type: Number,
     default: 0
+  },
+
+  // 가중치 점수 (0~100, 영역별 가중치 적용. 학원용 신규 응시자부터 사용)
+  // 핵심3·구조4·어휘3·추론5·비판5 (영역당 5문항 × 가중치 = 100점 만점)
+  weightedScore: {
+    type: Number,
+    default: null
   },
 
   // 소요 시간

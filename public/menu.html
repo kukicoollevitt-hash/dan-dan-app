@@ -13696,21 +13696,41 @@ async function performLogout() {
         const s = data.summary || {};
         console.log('🧪 [reset-bio01] 결과:', s);
 
-        // 🔥 클라이언트 캐시 정리 (3중 캐시 동기화)
+        // 🔥 클라이언트 캐시 정리 (4중 캐시 동기화)
         try {
-          // 1) localStorage: dan-progress:{stuKey}:{on_bio_01|bio_01} 키 삭제
+          // 1) localStorage: 단원 키가 포함된 모든 항목 삭제
+          //    - dan-progress:{stuKey}:{unit} (메뉴 별표용)
+          //    - passage_read_{unit}, passage_time_{unit}, paragraph_completed_{unit} (지문 호버/완독)
+          //    - dan-reading-state:{unit}, dan-bio-report-state:{unit}, dan-geo-report-state:{unit} (본문 채점·리포트)
+          //    - {stuKey}::{unit} (어휘 입력)
+          //    - current-geo-tab:{unit}, creative-state:{unit} 등
+          //    AI추천과제 sweep 과 동일한 substring 매칭 사용 (learning-common.js 참고)
+          //    주의: 'bio_01' 은 'on_bio_01' 의 부분문자열이므로 두 단원 키가 함께 제거됨 — 의도된 동작
           const TARGET_UNITS = ['on_bio_01', 'bio_01'];
           const keysToRemove = [];
           for (let i = 0; i < localStorage.length; i++) {
             const k = localStorage.key(i);
             if (!k) continue;
-            if (k.startsWith('dan-progress:') && TARGET_UNITS.some(u => k.endsWith(`:${u}`))) {
+            if (TARGET_UNITS.some(u => k.includes(u))) {
               keysToRemove.push(k);
             }
           }
           keysToRemove.forEach(k => localStorage.removeItem(k));
-          console.log('🗑️ localStorage 정리:', keysToRemove);
-          // 2) ApiCache: completion-status 응답 캐시 무효화
+          console.log('🗑️ localStorage 정리:', keysToRemove.length, '건', keysToRemove);
+
+          // 2) sessionStorage 도 동일 패턴으로 정리 (페이지 내 일시 상태)
+          const ssKeysToRemove = [];
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const k = sessionStorage.key(i);
+            if (!k) continue;
+            if (TARGET_UNITS.some(u => k.includes(u))) {
+              ssKeysToRemove.push(k);
+            }
+          }
+          ssKeysToRemove.forEach(k => sessionStorage.removeItem(k));
+          if (ssKeysToRemove.length) console.log('🗑️ sessionStorage 정리:', ssKeysToRemove);
+
+          // 3) ApiCache: completion-status 응답 캐시 무효화
           if (window.ApiCache && typeof ApiCache.invalidate === 'function') {
             ApiCache.invalidate('completion-status');
             ApiCache.invalidate('unit-grades');

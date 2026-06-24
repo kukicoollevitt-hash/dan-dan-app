@@ -122,6 +122,143 @@
       color: #e74c3c;
     }
 
+    /* 점수 위치 막대 차트 */
+    .score-position {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 20px 22px 18px;
+      margin: 18px 0 24px;
+    }
+    .score-position-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #1f2937;
+      margin: 0 0 16px;
+    }
+    .score-bar-wrap {
+      position: relative;
+      margin-top: 44px;     /* 라벨 + 화살표 공간 확보 */
+      margin-bottom: 8px;
+    }
+    .score-bar {
+      display: flex;
+      height: 36px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .score-marker-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .score-bar .seg {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+      text-align: center;
+      padding: 0 2px;
+      line-height: 1.1;
+      letter-spacing: -0.3px;
+    }
+    .score-bar .seg.current {
+      box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px #111827;
+      z-index: 2;
+    }
+    /* 등급별 색 (4구간 × 상중하 음영) */
+    .seg.g-on-1   { background: #94a3b8; }  /* 온 하 (어두움) */
+    .seg.g-on-2   { background: #a7b3c2; }
+    .seg.g-on-3   { background: #b8c2cf; }  /* 온 상 (밝음) */
+    .seg.g-on2-1  { background: #cbd5e1; }  /* 온 보통 하 */
+    .seg.g-on2-2  { background: #d7dee8; }
+    .seg.g-on2-3  { background: #e2e8f0; }  /* 온 보통 상 */
+    .seg.g-up-1   { background: #fcd34d; }  /* 업 하 */
+    .seg.g-up-2   { background: #fbbf24; }
+    .seg.g-up-3   { background: #f59e0b; }  /* 업 상 */
+    .seg.g-fit-1  { background: #fb923c; }  /* 핏 하 */
+    .seg.g-fit-2  { background: #f97316; }
+    .seg.g-fit-3  { background: #ea580c; }  /* 핏 상 */
+    .seg.g-deep   { background: #dc2626; }  /* 딥 단일 */
+
+    /* 마커 (현재 점수 위치 화살표) */
+    .score-marker {
+      position: absolute;
+      top: -36px;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .score-marker-label {
+      background: #111827;
+      color: #fff;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow:
+        0 3px 10px rgba(0,0,0,0.3),
+        0 0 0 2px #fbbf24;                /* 노란 후광 (작게) */
+      animation: markerPulse 1.6s ease-in-out infinite;
+      letter-spacing: -0.2px;
+    }
+    .score-marker-triangle {
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 11px solid #111827;
+      margin-top: 2px;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35));
+    }
+    @keyframes markerPulse {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.07); }
+    }
+
+    /* 눈금 */
+    .score-axis {
+      position: relative;
+      height: 16px;
+      margin-top: 6px;
+      font-size: 10px;
+      color: #6b7280;
+    }
+    .score-axis span {
+      position: absolute;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    /* 범례 */
+    .score-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      margin-top: 10px;
+      font-size: 11px;
+      color: #4b5563;
+    }
+    .score-legend .lg {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .score-legend .lg .sw {
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      border-radius: 2px;
+    }
+
     /* 틀린 문항 바로가기 */
     .wrong-questions-nav {
       background: #fff5f5;
@@ -836,6 +973,17 @@
 
       <div class="summary" id="summary"></div>
 
+      <!-- 점수 위치 막대 차트 (가중치 점수 학생만 표시) -->
+      <div class="score-position" id="scorePosition" style="display:none;">
+        <h4 class="score-position-title">📍 내 점수 위치</h4>
+        <div class="score-bar-wrap">
+          <div class="score-bar" id="scoreBar"></div>
+          <div class="score-marker-layer" id="scoreMarker"></div>
+        </div>
+        <div class="score-axis" id="scoreAxis"></div>
+        <div class="score-legend" id="scoreLegend"></div>
+      </div>
+
       <!-- 레이더 그래프 -->
       <div class="radar-chart-container">
         <h3>📊 5가지 문해력 지수 분석</h3>
@@ -1376,6 +1524,127 @@
       document.getElementById('error').textContent = message;
     }
 
+    // 시리즈 세부 레벨 (상/중/하) — 가중치 점수 + 학년대 기준
+    // 균등 분할, 딥은 단일 (반환 '')
+    function getSeriesSubLevel(weightedScore, isElementary) {
+      if (typeof weightedScore !== 'number') return '';
+      if (isElementary) {
+        if (weightedScore >= 78) {
+          if (weightedScore >= 93) return '(상)';
+          if (weightedScore >= 85) return '(중)';
+          return '(하)';
+        } else if (weightedScore >= 65) {
+          if (weightedScore >= 74) return '(상)';
+          if (weightedScore >= 69) return '(중)';
+          return '(하)';
+        } else {
+          // 온 (0~64): 상 55~64 / 중 45~54 / 하 0~44
+          if (weightedScore >= 55) return '(상)';
+          if (weightedScore >= 45) return '(중)';
+          return '(하)';
+        }
+      } else {
+        if (weightedScore >= 95) return '';
+        if (weightedScore >= 80) {
+          if (weightedScore >= 90) return '(상)';
+          if (weightedScore >= 85) return '(중)';
+          return '(하)';
+        } else if (weightedScore >= 60) {
+          if (weightedScore >= 74) return '(상)';
+          if (weightedScore >= 67) return '(중)';
+          return '(하)';
+        } else {
+          if (weightedScore >= 40) return '(상)';
+          if (weightedScore >= 20) return '(중)';
+          return '(하)';
+        }
+      }
+    }
+
+    // 점수 위치 막대 차트 렌더
+    function renderScorePositionChart(score, isElementary) {
+      const container = document.getElementById('scorePosition');
+      const bar = document.getElementById('scoreBar');
+      const axis = document.getElementById('scoreAxis');
+      const legend = document.getElementById('scoreLegend');
+      if (!container || !bar || !axis || !legend) return;
+
+      // 구간 정의: [시작, 끝, 라벨, 색(인라인), 등급명, 시리즈명]
+      // 색감: 낮음 = 진한 빨강 → 주황 → 노랑/연두 → 진한 녹색 (신호등)
+      // 초등은 9-segment, 중고등은 10-segment (딥 단일)
+      const segs = isElementary ? [
+        [0, 44,  '온(하)', '#991b1b', '기초 D/보통 C+', 'BRAIN 온'],  // 가장 진한 빨강 (넓은 하부)
+        [45, 54, '온(중)', '#dc2626', '보통 C+',        'BRAIN 온'],
+        [55, 64, '온(상)', '#ea580c', '보통 C+',        'BRAIN 온'],  // 진한 주황
+        [65, 68, '업(하)', '#f97316', '우수 A',         'BRAIN 업'],
+        [69, 73, '업(중)', '#eab308', '우수 A',         'BRAIN 업'],  // 노랑
+        [74, 77, '업(상)', '#a3e635', '우수 A',         'BRAIN 업'],  // 연두
+        [78, 84, '핏(하)', '#84cc16', '최우수 A+',      'BRAIN 핏'],  // 진한 연두
+        [85, 92, '핏(중)', '#22c55e', '최우수 A+',      'BRAIN 핏'],
+        [93, 100,'핏(상)', '#15803d', '최우수 A+',      'BRAIN 핏']   // 가장 진한 녹색
+      ] : [
+        [0, 19,  '온(하)', '#991b1b', '기초 D',  'BRAIN 온'],
+        [20, 39, '온(중)', '#dc2626', '기초 D',  'BRAIN 온'],
+        [40, 59, '온(상)', '#f87171', '기초 D',  'BRAIN 온'],
+        [60, 66, '업(하)', '#ea580c', '보통 C+', 'BRAIN 업'],
+        [67, 73, '업(중)', '#f97316', '보통 C+', 'BRAIN 업'],
+        [74, 79, '업(상)', '#fb923c', '보통 C+', 'BRAIN 업'],
+        [80, 84, '핏(하)', '#eab308', '우수 A',  'BRAIN 핏'],
+        [85, 89, '핏(중)', '#a3e635', '우수 A',  'BRAIN 핏'],
+        [90, 94, '핏(상)', '#84cc16', '우수 A',  'BRAIN 핏'],
+        [95, 100,'딥',     '#15803d', '최우수 A+','BRAIN 딥']   // 진한 녹색
+      ];
+
+      // 막대 세그먼트 (균등 폭) + 마커
+      const segWidth = 100 / segs.length;          // 각 구간 균등 폭 (%)
+      const segHtml = segs.map(([start, end, label, color], idx) => {
+        const isCurrent = (score >= start && score <= end);
+        return `<div class="seg ${isCurrent ? 'current' : ''}" style="width:${segWidth}%; background:${color};" title="${label} (${start}~${end}점)">${label}</div>`;
+      }).join('');
+
+      // 현재 점수 마커: 해당 구간의 중앙에 표시 (정확한 점수 위치 아님)
+      const segIdx = segs.findIndex(([s, e]) => score >= s && score <= e);
+      let markerLeft;
+      if (segIdx >= 0) {
+        markerLeft = (segIdx + 0.5) * segWidth;  // 구간 중앙
+      } else {
+        markerLeft = Math.max(0, Math.min(100, score));
+      }
+      const markerHtml = `
+        <div class="score-marker" style="left:${markerLeft.toFixed(2)}%;">
+          <div class="score-marker-label">📍 내 점수 ${score}점</div>
+          <div class="score-marker-triangle"></div>
+        </div>
+      `;
+      bar.innerHTML = segHtml;
+      const markerLayer = document.getElementById('scoreMarker');
+      if (markerLayer) markerLayer.innerHTML = markerHtml;
+
+      // 눈금: 구간 경계마다 시작 점수 표시 (균등 간격)
+      const tickHtml = segs.map(([start], idx) => {
+        const leftPct = idx * segWidth;
+        return `<span style="left:${leftPct.toFixed(2)}%;">${start}</span>`;
+      }).join('') + `<span style="left:100%;">100</span>`;
+      axis.innerHTML = tickHtml;
+
+      // 범례 (시리즈 단위 + 등급 범위 안내)
+      const groups = isElementary
+        ? [
+            { label: 'BRAIN 온 (0~64) · 기초 D + 보통 C+',  color: '#dc2626' },
+            { label: 'BRAIN 업 (65~77) · 우수 A',           color: '#eab308' },
+            { label: 'BRAIN 핏 (78~100) · 최우수 A+',       color: '#15803d' }
+          ]
+        : [
+            { label: 'BRAIN 온 (0~59) · 기초 D',     color: '#dc2626' },
+            { label: 'BRAIN 업 (60~79) · 보통 C+',   color: '#f97316' },
+            { label: 'BRAIN 핏 (80~94) · 우수 A',    color: '#a3e635' },
+            { label: 'BRAIN 딥 (95~100) · 최우수 A+', color: '#15803d' }
+          ];
+      legend.innerHTML = groups.map(g => `<span class="lg"><span class="sw" style="background:${g.color};"></span>${g.label}</span>`).join('');
+
+      container.style.display = 'block';
+    }
+
     function renderResult(data) {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('content').style.display = 'block';
@@ -1394,35 +1663,46 @@
         }
       });
 
-      // 실제 점수 결정 (data.score가 0이거나 없으면 correctCount 사용)
-      const displayScore = (data.score && data.score > 0) ? data.score : correctCount;
+      // 가중치 점수가 저장돼 있으면 그 값을 우선 사용 (학원 신규 응시자)
+      // 없으면 기존 정답 개수 기반으로 표시 (구버전 데이터)
+      const hasWeighted = (typeof data.weightedScore === 'number' && data.weightedScore !== null);
+      const displayScore = hasWeighted
+        ? data.weightedScore
+        : ((data.score && data.score > 0) ? data.score : correctCount);
+      const scoreSuffix = hasWeighted ? '/100점' : '/25점';
 
-      // 등급 재계산 (점수 기반)
+      // 등급 재계산
       const studentGradeValue = data.studentGrade || '';
       const isElementary = ['3학년', '4학년', '5학년', '6학년'].includes(studentGradeValue);
       let displayGrade;
 
-      if (isElementary) {
-        // 초등 기준: 23~25 A+, 19~22 A, 14~18 C+, 0~13 D
-        if (displayScore >= 23) {
-          displayGrade = "최우수 (A+) / 수능내신 1~2등급(예측)";
-        } else if (displayScore >= 19) {
-          displayGrade = "우수 (A) / 수능내신 3등급(예측)";
-        } else if (displayScore >= 14) {
-          displayGrade = "보통 (C+) / 수능내신 4등급(예측)";
+      if (hasWeighted) {
+        // 가중치 점수 기준 (신규 학원 응시자)
+        if (isElementary) {
+          // 초등: 78 핏 / 65 업 / 35 온 보통 / 0 온 기초
+          if (displayScore >= 78)      displayGrade = "최우수 (A+) / 수능내신 1~2등급(예측)";
+          else if (displayScore >= 65) displayGrade = "우수 (A) / 수능내신 3등급(예측)";
+          else if (displayScore >= 35) displayGrade = "보통 (C+) / 수능내신 4등급(예측)";
+          else                          displayGrade = "기초 (D) / 수능내신 5등급(예측)";
         } else {
-          displayGrade = "기초 (D) / 수능내신 5등급(예측)";
+          // 중고등: 95 딥 / 80 핏 / 60 업 / 0 온
+          if (displayScore >= 95)      displayGrade = "최우수 (A+) / 수능내신 1등급(예측)";
+          else if (displayScore >= 80) displayGrade = "우수 (A) / 수능내신 2등급(예측)";
+          else if (displayScore >= 60) displayGrade = "보통 (C+) / 수능내신 3등급(예측)";
+          else                          displayGrade = "기초 (D) / 수능내신 4~5등급(예측)";
         }
       } else {
-        // 중고등 기준: 24~25 A+, 22~23 A, 16~21 C+, 0~15 D
-        if (displayScore >= 24) {
-          displayGrade = "최우수 (A+) / 수능내신 1~2등급(예측)";
-        } else if (displayScore >= 22) {
-          displayGrade = "우수 (A) / 수능내신 3등급(예측)";
-        } else if (displayScore >= 16) {
-          displayGrade = "보통 (C+) / 수능내신 4등급(예측)";
+        // 정답 개수 기준 (기존 데이터)
+        if (isElementary) {
+          if (displayScore >= 23)      displayGrade = "최우수 (A+) / 수능내신 1~2등급(예측)";
+          else if (displayScore >= 19) displayGrade = "우수 (A) / 수능내신 3등급(예측)";
+          else if (displayScore >= 14) displayGrade = "보통 (C+) / 수능내신 4등급(예측)";
+          else                          displayGrade = "기초 (D) / 수능내신 5등급(예측)";
         } else {
-          displayGrade = "기초 (D) / 수능내신 5등급(예측)";
+          if (displayScore >= 24)      displayGrade = "최우수 (A+) / 수능내신 1~2등급(예측)";
+          else if (displayScore >= 22) displayGrade = "우수 (A) / 수능내신 3등급(예측)";
+          else if (displayScore >= 16) displayGrade = "보통 (C+) / 수능내신 4등급(예측)";
+          else                          displayGrade = "기초 (D) / 수능내신 5등급(예측)";
         }
       }
 
@@ -1432,7 +1712,7 @@
         <span class="info-badge name">${data.studentName}</span>
         <span class="info-badge grade">${data.studentGrade}</span>
         <span class="info-badge result-grade ${gradeClass}">${displayGrade}</span>
-        <span class="info-badge score">${displayScore}/25점</span>
+        <span class="info-badge score">${displayScore}${scoreSuffix}</span>
       `;
 
       // 스킬별/과목별 점수 계산 (정답/오답은 위에서 이미 계산됨)
@@ -1498,9 +1778,58 @@
       const score = displayScore; // 이미 계산된 displayScore 사용
       let series, recommendation, strength, weakness;
 
-      // 초등/중고등 기준 분리
-      if (isElementary) {
-        // 초등 기준: 23~25 딥, 19~22 핏, 14~18 업, 0~13 온
+      // 초등/중고등 + 가중치/개수 기준 분리
+      if (hasWeighted) {
+        // === 가중치 점수 기준 (학원 신규 응시자) ===
+        if (isElementary) {
+          // 초등: 78 핏 / 65 업 / 35 온 보통 / 0 온 기초 (딥 없음)
+          if (score >= 78) {
+            series = "BRAIN 핏";
+            recommendation = "추론력과 이해력이 고르게 발달했습니다. BRAIN 핏 시리즈로 균형 잡힌 문해력을 완성하세요!";
+            strength = `${highestSkill} 영역이 우수합니다 (정답률 ${skillPercentages[highestSkill]}%). 기본적인 독해 능력이 탄탄합니다.`;
+            weakness = `${lowestSkill} 영역에서 조금 더 연습이 필요합니다 (정답률 ${skillPercentages[lowestSkill]}%).`;
+          } else if (score >= 65) {
+            series = "BRAIN 업";
+            recommendation = "기초 이해력은 있습니다. BRAIN 업 시리즈로 추론력과 사고력을 한 단계 더 키워보세요!";
+            strength = `${highestSkill} 영역에서 가능성이 보입니다 (정답률 ${skillPercentages[highestSkill]}%).`;
+            weakness = `${lowestSkill} 영역을 집중 학습하면 큰 발전이 있을 것입니다 (정답률 ${skillPercentages[lowestSkill]}%).`;
+          } else if (score >= 35) {
+            series = "BRAIN 온";
+            recommendation = "문해력 기초를 탄탄히 다질 시간입니다. BRAIN 온 시리즈로 기초부터 차근차근 시작하세요!";
+            strength = `${highestSkill} 영역에서 가능성이 보입니다 (정답률 ${skillPercentages[highestSkill]}%).`;
+            weakness = `${lowestSkill} 영역을 집중 학습하면 큰 발전이 있을 것입니다 (정답률 ${skillPercentages[lowestSkill]}%).`;
+          } else {
+            series = "BRAIN 온";
+            recommendation = "문해력 기초를 탄탄히 다질 시간입니다. BRAIN 온 시리즈로 기초부터 차근차근 시작하세요!";
+            strength = "학습 의지가 있으며, 앞으로 발전 가능성이 높습니다.";
+            weakness = "5가지 문해력 지수를 모두 기초부터 차근차근 쌓아가는 것이 필요합니다.";
+          }
+        } else {
+          // 중고등: 95 딥 / 80 핏 / 60 업 / 0 온
+          if (score >= 95) {
+            series = "BRAIN 딥";
+            recommendation = "고급 수준의 문해력을 갖추셨습니다. BRAIN 딥 시리즈로 더 깊은 사고력을 키워보세요!";
+            strength = `${highestSkill} 영역이 특히 뛰어납니다 (정답률 ${skillPercentages[highestSkill]}%). 복잡한 문맥을 이해하는 능력이 탁월합니다.`;
+            weakness = skillScores[lowestSkill] < 4 ? `${lowestSkill} 영역을 더 강화하면 완벽합니다!` : "현재 수준을 유지하며, 더 다양한 장르의 텍스트를 접해보세요.";
+          } else if (score >= 80) {
+            series = "BRAIN 핏";
+            recommendation = "추론력과 이해력이 고르게 발달했습니다. BRAIN 핏 시리즈로 균형 잡힌 문해력을 완성하세요!";
+            strength = `${highestSkill} 영역이 우수합니다 (정답률 ${skillPercentages[highestSkill]}%). 기본적인 독해 능력이 탄탄합니다.`;
+            weakness = `${lowestSkill} 영역에서 조금 더 연습이 필요합니다 (정답률 ${skillPercentages[lowestSkill]}%).`;
+          } else if (score >= 60) {
+            series = "BRAIN 업";
+            recommendation = "기초 이해력은 있습니다. BRAIN 업 시리즈로 추론력과 사고력을 한 단계 더 키워보세요!";
+            strength = `${highestSkill} 영역에서 가능성이 보입니다 (정답률 ${skillPercentages[highestSkill]}%).`;
+            weakness = `${lowestSkill} 영역을 집중 학습하면 큰 발전이 있을 것입니다 (정답률 ${skillPercentages[lowestSkill]}%).`;
+          } else {
+            series = "BRAIN 온";
+            recommendation = "문해력 기초를 탄탄히 다질 시간입니다. BRAIN 온 시리즈로 기초부터 차근차근 시작하세요!";
+            strength = "학습 의지가 있으며, 앞으로 발전 가능성이 높습니다.";
+            weakness = "5가지 문해력 지수를 모두 기초부터 차근차근 쌓아가는 것이 필요합니다.";
+          }
+        }
+      } else if (isElementary) {
+        // === 개수 기준 (기존 데이터) — 초등 ===
         if (score >= 23) {
           series = "BRAIN 딥";
           recommendation = "고급 수준의 문해력을 갖추셨습니다. BRAIN 딥 시리즈로 더 깊은 사고력을 키워보세요!";
@@ -1523,7 +1852,7 @@
           weakness = "5가지 문해력 지수를 모두 기초부터 차근차근 쌓아가는 것이 필요합니다.";
         }
       } else {
-        // 중고등 기준: 24~25 딥, 22~23 핏, 16~21 업, 0~15 온
+        // === 개수 기준 (기존 데이터) — 중고등 ===
         if (score >= 24) {
           series = "BRAIN 딥";
           recommendation = "고급 수준의 문해력을 갖추셨습니다. BRAIN 딥 시리즈로 더 깊은 사고력을 키워보세요!";
@@ -1547,11 +1876,17 @@
         }
       }
 
-      // 추천 시리즈 및 분석 결과 표시
-      document.getElementById('recommendedSeries').textContent = series;
+      // 추천 시리즈 및 분석 결과 표시 (가중치 점수 기반 학원 데이터는 상/중/하 표기)
+      const seriesSubLevel = hasWeighted ? getSeriesSubLevel(displayScore, isElementary) : '';
+      document.getElementById('recommendedSeries').textContent = series + seriesSubLevel;
       document.getElementById('recommendationText').textContent = recommendation;
       document.getElementById('strengthText').textContent = strength;
       document.getElementById('weaknessText').textContent = weakness;
+
+      // 점수 위치 막대 차트 (가중치 점수 기반 학생만)
+      if (hasWeighted) {
+        renderScorePositionChart(displayScore, isElementary);
+      }
 
       // 레이더 차트 그리기
       drawRadarChart(skillPercentages);
@@ -1577,15 +1912,11 @@
       loadAIFeedback();
       console.log('AI 피드백 데이터:', window.aiFeedbackData);
 
-      // 요약 정보
+      // 요약 정보 — 점수 (정답/오답 대신)
       document.getElementById('summary').innerHTML = `
         <div class="summary-item">
-          <div class="label">정답</div>
-          <div class="value correct">${correctCount}개</div>
-        </div>
-        <div class="summary-item">
-          <div class="label">오답</div>
-          <div class="value wrong">${wrongCount}개</div>
+          <div class="label">점수</div>
+          <div class="value correct">${displayScore}${scoreSuffix}</div>
         </div>
         <div class="summary-item">
           <div class="label">응시일</div>
@@ -2225,7 +2556,9 @@
       const studentName = currentStudentData?.studentName || '학생';
       const studentGrade = currentStudentData?.studentGrade || '';
       const gradeResult = currentStudentData?.grade || '';
-      const score = currentStudentData?.score || 0;
+      const hasW = (typeof currentStudentData?.weightedScore === 'number' && currentStudentData?.weightedScore !== null);
+      const score = hasW ? currentStudentData.weightedScore : (currentStudentData?.score || 0);
+      const scoreSfx = hasW ? '/100점' : '/25점';
 
       // 현재 시험지 URL (ID 포함) - Render 서버 URL 사용 (로그인 없이 접근 가능)
       const resultUrl = `https://brainmoon.kr/test-result-viewer.html?id=${applicationId}`;
@@ -2234,7 +2567,7 @@
         objectType: 'feed',
         content: {
           title: '📝 단단국어 문해력 진단 시험지',
-          description: `${studentGrade} ${studentName} 학생\n등급: ${gradeResult}\n점수: ${score}/25점\n전체 문제 정답 및 해설 확인하기`,
+          description: `${studentGrade} ${studentName} 학생\n등급: ${gradeResult}\n점수: ${score}${scoreSfx}\n전체 문제 정답 및 해설 확인하기`,
           imageUrl: 'https://dan-dan-app.web.app/images/kakao_share.png',
           link: {
             mobileWebUrl: resultUrl,
