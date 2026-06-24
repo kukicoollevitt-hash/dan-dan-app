@@ -1688,6 +1688,12 @@ app.get("/super/diagnostic-management", requireSuperAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "super", "diagnostic-management.html"));
 });
 
+// ✅ 슈퍼관리자: 교재 전체 현황 관리
+app.get("/super/textbook-management", requireSuperAdmin, (req, res) => {
+  console.log("✅ [GET] /super/textbook-management -> public/super/textbook-management.html");
+  res.sendFile(path.join(__dirname, "public", "super", "textbook-management.html"));
+});
+
 // ✅ 슈퍼관리자: 학원용 진단테스트 관리
 app.get("/super/academy-diagnostic-management", requireSuperAdmin, (req, res) => {
   console.log(
@@ -2865,6 +2871,35 @@ app.put("/api/textbook-orders/:id", async (req, res) => {
   }
 });
 
+// ✅ 교재 신청 상태 토글 (결제/주문/배송 — 슈퍼관리자용)
+app.patch("/api/textbook-orders/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { field, value } = req.body || {};
+    const allowed = ['paymentConfirmed', 'orderConfirmed', 'deliveryCompleted'];
+    if (!allowed.includes(field)) {
+      return res.status(400).json({ ok: false, message: '허용되지 않은 필드' });
+    }
+    const newVal = !!value;
+    const stampField = field + 'At';
+    const update = {
+      [field]: newVal,
+      [stampField]: newVal ? new Date() : null
+    };
+    // 배송완료 토글되면 status도 동기화 (옵셔널)
+    if (field === 'deliveryCompleted') {
+      update.status = newVal ? '배송완료' : '신청완료';
+    }
+    const order = await TextbookOrder.findByIdAndUpdate(id, update, { new: true });
+    if (!order) return res.status(404).json({ ok: false, message: '주문 없음' });
+    console.log(`✅ 교재 상태 토글: ${id} | ${field}=${newVal}`);
+    res.json({ ok: true, order });
+  } catch (err) {
+    console.error('❌ 교재 상태 토글 오류:', err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
 // ✅ 교재 신청 삭제
 app.delete("/api/textbook-orders/:id", async (req, res) => {
   try {
@@ -2875,6 +2910,22 @@ app.delete("/api/textbook-orders/:id", async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error("❌ 교재 신청 삭제 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ✅ 교재 신청 일괄 삭제 (슈퍼관리자용)
+app.post("/api/textbook-orders/bulk-delete", async (req, res) => {
+  try {
+    const { ids } = req.body || {};
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ ok: false, message: '삭제할 ID 목록이 필요합니다.' });
+    }
+    const result = await TextbookOrder.deleteMany({ _id: { $in: ids } });
+    console.log(`✅ 교재 신청 일괄 삭제: 요청 ${ids.length}건 / 삭제 ${result.deletedCount}건`);
+    res.json({ ok: true, requested: ids.length, deleted: result.deletedCount || 0 });
+  } catch (err) {
+    console.error("❌ 교재 일괄 삭제 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });

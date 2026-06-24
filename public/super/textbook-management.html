@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>교재 전체 현황 관리</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 1500px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 20px;
+      padding: 36px 40px 50px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+      padding-bottom: 18px;
+      border-bottom: 3px solid #d97706;
+    }
+    .header h1 { font-size: 28px; color: #1f2937; margin-bottom: 6px; }
+    .header p { color: #6b7280; font-size: 14px; }
+
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #d97706; color: #fff;
+      padding: 10px 18px; border-radius: 10px;
+      text-decoration: none; font-weight: 600;
+      transition: all 0.2s; margin-bottom: 24px;
+      font-size: 14px;
+    }
+    .back-btn:hover { background: #b45309; transform: translateX(-2px); }
+
+    /* 필터 + 통계 */
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      justify-content: space-between; align-items: center;
+      background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+      border: 1px solid #fed7aa;
+      padding: 16px 20px; border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 8px 14px; border: 1.5px solid #fed7aa;
+      background: #fff; color: #9a3412; border-radius: 8px;
+      cursor: pointer; font-size: 13px; font-weight: 600;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover { background: #ffedd5; }
+    .filter-btn.active { background: #d97706; color: #fff; border-color: #d97706; }
+    .stats {
+      display: flex; gap: 16px; font-size: 13px; color: #92400e;
+    }
+    .stats b { color: #7c2d12; font-size: 15px; }
+
+    /* 리스트 */
+    .order-list { display: flex; flex-direction: column; gap: 10px; }
+    .order-row {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+      overflow: hidden; transition: box-shadow 0.2s;
+    }
+    .order-row:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+    .order-summary {
+      display: grid;
+      grid-template-columns: 34px 50px 1.6fr 1.4fr 1fr 1fr 1fr auto;
+      gap: 12px; align-items: center;
+      padding: 14px 18px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .col-check {
+      display: flex; align-items: center; justify-content: center;
+    }
+    .col-check input[type="checkbox"] {
+      width: 18px; height: 18px;
+      cursor: pointer; accent-color: #d97706;
+    }
+    .order-summary:hover { background: #fff7ed; }
+    .order-row.expanded .order-summary { background: #fff7ed; border-bottom: 1px solid #fed7aa; }
+    .col-idx { font-size: 12px; color: #6b7280; }
+    .col-branch { font-weight: 700; color: #1f2937; }
+    .col-name   { color: #374151; }
+    .col-amount { font-weight: 700; color: #c2410c; }
+    .col-date   { font-size: 12px; color: #6b7280; }
+    .col-badges { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+    .badge {
+      padding: 2px 7px; border-radius: 999px;
+      font-size: 11px; font-weight: 700;
+      border: 1.5px solid #d1d5db; color: #6b7280; background: #f9fafb;
+    }
+    .badge.on { background: #dcfce7; color: #166534; border-color: #86efac; }
+
+    .toggle-icon {
+      width: 24px; height: 24px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #9ca3af; font-size: 14px;
+      transition: transform 0.2s;
+    }
+    .order-row.expanded .toggle-icon { transform: rotate(90deg); color: #d97706; }
+
+    /* 상세 영역 */
+    .order-detail { display: none; padding: 16px 22px 18px; }
+    .order-row.expanded .order-detail { display: block; }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 24px;
+      margin-bottom: 14px;
+    }
+    .detail-item { font-size: 13px; }
+    .detail-item .label { color: #6b7280; font-weight: 600; margin-right: 6px; }
+    .detail-item .value { color: #111827; }
+    .detail-item.full { grid-column: 1 / -1; }
+
+    .items-table {
+      width: 100%; border-collapse: collapse;
+      margin-top: 10px; font-size: 13px;
+    }
+    .items-table th, .items-table td {
+      padding: 8px 10px; border-bottom: 1px solid #f3f4f6;
+      text-align: left;
+    }
+    .items-table th { background: #fff7ed; font-weight: 700; color: #7c2d12; }
+    .items-table tfoot td {
+      font-weight: 700; color: #b45309;
+      border-top: 2px solid #d97706; border-bottom: none;
+      padding-top: 10px;
+    }
+
+    /* 상태 토글 버튼 */
+    .status-actions {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-top: 14px; padding-top: 14px;
+      border-top: 1px dashed #fed7aa;
+    }
+    .status-btn {
+      padding: 7px 14px; border-radius: 8px;
+      border: 1.5px solid #d1d5db; background: #fff; color: #6b7280;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: all 0.15s;
+    }
+    .status-btn:hover { background: #f9fafb; }
+    .status-btn.on {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      color: #fff; border-color: #15803d;
+      box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+    }
+    .status-btn.on::before { content: "✓"; font-weight: 800; }
+    .status-time { font-size: 11px; color: #6b7280; margin-left: 4px; }
+
+    .empty {
+      padding: 60px 20px; text-align: center; color: #9ca3af; font-size: 14px;
+      background: #f9fafb; border-radius: 12px;
+    }
+
+    /* 일괄 삭제 버튼 */
+    .bulk-actions {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .delete-btn {
+      padding: 9px 18px; border-radius: 8px;
+      background: #dc2626; color: #fff; border: none;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .delete-btn:hover:not(:disabled) { background: #b91c1c; }
+    .delete-btn:disabled {
+      background: #d1d5db; color: #6b7280; cursor: not-allowed;
+    }
+    .selected-count {
+      font-size: 13px; color: #92400e; font-weight: 600;
+    }
+    .select-all-wrap {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; color: #4b5563; cursor: pointer;
+      user-select: none;
+    }
+    .select-all-wrap input { accent-color: #d97706; width: 16px; height: 16px; }
+
+    @media (max-width: 980px) {
+      .order-summary {
+        grid-template-columns: 34px 50px 1fr 1fr auto;
+        font-size: 13px;
+      }
+      .col-name, .col-date { display: none; }
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/super/dashboard" class="back-btn">← 슈퍼관리자 대시보드로</a>
+
+    <div class="header">
+      <h1>📚 교재 전체 현황 관리</h1>
+      <p>모든 센터의 교재 신청을 한 곳에서 일괄 관리합니다</p>
+    </div>
+
+    <div class="toolbar">
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">전체</button>
+        <button class="filter-btn" data-filter="pending">미처리</button>
+        <button class="filter-btn" data-filter="payment">결제확인 대기</button>
+        <button class="filter-btn" data-filter="order">주문확인 대기</button>
+        <button class="filter-btn" data-filter="delivery">배송 대기</button>
+        <button class="filter-btn" data-filter="done">완료</button>
+      </div>
+      <div class="stats" id="stats">불러오는 중…</div>
+    </div>
+
+    <div class="toolbar" style="background: #f9fafb; border-color: #e5e7eb;">
+      <label class="select-all-wrap">
+        <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+        전체 선택
+      </label>
+      <div class="bulk-actions">
+        <span class="selected-count" id="selectedCount">선택: 0건</span>
+        <button class="delete-btn" id="deleteSelectedBtn" onclick="deleteSelected()" disabled>
+          🗑 선택 삭제
+        </button>
+      </div>
+    </div>
+
+    <div class="order-list" id="orderList">
+      <div class="empty">불러오는 중…</div>
+    </div>
+  </div>
+
+  <script>
+    let allOrders = [];
+    let currentFilter = 'all';
+
+    function fmtMoney(n) {
+      return (n || 0).toLocaleString('ko-KR') + '원';
+    }
+    function fmtDate(d) {
+      try { return new Date(d).toLocaleString('ko-KR'); } catch { return ''; }
+    }
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[c]);
+    }
+
+    function isFullyDone(o) {
+      return !!(o.paymentConfirmed && o.orderConfirmed && o.deliveryCompleted);
+    }
+    function isFullyPending(o) {
+      return !o.paymentConfirmed && !o.orderConfirmed && !o.deliveryCompleted;
+    }
+
+    function applyFilter(orders) {
+      switch (currentFilter) {
+        case 'pending':  return orders.filter(isFullyPending);
+        case 'payment':  return orders.filter(o => !o.paymentConfirmed);
+        case 'order':    return orders.filter(o => o.paymentConfirmed && !o.orderConfirmed);
+        case 'delivery': return orders.filter(o => o.orderConfirmed && !o.deliveryCompleted);
+        case 'done':     return orders.filter(isFullyDone);
+        case 'all':
+        default:         return orders;
+      }
+    }
+
+    function renderStats() {
+      const total = allOrders.length;
+      const pay  = allOrders.filter(o => o.paymentConfirmed).length;
+      const ord  = allOrders.filter(o => o.orderConfirmed).length;
+      const ship = allOrders.filter(o => o.deliveryCompleted).length;
+      const amt  = allOrders.reduce((s, o) => s + (o.totalAmount || 0), 0);
+      document.getElementById('stats').innerHTML =
+        `총 <b>${total}</b>건 · 결제확인 <b>${pay}</b> · 주문확인 <b>${ord}</b> · 배송완료 <b>${ship}</b> · 금액합계 <b>${fmtMoney(amt)}</b>`;
+    }
+
+    function renderList() {
+      const list = applyFilter(allOrders);
+      const el = document.getElementById('orderList');
+      if (!list.length) {
+        el.innerHTML = '<div class="empty">조건에 맞는 주문이 없습니다.</div>';
+        return;
+      }
+      el.innerHTML = list.map((o, i) => renderRow(o, i + 1)).join('');
+    }
+
+    function renderRow(o, idx) {
+      const itemsRows = (o.items || []).map(it => `
+        <tr>
+          <td>${escapeHtml(it.bookType)}</td>
+          <td>${escapeHtml(it.series)}</td>
+          <td>${it.issueNumber}호</td>
+          <td>${it.quantity}권</td>
+          <td>${fmtMoney(it.unitPrice)}</td>
+          <td>${fmtMoney((it.quantity || 0) * (it.unitPrice || 0))}</td>
+        </tr>
+      `).join('');
+      const vat = Math.round((o.totalAmount || 0) * 0.1);
+      const grand = (o.totalAmount || 0) + vat;
+      const badges = [
+        `<span class="badge ${o.paymentConfirmed ? 'on' : ''}">결제</span>`,
+        `<span class="badge ${o.orderConfirmed ? 'on' : ''}">주문</span>`,
+        `<span class="badge ${o.deliveryCompleted ? 'on' : ''}">배송</span>`
+      ].join('');
+
+      return `
+        <div class="order-row" data-id="${o._id}">
+          <div class="order-summary" onclick="toggleRow('${o._id}', event)">
+            <div class="col-check" onclick="event.stopPropagation()">
+              <input type="checkbox" class="row-check" data-id="${o._id}" onchange="updateSelectedCount()">
+            </div>
+            <div class="col-idx">#${idx}</div>
+            <div class="col-branch">${escapeHtml(o.branchName)}</div>
+            <div class="col-name">${escapeHtml(o.applicantName)} · ${escapeHtml(o.phone)}</div>
+            <div class="col-amount">${fmtMoney(grand)}</div>
+            <div class="col-badges">${badges}</div>
+            <div class="col-date">${fmtDate(o.createdAt)}</div>
+            <div class="toggle-icon">▶</div>
+          </div>
+          <div class="order-detail">
+            <div class="detail-grid">
+              <div class="detail-item"><span class="label">센터:</span><span class="value">${escapeHtml(o.branchName)}</span></div>
+              <div class="detail-item"><span class="label">신청자:</span><span class="value">${escapeHtml(o.applicantName)}</span></div>
+              <div class="detail-item"><span class="label">연락처:</span><span class="value">${escapeHtml(o.phone)}</span></div>
+              <div class="detail-item"><span class="label">우편번호:</span><span class="value">${escapeHtml(o.postcode || '-')}</span></div>
+              <div class="detail-item full"><span class="label">주소:</span><span class="value">${escapeHtml(o.address || '-')}${o.addressDetail ? ' ' + escapeHtml(o.addressDetail) : ''}</span></div>
+              ${o.memo ? `<div class="detail-item full"><span class="label">메모:</span><span class="value">${escapeHtml(o.memo)}</span></div>` : ''}
+            </div>
+            <table class="items-table">
+              <thead>
+                <tr><th>교재 종류</th><th>시리즈</th><th>호수</th><th>권수</th><th>단가</th><th>소계</th></tr>
+              </thead>
+              <tbody>${itemsRows}</tbody>
+              <tfoot>
+                <tr><td colspan="5">공급가액</td><td>${fmtMoney(o.totalAmount)}</td></tr>
+                <tr><td colspan="5">부가세(10%)</td><td>${fmtMoney(vat)}</td></tr>
+                <tr><td colspan="5">총액 (VAT 포함, ${o.totalQuantity || 0}권)</td><td>${fmtMoney(grand)}</td></tr>
+              </tfoot>
+            </table>
+            <div class="status-actions">
+              <button class="status-btn ${o.paymentConfirmed ? 'on' : ''}"
+                      onclick="toggleStatus('${o._id}', 'paymentConfirmed', ${!o.paymentConfirmed})">
+                결제 완료 ${o.paymentConfirmedAt ? `<span class="status-time">(${fmtDate(o.paymentConfirmedAt)})</span>` : ''}
+              </button>
+              <button class="status-btn ${o.orderConfirmed ? 'on' : ''}"
+                      onclick="toggleStatus('${o._id}', 'orderConfirmed', ${!o.orderConfirmed})">
+                주문 확인 ${o.orderConfirmedAt ? `<span class="status-time">(${fmtDate(o.orderConfirmedAt)})</span>` : ''}
+              </button>
+              <button class="status-btn ${o.deliveryCompleted ? 'on' : ''}"
+                      onclick="toggleStatus('${o._id}', 'deliveryCompleted', ${!o.deliveryCompleted})">
+                배송 완료 ${o.deliveryCompletedAt ? `<span class="status-time">(${fmtDate(o.deliveryCompletedAt)})</span>` : ''}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleRow(id, evt) {
+      // 체크박스 클릭은 무시 (stopPropagation으로 이미 처리)
+      const row = document.querySelector(`.order-row[data-id="${id}"]`);
+      if (row) row.classList.toggle('expanded');
+    }
+
+    // 체크박스 동작
+    function updateSelectedCount() {
+      const checked = document.querySelectorAll('.row-check:checked');
+      const count = checked.length;
+      document.getElementById('selectedCount').textContent = `선택: ${count}건`;
+      document.getElementById('deleteSelectedBtn').disabled = (count === 0);
+      // 전체선택 체크박스 상태 동기화
+      const all = document.querySelectorAll('.row-check');
+      const selectAllBox = document.getElementById('selectAll');
+      if (all.length > 0 && count === all.length) {
+        selectAllBox.checked = true;
+        selectAllBox.indeterminate = false;
+      } else if (count === 0) {
+        selectAllBox.checked = false;
+        selectAllBox.indeterminate = false;
+      } else {
+        selectAllBox.checked = false;
+        selectAllBox.indeterminate = true;
+      }
+    }
+
+    function toggleSelectAll(box) {
+      document.querySelectorAll('.row-check').forEach(cb => { cb.checked = box.checked; });
+      updateSelectedCount();
+    }
+
+    async function deleteSelected() {
+      const ids = Array.from(document.querySelectorAll('.row-check:checked')).map(cb => cb.dataset.id);
+      if (ids.length === 0) return;
+      if (!confirm(`선택한 ${ids.length}건의 교재 주문을 영구 삭제하시겠습니까?\n\n⚠️ 삭제 후 복원되지 않습니다.`)) return;
+      try {
+        const res = await fetch('/api/textbook-orders/bulk-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids })
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          alert('삭제 실패: ' + (data.message || ''));
+          return;
+        }
+        alert(`${data.deleted || 0}건 삭제 완료`);
+        // 로컬 데이터에서도 제거 후 재렌더
+        allOrders = allOrders.filter(o => !ids.includes(o._id));
+        document.getElementById('selectAll').checked = false;
+        renderStats();
+        renderList();
+        updateSelectedCount();
+      } catch (err) {
+        console.error(err);
+        alert('통신 오류: ' + err.message);
+      }
+    }
+
+    async function toggleStatus(id, field, newValue) {
+      event && event.stopPropagation && event.stopPropagation();
+      try {
+        const res = await fetch(`/api/textbook-orders/${id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ field, value: newValue })
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          alert('상태 변경 실패: ' + (data.message || ''));
+          return;
+        }
+        // 로컬 갱신
+        const idx = allOrders.findIndex(o => o._id === id);
+        if (idx >= 0) {
+          allOrders[idx] = data.order;
+          // 확장 상태 보존
+          const wasExpanded = document.querySelector(`.order-row[data-id="${id}"]`)?.classList.contains('expanded');
+          renderStats();
+          renderList();
+          if (wasExpanded) {
+            const r = document.querySelector(`.order-row[data-id="${id}"]`);
+            if (r) r.classList.add('expanded');
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        alert('통신 오류: ' + err.message);
+      }
+    }
+
+    async function loadOrders() {
+      try {
+        const res = await fetch('/api/textbook-orders/all', { credentials: 'include' });
+        const data = await res.json();
+        // API 응답이 { ok, orders } 또는 배열 둘 다 처리
+        const orders = Array.isArray(data) ? data : (data && Array.isArray(data.orders) ? data.orders : []);
+        allOrders = orders;
+        // 최신순 정렬
+        allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        renderStats();
+        renderList();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('orderList').innerHTML =
+          '<div class="empty">불러오는 중 오류가 발생했습니다: ' + escapeHtml(err.message) + '</div>';
+      }
+    }
+
+    // 필터 버튼 이벤트
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderList();
+      });
+    });
+
+    loadOrders();
+  </script>
+</body>
+</html>

@@ -70,12 +70,20 @@ const textbookOrderSchema = new mongoose.Schema({
     default: 0
   },
 
-  // 상태
+  // 상태 (기존 단일 status 유지 — 호환성)
   status: {
     type: String,
     enum: ['신청완료', '확인중', '배송준비', '배송완료', '취소'],
     default: '신청완료'
   },
+
+  // 슈퍼관리자 일괄 관리용 3단 상태 (독립 토글)
+  paymentConfirmed:   { type: Boolean, default: false },  // 결제 완료
+  paymentConfirmedAt: { type: Date,    default: null },
+  orderConfirmed:     { type: Boolean, default: false },  // 주문 확인
+  orderConfirmedAt:   { type: Date,    default: null },
+  deliveryCompleted:  { type: Boolean, default: false },  // 배송 완료
+  deliveryCompletedAt:{ type: Date,    default: null },
 
   // 메모
   memo: {
