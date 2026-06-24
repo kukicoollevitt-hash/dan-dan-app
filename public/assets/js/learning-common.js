@@ -2031,9 +2031,9 @@
       }
     }
 
-    // 활용 키워드 박스 추가 (vocab에서 단어만 추출)
+    // 활용 키워드 박스 — 칩 형태 + 가사 자동 동기화 체크
     if (pack && pack.vocab && pack.vocab.length > 0) {
-      const keywords = pack.vocab.map(v => v[0]).join(', ');
+      const vocabKeywords = pack.vocab.map(v => v[0]);
 
       // 기존 키워드 박스가 있으면 업데이트, 없으면 생성
       let keywordBox = document.querySelector('.creative-keyword-box');
@@ -2050,7 +2050,80 @@
         }
       }
 
-      keywordBox.innerHTML = '<div style="font-weight: 700; color: #b8860b; margin-bottom: 6px;">💡 활용 키워드</div><div style="color: #5a4a00;">' + keywords + '</div>';
+      // 칩 CSS 한 번만 주입
+      if (!document.getElementById('creative-keyword-chip-styles')) {
+        const styleEl = document.createElement('style');
+        styleEl.id = 'creative-keyword-chip-styles';
+        styleEl.textContent =
+          '.creative-keyword-box .kw-chip {' +
+          '  display: inline-flex; align-items: center;' +
+          '  padding: 5px 12px;' +
+          '  background: #fff;' +
+          '  border: 1.5px solid #f0c14b;' +
+          '  border-radius: 999px;' +
+          '  color: #5a4a00;' +
+          '  font-size: 13px; font-weight: 600;' +
+          '  transition: all 0.15s;' +
+          '}' +
+          '.creative-keyword-box .kw-chip.checked {' +
+          '  background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);' +  // 연녹 → 진녹
+          '  color: #fff;' +
+          '  border-color: #15803d;' +
+          '  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.4);' +
+          '  transform: translateY(-1px);' +  // 살짝 떠 보임
+          '}' +
+          '.creative-keyword-box .kw-chip.checked::before {' +
+          '  content: "✓ "; font-weight: 800; margin-right: 2px;' +
+          '}' +
+          '.creative-keyword-box .kw-count {' +
+          '  font-size: 12px; color: #b8860b; font-weight: 700;' +
+          '  background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 999px;' +
+          '}';
+        document.head.appendChild(styleEl);
+      }
+
+      // 칩 HTML 생성
+      const chipsHtml = vocabKeywords.map(function(kw) {
+        // 데이터 속성에 들어가니 따옴표 escape
+        const safe = String(kw).replace(/"/g, '&quot;');
+        return '<span class="kw-chip" data-kw="' + safe + '">' + safe + '</span>';
+      }).join(' ');
+
+      keywordBox.innerHTML =
+        '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;">' +
+          '<div style="font-weight: 700; color: #b8860b;">💡 본문에서 배운 키워드를 2개 이상 활용해서 작성해보세요</div>' +
+          '<div class="kw-count">0/' + vocabKeywords.length + ' 사용</div>' +
+        '</div>' +
+        '<div style="display:flex; flex-wrap:wrap; gap:6px;">' + chipsHtml + '</div>';
+
+      // 동기화 함수 — textarea 본문에 키워드 포함 여부로 .checked 토글
+      function syncCreativeKeywords() {
+        const ta = document.getElementById('creative-input');
+        if (!ta) return;
+        const text = ta.value || '';
+        const chips = document.querySelectorAll('.creative-keyword-box .kw-chip');
+        let checked = 0;
+        chips.forEach(function(chip) {
+          const kw = chip.dataset.kw;
+          if (kw && text.indexOf(kw) !== -1) {
+            chip.classList.add('checked');
+            checked++;
+          } else {
+            chip.classList.remove('checked');
+          }
+        });
+        const counter = document.querySelector('.creative-keyword-box .kw-count');
+        if (counter) counter.textContent = checked + '/' + chips.length + ' 사용';
+      }
+
+      // textarea 이벤트는 1회만 등록 (중복 방지)
+      const taKw = document.getElementById('creative-input');
+      if (taKw && !taKw.dataset.kwBound) {
+        taKw.addEventListener('input', syncCreativeKeywords);
+        taKw.dataset.kwBound = '1';
+      }
+      // 초기 동기화 (저장 복원 / OCR 채움 / 단원 전환 시)
+      syncCreativeKeywords();
     }
   }
 
@@ -3048,8 +3121,8 @@
         console.log('[restoreCreativeStateFromServer] 텍스트 복원 완료');
       }
 
-      // 2. 맞춤법 검사 결과 복원
-      if (creativeState.resultHTML) {
+      // 2. 맞춤법 검사 결과 복원 (실제 내용이 있을 때만 박스 표시)
+      if (creativeState.resultHTML && String(creativeState.resultHTML).replace(/<[^>]*>/g, '').trim()) {
         const spellingResult = document.getElementById('spelling-result');
         if (spellingResult) {
           spellingResult.innerHTML = creativeState.resultHTML;
@@ -3057,8 +3130,8 @@
         }
       }
 
-      // 3. 올바른 맞춤법 결과 복원
-      if (creativeState.correctHTML) {
+      // 3. 올바른 맞춤법 결과 복원 (실제 내용이 있을 때만 박스 표시)
+      if (creativeState.correctHTML && String(creativeState.correctHTML).replace(/<[^>]*>/g, '').trim()) {
         const spellingCorrect = document.getElementById('spelling-correct');
         if (spellingCorrect) {
           spellingCorrect.innerHTML = creativeState.correctHTML;
