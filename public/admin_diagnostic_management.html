@@ -254,6 +254,11 @@
         </div>
         <button id="deleteDiagnosticBtn" class="delete-btn" onclick="deleteSelectedDiagnosticTests()" disabled>🗑 선택삭제 (<span id="diagnosticSelectedCount">0</span>명)</button>
       </div>
+      <div style="margin: 10px 0 14px;">
+        <input type="text" id="diagnosticSearch" placeholder="🔍 학생 이름·학년·연락처 검색…" oninput="filterDiagnosticTests()"
+               style="width:100%; max-width:420px; padding:10px 14px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; outline:none; transition:border-color 0.15s;"
+               onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e5e7eb'">
+      </div>
       <div class="table-container">
         <div id="diagnosticTestsLoading" class="loading">데이터를 불러오는 중...</div>
         <table id="diagnosticTestsTable" style="display: none;">
@@ -292,6 +297,11 @@
         </div>
         <button id="deleteApplicationBtn" class="delete-btn" onclick="deleteSelectedApplications()" disabled>🗑 선택삭제 (<span id="applicationSelectedCount">0</span>명)</button>
       </div>
+      <div style="margin: 10px 0 14px;">
+        <input type="text" id="applicationSearch" placeholder="🔍 학생 이름·학년·등급·시리즈 검색…" oninput="filterApplications()"
+               style="width:100%; max-width:420px; padding:10px 14px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; outline:none; transition:border-color 0.15s;"
+               onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e5e7eb'">
+      </div>
       <div class="table-container">
         <div id="applicationsLoading" class="loading">데이터를 불러오는 중...</div>
         <table id="applicationsTable" style="display: none;">
@@ -301,11 +311,9 @@
               <th>No.</th>
               <th>센터명</th>
               <th>학년</th>
-              <th>반</th>
               <th>학생 이름</th>
               <th>학생 연락처</th>
               <th>학부모 연락처</th>
-              <th>등급</th>
               <th>점수</th>
               <th>시리즈</th>
               <th>등록 시간</th>
@@ -366,6 +374,64 @@
           return '(하)';
         }
       }
+    }
+
+    // 실시간 검색 — DOM 기반 필터 (행을 표시/숨김)
+    function filterRows(tbodyId, hiddenClass, searchTerm, countBadgeId, moreBtnId) {
+      const tbody = document.getElementById(tbodyId);
+      if (!tbody) return;
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const term = (searchTerm || '').toLowerCase().trim();
+      let visible = 0;
+      rows.forEach(row => {
+        if (!term) {
+          row.style.display = '';
+          row.classList.remove('search-filtered');
+          visible++;
+          return;
+        }
+        const text = row.textContent.toLowerCase();
+        if (text.includes(term)) {
+          row.style.display = '';
+          row.classList.add('search-filtered'); // 더보기 토글에 영향 안 받게
+          visible++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+      // 검색 중일 때는 hidden-row 클래스로 인한 숨김 무시 (검색 결과 모두 노출)
+      if (term) {
+        document.querySelectorAll('.' + hiddenClass).forEach(r => {
+          if (r.classList.contains('search-filtered')) r.style.display = '';
+        });
+        // 더보기 버튼 숨김
+        const mb = document.getElementById(moreBtnId);
+        if (mb) mb.style.display = 'none';
+      } else {
+        // 검색 비웠을 때 원래 더보기 상태 복원
+        document.querySelectorAll('.' + hiddenClass).forEach(r => {
+          r.classList.remove('search-filtered');
+          // diagnosticExpanded/applicationExpanded 상태에 맞춰 표시 복원
+          const isExpanded = (hiddenClass === 'diagnostic-hidden') ? diagnosticExpanded : applicationExpanded;
+          if (!isExpanded) r.style.display = 'none';
+        });
+        const mb = document.getElementById(moreBtnId);
+        if (mb && document.querySelectorAll('.' + hiddenClass).length > 0) mb.style.display = 'block';
+      }
+      // 카운트 갱신
+      const cb = document.getElementById(countBadgeId);
+      if (cb) cb.textContent = visible + '명';
+    }
+
+    function filterDiagnosticTests() {
+      filterRows('diagnosticTestsBody', 'diagnostic-hidden',
+                 document.getElementById('diagnosticSearch').value,
+                 'testCount', 'diagnosticShowMoreBtn');
+    }
+    function filterApplications() {
+      filterRows('applicationsBody', 'application-hidden',
+                 document.getElementById('applicationSearch').value,
+                 'applicationCount', 'applicationShowMoreBtn');
     }
 
     // 진단테스트 목록 불러오기
@@ -478,16 +544,14 @@
               <tr class="${index >= DISPLAY_LIMIT ? 'hidden-row application-hidden' : ''}">
                 <td><input type="checkbox" class="select-checkbox application-checkbox" data-id="${app._id}" onchange="updateApplicationCount()"></td>
                 <td>${index + 1}</td>
-                <td>${app.branchName || '-'}</td>
+                <td style="white-space: nowrap;">${app.branchName || '-'}</td>
                 <td style="white-space: nowrap;"><span class="grade-badge">${app.studentGrade}</span></td>
-                <td>${app.studentClassNum || '-'}</td>
-                <td>${app.studentName}</td>
-                <td>${app.studentPhone}</td>
-                <td>${app.parentPhone}</td>
-                <td><span class="result-grade-badge ${gradeClass}">${app.grade}</span></td>
-                <td>${(typeof app.weightedScore === 'number' && app.weightedScore !== null) ? (app.weightedScore + '/100') : (app.score !== undefined ? app.score + '/25' : '-')}</td>
+                <td style="white-space: nowrap;">${app.studentName}</td>
+                <td style="white-space: nowrap;">${app.studentPhone}</td>
+                <td style="white-space: nowrap;">${app.parentPhone}</td>
+                <td style="white-space: nowrap;">${(typeof app.weightedScore === 'number' && app.weightedScore !== null) ? (app.weightedScore + '/100') : (app.score !== undefined ? app.score + '/25' : '-')}</td>
                 <td style="white-space: nowrap;">${app.series}${getSeriesSubLevel(app.weightedScore, isElementaryGrade(app.studentGrade))}</td>
-                <td>${new Date(app.createdAt).toLocaleString('ko-KR')}</td>
+                <td style="white-space: nowrap;">${new Date(app.createdAt).toLocaleString('ko-KR')}</td>
                 <td style="white-space: nowrap;">${hasAnswers ? `<button onclick="viewTestPaper('${app._id}')" style="padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap;">시험지 보기</button>` : '<span style="color: #999;">-</span>'}</td>
               </tr>
             `;

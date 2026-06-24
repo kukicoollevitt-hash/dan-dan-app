@@ -31214,15 +31214,15 @@ app.get("/api/course-applications", async (req, res) => {
   try {
     const applications = await CourseApplication.find().sort({ createdAt: -1 });
 
-    // answers 배열이 있으면 항상 점수 재계산, 등급/시리즈도 항상 재계산
+    // answers 배열이 있으면 점수(정답 개수) 재계산
+    // weightedScore가 있는 신 데이터는 저장된 grade/series 그대로 사용
     const applicationsWithScore = applications.map(app => {
       const appObj = app.toObject();
-      // answers 배열이 있으면 항상 점수 재계산
       if (appObj.answers && appObj.answers.length > 0) {
         appObj.score = calculateScoreFromAnswers(appObj.answers);
       }
-      // 등급과 시리즈 항상 재계산
-      if (appObj.studentGrade) {
+      const hasWeighted = (typeof appObj.weightedScore === 'number' && appObj.weightedScore !== null);
+      if (!hasWeighted && appObj.studentGrade) {
         const { grade, series } = calculateGradeAndSeries(appObj.score || 0, appObj.studentGrade);
         appObj.grade = grade;
         appObj.series = series;
@@ -31245,13 +31245,14 @@ app.get("/api/course-application/:id", async (req, res) => {
       return res.status(404).json({ success: false, message: "해당 수강신청 정보를 찾을 수 없습니다." });
     }
 
-    // answers 배열이 있으면 항상 점수 재계산, 등급/시리즈도 항상 재계산
+    // answers 배열이 있으면 점수(정답 개수) 재계산
+    // weightedScore가 있는 신 데이터는 저장된 grade/series 그대로 사용
     const appObj = application.toObject();
     if (appObj.answers && appObj.answers.length > 0) {
       appObj.score = calculateScoreFromAnswers(appObj.answers);
     }
-    // 등급과 시리즈 항상 재계산
-    if (appObj.studentGrade) {
+    const hasWeighted = (typeof appObj.weightedScore === 'number' && appObj.weightedScore !== null);
+    if (!hasWeighted && appObj.studentGrade) {
       const { grade, series } = calculateGradeAndSeries(appObj.score || 0, appObj.studentGrade);
       appObj.grade = grade;
       appObj.series = series;
@@ -31747,15 +31748,17 @@ app.get("/api/admin/course-applications", async (req, res) => {
 
     const applications = await CourseApplication.find(filter).sort({ createdAt: -1 });
 
-    // answers 배열이 있으면 항상 점수 재계산, 등급/시리즈도 항상 재계산
+    // answers 배열이 있으면 점수(정답 개수) 재계산
+    // 단, weightedScore가 있는 신 데이터는 저장된 grade/series 그대로 사용
+    // (옛 개수 기준 calculateGradeAndSeries 적용하면 신 가중치 점수와 맞지 않음)
     const applicationsWithScore = applications.map(app => {
       const appObj = app.toObject();
-      // answers 배열이 있으면 항상 점수 재계산
       if (appObj.answers && appObj.answers.length > 0) {
         appObj.score = calculateScoreFromAnswers(appObj.answers);
       }
-      // 등급과 시리즈 항상 재계산
-      if (appObj.studentGrade) {
+      const hasWeighted = (typeof appObj.weightedScore === 'number' && appObj.weightedScore !== null);
+      if (!hasWeighted && appObj.studentGrade) {
+        // 옛 데이터만 개수 기반으로 재계산
         const { grade, series } = calculateGradeAndSeries(appObj.score || 0, appObj.studentGrade);
         appObj.grade = grade;
         appObj.series = series;
