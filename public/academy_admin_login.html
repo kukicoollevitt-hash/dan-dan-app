@@ -150,6 +150,24 @@
       color: var(--primary);
       font-style: italic;
     }
+    /* 🕘 최근 검색 섹션 */
+    .academy-recent-header {
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #6a5d8a;
+      background: #faf7ff;
+      border-bottom: 1px solid #e6def3;
+      letter-spacing: 0.3px;
+    }
+    .academy-option.academy-recent-item {
+      color: #4b3a78;
+      background: #fdfcff;
+    }
+    .academy-option.academy-recent-item:hover,
+    .academy-option.academy-recent-item.highlighted {
+      background: #f1e9ff;
+    }
     .academy-no-result {
       padding: 10px 12px;
       color: #999;
@@ -391,6 +409,25 @@
       }
     }
 
+    // 🕘 최근 검색 학원 (localStorage, 최대 5개)
+    function getRecentAcademies() {
+      try {
+        const raw = localStorage.getItem('recent-academy-names');
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr.slice(0, 5) : [];
+      } catch { return []; }
+    }
+    function addRecentAcademy(name) {
+      if (!name || typeof name !== 'string') return;
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      try {
+        const cur = getRecentAcademies();
+        const updated = [trimmed, ...cur.filter(a => a !== trimmed)].slice(0, 5);
+        localStorage.setItem('recent-academy-names', JSON.stringify(updated));
+      } catch {}
+    }
+
     // 학원 검색 드롭다운 초기화
     function initAcademySearch(searchInputId, hiddenInputId, dropdownId, allowCustom = false) {
       const searchInput = document.getElementById(searchInputId);
@@ -403,9 +440,20 @@
 
       // 드롭다운 렌더링
       function renderDropdown(filter = '') {
+        // 🕘 검색어 없음 → 최근 검색 학원 표시
         if (!filter || filter.trim() === '') {
-          dropdown.innerHTML = '<div class="academy-no-result">학원명을 입력해주세요</div>';
+          const recents = getRecentAcademies();
+          if (recents.length === 0) {
+            dropdown.innerHTML = '<div class="academy-no-result">학원명을 입력해주세요</div>';
+          } else {
+            const header = '<div class="academy-recent-header">🕘 최근 검색</div>';
+            const items = recents.map(name =>
+              '<div class="academy-option academy-recent-item" data-value="' + name + '">' + name + '</div>'
+            ).join('');
+            dropdown.innerHTML = header + items;
+          }
           dropdown.classList.add('show');
+          highlightIndex = -1;
           return;
         }
 
@@ -435,17 +483,14 @@
           renderDropdown(val);
           dropdown.classList.add('show');
         } else {
-          dropdown.classList.remove('show');
+          // 빈 입력 → 최근 검색 표시
+          renderDropdown('');
         }
       });
 
-      // 포커스 시
+      // 포커스 시 (빈 값이면 최근 검색 표시)
       searchInput.addEventListener('focus', () => {
-        const val = searchInput.value.trim();
-        if (val.length > 0) {
-          renderDropdown(val);
-          dropdown.classList.add('show');
-        }
+        renderDropdown(searchInput.value);
       });
 
       // 외부 클릭 시 닫기
@@ -466,6 +511,7 @@
           const value = option.dataset.value;
           searchInput.value = value;
           hiddenInput.value = value;
+          addRecentAcademy(value);
           dropdown.classList.remove('show');
         }
       });
@@ -489,9 +535,11 @@
             const value = options[highlightIndex].dataset.value;
             searchInput.value = value;
             hiddenInput.value = value;
+            addRecentAcademy(value);
             dropdown.classList.remove('show');
           } else if (allowCustom && searchInput.value.trim()) {
             hiddenInput.value = searchInput.value.trim();
+            addRecentAcademy(searchInput.value.trim());
             dropdown.classList.remove('show');
           }
         } else if (e.key === 'Escape') {
@@ -514,6 +562,15 @@
       await loadAcademies();
       initAcademySearch('loginAcademySearch', 'loginAcademyValue', 'loginAcademyDropdown', false);
       initAcademySearch('registerAcademySearch', 'registerAcademyValue', 'registerAcademyDropdown', true);
+
+      // 🕘 폼 제출 시 학원명을 최근 검색에 저장 (직접 타이핑 후 제출한 경우도 커버)
+      document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', () => {
+          const hidden = form.querySelector('input[name="academyName"]');
+          const v = (hidden?.value || '').trim();
+          if (v) addRecentAcademy(v);
+        });
+      });
     });
   </script>
 </body>

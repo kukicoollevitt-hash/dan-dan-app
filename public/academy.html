@@ -918,6 +918,24 @@
             color: #1565c0;
             font-style: italic;
         }
+        /* 🕘 최근 검색 섹션 */
+        .academy-recent-header {
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #5e7a9c;
+            background: #f5f9ff;
+            border-bottom: 1px solid #d9e7f6;
+            letter-spacing: 0.3px;
+        }
+        .academy-dropdown-item.academy-recent-item {
+            color: #34557a;
+            background: #fbfcfe;
+        }
+        .academy-dropdown-item.academy-recent-item:hover,
+        .academy-dropdown-item.academy-recent-item.highlight {
+            background: #e3f2fd;
+        }
         .academy-no-result {
             padding: 10px 12px;
             font-size: 13px;
@@ -2484,6 +2502,25 @@
                 }
             }
 
+            // 🕘 최근 검색 학원 (localStorage, 최대 5개)
+            function getRecentAcademies() {
+                try {
+                    const raw = localStorage.getItem('recent-academy-names');
+                    const arr = raw ? JSON.parse(raw) : [];
+                    return Array.isArray(arr) ? arr.slice(0, 5) : [];
+                } catch { return []; }
+            }
+            function addRecentAcademy(name) {
+                if (!name || typeof name !== 'string') return;
+                const trimmed = name.trim();
+                if (!trimmed) return;
+                try {
+                    const cur = getRecentAcademies();
+                    const updated = [trimmed, ...cur.filter(a => a !== trimmed)].slice(0, 5);
+                    localStorage.setItem('recent-academy-names', JSON.stringify(updated));
+                } catch {}
+            }
+
             // 학원 검색 드롭다운 초기화 (allowCustom: 회원가입용 - 새 학원 입력 가능)
             function initAcademySearch(searchInputId, hiddenInputId, dropdownId, allowCustom = false) {
                 const searchInput = document.getElementById(searchInputId);
@@ -2494,13 +2531,35 @@
 
                 let highlightIndex = -1;
 
-                // 드롭다운 렌더링 (검색어가 있을 때만 결과 표시)
+                // 드롭다운 렌더링 (검색어 있으면 필터링, 비어있으면 최근 검색 표시)
                 function renderDropdown(query) {
                     dropdown.innerHTML = '';
                     highlightIndex = -1;
 
+                    // 🕘 검색어 없음 → 최근 검색 학원 표시
                     if (!query.trim()) {
-                        dropdown.classList.remove('show');
+                        const recents = getRecentAcademies();
+                        if (recents.length === 0) {
+                            dropdown.classList.remove('show');
+                            return;
+                        }
+                        const header = document.createElement('div');
+                        header.className = 'academy-recent-header';
+                        header.textContent = '🕘 최근 검색';
+                        dropdown.appendChild(header);
+                        recents.forEach(name => {
+                            const item = document.createElement('div');
+                            item.className = 'academy-dropdown-item academy-recent-item';
+                            item.textContent = name;
+                            item.addEventListener('click', () => {
+                                searchInput.value = name;
+                                hiddenInput.value = name;
+                                addRecentAcademy(name);
+                                dropdown.classList.remove('show');
+                            });
+                            dropdown.appendChild(item);
+                        });
+                        dropdown.classList.add('show');
                         return;
                     }
 
@@ -2517,6 +2576,7 @@
                             newItem.addEventListener('click', () => {
                                 searchInput.value = query.trim();
                                 hiddenInput.value = query.trim();
+                                addRecentAcademy(query.trim());
                                 dropdown.classList.remove('show');
                             });
                             dropdown.appendChild(newItem);
@@ -2534,6 +2594,7 @@
                             item.addEventListener('click', () => {
                                 searchInput.value = name;
                                 hiddenInput.value = name;
+                                addRecentAcademy(name);
                                 dropdown.classList.remove('show');
                             });
                             dropdown.appendChild(item);
@@ -2549,11 +2610,9 @@
                     hiddenInput.value = '';  // 검색 중에는 hidden 값 초기화
                 });
 
-                // 포커스 시 드롭다운 표시 (값이 있을 때만)
+                // 포커스 시 드롭다운 표시 (값 있으면 필터, 없으면 최근 검색)
                 searchInput.addEventListener('focus', () => {
-                    if (searchInput.value.trim()) {
-                        renderDropdown(searchInput.value);
-                    }
+                    renderDropdown(searchInput.value);
                 });
 
                 // 키보드 네비게이션
@@ -2611,6 +2670,16 @@
                 initAcademySearch('loginAcademySearch', 'loginAcademyValue', 'loginAcademyDropdown', false);  // 로그인: 기존 학원만
                 initAcademySearch('registerAcademySearch', 'registerAcademyValue', 'registerAcademyDropdown', true);  // 회원가입: 새 학원 입력 가능
             })();
+
+            // 🕘 폼 제출 시 학원명을 최근 검색에 저장 (직접 타이핑 후 제출한 경우도 커버)
+            document.getElementById('login-form')?.addEventListener('submit', () => {
+                const v = (document.getElementById('loginAcademyValue')?.value || '').trim();
+                if (v) addRecentAcademy(v);
+            });
+            document.getElementById('register-form')?.addEventListener('submit', () => {
+                const v = (document.getElementById('registerAcademyValue')?.value || '').trim();
+                if (v) addRecentAcademy(v);
+            });
 
             // ✅ 기본 로그인 모달 열기/닫기
             const mobileStartBtn = document.getElementById("mobileStartBtn");
