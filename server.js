@@ -31010,9 +31010,85 @@ app.post("/api/diagnostic-test", async (req, res) => {
 });
 
 // 수강신청(상담) 정보 저장 (상담신청 팝업에서 제출 시)
+// ===== 진단테스트 가중치 채점 — 서버 측 보강용 상수/함수 =====
+// 클라이언트 캐시 이슈로 weightedScore가 누락된 경우 서버에서 자동 계산
+const DIAG_CORRECTS_NEW = [
+  3, 3, 0, 2, 1,  1, 1, 3, 2, 3,
+  3, 3, 0, 1, 2,  0, 2, 1, 2, 3,
+  1, 0, 0, 2, 1
+];
+const DIAG_CORRECTS_OLD = [
+  1, 0, 1, 1, 2,  1, 2, 1, 2, 3,
+  2, 0, 1, 1, 2,  1, 1, 1, 2, 2,
+  1, 0, 1, 1, 2
+];
+const DIAG_SKILLS = [
+  '핵심','구조','어휘','추론','비판',
+  '핵심','구조','어휘','추론','비판',
+  '핵심','구조','어휘','추론','비판',
+  '핵심','구조','어휘','추론','비판',
+  '핵심','구조','어휘','추론','비판'
+];
+const DIAG_WEIGHTS = { '핵심': 3, '구조': 4, '어휘': 3, '추론': 5, '비판': 5 };
+
+function _diagScoreWith(answers, corrects) {
+  let count = 0, weighted = 0;
+  const len = Math.min((answers || []).length, 25);
+  for (let i = 0; i < len; i++) {
+    if (answers[i] === corrects[i]) {
+      count++;
+      weighted += DIAG_WEIGHTS[DIAG_SKILLS[i]] || 0;
+    }
+  }
+  return { count, weighted };
+}
+
+function _diagIsElementary(g) {
+  return ['3학년','4학년','5학년','6학년','초3','초4','초5','초6','3','4','5','6'].includes(g || '');
+}
+
+function _diagGradeFromWeighted(w, isElem) {
+  if (isElem) {
+    if (w >= 78) return { grade: '최우수 (A+) / 수능내신 1~2등급(예측)', series: 'BRAIN 핏' };
+    if (w >= 65) return { grade: '우수 (A) / 수능내신 3등급(예측)',    series: 'BRAIN 업' };
+    if (w >= 45) return { grade: '보통 (C+) / 수능내신 4등급(예측)',   series: 'BRAIN 온' };
+    return                  { grade: '기초 (D) / 수능내신 5등급(예측)',    series: 'BRAIN 온' };
+  }
+  if (w >= 95) return { grade: '최우수 (A+) / 수능내신 1등급(예측)', series: 'BRAIN 딥' };
+  if (w >= 80) return { grade: '우수 (A) / 수능내신 2등급(예측)',    series: 'BRAIN 핏' };
+  if (w >= 60) return { grade: '보통 (C+) / 수능내신 3등급(예측)',   series: 'BRAIN 업' };
+  return                  { grade: '기초 (D) / 수능내신 4~5등급(예측)',  series: 'BRAIN 온' };
+}
+
 app.post("/api/course-application", async (req, res) => {
   try {
     const { branchName, studentGrade, studentClassNum, studentName, studentPhone, parentPhone, grade, series, answers, score, weightedScore, duration, userType, academyName } = req.body;
+
+    // 학원 응시자인데 weightedScore가 빠졌으면 서버에서 자동 계산 (캐시 이슈 대비 근본 가드)
+    let finalWeighted = (typeof weightedScore === 'number') ? weightedScore : null;
+    let finalGrade = grade;
+    let finalSeries = series;
+
+    const isAcademy = (userType || '').toLowerCase() === 'academy';
+    const hasAnswers = Array.isArray(answers) && answers.length > 0;
+
+    if (isAcademy && finalWeighted === null && hasAnswers) {
+      const r1 = _diagScoreWith(answers, DIAG_CORRECTS_NEW);
+      const r2 = _diagScoreWith(answers, DIAG_CORRECTS_OLD);
+      let chosenW;
+      if (r1.count === (score || 0)) chosenW = r1.weighted;
+      else if (r2.count === (score || 0)) chosenW = r2.weighted;
+      else chosenW = (score || 0) * 4; // EST 평균 환산
+
+      finalWeighted = chosenW;
+      // 등급/시리즈도 새 컷오프로 재계산
+      const isElem = _diagIsElementary(studentGrade);
+      const ng = _diagGradeFromWeighted(chosenW, isElem);
+      finalGrade = ng.grade;
+      finalSeries = ng.series;
+
+      console.log(`🛡️ [course-application] weightedScore 서버 자동 계산: ${studentName} score=${score} → weighted=${chosenW} (${isElem?'초등':'중고등'}) → ${finalGrade.split('/')[0].trim()} / ${finalSeries}`);
+    }
 
     const courseApplication = new CourseApplication({
       branchName,
@@ -31023,11 +31099,11 @@ app.post("/api/course-application", async (req, res) => {
       studentName,
       studentPhone,
       parentPhone,
-      grade,
-      series,
+      grade: finalGrade,
+      series: finalSeries,
       answers: answers || [],
       score: score || 0,
-      weightedScore: (typeof weightedScore === 'number') ? weightedScore : null,
+      weightedScore: finalWeighted,
       duration: duration || ''
     });
 
