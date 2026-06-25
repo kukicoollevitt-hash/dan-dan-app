@@ -3728,8 +3728,15 @@
       creativeCheckBtn.addEventListener('click', async () => {
         const text = creativeTextarea ? creativeTextarea.value.trim() : '';
 
-        if (!text) {
-          alert('먼저 글을 작성해주세요.');
+        // 🐋 AI 글다듬기 최소 글자 수 — 학생이 어느 정도 써야 의미 있는 피드백이 가능
+        const AI_HELP_MIN_CHARS = 50;
+        if (text.length < AI_HELP_MIN_CHARS) {
+          const remain = AI_HELP_MIN_CHARS - text.length;
+          showCreativeAlert(
+            text.length === 0
+              ? `먼저 <b style="color:#d16355;">${AI_HELP_MIN_CHARS}자 이상</b> 글을 써 주세요.<br><span style="font-size:14px; color:#888;">짧은 글로는 정확한 피드백이 어려워요</span>`
+              : `현재 <b style="color:#d16355;">${text.length}자</b>예요.<br><b style="color:#d16355;">${remain}자</b>만 더 써주면 고래쌤이 도와줄 수 있어요!`
+          );
           return;
         }
 

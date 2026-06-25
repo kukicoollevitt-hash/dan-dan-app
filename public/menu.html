@@ -11671,28 +11671,9 @@ if (logoutConfirmBtn) {
 
     /* 9. 단원 리스트 출력 */
     async function renderUnitList(units) {
-      // 🔄 "AI 학습 인식 중..." 오버레이 표시
-      const loadingOverlay = document.getElementById('loading-overlay');
-      if (loadingOverlay) {
-        loadingOverlay.style.display = 'flex';
-        loadingOverlay.classList.remove('fade-out');
-      }
-
-      // 단원 등급 데이터 로드 (최소 300ms 대기하여 스피너가 보이도록)
-      const [gradeData] = await Promise.all([
-        fetchUnitGrades(),
-        new Promise(resolve => setTimeout(resolve, 300))
-      ]);
-      unitGradesData = gradeData || {};
+      // 단원 등급 데이터 로드 (ApiCache 캐싱됨 — 캐시 hit 시 즉시 반환)
+      unitGradesData = (await fetchUnitGrades()) || {};
       console.log('⭐ [renderUnitList] unitGradesData 로드 완료:', Object.keys(unitGradesData).length, '개');
-
-      // 🔄 로딩 오버레이 숨기기 (배경 이미지 로딩 중이 아닐 때만)
-      if (loadingOverlay && !window.isBackgroundLoading) {
-        loadingOverlay.classList.add('fade-out');
-        setTimeout(() => {
-          loadingOverlay.style.display = 'none';
-        }, 300);
-      }
 
       unitList.innerHTML = "";
       units.forEach((u, unitIndex) => {
@@ -34502,6 +34483,20 @@ ${content}
       cursor: pointer;
       opacity: 0.85;
     }
+    /* 🔒 기본 한국사 순차 잠금 카드 — 톤다운 + 자물쇠 강조 */
+    .kh-unit-card.kh-seq-locked {
+      background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+      border-color: #c8c8c8;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      opacity: 0.78;
+      cursor: pointer;
+    }
+    .kh-unit-card.kh-seq-locked:hover {
+      border-color: #a0a0a0;
+      opacity: 0.92;
+    }
+    .kh-unit-card.kh-seq-locked .kh-unit-title { color: #6b6b6b; }
+    .kh-unit-card.kh-seq-locked .kh-unit-sub { color: #8a8a8a; }
     .kh-coming-badge {
       position: absolute;
       top: 10px;
@@ -36633,10 +36628,28 @@ ${content}
         // 재학습 자동 정리 (완료된 것 제거)
         checkKhRelearnDone();
         const relearnList = getKhRelearnList();
+
+        // 🔒 순차 잠금 — 베타 테스터는 우회
+        const KH_SEQ_BETA_TESTERS = [{ grade: '초3', name: '김윤슬' }];
+        let _khSeqIsBeta = false;
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          _khSeqIsBeta = KH_SEQ_BETA_TESTERS.some(t => t.grade === cs.grade && t.name === cs.name);
+        } catch {}
+        // kh_(n-1) 완료(또는 재학습 마킹)되어야 kh_n 잠금 해제 (1강은 항상 오픈)
+        function _canOpenKhBasic(n) {
+          if (_khSeqIsBeta) return true;
+          if (n <= 1) return true;
+          const prev = `kh_${String(n - 1).padStart(2, '0')}`;
+          return isKhUnitCompleted(prev) || relearnList.includes(prev);
+        }
+
         const unitCards = KH_UNITS.map(u => {
           const code = `kh_${u.no}`;
           const done = isKhUnitCompleted(code);
           const relearn = relearnList.includes(code);
+          const num = parseInt(u.no, 10);
+          const isLocked = !done && !relearn && !_canOpenKhBasic(num);
           let badge = '';
           let extraClass = '';
           if (relearn) {
@@ -36645,9 +36658,12 @@ ${content}
           } else if (done) {
             badge = '<span class="kh-done-badge">완료 ✓</span>';
             extraClass = ' kh-completed';
+          } else if (isLocked) {
+            badge = '<span class="kh-coming-badge">🔒 잠김</span>';
+            extraClass = ' kh-seq-locked';
           }
           return `
-          <div class="kh-unit-card${extraClass}" role="button" tabindex="0" data-kh-path="./BRAINUP/korhistory/kh_${u.no}.html" data-kh-unit="${code}">
+          <div class="kh-unit-card${extraClass}" role="button" tabindex="0" data-kh-path="./BRAINUP/korhistory/kh_${u.no}.html" data-kh-unit="${code}" data-kh-num="${num}" data-kh-seq-locked="${isLocked ? '1' : '0'}">
             ${badge}
             <div class="kh-unit-title">${u.title}</div>
             <div class="kh-unit-sub">${u.subs.join(' · ')}</div>
@@ -36692,22 +36708,44 @@ ${content}
         const _khAdvIsOpen = new Date() >= KH_ADV_OPEN_DATE;
         // 현재 콘텐츠 작성이 완료된 강 번호 (작성 끝나는 대로 여기에 추가)
         const KH_ADV_READY_UNITS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+
+        // 🎓 심화한국사 진입 조건: 단원평가 합격 (베타 우회)
+        // 합격은 20강 완료를 전제로 하므로 합격 이력만 보면 충분.
+        // 합격 이후 재학습 마킹으로 allDone이 일시적으로 false가 돼도 심화 접근은 유지.
+        const _examPassed = !!(examResult && examResult.passed);
+        const _khAdvUserUnlocked = _khAdvIsBeta || _examPassed;
+        // khadv_(n-1) 완료되어야 khadv_n 잠금 해제 (1강은 진입 조건만 충족하면 오픈)
+        function _canOpenKhAdvSeq(n) {
+          if (_khAdvIsBeta) return true;
+          if (!_khAdvUserUnlocked) return false;
+          if (n <= 1) return true;
+          const prev = `khadv_${String(n - 1).padStart(2, '0')}`;
+          return isKhUnitCompleted(prev);
+        }
+
         const advCards = KH_ADV_UNITS.map(u => {
           const ready = KH_ADV_READY_UNITS.includes(u.no);
-          const canOpen = (_khAdvIsBeta || _khAdvIsOpen) && ready;
+          const dateOK = _khAdvIsBeta || _khAdvIsOpen;
+          const num = parseInt(u.no, 10);
+          const seqOK = _canOpenKhAdvSeq(num);
+          const canOpen = ready && dateOK && seqOK;
           const advCode = `khadv_${u.no}`;
           const advDone = canOpen && isKhUnitCompleted(advCode);
+          // 잠금 사유 구분: 콘텐츠 미준비/오픈일 미도래 = "준비 중", 진도 부족 = "🔒 잠김"
+          const seqLocked = ready && dateOK && !seqOK;
           let badge = '';
           let extraClass = '';
           if (advDone) {
             badge = '<span class="kh-done-badge">완료 ✓</span>';
             extraClass = ' kh-completed';
+          } else if (seqLocked) {
+            badge = '<span class="kh-coming-badge">🔒 잠김</span>';
           } else if (!canOpen) {
             badge = '<span class="kh-coming-badge">준비 중</span>';
           }
           // 베타 열람 배지는 표시하지 않음 (배지 없는 상태 = 학습 가능)
           return `
-          <div class="kh-unit-card kh-adv-card${canOpen ? ' kh-adv-open' : ' kh-coming'}${extraClass}" role="button" tabindex="0" data-kh-adv="${u.no}" data-kh-adv-path="./BRAINUP/korhistory/khadv_${u.no}.html" data-kh-adv-ready="${canOpen ? '1' : '0'}" data-kh-unit="${advCode}">
+          <div class="kh-unit-card kh-adv-card${canOpen ? ' kh-adv-open' : ' kh-coming'}${extraClass}" role="button" tabindex="0" data-kh-adv="${u.no}" data-kh-adv-path="./BRAINUP/korhistory/khadv_${u.no}.html" data-kh-adv-ready="${canOpen ? '1' : '0'}" data-kh-adv-seq-locked="${seqLocked ? '1' : '0'}" data-kh-unit="${advCode}">
             ${badge}
             <div class="kh-unit-title">${u.title}</div>
             <div class="kh-unit-sub">${u.subs.join(' · ')}</div>
@@ -36770,9 +36808,15 @@ ${content}
             if (typeof openKhCertExam === 'function') openKhCertExam(lv);
           });
         });
-        // 단원 카드 클릭 → 학습 모달
-        grid.querySelectorAll('.kh-unit-card').forEach(card => {
+        // 기본 한국사 카드 클릭 → 잠금 시 안내, 아니면 학습 모달
+        // (심화 카드는 .kh-adv-card 클래스를 추가로 가지므로 :not으로 제외)
+        grid.querySelectorAll('.kh-unit-card:not(.kh-adv-card)').forEach(card => {
           const open = () => {
+            if (card.dataset.khSeqLocked === '1') {
+              const num = parseInt(card.dataset.khNum, 10);
+              showKhBasicSeqLockPopup(num);
+              return;
+            }
             const path = card.dataset.khPath;
             const ov = document.getElementById('khModalOverlay');
             if (ov) {
@@ -36790,7 +36834,7 @@ ${content}
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
           });
         });
-        // 심화한국사 카드 클릭 → 베타+ready면 학습 모달 열기, 아니면 "준비 중" 안내
+        // 심화한국사 카드 클릭 → 진도 잠금 / 콘텐츠 미준비 / 학습 가능 분기
         grid.querySelectorAll('.kh-adv-card').forEach(card => {
           const open = () => {
             if (card.dataset.khAdvReady === '1') {
@@ -36802,6 +36846,9 @@ ${content}
               }
               if (typeof openUnitModal === 'function') openUnitModal(path);
               else window.location.href = path;
+            } else if (card.dataset.khAdvSeqLocked === '1') {
+              // 단원평가 미합격 또는 이전 강 미완료
+              showKhAdvSeqLockPopup(parseInt(card.dataset.khAdv, 10));
             } else {
               showKhComingSoonToast();
             }
@@ -36865,6 +36912,72 @@ ${content}
         pop.addEventListener('click', (e) => { if (e.target === pop) close(); });
       }
       window.showKhLockPopup = showKhLockPopup;
+
+      // 🔒 기본 한국사 순차 잠금 안내 — "N강은 (N-1)강 완료 후 열려요"
+      function showKhBasicSeqLockPopup(num) {
+        const existing = document.getElementById('khBasicSeqLockPopup');
+        if (existing) existing.remove();
+        const prev = Math.max(1, num - 1);
+        const pop = document.createElement('div');
+        pop.id = 'khBasicSeqLockPopup';
+        pop.className = 'kh-lock-popup';
+        pop.innerHTML = `
+          <div class="kh-lock-popup-box">
+            <div class="kh-lock-popup-icon">🔒</div>
+            <h3 class="kh-lock-popup-title">${num}강은 아직 잠겨 있어요</h3>
+            <p class="kh-lock-popup-msg">
+              <b style="color:#d97706;">${prev}강을 먼저 완료</b>해야 ${num}강이 열려요.<br>
+              <span class="kh-lock-popup-sub">분석리포트 → "학습완료 및 제출하기"를 누르면 완료로 표시돼요</span>
+            </p>
+            <button class="kh-lock-popup-btn" type="button">확인</button>
+          </div>`;
+        document.body.appendChild(pop);
+        const close = () => pop.remove();
+        pop.querySelector('.kh-lock-popup-btn').addEventListener('click', close);
+        pop.addEventListener('click', (e) => { if (e.target === pop) close(); });
+      }
+      window.showKhBasicSeqLockPopup = showKhBasicSeqLockPopup;
+
+      // 🎓 심화 한국사 진도 잠금 안내 — 단원평가 미합격 / 이전 강 미완료 구분
+      function showKhAdvSeqLockPopup(num) {
+        const existing = document.getElementById('khAdvSeqLockPopup');
+        if (existing) existing.remove();
+        // 잠금 사유 판정
+        const allBasicDone = (typeof areAllKhUnitsCompleted === 'function') ? areAllKhUnitsCompleted() : false;
+        let examPassed = false;
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          if (cs.grade && cs.name) {
+            const r = JSON.parse(localStorage.getItem(`kh-exam-result:${cs.grade}_${cs.name}`) || 'null');
+            examPassed = !!(r && r.passed);
+          }
+        } catch {}
+        let titleText, msgText;
+        if (!allBasicDone || !examPassed) {
+          titleText = '심화한국사는 단원평가 합격 후 열려요';
+          msgText = `<b style="color:#b45309;">기본 한국사 20강 완료 + 단원평가 합격</b> 후<br>심화한국사가 1강부터 차례로 열려요.<br><span class="kh-lock-popup-sub">단원평가는 90점 이상이면 합격이에요</span>`;
+        } else {
+          // 진입 조건은 충족했으나 이전 강 미완료
+          const prev = Math.max(1, num - 1);
+          titleText = `심화 ${num}강은 아직 잠겨 있어요`;
+          msgText = `<b style="color:#d97706;">심화 ${prev}강을 먼저 완료</b>해야 ${num}강이 열려요.`;
+        }
+        const pop = document.createElement('div');
+        pop.id = 'khAdvSeqLockPopup';
+        pop.className = 'kh-lock-popup';
+        pop.innerHTML = `
+          <div class="kh-lock-popup-box" style="border-top:6px solid #d97706;">
+            <div class="kh-lock-popup-icon">🔒</div>
+            <h3 class="kh-lock-popup-title" style="color:#92400e;">${titleText}</h3>
+            <p class="kh-lock-popup-msg">${msgText}</p>
+            <button class="kh-lock-popup-btn" type="button" style="background:linear-gradient(135deg,#d97706,#b45309);">확인</button>
+          </div>`;
+        document.body.appendChild(pop);
+        const close = () => pop.remove();
+        pop.querySelector('.kh-lock-popup-btn').addEventListener('click', close);
+        pop.addEventListener('click', (e) => { if (e.target === pop) close(); });
+      }
+      window.showKhAdvSeqLockPopup = showKhAdvSeqLockPopup;
 
       // 🎓 심화한국사 "준비 중" 안내 토스트
       function showKhComingSoonToast() {
