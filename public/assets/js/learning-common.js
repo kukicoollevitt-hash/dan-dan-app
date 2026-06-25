@@ -3934,6 +3934,110 @@
 // 기존 화살표 버튼 대신 menu.html의 "홈으로" 버튼으로 대체됨
 
 /* =========================================================
+   🚫 창의활동 복붙 차단
+   - 출력 영역(AI 다듬은 글, 예시): 드래그/복사/우클릭/드래그앤드롭 차단
+   - 입력 영역(#creative-input): 외부 텍스트 paste 차단
+   - 학생/선생님 모두 적용 (창의활동 탭에서 복사할 일 없음)
+========================================================= */
+(function initCreativeCopyGuard() {
+  if (window._creativeCopyGuardAttached) return;
+  window._creativeCopyGuardAttached = true;
+
+  // 1) CSS — 텍스트 선택 자체 차단
+  const styleId = 'creative-copy-guard-style';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      #ai-feedback-result, #ai-feedback-result *,
+      .creative-examples-box, .creative-examples-box * {
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        user-select: none !important;
+        -webkit-touch-callout: none !important;
+      }
+      @keyframes creativeCopyToastIn {
+        from { opacity: 0; transform: translate(-50%, 12px); }
+        to   { opacity: 1; transform: translate(-50%, 0); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // 2) 차단 안내 토스트
+  let _toastTimer = null;
+  function showBlockToast(msg) {
+    let toast = document.getElementById('creative-copy-block-toast');
+    if (toast) {
+      toast.textContent = msg;
+    } else {
+      toast = document.createElement('div');
+      toast.id = 'creative-copy-block-toast';
+      toast.textContent = msg;
+      toast.style.cssText =
+        'position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%);' +
+        'background: linear-gradient(135deg, #d97706, #b45309); color: #fff;' +
+        'padding: 14px 28px; border-radius: 999px; font-size: 15px; font-weight: 600;' +
+        'z-index: 999999; box-shadow: 0 6px 20px rgba(146, 64, 14, 0.35);' +
+        'animation: creativeCopyToastIn 0.25s ease-out;';
+      document.body.appendChild(toast);
+    }
+    if (_toastTimer) clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => {
+      if (toast && toast.parentNode) toast.parentNode.removeChild(toast);
+      _toastTimer = null;
+    }, 1800);
+  }
+
+  // 3) 출력 영역(AI 결과 + 예시) — 복사/잘라내기/우클릭/드래그 차단
+  function isGuardedOutputArea(target) {
+    if (!target || !target.closest) return false;
+    return !!target.closest('#ai-feedback-result, .creative-examples-box');
+  }
+
+  ['copy', 'cut'].forEach(function(evt) {
+    document.addEventListener(evt, function(e) {
+      if (isGuardedOutputArea(e.target)) {
+        e.preventDefault();
+        showBlockToast('✏️ 복사 대신 직접 써보세요!');
+      }
+    }, true);
+  });
+
+  document.addEventListener('contextmenu', function(e) {
+    if (isGuardedOutputArea(e.target)) {
+      e.preventDefault();
+      showBlockToast('✏️ 복사 대신 직접 써보세요!');
+    }
+  }, true);
+
+  document.addEventListener('dragstart', function(e) {
+    if (isGuardedOutputArea(e.target)) {
+      e.preventDefault();
+    }
+  }, true);
+
+  // 4) 입력 영역(#creative-input) — paste 차단
+  document.addEventListener('paste', function(e) {
+    const t = e.target;
+    if (t && (t.id === 'creative-input' || (t.closest && t.closest('#creative-input')))) {
+      e.preventDefault();
+      showBlockToast('✏️ 붙여넣기 대신 직접 써보세요!');
+    }
+  }, true);
+
+  // 5) 입력 영역 — 외부에서 텍스트를 드롭하는 것도 차단
+  document.addEventListener('drop', function(e) {
+    const t = e.target;
+    if (t && (t.id === 'creative-input' || (t.closest && t.closest('#creative-input')))) {
+      e.preventDefault();
+      showBlockToast('✏️ 끌어다 넣기 대신 직접 써보세요!');
+    }
+  }, true);
+})();
+
+/* =========================================================
    글씨 크기 조절 기능
 ========================================================= */
 (function initFontSizeControl() {
