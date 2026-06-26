@@ -31555,20 +31555,10 @@ app.put("/api/academy-notice/:id", requireAdminLogin, async (req, res) => {
   }
 });
 
-// 📎 본문용 이미지 영구 업로드 — '브레인문해원_테스트'만
-const academyNoticeUploadsDir = path.join(__dirname, 'public', 'uploads', 'academy-notice');
-if (!fs.existsSync(academyNoticeUploadsDir)) {
-  fs.mkdirSync(academyNoticeUploadsDir, { recursive: true });
-}
-const academyNoticeStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, academyNoticeUploadsDir),
-  filename: (req, file, cb) => {
-    const safe = (path.extname(file.originalname || '') || '.png').toLowerCase();
-    cb(null, `notice-${Date.now()}-${Math.round(Math.random() * 1e9)}${safe}`);
-  }
-});
+// 📎 본문용 이미지 — MongoDB에 직접 저장 (Render ephemeral FS 회피)
+const AcademyNoticeImage = require('./models/AcademyNoticeImage');
 const academyNoticeUpload = multer({
-  storage: academyNoticeStorage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif|webp/;
@@ -31588,19 +31578,44 @@ app.post("/api/academy-notice/upload-image",
     next();
   },
   academyNoticeUpload.single('image'),
-  (req, res) => {
+  async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ ok: false, message: "이미지 파일이 없습니다" });
       }
-      const imageUrl = `/uploads/academy-notice/${req.file.filename}`;
-      res.json({ ok: true, imageUrl });
+      const doc = await AcademyNoticeImage.create({
+        data: req.file.buffer,
+        mimeType: req.file.mimetype || 'image/png',
+        size: req.file.size,
+        originalName: req.file.originalname || '',
+        uploadedBy: (req.session && req.session.adminId) || ''
+      });
+      res.json({ ok: true, imageUrl: `/api/academy-notice-image/${doc._id}` });
     } catch (err) {
       console.error("[POST /api/academy-notice/upload-image] 오류:", err);
       res.status(500).json({ ok: false, message: "업로드 실패" });
     }
   }
 );
+
+// 본문용 이미지 서빙 — 공개 (소식 자체가 모든 학원 관리자에게 노출됨)
+app.get("/api/academy-notice-image/:id", async (req, res) => {
+  try {
+    if (!/^[a-f0-9]{24}$/i.test(req.params.id)) {
+      return res.status(400).send('invalid id');
+    }
+    const doc = await AcademyNoticeImage.findById(req.params.id).lean();
+    if (!doc || !doc.data) {
+      return res.status(404).send('not found');
+    }
+    res.setHeader('Content-Type', doc.mimeType || 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.send(doc.data);
+  } catch (err) {
+    console.error("[GET /api/academy-notice-image] 오류:", err);
+    res.status(500).send('server error');
+  }
+});
 
 // 삭제 (소프트) — '브레인문해원_테스트'만
 app.delete("/api/academy-notice/:id", requireAdminLogin, async (req, res) => {

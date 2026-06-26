@@ -1680,7 +1680,8 @@
       const text = String(content || '');
       const hasImage =
         /\.(jpg|jpeg|png|gif|webp|svg)(\?\S*)?(\s|$)/i.test(text) ||
-        /\/(uploads|temp-uploads)\/\S+\.(jpg|jpeg|png|gif|webp|svg)/i.test(text);
+        /\/(uploads|temp-uploads)\/\S+\.(jpg|jpeg|png|gif|webp|svg)/i.test(text) ||
+        /\/api\/academy-notice-image\/[a-f0-9]{24}/i.test(text);
       const hasVideo =
         /\.(mp4|webm|mov|m4v|ogv)(\?\S*)?(\s|$)/i.test(text) ||
         /(?:youtube\.com|youtu\.be|vimeo\.com|tv\.naver\.com|tv\.kakao\.com)/i.test(text);
@@ -1723,13 +1724,19 @@
       const urlRe = /https?:\/\/[^\s<>"']+/g;
       const relImgRe = /^\/(uploads|temp-uploads)\/\S+\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i;
       const relVideoRe = /^\/(uploads|temp-uploads)\/\S+\.(mp4|webm|mov|m4v|ogv)(\?.*)?$/i;
+      const apiImgRe = /^\/api\/academy-notice-image\/[a-f0-9]{24}$/i;
 
       for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed) { out.push('<br>'); continue; }
 
-        // 줄 전체가 업로드된 이미지 상대 경로
+        // 줄 전체가 업로드된 이미지 상대 경로 (구버전 디스크 저장)
         if (relImgRe.test(trimmed)) {
+          out.push(`<img src="${anEscape(trimmed)}" alt="첨부 이미지" loading="lazy">`);
+          continue;
+        }
+        // 줄 전체가 MongoDB 저장 이미지 API URL (신버전)
+        if (apiImgRe.test(trimmed)) {
           out.push(`<img src="${anEscape(trimmed)}" alt="첨부 이미지" loading="lazy">`);
           continue;
         }
