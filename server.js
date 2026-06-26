@@ -1700,6 +1700,160 @@ app.get("/super/textbook-management", requireSuperAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "super", "textbook-management.html"));
 });
 
+// ✅ 교재 잔여 재고 — 슈퍼관리자만
+const TextbookInventory = require('./models/TextbookInventory');
+app.get("/api/super/textbook-inventory", requireSuperAdmin, async (req, res) => {
+  try {
+    const doc = await TextbookInventory.findById('inventory');
+    const quantities = doc ? Object.fromEntries(doc.quantities) : {};
+    res.json({ ok: true, quantities, updatedAt: doc ? doc.updatedAt : null, updatedBy: doc ? doc.updatedBy : '' });
+  } catch (err) {
+    console.error('[GET /api/super/textbook-inventory] 오류:', err);
+    res.status(500).json({ ok: false, message: '조회 실패' });
+  }
+});
+/**
+ * 주문 아이템을 인벤토리 키 목록으로 변환.
+ * 매핑 안 되는 아이템은 결과의 unmapped에 담아 반환.
+ * 한국사(특강교재)는 기본+심화 둘 다 차감 (세트 상품).
+ */
+function mapOrderItemToInventoryKeys(item) {
+  const issue = Number(item.issueNumber || 0);
+  const out = []; // [{ key, qty }]
+  const qty = Math.max(0, Math.floor(Number(item.quantity) || 0));
+  if (qty <= 0) return { keys: out, unmapped: false, reason: 'qty=0' };
+
+  if (item.bookType === '브레인문해력') {
+    const map = { '브레인온': 'on', '브레인업': 'up', '브레인핏': 'fit', '브레인딥': 'deep' };
+    const s = map[item.series];
+    if (s && issue >= 1 && issue <= 12) { out.push({ key: `brain_${s}_${issue}`, qty }); return { keys: out }; }
+  } else if (item.bookType === '고래도서관') {
+    const map = { '시즌1': 'on', '시즌2': 'up', '시즌3': 'fit' };
+    const s = map[item.series];
+    if (s && issue >= 1 && issue <= 12) { out.push({ key: `creative_${s}_${issue}`, qty }); return { keys: out }; }
+  } else if (item.bookType === '브레인비평') {
+    const map = { 'BRAIN ON': 'on', 'BRAIN UP': 'up', 'BRAIN FIT': 'fit', 'BRAIN DEEP': 'deep' };
+    const s = map[item.series];
+    if (s && issue >= 1 && issue <= 12) { out.push({ key: `daily_${s}_${issue}`, qty }); return { keys: out }; }
+  } else if (item.bookType === '특강교재' && item.series === '한국사') {
+    // 한국사는 기본+심화 세트 → 동일 수량 동시 차감
+    out.push({ key: 'korhistory_basic', qty });
+    out.push({ key: 'korhistory_advanced', qty });
+    return { keys: out };
+  }
+  return { keys: out, unmapped: true, reason: `매핑 없음 (${item.bookType} / ${item.series})` };
+}
+
+// 차감 미리보기 (모달용)
+app.get("/api/super/textbook-orders/:id/decrement-preview", requireSuperAdmin, async (req, res) => {
+  try {
+    const order = await TextbookOrder.findById(req.params.id).lean();
+    if (!order) return res.status(404).json({ ok: false, message: '주문을 찾을 수 없습니다' });
+    const inv = await TextbookInventory.findById('inventory');
+    const currentQty = inv ? Object.fromEntries(inv.quantities) : {};
+
+    const preview = [];
+    const unmapped = [];
+    for (const it of (order.items || [])) {
+      const r = mapOrderItemToInventoryKeys(it);
+      if (r.unmapped) {
+        unmapped.push({ item: it, reason: r.reason });
+        continue;
+      }
+      for (const { key, qty } of r.keys) {
+        const before = Number(currentQty[key] || 0);
+        preview.push({ item: it, key, qty, before, after: before - qty });
+      }
+    }
+    res.json({
+      ok: true,
+      already: !!order.inventoryDecrementedAt,
+      alreadyAt: order.inventoryDecrementedAt,
+      preview, unmapped
+    });
+  } catch (err) {
+    console.error('[GET decrement-preview] 오류:', err);
+    res.status(500).json({ ok: false, message: '미리보기 실패' });
+  }
+});
+
+// 실제 차감 + 배송완료 토글 (idempotent)
+app.post("/api/super/textbook-orders/:id/decrement-and-deliver", requireSuperAdmin, async (req, res) => {
+  try {
+    const order = await TextbookOrder.findById(req.params.id);
+    if (!order) return res.status(404).json({ ok: false, message: '주문을 찾을 수 없습니다' });
+    if (order.inventoryDecrementedAt) {
+      return res.status(409).json({ ok: false, message: '이미 차감 처리된 주문입니다', alreadyAt: order.inventoryDecrementedAt });
+    }
+
+    // 차감할 키 모으기
+    const decrements = {}; // key -> qty
+    const unmapped = [];
+    for (const it of (order.items || [])) {
+      const r = mapOrderItemToInventoryKeys(it);
+      if (r.unmapped) { unmapped.push(r.reason); continue; }
+      for (const { key, qty } of r.keys) {
+        decrements[key] = (decrements[key] || 0) + qty;
+      }
+    }
+
+    // 재고 atomic 차감 ($inc 음수)
+    const inc = {};
+    for (const [k, v] of Object.entries(decrements)) inc[`quantities.${k}`] = -v;
+    if (Object.keys(inc).length > 0) {
+      await TextbookInventory.findByIdAndUpdate(
+        'inventory',
+        { $inc: inc },
+        { upsert: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    const now = new Date();
+    order.deliveryCompleted = true;
+    order.deliveryCompletedAt = now;
+    order.inventoryDecrementedAt = now;
+    await order.save();
+
+    const inv = await TextbookInventory.findById('inventory');
+    res.json({
+      ok: true,
+      decremented: decrements,
+      unmapped,
+      quantities: inv ? Object.fromEntries(inv.quantities) : {},
+      order: { _id: order._id, deliveryCompleted: true, deliveryCompletedAt: now, inventoryDecrementedAt: now }
+    });
+  } catch (err) {
+    console.error('[POST decrement-and-deliver] 오류:', err);
+    res.status(500).json({ ok: false, message: '차감 처리 실패' });
+  }
+});
+
+app.put("/api/super/textbook-inventory", requireSuperAdmin, async (req, res) => {
+  try {
+    const incoming = (req.body && req.body.quantities) || {};
+    // 유효 키만 통과 (위변조 방지)
+    const validKey = /^(brain|creative|daily)_(on|up|fit|deep)_(?:[1-9]|1[0-2])$|^korhistory_(basic|advanced)$/;
+    const cleaned = {};
+    for (const [k, v] of Object.entries(incoming)) {
+      if (!validKey.test(k)) continue;
+      // 창작독서엔 deep 없음, 한국사는 별도 키
+      if (k.startsWith('creative_') && k.includes('_deep_')) continue;
+      const num = Math.max(0, Math.floor(Number(v) || 0));
+      cleaned[k] = num;
+    }
+    const adminName = (req.session.admin && req.session.admin.name) || (req.session.admin && req.session.admin.adminId) || 'super';
+    const doc = await TextbookInventory.findByIdAndUpdate(
+      'inventory',
+      { $set: { quantities: cleaned, updatedBy: adminName } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    res.json({ ok: true, count: Object.keys(cleaned).length, updatedAt: doc.updatedAt });
+  } catch (err) {
+    console.error('[PUT /api/super/textbook-inventory] 오류:', err);
+    res.status(500).json({ ok: false, message: '저장 실패' });
+  }
+});
+
 // ✅ 슈퍼관리자: 학원용 진단테스트 관리
 app.get("/super/academy-diagnostic-management", requireSuperAdmin, (req, res) => {
   console.log(

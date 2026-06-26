@@ -85,6 +85,9 @@ const textbookOrderSchema = new mongoose.Schema({
   deliveryCompleted:  { type: Boolean, default: false },  // 배송 완료
   deliveryCompletedAt:{ type: Date,    default: null },
 
+  // 재고 차감 시점 — 멱등성 보장 (한 번 차감된 주문은 다시 차감하지 않음)
+  inventoryDecrementedAt: { type: Date, default: null },
+
   // 메모
   memo: {
     type: String,
