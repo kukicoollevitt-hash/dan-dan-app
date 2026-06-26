@@ -31604,13 +31604,16 @@ app.get("/api/academy-notice-image/:id", async (req, res) => {
     if (!/^[a-f0-9]{24}$/i.test(req.params.id)) {
       return res.status(400).send('invalid id');
     }
-    const doc = await AcademyNoticeImage.findById(req.params.id).lean();
+    // .lean() 사용 시 BSON Binary 객체가 반환되어 Express가 문자열로 직렬화하므로 사용 금지
+    const doc = await AcademyNoticeImage.findById(req.params.id);
     if (!doc || !doc.data) {
       return res.status(404).send('not found');
     }
+    const buf = Buffer.isBuffer(doc.data) ? doc.data : Buffer.from(doc.data.buffer || doc.data);
     res.setHeader('Content-Type', doc.mimeType || 'image/png');
+    res.setHeader('Content-Length', buf.length);
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    res.send(doc.data);
+    res.end(buf);
   } catch (err) {
     console.error("[GET /api/academy-notice-image] 오류:", err);
     res.status(500).send('server error');
