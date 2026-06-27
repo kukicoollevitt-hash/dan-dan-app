@@ -1740,6 +1740,12 @@ function mapOrderItemToInventoryKeys(item) {
     out.push({ key: 'korhistory_basic', qty });
     out.push({ key: 'korhistory_advanced', qty });
     return { keys: out };
+  } else if (item.bookType === '문해어휘학습장') {
+    // 어휘학습장: 4권 분할 (issueNumber 1~4 = 권 번호)
+    if (issue >= 1 && issue <= 4) {
+      out.push({ key: `vocabwb_${issue}`, qty });
+      return { keys: out };
+    }
   }
   return { keys: out, unmapped: true, reason: `매핑 없음 (${item.bookType} / ${item.series})` };
 }
@@ -1832,7 +1838,7 @@ app.put("/api/super/textbook-inventory", requireSuperAdmin, async (req, res) => 
   try {
     const incoming = (req.body && req.body.quantities) || {};
     // 유효 키만 통과 (위변조 방지)
-    const validKey = /^(brain|creative|daily)_(on|up|fit|deep)_(?:[1-9]|1[0-2])$|^korhistory_(basic|advanced)$/;
+    const validKey = /^(brain|creative|daily)_(on|up|fit|deep)_(?:[1-9]|1[0-2])$|^korhistory_(basic|advanced)$|^vocabwb_[1-4]$/;
     const cleaned = {};
     for (const [k, v] of Object.entries(incoming)) {
       if (!validKey.test(k)) continue;

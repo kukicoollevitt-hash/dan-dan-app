@@ -580,16 +580,23 @@
     }
 
     function renderRow(o, idx) {
-      const itemsRows = (o.items || []).map(it => `
+      const itemsRows = (o.items || []).map(it => {
+        let issueLabel;
+        if (it.bookType === '브레인비평') issueLabel = `${it.issueNumber}월호`;
+        else if (it.bookType === '특강교재') issueLabel = '기본+심화 통합';
+        else if (it.bookType === '문해어휘학습장') issueLabel = `${it.issueNumber}권`;
+        else issueLabel = `${it.issueNumber}호`;
+        return `
         <tr>
           <td>${escapeHtml(it.bookType)}</td>
           <td>${escapeHtml(it.series)}</td>
-          <td>${it.issueNumber}호</td>
+          <td>${issueLabel}</td>
           <td>${it.quantity}권</td>
           <td>${fmtMoney(it.unitPrice)}</td>
           <td>${fmtMoney((it.quantity || 0) * (it.unitPrice || 0))}</td>
         </tr>
-      `).join('');
+        `;
+      }).join('');
       const vat = Math.round((o.totalAmount || 0) * 0.1);
       const grand = (o.totalAmount || 0) + vat;
       const badges = [
@@ -866,6 +873,28 @@
       html.push('</div>');
       html.push('</div></div>');
 
+      // 문해어휘학습장: 1~4권
+      const vwbVals = [1,2,3,4].map(n => Number(quantities['vocabwb_'+n] || 0));
+      const vwbTotal = vwbVals.reduce((s,n)=>s+n,0);
+      html.push('<div class="inv-category" data-cat="vocabwb">');
+      html.push(`<div class="inv-category-head" onclick="toggleInvCategory('vocabwb')">`);
+      html.push(`<div class="inv-category-title"><span class="inv-category-toggle">▶</span>📘 문해어휘학습장</div>`);
+      html.push(`<div class="inv-category-stats"><span>4권 분할</span><span>총 <b id="invCatTotal_vocabwb">${vwbTotal.toLocaleString()}</b> 부</span></div>`);
+      html.push('</div>');
+      html.push('<div class="inv-category-body">');
+      html.push('<div class="inv-row" style="grid-template-columns: 110px repeat(4, 1fr);"><div class="inv-row-label"></div>');
+      ['1권','2권','3권','4권'].forEach(label => {
+        html.push(`<div class="inv-cell"><div class="inv-cell-no">${label}</div></div>`);
+      });
+      html.push('</div>');
+      html.push('<div class="inv-row" style="grid-template-columns: 110px repeat(4, 1fr);"><div class="inv-row-label">어휘학습장</div>');
+      [1,2,3,4].forEach((n, i) => {
+        const v = vwbVals[i];
+        html.push(`<div class="inv-cell"><input class="inv-input${v===0?' zero':''}" type="number" min="0" data-k="vocabwb_${n}" data-cat="vocabwb" value="${v}" disabled></div>`);
+      });
+      html.push('</div>');
+      html.push('</div></div>');
+
       body.innerHTML = html.join('');
 
       // 입력 변경 시 dirty + 카테고리 합계 실시간 갱신
@@ -1071,7 +1100,11 @@
 
       const rows = data.preview.map(p => {
         const it = p.item;
-        const issueLabel = it.bookType === '브레인비평' ? `${it.issueNumber}월호` : `${it.issueNumber}호`;
+        let issueLabel;
+        if (it.bookType === '브레인비평') issueLabel = `${it.issueNumber}월호`;
+        else if (it.bookType === '특강교재') issueLabel = '기본+심화 통합';
+        else if (it.bookType === '문해어휘학습장') issueLabel = `${it.issueNumber}권`;
+        else issueLabel = `${it.issueNumber}호`;
         const afterClass = p.after < 0 ? 'neg' : '';
         return `
           <tr>

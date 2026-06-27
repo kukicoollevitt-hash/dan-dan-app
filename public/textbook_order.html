@@ -475,6 +475,23 @@
       </div>
     </div>
 
+    <!-- 문해어휘학습장 (4권 분할) -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">📘</span>
+        문해어휘학습장 (4권 분할)
+      </div>
+      <div class="book-section">
+        <div class="book-section-header">
+          <div class="book-section-title">교재 목록 <span style="font-size:11px;color:rgba(255,255,255,0.6);margin-left:6px;">(권당 10,000원 · 최소 10권 신청)</span></div>
+          <button class="add-btn" onclick="addVocabWbItem()">+ 추가</button>
+        </div>
+        <div id="vocabWbItems">
+          <div class="no-items">추가 버튼을 눌러 교재를 추가하세요</div>
+        </div>
+      </div>
+    </div>
+
     <!-- 주문 요약 -->
     <div class="order-summary">
       <div class="summary-title">신청 내역 요약</div>
@@ -520,6 +537,7 @@
     let whaleItemId = 0;
     let critiqueItemId = 0;
     let specialItemId = 0;
+    let vocabWbItemId = 0;
 
     // 브레인문해력 아이템 추가
     function addBrainItem() {
@@ -604,6 +622,31 @@
       updateSummary();
     }
 
+    // 문해어휘학습장 아이템 추가 — 4권 분할, 권당 최소 10권
+    function addVocabWbItem() {
+      const container = document.getElementById('vocabWbItems');
+      const noItems = container.querySelector('.no-items');
+      if (noItems) noItems.remove();
+
+      vocabWbItemId++;
+      const itemHtml = `
+        <div class="book-item" id="vocabwb-${vocabWbItemId}">
+          <select onchange="updateSummary()">
+            <option value="">권 선택</option>
+            <option value="1">1권 (Day 1~28)</option>
+            <option value="2">2권 (Day 29~56)</option>
+            <option value="3">3권 (Day 57~84)</option>
+            <option value="4">4권 (Day 85~112)</option>
+          </select>
+          <input type="number" min="10" value="10" placeholder="권수 (최소 10권)" onchange="updateSummary()" oninput="updateSummary()">
+          <span class="item-subtotal">100,000원</span>
+          <button class="remove-btn" onclick="removeItem('vocabwb-${vocabWbItemId}')">삭제</button>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', itemHtml);
+      updateSummary();
+    }
+
     // 브레인비평 시사문해 월간 교재 아이템 추가 — 최소 10권
     function addCritiqueItem() {
       const container = document.getElementById('critiqueItems');
@@ -654,6 +697,10 @@
       }
       if (specialContainer && specialContainer.children.length === 0) {
         specialContainer.innerHTML = '<div class="no-items">추가 버튼을 눌러 교재를 추가하세요</div>';
+      }
+      const vocabWbContainer = document.getElementById('vocabWbItems');
+      if (vocabWbContainer && vocabWbContainer.children.length === 0) {
+        vocabWbContainer.innerHTML = '<div class="no-items">추가 버튼을 눌러 교재를 추가하세요</div>';
       }
 
       updateSummary();
@@ -777,6 +824,33 @@
         }
       });
 
+      // 문해어휘학습장 아이템 수집 (권 1~4, 권당 최소 10권)
+      document.querySelectorAll('#vocabWbItems .book-item').forEach(item => {
+        const select = item.querySelector('select');
+        const input = item.querySelector('input');
+        const subtotalEl = item.querySelector('.item-subtotal');
+
+        const vol = parseInt(select.value) || 0;
+        const qty = parseInt(input.value) || 0;
+
+        if (vol >= 1 && vol <= 4 && qty >= 10) {
+          const subtotal = qty * UNIT_PRICE;
+          subtotalEl.textContent = subtotal.toLocaleString() + '원';
+          items.push({
+            bookType: '문해어휘학습장',
+            series: '어휘학습장',
+            issueNumber: vol,
+            quantity: qty,
+            unitPrice: UNIT_PRICE,
+            subtotal
+          });
+          totalQty += qty;
+          totalAmt += subtotal;
+        } else {
+          subtotalEl.textContent = qty > 0 && qty < 10 ? '⚠️ 최소 10권' : '-';
+        }
+      });
+
       // 요약 테이블 업데이트
       const summaryBody = document.getElementById('summaryBody');
       if (items.length === 0) {
@@ -786,6 +860,7 @@
           let issueLabel;
           if (item.bookType === '브레인비평') issueLabel = `${item.issueNumber}월호`;
           else if (item.bookType === '특강교재') issueLabel = '기본+심화 통합';
+          else if (item.bookType === '문해어휘학습장') issueLabel = `${item.issueNumber}권`;
           else issueLabel = `${item.issueNumber}호`;
           return `
           <tr>
