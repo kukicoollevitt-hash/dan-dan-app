@@ -573,6 +573,67 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
+        /* 상담 신청 모달 */
+        .apply-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 10001;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+            animation: applyFade 0.18s ease;
+        }
+        .apply-modal-overlay.show { display: flex; }
+        @keyframes applyFade { from { opacity: 0; } to { opacity: 1; } }
+        .apply-modal-card {
+            position: relative;
+            background: #fff;
+            border-radius: 20px;
+            width: min(560px, 100%);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+            animation: applyPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes applyPop {
+            from { opacity: 0; transform: scale(0.94) translateY(8px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .apply-modal-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            border: none;
+            font-size: 22px;
+            color: #475569;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            z-index: 2;
+        }
+        .apply-modal-close:hover { background: #e2e8f0; color: #1e293b; transform: scale(1.05); }
+        /* 모달 안에서는 apply-section의 바깥 여백·배경 제거 */
+        .apply-modal-card .apply-section {
+            padding: 0;
+            background: none;
+            margin: 0;
+        }
+        .apply-modal-card .apply-container {
+            padding: 24px 28px 28px;
+            max-width: none;
+        }
+
         /* 개인정보문의 모달 */
         .privacy-modal-overlay {
             display: none;
@@ -1557,7 +1618,10 @@
             </div>
         </section>
 
-        <!-- 브레인 문해력 신청 섹션 -->
+        <!-- 브레인 문해력 신청 — 모달로 띄움 -->
+        <div class="apply-modal-overlay" id="applyModalOverlay" onclick="if(event.target===this)closeApplyModal()">
+        <div class="apply-modal-card">
+        <button type="button" class="apply-modal-close" id="closeApplyModalBtn" aria-label="닫기">×</button>
         <section class="apply-section" id="applySection">
             <div class="apply-container">
                 <div class="apply-header">
@@ -1604,6 +1668,8 @@
                 </form>
             </div>
         </section>
+        </div><!-- /.apply-modal-card -->
+        </div><!-- /.apply-modal-overlay -->
 
         </div><!-- /#heroReveal -->
     </div>
@@ -2789,27 +2855,34 @@
                 });
             }
 
-            // ✅ 상담신청문의 버튼 - 하단 신청 섹션으로 스크롤
+            // ✅ 상담신청문의 모달
+            // 모달이 #heroReveal(평소 display:none) 안에 있어 안 보이는 문제 해결:
+            //   body 직속으로 이동시켜 부모 가시성/transform 영향에서 분리
+            const applyOv = document.getElementById("applyModalOverlay");
+            if (applyOv && applyOv.parentElement !== document.body) {
+                document.body.appendChild(applyOv);
+            }
+            window.openApplyModal = function () {
+                const ov = document.getElementById("applyModalOverlay");
+                if (ov) { ov.classList.add("show"); document.body.style.overflow = "hidden"; }
+            };
+            window.closeApplyModal = function () {
+                const ov = document.getElementById("applyModalOverlay");
+                if (ov) { ov.classList.remove("show"); document.body.style.overflow = ""; }
+            };
             const scrollToApplyBtn = document.getElementById("scrollToApplyBtn");
-            if (scrollToApplyBtn) {
-                scrollToApplyBtn.addEventListener("click", () => {
-                    const applySection = document.getElementById("applySection");
-                    if (applySection) {
-                        applySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                });
-            }
-
-            // ✅ 모바일 상담문의하기 버튼 - 하단 신청 섹션으로 스크롤
+            if (scrollToApplyBtn) scrollToApplyBtn.addEventListener("click", window.openApplyModal);
             const mobileApplyBtn = document.getElementById("mobileApplyBtn");
-            if (mobileApplyBtn) {
-                mobileApplyBtn.addEventListener("click", () => {
-                    const applySection = document.getElementById("applySection");
-                    if (applySection) {
-                        applySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                });
-            }
+            if (mobileApplyBtn) mobileApplyBtn.addEventListener("click", window.openApplyModal);
+            const closeApplyBtn = document.getElementById("closeApplyModalBtn");
+            if (closeApplyBtn) closeApplyBtn.addEventListener("click", window.closeApplyModal);
+            // ESC 키로 닫기
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    const ov = document.getElementById("applyModalOverlay");
+                    if (ov && ov.classList.contains("show")) window.closeApplyModal();
+                }
+            });
 
             // ✅ 개인정보문의 모달
             const privacyOpenBtn = document.getElementById("openPrivacyInquiryBtn");
@@ -2986,6 +3059,7 @@
 
                         // 응답이 200이면 성공으로 처리 (Content-Length 오류 대비)
                         if (response.ok) {
+                            if (window.closeApplyModal) window.closeApplyModal();
                             showApplySuccessPopup();
                             applyForm.reset();
                         } else {
@@ -2996,6 +3070,7 @@
                         // 네트워크 오류지만 메일은 전송됐을 가능성 높음
                         console.error('상담신청 오류:', error);
                         // 성공으로 처리
+                        if (window.closeApplyModal) window.closeApplyModal();
                         showApplySuccessPopup();
                         applyForm.reset();
                     } finally {
