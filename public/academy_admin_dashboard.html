@@ -425,6 +425,16 @@
       background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
       box-shadow: 0 0 12px rgba(251, 191, 36, 0.55);
     }
+    .an-section-header.instructor {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15),
+                  inset 0 0 0 1px rgba(16, 185, 129, 0.22);
+    }
+    .an-section-header.instructor::before {
+      background: linear-gradient(180deg, #34d399 0%, #047857 100%);
+      box-shadow: 0 0 12px rgba(52, 211, 153, 0.55);
+    }
     .an-section-divider {
       height: 0; margin: 28px 0 16px;
     }
@@ -1611,6 +1621,7 @@
           <select id="anWriteCategory">
             <option value="정기교육">📚 정기교육</option>
             <option value="업데이트">🔔 활용안내 및 업데이트</option>
+            <option value="문해력지도사">🎓 문해력 전문 지도사 과정</option>
           </select>
         </div>
         <div>
@@ -1641,7 +1652,7 @@
     // ============ 📣 최신 교육 및 업데이트 소식 ============
     let _anCache = { notices: [], canWrite: false };
     let _anEditingId = null;
-    let _anFilter = { '정기교육': '', '업데이트': '' };
+    let _anFilter = { '정기교육': '', '업데이트': '', '문해력지도사': '' };
     const AN_NEW_HOURS = 72;
     const AN_SEEN_KEY = 'an_lastSeenAt';
 
@@ -1905,16 +1916,21 @@
       const list = _anCache.notices || [];
       const all = list.filter(n => n.category === category);
       const filtered = all.filter(n => anMatchesQuery(n, _anFilter[category]));
-      const klass = category === '정기교육' ? 'training' : 'update';
+      const klass = category === '정기교육' ? 'training'
+                  : category === '문해력지도사' ? 'instructor'
+                  : 'update';
       const listEl = document.getElementById('anList_' + klass);
       if (!listEl) return;
       if (filtered.length) {
         listEl.innerHTML = `<div class="an-list">${filtered.map(anRenderItemHtml).join('')}</div>`;
       } else {
         const q = _anFilter[category];
+        const emptyMsg = category === '정기교육' ? '아직 등록된 정기교육 소식이 없습니다'
+                       : category === '문해력지도사' ? '아직 등록된 문해력 전문 지도사 과정 소식이 없습니다'
+                       : '아직 등록된 업데이트 소식이 없습니다';
         const msg = q
           ? `🔍 "${anEscape(q)}" 검색 결과가 없습니다`
-          : (category === '정기교육' ? '아직 등록된 정기교육 소식이 없습니다' : '아직 등록된 업데이트 소식이 없습니다');
+          : emptyMsg;
         listEl.innerHTML = `<div class="an-empty">${msg}</div>`;
       }
       // 클리어 버튼 표시 토글
@@ -1958,12 +1974,16 @@
         ${headerHtml('정기교육', '📚 정기교육', 'training')}
         <div id="anList_training"></div>
         <div class="an-section-divider"></div>
+        ${headerHtml('문해력지도사', '🎓 문해력 전문 지도사 과정', 'instructor')}
+        <div id="anList_instructor"></div>
+        <div class="an-section-divider"></div>
         ${headerHtml('업데이트', '🔔 활용안내 및 업데이트', 'update')}
         <div id="anList_update"></div>
       `;
 
       // 리스트만 채움 (input은 위에서 한 번만 생성됨)
       renderAcademyNoticeListOnly('정기교육');
+      renderAcademyNoticeListOnly('문해력지도사');
       renderAcademyNoticeListOnly('업데이트');
     }
 
@@ -1979,7 +1999,9 @@
     }
     function clearAcademyNoticeSearch(category) {
       _anFilter[category] = '';
-      const klass = category === '정기교육' ? 'training' : 'update';
+      const klass = category === '정기교육' ? 'training'
+                  : category === '문해력지도사' ? 'instructor'
+                  : 'update';
       const input = document.getElementById('anSearch_' + klass);
       if (input) {
         input.value = '';
@@ -2014,7 +2036,7 @@
 
     function openAcademyNoticeModal() {
       // 모달을 새로 열 때 검색 필터 초기화
-      _anFilter = { '정기교육': '', '업데이트': '' };
+      _anFilter = { '정기교육': '', '업데이트': '', '문해력지도사': '' };
       document.getElementById('anModal').classList.add('show');
       loadAcademyNotices();
     }

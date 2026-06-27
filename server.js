@@ -31666,7 +31666,7 @@ app.post("/api/academy-notice", requireAdminLogin, async (req, res) => {
       return res.status(403).json({ ok: false, message: "작성 권한이 없습니다." });
     }
     const { category, title, content } = req.body || {};
-    if (!category || !["정기교육", "업데이트"].includes(category)) {
+    if (!category || !["정기교육", "업데이트", "문해력지도사"].includes(category)) {
       return res.status(400).json({ ok: false, message: "카테고리가 올바르지 않습니다." });
     }
     if (!title || !title.trim()) {
@@ -31697,7 +31697,7 @@ app.put("/api/academy-notice/:id", requireAdminLogin, async (req, res) => {
     }
     const { category, title, content } = req.body || {};
     const update = {};
-    if (category && ["정기교육", "업데이트"].includes(category)) update.category = category;
+    if (category && ["정기교육", "업데이트", "문해력지도사"].includes(category)) update.category = category;
     if (typeof title === "string" && title.trim()) update.title = title.trim().slice(0, 200);
     if (typeof content === "string" && content.trim()) update.content = content.trim().slice(0, 20000);
     const updated = await AcademyNotice.findByIdAndUpdate(req.params.id, update, { new: true });

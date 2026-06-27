@@ -6,11 +6,11 @@ const mongoose = require('mongoose');
  * 모든 학원 관리자에게 동일하게 노출
  */
 const academyNoticeSchema = new mongoose.Schema({
-  // 카테고리: '정기교육' 또는 '업데이트'
+  // 카테고리: '정기교육' / '업데이트' / '문해력지도사'
   category: {
     type: String,
     required: true,
-    enum: ['정기교육', '업데이트'],
+    enum: ['정기교육', '업데이트', '문해력지도사'],
     index: true
   },
 
