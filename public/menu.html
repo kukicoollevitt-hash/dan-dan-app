@@ -11691,6 +11691,11 @@ if (logoutConfirmBtn) {
       }
 
       renderUnitList(currentUnits);
+
+      // 과목 선택 시 단원들 idle prefetch (학생이 카드 결정하는 사이 미리 받기)
+      if (typeof prefetchSubjectUnits === 'function') {
+        prefetchSubjectUnits(currentUnits);
+      }
     }
 
     /* 9. 단원 리스트 출력 */
@@ -13437,6 +13442,26 @@ async function performLogout() {
       }
 
       if (event.data && event.data.type === 'UNIT_COMPLETED') {
+        // ⚡ 새 방식: 메시지에 점수 데이터 있으면 별표 즉시 계산 + 즉시 표시 (서버 fetch 안 기다림)
+        // 서버 계산 공식과 동일 (server.js /api/unit-grades): radar 평균 → 격려/보통/양호/우수
+        if (event.data.radarScores && event.data.unitCode) {
+          const radarValues = Object.values(event.data.radarScores).filter(v => typeof v === 'number');
+          if (radarValues.length > 0) {
+            const radarAvg = radarValues.reduce((s, v) => s + v, 0) / radarValues.length;
+            let g = '격려';
+            if (radarAvg >= 9) g = '우수';
+            else if (radarAvg >= 8) g = '양호';
+            else if (radarAvg >= 7) g = '보통';
+            unitGradesData[event.data.unitCode] = {
+              grade: g,
+              radarAvg: radarAvg.toFixed(2),
+              timestamp: new Date().toISOString(),
+              radar: event.data.radarScores
+            };
+            console.log(`⚡ [UNIT_COMPLETED] 별표 즉시 갱신: ${event.data.unitCode} → ${g} (${radarAvg.toFixed(2)})`);
+          }
+        }
+
         // 현재 열려있는 단원 경로 가져오기
         const currentUnitPath = sessionStorage.getItem('currentOpenUnit');
         if (!currentUnitPath) {
@@ -16187,6 +16212,31 @@ async function performLogout() {
       });
     })();
 
+    // B-touch. 터치 prefetch — 태블릿 환경 (touchstart 50ms 후 prefetch, 스크롤 시 취소)
+    (function setupTouchPrefetch() {
+      let touchTimer = null;
+      let touchScrolled = false;
+      document.addEventListener('touchstart', (e) => {
+        if (!e.target || !e.target.closest) return;
+        const li = e.target.closest('li.unit-item[data-page]');
+        if (!li) return;
+        const path = li.dataset.page;
+        if (!path) return;
+        touchScrolled = false;
+        clearTimeout(touchTimer);
+        touchTimer = setTimeout(() => {
+          if (!touchScrolled) prefetchUnit(path);
+        }, 50);
+      }, { passive: true });
+      document.addEventListener('touchmove', () => {
+        touchScrolled = true;
+        clearTimeout(touchTimer);
+      }, { passive: true });
+      document.addEventListener('touchend', () => {
+        clearTimeout(touchTimer);
+      }, { passive: true });
+    })();
+
     // C. 학습실 task 자동 prefetch — 데이터 로드 후 idle 시점에 미리 받기
     function prefetchStudyRoomTasks(tasks) {
       if (!Array.isArray(tasks) || tasks.length === 0) return;
@@ -16211,6 +16261,32 @@ async function performLogout() {
     }
     window.prefetchUnit = prefetchUnit;
     window.prefetchStudyRoomTasks = prefetchStudyRoomTasks;
+
+    // D. 과목 선택 시 단원 prefetch — 24개 단원을 idle 시점에 1개씩 순차 받기
+    function prefetchSubjectUnits(units) {
+      if (!Array.isArray(units) || units.length === 0) return;
+      const paths = units.map(u => u && u.path).filter(p => p && typeof p === 'string');
+      if (paths.length === 0) return;
+
+      const schedule = window.requestIdleCallback
+        ? (cb) => requestIdleCallback(cb, { timeout: 3000 })
+        : (cb) => setTimeout(cb, 1000);
+
+      let idx = 0;
+      function next() {
+        if (idx >= paths.length) return;
+        // 동시 prefetch 슬롯이 차 있으면 잠시 후 재시도
+        if (_unitPrefetchPending >= PREFETCH_MAX_CONCURRENT) {
+          setTimeout(next, 200);
+          return;
+        }
+        const p = paths[idx++];
+        if (!_unitPrefetched.has(p)) prefetchUnit(p);
+        schedule(next);
+      }
+      schedule(next);
+    }
+    window.prefetchSubjectUnits = prefetchSubjectUnits;
 
     function openUnitModal(unitIdOrPath, isAITask = false) {
       console.log('🚀 [openUnitModal] 호출됨! isAITask =', isAITask, '타입:', typeof isAITask);
@@ -16483,10 +16559,32 @@ async function performLogout() {
           bgVideo.play().catch(e => console.log('비디오 재생 실패:', e));
         }
 
-        // 메뉴 페이지 새로고침 (학습 완료 상태 반영) - 축하 효과 보이도록 딜레이 증가
+        // ⚡ reload 제거 — UNIT_COMPLETED 핸들러가 이미 별표/완료 배지 갱신 처리함
+        // 축하 효과 보이는 시간만 짧게 두고, 단원 목록만 다시 렌더 (학생 메뉴 위치 유지)
         setTimeout(() => {
-          location.reload();
-        }, 1500);
+          try {
+            if (typeof currentUnits !== 'undefined' && currentUnits && currentUnits.length > 0
+                && typeof renderUnitList === 'function') {
+              renderUnitList(currentUnits);
+              if (typeof restoreProgressOnRenderedList === 'function') {
+                restoreProgressOnRenderedList();
+              }
+            }
+            // 학습실 모달이 열려있으면 리스트 갱신
+            const studyRoomModal = document.getElementById('studyRoomModal');
+            if (studyRoomModal && studyRoomModal.classList.contains('show')
+                && typeof renderStudyRoomList === 'function') {
+              renderStudyRoomList();
+            }
+            // 한국사 모달이 열려있으면 카드 갱신
+            const khOv2 = document.getElementById('khModalOverlay');
+            if (khOv2 && khOv2.classList.contains('show') && typeof renderKhGrid === 'function') {
+              renderKhGrid();
+            }
+          } catch (e) {
+            console.warn('[closeUnitModal] 부분 갱신 오류:', e);
+          }
+        }, 500);
       }
     };
 

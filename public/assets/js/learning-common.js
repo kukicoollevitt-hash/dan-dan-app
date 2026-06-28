@@ -1764,10 +1764,16 @@
     localStorage.setItem(currentUnitKey, JSON.stringify(saved));
     console.log('[study page] Saved completion to', currentUnitKey, '=>', saved);
 
-    // 6) 부모 창에 완료 메시지 전송
+    // 6) 부모 창에 완료 메시지 전송 (점수 데이터 포함 — 부모가 별표 즉시 갱신, reload 없이 정확)
     if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'UNIT_COMPLETED' }, window.location.origin);
-      console.log('[study page] Sent UNIT_COMPLETED to parent');
+      const rs = window.reportState || (typeof reportState !== 'undefined' ? reportState : null);
+      window.parent.postMessage({
+        type: 'UNIT_COMPLETED',
+        unitCode: cur,
+        radarScores: rs && rs.radarScores ? rs.radarScores : null,
+        completedAt: Date.now()
+      }, window.location.origin);
+      console.log('[study page] Sent UNIT_COMPLETED to parent (with scores)');
     }
 
     // 7) 완료 표시 + 축하 효과 (먼저 실행 - 딜레이 방지)
