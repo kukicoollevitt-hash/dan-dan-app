@@ -32166,7 +32166,11 @@ app.get("/api/unit-progress/load", async (req, res) => {
       return res.status(400).json({ success: false, message: "grade, name은 필수입니다." });
     }
 
-    const userProgress = await UserProgress.findOne({ grade, name }).lean();
+    // unit 지정 시 해당 단원만 projection (전송량 절감)
+    const projection = unit
+      ? { [`unitProgress.${unit}`]: 1, completedPages: 1 }
+      : {};
+    const userProgress = await UserProgress.findOne({ grade, name }, projection).lean();
     console.log('[unit-progress/load] 문서:', userProgress ? '있음' : '없음');
 
     if (!userProgress) {
@@ -40848,10 +40852,14 @@ app.get("/api/activity-feed", async (req, res) => {
     });
 
     // 2. 최근 어휘퀴즈 코인 획득 기록 (무제한) - 삭제된 학생 제외
-    const recentCoins = await UserProgress.find({
-      'vocabularyQuiz.totalCoins': { $gt: 0 },
-      deleted: { $ne: true }
-    })
+    // projection으로 필요한 필드만 가져오기 (학생당 수백KB → 수십바이트로 감소)
+    const recentCoins = await UserProgress.find(
+      {
+        'vocabularyQuiz.totalCoins': { $gt: 0 },
+        deleted: { $ne: true }
+      },
+      'grade name vocabularyQuiz.totalCoins vocabularyQuiz.lastRankUpdate'
+    )
     .sort({ 'vocabularyQuiz.lastRankUpdate': -1 })
     .lean();
 
