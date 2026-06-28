@@ -16145,6 +16145,73 @@ async function performLogout() {
     }
 
     // === 단원 학습 모달 관련 ===
+    // ===== 단원 페이지 prefetch (학생 클릭 전 미리 다운로드, 클릭 시 즉시 표시) =====
+    const _unitPrefetched = new Set();
+    let _unitPrefetchPending = 0;
+    const PREFETCH_MAX_CONCURRENT = 2;
+
+    function prefetchUnit(path) {
+      if (!path || _unitPrefetched.has(path)) return;
+      if (_unitPrefetchPending >= PREFETCH_MAX_CONCURRENT) return;
+      _unitPrefetched.add(path);
+      _unitPrefetchPending++;
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.as = 'document';
+      link.href = path;
+      const done = () => { _unitPrefetchPending = Math.max(0, _unitPrefetchPending - 1); };
+      link.onload = done;
+      link.onerror = done;
+      document.head.appendChild(link);
+    }
+
+    // B. 호버 prefetch — 200ms 디바운싱 (마우스 휙 지나가는 건 무시)
+    (function setupHoverPrefetch() {
+      let hoverTimer = null;
+      let lastHoverPath = null;
+      document.addEventListener('mouseover', (e) => {
+        if (!e.target || !e.target.closest) return;
+        const li = e.target.closest('li.unit-item[data-page]');
+        if (!li) return;
+        const path = li.dataset.page;
+        if (!path || path === lastHoverPath) return;
+        lastHoverPath = path;
+        clearTimeout(hoverTimer);
+        hoverTimer = setTimeout(() => prefetchUnit(path), 200);
+      });
+      document.addEventListener('mouseout', (e) => {
+        if (e.target && e.target.closest && e.target.closest('li.unit-item')) {
+          clearTimeout(hoverTimer);
+          lastHoverPath = null;
+        }
+      });
+    })();
+
+    // C. 학습실 task 자동 prefetch — 데이터 로드 후 idle 시점에 미리 받기
+    function prefetchStudyRoomTasks(tasks) {
+      if (!Array.isArray(tasks) || tasks.length === 0) return;
+      const schedule = window.requestIdleCallback
+        ? (cb) => requestIdleCallback(cb, { timeout: 2000 })
+        : (cb) => setTimeout(cb, 800);
+      schedule(() => {
+        // 상위 5개만 (학생이 곧 클릭할 가능성 높은 것들)
+        const targets = tasks.slice(0, 5);
+        for (const t of targets) {
+          const id = t.unitId || t.id || t.path;
+          if (!id) continue;
+          // 이미 path면 그대로, ID면 getUnitPath로 변환 시도
+          let path = id;
+          if (!id.includes('/') && typeof getUnitPath === 'function') {
+            try { path = getUnitPath(id) || id; } catch {}
+          }
+          if (path && path !== id) prefetchUnit(path);
+          else if (path && path.endsWith('.html')) prefetchUnit(path);
+        }
+      });
+    }
+    window.prefetchUnit = prefetchUnit;
+    window.prefetchStudyRoomTasks = prefetchStudyRoomTasks;
+
     function openUnitModal(unitIdOrPath, isAITask = false) {
       console.log('🚀 [openUnitModal] 호출됨! isAITask =', isAITask, '타입:', typeof isAITask);
       // 메뉴 클릭 효과음 재생
@@ -16203,12 +16270,16 @@ async function performLogout() {
           }
         };
 
-        // 캐시버스터 추가 (iframe 캐시 방지)
-        let queryParams = unitPath.includes('?') ? `&_t=${Date.now()}` : `?_t=${Date.now()}`;
-        // AI 추천과제인 경우 isAI 파라미터 추가 (본문학습 초기화용)
+        // 캐시 버스터 제거 — server.js의 HTML 응답이 no-cache+ETag라 변경 시 즉시 반영되고,
+        // 변경 없으면 304(~200B)로 빠르게 응답. 매 Date.now()는 캐시 0%라 오히려 느림.
+        let queryParams = '';
         if (isAITask) {
-          queryParams += '&isAI=true';
+          queryParams = unitPath.includes('?') ? '&isAI=true' : '?isAI=true';
           console.log('✅ [openUnitModal] isAI=true 파라미터 추가됨!');
+        }
+        // prefetch 캐시 hit 추적 (B/C에서 미리 받은 단원인 경우 즉시 로딩)
+        if (typeof _unitPrefetched !== 'undefined' && _unitPrefetched.has(unitPath)) {
+          console.log('⚡ [openUnitModal] prefetch 캐시 사용:', unitPath);
         }
 
         const finalUrl = unitPath + queryParams;
@@ -17295,6 +17366,11 @@ async function performLogout() {
           const prevValue = localStorage.getItem(key);
           if (prevValue !== newValue) {
             localStorage.setItem(key, newValue);
+          }
+
+          // ⚡ 학습실 task들을 idle 시점에 미리 prefetch (클릭 즉시 표시)
+          if (typeof prefetchStudyRoomTasks === 'function') {
+            prefetchStudyRoomTasks(tasks);
           }
 
           return tasks;
