@@ -3404,13 +3404,13 @@ window.sendLearningLog = async function () {
 
 /* ===== 로드 시 실행 + 버튼 타입 안전패치 ===== */
 document.addEventListener('DOMContentLoaded', async () => {
-  // 0) 🔄 서버에서 학습 완료 상태 동기화
-  if (typeof window.loadCompletionStatus === 'function') {
-    await loadCompletionStatus();
-}
-
-  // 1) 본문 내용 채우기
+  // ⚡ 1) 본문 내용 먼저 채우기 (서버 호출 대기 없이 즉시 표시)
   applyContentPack(window.CUR_UNIT);
+
+  // 0) 🔄 서버에서 학습 완료 상태 동기화 (백그라운드 — 본문 렌더와 독립)
+  if (typeof window.loadCompletionStatus === 'function') {
+    loadCompletionStatus();
+}
 
   // 2) 탭 이벤트 + 어휘 자동 렌더
   _bindTabEvents();

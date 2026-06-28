@@ -4686,8 +4686,9 @@ window.sendLearningLog = async function () {
 
 /* ===== DOMContentLoaded ===== */
 document.addEventListener('DOMContentLoaded', async () => {
-  if (typeof window.loadCompletionStatus === 'function') await loadCompletionStatus();
+  // ⚡ 본문 즉시 표시 (서버 호출 백그라운드)
   applyContentPack(window.CUR_UNIT);
+  if (typeof window.loadCompletionStatus === 'function') loadCompletionStatus();
   _bindTabEvents();
   if (location.hash.includes('어휘학습') || document.querySelector('#vocab-fill')) renderVocabFill();
   ['grade-btn','reset-btn','submit-btn'].forEach(id => {

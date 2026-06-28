@@ -4570,7 +4570,7 @@ window.sendLearningLog = async function () {
 document.addEventListener('DOMContentLoaded', async () => {
   // 0) 🔄 서버에서 학습 완료 상태 동기화
   if (typeof window.loadCompletionStatus === 'function') {
-    await loadCompletionStatus();
+    loadCompletionStatus();
 }
 
   // 1) 본문 내용 채우기
