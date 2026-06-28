@@ -963,9 +963,10 @@ app.use(express.static(path.join(__dirname, "public"), {
     if (filePath.endsWith('.html')) {
       res.set('Cache-Control', 'no-cache, must-revalidate, private');
     }
-    // 비디오/이미지 파일은 1일 캐시
+    // 비디오/이미지 파일은 30일 캐시 — 학생/관리자 매일 재방문 시 즉시 로딩
+    // 새 이미지는 새 파일명으로 추가 권장 (같은 파일명 덮어쓰면 30일간 옛 캐시 노출 가능)
     else if (filePath.match(/\.(mp4|webm|jpg|jpeg|png|gif|svg|webp)$/i)) {
-      res.set('Cache-Control', 'public, max-age=86400'); // 24시간
+      res.set('Cache-Control', 'public, max-age=2592000'); // 30일
     }
     // JS/CSS 파일은 1시간 캐시
     else if (filePath.match(/\.(js|css)$/i)) {
