@@ -32166,7 +32166,7 @@ app.get("/api/unit-progress/load", async (req, res) => {
       return res.status(400).json({ success: false, message: "grade, name은 필수입니다." });
     }
 
-    const userProgress = await UserProgress.findOne({ grade, name });
+    const userProgress = await UserProgress.findOne({ grade, name }).lean();
     console.log('[unit-progress/load] 문서:', userProgress ? '있음' : '없음');
 
     if (!userProgress) {
