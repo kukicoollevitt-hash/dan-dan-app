@@ -11696,6 +11696,10 @@ if (logoutConfirmBtn) {
       if (typeof prefetchSubjectUnits === 'function') {
         prefetchSubjectUnits(currentUnits);
       }
+      // 과목 공용 content.js prefetch (24개 단원 모두 혜택, 가장 큰 효과)
+      if (typeof prefetchSubjectContentJs === 'function') {
+        prefetchSubjectContentJs(currentUnits);
+      }
     }
 
     /* 9. 단원 리스트 출력 */
@@ -16287,6 +16291,51 @@ async function performLogout() {
       schedule(next);
     }
     window.prefetchSubjectUnits = prefetchSubjectUnits;
+
+    // E. 과목 공용 content.js prefetch — 350~470KB 한 번 받으면 24개 단원 전부 캐시 hit
+    const _contentJsPrefetched = new Set();
+    async function prefetchSubjectContentJs(units) {
+      if (!Array.isArray(units) || units.length === 0) return;
+      const firstPath = units[0] && units[0].path;
+      if (!firstPath || _contentJsPrefetched.has(firstPath)) return;
+      _contentJsPrefetched.add(firstPath);
+
+      const schedule = window.requestIdleCallback
+        ? (cb) => requestIdleCallback(cb, { timeout: 5000 })
+        : (cb) => setTimeout(cb, 1500);
+
+      schedule(async () => {
+        try {
+          // 첫 단원 HTML fetch (D에서 이미 prefetch 시작했으므로 캐시 hit 가능)
+          const res = await fetch(firstPath, { credentials: 'same-origin' });
+          if (!res.ok) return;
+          const html = await res.text();
+
+          // <script src="./X_content.js?v=Y" defer> 추출
+          const m = html.match(/<script[^>]+src=["']([^"']*_content\.js[^"']*)["']/);
+          if (!m) return;
+          let contentJsUrl = m[1];
+
+          // 상대 경로 → 단원 폴더 기준 절대 경로 변환
+          if (contentJsUrl.startsWith('./')) {
+            const baseDir = firstPath.substring(0, firstPath.lastIndexOf('/') + 1);
+            contentJsUrl = baseDir + contentJsUrl.substring(2);
+          } else if (!contentJsUrl.startsWith('/') && !contentJsUrl.startsWith('http')) {
+            const baseDir = firstPath.substring(0, firstPath.lastIndexOf('/') + 1);
+            contentJsUrl = baseDir + contentJsUrl;
+          }
+
+          const link = document.createElement('link');
+          link.rel = 'prefetch';
+          link.as = 'script';
+          link.href = contentJsUrl;
+          document.head.appendChild(link);
+        } catch (e) {
+          // 실패해도 무시 (현재 동작과 동일)
+        }
+      });
+    }
+    window.prefetchSubjectContentJs = prefetchSubjectContentJs;
 
     function openUnitModal(unitIdOrPath, isAITask = false) {
       console.log('🚀 [openUnitModal] 호출됨! isAITask =', isAITask, '타입:', typeof isAITask);
