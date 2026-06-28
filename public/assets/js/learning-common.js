@@ -1832,26 +1832,6 @@
     const phone = user.phone || '';
     const unit = window.CUR_UNIT || 'geo_01';
 
-    let hasLearningRecord = false;
-
-    // 학습 기록이 있는지 확인
-    if (grade && name) {
-      try {
-        const url = phone
-          ? `/api/learning-logs?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}`
-          : `/api/learning-logs?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`;
-
-        const response = await fetch(url);
-        const logs = await response.json();
-
-        // 현재 단원의 학습 기록이 있는지 확인
-        hasLearningRecord = logs.some(log => log.unit === unit && log.completed);
-        console.log(`[learning-common] 학습 기록 확인: unit=${unit}, hasRecord=${hasLearningRecord}`);
-      } catch (err) {
-        console.error('[learning-common] 학습 기록 조회 오류:', err);
-      }
-    }
-
     // URL 파라미터에서 tab 확인 (예: ?tab=vocab)
     const urlParams = new URLSearchParams(window.location.search);
     const tabFromUrl = urlParams.get('tab');
