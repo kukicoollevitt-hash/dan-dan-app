@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="브레인문해력">
 
     <!-- ⚡ 2번째 콘텐츠 이미지 우선순위 preload (영상 다운로드와 경합 방지) -->
-    <link rel="preload" as="image" href="images/메인2번째.jpg?v=20260605" fetchpriority="high">
+    <link rel="preload" as="image" href="images/메인2번째.jpg?v=20260630a" fetchpriority="high">
 
     <!-- Open Graph / 카카오톡 미리보기 -->
     <meta property="og:type" content="website">
@@ -1410,12 +1410,12 @@
     <div class="landing-container">
         <!-- 메인 영상 (반응형: JS가 viewport에 따라 src 설정) -->
         <section class="section video-section hero" id="heroSection">
-            <video id="mainHeroVideo" autoplay muted loop playsinline preload="auto" poster="images/메인영상_포스터.jpg"></video>
+            <video id="mainHeroVideo" autoplay muted loop playsinline preload="metadata" poster="images/메인영상_포스터.jpg"></video>
         </section>
 
         <!-- 메인 영상 바로 아래 콘텐츠 (항상 노출) -->
         <section class="section" id="contentStart">
-            <img src="images/메인2번째.jpg?v=20260605" alt="브레인문해력 소개" fetchpriority="high" decoding="async">
+            <img src="images/메인2번째.jpg?v=20260630a" alt="브레인문해력 소개" width="1669" height="942" fetchpriority="high" decoding="async" style="width:100%;height:auto;">
         </section>
 
         <!-- 더보기 버튼 — 3번째 콘텐츠부터 펼침 -->
@@ -1482,7 +1482,7 @@
         </section>
 
         <section class="section">
-            <img src="images/brain/b12.png" alt="">
+            <img src="images/brain/b12.jpg" alt="" loading="lazy" decoding="async">
         </section>
 
         <!-- 브레인 문해력 FAQ 섹션 -->
@@ -2380,6 +2380,26 @@
         document.querySelectorAll('.section').forEach(section => {
             observer.observe(section);
         });
+
+        // ⚡ viewport 밖 영상 자동 pause — 14개 영상 동시 디코딩 부담 해소 (스크롤 가속)
+        // hero 영상(mainHeroVideo)은 제외 — 항상 재생
+        (function setupVideoViewportPause() {
+            const videoObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const v = entry.target;
+                    if (entry.isIntersecting) {
+                        if (v.paused) v.play().catch(() => {});
+                    } else {
+                        if (!v.paused) v.pause();
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '100px 0px' });
+
+            document.querySelectorAll('.video-section video').forEach(v => {
+                if (v.id === 'mainHeroVideo') return; // 히어로는 항상 재생
+                videoObserver.observe(v);
+            });
+        })();
 
         // 메인 히어로 영상: viewport에 따라 src 동적 설정 (iOS 동시재생 제한 회피)
         (function setupHeroVideo() {
