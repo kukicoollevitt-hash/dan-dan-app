@@ -44,7 +44,7 @@ const megaphoneMessageSchema = new mongoose.Schema({
     maxlength: 50
   },
 
-  // 코인 사용량
+  // 뱃지 사용량
   coinUsed: {
     type: Number,
     default: 40

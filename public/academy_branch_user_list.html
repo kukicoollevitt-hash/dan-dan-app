@@ -1049,6 +1049,71 @@
     </div>
   </div>
 
+  <!-- 회원 상태 변경 확인 모달 (대기전환/승인하기 공용) -->
+  <div id="status-change-modal" class="delete-modal-overlay">
+    <div class="delete-modal-box">
+      <div class="delete-modal-icon" id="status-change-icon" style="background: #dbeafe;">🔁</div>
+      <div class="delete-modal-title" id="status-change-title">회원 상태 변경</div>
+      <div class="delete-modal-message" id="status-change-message">
+        상태를 변경하시겠습니까?
+      </div>
+      <div class="delete-modal-buttons">
+        <button class="delete-modal-btn cancel" onclick="closeStatusChangeModal()">취소</button>
+        <button class="delete-modal-btn confirm" id="status-change-confirm-btn" style="background: #3b82f6;">변경</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    let _statusChangeHref = '';
+    function showStatusChangeModal(toggleText, href) {
+      _statusChangeHref = href;
+      const isPending = toggleText === '대기전환';
+      const icon = document.getElementById('status-change-icon');
+      const title = document.getElementById('status-change-title');
+      const message = document.getElementById('status-change-message');
+      const confirmBtn = document.getElementById('status-change-confirm-btn');
+      if (isPending) {
+        icon.textContent = '⏸️';
+        icon.style.background = '#fef3c7';
+        title.textContent = '대기 상태로 변경';
+        message.innerHTML = '이 회원을 <strong>대기</strong> 상태로 변경하시겠습니까?';
+        confirmBtn.style.background = '#f59e0b';
+        confirmBtn.textContent = '대기전환';
+      } else {
+        icon.textContent = '✅';
+        icon.style.background = '#dcfce7';
+        title.textContent = '승인 상태로 변경';
+        message.innerHTML = '이 회원을 <strong>승인</strong> 상태로 변경하시겠습니까?';
+        confirmBtn.style.background = '#10b981';
+        confirmBtn.textContent = '승인하기';
+      }
+      document.getElementById('status-change-modal').classList.add('show');
+    }
+    function closeStatusChangeModal() {
+      document.getElementById('status-change-modal').classList.remove('show');
+      _statusChangeHref = '';
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('status-change-confirm-btn');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          if (_statusChangeHref) window.location.href = _statusChangeHref;
+        });
+      }
+      // ESC 키로 닫기
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeStatusChangeModal();
+      });
+      // 배경 클릭으로 닫기
+      const overlay = document.getElementById('status-change-modal');
+      if (overlay) {
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) closeStatusChangeModal();
+        });
+      }
+    });
+  </script>
+
   <!-- 공용 성공 토스트 모달 -->
   <div id="success-modal" class="success-modal-overlay">
     <div class="success-modal-box">
@@ -1582,7 +1647,7 @@
             <span class="badge ${statusClass}">${statusLabel}</span><br>
             <a class="link-text"
                href="${statusHref}"
-               onclick="return confirm('이 회원의 상태를 ${toggleText} 상태로 변경할까요?');">
+               onclick="showStatusChangeModal('${toggleText}', '${statusHref}'); return false;">
               ${toggleText}
             </a>
           </td>

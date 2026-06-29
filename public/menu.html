@@ -7273,16 +7273,16 @@ canvas[id^="confetti-canvas"] {
         <button class="megaphone-modal-close" onclick="closeMegaphoneModal()">&times;</button>
       </div>
       <div class="megaphone-coin-info">
-        <span class="label">내 고래 코인</span>
+        <span class="label">내 고래 뱃지</span>
         <span class="value" id="megaphoneModalCoins">--</span>
       </div>
       <div class="megaphone-cost-info">
-        📢 확성기 사용 시 <strong>200 코인</strong>이 차감됩니다
+        📢 확성기 사용 시 <strong>200 뱃지</strong>이 차감됩니다
       </div>
       <textarea class="megaphone-textarea" id="megaphoneMessage" placeholder="응원 메시지를 입력하세요! (최대 100자)" maxlength="100"></textarea>
       <div class="megaphone-char-count"><span id="megaphoneCharCount">0</span>/100</div>
       <button class="megaphone-submit-btn" id="megaphoneSubmitBtn" onclick="sendMegaphoneMessage()">
-        📢 응원 메시지 보내기 (200코인)
+        📢 응원 메시지 보내기 (200뱃지)
       </button>
       <div id="megaphoneStatus"></div>
     </div>
@@ -11153,6 +11153,10 @@ canvas[id^="confetti-canvas"] {
     // 단원별 등급 데이터 저장 객체
     let unitGradesData = {};
 
+    // ⚡ 방금 완료된 단원 코드 Set (UNIT_COMPLETED 핸들러에서 추가, isUnitCompleted가 우선 확인)
+    // renderStudyRoomList가 unitGradesData를 서버 데이터(아직 미반영)로 덮어써도 영향 안 받게 함
+    const recentlyCompletedUnits = new Set();
+
     /* 4. DOM 캐싱 */
     const domainList = document.getElementById("domainList");
     const subjectList = document.getElementById("subjectList");
@@ -13379,7 +13383,7 @@ async function performLogout() {
     }
 
     // === 고래 Coin 시스템 ===
-    // 단원 완료 메시지를 받아서 코인 증가 처리 + 완료 상태 저장
+    // 단원 완료 메시지를 받아서 뱃지 증가 처리 + 완료 상태 저장
     window.addEventListener('message', function(event) {
       // 보안: 같은 origin에서 온 메시지만 처리
       if (event.origin !== window.location.origin) return;
@@ -13450,6 +13454,12 @@ async function performLogout() {
       }
 
       if (event.data && event.data.type === 'UNIT_COMPLETED') {
+        // ⚡ 방금 완료된 단원 코드를 Set에 기록 (renderStudyRoomList의 unitGradesData 덮어쓰기와 무관하게 인식)
+        if (event.data.unitCode) {
+          recentlyCompletedUnits.add(event.data.unitCode);
+          console.log('⚡ [UNIT_COMPLETED] recentlyCompletedUnits에 추가:', event.data.unitCode);
+        }
+
         // ⚡ 새 방식: 메시지에 점수 데이터 있으면 별표 즉시 계산 + 즉시 표시 (서버 fetch 안 기다림)
         // 서버 계산 공식과 동일 (server.js /api/unit-grades): radar 평균 → 격려/보통/양호/우수
         if (event.data.radarScores && event.data.unitCode) {
@@ -13517,6 +13527,13 @@ async function performLogout() {
 
         // UI 업데이트 (학습완료 배지 표시)
         updateLessonStatus(currentUnitPath, 'done');
+
+        // ⚡ 좌측 학습실 고래 위 배지(N/M개) 즉시 갱신
+        // unitGradesData는 위에서 새 단원 완료 정보로 이미 업데이트됨 → fetchUnitGrades 호출 없이 정확히 반영
+        if (typeof updateStudyRoomBadge === 'function') {
+          updateStudyRoomBadge();
+          console.log('🐳 [UNIT_COMPLETED] 좌측 학습실 배지 즉시 갱신');
+        }
 
         // 🔥 API 캐시 무효화 (별표/학습완료 즉시 반영)
         if (window.ApiCache) {
@@ -13715,7 +13732,7 @@ async function performLogout() {
           alert('이 기능은 테스트 학생(초3 김윤슬)에게만 허용됩니다.');
           return;
         }
-        if (!confirm('BRAIN온·업 생물 01단원의 학습 기록을 초기화할까요?\n(관문·코인·고래·어휘·중간평가는 유지)')) return;
+        if (!confirm('BRAIN온·업 생물 01단원의 학습 기록을 초기화할까요?\n(관문·뱃지·고래·어휘·중간평가는 유지)')) return;
 
         const btn = document.getElementById('resetBio01Btn');
         if (btn) { btn.disabled = true; btn.textContent = '초기화 중...'; }
@@ -18161,6 +18178,22 @@ async function performLogout() {
       if (saved) {
         updateActionButtons();
         updateStatusDisplay();
+
+        // ⚡ 학습실 캐시 무효화 + 좌측 배지 즉시 갱신 (새로 부여된 과제 반영)
+        if (window.ApiCache) {
+          ApiCache.invalidate('user-progress/study-room');
+        }
+        if (typeof updateStudyRoomBadge === 'function') {
+          await updateStudyRoomBadge();
+          console.log('🐳 [startAutoTask] 좌측 학습실 배지 즉시 갱신');
+        }
+        // 학습실 모달이 열려있으면 리스트도 즉시 갱신
+        const studyRoomModalEl = document.getElementById('studyRoomModal');
+        if (studyRoomModalEl && studyRoomModalEl.classList.contains('show')
+            && typeof renderStudyRoomList === 'function') {
+          await renderStudyRoomList();
+        }
+
         showAutoTaskStartSuccess(); // 확인 클릭 시 자동 새로고침 (이 시점엔 이미 과제 DB 반영 완료)
       } else {
         autoTaskSettings.status = 'stopped';
@@ -18193,6 +18226,20 @@ async function performLogout() {
 
       if (saved) {
         applySettingsToUI();
+
+        // ⚡ 학습실 캐시 무효화 + 좌측 배지 즉시 갱신
+        if (window.ApiCache) {
+          ApiCache.invalidate('user-progress/study-room');
+        }
+        if (typeof updateStudyRoomBadge === 'function') {
+          await updateStudyRoomBadge();
+        }
+        const studyRoomModalEl = document.getElementById('studyRoomModal');
+        if (studyRoomModalEl && studyRoomModalEl.classList.contains('show')
+            && typeof renderStudyRoomList === 'function') {
+          await renderStudyRoomList();
+        }
+
         showAutoTaskStopSuccess(); // 확인 클릭 시 자동 새로고침
       }
     }
@@ -19597,16 +19644,13 @@ async function performLogout() {
               return;
             }
           }
-          // 학습실 모달 먼저 닫기
-          closeStudyRoomModal();
-          // 약간의 딜레이 후 학습 페이지 열기
+          // ✅ 학습실 모달을 유지한 채 단원 모달을 위로 띄움 (학습 완료 후 학습실로 바로 복귀)
+          // 단원 모달 z-index(10010) > 학습실 모달(10002) — 자연 스택
           // AI 추천과제인 경우 isAI 플래그 전달
           console.log('🔍 [AI Task Debug] task.isAI =', task.isAI, '타입:', typeof task.isAI);
           const isAIFlag = !!task.isAI;  // truthy 값을 boolean으로 변환
           console.log('🔍 [AI Task Debug] isAIFlag =', isAIFlag);
-          setTimeout(() => {
-            openUnitModal(unitId, isAIFlag);
-          }, 200);
+          openUnitModal(unitId, isAIFlag);
         });
 
         list.appendChild(li);
@@ -19775,6 +19819,11 @@ async function performLogout() {
       // ✅ 시리즈별 prefix(fit_, on_, deep_)를 유지하여 정확한 완료 체크
       // fit_bio_01과 bio_01은 별개의 과제로 취급
       const codesToCheck = [unitCode];
+
+      // ⚡ 0. recentlyCompletedUnits 우선 확인 (UNIT_COMPLETED 직후 즉시 반영, race condition 안전)
+      if (recentlyCompletedUnits.has(unitCode)) {
+        return true;
+      }
 
       // ✅ 1. 서버에서 가져온 unitGradesData 먼저 확인 (가장 신뢰할 수 있는 데이터)
       if (unitGradesData && Object.keys(unitGradesData).length > 0) {
@@ -25059,7 +25108,7 @@ ${content}
         <!-- 교과기반 창작도서 3-4학년 -->
         <div class="novel-category-card grade34" onclick="openGrade34Novel()">
           <div class="novel-category-icon">📖</div>
-          <div class="novel-category-badge">시즌1</div>
+          <div class="novel-category-badge">브레인온</div>
           <h3>교과기반 창작도서</h3>
           <p>3~4학년 추천</p>
           <div class="novel-category-count">시리즈 <span>104개</span></div>
@@ -25068,7 +25117,7 @@ ${content}
         <!-- 교과기반 창작도서 5-6학년 -->
         <div class="novel-category-card grade56" onclick="openGrade56Novel()">
           <div class="novel-category-icon">📕</div>
-          <div class="novel-category-badge">시즌2</div>
+          <div class="novel-category-badge">브레인업</div>
           <h3>교과기반 창작도서</h3>
           <p>5~6학년 추천</p>
           <div class="novel-category-count">시리즈 <span>104개</span></div>
@@ -25077,7 +25126,7 @@ ${content}
         <!-- 교과기반 창작도서 중1,2학년 -->
         <div class="novel-category-card grade78" onclick="openGrade78Novel()">
           <div class="novel-category-icon">📘</div>
-          <div class="novel-category-badge">시즌3</div>
+          <div class="novel-category-badge">브레인핏</div>
           <h3>교과기반 창작도서</h3>
           <p>중1,2 추천</p>
           <div class="novel-category-count">시리즈 <span>104개</span></div>
@@ -32082,11 +32131,11 @@ ${content}
 
   <!-- 📢 확성기 기능 스크립트 -->
   <script>
-    // 현재 사용 가능한 코인 수
+    // 현재 사용 가능한 뱃지 수
     let megaphoneAvailableCoins = 0;
     const MEGAPHONE_COST = 40;
 
-    // 페이지 로드 시 코인 불러오기
+    // 페이지 로드 시 뱃지 불러오기
     document.addEventListener('DOMContentLoaded', function() {
       loadMegaphoneCoins();
 
@@ -32215,7 +32264,7 @@ ${content}
 
     // 사용자 정보 가져오기
     //   🔥 우선순위: localStorage.currentStudent (URL→view-as 학생) → sessionStorage.user (서버 세션)
-    //   브랜치 관리자에서 학생 클릭 시 보고 있는 학생 기준으로 고래 배지·확성기 코인 조회
+    //   브랜치 관리자에서 학생 클릭 시 보고 있는 학생 기준으로 고래 배지·확성기 뱃지 조회
     function getMegaphoneUser() {
       try {
         const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
@@ -32298,10 +32347,10 @@ ${content}
         return;
       }
 
-      // 코인 새로고침
+      // 뱃지 새로고침
       loadMegaphoneCoins();
 
-      // 메뉴에 코인 표시
+      // 메뉴에 뱃지 표시
       document.getElementById('badgeMenuCoins').textContent = megaphoneAvailableCoins;
 
       // 메뉴 표시
@@ -32368,7 +32417,7 @@ ${content}
     function openCuStoreModal() {
       cuSelectedItems = [];
       cuCurrentCategory = 'all';
-      loadMegaphoneCoins(); // 코인 새로고침
+      loadMegaphoneCoins(); // 뱃지 새로고침
 
       document.getElementById('cuStoreBadgeCount').textContent = megaphoneAvailableCoins;
       renderCuStoreItems();
@@ -34181,7 +34230,7 @@ ${content}
         return;
       }
 
-      // 코인 새로고침
+      // 뱃지 새로고침
       loadMegaphoneCoins();
 
       // 모달 표시
@@ -34191,14 +34240,14 @@ ${content}
       document.getElementById('megaphoneCharCount').textContent = '0';
       document.getElementById('megaphoneStatus').innerHTML = '';
 
-      // 코인 부족 시 버튼 비활성화
+      // 뱃지 부족 시 버튼 비활성화
       const submitBtn = document.getElementById('megaphoneSubmitBtn');
       if (megaphoneAvailableCoins < MEGAPHONE_COST) {
         submitBtn.disabled = true;
-        submitBtn.textContent = '코인 부족 (200코인 필요)';
+        submitBtn.textContent = '뱃지 부족 (200뱃지 필요)';
       } else {
         submitBtn.disabled = false;
-        submitBtn.textContent = '📢 응원 메시지 보내기 (200코인)';
+        submitBtn.textContent = '📢 응원 메시지 보내기 (200뱃지)';
       }
     }
 
@@ -34220,7 +34269,7 @@ ${content}
       }
 
       if (megaphoneAvailableCoins < MEGAPHONE_COST) {
-        statusEl.innerHTML = '<div class="megaphone-error">코인이 부족합니다! (200코인 필요)</div>';
+        statusEl.innerHTML = '<div class="megaphone-error">뱃지가 부족합니다! (200뱃지 필요)</div>';
         return;
       }
 
@@ -34265,13 +34314,13 @@ ${content}
         } else {
           statusEl.innerHTML = `<div class="megaphone-error">${data.error || '전송에 실패했습니다.'}</div>`;
           submitBtn.disabled = false;
-          submitBtn.textContent = '📢 응원 메시지 보내기 (200코인)';
+          submitBtn.textContent = '📢 응원 메시지 보내기 (200뱃지)';
         }
       } catch (err) {
         console.error('확성기 전송 에러:', err);
         statusEl.innerHTML = '<div class="megaphone-error">서버 오류가 발생했습니다.</div>';
         submitBtn.disabled = false;
-        submitBtn.textContent = '📢 응원 메시지 보내기 (200코인)';
+        submitBtn.textContent = '📢 응원 메시지 보내기 (200뱃지)';
       }
     }
 

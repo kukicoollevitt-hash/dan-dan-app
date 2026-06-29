@@ -1038,7 +1038,7 @@
             <span class="badge ${statusClass}">${statusLabel}</span>
             <a class="link-text"
                href="${statusHref}"
-               onclick="return confirm('이 회원의 상태를 ${toggleText} 상태로 변경할까요?');">
+               onclick="showStatusChangeModal('${toggleText}', '${statusHref}'); return false;">
               ${toggleText}
             </a>
           </td>
@@ -1861,6 +1861,103 @@
         alert('알림 설정 변경 중 오류가 발생했습니다.');
       }
     }
+  </script>
+
+  <!-- 회원 상태 변경 확인 모달 (대기전환/승인하기 공용) -->
+  <style>
+    .status-change-modal-overlay {
+      display: none;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+      z-index: 99999; justify-content: center; align-items: center;
+    }
+    .status-change-modal-overlay.show { display: flex; }
+    .status-change-modal-box {
+      background: #fff; border-radius: 20px; padding: 32px;
+      max-width: 400px; width: 90%; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: scModalPop 0.3s ease;
+    }
+    @keyframes scModalPop {
+      from { opacity: 0; transform: scale(0.85) translateY(15px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .status-change-icon {
+      width: 64px; height: 64px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px; font-size: 32px;
+    }
+    .status-change-title {
+      font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 12px;
+    }
+    .status-change-message {
+      font-size: 14px; color: #6b7280; line-height: 1.6; margin-bottom: 24px;
+    }
+    .status-change-buttons {
+      display: flex; gap: 12px; justify-content: center;
+    }
+    .status-change-btn {
+      padding: 12px 28px; border-radius: 10px; font-size: 14px;
+      font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+      border: none; color: #fff;
+    }
+    .status-change-btn.cancel { background: #f3f4f6; color: #6b7280; }
+    .status-change-btn.cancel:hover { background: #e5e7eb; }
+  </style>
+  <div id="status-change-modal" class="status-change-modal-overlay">
+    <div class="status-change-modal-box">
+      <div class="status-change-icon" id="status-change-icon">🔁</div>
+      <div class="status-change-title" id="status-change-title">회원 상태 변경</div>
+      <div class="status-change-message" id="status-change-message">상태를 변경하시겠습니까?</div>
+      <div class="status-change-buttons">
+        <button class="status-change-btn cancel" onclick="closeStatusChangeModal()">취소</button>
+        <button class="status-change-btn" id="status-change-confirm-btn">변경</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    let _statusChangeHref = '';
+    function showStatusChangeModal(toggleText, href) {
+      _statusChangeHref = href;
+      const isPending = toggleText === '대기전환';
+      const icon = document.getElementById('status-change-icon');
+      const title = document.getElementById('status-change-title');
+      const message = document.getElementById('status-change-message');
+      const confirmBtn = document.getElementById('status-change-confirm-btn');
+      if (isPending) {
+        icon.textContent = '⏸️';
+        icon.style.background = '#fef3c7';
+        title.textContent = '대기 상태로 변경';
+        message.innerHTML = '이 회원을 <strong>대기</strong> 상태로 변경하시겠습니까?';
+        confirmBtn.style.background = '#f59e0b';
+        confirmBtn.textContent = '대기전환';
+      } else {
+        icon.textContent = '✅';
+        icon.style.background = '#dcfce7';
+        title.textContent = '승인 상태로 변경';
+        message.innerHTML = '이 회원을 <strong>승인</strong> 상태로 변경하시겠습니까?';
+        confirmBtn.style.background = '#10b981';
+        confirmBtn.textContent = '승인하기';
+      }
+      document.getElementById('status-change-modal').classList.add('show');
+    }
+    function closeStatusChangeModal() {
+      document.getElementById('status-change-modal').classList.remove('show');
+      _statusChangeHref = '';
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('status-change-confirm-btn');
+      if (btn) btn.addEventListener('click', () => {
+        if (_statusChangeHref) window.location.href = _statusChangeHref;
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeStatusChangeModal();
+      });
+      const overlay = document.getElementById('status-change-modal');
+      if (overlay) overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeStatusChangeModal();
+      });
+    });
   </script>
 </body>
 </html>

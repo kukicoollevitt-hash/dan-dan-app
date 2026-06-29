@@ -2573,7 +2573,7 @@ console.log("🐳 고래 뱃지 API 라우트 등록됨");
 app.get("/api/super/whale-badges", requireSuperAdmin, async (req, res) => {
   console.log("🐳 고래 뱃지 API 호출됨");
   try {
-    // UserProgress에서 코인을 획득한 학생들 조회
+    // UserProgress에서 뱃지를 획득한 학생들 조회
     const badgeUsers = await UserProgress.find({
       'vocabularyQuiz.totalCoins': { $gt: 0 },
       deleted: { $ne: true }
@@ -2633,7 +2633,7 @@ app.post("/api/super/whale-badges/update", requireSuperAdmin, async (req, res) =
   }
 });
 
-// ✅ 슈퍼관리자: 고래 뱃지 삭제 API (코인 0으로 초기화)
+// ✅ 슈퍼관리자: 고래 뱃지 삭제 API (뱃지 0으로 초기화)
 app.post("/api/super/whale-badges/delete", requireSuperAdmin, async (req, res) => {
   try {
     const { grade, name } = req.body;
@@ -16112,6 +16112,27 @@ app.get("/my-learning", async (req, res) => {
       console.error("⚠️ [/my-learning] 독해시간 조회 실패:", err);
     }
 
+    // ✅ LearningBehavior에서도 독해시간 조회 (behavior-data 페이지와 동일 소스)
+    // reading_times 컬렉션에 누락된 경우 fallback
+    let learningBehaviorReadingMap = {};
+    try {
+      const LearningBehaviorModel = mongoose.model("LearningBehavior");
+      const behaviors = await LearningBehaviorModel.find(
+        { grade, name },
+        'unit readingTime createdAt'
+      ).sort({ createdAt: -1 }).lean();
+
+      // 단원당 가장 최근 회차의 readingTime 사용 (sort -1 + 첫 등장만 보존)
+      behaviors.forEach(b => {
+        if (b.unit && b.readingTime > 0 && !learningBehaviorReadingMap[b.unit]) {
+          learningBehaviorReadingMap[b.unit] = b.readingTime; // 초 단위
+        }
+      });
+      console.log("✅ [/my-learning] LearningBehavior 독해시간 조회 완료:", Object.keys(learningBehaviorReadingMap).length, "개 기록");
+    } catch (err) {
+      console.error("⚠️ [/my-learning] LearningBehavior 조회 실패:", err);
+    }
+
     let html = `
     <!DOCTYPE html>
     <html lang="ko">
@@ -19904,6 +19925,7 @@ app.get("/my-learning", async (req, res) => {
         const UNIT_TITLES = ${JSON.stringify(UNIT_TITLES)};
         const UNIT_PROGRESS_MAP = ${JSON.stringify(unitProgressMap)};  // ✅ 어휘학습 점수 포함
         const READING_TIMES_MAP = ${JSON.stringify(readingTimesMap)};  // ✅ 독해시간 (밀리초)
+        const LEARNING_BEHAVIOR_READING_MAP = ${JSON.stringify(learningBehaviorReadingMap)};  // ✅ LearningBehavior fallback (초 단위)
         const rawSeries = '${series || 'all'}';  // 현재 페이지의 시리즈 (단축코드) - 기본값 전체
 
         // 디버그: UNIT_TITLES 키 확인
@@ -21450,7 +21472,28 @@ app.get("/my-learning", async (req, res) => {
             tableHtml += '<td><span class="badge ' + badgeClass + '">' + badgeText + '</span></td>';
             tableHtml += '<td>' + avgScore.toFixed(1) + '</td>';
             // 독해시간 표시 (밀리초 → 분:초 형식)
-            const readingDuration = READING_TIMES_MAP[unitCode] || 0;
+            // Fallback 체인:
+            // 1) reading_times[unitCode] (밀리초)
+            // 2) reading_times[normalized] (접두어 제거, 밀리초)
+            // 3) LearningBehavior[unitCode] (초→ms) — behavior-data 페이지 소스
+            // 4) LearningLog.readingTime (초→ms)
+            let readingDuration = READING_TIMES_MAP[unitCode] || 0;
+            if (readingDuration === 0) {
+              // 2차: on_/fit_/deep_ 접두어 제거 후 재조회 (vocab score와 동일 패턴)
+              let normalizedReadingKey = unitCode;
+              if (unitCode.startsWith('fit_')) normalizedReadingKey = unitCode.substring(4);
+              else if (unitCode.startsWith('deep_')) normalizedReadingKey = unitCode.substring(5);
+              else if (unitCode.startsWith('on_')) normalizedReadingKey = unitCode.substring(3);
+              readingDuration = READING_TIMES_MAP[normalizedReadingKey] || 0;
+            }
+            if (readingDuration === 0 && LEARNING_BEHAVIOR_READING_MAP[unitCode]) {
+              // 3차: LearningBehavior 컬렉션 (초 단위) → 밀리초로 변환
+              readingDuration = LEARNING_BEHAVIOR_READING_MAP[unitCode] * 1000;
+            }
+            if (readingDuration === 0 && log.readingTime) {
+              // 4차: LearningLog.readingTime (초 단위) → 밀리초로 변환
+              readingDuration = log.readingTime * 1000;
+            }
             let readingTimeDisplay = '-';
             if (readingDuration > 0) {
               const totalSeconds = Math.floor(readingDuration / 1000);
@@ -21959,7 +22002,21 @@ app.get("/my-learning", async (req, res) => {
                 tableHtml += '<td><span class="badge ' + badgeClass + '">' + badgeText + '</span></td>';
                 tableHtml += '<td>' + avgScore.toFixed(1) + '</td>';
                 // 독해시간 표시 (밀리초 → 분:초 형식)
-                const readingDuration = READING_TIMES_MAP[unitCode] || 0;
+                // Fallback 체인: 1) reading_times 2) normalized 3) LearningBehavior 4) LearningLog.readingTime
+                let readingDuration = READING_TIMES_MAP[unitCode] || 0;
+                if (readingDuration === 0) {
+                  let normalizedReadingKey2 = unitCode;
+                  if (unitCode.startsWith('fit_')) normalizedReadingKey2 = unitCode.substring(4);
+                  else if (unitCode.startsWith('deep_')) normalizedReadingKey2 = unitCode.substring(5);
+                  else if (unitCode.startsWith('on_')) normalizedReadingKey2 = unitCode.substring(3);
+                  readingDuration = READING_TIMES_MAP[normalizedReadingKey2] || 0;
+                }
+                if (readingDuration === 0 && LEARNING_BEHAVIOR_READING_MAP[unitCode]) {
+                  readingDuration = LEARNING_BEHAVIOR_READING_MAP[unitCode] * 1000;
+                }
+                if (readingDuration === 0 && log.readingTime) {
+                  readingDuration = log.readingTime * 1000;
+                }
                 let readingTimeDisplay = '-';
                 if (readingDuration > 0) {
                   const totalSeconds = Math.floor(readingDuration / 1000);
@@ -38209,7 +38266,7 @@ app.get('/api/reading-time/:studentKey/:unitKey', async (req, res) => {
 
 // ============================================
 // 🧪 설명회 시연용 — 김윤슬(초3) 생물01 단원만 학습 기록 초기화
-// (관문·코인·고래·어휘·중간평가는 유지)
+// (관문·뱃지·고래·어휘·중간평가는 유지)
 // ============================================
 app.post('/api/student/reset-bio01', async (req, res) => {
   try {
@@ -40851,7 +40908,7 @@ app.get("/api/activity-feed", async (req, res) => {
       });
     });
 
-    // 2. 최근 어휘퀴즈 코인 획득 기록 (무제한) - 삭제된 학생 제외
+    // 2. 최근 어휘퀴즈 뱃지 획득 기록 (무제한) - 삭제된 학생 제외
     // projection으로 필요한 필드만 가져오기 (학생당 수백KB → 수십바이트로 감소)
     const recentCoins = await UserProgress.find(
       {
@@ -41035,7 +41092,7 @@ app.put("/api/learning-log/admin/update/:id", async (req, res) => {
 // 📢 확성기 메시지 API (응원 메시지)
 // ============================================
 
-// 확성기 메시지 보내기 (코인 차감)
+// 확성기 메시지 보내기 (뱃지 차감)
 app.post("/api/megaphone/send", async (req, res) => {
   console.log("📢 확성기 API 호출됨:", req.body);
   try {
@@ -41203,14 +41260,14 @@ app.post("/api/megaphone/send", async (req, res) => {
       return res.status(404).json({ success: false, error: '사용자를 찾을 수 없습니다' });
     }
 
-    // 코인 잔액 확인 (totalCoins - usedCoins = 사용 가능한 코인)
+    // 뱃지 잔액 확인 (totalCoins - usedCoins = 사용 가능한 뱃지)
     const totalCoins = user.vocabularyQuiz?.totalCoins || 0;
     const usedCoins = user.vocabularyQuiz?.usedCoins || 0;
     const availableCoins = totalCoins - usedCoins;
     if (availableCoins < MEGAPHONE_COST) {
       return res.status(400).json({
         success: false,
-        error: `코인이 부족합니다. (현재: ${availableCoins}코인, 필요: ${MEGAPHONE_COST}코인)`
+        error: `뱃지가 부족합니다. (현재: ${availableCoins}뱃지, 필요: ${MEGAPHONE_COST}뱃지)`
       });
     }
 
@@ -41238,7 +41295,7 @@ app.post("/api/megaphone/send", async (req, res) => {
     });
     await megaphoneMsg.save();
 
-    // 코인 차감 (usedCoins 증가 방식)
+    // 뱃지 차감 (usedCoins 증가 방식)
     await UserProgress.updateOne(
       { grade, name },
       { $inc: { 'vocabularyQuiz.usedCoins': MEGAPHONE_COST } }
