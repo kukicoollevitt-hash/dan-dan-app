@@ -398,7 +398,7 @@
         if (pathMatch) {
           const unitFromPath = pathMatch[1];
 
-          // 해당 단원과 관련된 모든 localStorage 키 삭제 (학생 이름 포함된 키도 삭제)
+          // 해당 단원과 관련된 모든 localStorage 키 삭제 (이름 포함된 키도 삭제)
           // 키 종류: passage_read_, passage_time_, paragraph_completed_,
           //         dan-reading-state:, dan-progress:, creative-state:
           const keysToRemove = [];

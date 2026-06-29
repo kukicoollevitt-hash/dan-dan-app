@@ -7839,7 +7839,7 @@ canvas[id^="confetti-canvas"] {
           const updateVocabBadgeFromServer = async () => {
             try {
               // 🔥 학생 정보 우선순위: localStorage.currentStudent (URL→view-as 학생) → data.user (서버 세션)
-              //   브랜치 관리자에서 학생 이름 클릭 시 보고 있는 학생 기준으로 어휘지수 가져오기
+              //   브랜치 관리자에서 이름 클릭 시 보고 있는 학생 기준으로 어휘지수 가져오기
               let bgGrade = data.user.grade;
               let bgName = data.user.name;
               try {
@@ -12125,7 +12125,7 @@ if (logoutConfirmBtn) {
     }
 
     // 🔥 view-as 모드 호환 학생 getter
-    //   브랜치 관리자가 학생 이름 클릭 시 새 탭에서 URL 파라미터로 currentStudent가 채워짐
+    //   브랜치 관리자가 이름 클릭 시 새 탭에서 URL 파라미터로 currentStudent가 채워짐
     //   sessionStorage.user는 서버 세션(=관리자 본인)이라 view-as에서는 학생과 다름
     //   이 헬퍼는 두 곳 모두 점검해서 일관된 학생 정보를 반환
     function getViewAsStudentUser() {
@@ -19883,7 +19883,7 @@ async function performLogout() {
         }
       }
 
-      // ✅ Fallback: localStorage에서 학생 이름과 unitCode가 모두 포함된 키 검색
+      // ✅ Fallback: localStorage에서 이름과 unitCode가 모두 포함된 키 검색
       // (키 형식이 다른 경우에도 완료 상태를 찾을 수 있도록)
       // ⚠️ 주의: includes() 대신 정확한 이름 매칭 사용 (예: "나교재"가 "나민트" 키에 매칭되는 버그 방지)
       const studentName = stu.name;
@@ -40091,8 +40091,9 @@ ${content}
           el.onclick = null;
           return;
         }
-        const stars = starsString(avg);
-        el.innerHTML = `${stars}<span class="crit-avg-num">${avg.toFixed(1)}</span><span style="font-size:10.5px;color:#a16207;font-weight:600;">(${cnt}건)</span>`;
+        // 10점 만점 표시 (내부 stars 1~5 * 2)
+        const score10 = avg * 2;
+        el.innerHTML = `<span class="crit-avg-num" style="font-family:'Noto Serif KR',serif;font-weight:800;color:#d97706;">${score10.toFixed(1)}</span><span style="font-size:10.5px;color:#a16207;font-weight:600;">/ 10 (${cnt}건)</span>`;
         el.dataset.empty = '0';
         el.onclick = openHistoryModal;
       }
@@ -40136,26 +40137,28 @@ ${content}
 
         // X좌표 (제출한 날 균등 분포)
         const xPos = (i) => n === 1 ? PL + chartW / 2 : PL + (i / (n - 1)) * chartW;
-        const yToPx = (v) => PT + chartH - (v / 5) * chartH;
+        // ⚡ 10점 만점 표시 (내부값 stars 1~5 → 2배 변환)
+        const toScore10 = (s) => s * 2;
+        const yToPx = (v10) => PT + chartH - (v10 / 10) * chartH;
 
-        // 그리드 + Y라벨
+        // 그리드 + Y라벨 (2/4/6/8/10)
         let grid = '';
-        for (let v = 1; v <= 5; v++) {
+        for (let v = 2; v <= 10; v += 2) {
           const y = yToPx(v);
-          const isMain = (v === 3 || v === 4);
+          const isMain = (v === 6 || v === 8);
           grid += `<line x1="${PL}" y1="${y}" x2="${W - PR}" y2="${y}" stroke="${isMain ? '#d4af6f' : '#e5d9c5'}" stroke-width="${isMain ? 1 : 0.6}" stroke-dasharray="${isMain ? '4,3' : '2,2'}" />`;
-          grid += `<text x="${PL - 6}" y="${y + 3}" text-anchor="end" font-size="9.5" fill="#888" font-family="sans-serif">${v}.0</text>`;
+          grid += `<text x="${PL - 6}" y="${y + 3}" text-anchor="end" font-size="9.5" fill="#888" font-family="sans-serif">${v}</text>`;
         }
-        // 보조 라벨: 보통/잘함 텍스트
-        grid += `<text x="${W - PR - 2}" y="${yToPx(3) - 3}" text-anchor="end" font-size="8.5" fill="#a16207" font-family="sans-serif" font-style="italic">보통</text>`;
-        grid += `<text x="${W - PR - 2}" y="${yToPx(4) - 3}" text-anchor="end" font-size="8.5" fill="#16a34a" font-family="sans-serif" font-style="italic">잘함</text>`;
+        // 보조 라벨: 보통/잘함 텍스트 (6점/8점 기준)
+        grid += `<text x="${W - PR - 2}" y="${yToPx(6) - 3}" text-anchor="end" font-size="8.5" fill="#a16207" font-family="sans-serif" font-style="italic">보통</text>`;
+        grid += `<text x="${W - PR - 2}" y="${yToPx(8) - 3}" text-anchor="end" font-size="8.5" fill="#16a34a" font-family="sans-serif" font-style="italic">잘함</text>`;
 
         // 막대
         const barWidth = Math.min(28, Math.max(8, chartW / n * 0.55));
         let bars = '';
         submittedEntries.forEach((e, i) => {
           const x = xPos(i);
-          const y = yToPx(e.grading.stars);
+          const y = yToPx(toScore10(e.grading.stars));
           const h = PT + chartH - y;
           bars += `<rect x="${x - barWidth/2}" y="${y}" width="${barWidth}" height="${h}" fill="url(#critBarGrad)" rx="3" opacity="0.75" />`;
         });
@@ -40165,7 +40168,7 @@ ${content}
         if (n >= 2) {
           let path = `M ${xPos(0)} ${PT + chartH}`;
           for (let i = 0; i < n; i++) {
-            path += ` L ${xPos(i)} ${yToPx(submittedEntries[i].grading.stars)}`;
+            path += ` L ${xPos(i)} ${yToPx(toScore10(submittedEntries[i].grading.stars))}`;
           }
           path += ` L ${xPos(n - 1)} ${PT + chartH} Z`;
           areaPath = `<path d="${path}" fill="url(#critAreaGrad)" />`;
@@ -40174,8 +40177,8 @@ ${content}
         // 꺾은선
         let line = '';
         for (let i = 1; i < n; i++) {
-          const x1 = xPos(i - 1), y1 = yToPx(submittedEntries[i - 1].grading.stars);
-          const x2 = xPos(i), y2 = yToPx(submittedEntries[i].grading.stars);
+          const x1 = xPos(i - 1), y1 = yToPx(toScore10(submittedEntries[i - 1].grading.stars));
+          const x2 = xPos(i), y2 = yToPx(toScore10(submittedEntries[i].grading.stars));
           line += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#d97706" stroke-width="2.2" stroke-linecap="round" />`;
         }
 
@@ -40184,19 +40187,19 @@ ${content}
         const showAllValues = n <= 8; // 데이터 적을 땐 모든 점수 표시
         submittedEntries.forEach((e, i) => {
           const x = xPos(i);
-          const stars = e.grading.stars;
-          const y = yToPx(stars);
+          const score10 = toScore10(e.grading.stars);
+          const y = yToPx(score10);
           const isHi = options.highlightDate === e.date;
           const r = isHi ? 7 : 5;
           const color = isHi ? '#dc2626' : '#d97706';
           dots += `<circle cx="${x}" cy="${y}" r="${r}" fill="${color}" stroke="#fff" stroke-width="2" />`;
 
-          // 데이터 포인트 위 점수
+          // 데이터 포인트 위 점수 (10점 만점)
           if (isHi || showAllValues) {
             const fontSize = isHi ? 12 : 10;
             const fontColor = isHi ? '#dc2626' : '#a16207';
             const weight = isHi ? 800 : 700;
-            valueLabels += `<text x="${x}" y="${y - r - 3}" text-anchor="middle" font-size="${fontSize}" fill="${fontColor}" font-weight="${weight}" font-family="serif">${stars.toFixed(1)}</text>`;
+            valueLabels += `<text x="${x}" y="${y - r - 3}" text-anchor="middle" font-size="${fontSize}" fill="${fontColor}" font-weight="${weight}" font-family="serif">${score10.toFixed(1)}</text>`;
           }
           // X축 라벨 (날짜)
           const dt = new Date(e.date);
@@ -40241,10 +40244,11 @@ ${content}
           down: { icon: '↘', text: '하락 중', cls: 'crit-stat-trend-down' },
           flat: { icon: '─', text: '안정',   cls: 'crit-stat-trend-flat' }
         }[stats.trend] || { icon: '─', text: '안정', cls: 'crit-stat-trend-flat' };
-        const avgDisplay = stats.count > 0 ? stats.avg.toFixed(1) : '-';
+        // 10점 만점 변환 (내부 stars 1~5 * 2)
+        const avgDisplay = stats.count > 0 ? (stats.avg * 2).toFixed(1) : '-';
         return `
           <div class="crit-history-overview">
-            <div class="crit-history-overview-title">📈 이번 달 별점 흐름</div>
+            <div class="crit-history-overview-title">📈 이번 달 점수 흐름</div>
             <div class="crit-history-chart-wrap">${buildCritChartSVG(submittedEntries, options)}</div>
             <div class="crit-history-stats">
               <div class="crit-stat-card">
@@ -40254,8 +40258,8 @@ ${content}
               </div>
               <div class="crit-stat-card">
                 <div class="crit-stat-icon">⭐</div>
-                <div class="crit-stat-label">평균 별점</div>
-                <div class="crit-stat-value">★ ${avgDisplay}</div>
+                <div class="crit-stat-label">평균 점수</div>
+                <div class="crit-stat-value">${avgDisplay}<span>/ 10</span></div>
               </div>
               <div class="crit-stat-card">
                 <div class="crit-stat-icon">📈</div>
@@ -40292,7 +40296,7 @@ ${content}
             return;
           }
           const avg = _critState.monthlyAvgStars;
-          const avgHtml = (typeof avg === 'number') ? `${starsString(avg)} <strong>${avg.toFixed(1)}</strong>` : '';
+          const avgHtml = (typeof avg === 'number') ? `<strong style="color:#d97706;">${(avg * 2).toFixed(1)}</strong><span style="font-size:11px;color:#a16207;font-weight:600;"> / 10</span>` : '';
           meta.innerHTML = `${_critState.currentMonth} · 총 <strong>${entries.length}</strong>건 · 평균 ${avgHtml}`;
           // 최신순 정렬
           entries.sort((a, b) => b.date.localeCompare(a.date));
@@ -40326,8 +40330,8 @@ ${content}
         const md = `${dt.getMonth() + 1}/${dt.getDate()}`;
         const wk = ['일','월','화','수','목','금','토'][dt.getDay()];
         const cat = pickCategoryEmoji(e.category);
-        const stars = (e.grading && typeof e.grading.stars === 'number') ? starsString(e.grading.stars) : '';
-        const starsNum = (e.grading && typeof e.grading.stars === 'number') ? `<span class="crit-history-entry-num" style="font-family:'Noto Serif KR',serif;font-size:14px;font-weight:800;color:#d97706;margin-left:6px;">${e.grading.stars.toFixed(1)}</span>` : '';
+        const stars = ''; // 별 아이콘 표시 제거 (10점 숫자로 일원화)
+        const starsNum = (e.grading && typeof e.grading.stars === 'number') ? `<span class="crit-history-entry-num" style="font-family:'Noto Serif KR',serif;font-size:14px;font-weight:800;color:#d97706;margin-left:6px;">${(e.grading.stars * 2).toFixed(1)}<span style="font-size:11px;color:#a16207;font-weight:600;margin-left:2px;">/10</span></span>` : '';
 
         // 6하원칙 표
         const sixWLabels = { who:'누가', when:'언제', where:'어디서', what:'무엇을', why:'왜', how:'어떻게' };
@@ -40362,7 +40366,7 @@ ${content}
         `).join('');
         const gradingBlock = (e.grading && typeof e.grading.stars === 'number') ? `
           <div class="crit-history-entry-grading">
-            <div style="text-align:center;">${stars}<span class="crit-history-entry-grading-num">${e.grading.stars.toFixed(1)} <span style="font-size:11px;color:#a16207;">/ 5.0</span></span></div>
+            <div style="text-align:center;"><span class="crit-history-entry-grading-num" style="font-family:'Noto Serif KR',serif;font-size:28px;font-weight:800;color:#d97706;">${(e.grading.stars * 2).toFixed(1)} <span style="font-size:13px;color:#a16207;font-weight:600;">/ 10</span></span></div>
             ${e.grading.encouragement ? `<div class="crit-history-comment"><div class="crit-history-comment-label" style="color:#a16207;">💛 칭찬</div>${escapeHtml(e.grading.encouragement)}</div>` : ''}
             ${e.grading.improvement ? `<div class="crit-history-comment"><div class="crit-history-comment-label" style="color:#0d47a1;">💡 다음엔 이렇게</div>${escapeHtml(e.grading.improvement)}</div>` : ''}
           </div>
@@ -40383,8 +40387,11 @@ ${content}
             <div class="crit-history-entry-body">
               ${gradingBlock}
               <div class="crit-history-section-label">육하원칙 비교</div>
+              <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:6px 10px;margin:0 0 8px;border-radius:4px;font-size:11.5px;color:#92400e;line-height:1.45;">
+                💡 <strong>모범답안은 예시</strong>입니다. 본문에 근거가 있고 일관된 다른 관점의 답도 정답으로 인정돼요.
+              </div>
               <table class="crit-history-table">
-                <thead><tr><th>항목</th><th>내 답안</th><th>모범 답안</th></tr></thead>
+                <thead><tr><th>항목</th><th>내 답안</th><th>📌 모범 답안 (예시)</th></tr></thead>
                 <tbody>${sixWRows}</tbody>
               </table>
               <div class="crit-history-section-label">생각쓰기 비교</div>
@@ -40459,8 +40466,7 @@ ${content}
           <div style="background:linear-gradient(135deg,#fff7e6,#fff3d6);border:2px solid #f5d27e;border-radius:12px;padding:14px 16px;margin:14px 0;page-break-inside:avoid;">
             <div style="text-align:center;">
               <div style="font-size:11px;letter-spacing:4px;color:#a16207;margin-bottom:4px;">AI 평가 결과</div>
-              <div style="font-size:28px;color:#f5b800;letter-spacing:-1px;margin-bottom:2px;">${stars}</div>
-              <div style="font-family:'Noto Serif KR',serif;font-size:24px;font-weight:800;color:#d97706;">${starsScore} <span style="font-size:12px;color:#a16207;">/ 5.0</span></div>
+              <div style="font-family:'Noto Serif KR',serif;font-size:32px;font-weight:800;color:#d97706;">${(entry.grading.stars * 2).toFixed(1)} <span style="font-size:13px;color:#a16207;">/ 10</span></div>
             </div>
             ${entry.grading.encouragement ? `<div style="background:#fff;border-radius:8px;padding:8px 12px;margin-top:8px;"><div style="font-size:10px;font-weight:700;color:#a16207;letter-spacing:1px;margin-bottom:3px;">💛 칭찬</div><div style="font-size:12px;color:#333;line-height:1.55;">${escapeHtml(entry.grading.encouragement)}</div></div>` : ''}
             ${entry.grading.improvement ? `<div style="background:#fff;border-radius:8px;padding:8px 12px;margin-top:6px;"><div style="font-size:10px;font-weight:700;color:#0d47a1;letter-spacing:1px;margin-bottom:3px;">💡 다음엔 이렇게</div><div style="font-size:12px;color:#333;line-height:1.55;">${escapeHtml(entry.grading.improvement)}</div></div>` : ''}
@@ -40495,13 +40501,16 @@ ${content}
             </div>
             ${gradingBlock}
             <!-- 6하원칙 -->
-            <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:6mm 0 3mm;letter-spacing:1px;">육하원칙 비교</div>
+            <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:6mm 0 2mm;letter-spacing:1px;">육하원칙 비교</div>
+            <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:4mm 5mm;margin-bottom:3mm;border-radius:2mm;font-size:10.5px;color:#92400e;line-height:1.45;">
+              💡 <strong>모범답안은 예시</strong>입니다. 본문에 근거가 있고 일관된 다른 관점의 답도 정답으로 인정돼요.
+            </div>
             <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
               <thead>
                 <tr>
                   <th style="padding:6px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">항목</th>
                   <th style="padding:6px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">내 답안</th>
-                  <th style="padding:6px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">모범 답안</th>
+                  <th style="padding:6px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">📌 모범 답안 (예시)</th>
                 </tr>
               </thead>
               <tbody>${sixWRows}</tbody>
@@ -40610,8 +40619,7 @@ ${content}
               <div style="background:linear-gradient(135deg,#fff7e6,#fff3d6);border:2px solid #f5d27e;border-radius:12px;padding:14px 16px;">
                 <div style="text-align:center;">
                   <div style="font-size:11px;letter-spacing:4px;color:#a16207;margin-bottom:4px;">AI 평가 결과</div>
-                  <div style="font-size:28px;color:#f5b800;letter-spacing:-1px;margin-bottom:2px;">${stars}</div>
-                  <div style="font-family:'Noto Serif KR',serif;font-size:24px;font-weight:800;color:#d97706;">${starsScore} <span style="font-size:12px;color:#a16207;">/ 5.0</span></div>
+                  <div style="font-family:'Noto Serif KR',serif;font-size:32px;font-weight:800;color:#d97706;">${(entry.grading.stars * 2).toFixed(1)} <span style="font-size:13px;color:#a16207;">/ 10</span></div>
                 </div>
                 ${entry.grading.encouragement ? `<div style="background:#fff;border-radius:8px;padding:8px 12px;margin-top:8px;"><div style="font-size:10px;font-weight:700;color:#a16207;letter-spacing:1px;margin-bottom:3px;">💛 칭찬</div><div style="font-size:12px;color:#333;line-height:1.55;">${escapeHtml(entry.grading.encouragement)}</div></div>` : ''}
                 ${entry.grading.improvement ? `<div style="background:#fff;border-radius:8px;padding:8px 12px;margin-top:6px;"><div style="font-size:10px;font-weight:700;color:#0d47a1;letter-spacing:1px;margin-bottom:3px;">💡 다음엔 이렇게</div><div style="font-size:12px;color:#333;line-height:1.55;">${escapeHtml(entry.grading.improvement)}</div></div>` : ''}
@@ -40629,13 +40637,16 @@ ${content}
         `).join('');
         sections.push(`
           <div style="padding:0 4mm 5mm;">
-            <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:0 0 3mm;letter-spacing:1px;">육하원칙 비교</div>
+            <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:0 0 2mm;letter-spacing:1px;">육하원칙 비교</div>
+            <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:3mm 4mm;margin-bottom:2mm;border-radius:1.5mm;font-size:10.5px;color:#92400e;line-height:1.45;">
+              💡 <strong>모범답안은 예시</strong>입니다. 본문에 근거가 있고 일관된 다른 관점의 답도 정답으로 인정돼요.
+            </div>
             <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
               <thead>
                 <tr>
                   <th style="padding:5px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">항목</th>
                   <th style="padding:5px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">내 답안</th>
-                  <th style="padding:5px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">모범 답안</th>
+                  <th style="padding:5px 8px;background:#1a1a1a;color:#fff;font-size:10px;letter-spacing:2px;border:1px solid #1a1a1a;">📌 모범 답안 (예시)</th>
                 </tr>
               </thead>
               <tbody>${sixWRows}</tbody>

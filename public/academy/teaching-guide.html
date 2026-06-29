@@ -1668,8 +1668,8 @@
       </div>
     </div>
 
-    <!-- 📘 문해어휘학습장 다운로드 (본사 관리자 전용) -->
-    <div id="vocabWbBox" style="display:none; margin-bottom: 24px; padding: 22px 28px; background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%); border-radius: 16px; box-shadow: 0 8px 24px rgba(12, 74, 110, 0.25); color: #fff;">
+    <!-- 📘 문해어휘학습장 다운로드 (모든 센터 공개) -->
+    <div id="vocabWbBox" style="margin-bottom: 24px; padding: 22px 28px; background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%); border-radius: 16px; box-shadow: 0 8px 24px rgba(12, 74, 110, 0.25); color: #fff;">
       <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: space-between;">
         <div style="flex: 1; min-width: 280px;">
           <div style="font-size: 20px; font-weight: 900; margin-bottom: 6px;">📘 문해어휘학습장 다운로드</div>
@@ -68105,6 +68105,120 @@
           return;
         }
 
+        // 과목 한글 파일명 매핑 (브레인온과목별 폴더 파일 명명 규칙)
+        // 12개 공통 과목은 어디서나 동일, world1·world2만 폴더별로 다름
+        const SUBJECT_BASE_NAMES = {
+          bio: '생물', earth: '지구과학', physics: '물리', chem: '화학',
+          soc: '사회문화', geo: '지리', law: '법', pol: '정치경제',
+          modern: '현대문학', classic: '고전문학',
+          people1: '한국인물', people2: '세계인물'
+        };
+        // 앞표지: 세계문학1·세계문학2 (숫자만)
+        const COVER_NAMES = { ...SUBJECT_BASE_NAMES, world1: '세계문학1', world2: '세계문학2' };
+        // 속지·학습계획표: 세계문학(숫자 없음) · 세계문학(2)
+        const INNER_NAMES = { ...SUBJECT_BASE_NAMES, world1: '세계문학', world2: '세계문학(2)' };
+        // 목차: 세계문학·세계문학2 (괄호 없음), 화학도 "브레인온" 접두사 (다른 폴더는 "브레인문해력"로 다름)
+        const TOC_NAMES = { ...SUBJECT_BASE_NAMES, world1: '세계문학', world2: '세계문학2' };
+
+        // 이미지 → JPEG dataUrl 헬퍼
+        const _loadImageDataUrl = (url) => new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth || 794;
+            c.height = img.naturalHeight || 1123;
+            c.getContext('2d').drawImage(img, 0, 0);
+            try { resolve(c.toDataURL('image/jpeg', 0.95)); } catch (e) { reject(e); }
+          };
+          img.onerror = reject;
+          img.src = url;
+        });
+
+        // 과목별 앞표지·학습계획표·속지 로드 (브레인온 시리즈만)
+        // /images/브레인온과목별/{앞표지|학습계획표|속지}/{prefix}-{과목}.png
+        let subjectFrontCoverDataUrl = null;
+        let subjectStudyPlanDataUrl = null;
+        let subjectInnerDataUrl = null;
+        if (series === 'brainon') {
+          const coverName = COVER_NAMES[realSubjectKey];
+          const innerName = INNER_NAMES[realSubjectKey];
+          // 화학만 "브레인문해력-" 접두사, 그 외 "브레인온-"
+          const prefix = realSubjectKey === 'chem' ? '브레인문해력' : '브레인온';
+          const buildUrl = (folder, name) => `/images/${encodeURIComponent('브레인온과목별')}/${encodeURIComponent(folder)}/${encodeURIComponent(prefix + '-' + name)}.png`;
+          // 앞표지
+          if (coverName) {
+            if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>과목 앞표지 로드 중...</span>`;
+            const url = buildUrl('앞표지', coverName);
+            try { subjectFrontCoverDataUrl = await _loadImageDataUrl(url); }
+            catch (e) { console.warn('과목별 앞표지 로드 실패:', url, e); }
+          }
+          // 학습계획표
+          if (innerName) {
+            if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>학습계획표 로드 중...</span>`;
+            const url = buildUrl('학습계획표', innerName);
+            try { subjectStudyPlanDataUrl = await _loadImageDataUrl(url); }
+            catch (e) { console.warn('과목별 학습계획표 로드 실패:', url, e); }
+          }
+          // 속지
+          if (innerName) {
+            if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>과목 속지 로드 중...</span>`;
+            const url = buildUrl('속지', innerName);
+            try { subjectInnerDataUrl = await _loadImageDataUrl(url); }
+            catch (e) { console.warn('과목별 속지 로드 실패:', url, e); }
+          }
+        }
+
+        // 과목별 목차 2장 로드 (/images/브레인온과목별/브레인온 과목별 목차/브레인온 {과목} 목차{N}.png)
+        // 단, 목차는 화학도 "브레인온" 접두사 (다른 폴더와 다름) — TOC_NAMES 사용
+        const subjectTocDataUrls = [];
+        if (series === 'brainon') {
+          const tocName = TOC_NAMES[realSubjectKey];
+          if (tocName) {
+            for (const idx of [1, 2]) {
+              if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>과목 목차 로드 중... (${idx}/2)</span>`;
+              const url = `/images/${encodeURIComponent('브레인온과목별')}/${encodeURIComponent('브레인온 과목별 목차')}/${encodeURIComponent('브레인온 ' + tocName + ' 목차' + idx)}.png`;
+              try { subjectTocDataUrls.push(await _loadImageDataUrl(url)); }
+              catch (e) { console.warn('과목별 목차 로드 실패:', url, e); }
+            }
+          }
+        }
+
+        // 과목별 뒷표지 2장 로드 — /images/브레인온과목별/뒷표지/{prefix}-{name}{1|2}.png
+        // INNER_NAMES 사용 (속지·학습계획표와 동일 명명: 화학은 "브레인문해력-", world1='세계문학', world2='세계문학(2)')
+        // 순서: 본문 → 뒷표지2(안쪽) → 뒷표지1(바깥쪽, 맨 마지막)
+        let subjectBackCover2DataUrl = null;
+        let subjectBackCover1DataUrl = null;
+        if (series === 'brainon') {
+          const innerName2 = INNER_NAMES[realSubjectKey];
+          const prefix2 = realSubjectKey === 'chem' ? '브레인문해력' : '브레인온';
+          if (innerName2) {
+            // 뒷표지 2
+            if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>과목 뒷표지(2) 로드 중...</span>`;
+            const url2 = `/images/${encodeURIComponent('브레인온과목별')}/${encodeURIComponent('뒷표지')}/${encodeURIComponent(prefix2 + '-' + innerName2 + '2')}.png`;
+            try { subjectBackCover2DataUrl = await _loadImageDataUrl(url2); }
+            catch (e) { console.warn('과목별 뒷표지(2) 로드 실패:', url2, e); }
+            // 뒷표지 1
+            if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>과목 뒷표지(1) 로드 중...</span>`;
+            const url1 = `/images/${encodeURIComponent('브레인온과목별')}/${encodeURIComponent('뒷표지')}/${encodeURIComponent(prefix2 + '-' + innerName2 + '1')}.png`;
+            try { subjectBackCover1DataUrl = await _loadImageDataUrl(url1); }
+            catch (e) { console.warn('과목별 뒷표지(1) 로드 실패:', url1, e); }
+          }
+        }
+
+        // 교재 공용 안내 6장 로드 (/images/교재공용/교재공용N.png)
+        const COMMON_COUNT = 6;
+        const commonImageDataUrls = [];
+        for (let i = 1; i <= COMMON_COUNT; i++) {
+          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>교재 공용 페이지 로드 중... (${i}/${COMMON_COUNT})</span>`;
+          const url = `/images/${encodeURIComponent('교재공용')}/${encodeURIComponent('교재공용' + i)}.png`;
+          try {
+            commonImageDataUrls.push(await _loadImageDataUrl(url));
+          } catch (e) {
+            console.warn('공용 페이지 로드 실패:', url, e);
+          }
+        }
+
         const stage = document.createElement('div');
         stage.style.cssText = 'position: fixed; left: -10000px; top: 0; width: 794px;';
         document.body.appendChild(stage);
@@ -68118,6 +68232,61 @@
         const pageW = 210, pageH = 297;
 
         let pageIdx = 0;
+
+        // 과목별 앞표지 — PDF 최맨앞 (브레인온 시리즈만)
+        if (subjectFrontCoverDataUrl) {
+          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 생성 중... 과목 앞표지</span>`;
+          if (pageIdx > 0) pdf.addPage();
+          pdf.addImage(subjectFrontCoverDataUrl, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+          pageIdx++;
+        }
+        // 과목별 학습계획표 — 앞표지 직후
+        if (subjectStudyPlanDataUrl) {
+          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 생성 중... 학습계획표</span>`;
+          if (pageIdx > 0) pdf.addPage();
+          pdf.addImage(subjectStudyPlanDataUrl, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+          pageIdx++;
+        }
+        // 과목별 속지 — 학습계획표 직후
+        if (subjectInnerDataUrl) {
+          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 생성 중... 과목 속지</span>`;
+          if (pageIdx > 0) pdf.addPage();
+          pdf.addImage(subjectInnerDataUrl, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+          pageIdx++;
+        }
+
+        // 교재 공용 6장 추가
+        for (let i = 0; i < commonImageDataUrls.length; i++) {
+          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 생성 중... 교재 공용 ${i+1}/${COMMON_COUNT}</span>`;
+          if (pageIdx > 0) pdf.addPage();
+          pdf.addImage(commonImageDataUrls[i], 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+          pageIdx++;
+        }
+
+        // 과목별 목차 2장 — 교재 공용 직후
+        for (let i = 0; i < subjectTocDataUrls.length; i++) {
+          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 생성 중... 과목 목차 ${i+1}/${subjectTocDataUrls.length}</span>`;
+          if (pageIdx > 0) pdf.addPage();
+          pdf.addImage(subjectTocDataUrls[i], 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+          pageIdx++;
+        }
+
+        // 메모장 (연한 바둑판) — 목차 직후 (브레인온만)
+        if (series === 'brainon') {
+          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 생성 중... 메모장</span>`;
+          stage.innerHTML = buildMemoGridPage();
+          await new Promise(r => setTimeout(r, 30));
+          const memoNode = stage.firstElementChild;
+          const memoCanvas = await html2canvas(memoNode, {
+            scale: 3, useCORS: true, backgroundColor: '#ffffff',
+            logging: false, imageTimeout: 0, letterRendering: true
+          });
+          const memoImg = memoCanvas.toDataURL('image/jpeg', 0.95);
+          if (pageIdx > 0) pdf.addPage();
+          pdf.addImage(memoImg, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+          pageIdx++;
+        }
+
         for (let u = 0; u < orderedUnits.length; u++) {
           const unitKey = orderedUnits[u];
           const unit = unitDataMap[unitKey];
@@ -68159,6 +68328,21 @@
             pdf.addImage(img, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
             pageIdx++;
           }
+        }
+
+        // 과목별 뒷표지(2) — 본문 직후
+        if (subjectBackCover2DataUrl) {
+          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 생성 중... 과목 뒷표지(2)</span>`;
+          if (pageIdx > 0) pdf.addPage();
+          pdf.addImage(subjectBackCover2DataUrl, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+          pageIdx++;
+        }
+        // 과목별 뒷표지(1) — PDF 맨 마지막
+        if (subjectBackCover1DataUrl) {
+          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 생성 중... 과목 뒷표지(1)</span>`;
+          if (pageIdx > 0) pdf.addPage();
+          pdf.addImage(subjectBackCover1DataUrl, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+          pageIdx++;
         }
 
         document.body.removeChild(stage);
@@ -69937,10 +70121,7 @@
           const data = await r.json();
           if (data && data.success && data.academyName === '브레인문해원_테스트') {
             window.IS_BRAIN_ADMIN = true;
-            console.log('✅ 본사 관리자 — 워크북 PDF 버튼 활성');
-            // 📘 문해어휘학습장 다운로드 박스 노출
-            const vocabWbBox = document.getElementById('vocabWbBox');
-            if (vocabWbBox) vocabWbBox.style.display = '';
+            console.log('✅ 본사 관리자 — 단원별 워크북 PDF 버튼 활성');
             // 이미 열려 있는 BRAIN온 생물·지구과학 탭에 묶음 PDF 박스 사후 prepend
             const SUB_META_LATE = [
               { prefix: 'on_bio_',     units: BIO_WORKBOOK_UNITS,     label: '브레인온 생물',    icon: '🧬', fn: 'downloadAllBioWorkbookPDF' },
