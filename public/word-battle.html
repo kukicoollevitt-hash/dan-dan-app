@@ -32,6 +32,96 @@
   }
   .container { max-width: 900px; margin: 0 auto; }
 
+  /* 지난달 TOP 3 LED 전광판 */
+  .wb-monthly-led {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    margin: 0 0 14px 0;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    border: 1.5px solid #facc15;
+    border-radius: 14px;
+    box-shadow:
+      0 0 0 1px rgba(250, 204, 21, 0.25) inset,
+      0 8px 22px rgba(15, 23, 42, 0.25);
+    overflow: hidden;
+  }
+  .wb-monthly-led-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.45);
+  }
+  .wb-monthly-led-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    animation: wbMonthlyBlink 1.2s ease-in-out infinite;
+  }
+  @keyframes wbMonthlyBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .wb-monthly-led-month {
+    flex: 0 0 auto;
+    font-size: 13px;
+    font-weight: 800;
+    color: #facc15;
+    text-shadow: 0 0 8px rgba(250, 204, 21, 0.5);
+    white-space: nowrap;
+  }
+  .wb-monthly-led-track-wrap {
+    flex: 1 1 auto;
+    overflow: hidden;
+    position: relative;
+    min-width: 0;
+  }
+  .wb-monthly-led-track {
+    display: inline-block;
+    white-space: nowrap;
+    padding-left: 100%;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-shadow:
+      0 0 6px rgba(255, 255, 255, 0.55),
+      0 0 12px rgba(250, 204, 21, 0.35);
+    animation:
+      wbMonthlyScroll 26s linear infinite,
+      wbMonthlyFlicker 0.9s steps(2, end) infinite;
+  }
+  @keyframes wbMonthlyScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+  @keyframes wbMonthlyFlicker {
+    0%, 49%   { opacity: 1; filter: brightness(1.15); }
+    50%, 100% { opacity: 0.85; filter: brightness(0.95); }
+  }
+  .wb-monthly-led-track .rank-gold   { color: #fde047; }
+  .wb-monthly-led-track .rank-silver { color: #e5e7eb; }
+  .wb-monthly-led-track .rank-bronze { color: #fdba74; }
+  .wb-monthly-led-track .rank-four   { color: #a7f3d0; }
+  .wb-monthly-led-track .rank-five   { color: #bae6fd; }
+  .wb-monthly-led-track .star { color: #facc15; }
+  @media (max-width: 640px) {
+    .wb-monthly-led { padding: 7px 10px; gap: 7px; }
+    .wb-monthly-led-month { font-size: 12px; }
+    .wb-monthly-led-track { font-size: 12px; }
+    .wb-monthly-led-badge { font-size: 10px; padding: 2px 7px; }
+  }
+
   /* 공용 헤더 */
   .header { text-align: center; margin-bottom: 16px; position: relative; }
   .wb-rules-btn {
@@ -1196,6 +1286,15 @@
 <body>
 
 <div class="container">
+  <!-- 지난달 단어월드컵 TOP 3 LED 전광판 -->
+  <div class="wb-monthly-led" id="wbMonthlyLed">
+    <span class="wb-monthly-led-badge"><span class="wb-monthly-led-dot"></span>LIVE</span>
+    <span class="wb-monthly-led-month" id="wbMonthlyLedMonth">🏆 6월 TOP 5</span>
+    <div class="wb-monthly-led-track-wrap">
+      <div class="wb-monthly-led-track" id="wbMonthlyLedTrack"></div>
+    </div>
+  </div>
+
   <div class="header">
     <button class="wb-rules-btn" onclick="openWbRulesModal()">📜 점수규정</button>
     <div class="title">🏅 전국 어휘 월드컵</div>
@@ -1502,10 +1601,69 @@
       return;
     }
     document.title = '전국 어휘 월드컵';
+    renderMonthlyLed();
     renderFieldTabs();
     fetchMyStats();
     fetchOverallTop();
     fetchDailyStatus();
+  }
+
+  // ───── 지난달 단어월드컵 TOP 5 LED 전광판 ─────
+  // 매월 1일에 직전 달 결과로 교체. 데이터는 /api/word-battle/overall-ranking 스냅샷 기준.
+  const WB_MONTHLY_TOP5 = {
+    '2026-06': [
+      { rank: 1, grade: '초6',  name: '장유진', points: 20000 },
+      { rank: 2, grade: '초5',  name: '최건우', points: 7800  },
+      { rank: 3, grade: '5학년', name: '정하영', points: 6500  },
+      { rank: 4, grade: '초6',  name: '이재희', points: 5570  },
+      { rank: 5, grade: '중2',  name: '이지유', points: 2280  }
+    ]
+  };
+
+  function maskName(name) {
+    if (!name) return '';
+    const chars = [...name];
+    if (chars.length <= 1) return name;
+    if (chars.length === 2) return chars[0] + '○';
+    return chars[0] + '○'.repeat(chars.length - 2) + chars[chars.length - 1];
+  }
+
+  function renderMonthlyLed() {
+    const monthEl = document.getElementById('wbMonthlyLedMonth');
+    const trackEl = document.getElementById('wbMonthlyLedTrack');
+    if (!monthEl || !trackEl) return;
+
+    const now = new Date();
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const yyyy = prev.getFullYear();
+    const mm = String(prev.getMonth() + 1).padStart(2, '0');
+    const key = `${yyyy}-${mm}`;
+    const top5 = WB_MONTHLY_TOP5[key];
+
+    monthEl.textContent = `🏆 ${prev.getMonth() + 1}월 TOP 5`;
+
+    if (!top5 || top5.length === 0) {
+      trackEl.textContent = '이번 달 첫 번째 우승자에 도전해 보세요! ⚡';
+      return;
+    }
+
+    const medals = {
+      1: ['🥇', 'rank-gold'],
+      2: ['🥈', 'rank-silver'],
+      3: ['🥉', 'rank-bronze'],
+      4: ['',   'rank-four'],
+      5: ['',   'rank-five']
+    };
+    const segments = top5.map(r => {
+      const [emoji, cls] = medals[r.rank] || ['', ''];
+      const masked = maskName(r.name);
+      const pts = r.points.toLocaleString();
+      const prefix = emoji ? `${emoji} ${r.rank}위` : `${r.rank}위`;
+      return `<span class="${cls}">${prefix} ${r.grade} ${masked} <span class="star">⭐</span> ${pts}</span>`;
+    });
+    // 두 벌 이어 붙여 마퀴 끝없이 흐르는 느낌
+    const html = segments.join(' &nbsp;&nbsp;|&nbsp;&nbsp; ') + ' &nbsp;&nbsp;&nbsp;&nbsp;';
+    trackEl.innerHTML = html + html;
   }
 
   // ───── 일일 랭킹 상한 캐시 ─────

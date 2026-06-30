@@ -13956,7 +13956,7 @@ app.post("/api/log", async (req, res) => {
         console.error("⚠️ [/api/log] 고래 배지 지급 실패:", badgeErr.message);
       }
 
-      // 🎮 단어월드컵 도전권 충전 (최대 50까지)
+      // 🎮 단어월드컵 도전권 충전 (최대 10까지)
       try {
         const wbState = await getOrInitWbState(grade, name);
         const oldBalance = wbState.balance;
@@ -13965,9 +13965,22 @@ app.post("/api/log", async (req, res) => {
         wbState.updatedAt = new Date();
         await wbState.save();
         wbBalanceAfter = wbState.balance;
-        console.log(`🎮 [/api/log] 도전권 +${wbAttemptsAdded} 충전 → 잔액 ${wbBalanceAfter}/${WB_BALANCE_CAP}`);
+        console.log(`🎮 [/api/log] 단어월드컵 도전권 +${wbAttemptsAdded} 충전 → 잔액 ${wbBalanceAfter}/${WB_BALANCE_CAP}`);
       } catch (wbErr) {
-        console.error("⚠️ [/api/log] 도전권 충전 실패:", wbErr.message);
+        console.error("⚠️ [/api/log] 단어월드컵 도전권 충전 실패:", wbErr.message);
+      }
+
+      // 👑 문해왕 도전권 충전 (최대 10까지) — 단어월드컵과 동일 정책
+      try {
+        const lkState = await getOrInitLkState(grade, name);
+        const oldBalance = lkState.balance;
+        lkState.balance = Math.min(lkState.balance + LK_REFILL_PER_UNIT, LK_BALANCE_CAP);
+        const added = lkState.balance - oldBalance;
+        lkState.updatedAt = new Date();
+        await lkState.save();
+        console.log(`👑 [/api/log] 문해왕 도전권 +${added} 충전 → 잔액 ${lkState.balance}/${LK_BALANCE_CAP}`);
+      } catch (lkErr) {
+        console.error("⚠️ [/api/log] 문해왕 도전권 충전 실패:", lkErr.message);
       }
     }
 
@@ -30133,40 +30146,45 @@ app.get('/api/word-battle/last-champions', async (req, res) => {
 
 const LK_SERIES_LIST = ['on', 'up', 'fit', 'deep'];
 
-// 문해왕 일일 도전 횟수 제한 + 12시간 쿨다운
-const LK_DAILY_ATTEMPTS_CAP = 10;
-const LK_BLOCK_DURATION_MS = 12 * 60 * 60 * 1000;  // 12시간
-const literacyKingDailySchema = new mongoose.Schema({
+// 문해왕 도전권 시스템 (잔액 기반 + 학습 완료 충전) — 단어월드컵과 동일 정책
+const LK_DAILY_BASELINE = 10;             // 매일 0시 잔액 보충(이 값까지)
+const LK_BALANCE_CAP = 10;                // 잔액 최대치(학습 충전해도 10 초과 X)
+const LK_REFILL_PER_UNIT = 10;            // 단원 최초 학습 완료 시 충전량
+const LK_DAILY_TOTAL_ATTEMPTS_CAP = 50;   // 오늘 누적 게임 한도(절대값, 도달 시 자정까지 차단)
+
+const literacyKingStudentStateSchema = new mongoose.Schema({
   grade: { type: String, required: true },
   name: { type: String, required: true },
-  dayKey: { type: String, required: true },  // 'YYYY-MM-DD' KST
-  attempts: { type: Number, default: 0 },
-  cappedAt: { type: Date, default: null },   // 10회 도달 시각 (12h 카운트 시작점)
-  lastPlayedAt: { type: Date, default: Date.now }
+  balance: { type: Number, default: LK_DAILY_BASELINE },     // 사용 가능 도전권
+  attemptsUsedToday: { type: Number, default: 0 },           // 오늘 사용한 횟수
+  lastResetDayKey: { type: String, default: '' },            // 마지막 일일 리셋 날짜
+  updatedAt: { type: Date, default: Date.now }
 });
-literacyKingDailySchema.index({ grade: 1, name: 1, dayKey: 1 }, { unique: true });
-const LiteracyKingDaily = mongoose.model('LiteracyKingDaily', literacyKingDailySchema);
+literacyKingStudentStateSchema.index({ grade: 1, name: 1 }, { unique: true });
+const LiteracyKingStudentState = mongoose.model('LiteracyKingStudentState', literacyKingStudentStateSchema);
 
-// 문해왕 일일 상태 확인 + 12h 만료 시 자동 리셋 헬퍼
-async function getOrInitLkDaily(grade, name) {
+// 학생 상태 조회 + 일일 0시 보충(오늘 첫 접근 시 잔액을 baseline(10)으로)
+async function getOrInitLkState(grade, name) {
+  let state = await LiteracyKingStudentState.findOne({ grade, name });
   const todayKey = getKstDayKey();
-  let daily = await LiteracyKingDaily.findOne({ grade, name, dayKey: todayKey });
-  if (!daily) {
-    // 다른 날짜 기록 있는지 확인 — 있고 12h 지났으면 정리하고 새로 시작
-    const oldDaily = await LiteracyKingDaily.findOne({ grade, name }).sort({ dayKey: -1 });
-    if (oldDaily && oldDaily.cappedAt && (Date.now() - oldDaily.cappedAt.getTime() >= LK_BLOCK_DURATION_MS)) {
-      // 만료된 차단 — 새 일자로 ride
-    }
-    daily = await LiteracyKingDaily.create({ grade, name, dayKey: todayKey, attempts: 0, cappedAt: null });
-    return daily;
+  if (!state) {
+    state = await LiteracyKingStudentState.create({
+      grade, name,
+      balance: LK_DAILY_BASELINE,
+      attemptsUsedToday: 0,
+      lastResetDayKey: todayKey
+    });
+    return state;
   }
-  // 12h 만료 체크: cappedAt 후 12h 경과 시 자동 리셋
-  if (daily.cappedAt && (Date.now() - daily.cappedAt.getTime() >= LK_BLOCK_DURATION_MS)) {
-    daily.attempts = 0;
-    daily.cappedAt = null;
-    await daily.save();
+  if (state.lastResetDayKey !== todayKey) {
+    // 일일 0시 보충: 잔액 무조건 baseline(10)으로, 누적 카운터 리셋
+    state.balance = LK_DAILY_BASELINE;
+    state.attemptsUsedToday = 0;
+    state.lastResetDayKey = todayKey;
+    state.updatedAt = new Date();
+    await state.save();
   }
-  return daily;
+  return state;
 }
 const LK_SERIES_LABEL = { on: 'BRAIN ON', up: 'BRAIN UP', fit: 'BRAIN FIT', deep: 'BRAIN DEEP' };
 
@@ -30182,21 +30200,16 @@ app.post('/api/literacy-king/save', async (req, res) => {
     }
     const currentMonth = getCurrentMonthKey();
 
-    // 일일 도전 횟수 카운트 + 10회 한도 체크 + 12h 쿨다운
-    const lkDaily = await getOrInitLkDaily(grade, name);
-    const attemptsAfterSave = (lkDaily.attempts || 0) + 1;
-    const attemptsLimitReached = attemptsAfterSave >= LK_DAILY_ATTEMPTS_CAP;
-    const updateOps = {
-      $inc: { attempts: 1 },
-      $set: { lastPlayedAt: new Date() }
-    };
-    // 10회 도달 시 cappedAt 기록 (12h 카운트 시작)
-    if (attemptsLimitReached && !lkDaily.cappedAt) {
-      updateOps.$set.cappedAt = new Date();
-    }
-    await LiteracyKingDaily.updateOne({ _id: lkDaily._id }, updateOps);
-    const cappedAtForResp = lkDaily.cappedAt || (attemptsLimitReached ? new Date() : null);
-    const unlockAt = cappedAtForResp ? new Date(cappedAtForResp.getTime() + LK_BLOCK_DURATION_MS) : null;
+    // 도전권 잔액 차감 + 누적 50회 한도 체크 (단어월드컵과 동일 정책)
+    const dayKey = getKstDayKey();
+    const lkState = await getOrInitLkState(grade, name);
+    lkState.balance = Math.max(0, lkState.balance - 1);
+    lkState.attemptsUsedToday = (lkState.attemptsUsedToday || 0) + 1;
+    lkState.updatedAt = new Date();
+    await lkState.save();
+    const attemptsAfterSave = lkState.attemptsUsedToday;
+    const dailyTotalLimitReached = attemptsAfterSave >= LK_DAILY_TOTAL_ATTEMPTS_CAP;
+    const balanceExhausted = lkState.balance <= 0;
 
     const existing = await LiteracyKingRecord.findOne({ grade, name, unitId });
     let isNewBest = false;
@@ -30285,11 +30298,14 @@ app.post('/api/literacy-king/save', async (req, res) => {
       ok: true, isNewBest, currentRank, currentPoints, badgesAwarded,
       totalAwardedForUnit: Math.max(currentPoints, previousAwarded),
       daily: {
+        balance: lkState.balance,
+        balanceCap: LK_BALANCE_CAP,
         attempts: attemptsAfterSave,
-        attemptsCap: LK_DAILY_ATTEMPTS_CAP,
-        attemptsLimitReached,
-        unlockAt,
-        dayKey: lkDaily.dayKey
+        dailyTotalCap: LK_DAILY_TOTAL_ATTEMPTS_CAP,
+        balanceExhausted,
+        dailyTotalLimitReached,
+        dayKey,
+        type: 'balance-refill'
       }
     });
   } catch (err) {
@@ -30298,22 +30314,26 @@ app.post('/api/literacy-king/save', async (req, res) => {
   }
 });
 
-// 문해왕 일일 도전 횟수 상태 조회 (12h 쿨다운 자동 만료 처리)
+// 문해왕 도전권 상태 조회 (잔액 + 누적 사용 + 일일 0시 자동 보충)
 app.get('/api/literacy-king/daily-status', async (req, res) => {
   try {
     const { grade, name } = req.query;
     if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
-    const daily = await getOrInitLkDaily(grade, name);
-    const attempts = daily.attempts || 0;
-    const limitReached = attempts >= LK_DAILY_ATTEMPTS_CAP;
-    const unlockAt = daily.cappedAt ? new Date(daily.cappedAt.getTime() + LK_BLOCK_DURATION_MS) : null;
+    const lkState = await getOrInitLkState(grade, name);
+    const attempts = lkState.attemptsUsedToday || 0;
+    const balance = lkState.balance || 0;
+    const dailyTotalLimitReached = attempts >= LK_DAILY_TOTAL_ATTEMPTS_CAP;
+    const balanceExhausted = balance <= 0;
     res.json({
       ok: true,
+      balance,
+      balanceCap: LK_BALANCE_CAP,
       attempts,
-      attemptsCap: LK_DAILY_ATTEMPTS_CAP,
-      attemptsLimitReached: limitReached,
-      unlockAt,
-      dayKey: daily.dayKey
+      dailyTotalCap: LK_DAILY_TOTAL_ATTEMPTS_CAP,
+      balanceExhausted,
+      dailyTotalLimitReached,
+      dayKey: lkState.lastResetDayKey,
+      type: 'balance-refill'
     });
   } catch (err) {
     console.error('문해왕 일일 상태 조회 오류:', err);
@@ -30412,11 +30432,19 @@ app.get('/api/literacy-king/my-stats', async (req, res) => {
 app.get('/api/literacy-king/overall-ranking', async (req, res) => {
   try {
     const { series, grade, name } = req.query;
-    if (!series || !LK_SERIES_LIST.includes(series)) {
-      return res.status(400).json({ ok: false, message: 'series 필요' });
+    // series 미지정 또는 'all' → 전 시리즈 합산 종합 순위
+    const combined = !series || series === 'all';
+    if (!combined && !LK_SERIES_LIST.includes(series)) {
+      return res.status(400).json({ ok: false, message: 'series 값이 올바르지 않습니다' });
     }
-    const records = await LiteracyKingRecord.find({ series }, { grade: 1, name: 1, academyName: 1, unitId: 1, bestScore: 1, bestTime: 1 }).lean();
+    const query = combined ? {} : { series };
+    const records = await LiteracyKingRecord.find(
+      query,
+      { grade: 1, name: 1, academyName: 1, unitId: 1, bestScore: 1, bestTime: 1 }
+    ).lean();
 
+    // unitId는 시리즈별로 이미 유니크(on_/fit_/deep_ prefix, up은 prefix 없음)이므로
+    // 통합 집계 시에도 단원 단위 등수 산정은 그대로 무손상.
     const unitGroups = {};
     for (const r of records) {
       (unitGroups[r.unitId] = unitGroups[r.unitId] || []).push(r);
@@ -30443,7 +30471,7 @@ app.get('/api/literacy-king/overall-ranking', async (req, res) => {
       myRank = idx >= 0 ? idx + 1 : null;
       myPoints = studentPoints[`${grade}|${name}`] || 0;
     }
-    res.json({ ok: true, series, topRanking, myRank, myPoints, totalStudents: sorted.length });
+    res.json({ ok: true, series: combined ? 'all' : series, topRanking, myRank, myPoints, totalStudents: sorted.length });
   } catch (err) {
     console.error('문해왕 종합 순위 오류:', err);
     res.status(500).json({ ok: false });
@@ -40321,8 +40349,15 @@ app.get('/api/word-battle/my-stats', async (req, res) => {
       return res.status(400).json({ ok: false, message: '학생 정보가 필요합니다.' });
     }
 
-    // 모든 기록 조회 — 점수는 현재 등수(bestTime) 기준 rankToPoints 합산
-    const allRecords = await WordBattleRecord.find({}, { grade: 1, name: 1, unitId: 1, bestTime: 1 }).lean();
+    // ⚡ 이번 달에 실제로 플레이한 기록만 집계 — 월별 리프레시 반영
+    const now = new Date();
+    const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    const monthStartKst = new Date(Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), 1, 0, 0, 0));
+    const monthStartUtc = new Date(monthStartKst.getTime() - 9 * 60 * 60 * 1000);
+    const allRecords = await WordBattleRecord.find(
+      { lastPlayedAt: { $gte: monthStartUtc } },
+      { grade: 1, name: 1, unitId: 1, bestTime: 1 }
+    ).lean();
 
     const unitGroups = {};
     for (const r of allRecords) {
@@ -40389,8 +40424,14 @@ app.get('/api/word-battle/overall-ranking', async (req, res) => {
   try {
     const { grade, name } = req.query;
 
+    // ⚡ 이번 달에 실제로 플레이한 기록만 집계 — 월별 리프레시 반영
+    // monthKey는 정산 시 모두 갱신돼서 신뢰 불가, lastPlayedAt 기준이 정확
+    const now = new Date();
+    const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    const monthStartKst = new Date(Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), 1, 0, 0, 0));
+    const monthStartUtc = new Date(monthStartKst.getTime() - 9 * 60 * 60 * 1000); // KST 0시 → UTC
     const allRecords = await WordBattleRecord.find(
-      {},
+      { lastPlayedAt: { $gte: monthStartUtc } },
       { grade: 1, name: 1, academyName: 1, unitId: 1, bestTime: 1 }
     ).lean();
 
