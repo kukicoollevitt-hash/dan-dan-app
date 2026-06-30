@@ -68716,9 +68716,11 @@
       };
       const addPngPage = async (dataUrl) => {
         if (!dataUrl) return;
-        const png = await merged.embedPng(dataUrl);
+        // JPEG/PNG dataURL 자동 분기 (canvas.toDataURL은 JPEG 반환)
+        const isPng = String(dataUrl).startsWith('data:image/png');
+        const img = isPng ? await merged.embedPng(dataUrl) : await merged.embedJpg(dataUrl);
         const page = merged.addPage([A4_W, A4_H]);
-        page.drawImage(png, { x: 0, y: 0, width: A4_W, height: A4_H });
+        page.drawImage(img, { x: 0, y: 0, width: A4_W, height: A4_H });
       };
 
       // 1) 앞표지 PDF
@@ -68841,11 +68843,12 @@
       await addFirstPageFromBytes(frontBytes);
       // 2) 25 공통 앞표지 뒷장 PDF
       await addFirstPageFromBytes(frontBackBytes);
-      // 3) 권 속지 (PNG → 새 페이지에 임베드)
+      // 3) 권 속지 (이미지 → 새 페이지에 임베드, JPEG/PNG 자동 분기)
       if (innerPngDataUrl) {
-        const png = await merged.embedPng(innerPngDataUrl);
+        const isPng = String(innerPngDataUrl).startsWith('data:image/png');
+        const img = isPng ? await merged.embedPng(innerPngDataUrl) : await merged.embedJpg(innerPngDataUrl);
         const page = merged.addPage([A4_W, A4_H]);
-        page.drawImage(png, { x: 0, y: 0, width: A4_W, height: A4_H });
+        page.drawImage(img, { x: 0, y: 0, width: A4_W, height: A4_H });
       }
       // 4) 교재공용 6장 PDF
       for (const bytes of (commonPdfsBytes || [])) {
