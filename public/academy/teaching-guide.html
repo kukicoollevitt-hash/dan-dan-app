@@ -7,6 +7,8 @@
   <!-- PDF 생성용 라이브러리 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- 벡터 PDF 병합용 (표지/공용 PDF를 무손실로 끼워 넣기) -->
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <!-- 워크북 좌측 박스용 Pretendard 폰트 -->
   <link rel="stylesheet" href="/images/Pretendard-1.3.9/web/static/pretendard.css">
   <!-- 워크북 좌측 박스용 학교안심 둥근미소 폰트 -->
@@ -68762,6 +68764,126 @@
     }
 
     // 메인: 브레인온 N권 PDF 생성 (4주차 표지 + 28강 워크북)
+    // ─── PDF 파일 ArrayBuffer 로드 (pdf-lib 병합용, 벡터 무손실) ───
+    async function _loadPdfBytes(url) {
+      try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return await res.arrayBuffer();
+      } catch (e) {
+        console.warn('PDF 로드 실패:', url, e);
+        return null;
+      }
+    }
+
+    // 권별 표지 4종 PDF 로드 (앞표지, 25공통뒷장, 26공통뒤표지, 띠지)
+    // 시리즈별 PDF 명명: {시리즈}_extract_{N}.pdf  (N = PNG번호 - 1)
+    //   - 권 앞표지: PNG (2n-1) → PDF (2n-2)
+    //   - 권 띠지:   PNG (2n)   → PDF (2n-1)
+    //   - 25 공통:  PNG 25    → PDF 24
+    //   - 26 공통:  PNG 26    → PDF 25
+    async function loadVolumeCoverPdfs(seriesFolder, volNum) {
+      const folder = encodeURIComponent('교재별표지');
+      const series = encodeURIComponent(seriesFolder);
+      const fname = (idx) => `${seriesFolder}_extract_${idx}.pdf`;
+      const map = {
+        front:     `/images/${folder}/${series}/${encodeURIComponent(fname(2 * volNum - 2))}`,
+        frontBack: `/images/${folder}/${series}/${encodeURIComponent(fname(24))}`,
+        backBack:  `/images/${folder}/${series}/${encodeURIComponent(fname(25))}`,
+        band:      `/images/${folder}/${series}/${encodeURIComponent(fname(2 * volNum - 1))}`
+      };
+      const out = {};
+      for (const [key, url] of Object.entries(map)) {
+        out[key] = await _loadPdfBytes(url);
+      }
+      return out;
+    }
+
+    // 교재공용 6장 PDF 로드 (교재_구성_extract_0.pdf ~ extract_5.pdf)
+    async function loadCommonPdfs() {
+      const folder = encodeURIComponent('교재공용');
+      const out = [];
+      for (let i = 0; i < 6; i++) {
+        const url = `/images/${folder}/${encodeURIComponent('교재_구성_extract_' + i)}.pdf`;
+        const bytes = await _loadPdfBytes(url);
+        out.push(bytes);
+      }
+      return out;
+    }
+
+    // 권별 속지 PNG 로드 (속지 폴더는 아직 PDF 없음 → PNG 유지)
+    async function loadVolumeInnerImage(seriesFolder, volNum) {
+      const folder = encodeURIComponent('교재별표지');
+      const innerSeries = encodeURIComponent(seriesFolder + '_속지');
+      const url = `/images/${folder}/${innerSeries}/${volNum}.png`;
+      try {
+        return await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth || 794;
+            c.height = img.naturalHeight || 1123;
+            c.getContext('2d').drawImage(img, 0, 0);
+            try { resolve(c.toDataURL('image/jpeg', 0.95)); } catch (e) { reject(e); }
+          };
+          img.onerror = reject;
+          img.src = url;
+        });
+      } catch (e) {
+        console.warn('권 속지 로드 실패:', url, e);
+        return null;
+      }
+    }
+
+    // pdf-lib로 최종 PDF 병합: front + frontBack + innerPng(이미지로 박힌 페이지) + commonPdfs + bodyJsPdf + backBack + band
+    // 모든 PDF 페이지는 A4 (210×297mm) 로 통일됨 (필요시 스케일)
+    async function mergeFinalPdf({ frontBytes, frontBackBytes, innerPngDataUrl, commonPdfsBytes, bodyJsPdfBytes, backBackBytes, bandBytes }) {
+      const { PDFDocument, PageSizes } = window.PDFLib;
+      const merged = await PDFDocument.create();
+      const [A4_W, A4_H] = PageSizes.A4; // [595.28, 841.89] points
+
+      // 외부 PDF의 첫 페이지를 가져와 merged에 복사
+      const addFirstPageFromBytes = async (bytes) => {
+        if (!bytes) return;
+        const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+        if (src.getPageCount() === 0) return;
+        const [copied] = await merged.copyPages(src, [0]);
+        merged.addPage(copied);
+      };
+      // 외부 PDF의 전체 페이지를 복사
+      const addAllPagesFromBytes = async (bytes) => {
+        if (!bytes) return;
+        const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+        const indices = src.getPageIndices();
+        const copied = await merged.copyPages(src, indices);
+        for (const p of copied) merged.addPage(p);
+      };
+
+      // 1) 권 앞표지 PDF
+      await addFirstPageFromBytes(frontBytes);
+      // 2) 25 공통 앞표지 뒷장 PDF
+      await addFirstPageFromBytes(frontBackBytes);
+      // 3) 권 속지 (PNG → 새 페이지에 임베드)
+      if (innerPngDataUrl) {
+        const png = await merged.embedPng(innerPngDataUrl);
+        const page = merged.addPage([A4_W, A4_H]);
+        page.drawImage(png, { x: 0, y: 0, width: A4_W, height: A4_H });
+      }
+      // 4) 교재공용 6장 PDF
+      for (const bytes of (commonPdfsBytes || [])) {
+        await addFirstPageFromBytes(bytes);
+      }
+      // 5) 본문 jsPDF (메모장 + 주차 표지 + 어휘 + 28강)
+      await addAllPagesFromBytes(bodyJsPdfBytes);
+      // 6) 26 공통 맨 뒤표지 PDF
+      await addFirstPageFromBytes(backBackBytes);
+      // 7) 권 띠지 PDF
+      await addFirstPageFromBytes(bandBytes);
+
+      return await merged.save();
+    }
+
     // ─── 권별 표지 5장 로드 헬퍼 (앞표지, 25공통뒷장, 속지, 26공통뒤표지, 띠지) ───
     // 폴더: /images/교재별표지/{seriesFolder}/  + /images/교재별표지/{seriesFolder}_속지/
     async function loadVolumeCoverImages(seriesFolder, volNum) {
@@ -68871,41 +68993,17 @@
           vocabItem.html = buildMonthlyWeekVocabPage(volNum, weekInfo, unitDataMap);
         }
 
-        // 2-b) 교재 공용 페이지 6장 사전 로드 (/images/교재공용/교재공용N.png)
-        const COMMON_COUNT = 6;
-        const commonImageDataUrls = [];
-        for (let i = 1; i <= COMMON_COUNT; i++) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>교재 공용 페이지 로드 중... (${i}/${COMMON_COUNT})</span>`;
-          const url = `/images/${encodeURIComponent('교재공용')}/${encodeURIComponent('교재공용' + i)}.png?v=20260630`;
-          try {
-            const dataUrl = await new Promise((resolve, reject) => {
-              const img = new Image();
-              img.crossOrigin = 'anonymous';
-              img.onload = () => {
-                const c = document.createElement('canvas');
-                c.width = img.naturalWidth || 794;
-                c.height = img.naturalHeight || 1123;
-                c.getContext('2d').drawImage(img, 0, 0);
-                try { resolve(c.toDataURL('image/jpeg', 0.95)); } catch (e) { reject(e); }
-              };
-              img.onerror = reject;
-              img.src = url;
-            });
-            commonImageDataUrls.push(dataUrl);
-          } catch (e) {
-            console.warn('공용 페이지 로드 실패:', url, e);
-          }
-        }
+        // 2-b) 권 표지 PDF 4종 + 교재공용 PDF 6장 + 속지 PNG 사전 로드
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 표지 PDF 로드 중...</span>`;
+        const coverPdfs = await loadVolumeCoverPdfs('브레인온', volNum);
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>교재 공용 PDF 6장 로드 중...</span>`;
+        const commonPdfsBytes = await loadCommonPdfs();
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 속지 로드 중...</span>`;
+        const innerPngDataUrl = await loadVolumeInnerImage('브레인온', volNum);
 
-        // 2-c) 권별 표지 4장 로드 (앞표지 + 25공통뒷장 + 26공통뒤표지 + 띠지)
-        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 표지 로드 중...</span>`;
-        const volumeCovers = await loadVolumeCoverImages('브레인온', volNum);
-        const coverFrontCount = (volumeCovers.front ? 1 : 0) + (volumeCovers.frontBack ? 1 : 0) + (volumeCovers.inner ? 1 : 0);
-        const coverBackCount = (volumeCovers.backBack ? 1 : 0) + (volumeCovers.band ? 1 : 0);
+        const totalPages = 3 + commonPdfsBytes.filter(Boolean).length + 1 + prebuilt.length + 2; // 앞표지+25+속지 + 공용 + 메모장 + 본문 + 26+띠지
 
-        const totalPages = coverFrontCount + commonImageDataUrls.length + 1 + prebuilt.length + coverBackCount;  // 권앞표지+25 + 공용 + 메모장 + 주차/단원 + 26+띠지
-
-        // 3) PDF 생성
+        // 3) 본문 jsPDF 생성 (메모장 + 주차표지 + 어휘 + 28강 단원)
         const stage = document.createElement('div');
         stage.style.cssText = 'position: fixed; left: -10000px; top: 0; width: 794px;';
         document.body.appendChild(stage);
@@ -68917,38 +69015,11 @@
         const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
         const pageW = 210, pageH = 297;
         let pageIdx = 0;
+        let bodyPageNo = 3 + commonPdfsBytes.filter(Boolean).length; // 본문 시작 페이지 (앞부분 표지+공용 다음)
 
-        // 3-pre) 권 앞표지 + 공통 앞표지 뒷장 (25.png)
-        if (volumeCovers.front) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 권 앞표지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.front, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-        if (volumeCovers.frontBack) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 앞표지 뒷장</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.frontBack, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-        if (volumeCovers.inner) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 권별 속지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.inner, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-
-        // 3-a) 공용 페이지 6장 먼저 추가
-        for (let i = 0; i < commonImageDataUrls.length; i++) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 교재 공용 ${i+1}/${COMMON_COUNT}</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(commonImageDataUrls[i], 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-
-        // 3-b) 메모장 오목판 페이지 1장 (7페이지째)
+        // 3-a) 메모장 오목판 페이지
         {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 메모장</span>`;
+          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${bodyPageNo + 1}/${totalPages}</b> · 메모장</span>`;
           stage.innerHTML = buildMemoGridPage();
           await new Promise(r => setTimeout(r, 30));
           const memoNode = stage.firstElementChild;
@@ -68960,19 +69031,17 @@
           if (pageIdx > 0) pdf.addPage();
           pdf.addImage(memoImg, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
           pageIdx++;
+          bodyPageNo++;
         }
 
+        // 3-b) 주차 표지·어휘·단원 본문
         for (let p = 0; p < prebuilt.length; p++) {
           const item = prebuilt[p];
-          const overall = `<b>전체 ${pageIdx + 1}/${totalPages}</b>`;
+          const overall = `<b>전체 ${bodyPageNo + 1}/${totalPages}</b>`;
           let detail = '';
-          if (item.kind === 'cover') {
-            detail = `${item.weekInfo.week}주차 표지`;
-          } else if (item.kind === 'vocab') {
-            detail = `${item.weekInfo.week}주차 어휘 한 눈에 보기`;
-          } else {
-            detail = `${item.weekInfo.week}주차 · ${MONTHLY_SUBJECT_LABEL[item.sub]} ${parseInt(item.weekInfo.unitNo,10)}단원 (${item.unitPageIdx}/${item.unitPageTotal})`;
-          }
+          if (item.kind === 'cover') detail = `${item.weekInfo.week}주차 표지`;
+          else if (item.kind === 'vocab') detail = `${item.weekInfo.week}주차 어휘 한 눈에 보기`;
+          else detail = `${item.weekInfo.week}주차 · ${MONTHLY_SUBJECT_LABEL[item.sub]} ${parseInt(item.weekInfo.unitNo,10)}단원 (${item.unitPageIdx}/${item.unitPageTotal})`;
           if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>${overall} · ${detail}</span>`;
 
           stage.innerHTML = item.html;
@@ -69005,25 +69074,32 @@
           if (pageIdx > 0) pdf.addPage();
           pdf.addImage(img, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
           pageIdx++;
-        }
-
-        // 3-post) 공통 맨 뒤표지 (26.png) + 권 띠지
-        if (volumeCovers.backBack) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 맨 뒤표지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.backBack, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-        if (volumeCovers.band) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 권 띠지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.band, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
+          bodyPageNo++;
         }
 
         document.body.removeChild(stage);
+
+        // 4) pdf-lib로 표지+공용 PDF와 본문 jsPDF 병합 (벡터 무손실)
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 병합 중...</span>`;
+        const bodyJsPdfBytes = pdf.output('arraybuffer');
+        const mergedBytes = await mergeFinalPdf({
+          frontBytes: coverPdfs.front,
+          frontBackBytes: coverPdfs.frontBack,
+          innerPngDataUrl,
+          commonPdfsBytes,
+          bodyJsPdfBytes,
+          backBackBytes: coverPdfs.backBack,
+          bandBytes: coverPdfs.band
+        });
+
+        // 5) 다운로드 트리거
+        const blob = new Blob([mergedBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
         const fileName = `교재_브레인온_${volNum}권_4주차28단원_${audienceLabel}.pdf`;
-        pdf.save(fileName);
+        const a = document.createElement('a');
+        a.href = url; a.download = fileName;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
 
         if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
       } catch (err) {
@@ -69100,41 +69176,17 @@
           vocabItem.html = buildMonthlyWeekVocabPageUp(volNum, weekInfo, unitDataMap);
         }
 
-        // 2-b) 교재 공용 페이지 6장 로드
-        const COMMON_COUNT = 6;
-        const commonImageDataUrls = [];
-        for (let i = 1; i <= COMMON_COUNT; i++) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>교재 공용 페이지 로드 중... (${i}/${COMMON_COUNT})</span>`;
-          const url = `/images/${encodeURIComponent('교재공용')}/${encodeURIComponent('교재공용' + i)}.png?v=20260630`;
-          try {
-            const dataUrl = await new Promise((resolve, reject) => {
-              const img = new Image();
-              img.crossOrigin = 'anonymous';
-              img.onload = () => {
-                const c = document.createElement('canvas');
-                c.width = img.naturalWidth || 794;
-                c.height = img.naturalHeight || 1123;
-                c.getContext('2d').drawImage(img, 0, 0);
-                try { resolve(c.toDataURL('image/jpeg', 0.95)); } catch (e) { reject(e); }
-              };
-              img.onerror = reject;
-              img.src = url;
-            });
-            commonImageDataUrls.push(dataUrl);
-          } catch (e) {
-            console.warn('공용 페이지 로드 실패:', url, e);
-          }
-        }
+        // 2-b) 권 표지 PDF 4종 + 교재공용 PDF 6장 + 속지 PNG 로드
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 표지 PDF 로드 중...</span>`;
+        const coverPdfs = await loadVolumeCoverPdfs('브레인업', volNum);
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>교재 공용 PDF 6장 로드 중...</span>`;
+        const commonPdfsBytes = await loadCommonPdfs();
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 속지 로드 중...</span>`;
+        const innerPngDataUrl = await loadVolumeInnerImage('브레인업', volNum);
 
-        // 2-c) 권별 표지 4장 로드
-        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 표지 로드 중...</span>`;
-        const volumeCovers = await loadVolumeCoverImages('브레인업', volNum);
-        const coverFrontCount = (volumeCovers.front ? 1 : 0) + (volumeCovers.frontBack ? 1 : 0) + (volumeCovers.inner ? 1 : 0);
-        const coverBackCount = (volumeCovers.backBack ? 1 : 0) + (volumeCovers.band ? 1 : 0);
+        const totalPages = 3 + commonPdfsBytes.filter(Boolean).length + 1 + prebuilt.length + 2;
 
-        const totalPages = coverFrontCount + commonImageDataUrls.length + 1 + prebuilt.length + coverBackCount;
-
-        // 3) PDF 생성
+        // 3) 본문 jsPDF 생성
         const stage = document.createElement('div');
         stage.style.cssText = 'position: fixed; left: -10000px; top: 0; width: 794px;';
         document.body.appendChild(stage);
@@ -69146,36 +69198,10 @@
         const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
         const pageW = 210, pageH = 297;
         let pageIdx = 0;
-
-        // 3-pre) 권 앞표지 + 공통 앞표지 뒷장
-        if (volumeCovers.front) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 권 앞표지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.front, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-        if (volumeCovers.frontBack) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 앞표지 뒷장</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.frontBack, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-        if (volumeCovers.inner) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 권별 속지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.inner, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-
-        for (let i = 0; i < commonImageDataUrls.length; i++) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 교재 공용 ${i+1}/${COMMON_COUNT}</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(commonImageDataUrls[i], 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
+        let bodyPageNo = 3 + commonPdfsBytes.filter(Boolean).length;
 
         {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 메모장</span>`;
+          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${bodyPageNo + 1}/${totalPages}</b> · 메모장</span>`;
           stage.innerHTML = buildMemoGridPage();
           await new Promise(r => setTimeout(r, 30));
           const memoNode = stage.firstElementChild;
@@ -69187,19 +69213,16 @@
           if (pageIdx > 0) pdf.addPage();
           pdf.addImage(memoImg, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
           pageIdx++;
+          bodyPageNo++;
         }
 
         for (let p = 0; p < prebuilt.length; p++) {
           const item = prebuilt[p];
-          const overall = `<b>전체 ${pageIdx + 1}/${totalPages}</b>`;
+          const overall = `<b>전체 ${bodyPageNo + 1}/${totalPages}</b>`;
           let detail = '';
-          if (item.kind === 'cover') {
-            detail = `${item.weekInfo.week}주차 표지`;
-          } else if (item.kind === 'vocab') {
-            detail = `${item.weekInfo.week}주차 어휘 한 눈에 보기`;
-          } else {
-            detail = `${item.weekInfo.week}주차 · ${MONTHLY_SUBJECT_LABEL[item.sub]} ${parseInt(item.weekInfo.unitNo,10)}단원 (${item.unitPageIdx}/${item.unitPageTotal})`;
-          }
+          if (item.kind === 'cover') detail = `${item.weekInfo.week}주차 표지`;
+          else if (item.kind === 'vocab') detail = `${item.weekInfo.week}주차 어휘 한 눈에 보기`;
+          else detail = `${item.weekInfo.week}주차 · ${MONTHLY_SUBJECT_LABEL[item.sub]} ${parseInt(item.weekInfo.unitNo,10)}단원 (${item.unitPageIdx}/${item.unitPageTotal})`;
           if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>${overall} · ${detail}</span>`;
 
           stage.innerHTML = item.html;
@@ -69231,25 +69254,32 @@
           if (pageIdx > 0) pdf.addPage();
           pdf.addImage(img, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
           pageIdx++;
-        }
-
-        // 3-post) 공통 맨 뒤표지 + 권 띠지
-        if (volumeCovers.backBack) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 맨 뒤표지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.backBack, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-        if (volumeCovers.band) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 권 띠지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.band, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
+          bodyPageNo++;
         }
 
         document.body.removeChild(stage);
+
+        // 4) pdf-lib 병합
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 병합 중...</span>`;
+        const bodyJsPdfBytes = pdf.output('arraybuffer');
+        const mergedBytes = await mergeFinalPdf({
+          frontBytes: coverPdfs.front,
+          frontBackBytes: coverPdfs.frontBack,
+          innerPngDataUrl,
+          commonPdfsBytes,
+          bodyJsPdfBytes,
+          backBackBytes: coverPdfs.backBack,
+          bandBytes: coverPdfs.band
+        });
+
+        // 5) 다운로드
+        const blob = new Blob([mergedBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
         const fileName = `교재_브레인업_${volNum}권_4주차28단원_${audienceLabel}.pdf`;
-        pdf.save(fileName);
+        const a = document.createElement('a');
+        a.href = url; a.download = fileName;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
 
         if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
       } catch (err) {
@@ -69326,41 +69356,17 @@
           vocabItem.html = buildMonthlyWeekVocabPageFit(volNum, weekInfo, unitDataMap);
         }
 
-        // 2-b) 교재 공용 페이지 6장 로드
-        const COMMON_COUNT = 6;
-        const commonImageDataUrls = [];
-        for (let i = 1; i <= COMMON_COUNT; i++) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>교재 공용 페이지 로드 중... (${i}/${COMMON_COUNT})</span>`;
-          const url = `/images/${encodeURIComponent('교재공용')}/${encodeURIComponent('교재공용' + i)}.png?v=20260630`;
-          try {
-            const dataUrl = await new Promise((resolve, reject) => {
-              const img = new Image();
-              img.crossOrigin = 'anonymous';
-              img.onload = () => {
-                const c = document.createElement('canvas');
-                c.width = img.naturalWidth || 794;
-                c.height = img.naturalHeight || 1123;
-                c.getContext('2d').drawImage(img, 0, 0);
-                try { resolve(c.toDataURL('image/jpeg', 0.95)); } catch (e) { reject(e); }
-              };
-              img.onerror = reject;
-              img.src = url;
-            });
-            commonImageDataUrls.push(dataUrl);
-          } catch (e) {
-            console.warn('공용 페이지 로드 실패:', url, e);
-          }
-        }
+        // 2-b) 권 표지 PDF + 교재공용 PDF + 속지 PNG 로드
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 표지 PDF 로드 중...</span>`;
+        const coverPdfs = await loadVolumeCoverPdfs('브레인핏', volNum);
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>교재 공용 PDF 6장 로드 중...</span>`;
+        const commonPdfsBytes = await loadCommonPdfs();
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 속지 로드 중...</span>`;
+        const innerPngDataUrl = await loadVolumeInnerImage('브레인핏', volNum);
 
-        // 2-c) 권별 표지 4장 로드
-        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 표지 로드 중...</span>`;
-        const volumeCovers = await loadVolumeCoverImages('브레인핏', volNum);
-        const coverFrontCount = (volumeCovers.front ? 1 : 0) + (volumeCovers.frontBack ? 1 : 0) + (volumeCovers.inner ? 1 : 0);
-        const coverBackCount = (volumeCovers.backBack ? 1 : 0) + (volumeCovers.band ? 1 : 0);
+        const totalPages = 3 + commonPdfsBytes.filter(Boolean).length + 1 + prebuilt.length + 2;
 
-        const totalPages = coverFrontCount + commonImageDataUrls.length + 1 + prebuilt.length + coverBackCount;
-
-        // 3) PDF 생성
+        // 3) 본문 jsPDF 생성
         const stage = document.createElement('div');
         stage.style.cssText = 'position: fixed; left: -10000px; top: 0; width: 794px;';
         document.body.appendChild(stage);
@@ -69372,36 +69378,10 @@
         const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
         const pageW = 210, pageH = 297;
         let pageIdx = 0;
-
-        // 3-pre) 권 앞표지 + 공통 앞표지 뒷장
-        if (volumeCovers.front) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 권 앞표지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.front, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-        if (volumeCovers.frontBack) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 앞표지 뒷장</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.frontBack, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-        if (volumeCovers.inner) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 권별 속지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.inner, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-
-        for (let i = 0; i < commonImageDataUrls.length; i++) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 교재 공용 ${i+1}/${COMMON_COUNT}</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(commonImageDataUrls[i], 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
+        let bodyPageNo = 3 + commonPdfsBytes.filter(Boolean).length;
 
         {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 메모장</span>`;
+          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${bodyPageNo + 1}/${totalPages}</b> · 메모장</span>`;
           stage.innerHTML = buildMemoGridPage();
           await new Promise(r => setTimeout(r, 30));
           const memoNode = stage.firstElementChild;
@@ -69413,19 +69393,16 @@
           if (pageIdx > 0) pdf.addPage();
           pdf.addImage(memoImg, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
           pageIdx++;
+          bodyPageNo++;
         }
 
         for (let p = 0; p < prebuilt.length; p++) {
           const item = prebuilt[p];
-          const overall = `<b>전체 ${pageIdx + 1}/${totalPages}</b>`;
+          const overall = `<b>전체 ${bodyPageNo + 1}/${totalPages}</b>`;
           let detail = '';
-          if (item.kind === 'cover') {
-            detail = `${item.weekInfo.week}주차 표지`;
-          } else if (item.kind === 'vocab') {
-            detail = `${item.weekInfo.week}주차 어휘 한 눈에 보기`;
-          } else {
-            detail = `${item.weekInfo.week}주차 · ${MONTHLY_SUBJECT_LABEL[item.sub]} ${parseInt(item.weekInfo.unitNo,10)}단원 (${item.unitPageIdx}/${item.unitPageTotal})`;
-          }
+          if (item.kind === 'cover') detail = `${item.weekInfo.week}주차 표지`;
+          else if (item.kind === 'vocab') detail = `${item.weekInfo.week}주차 어휘 한 눈에 보기`;
+          else detail = `${item.weekInfo.week}주차 · ${MONTHLY_SUBJECT_LABEL[item.sub]} ${parseInt(item.weekInfo.unitNo,10)}단원 (${item.unitPageIdx}/${item.unitPageTotal})`;
           if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>${overall} · ${detail}</span>`;
 
           stage.innerHTML = item.html;
@@ -69457,25 +69434,32 @@
           if (pageIdx > 0) pdf.addPage();
           pdf.addImage(img, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
           pageIdx++;
-        }
-
-        // 3-post) 공통 맨 뒤표지 + 권 띠지
-        if (volumeCovers.backBack) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 맨 뒤표지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.backBack, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-        if (volumeCovers.band) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 권 띠지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.band, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
+          bodyPageNo++;
         }
 
         document.body.removeChild(stage);
+
+        // 4) pdf-lib 병합
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 병합 중...</span>`;
+        const bodyJsPdfBytes = pdf.output('arraybuffer');
+        const mergedBytes = await mergeFinalPdf({
+          frontBytes: coverPdfs.front,
+          frontBackBytes: coverPdfs.frontBack,
+          innerPngDataUrl,
+          commonPdfsBytes,
+          bodyJsPdfBytes,
+          backBackBytes: coverPdfs.backBack,
+          bandBytes: coverPdfs.band
+        });
+
+        // 5) 다운로드
+        const blob = new Blob([mergedBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
         const fileName = `교재_브레인핏_${volNum}권_4주차28단원_${audienceLabel}.pdf`;
-        pdf.save(fileName);
+        const a = document.createElement('a');
+        a.href = url; a.download = fileName;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
 
         if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
       } catch (err) {
@@ -69552,41 +69536,17 @@
           vocabItem.html = buildMonthlyWeekVocabPageDeep(volNum, weekInfo, unitDataMap);
         }
 
-        // 2-b) 교재 공용 페이지 6장 로드
-        const COMMON_COUNT = 6;
-        const commonImageDataUrls = [];
-        for (let i = 1; i <= COMMON_COUNT; i++) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>교재 공용 페이지 로드 중... (${i}/${COMMON_COUNT})</span>`;
-          const url = `/images/${encodeURIComponent('교재공용')}/${encodeURIComponent('교재공용' + i)}.png?v=20260630`;
-          try {
-            const dataUrl = await new Promise((resolve, reject) => {
-              const img = new Image();
-              img.crossOrigin = 'anonymous';
-              img.onload = () => {
-                const c = document.createElement('canvas');
-                c.width = img.naturalWidth || 794;
-                c.height = img.naturalHeight || 1123;
-                c.getContext('2d').drawImage(img, 0, 0);
-                try { resolve(c.toDataURL('image/jpeg', 0.95)); } catch (e) { reject(e); }
-              };
-              img.onerror = reject;
-              img.src = url;
-            });
-            commonImageDataUrls.push(dataUrl);
-          } catch (e) {
-            console.warn('공용 페이지 로드 실패:', url, e);
-          }
-        }
+        // 2-b) 권 표지 PDF + 교재공용 PDF + 속지 PNG 로드
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 표지 PDF 로드 중...</span>`;
+        const coverPdfs = await loadVolumeCoverPdfs('브레인딥', volNum);
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>교재 공용 PDF 6장 로드 중...</span>`;
+        const commonPdfsBytes = await loadCommonPdfs();
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 속지 로드 중...</span>`;
+        const innerPngDataUrl = await loadVolumeInnerImage('브레인딥', volNum);
 
-        // 2-c) 권별 표지 4장 로드
-        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 표지 로드 중...</span>`;
-        const volumeCovers = await loadVolumeCoverImages('브레인딥', volNum);
-        const coverFrontCount = (volumeCovers.front ? 1 : 0) + (volumeCovers.frontBack ? 1 : 0) + (volumeCovers.inner ? 1 : 0);
-        const coverBackCount = (volumeCovers.backBack ? 1 : 0) + (volumeCovers.band ? 1 : 0);
+        const totalPages = 3 + commonPdfsBytes.filter(Boolean).length + 1 + prebuilt.length + 2;
 
-        const totalPages = coverFrontCount + commonImageDataUrls.length + 1 + prebuilt.length + coverBackCount;
-
-        // 3) PDF 생성
+        // 3) 본문 jsPDF 생성
         const stage = document.createElement('div');
         stage.style.cssText = 'position: fixed; left: -10000px; top: 0; width: 794px;';
         document.body.appendChild(stage);
@@ -69598,36 +69558,10 @@
         const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
         const pageW = 210, pageH = 297;
         let pageIdx = 0;
-
-        // 3-pre) 권 앞표지 + 공통 앞표지 뒷장
-        if (volumeCovers.front) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 권 앞표지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.front, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-        if (volumeCovers.frontBack) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 앞표지 뒷장</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.frontBack, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-        if (volumeCovers.inner) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 권별 속지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.inner, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-
-        for (let i = 0; i < commonImageDataUrls.length; i++) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 교재 공용 ${i+1}/${COMMON_COUNT}</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(commonImageDataUrls[i], 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
+        let bodyPageNo = 3 + commonPdfsBytes.filter(Boolean).length;
 
         {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 메모장</span>`;
+          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${bodyPageNo + 1}/${totalPages}</b> · 메모장</span>`;
           stage.innerHTML = buildMemoGridPage();
           await new Promise(r => setTimeout(r, 30));
           const memoNode = stage.firstElementChild;
@@ -69639,19 +69573,16 @@
           if (pageIdx > 0) pdf.addPage();
           pdf.addImage(memoImg, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
           pageIdx++;
+          bodyPageNo++;
         }
 
         for (let p = 0; p < prebuilt.length; p++) {
           const item = prebuilt[p];
-          const overall = `<b>전체 ${pageIdx + 1}/${totalPages}</b>`;
+          const overall = `<b>전체 ${bodyPageNo + 1}/${totalPages}</b>`;
           let detail = '';
-          if (item.kind === 'cover') {
-            detail = `${item.weekInfo.week}주차 표지`;
-          } else if (item.kind === 'vocab') {
-            detail = `${item.weekInfo.week}주차 어휘 한 눈에 보기`;
-          } else {
-            detail = `${item.weekInfo.week}주차 · ${MONTHLY_SUBJECT_LABEL[item.sub]} ${parseInt(item.weekInfo.unitNo,10)}단원 (${item.unitPageIdx}/${item.unitPageTotal})`;
-          }
+          if (item.kind === 'cover') detail = `${item.weekInfo.week}주차 표지`;
+          else if (item.kind === 'vocab') detail = `${item.weekInfo.week}주차 어휘 한 눈에 보기`;
+          else detail = `${item.weekInfo.week}주차 · ${MONTHLY_SUBJECT_LABEL[item.sub]} ${parseInt(item.weekInfo.unitNo,10)}단원 (${item.unitPageIdx}/${item.unitPageTotal})`;
           if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>${overall} · ${detail}</span>`;
 
           stage.innerHTML = item.html;
@@ -69683,25 +69614,32 @@
           if (pageIdx > 0) pdf.addPage();
           pdf.addImage(img, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
           pageIdx++;
-        }
-
-        // 3-post) 공통 맨 뒤표지 + 권 띠지
-        if (volumeCovers.backBack) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 맨 뒤표지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.backBack, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
-        }
-        if (volumeCovers.band) {
-          if (btn) btn.innerHTML = `<span class="icon">⏳</span><span><b>전체 ${pageIdx + 1}/${totalPages}</b> · 권 띠지</span>`;
-          if (pageIdx > 0) pdf.addPage();
-          pdf.addImage(volumeCovers.band, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-          pageIdx++;
+          bodyPageNo++;
         }
 
         document.body.removeChild(stage);
+
+        // 4) pdf-lib 병합
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 병합 중...</span>`;
+        const bodyJsPdfBytes = pdf.output('arraybuffer');
+        const mergedBytes = await mergeFinalPdf({
+          frontBytes: coverPdfs.front,
+          frontBackBytes: coverPdfs.frontBack,
+          innerPngDataUrl,
+          commonPdfsBytes,
+          bodyJsPdfBytes,
+          backBackBytes: coverPdfs.backBack,
+          bandBytes: coverPdfs.band
+        });
+
+        // 5) 다운로드
+        const blob = new Blob([mergedBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
         const fileName = `교재_브레인딥_${volNum}권_4주차28단원_${audienceLabel}.pdf`;
-        pdf.save(fileName);
+        const a = document.createElement('a');
+        a.href = url; a.download = fileName;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
 
         if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
       } catch (err) {
