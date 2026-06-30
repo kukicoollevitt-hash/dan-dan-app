@@ -31545,15 +31545,14 @@ app.get("/api/course-application/:id", async (req, res) => {
       return res.status(404).json({ success: false, message: "해당 수강신청 정보를 찾을 수 없습니다." });
     }
 
-    // answers 배열이 있으면 점수(정답 개수) 재계산
-    // weightedScore가 있는 신 데이터는 저장된 grade/series 그대로 사용
+    // ⚡ DB에 저장된 score/weightedScore 신뢰 (학생이 풀 때의 정답으로 채점된 원본 값)
+    // 과거에는 서버에서 옛 quizData로 재계산 → DB값 덮어쓰는 버그가 있었음
+    // 이제는 weightedScore 있으면 신데이터로 간주, 없으면 DB score 그대로 사용
     const appObj = application.toObject();
-    if (appObj.answers && appObj.answers.length > 0) {
-      appObj.score = calculateScoreFromAnswers(appObj.answers);
-    }
     const hasWeighted = (typeof appObj.weightedScore === 'number' && appObj.weightedScore !== null);
-    if (!hasWeighted && appObj.studentGrade) {
-      const { grade, series } = calculateGradeAndSeries(appObj.score || 0, appObj.studentGrade);
+    // weightedScore 없는 옛 데이터만 등급/시리즈 재계산 (저장된 score 그대로 사용)
+    if (!hasWeighted && appObj.studentGrade && typeof appObj.score === 'number') {
+      const { grade, series } = calculateGradeAndSeries(appObj.score, appObj.studentGrade);
       appObj.grade = grade;
       appObj.series = series;
     }
