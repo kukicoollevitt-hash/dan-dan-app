@@ -68191,6 +68191,18 @@
           pageIdx++;
         }
 
+        // 과목별 PDF 하단 페이지 번호를 단원 리셋 없이 전체 통합 카운터로 표시
+        // (wbFooter는 HTML에 이미 렌더링되어 있으므로 정규식으로 번호·좌우 정렬 재작성)
+        let globalPageNo = 0;
+        const _rewriteFooter = (html, newNo) => {
+          const isOdd = (newNo % 2) === 1;
+          const sidePos = isOdd ? 'right: 50px; text-align: right;' : 'left: 50px; text-align: left;';
+          return String(html).replace(
+            /<div style="position: absolute; bottom: 28px; [^"]*font-size: 10px; color: #9ca3af; letter-spacing: 1px;">— \d+ —<\/div>/g,
+            `<div style="position: absolute; bottom: 28px; ${sidePos} font-size: 10px; color: #9ca3af; letter-spacing: 1px;">— ${newNo} —</div>`
+          );
+        };
+
         for (let u = 0; u < orderedUnits.length; u++) {
           const unitKey = orderedUnits[u];
           const unit = unitDataMap[unitKey];
@@ -68198,13 +68210,14 @@
           const pages = buildUnitPagesDispatch(unit, audienceLabel, teachData, unitKey);
 
           for (let i = 0; i < pages.length; i++) {
-            if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 생성 중... 단원 ${u+1}/${orderedUnits.length} · 페이지 ${i+1}/${pages.length}</span>`;
-            stage.innerHTML = pages[i];
+            globalPageNo++;
+            if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 생성 중... 단원 ${u+1}/${orderedUnits.length} · 페이지 ${i+1}/${pages.length} · 전체 ${globalPageNo}p</span>`;
+            stage.innerHTML = _rewriteFooter(pages[i], globalPageNo);
             await new Promise(r => setTimeout(r, 30));
             const node = stage.firstElementChild;
             if (node) {
-              // 단원별로 페이지 번호 1부터 시작하므로 holeleft/right 보정도 단원 내부 페이지 인덱스 기준
-              const isOdd = (i + 1) % 2 === 1;
+              // 책 접지 보정: 전체 페이지 번호 기준으로 홀수=우측정렬(좌측 padding), 짝수=좌측정렬(우측 padding)
+              const isOdd = globalPageNo % 2 === 1;
               const header = node.querySelector('[data-wb-header]');
               const leftBox = node.querySelector('[data-wb-leftbox]');
               if (isOdd) {
