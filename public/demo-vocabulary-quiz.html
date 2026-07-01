@@ -77,8 +77,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 15px;
+      padding: 15px 15px 60px; /* 하단에 여유를 두어 해설/다음버튼이 가리지 않음 */
       overflow-y: auto; /* 해설 영역이 viewport 넘칠 때 스크롤 가능 */
+      scroll-behavior: smooth;
     }
 
     /* 상단 헤더 */
@@ -88,7 +89,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
 
     .score-board {
@@ -1275,13 +1276,13 @@
       backdrop-filter: blur(16px) saturate(160%);
       -webkit-backdrop-filter: blur(16px) saturate(160%);
       border-radius: 30px;
-      padding: 35px;
+      padding: 22px 28px;
       max-width: 900px;
       width: 100%;
       box-shadow: 0 25px 70px rgba(0,0,0,0.35),
                   0 10px 25px rgba(102, 126, 234, 0.2),
                   inset 0 1px 0 rgba(255,255,255,0.9);
-      margin-bottom: 15px;
+      margin-bottom: 12px;
       animation: cardSlideIn 0.5s ease;
       border: 2px solid rgba(255,255,255,0.55);
       position: relative;
@@ -1369,13 +1370,13 @@
     .question-text {
       font-size: 24px;
       font-weight: 700;
-      line-height: 1.6;
+      line-height: 1.5;
       color: #2c3e50;
-      margin-bottom: 18px;
+      margin-bottom: 12px;
       text-align: center;
       position: relative;
       z-index: 1;
-      padding: 20px;
+      padding: 14px 18px;
       background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 100%);
       border-radius: 18px;
       border: 2px dashed rgba(102, 126, 234, 0.3);
@@ -1421,14 +1422,14 @@
     .choices {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 15px;
+      gap: 10px;
     }
 
     .choice-btn {
       background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       border: 3px solid #e0e0e0;
       border-radius: 16px;
-      padding: 18px;
+      padding: 13px 16px;
       font-size: 18px;
       font-weight: 600;
       color: #2c3e50;
@@ -1517,8 +1518,8 @@
     /* 설명 패널 */
     .explanation {
       display: none;
-      margin-top: 15px;
-      padding: 15px;
+      margin-top: 10px;
+      padding: 12px 14px;
       background: #f8f9fa;
       border-radius: 12px;
       border-left: 4px solid #667eea;
@@ -1541,21 +1542,21 @@
     }
 
     .explanation-title {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 700;
       color: #667eea;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
 
     .explanation-text {
-      font-size: 16px;
-      line-height: 1.6;
+      font-size: 15px;
+      line-height: 1.5;
       color: #555;
     }
 
     .example-sentence {
-      margin-top: 10px;
-      padding: 10px;
+      margin-top: 6px;
+      padding: 8px 10px;
       background: #fff;
       border-radius: 8px;
       font-style: italic;
@@ -1568,8 +1569,8 @@
       color: #fff;
       border: none;
       border-radius: 50px;
-      padding: 18px 60px;
-      font-size: 20px;
+      padding: 14px 48px;
+      font-size: 18px;
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
@@ -7939,7 +7940,24 @@
       const quiz = selectedQuizData[currentQuestionIndex];
       document.getElementById('explanationText').textContent = quiz.explanation;
       document.getElementById('exampleSentence').textContent = quiz.example;
-      document.getElementById('explanation').classList.add('show');
+      const explEl = document.getElementById('explanation');
+      explEl.classList.add('show');
+
+      // 해설이 하단에 가려지지 않도록, 컨테이너를 스크롤해서 다음 버튼까지 보이게
+      // (setTimeout으로 slideDown 애니메이션이 끝난 뒤 실제 높이 기준으로 스크롤)
+      setTimeout(() => {
+        const container = document.querySelector('.container');
+        const nextBtn = document.getElementById('nextBtn');
+        const target = nextBtn && nextBtn.classList.contains('show') ? nextBtn : explEl;
+        if (container && target) {
+          try {
+            target.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          } catch (e) {
+            // 구형 브라우저 fallback: 컨테이너 맨 아래로
+            container.scrollTop = container.scrollHeight;
+          }
+        }
+      }, 350);
     }
 
     // 선택지 비활성화
