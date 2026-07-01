@@ -3705,13 +3705,23 @@
       return canvas.toDataURL('image/png');
     }
     // 신규 디자인 콘텐츠 페이지를 PDF에 추가 (배경 + 안전 분할)
-    async function _appendCritiqueContentPage(pdf, html) {
+    // startPageNum: 이 함수가 그리는 첫 페이지의 번호 (일자 표지 다음부터 1로 시작).
+    // 반환값: 이 호출로 실제 추가된 페이지 수 → 호출자가 다음 시작 번호 계산에 활용.
+    async function _appendCritiqueContentPage(pdf, html, startPageNum) {
       const W = 210, H = 297, M = WORKBOOK_MARGIN;
       const CW = W - 2 * M, CH = H - 2 * M;
       const wrap = document.createElement('div');
       wrap.style.cssText = 'position:fixed;left:-99999px;top:0;width:794px;background:#fff;';
       wrap.innerHTML = html;
       document.body.appendChild(wrap);
+      // 하단 중앙 페이지 번호 스탬프
+      const stampPageNo = (num) => {
+        if (typeof num !== 'number' || num <= 0) return;
+        pdf.setFontSize(9);
+        pdf.setTextColor(140, 140, 140);
+        pdf.text(String(num), W / 2, H - 6, { align: 'center' });
+      };
+      let pagesAdded = 0;
       try {
         const imgs = wrap.querySelectorAll('img');
         await Promise.all(Array.from(imgs).map(img => {
@@ -3724,6 +3734,8 @@
         pdf.addPage();
         if (finalH <= CH) {
           pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', M, M, CW, finalH);
+          stampPageNo(startPageNum);
+          pagesAdded = 1;
         } else {
           // 블록 경계 안전 분할 — 본문 박스/어휘 박스 자체 끝은 분기점에서 제외 (본문↔어휘 사이에서 잘리지 않게)
           const scaleY = canvas.height / wrap.offsetHeight;
@@ -3754,13 +3766,16 @@
               .drawImage(canvas, 0, offY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
             const sliceMM = (sliceH / canvas.width) * CW;
             pdf.addImage(tc.toDataURL('image/jpeg', 0.9), 'JPEG', M, M, CW, sliceMM);
+            stampPageNo(typeof startPageNum === 'number' ? (startPageNum + pc) : undefined);
             offY = cutAt;
             pc++;
           }
+          pagesAdded = pc;
         }
       } finally {
         try { document.body.removeChild(wrap); } catch {}
       }
+      return pagesAdded;
     }
 
     async function renderDayPagesForWorkbook(pdf, withAnswers) {
@@ -3817,14 +3832,16 @@
         document.body.removeChild(coverPage);
         pdf.addImage(cov.toDataURL('image/png'), 'PNG', M, M, CW, CH);
 
+        // 페이지 번호 카운터 (일자 표지 다음부터 1로 시작, 하단 중앙 표시)
+        let critiquePageNo = 1;
         // 🆕 페이지 2: 기사 본문 + 어휘 사전 (학년별 본문 자동 매칭, 길면 안전 분할)
-        await _appendCritiqueContentPage(pdf, generateCritiquePage1HTML(currentArticle, currentGrade));
+        critiquePageNo += await _appendCritiqueContentPage(pdf, generateCritiquePage1HTML(currentArticle, currentGrade), critiquePageNo);
 
         // 🆕 페이지 3: 본문 안 어휘 빈칸 (학생용=초성+번호, 교사용=빨간 정답+번호)
-        await _appendCritiqueContentPage(pdf, generateCritiquePage1bHTML(currentArticle, currentGrade, withAnswers));
+        critiquePageNo += await _appendCritiqueContentPage(pdf, generateCritiquePage1bHTML(currentArticle, currentGrade, withAnswers), critiquePageNo);
 
         // 🆕 페이지 4: 6하 원칙 + 사고질문 글쓰기 (학생용=빈칸 / 교사용=답안 가이드)
-        await _appendCritiqueContentPage(pdf, generateCritiquePage2HTML(currentArticle, currentGrade, withAnswers));
+        critiquePageNo += await _appendCritiqueContentPage(pdf, generateCritiquePage2HTML(currentArticle, currentGrade, withAnswers), critiquePageNo);
 
       } finally {
         header.style.display = '';
