@@ -62063,10 +62063,15 @@
     }
 
     // 페이지 번호 — 하단 pill 배지 (책 외측에 페이지번호, 홀수=우/짝수=좌)
-    function wbFooter(pageNo, totalPages) {
+    // 반대편에 단원명 배지 추가 가능 (unitLabel 전달 시)
+    function wbFooter(pageNo, totalPages, unitLabel) {
       const isOdd = (Number(pageNo) % 2) === 1;
-      const sidePos = isOdd ? 'right: 45px;' : 'left: 45px;';
-      return `<div data-page-footer="1" style="position: absolute; bottom: 24px; ${sidePos}"><span style="display:inline-block; padding:3px 11px; background:#f1f5f9; color:#475569; border-radius:999px; font-size:10px; font-weight:600; letter-spacing:0.5px; border:1px solid #e2e8f0;">${pageNo}</span></div>`;
+      const numSide  = isOdd ? 'right: 45px;' : 'left: 45px;';
+      const nameSide = isOdd ? 'left: 45px;'  : 'right: 45px;';
+      const pillStyle = 'display:inline-block; padding:3px 11px; background:#f1f5f9; color:#475569; border-radius:999px; font-size:10px; font-weight:600; letter-spacing:0.5px; border:1px solid #e2e8f0;';
+      const numDiv = `<div data-page-footer="1" style="position: absolute; bottom: 24px; ${numSide}"><span style="${pillStyle}">${pageNo}</span></div>`;
+      const nameDiv = unitLabel ? `<div data-page-footer-name="1" style="position: absolute; bottom: 24px; ${nameSide}"><span style="${pillStyle} letter-spacing:0.3px;">${unitLabel}</span></div>` : '';
+      return numDiv + nameDiv;
     }
 
     // ─── 페이지 1: 표지 ─────────────────────────
@@ -68193,13 +68198,18 @@
         // 과목별 PDF 하단 페이지 번호를 단원 리셋 없이 전체 통합 카운터로 표시
         // (wbFooter는 HTML에 이미 렌더링되어 있으므로 정규식으로 번호·좌우 정렬 재작성)
         let globalPageNo = 0;
-        const _rewriteFooter = (html, newNo) => {
+        // 번호(홀수=우/짝수=좌) + 단원명(반대편) 두 배지를 통째로 재작성
+        const _rewriteFooter = (html, newNo, unitLabel) => {
           const isOdd = (newNo % 2) === 1;
-          const sidePos = isOdd ? 'right: 45px;' : 'left: 45px;';
-          return String(html).replace(
-            /<div data-page-footer="1"[^>]*>[\s\S]*?<\/div>/g,
-            `<div data-page-footer="1" style="position: absolute; bottom: 24px; ${sidePos}"><span style="display:inline-block; padding:3px 11px; background:#f1f5f9; color:#475569; border-radius:999px; font-size:10px; font-weight:600; letter-spacing:0.5px; border:1px solid #e2e8f0;">${newNo}</span></div>`
-          );
+          const numSide  = isOdd ? 'right: 45px;' : 'left: 45px;';
+          const nameSide = isOdd ? 'left: 45px;'  : 'right: 45px;';
+          const pillStyle = 'display:inline-block; padding:3px 11px; background:#f1f5f9; color:#475569; border-radius:999px; font-size:10px; font-weight:600; letter-spacing:0.5px; border:1px solid #e2e8f0;';
+          const numDiv = `<div data-page-footer="1" style="position: absolute; bottom: 24px; ${numSide}"><span style="${pillStyle}">${newNo}</span></div>`;
+          const nameDiv = unitLabel ? `<div data-page-footer-name="1" style="position: absolute; bottom: 24px; ${nameSide}"><span style="${pillStyle} letter-spacing:0.3px;">${unitLabel}</span></div>` : '';
+          // 기존 번호 배지 + 기존 이름 배지(있으면) 제거 후 새 마크업 삽입
+          return String(html)
+            .replace(/<div data-page-footer-name="1"[^>]*>[\s\S]*?<\/div>/g, '')
+            .replace(/<div data-page-footer="1"[^>]*>[\s\S]*?<\/div>/g, numDiv + nameDiv);
         };
 
         for (let u = 0; u < orderedUnits.length; u++) {
@@ -68208,10 +68218,11 @@
           const teachData = (typeof TEACHER_GUIDES === 'object' && TEACHER_GUIDES) ? (TEACHER_GUIDES[unitKey] || {}) : {};
           const pages = buildUnitPagesDispatch(unit, audienceLabel, teachData, unitKey);
 
+          const unitLabelForFooter = `${sub.label} ${parseInt(unit.labelNo || '0', 10)}단원`;
           for (let i = 0; i < pages.length; i++) {
             globalPageNo++;
             if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 생성 중... 단원 ${u+1}/${orderedUnits.length} · 페이지 ${i+1}/${pages.length} · 전체 ${globalPageNo}p</span>`;
-            stage.innerHTML = _rewriteFooter(pages[i], globalPageNo);
+            stage.innerHTML = _rewriteFooter(pages[i], globalPageNo, unitLabelForFooter);
             await new Promise(r => setTimeout(r, 30));
             const node = stage.firstElementChild;
             if (node) {
@@ -69031,13 +69042,18 @@
         // 단원 페이지 하단 번호는 단원마다 리셋 없이 전체 통합 (권 내에서 1, 2, 3, ..., 끝)
         // 주차 표지·어휘 페이지는 페이지 번호 없음 → 카운터 증가 안 함
         let unitGlobalPageNo = 0;
-        const _rewriteFooter = (html, newNo) => {
+        // 번호(홀수=우/짝수=좌) + 단원명(반대편) 두 배지를 통째로 재작성
+        const _rewriteFooter = (html, newNo, unitLabel) => {
           const isOdd = (newNo % 2) === 1;
-          const sidePos = isOdd ? 'right: 45px;' : 'left: 45px;';
-          return String(html).replace(
-            /<div data-page-footer="1"[^>]*>[\s\S]*?<\/div>/g,
-            `<div data-page-footer="1" style="position: absolute; bottom: 24px; ${sidePos}"><span style="display:inline-block; padding:3px 11px; background:#f1f5f9; color:#475569; border-radius:999px; font-size:10px; font-weight:600; letter-spacing:0.5px; border:1px solid #e2e8f0;">${newNo}</span></div>`
-          );
+          const numSide  = isOdd ? 'right: 45px;' : 'left: 45px;';
+          const nameSide = isOdd ? 'left: 45px;'  : 'right: 45px;';
+          const pillStyle = 'display:inline-block; padding:3px 11px; background:#f1f5f9; color:#475569; border-radius:999px; font-size:10px; font-weight:600; letter-spacing:0.5px; border:1px solid #e2e8f0;';
+          const numDiv = `<div data-page-footer="1" style="position: absolute; bottom: 24px; ${numSide}"><span style="${pillStyle}">${newNo}</span></div>`;
+          const nameDiv = unitLabel ? `<div data-page-footer-name="1" style="position: absolute; bottom: 24px; ${nameSide}"><span style="${pillStyle} letter-spacing:0.3px;">${unitLabel}</span></div>` : '';
+          // 기존 번호 배지 + 기존 이름 배지(있으면) 제거 후 새 마크업 삽입
+          return String(html)
+            .replace(/<div data-page-footer-name="1"[^>]*>[\s\S]*?<\/div>/g, '')
+            .replace(/<div data-page-footer="1"[^>]*>[\s\S]*?<\/div>/g, numDiv + nameDiv);
         };
         for (let p = 0; p < prebuilt.length; p++) {
           const item = prebuilt[p];
@@ -69052,7 +69068,8 @@
           let htmlToRender = item.html;
           if (item.kind === 'unit') {
             unitGlobalPageNo++;
-            htmlToRender = _rewriteFooter(item.html, unitGlobalPageNo);
+            const unitLabelForFooter = `${MONTHLY_SUBJECT_LABEL[item.sub]} ${parseInt(item.weekInfo.unitNo, 10)}단원`;
+            htmlToRender = _rewriteFooter(item.html, unitGlobalPageNo, unitLabelForFooter);
           }
           stage.innerHTML = htmlToRender;
           await new Promise(r => setTimeout(r, 30));
@@ -69228,13 +69245,18 @@
 
         // 단원 페이지 하단 번호는 단원마다 리셋 없이 전체 통합 (권 내에서 1, 2, 3, ..., 끝)
         let unitGlobalPageNo = 0;
-        const _rewriteFooter = (html, newNo) => {
+        // 번호(홀수=우/짝수=좌) + 단원명(반대편) 두 배지를 통째로 재작성
+        const _rewriteFooter = (html, newNo, unitLabel) => {
           const isOdd = (newNo % 2) === 1;
-          const sidePos = isOdd ? 'right: 45px;' : 'left: 45px;';
-          return String(html).replace(
-            /<div data-page-footer="1"[^>]*>[\s\S]*?<\/div>/g,
-            `<div data-page-footer="1" style="position: absolute; bottom: 24px; ${sidePos}"><span style="display:inline-block; padding:3px 11px; background:#f1f5f9; color:#475569; border-radius:999px; font-size:10px; font-weight:600; letter-spacing:0.5px; border:1px solid #e2e8f0;">${newNo}</span></div>`
-          );
+          const numSide  = isOdd ? 'right: 45px;' : 'left: 45px;';
+          const nameSide = isOdd ? 'left: 45px;'  : 'right: 45px;';
+          const pillStyle = 'display:inline-block; padding:3px 11px; background:#f1f5f9; color:#475569; border-radius:999px; font-size:10px; font-weight:600; letter-spacing:0.5px; border:1px solid #e2e8f0;';
+          const numDiv = `<div data-page-footer="1" style="position: absolute; bottom: 24px; ${numSide}"><span style="${pillStyle}">${newNo}</span></div>`;
+          const nameDiv = unitLabel ? `<div data-page-footer-name="1" style="position: absolute; bottom: 24px; ${nameSide}"><span style="${pillStyle} letter-spacing:0.3px;">${unitLabel}</span></div>` : '';
+          // 기존 번호 배지 + 기존 이름 배지(있으면) 제거 후 새 마크업 삽입
+          return String(html)
+            .replace(/<div data-page-footer-name="1"[^>]*>[\s\S]*?<\/div>/g, '')
+            .replace(/<div data-page-footer="1"[^>]*>[\s\S]*?<\/div>/g, numDiv + nameDiv);
         };
         for (let p = 0; p < prebuilt.length; p++) {
           const item = prebuilt[p];
@@ -69248,7 +69270,8 @@
           let htmlToRender = item.html;
           if (item.kind === 'unit') {
             unitGlobalPageNo++;
-            htmlToRender = _rewriteFooter(item.html, unitGlobalPageNo);
+            const unitLabelForFooter = `${MONTHLY_SUBJECT_LABEL[item.sub]} ${parseInt(item.weekInfo.unitNo, 10)}단원`;
+            htmlToRender = _rewriteFooter(item.html, unitGlobalPageNo, unitLabelForFooter);
           }
           stage.innerHTML = htmlToRender;
           await new Promise(r => setTimeout(r, 30));
@@ -69423,13 +69446,18 @@
 
         // 단원 페이지 하단 번호는 단원마다 리셋 없이 전체 통합 (권 내에서 1, 2, 3, ..., 끝)
         let unitGlobalPageNo = 0;
-        const _rewriteFooter = (html, newNo) => {
+        // 번호(홀수=우/짝수=좌) + 단원명(반대편) 두 배지를 통째로 재작성
+        const _rewriteFooter = (html, newNo, unitLabel) => {
           const isOdd = (newNo % 2) === 1;
-          const sidePos = isOdd ? 'right: 45px;' : 'left: 45px;';
-          return String(html).replace(
-            /<div data-page-footer="1"[^>]*>[\s\S]*?<\/div>/g,
-            `<div data-page-footer="1" style="position: absolute; bottom: 24px; ${sidePos}"><span style="display:inline-block; padding:3px 11px; background:#f1f5f9; color:#475569; border-radius:999px; font-size:10px; font-weight:600; letter-spacing:0.5px; border:1px solid #e2e8f0;">${newNo}</span></div>`
-          );
+          const numSide  = isOdd ? 'right: 45px;' : 'left: 45px;';
+          const nameSide = isOdd ? 'left: 45px;'  : 'right: 45px;';
+          const pillStyle = 'display:inline-block; padding:3px 11px; background:#f1f5f9; color:#475569; border-radius:999px; font-size:10px; font-weight:600; letter-spacing:0.5px; border:1px solid #e2e8f0;';
+          const numDiv = `<div data-page-footer="1" style="position: absolute; bottom: 24px; ${numSide}"><span style="${pillStyle}">${newNo}</span></div>`;
+          const nameDiv = unitLabel ? `<div data-page-footer-name="1" style="position: absolute; bottom: 24px; ${nameSide}"><span style="${pillStyle} letter-spacing:0.3px;">${unitLabel}</span></div>` : '';
+          // 기존 번호 배지 + 기존 이름 배지(있으면) 제거 후 새 마크업 삽입
+          return String(html)
+            .replace(/<div data-page-footer-name="1"[^>]*>[\s\S]*?<\/div>/g, '')
+            .replace(/<div data-page-footer="1"[^>]*>[\s\S]*?<\/div>/g, numDiv + nameDiv);
         };
         for (let p = 0; p < prebuilt.length; p++) {
           const item = prebuilt[p];
@@ -69443,7 +69471,8 @@
           let htmlToRender = item.html;
           if (item.kind === 'unit') {
             unitGlobalPageNo++;
-            htmlToRender = _rewriteFooter(item.html, unitGlobalPageNo);
+            const unitLabelForFooter = `${MONTHLY_SUBJECT_LABEL[item.sub]} ${parseInt(item.weekInfo.unitNo, 10)}단원`;
+            htmlToRender = _rewriteFooter(item.html, unitGlobalPageNo, unitLabelForFooter);
           }
           stage.innerHTML = htmlToRender;
           await new Promise(r => setTimeout(r, 30));
@@ -69618,13 +69647,18 @@
 
         // 단원 페이지 하단 번호는 단원마다 리셋 없이 전체 통합 (권 내에서 1, 2, 3, ..., 끝)
         let unitGlobalPageNo = 0;
-        const _rewriteFooter = (html, newNo) => {
+        // 번호(홀수=우/짝수=좌) + 단원명(반대편) 두 배지를 통째로 재작성
+        const _rewriteFooter = (html, newNo, unitLabel) => {
           const isOdd = (newNo % 2) === 1;
-          const sidePos = isOdd ? 'right: 45px;' : 'left: 45px;';
-          return String(html).replace(
-            /<div data-page-footer="1"[^>]*>[\s\S]*?<\/div>/g,
-            `<div data-page-footer="1" style="position: absolute; bottom: 24px; ${sidePos}"><span style="display:inline-block; padding:3px 11px; background:#f1f5f9; color:#475569; border-radius:999px; font-size:10px; font-weight:600; letter-spacing:0.5px; border:1px solid #e2e8f0;">${newNo}</span></div>`
-          );
+          const numSide  = isOdd ? 'right: 45px;' : 'left: 45px;';
+          const nameSide = isOdd ? 'left: 45px;'  : 'right: 45px;';
+          const pillStyle = 'display:inline-block; padding:3px 11px; background:#f1f5f9; color:#475569; border-radius:999px; font-size:10px; font-weight:600; letter-spacing:0.5px; border:1px solid #e2e8f0;';
+          const numDiv = `<div data-page-footer="1" style="position: absolute; bottom: 24px; ${numSide}"><span style="${pillStyle}">${newNo}</span></div>`;
+          const nameDiv = unitLabel ? `<div data-page-footer-name="1" style="position: absolute; bottom: 24px; ${nameSide}"><span style="${pillStyle} letter-spacing:0.3px;">${unitLabel}</span></div>` : '';
+          // 기존 번호 배지 + 기존 이름 배지(있으면) 제거 후 새 마크업 삽입
+          return String(html)
+            .replace(/<div data-page-footer-name="1"[^>]*>[\s\S]*?<\/div>/g, '')
+            .replace(/<div data-page-footer="1"[^>]*>[\s\S]*?<\/div>/g, numDiv + nameDiv);
         };
         for (let p = 0; p < prebuilt.length; p++) {
           const item = prebuilt[p];
@@ -69638,7 +69672,8 @@
           let htmlToRender = item.html;
           if (item.kind === 'unit') {
             unitGlobalPageNo++;
-            htmlToRender = _rewriteFooter(item.html, unitGlobalPageNo);
+            const unitLabelForFooter = `${MONTHLY_SUBJECT_LABEL[item.sub]} ${parseInt(item.weekInfo.unitNo, 10)}단원`;
+            htmlToRender = _rewriteFooter(item.html, unitGlobalPageNo, unitLabelForFooter);
           }
           stage.innerHTML = htmlToRender;
           await new Promise(r => setTimeout(r, 30));
