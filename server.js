@@ -37861,13 +37861,25 @@ ${scoreText}
 // 문해력 테스트 결과 AI 피드백 생성 API
 app.post("/api/literacy-test/ai-feedback", async (req, res) => {
   try {
-    const { studentName, studentGrade, skillPercentages, categoryPercentages, gradeAverage, totalScore } = req.body;
+    const {
+      studentName, studentGrade, skillPercentages, categoryPercentages, gradeAverage,
+      totalScore, totalScoreMax, correctCount, totalQuestions
+    } = req.body;
 
     if (!skillPercentages || !categoryPercentages) {
       return res.status(400).json({ ok: false, error: "점수 데이터가 필요합니다." });
     }
 
-    console.log(`🤖 [문해력 AI 피드백] ${studentGrade} ${studentName} - 피드백 생성 요청`);
+    // 총점 스케일 판별 (가중치 100점제 vs 개수 25점제)
+    const scoreMax = (typeof totalScoreMax === 'number' && totalScoreMax > 0) ? totalScoreMax : 25;
+    const questions = (typeof totalQuestions === 'number' && totalQuestions > 0) ? totalQuestions : 25;
+    const correctNum = (typeof correctCount === 'number') ? correctCount : totalScore;
+    const isWeightedScale = scoreMax === 100;
+    const scoreLine = isWeightedScale
+      ? `총점: ${totalScore}/100점 (25문제 중 ${correctNum}문제 정답, 가중치 반영 점수)`
+      : `총점: ${totalScore}/${questions}문제 정답`;
+
+    console.log(`🤖 [문해력 AI 피드백] ${studentGrade} ${studentName} - 피드백 생성 요청 (${scoreLine})`);
 
     // 이름 처리: "이승찬" -> "승찬", "김철수" -> "철수" (성 제외, 이름만 사용)
     const friendlyName = studentName && studentName.length >= 2
@@ -37942,7 +37954,7 @@ app.post("/api/literacy-test/ai-feedback", async (req, res) => {
 [학생 정보]
 - 이름: ${friendlyName}
 - 학년: ${studentGrade} (${gradeGroup} 그룹)
-- 총점: ${totalScore}/25문제
+- ${scoreLine}
 
 [문해력 지수별 정답률 vs ${gradeGroup} 평균]
 ${skillEntries.map(s => `- ${s.name}: ${s.value}% (${gradeGroup} 평균 ${s.avg}%) → ${s.value >= s.avg ? `평균보다 ${s.value - s.avg}%p 높음 ✓` : `평균보다 ${s.avg - s.value}%p 낮음 △`}`).join('\n')}
@@ -37958,7 +37970,7 @@ ${categoryEntries.map(c => `- ${c.name}: ${c.value}% (${gradeGroup} 평균 ${c.a
 
 [응답 형식 - 반드시 아래 JSON 형식으로만 응답]
 {
-  "overall": "종합 평가 (3-4문장): 총점과 전체적인 수준을 언급하고, 평균 대비 잘한 지수/과목 수를 구체적으로 칭찬",
+  "overall": "종합 평가 (3-4문장): ${isWeightedScale ? '총점을 반드시 \"' + totalScore + '/100점\" 형태로 표기하고' : '총점을 \"' + totalScore + '/25문제 정답\" 형태로 표기하고'} 전체적인 수준을 언급, 평균 대비 잘한 지수/과목 수를 구체적으로 칭찬",
   "strengths": "강점 분석 (3-4문장): 평균 이상인 지수와 과목을 구체적인 수치(%)와 함께 언급. 예: '핵심 이해력이 80%로 평균 63%보다 17%p나 높아요!'",
   "improvements": "성장 포인트 (3-4문장): 평균 미만인 지수와 과목을 부드럽게 언급하고 개선 방법 제안. 예: '구조 파악력은 40%로 평균 58%보다 조금 낮지만, 글의 구조를 파악하는 연습을 하면 금방 올라갈 거예요!'",
   "tips": "학습 TIP (2-3문장): 반드시 '브레인문해력을 통해서 각 교과문해력과 유형별 지수를 높이면 됩니다' 형태로 작성. 학생의 약한 영역(지수/과목)을 짧게 짚고, 브레인문해력 학습으로 해당 영역을 키울 수 있다는 메시지로 마무리"
