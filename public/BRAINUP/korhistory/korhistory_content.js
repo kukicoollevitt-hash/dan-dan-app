@@ -2861,9 +2861,107 @@ function applyContentPack(unitKey) {
           border-radius: 16px;
           margin: 12px 0 14px 0;
           box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+          cursor: zoom-in;
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .passage-text .passage-para-img:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+        }
+
+        /* 사료 이미지 확대 라이트박스 */
+        .kh-img-lightbox {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.88);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          z-index: 100000;
+          padding: 40px;
+          animation: khLightboxFade 0.2s ease;
+          cursor: zoom-out;
+        }
+        .kh-img-lightbox.show { display: flex; }
+        @keyframes khLightboxFade {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .kh-img-lightbox img {
+          max-width: 100%;
+          max-height: 100%;
+          border-radius: 12px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+          object-fit: contain;
+          cursor: default;
+        }
+        .kh-img-lightbox .kh-lb-close {
+          position: absolute;
+          top: 24px;
+          right: 28px;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.95);
+          color: #333;
+          border: none;
+          font-size: 28px;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          transition: transform 0.15s ease;
+        }
+        .kh-img-lightbox .kh-lb-close:hover { transform: scale(1.1); }
+        .kh-img-lightbox .kh-lb-hint {
+          position: absolute;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          color: rgba(255, 255, 255, 0.75);
+          font-size: 13px;
+          letter-spacing: 0.5px;
+          pointer-events: none;
         }
       `;
       document.head.appendChild(style);
+    }
+
+    // 사료 이미지 클릭 시 라이트박스로 확대 (한 번만 초기화)
+    if (!window._khImgLightboxInit) {
+      window._khImgLightboxInit = true;
+
+      const lightbox = document.createElement('div');
+      lightbox.className = 'kh-img-lightbox';
+      lightbox.innerHTML = `
+        <button class="kh-lb-close" aria-label="닫기">&times;</button>
+        <img alt="사료 이미지 확대">
+        <div class="kh-lb-hint">배경 클릭 또는 ESC로 닫기</div>
+      `;
+      document.body.appendChild(lightbox);
+
+      const lbImg = lightbox.querySelector('img');
+      const closeLightbox = () => lightbox.classList.remove('show');
+
+      lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox || e.target.classList.contains('kh-lb-close')) {
+          closeLightbox();
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && lightbox.classList.contains('show')) closeLightbox();
+      });
+
+      // 이벤트 위임: 지문 이미지 클릭
+      document.addEventListener('click', (e) => {
+        const img = e.target.closest('.passage-para-img');
+        if (!img) return;
+        lbImg.src = img.src;
+        lbImg.alt = img.alt || '사료 이미지 확대';
+        lightbox.classList.add('show');
+      });
     }
 
     // localStorage 키 - 학생별로 구분하여 다른 학생과 데이터가 섞이지 않게 함
