@@ -3475,6 +3475,8 @@
         // === 일별 콘텐츠 ===
         // 양면 인쇄용 — 초3-4 제외, 나머지 학년은 단원 표지가 짝수 페이지에 오도록 빈 페이지 자동 삽입
         // 현재 페이지 수가 짝수면 다음 페이지(=일자 표지)가 홀수가 되므로, 빈 페이지 1장 추가해 짝수에 맞춤
+        // 본문 전용 페이지 카운터 — 첫 날 첫 본문 페이지부터 1로 시작해 전 일자 걸쳐 누적
+        let bodyPageCursor = 1;
         for (let i = 0; i < validDates.length; i++) {
           const date = validDates[i];
           const d = new Date(date);
@@ -3487,7 +3489,7 @@
             pdf.addPage();
             drawMemoGridPage(pdf); // 옅은 모눈 + 메모 라벨
           }
-          await renderDayPagesForWorkbook(pdf, withAnswers);
+          bodyPageCursor = await renderDayPagesForWorkbook(pdf, withAnswers, bodyPageCursor);
           await new Promise(r => setTimeout(r, 30));
         }
 
@@ -3594,23 +3596,25 @@
       // 30일이면 2페이지로 분할 (페이지당 16개)
       const PER_PAGE = 16;
       const tocPagesCount = Math.ceil(validDates.length / PER_PAGE);
-      const FIRST_DAY_PAGE = 1 /*표지*/ + tocPagesCount /*목차*/ + 1; // 첫 일자 시작 페이지
+      // 본문만 1부터 연속 번호 매김 (표지·목차·일자 표지·memo는 페이지 번호에서 제외).
+      // 각 날짜는 본문 3장으로 고정 (기사+어휘 / 어휘 빈칸 / 6하+사고질문).
       const pages = [];
       for (let p = 0; p < tocPagesCount; p++) {
         const startIdx = p * PER_PAGE;
         const chunk = validDates.slice(startIdx, startIdx + PER_PAGE);
-        pages.push(await renderWorkbookTOCPage(grade, month, chunk, startIdx, FIRST_DAY_PAGE, validDates.length, p + 1, tocPagesCount));
+        pages.push(await renderWorkbookTOCPage(grade, month, chunk, startIdx, validDates.length, p + 1, tocPagesCount));
       }
       return pages;
     }
-    async function renderWorkbookTOCPage(grade, month, chunk, startIdx, firstDayPage, totalDays, pageNo, totalTocPages) {
+    async function renderWorkbookTOCPage(grade, month, chunk, startIdx, totalDays, pageNo, totalTocPages) {
       const [y, mm] = month.split('-');
       const itemsHtml = chunk.map((d, i) => {
         const globalIdx = startIdx + i;
         const art = articlesData.articles[d];
         const dt = new Date(d);
         const dateLabel = `${dt.getMonth()+1}/${dt.getDate()}(${['일','월','화','수','목','금','토'][dt.getDay()]})`;
-        const pageNum = firstDayPage + (globalIdx * 4);
+        // 본문 전용 페이지 번호: 각 날짜 3장 본문. Day N (0-based idx)의 본문 시작 = idx*3 + 1
+        const pageNum = 1 + (globalIdx * 3);
         return `
           <div style="display:flex;align-items:baseline;padding:8px 0;border-bottom:1px dashed #ddd;gap:10px;font-size:12px;">
             <div style="width:18mm;color:#0d47a1;font-weight:700;">${dateLabel}</div>
@@ -3778,7 +3782,7 @@
       return pagesAdded;
     }
 
-    async function renderDayPagesForWorkbook(pdf, withAnswers) {
+    async function renderDayPagesForWorkbook(pdf, withAnswers, bodyStartPageNo = 1) {
       const W = 210, H = 297;
       const M = WORKBOOK_MARGIN;
       const CW = W - 2 * M;
@@ -3832,8 +3836,9 @@
         document.body.removeChild(coverPage);
         pdf.addImage(cov.toDataURL('image/png'), 'PNG', M, M, CW, CH);
 
-        // 페이지 번호 카운터 (일자 표지 다음부터 1로 시작, 하단 중앙 표시)
-        let critiquePageNo = 1;
+        // 본문 전용 페이지 번호 카운터 (일자별 누적, 목차와 일치)
+        // 표지·목차·일자 표지·memo는 제외하고 오직 본문만 1부터 연속 증가.
+        let critiquePageNo = bodyStartPageNo;
         // 🆕 페이지 2: 기사 본문 + 어휘 사전 (학년별 본문 자동 매칭, 길면 안전 분할)
         critiquePageNo += await _appendCritiqueContentPage(pdf, generateCritiquePage1HTML(currentArticle, currentGrade), critiquePageNo);
 
@@ -3842,6 +3847,9 @@
 
         // 🆕 페이지 4: 6하 원칙 + 사고질문 글쓰기 (학생용=빈칸 / 교사용=답안 가이드)
         critiquePageNo += await _appendCritiqueContentPage(pdf, generateCritiquePage2HTML(currentArticle, currentGrade, withAnswers), critiquePageNo);
+
+        // 다음 일자 렌더러가 이어받도록 최종 카운터 반환
+        return critiquePageNo;
 
       } finally {
         header.style.display = '';
