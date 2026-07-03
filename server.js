@@ -16072,6 +16072,16 @@ function isMonthlyReportBeta(grade, name) {
   return true;
 }
 
+// ===================== 종합리포트 모바일 카드 레이아웃 베타 =====================
+// 화이트리스트 학생만 768px 이하에서 카드형 레이아웃 노출.
+// 전체 오픈 시 이 함수를 `return true;` 로 바꾸면 됨.
+const MOBILE_CARD_BETA_TESTERS = [
+  { grade: '초3', name: '김윤슬' }
+];
+function isMobileCardBeta(grade, name) {
+  return MOBILE_CARD_BETA_TESTERS.some(t => t.grade === grade && t.name === name);
+}
+
 // ===== 학생용 학습 이력 보기 (인증 불필요) =====
 app.get("/my-learning", async (req, res) => {
   // 캐시 방지 헤더 설정
@@ -17423,6 +17433,413 @@ app.get("/my-learning", async (req, res) => {
           font-size: 16px;
         }
 
+        /* ============================================================
+           🧪 모바일 카드 레이아웃 베타 (768px 이하 · body.mobile-card-beta만 발동)
+           - 테이블 rows를 카드로 변환. thead 숨기고 각 td에 라벨 부여
+           - 데스크톱/태블릿 가로(769px+)는 기존 데스크톱 테이블 그대로
+           ============================================================ */
+        @media (max-width: 768px) {
+          body.mobile-card-beta .today-table {
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            background: transparent;
+            box-shadow: none;
+            border-radius: 0;
+          }
+          body.mobile-card-beta .today-table thead {
+            display: none !important;
+          }
+          body.mobile-card-beta .today-table tbody tr {
+            display: block;
+            background: rgba(255,255,255,0.96);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+            border: 1px solid rgba(0,0,0,0.06);
+          }
+          body.mobile-card-beta .today-table tbody tr:hover {
+            background: rgba(255,255,255,0.98);
+          }
+          body.mobile-card-beta .today-table td {
+            display: block;
+            border: none;
+            padding: 4px 0;
+            font-size: 13px;
+            text-align: left;
+            color: #333;
+          }
+          /* 각 셀에 라벨(::before) 부여 (nth-child 기반) */
+          /* 1: # / 2: 시리즈 / 3: 분야 / 4: 단원명 / 5: 등급 / 6: 평균 / 7: 독해시간 / 8: 어휘 */
+          body.mobile-card-beta .today-table td:nth-child(1) {
+            /* # (번호) — 우상단 소형 배지로 재배치 */
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-weight: 800;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+          }
+          body.mobile-card-beta .today-table tbody tr {
+            position: relative;
+          }
+          body.mobile-card-beta .today-table td:nth-child(2) {
+            /* 시리즈 */
+            display: inline-block;
+            background: linear-gradient(135deg, #4c1d95, #7c3aed);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+          }
+          body.mobile-card-beta .today-table td:nth-child(3) {
+            /* 분야 */
+            display: inline-block;
+            background: #f0f9ff;
+            color: #0369a1;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-bottom: 6px;
+          }
+          body.mobile-card-beta .today-table td:nth-child(4) {
+            /* 단원명 (큰 글씨) */
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #1a1a2e;
+            padding: 8px 0 6px;
+            border-top: 1px dashed rgba(0,0,0,0.08);
+            margin-top: 6px;
+            line-height: 1.4;
+          }
+          body.mobile-card-beta .today-table td:nth-child(5),
+          body.mobile-card-beta .today-table td:nth-child(6),
+          body.mobile-card-beta .today-table td:nth-child(7),
+          body.mobile-card-beta .today-table td:nth-child(8) {
+            /* 등급/평균/독해시간/어휘 — 라벨 부여 후 인라인 표시 */
+            display: inline-block;
+            margin-right: 12px;
+            font-size: 12.5px;
+            color: #4b5563;
+          }
+          body.mobile-card-beta .today-table td:nth-child(5)::before {
+            content: '등급 '; color: #94a3b8; font-weight: 600;
+          }
+          body.mobile-card-beta .today-table td:nth-child(6)::before {
+            content: '평균 '; color: #94a3b8; font-weight: 600;
+          }
+          body.mobile-card-beta .today-table td:nth-child(7)::before {
+            content: '독해 '; color: #94a3b8; font-weight: 600;
+          }
+          body.mobile-card-beta .today-table td:nth-child(8)::before {
+            content: '어휘 '; color: #94a3b8; font-weight: 600;
+          }
+          /* 뱃지 자체는 자연스러운 크기 유지 */
+          body.mobile-card-beta .today-table td:nth-child(5) .badge {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 8px;
+          }
+          /* 관문 통과 특수 행 — 컴팩트 카드 (트로피 배지 + 라벨) */
+          body.mobile-card-beta .today-table tbody tr.gate-pass-row {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 10px 14px;
+          }
+          body.mobile-card-beta .today-table tbody tr.gate-pass-row td {
+            display: inline-block;
+            padding: 0;
+            margin-right: 8px;
+            font-size: 12.5px;
+            color: #78350f;
+            font-weight: 600;
+            background: transparent;
+            border: none;
+          }
+          body.mobile-card-beta .today-table tbody tr.gate-pass-row td:nth-child(1) {
+            position: static;
+            background: transparent;
+            padding: 0;
+            font-size: 18px;
+          }
+          body.mobile-card-beta .today-table tbody tr.gate-pass-row td:empty { display: none; }
+          body.mobile-card-beta .today-table tbody tr.gate-pass-row td::before { content: none !important; }
+
+          /* 중간평가 특수 행 — 컴팩트 카드 */
+          body.mobile-card-beta .today-table tbody tr.midterm-row {
+            padding: 10px 14px;
+          }
+          body.mobile-card-beta .today-table tbody tr.midterm-row td {
+            display: inline-block;
+            padding: 0;
+            margin-right: 8px;
+            font-size: 12.5px;
+            font-weight: 600;
+            background: transparent;
+            border: none;
+          }
+          body.mobile-card-beta .today-table tbody tr.midterm-row td:nth-child(1) {
+            position: static;
+            background: transparent;
+            padding: 0;
+            font-size: 18px;
+          }
+          body.mobile-card-beta .today-table tbody tr.midterm-row td:empty { display: none; }
+          body.mobile-card-beta .today-table tbody tr.midterm-row td::before { content: none !important; }
+
+          /* 월간 뷰의 날짜 구분바 — 카드 사이 얇은 인디고 라벨로 유지 */
+          body.mobile-card-beta .today-table tbody tr.date-divider-row {
+            background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+            padding: 6px 12px;
+            box-shadow: none;
+            border-radius: 10px;
+            margin: 12px 0 6px;
+          }
+          body.mobile-card-beta .today-table tbody tr.date-divider-row td {
+            display: block;
+            padding: 0;
+            background: transparent;
+            border: none;
+          }
+          body.mobile-card-beta .today-table tbody tr.date-divider-row td::before { content: none !important; }
+
+          /* 주간 뷰의 일별 헤더 (테이블 밖 div) — 여백/폰트 조정 */
+          body.mobile-card-beta .weekly-day-header {
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+            margin-top: 10px !important;
+          }
+
+          /* ─── 상단 헤더 배지·세그먼트·타이틀 조정 ─── */
+
+          /* BRAIN온 시리즈 선택 배지 — 크기 축소 */
+          body.mobile-card-beta .series-button {
+            font-size: 13px !important;
+            padding: 6px 14px !important;
+            border-radius: 18px !important;
+            min-width: 0 !important;
+          }
+          body.mobile-card-beta .series-selector {
+            margin-bottom: 8px !important;
+          }
+
+          /* 총 X건의 학습 기록 (최상단 큰 배지) — 크기 축소 */
+          body.mobile-card-beta #logCountBadge {
+            font-size: 13px !important;
+            padding: 8px 18px !important;
+            border-radius: 18px !important;
+          }
+          /* 일반학습·AI추천학습 배지 — 간격/크기 컴팩트 */
+          body.mobile-card-beta #normalLearningCount,
+          body.mobile-card-beta #aiLearningCount {
+            font-size: 11px !important;
+            padding: 5px 12px !important;
+            border-radius: 14px !important;
+          }
+          /* 아래 배지들 gap 축소 */
+          body.mobile-card-beta #logCountBadge + div,
+          body.mobile-card-beta div:has(> #normalLearningCount) {
+            gap: 8px !important;
+            margin-top: 8px !important;
+            flex-wrap: wrap;
+          }
+
+          /* [월간|주간|일간] 세그먼트 — 중앙 정렬 */
+          body.mobile-card-beta div:has(> #reportModeSegment) {
+            justify-content: center !important;
+          }
+          body.mobile-card-beta #reportModeSegment button {
+            font-size: 12.5px !important;
+            padding: 7px 14px !important;
+          }
+
+          /* 섹션 타이틀 (📆 이달 나의 AI 학습 기록) — 살짝 크게 */
+          body.mobile-card-beta #sectionTitleText,
+          body.mobile-card-beta .today-section .section-title {
+            font-size: 17px !important;
+            font-weight: 700 !important;
+          }
+          /* 설명 문구 — 살짝 크게, 가독성 확보 */
+          body.mobile-card-beta #todayDescription,
+          body.mobile-card-beta .today-section .section-description {
+            font-size: 12.5px !important;
+            line-height: 1.55 !important;
+            opacity: 0.9;
+          }
+
+          /* ─── 시리즈 드롭다운 — 헤더 위에서 인라인 흐름으로 ─── */
+          body.mobile-card-beta .series-selector {
+            position: static !important;
+            top: auto !important;
+            left: auto !important;
+            display: flex;
+            justify-content: center;
+            margin: 10px 0 12px !important;
+            z-index: 1 !important;
+          }
+
+          /* ─── AI 레이더 카드 (슬라이더 뷰 · 기본 상태) ─── */
+          body.mobile-card-beta #today-radar-wrap .radar-card {
+            flex: 0 0 140px !important;
+            min-width: 140px !important;
+            padding: 8px !important;
+            border-radius: 12px !important;
+          }
+          body.mobile-card-beta #today-radar-wrap .radar-card canvas {
+            width: 100px !important;
+            height: 100px !important;
+            max-width: 100px !important;
+            max-height: 100px !important;
+          }
+          body.mobile-card-beta #today-radar-wrap .radar-card-title {
+            font-size: 12px !important;
+          }
+          body.mobile-card-beta #today-radar-wrap .radar-card-time {
+            font-size: 10px !important;
+          }
+          body.mobile-card-beta #today-radar-wrap .radar-card-stats {
+            font-size: 10.5px !important;
+          }
+          body.mobile-card-beta #today-radar-wrap .score-badge {
+            font-size: 10px !important;
+            padding: 2px 6px !important;
+          }
+          /* 슬라이더 좌우 화살표도 축소 */
+          body.mobile-card-beta .slider-arrow {
+            width: 30px !important;
+            height: 30px !important;
+            font-size: 14px !important;
+          }
+          body.mobile-card-beta .today-radar-slider {
+            gap: 6px !important;
+          }
+
+          /* ─── AI 레이더 카드 (전체 보기 그리드) — 2열로 ─── */
+          body.mobile-card-beta .today-radar-grid {
+            gap: 8px !important;
+            padding: 10px !important;
+            justify-content: center;
+          }
+          body.mobile-card-beta .today-radar-grid .radar-card {
+            flex: 0 0 calc(50% - 6px) !important;
+            min-width: 0 !important;
+            padding: 8px !important;
+            border-radius: 12px !important;
+          }
+          body.mobile-card-beta .today-radar-grid .radar-card canvas {
+            width: 100% !important;
+            max-width: 100px !important;
+            height: auto !important;
+            aspect-ratio: 1 / 1;
+          }
+          body.mobile-card-beta .today-radar-grid .radar-card-title {
+            font-size: 12px !important;
+          }
+          body.mobile-card-beta .today-radar-grid .radar-card-time {
+            font-size: 10px !important;
+          }
+          body.mobile-card-beta .today-radar-grid .radar-card-stats {
+            font-size: 10.5px !important;
+          }
+
+          /* ─── 성장 지수 변화 차트 — 컨테이너 + 캔버스 모두 축소 ─── */
+          body.mobile-card-beta .index-trend-chart-container {
+            padding: 10px 6px !important;
+            border-radius: 12px !important;
+          }
+          body.mobile-card-beta .index-trend-chart-container canvas {
+            height: 200px !important;
+            max-height: 200px !important;
+          }
+          body.mobile-card-beta #indexTrendChart {
+            height: 200px !important;
+            max-height: 200px !important;
+          }
+          body.mobile-card-beta .index-trend-nav {
+            gap: 8px !important;
+            margin: 8px 0 !important;
+          }
+          body.mobile-card-beta .index-trend-nav .nav-arrow-btn {
+            width: 28px !important; height: 28px !important; font-size: 14px !important;
+          }
+          body.mobile-card-beta #indexTrendDateRange {
+            font-size: 12px !important;
+          }
+          /* 지수 범례 (5가지 문해력) — 컴팩트 */
+          body.mobile-card-beta #indexTrendLegend {
+            gap: 6px !important; font-size: 11px !important; flex-wrap: wrap;
+          }
+          body.mobile-card-beta #indexTrendLegend > * {
+            font-size: 11px !important;
+          }
+
+          /* ─── 어휘 점수 차트 — 라벨/막대/점수 재배치 ─── */
+          body.mobile-card-beta .vocab-bar-row {
+            padding: 4px 0 !important;
+            margin-bottom: 8px !important;
+          }
+          body.mobile-card-beta .vocab-bar-label {
+            width: 78px !important;
+            font-size: 11px !important;
+            padding-right: 6px !important;
+          }
+          body.mobile-card-beta .vocab-bar-label > div:first-child {
+            font-size: 11px !important;
+            line-height: 1.2 !important;
+          }
+          body.mobile-card-beta .vocab-bar-container {
+            height: 18px !important;
+          }
+          body.mobile-card-beta .vocab-bar-score {
+            width: 56px !important;
+            padding-left: 6px !important;
+          }
+          body.mobile-card-beta .vocab-bar-score > span:first-child {
+            font-size: 12px !important;
+          }
+          body.mobile-card-beta .vocab-bar-score > span:last-child {
+            font-size: 10px !important;
+            margin-left: 3px !important;
+          }
+          body.mobile-card-beta #vocabScoreChartContainer {
+            padding: 10px 8px !important;
+          }
+
+          /* ─── 창의활동 테이블 — 컴팩트 카드 스타일 ─── */
+          body.mobile-card-beta .creative-table {
+            font-size: 12px !important;
+            border-collapse: separate !important;
+            border-spacing: 0 6px !important;
+          }
+          body.mobile-card-beta .creative-table thead {
+            font-size: 11px !important;
+          }
+          body.mobile-card-beta .creative-table thead th {
+            padding: 6px 4px !important;
+            font-size: 11px !important;
+          }
+          body.mobile-card-beta .creative-table tbody tr.creative-row {
+            display: table-row !important;
+          }
+          body.mobile-card-beta .creative-table tbody tr.creative-row td {
+            padding: 8px 4px !important;
+            font-size: 12px !important;
+            vertical-align: middle;
+          }
+          /* 창의활동 확장 콘텐츠 행 — 부드럽게 */
+          body.mobile-card-beta .creative-table tbody tr.creative-detail-row td {
+            padding: 8px 10px !important;
+            font-size: 12px !important;
+          }
+        }
+
         /* AI 피드백 박스 스타일 */
         .ai-feedback-box {
           background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%);
@@ -18111,7 +18528,7 @@ app.get("/my-learning", async (req, res) => {
         }
       </style>
     </head>
-    <body>
+    <body class="${isMobileCardBeta(grade, name) ? 'mobile-card-beta' : ''}">
       <!-- 🔄 로딩 오버레이 -->
       <div id="loading-overlay">
         <div class="spinner-container">
@@ -23003,7 +23420,9 @@ app.get("/my-learning", async (req, res) => {
           { key: 'person1', name: '한국인물', color: '#673AB7' },
           { key: 'person2', name: '세계인물', color: '#3F51B5' },
           { key: 'people1', name: '한국인물', color: '#673AB7' },
-          { key: 'people2', name: '세계인물', color: '#3F51B5' }
+          { key: 'people2', name: '세계인물', color: '#3F51B5' },
+          { key: 'kh', name: '기본한국사', color: '#D84315' },
+          { key: 'khadv', name: '심화한국사', color: '#BF360C' }
         ];
 
         function getVocabSubjectColor(unitCode) {
