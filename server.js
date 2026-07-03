@@ -20047,6 +20047,9 @@ app.get("/my-learning", async (req, res) => {
         // 시리즈별 unit 접두사 필터 함수 (filterLogsBySeries와 동일한 로직 사용)
         function matchesSeries(unit, series) {
           if (!unit) return false;
+          // 방학특강 BRAIN한국사(kh_/khadv_)는 정규 진도 시리즈가 아니라 특강 성격이므로
+          // 어느 시리즈 필터에서든 항상 노출 (학부모/학생 리포트 일치 목적)
+          if (unit.startsWith('khadv_') || unit.startsWith('kh_')) return true;
           if (series === '전체 시리즈') return true; // 전체 시리즈: 모든 로그 포함
           if (series === 'BRAIN온') return unit.includes('on_');
           if (series === 'BRAIN핏') return unit.includes('fit_');
@@ -21113,6 +21116,11 @@ app.get("/my-learning", async (req, res) => {
             if (weeklyRadarNav) weeklyRadarNav.style.display = 'none';
             if (titleEl) titleEl.textContent = 'Today 나의 AI 학습 기록';
             renderTodaySection();
+            // 🧪 하단 4개 차트도 일간 스코프로 재갱신 (월간→일간 전환 시 잔재 방지)
+            if (typeof window.updateIndexTrendChart === 'function') window.updateIndexTrendChart();
+            if (typeof window.updateSubjectBarChart === 'function') window.updateSubjectBarChart();
+            if (typeof renderVocabScoreChart === 'function') renderVocabScoreChart();
+            if (typeof renderCreativeTable === 'function') renderCreativeTable();
             if (typeof initAIFeedbacks === 'function') initAIFeedbacks(false);
           } else if (mode === 'monthly') {
             const dailyNav = document.getElementById('dailyNavigator');
@@ -21127,10 +21135,11 @@ app.get("/my-learning", async (req, res) => {
             if (monthlyNav) monthlyNav.style.display = 'flex';
             if (monthlySelector) monthlySelector.style.display = 'flex';
             if (calendarIcon) calendarIcon.style.display = 'none';
-            if (weeklyRadarNav) weeklyRadarNav.style.display = 'flex';
+            // 🧪 월간 뷰에서는 주간 라이더 좌우 화살표 숨김 (월 이동은 상단 monthlyNavigator로)
+            if (weeklyRadarNav) weeklyRadarNav.style.display = 'none';
             if (titleEl) titleEl.textContent = '📆 이달 나의 AI 학습 기록';
             await renderMonthlySection();
-            updateWeeklyRadarNav();
+            // updateWeeklyRadarNav()는 호출하지 않음 — 라이더 타이틀·라벨은 renderMonthlySection이 이미 월간용으로 세팅함
             if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
           }
         }
@@ -21304,7 +21313,7 @@ app.get("/my-learning", async (req, res) => {
             return weekDates.includes(logDateStr);
           });
 
-          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물' };
+          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물', 'kh': '기본한국사', 'khadv': '심화한국사' };
 
           renderWeeklyRadarCards(weeklyLogs, subjectMap);
         }
@@ -21567,7 +21576,7 @@ app.get("/my-learning", async (req, res) => {
           }
 
           // 과목 매핑 (종합 학습 기록과 동일)
-          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물' };
+          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물', 'kh': '기본한국사', 'khadv': '심화한국사' };
 
           // 분야 매핑
           const fieldMap = {
@@ -21575,7 +21584,8 @@ app.get("/my-learning", async (req, res) => {
             'geo': '사회분야', 'soc': '사회분야', 'law': '사회분야', 'pol': '사회분야',
             'modern': '한국문학', 'classic': '한국문학',
             'world': '세계문학', 'world1': '세계문학', 'world2': '세계문학',
-            'people': '인물분야', 'people1': '인물분야', 'people2': '인물분야', 'person1': '인물분야', 'person2': '인물분야'
+            'people': '인물분야', 'people1': '인물분야', 'people2': '인물분야', 'person1': '인물분야', 'person2': '인물분야',
+            'kh': '한국사', 'khadv': '한국사'
           };
 
           // 폴더 매핑 (subjectKey -> 폴더명)
@@ -21584,7 +21594,8 @@ app.get("/my-learning", async (req, res) => {
             'geo': 'social', 'soc': 'social', 'law': 'social', 'pol': 'social',
             'modern': 'korlit', 'classic': 'korlit',
             'world': 'worldlit', 'world1': 'worldlit', 'world2': 'worldlit',
-            'people': 'person', 'people1': 'person', 'people2': 'person', 'person1': 'person', 'person2': 'person'
+            'people': 'person', 'people1': 'person', 'people2': 'person', 'person1': 'person', 'person2': 'person',
+            'kh': 'korhistory', 'khadv': 'korhistory'
           };
 
           // 테이블 생성
@@ -21617,7 +21628,8 @@ app.get("/my-learning", async (req, res) => {
 
             // 시리즈 추출
             let series = 'BRAIN업';
-            if (unitCode.includes('on_')) series = 'BRAIN온';
+            if (unitCode.startsWith('khadv_') || unitCode.startsWith('kh_')) series = 'BRAIN한국사';
+            else if (unitCode.includes('on_')) series = 'BRAIN온';
             else if (unitCode.includes('fit_')) series = 'BRAIN핏';
             else if (unitCode.includes('deep_')) series = 'BRAIN딥';
 
@@ -22017,7 +22029,7 @@ app.get("/my-learning", async (req, res) => {
           if (!tableContainer || !radarWrap) return;
 
           // 과목 매핑
-          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물' };
+          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물', 'kh': '기본한국사', 'khadv': '심화한국사' };
 
           // 분야 매핑
           const fieldMap = {
@@ -22025,7 +22037,8 @@ app.get("/my-learning", async (req, res) => {
             'geo': '사회분야', 'soc': '사회분야', 'law': '사회분야', 'pol': '사회분야',
             'modern': '한국문학', 'classic': '한국문학',
             'world': '세계문학', 'world1': '세계문학', 'world2': '세계문학',
-            'people': '인물분야', 'people1': '인물분야', 'people2': '인물분야', 'person1': '인물분야', 'person2': '인물분야'
+            'people': '인물분야', 'people1': '인물분야', 'people2': '인물분야', 'person1': '인물분야', 'person2': '인물분야',
+            'kh': '한국사', 'khadv': '한국사'
           };
 
           const folderMap = {
@@ -22033,7 +22046,8 @@ app.get("/my-learning", async (req, res) => {
             'geo': 'social', 'soc': 'social', 'law': 'social', 'pol': 'social',
             'modern': 'korlit', 'classic': 'korlit',
             'world': 'worldlit', 'world1': 'worldlit', 'world2': 'worldlit',
-            'people': 'person', 'people1': 'person', 'people2': 'person', 'person1': 'person', 'person2': 'person'
+            'people': 'person', 'people1': 'person', 'people2': 'person', 'person1': 'person', 'person2': 'person',
+            'kh': 'korhistory', 'khadv': 'korhistory'
           };
 
           // 날짜별로 그룹화
@@ -22160,7 +22174,8 @@ app.get("/my-learning", async (req, res) => {
                 }
 
                 let series = 'BRAIN업';
-                if (unitCode.includes('on_')) series = 'BRAIN온';
+                if (unitCode.startsWith('khadv_') || unitCode.startsWith('kh_')) series = 'BRAIN한국사';
+                else if (unitCode.includes('on_')) series = 'BRAIN온';
                 else if (unitCode.includes('fit_')) series = 'BRAIN핏';
                 else if (unitCode.includes('deep_')) series = 'BRAIN딥';
 
@@ -22407,7 +22422,8 @@ app.get("/my-learning", async (req, res) => {
               else subjectName = subjectMap[subjectKey] || subjectKey;
             }
             let series = 'BRAIN업';
-            if (unitCode.includes('on_')) series = 'BRAIN온';
+            if (unitCode.startsWith('khadv_') || unitCode.startsWith('kh_')) series = 'BRAIN한국사';
+            else if (unitCode.includes('on_')) series = 'BRAIN온';
             else if (unitCode.includes('fit_')) series = 'BRAIN핏';
             else if (unitCode.includes('deep_')) series = 'BRAIN딥';
             const field = fieldMap[subjectKey] || '기타';
@@ -22660,7 +22676,7 @@ app.get("/my-learning", async (req, res) => {
           renderMonthlyTable();
 
           // 레이더 카드 — 이달 전체 로그로 렌더
-          renderWeeklyRadarCards(monthLogs, {'geo':'지리','bio':'생물','earth':'지구과학','physics':'물리','chem':'화학','soc':'사회문화','law':'법','pol':'정치경제','modern':'현대문학','classic':'고전문학','world':'세계문학1','world1':'세계문학1','world2':'세계문학2','people':'한국인물','people1':'한국인물','people2':'세계인물','person1':'한국인물','person2':'세계인물'});
+          renderWeeklyRadarCards(monthLogs, {'geo':'지리','bio':'생물','earth':'지구과학','physics':'물리','chem':'화학','soc':'사회문화','law':'법','pol':'정치경제','modern':'현대문학','classic':'고전문학','world':'세계문학1','world1':'세계문학1','world2':'세계문학2','people':'한국인물','people1':'한국인물','people2':'세계인물','person1':'한국인물','person2':'세계인물','kh':'기본한국사','khadv':'심화한국사'});
 
           // 레이더 네비게이터 라벨 (월 범위 표시)
           const weekRadarDisplay = document.getElementById('currentWeekRadarDisplay');
@@ -22686,9 +22702,9 @@ app.get("/my-learning", async (req, res) => {
           const tableContainer = document.getElementById('todayTableContainer');
           if (!tableContainer) return;
 
-          const subjectMap = {'geo':'지리','bio':'생물','earth':'지구과학','physics':'물리','chem':'화학','soc':'사회문화','law':'법','pol':'정치경제','modern':'현대문학','classic':'고전문학','world':'세계문학1','world1':'세계문학1','world2':'세계문학2','people':'한국인물','people1':'한국인물','people2':'세계인물','person1':'한국인물','person2':'세계인물'};
-          const fieldMap = {'bio':'과학분야','earth':'과학분야','physics':'과학분야','chem':'과학분야','geo':'사회분야','soc':'사회분야','law':'사회분야','pol':'사회분야','modern':'한국문학','classic':'한국문학','world':'세계문학','world1':'세계문학','world2':'세계문학','people':'인물분야','people1':'인물분야','people2':'인물분야','person1':'인물분야','person2':'인물분야'};
-          const folderMap = {'bio':'science','earth':'science','physics':'science','chem':'science','geo':'social','soc':'social','law':'social','pol':'social','modern':'korlit','classic':'korlit','world':'worldlit','world1':'worldlit','world2':'worldlit','people':'person','people1':'person','people2':'person','person1':'person','person2':'person'};
+          const subjectMap = {'geo':'지리','bio':'생물','earth':'지구과학','physics':'물리','chem':'화학','soc':'사회문화','law':'법','pol':'정치경제','modern':'현대문학','classic':'고전문학','world':'세계문학1','world1':'세계문학1','world2':'세계문학2','people':'한국인물','people1':'한국인물','people2':'세계인물','person1':'한국인물','person2':'세계인물','kh':'기본한국사','khadv':'심화한국사'};
+          const fieldMap = {'bio':'과학분야','earth':'과학분야','physics':'과학분야','chem':'과학분야','geo':'사회분야','soc':'사회분야','law':'사회분야','pol':'사회분야','modern':'한국문학','classic':'한국문학','world':'세계문학','world1':'세계문학','world2':'세계문학','people':'인물분야','people1':'인물분야','people2':'인물분야','person1':'인물분야','person2':'인물분야','kh':'한국사','khadv':'한국사'};
+          const folderMap = {'bio':'science','earth':'science','physics':'science','chem':'science','geo':'social','soc':'social','law':'social','pol':'social','modern':'korlit','classic':'korlit','world':'worldlit','world1':'worldlit','world2':'worldlit','people':'person','people1':'person','people2':'person','person1':'person','person2':'person','kh':'korhistory','khadv':'korhistory'};
 
           // 행 수 기준 페이지네이션: 초기 10건, 더보기 클릭 시 +10건
           let displayedRows = 0;
@@ -22948,10 +22964,11 @@ app.get("/my-learning", async (req, res) => {
               if (monthlyNav) monthlyNav.style.display = 'flex';
               if (monthlySelector) monthlySelector.style.display = 'flex';
               if (calendarIcon) calendarIcon.style.display = 'none';
-              if (weeklyRadarNav) weeklyRadarNav.style.display = 'flex';
+              // 🧪 월간 뷰에서는 주간 라이더 좌우 화살표 숨김
+              if (weeklyRadarNav) weeklyRadarNav.style.display = 'none';
               if (titleEl) titleEl.textContent = '📆 이달 나의 AI 학습 기록';
               await renderMonthlySection();
-              updateWeeklyRadarNav();
+              // updateWeeklyRadarNav() 호출 안 함 — 월간 라이더 타이틀·라벨 유지
               if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
               return;
             }
@@ -23221,7 +23238,8 @@ app.get("/my-learning", async (req, res) => {
             'geo': 'social', 'soc': 'social', 'law': 'social', 'pol': 'social',
             'modern': 'korlit', 'classic': 'korlit',
             'world': 'worldlit', 'world1': 'worldlit', 'world2': 'worldlit',
-            'people': 'person', 'people1': 'person', 'people2': 'person', 'person1': 'person', 'person2': 'person'
+            'people': 'person', 'people1': 'person', 'people2': 'person', 'person1': 'person', 'person2': 'person',
+            'kh': 'korhistory', 'khadv': 'korhistory'
           };
 
           // 가로 막대 그래프 HTML 생성
@@ -23794,7 +23812,7 @@ app.get("/my-learning", async (req, res) => {
 
           const todayLogs = filteredLogs;
 
-          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물' };
+          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물', 'kh': '기본한국사', 'khadv': '심화한국사' };
 
           todayLogs.forEach((log, idx) => {
             const unitCode = log.unit || '';
@@ -24456,7 +24474,7 @@ app.get("/my-learning", async (req, res) => {
           let unitName = log.unit || '단원';
           if (unitName && unitName.includes('_')) {
             const parts = unitName.split('_');
-            const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'person1': '한국인물', 'person2': '세계인물', 'people1': '한국인물', 'people2': '세계인물' };
+            const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'person1': '한국인물', 'person2': '세계인물', 'people1': '한국인물', 'people2': '세계인물', 'kh': '기본한국사', 'khadv': '심화한국사' };
             // fit_/deep_/on_ 접두어 처리: fit_bio_01 → ['fit', 'bio', '01'], deep_bio_01 → ['deep', 'bio', '01'], on_bio_01 → ['on', 'bio', '01']
             let subjectKey = parts[0];
             let numStr = parts[1];
@@ -24769,7 +24787,8 @@ app.get("/my-learning", async (req, res) => {
             // unit 코드에서 시리즈명 추출
             let series = 'BRAIN업';
             if (log.unit) {
-              if (log.unit.includes('on_')) series = 'BRAIN온';
+              if (log.unit.startsWith('khadv_') || log.unit.startsWith('kh_')) series = 'BRAIN한국사';
+              else if (log.unit.includes('on_')) series = 'BRAIN온';
               else if (log.unit.includes('fit_')) series = 'BRAIN핏';
               else if (log.unit.includes('deep_')) series = 'BRAIN딥';
             }
@@ -25536,7 +25555,7 @@ app.get("/my-learning", async (req, res) => {
           tbody.innerHTML = '';
 
           // 과목 매핑 (world1/world2는 세계문학1/세계문학2, people1/people2는 한국인물/세계인물로 분리)
-          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물' };
+          const subjectMap = { 'geo': '지리', 'bio': '생물', 'earth': '지구과학', 'physics': '물리', 'chem': '화학', 'soc': '사회문화', 'law': '법', 'pol': '정치경제', 'modern': '현대문학', 'classic': '고전문학', 'world': '세계문학1', 'world1': '세계문학1', 'world2': '세계문학2', 'people': '한국인물', 'people1': '한국인물', 'people2': '세계인물', 'person1': '한국인물', 'person2': '세계인물', 'kh': '기본한국사', 'khadv': '심화한국사' };
 
           logs.forEach((log, idx) => {
             // 과목명 추출 (unit 코드에서)
