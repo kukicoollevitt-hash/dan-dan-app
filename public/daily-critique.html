@@ -860,48 +860,48 @@
       background: #fafafa;
       border: 1px solid #e5e7eb;
       border-radius: 10px;
-      padding: 16px 20px;
+      padding: 12px 16px;
       font-size: 13.5px;
-      line-height: 2.0;
+      line-height: 1.75;
       color: #1f2937;
       letter-spacing: 0.2px;
     }
-    .cw-article-body p { margin: 0 0 12px; }
+    .cw-article-body p { margin: 0 0 8px; }
     .cw-article-body p:last-child { margin-bottom: 0; }
     /* 어휘 표 */
     .cw-vocab-box {
-      margin-top: 14px;
+      margin-top: 10px;
       background: #fffbeb;
       border: 1.5px solid #fbbf24;
       border-radius: 10px;
-      padding: 12px 14px;
+      padding: 9px 12px;
     }
     .cw-vocab-title {
       font-size: 13px;
       font-weight: 800;
       color: #92400e;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
     .cw-vocab-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12.5px;
+      font-size: 12px;
     }
     .cw-vocab-table td {
-      padding: 6px 8px;
+      padding: 4px 7px;
       border-bottom: 1px dashed #fde68a;
-      line-height: 1.5;
+      line-height: 1.4;
       vertical-align: top;
     }
     .cw-vocab-table tr:last-child td { border-bottom: none; }
     .cw-v-no {
-      width: 22px;
+      width: 20px;
       font-weight: 800;
       color: #b45309;
       text-align: center;
     }
     .cw-v-word {
-      width: 110px;
+      width: 100px;
       font-weight: 800;
       color: #78350f;
     }
@@ -3464,9 +3464,26 @@
         }
 
         // === 일별 콘텐츠 ===
-        // 양면 인쇄용 — 초3-4 제외, 나머지 학년은 단원 표지가 짝수 페이지에 오도록 빈 페이지 자동 삽입
-        // 현재 페이지 수가 짝수면 다음 페이지(=일자 표지)가 홀수가 되므로, 빈 페이지 1장 추가해 짝수에 맞춤
+        // 양면 인쇄 정렬 — 각 날짜 표지가 항상 우측 페이지(짝수)에 오도록 균등화
+        //   물리 책 구조:
+        //     PDF p.1(표지 인쇄면) → 좌측·표지 뒷면 취급
+        //     PDF p.2(목차1) → 우측
+        //     PDF p.3(목차2) → 좌측
+        //     PDF p.4(첫 날 표지) → 우측 (짝수)
+        //     … 이후 각 날짜 표지는 항상 짝수(우측) 유지
+        //   BEFORE 각 날짜 렌더: 현재 페이지 수가 짝수(=다음 페이지가 홀수/좌측)면 빈 페이지 삽입
+        //     → 다음 addPage=홀수+1=짝수 → 표지가 우측(짝수)에 안착
+        //   AFTER 각 날짜 렌더: 이 날짜가 홀수 페이지 차지 시 빈 페이지 추가 (이중 안전망)
+        //   4/6배수 어떤 케이스든 표지 우측 유지 보장 (전 시리즈 동일 적용)
         // 본문 전용 페이지 카운터 — 첫 날 첫 본문 페이지부터 1로 시작해 전 일자 걸쳐 누적
+        const addBlankBalancerPage = () => {
+          pdf.addPage();
+          if (grade === 'elem34') {
+            drawBgFullPage(true); // 초3-4는 배경만 살짝 흐리게
+          } else {
+            drawMemoGridPage(pdf); // 나머지는 메모 모눈
+          }
+        };
         let bodyPageCursor = 1;
         for (let i = 0; i < validDates.length; i++) {
           const date = validDates[i];
@@ -3475,12 +3492,17 @@
           document.getElementById('dateSelect').value = date;
           loadArticleByDate();
           await new Promise(r => setTimeout(r, 150));
-          // 초3-4 외 학년만 — 일자 표지를 짝수 페이지로 맞추기 위한 메모 페이지 삽입
-          if (grade !== 'elem34' && pdf.internal.getNumberOfPages() % 2 === 0) {
-            pdf.addPage();
-            drawMemoGridPage(pdf); // 옅은 모눈 + 메모 라벨
+          // (1) BEFORE 균등화 — 표지가 우측(짝수)에 오도록 현재 페이지 수를 홀수로 정렬
+          if (pdf.internal.getNumberOfPages() % 2 === 0) {
+            addBlankBalancerPage();
           }
+          const pagesBeforeDay = pdf.internal.getNumberOfPages();
           bodyPageCursor = await renderDayPagesForWorkbook(pdf, withAnswers, bodyPageCursor);
+          const pagesAddedForDay = pdf.internal.getNumberOfPages() - pagesBeforeDay;
+          // (2) AFTER 균등화 — 이 날짜가 홀수 페이지 차지 시 빈 페이지 추가 (안전망)
+          if (pagesAddedForDay % 2 !== 0) {
+            addBlankBalancerPage();
+          }
           await new Promise(r => setTimeout(r, 30));
         }
 
