@@ -16064,14 +16064,12 @@ app.get("/api/unit-grades", async (req, res) => {
   }
 });
 
-// ===================== 종합리포트 월간 뷰 베타 =====================
-// 화이트리스트 학생만 우측 상단 [월간|주간|일간] 세그먼트 노출 + 월간 기본값 적용.
-// 전체 오픈 시 이 배열을 비우거나 함수를 `return true;` 로 바꾸면 됨.
-const MONTHLY_REPORT_BETA_TESTERS = [
-  { grade: '초3', name: '김윤슬' }
-];
+// ===================== 종합리포트 월간 뷰 =====================
+// (2026-07-03) 김윤슬 베타 검증 완료 → 전체 학생 오픈.
+// 문제 발생 시 아래 함수를 `return false;` 로 바꿔 즉시 롤백 가능.
+const MONTHLY_REPORT_BETA_TESTERS = []; // 화이트리스트 유지 안 함 (전체 오픈)
 function isMonthlyReportBeta(grade, name) {
-  return MONTHLY_REPORT_BETA_TESTERS.some(t => t.grade === grade && t.name === name);
+  return true;
 }
 
 // ===== 학생용 학습 이력 보기 (인증 불필요) =====
