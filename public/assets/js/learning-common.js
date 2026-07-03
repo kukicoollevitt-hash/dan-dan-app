@@ -1,4 +1,32 @@
   /* =========================================================
+     텍스트 선택(드래그) 차단 — 지문·어휘 콘텐츠 복사 방지
+     - 전 단원 페이지 자동 적용
+     - 예외: input / textarea / [contenteditable] (빈칸 쓰기, 창의활동 등)
+     - 정답체크·onclick·타이핑 등 학습 상호작용 무손상
+     - 롤백 시 이 IIFE 통째로 삭제하면 즉시 원복
+  ========================================================= */
+  (function disableTextSelection() {
+    const styleId = 'bmn-no-select-style';
+    if (document.getElementById(styleId)) return; // 중복 주입 방지
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent =
+      'body {' +
+        '-webkit-user-select: none;' +
+        '-moz-user-select: none;' +
+        '-ms-user-select: none;' +
+        'user-select: none;' +
+      '}' +
+      'input, textarea, [contenteditable], [contenteditable="true"] {' +
+        '-webkit-user-select: text !important;' +
+        '-moz-user-select: text !important;' +
+        '-ms-user-select: text !important;' +
+        'user-select: text !important;' +
+      '}';
+    (document.head || document.documentElement).appendChild(style);
+  })();
+
+  /* =========================================================
      아이패드 핀치 줌 방지 (화면 깨짐 방지)
   ========================================================= */
   (function disablePinchZoom() {

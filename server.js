@@ -17630,25 +17630,19 @@ app.get("/my-learning", async (req, res) => {
             margin-bottom: 8px !important;
           }
 
-          /* 총 X건의 학습 기록 (최상단 큰 배지) — 크기 축소 */
-          body.mobile-card-beta #logCountBadge {
-            font-size: 13px !important;
-            padding: 8px 18px !important;
-            border-radius: 18px !important;
-          }
-          /* 일반학습·AI추천학습 배지 — 간격/크기 컴팩트 */
+          /* 총 X건의 학습 기록 / 일반학습 / AI추천학습 배지 3종 — 모바일에서 완전 숨김 */
+          body.mobile-card-beta #logCountBadge,
           body.mobile-card-beta #normalLearningCount,
           body.mobile-card-beta #aiLearningCount {
-            font-size: 11px !important;
-            padding: 5px 12px !important;
-            border-radius: 14px !important;
+            display: none !important;
           }
-          /* 아래 배지들 gap 축소 */
-          body.mobile-card-beta #logCountBadge + div,
+          /* 두 번째 배지들을 감싼 flex 컨테이너도 함께 숨김 (빈 여백 방지) */
           body.mobile-card-beta div:has(> #normalLearningCount) {
-            gap: 8px !important;
-            margin-top: 8px !important;
-            flex-wrap: wrap;
+            display: none !important;
+          }
+          /* 상단 배지들을 감싼 최상위 컨테이너도 숨김 */
+          body.mobile-card-beta div:has(> #logCountBadge) {
+            display: none !important;
           }
 
           /* [월간|주간|일간] 세그먼트 — 중앙 정렬 */
@@ -17672,6 +17666,13 @@ app.get("/my-learning", async (req, res) => {
             font-size: 12.5px !important;
             line-height: 1.55 !important;
             opacity: 0.9;
+          }
+
+          /* 하단 섹션 타이틀 (레이더/성장지수/과목/어휘/창의활동 등) — 모바일 축소 */
+          body.mobile-card-beta .today-radar-title {
+            font-size: 14px !important;
+            margin-bottom: 10px !important;
+            line-height: 1.35;
           }
 
           /* ─── 시리즈 드롭다운 — 헤더 위에서 인라인 흐름으로 ─── */
@@ -17812,31 +17813,119 @@ app.get("/my-learning", async (req, res) => {
             padding: 10px 8px !important;
           }
 
-          /* ─── 창의활동 테이블 — 컴팩트 카드 스타일 ─── */
+          /* ─── 창의활동 — 카드 레이아웃 (테이블 → 카드) ─── */
           body.mobile-card-beta .creative-table {
-            font-size: 12px !important;
-            border-collapse: separate !important;
-            border-spacing: 0 6px !important;
+            display: block !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
           }
-          body.mobile-card-beta .creative-table thead {
-            font-size: 11px !important;
-          }
-          body.mobile-card-beta .creative-table thead th {
-            padding: 6px 4px !important;
-            font-size: 11px !important;
-          }
+          body.mobile-card-beta .creative-table thead { display: none !important; }
+          body.mobile-card-beta .creative-table tbody { display: block !important; }
+
+          /* 메인 카드 — 한 줄에 [번호] [날짜] [단원명] [글자수] */
           body.mobile-card-beta .creative-table tbody tr.creative-row {
-            display: table-row !important;
+            display: grid !important;
+            grid-template-columns: 36px 50px 1fr auto !important;
+            gap: 8px !important;
+            align-items: center !important;
+            background: rgba(255,255,255,0.96) !important;
+            border-radius: 12px !important;
+            padding: 12px 14px !important;
+            margin-bottom: 8px !important;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12) !important;
+            border: 1px solid rgba(0,0,0,0.06) !important;
+            cursor: pointer !important;
           }
           body.mobile-card-beta .creative-table tbody tr.creative-row td {
-            padding: 8px 4px !important;
-            font-size: 12px !important;
-            vertical-align: middle;
+            padding: 0 !important;
+            font-size: 12.5px !important;
+            color: #333 !important;
+            border: none !important;
+            background: transparent !important;
+            vertical-align: middle !important;
           }
-          /* 창의활동 확장 콘텐츠 행 — 부드럽게 */
-          body.mobile-card-beta .creative-table tbody tr.creative-detail-row td {
-            padding: 8px 10px !important;
+          body.mobile-card-beta .creative-table tbody tr.creative-row td.creative-num {
+            display: flex !important;
+            align-items: center;
+            gap: 3px;
+            font-weight: 800;
+            color: #4338ca;
+            font-size: 13px !important;
+          }
+          body.mobile-card-beta .creative-table tbody tr.creative-row td.creative-date {
             font-size: 12px !important;
+            color: #6b7280;
+            font-weight: 600;
+            white-space: nowrap;
+          }
+          body.mobile-card-beta .creative-table tbody tr.creative-row td.creative-unit {
+            font-size: 13.5px !important;
+            font-weight: 700;
+            color: #1a1a2e;
+            min-width: 0;
+            white-space: normal;
+            word-break: keep-all;
+            line-height: 1.3;
+          }
+          /* 주제 컬럼 — 리스트에서는 숨김 (펼침 카드로 옮김) */
+          body.mobile-card-beta .creative-table tbody tr.creative-row td.creative-topic {
+            display: none !important;
+          }
+          body.mobile-card-beta .creative-table tbody tr.creative-row .creative-chars {
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 10.5px !important;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 10px;
+            white-space: nowrap;
+          }
+          body.mobile-card-beta .creative-table tbody tr.creative-row .creative-chars::before {
+            content: '📝 ';
+            margin-right: 2px;
+          }
+          body.mobile-card-beta .creative-table tbody tr.creative-row .creative-arrow {
+            font-size: 11px;
+          }
+
+          /* 펼침 내용 행 — 인라인 style="display:none"을 유지, JS 토글되면 표시.
+             (기존 CSS에서 !important로 강제 표시하지 않도록 주의) */
+          body.mobile-card-beta .creative-table tbody tr.creative-content-row {
+            background: transparent !important;
+            margin: -4px 0 10px 0;
+          }
+          /* JS가 style.display='table-row'로 열면 mobile에서는 block으로 보이게 */
+          body.mobile-card-beta .creative-table tbody tr.creative-content-row[style*="table-row"] {
+            display: block !important;
+          }
+          body.mobile-card-beta .creative-table tbody tr.creative-content-row td {
+            display: block !important;
+            padding: 0 !important;
+            border: none !important;
+          }
+          body.mobile-card-beta .creative-content-box {
+            background: rgba(255,255,255,0.95) !important;
+            border-radius: 12px !important;
+            padding: 12px 14px !important;
+            border-left: 4px solid #7c3aed !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+          }
+          body.mobile-card-beta .creative-content-label {
+            font-size: 12px !important;
+            margin-bottom: 8px !important;
+            color: #4338ca !important;
+          }
+          body.mobile-card-beta .creative-content-text {
+            font-size: 13px !important;
+            line-height: 1.7 !important;
+            color: #333 !important;
+          }
+
+          /* 데이터 없음 안내 */
+          body.mobile-card-beta .creative-table .creative-empty {
+            padding: 30px 20px !important;
+            font-size: 13px !important;
           }
         }
 
@@ -22309,7 +22398,8 @@ app.get("/my-learning", async (req, res) => {
               '</div>';
             card.appendChild(stats);
 
-            // 카드 클릭 시 해당 단원 페이지로 이동
+            // 카드 클릭 시 해당 단원 페이지로 이동 (공유 모드=학부모 리포트에서는 비활성화)
+            if (!${isSharedMode}) {
             card.style.cursor = 'pointer';
             card.addEventListener('click', function() {
               if (unitCode) {
@@ -22330,6 +22420,7 @@ app.get("/my-learning", async (req, res) => {
                 window.location.href = unitUrl;
               }
             });
+            }
 
             radarWrap.appendChild(card);
 
@@ -23142,24 +23233,24 @@ app.get("/my-learning", async (req, res) => {
           const totalRows = _monthlyDaysData.reduce((s, d) => s + d.totalCount, 0);
           const remainingRows = totalRows - displayedRows;
 
-          // 하나의 테이블로 감싸기 (sticky thead)
+          // 하나의 테이블로 감싸기 (sticky thead) + 더보기 버튼을 박스 하단에 통합
           let html = '';
-          html += '<div style="border-radius:12px; overflow:hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">';
+          html += '<div class="monthly-table-box" style="border-radius:12px; overflow:hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); background:#fff;">';
           html += '<table class="today-table monthly-table" style="margin-bottom:0; border-radius:0;">';
           html += '<thead style="position: sticky; top: 0; z-index: 3;"><tr>';
           html += '<th>#</th><th>시리즈</th><th>분야</th><th>단원명</th><th>등급</th><th>평균</th><th>독해시간</th><th>어휘</th>';
           html += '</tr></thead>';
           html += '<tbody>' + bodyRowsHtml + '</tbody>';
           html += '</table>';
-          html += '</div>';
-
+          // "더보기" 버튼 또는 완료 안내 — 박스 하단에 통합
           if (remainingRows > 0) {
-            html += '<div style="text-align:center; margin-top:16px;">';
-            html += '<button onclick="showMoreMonthly()" style="background: linear-gradient(135deg, #ffd54f 0%, #fb8c00 100%); border: none; color: #1a1a1a; padding: 12px 28px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(251,140,0,0.35);">📖 더보기 (' + remainingRows + '건 더)</button>';
+            html += '<div class="monthly-more-wrap" style="text-align:center; padding:14px 12px; border-top: 1px solid rgba(0,0,0,0.06); background: linear-gradient(180deg, rgba(255,213,79,0.08) 0%, rgba(255,213,79,0.15) 100%);">';
+            html += '<button onclick="showMoreMonthly()" style="background: linear-gradient(135deg, #ffd54f 0%, #fb8c00 100%); border: none; color: #1a1a1a; padding: 10px 24px; border-radius: 22px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 10px rgba(251,140,0,0.35);">📖 더보기 (' + remainingRows + '건 더)</button>';
             html += '</div>';
           } else if (totalRows > 10) {
-            html += '<div style="text-align:center; margin-top:12px; color:#fff; opacity:0.75; font-size:12px;">— 이달 학습 기록을 모두 표시했습니다 (총 ' + totalRows + '건) —</div>';
+            html += '<div class="monthly-more-wrap" style="text-align:center; padding:12px; border-top: 1px solid rgba(0,0,0,0.06); color:#6b7280; font-size:12px;">— 이달 학습 기록을 모두 표시했습니다 (총 ' + totalRows + '건) —</div>';
           }
+          html += '</div>';
 
           tableContainer.innerHTML = html;
         }
@@ -23291,7 +23382,8 @@ app.get("/my-learning", async (req, res) => {
               '</div>';
             card.appendChild(stats);
 
-            // 카드 클릭 시 해당 단원 페이지로 이동
+            // 카드 클릭 시 해당 단원 페이지로 이동 (공유 모드=학부모 리포트에서는 비활성화)
+            if (!${isSharedMode}) {
             card.style.cursor = 'pointer';
             card.addEventListener('click', function() {
               if (unitCode) {
@@ -23305,6 +23397,7 @@ app.get("/my-learning", async (req, res) => {
                 window.location.href = unitUrl;
               }
             });
+            }
 
             radarWrap.appendChild(card);
 
@@ -24323,7 +24416,8 @@ app.get("/my-learning", async (req, res) => {
               '</div>';
             card.appendChild(stats);
 
-            // 카드 클릭 시 해당 단원 페이지로 이동
+            // 카드 클릭 시 해당 단원 페이지로 이동 (공유 모드=학부모 리포트에서는 비활성화)
+            if (!${isSharedMode}) {
             card.style.cursor = 'pointer';
             card.addEventListener('click', function() {
               if (unitCode) {
@@ -24344,6 +24438,7 @@ app.get("/my-learning", async (req, res) => {
                 window.location.href = unitUrl;
               }
             });
+            }
 
             grid.appendChild(card);
 
