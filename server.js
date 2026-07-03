@@ -87,6 +87,12 @@ function getWeekStart() {
   return monday.toISOString().split('T')[0]; // YYYY-MM-DD 형식
 }
 
+// 🧪 월간 시작일(1일) 계산 함수 — 종합리포트 월간 뷰 URL용
+function getMonthStartKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+}
+
 // 바이트 계산 함수 (한글 2바이트, 그 외 1바이트)
 function getByteLength(str) {
   let byteLen = 0;
@@ -184,10 +190,17 @@ async function sendParentNotification(studentName, parentPhone, type, additional
       break;
     case 'logout':
       // [브레인문해력] 홍길동 학생이 학습을 완료하였어요! 많이 칭찬 해주세요!
-      // 주간 리포트 링크 생성 (grade 정보가 있으면 포함)
+      // 리포트 링크 생성 (grade 정보가 있으면 포함)
       const grade = additionalInfo.grade || '';
-      const weekStart = getWeekStart();
-      const reportUrl = `https://brainmoon.kr/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&weekly=true&weekStart=${weekStart}&shared=true`;
+      // 🧪 종합리포트 월간 뷰 베타 — 화이트리스트 학생만 월간 URL 발송
+      let reportUrl;
+      if (typeof isMonthlyReportBeta === 'function' && isMonthlyReportBeta(grade, studentName)) {
+        const monthStart = getMonthStartKey();
+        reportUrl = `https://brainmoon.kr/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&monthly=true&monthStart=${monthStart}&shared=true`;
+      } else {
+        const weekStart = getWeekStart();
+        reportUrl = `https://brainmoon.kr/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&weekly=true&weekStart=${weekStart}&shared=true`;
+      }
 
       // URL 단축 없이 원본 URL 사용 (LMS 발송이라 장문 OK)
       // 2줄 공백으로 미리보기 중복 방지 시도
@@ -16051,6 +16064,16 @@ app.get("/api/unit-grades", async (req, res) => {
   }
 });
 
+// ===================== 종합리포트 월간 뷰 베타 =====================
+// 화이트리스트 학생만 우측 상단 [월간|주간|일간] 세그먼트 노출 + 월간 기본값 적용.
+// 전체 오픈 시 이 배열을 비우거나 함수를 `return true;` 로 바꾸면 됨.
+const MONTHLY_REPORT_BETA_TESTERS = [
+  { grade: '초3', name: '김윤슬' }
+];
+function isMonthlyReportBeta(grade, name) {
+  return MONTHLY_REPORT_BETA_TESTERS.some(t => t.grade === grade && t.name === name);
+}
+
 // ===== 학생용 학습 이력 보기 (인증 불필요) =====
 app.get("/my-learning", async (req, res) => {
   // 캐시 방지 헤더 설정
@@ -16145,6 +16168,9 @@ app.get("/my-learning", async (req, res) => {
     } catch (err) {
       console.error("⚠️ [/my-learning] LearningBehavior 조회 실패:", err);
     }
+
+    // 종합리포트 월간 뷰 베타 — 화이트리스트 학생만 [월간|주간|일간] 세그먼트 노출
+    const isMonthlyBeta = isMonthlyReportBeta(grade, name);
 
     let html = `
     <!DOCTYPE html>
@@ -18130,8 +18156,43 @@ app.get("/my-learning", async (req, res) => {
 
         <!-- ✨ Today 나의 AI 학습 기록 섹션 -->
         <div class="today-section">
-          <!-- 주간/일간 토글 버튼 -->
+          <!-- 리포트 모드 스위처 (베타: 3모드 세그먼트 / 그 외: 기존 주간 토글) -->
           <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+            ${isMonthlyBeta ? `
+            <!-- 🧪 베타 — 월간|주간|일간 세그먼트 컨트롤 -->
+            <div id="reportModeSegment" role="tablist" aria-label="리포트 모드 선택" style="
+              display: inline-flex;
+              background: rgba(255,255,255,0.12);
+              border: 2px solid rgba(255,255,255,0.35);
+              border-radius: 28px;
+              padding: 4px;
+              backdrop-filter: blur(10px);
+              gap: 2px;
+            ">
+              <button type="button" data-mode="monthly" onclick="setReportMode('monthly')" style="
+                border: none; background: transparent; color: #fff;
+                padding: 8px 18px; border-radius: 22px;
+                font-size: 13px; font-weight: 700; cursor: pointer;
+                transition: all 0.25s ease;
+                display: inline-flex; align-items: center; gap: 6px;
+              ">📆 월간</button>
+              <button type="button" data-mode="weekly" onclick="setReportMode('weekly')" style="
+                border: none; background: transparent; color: #fff;
+                padding: 8px 18px; border-radius: 22px;
+                font-size: 13px; font-weight: 700; cursor: pointer;
+                transition: all 0.25s ease;
+                display: inline-flex; align-items: center; gap: 6px;
+              ">📅 주간</button>
+              <button type="button" data-mode="daily" onclick="setReportMode('daily')" style="
+                border: none; background: transparent; color: #fff;
+                padding: 8px 18px; border-radius: 22px;
+                font-size: 13px; font-weight: 700; cursor: pointer;
+                transition: all 0.25s ease;
+                display: inline-flex; align-items: center; gap: 6px;
+              ">🕐 일간</button>
+            </div>
+            ` : `
+            <!-- 기존 주간/일간 토글 -->
             <button id="weeklyToggleBtn" onclick="toggleWeeklyMode()" style="
               background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
               border: 2px solid rgba(255,255,255,0.4);
@@ -18150,6 +18211,7 @@ app.get("/my-learning", async (req, res) => {
               <span id="weeklyToggleIcon">📅</span>
               <span id="weeklyToggleText">주간리포트</span>
             </button>
+            `}
           </div>
           <div class="section-title"><span id="calendarIcon" onclick="openCalendarPopup()" style="cursor:pointer;">📅</span> <span id="sectionTitleText">Today 나의 AI 학습 기록</span></div>
           <p class="section-description" id="todayDescription">오늘 완료한 학습 기록입니다.</p>
@@ -18179,6 +18241,14 @@ app.get("/my-learning", async (req, res) => {
             <span id="currentWeekDisplay" style="color:#fff; font-size:18px; font-weight:600; min-width:280px; text-align:center;"></span>
             <button id="weekNextBtn" onclick="changeWeek(1)" style="background:rgba(255,255,255,0.2); border:none; color:#fff; font-size:20px; padding:8px 16px; border-radius:8px; cursor:pointer; transition:all 0.2s;">❯</button>
           </div>
+          <!-- 🧪 월간 네비게이션 (베타·월간 모드에서만 표시) -->
+          <div id="monthlyNavigator" class="date-navigator" style="display:none; justify-content:center; align-items:center; gap:16px; margin-bottom:12px;">
+            <button id="monthPrevBtn" onclick="changeMonth(-1)" style="background:rgba(255,255,255,0.2); border:none; color:#fff; font-size:20px; padding:8px 16px; border-radius:8px; cursor:pointer; transition:all 0.2s;">❮</button>
+            <span id="currentMonthDisplay" style="color:#fff; font-size:20px; font-weight:700; min-width:180px; text-align:center;"></span>
+            <button id="monthNextBtn" onclick="changeMonth(1)" style="background:rgba(255,255,255,0.2); border:none; color:#fff; font-size:20px; padding:8px 16px; border-radius:8px; cursor:pointer; transition:all 0.2s;">❯</button>
+          </div>
+          <!-- (구) 주 선택 스트립 — 전체 나열 UX로 대체됨. 하위호환 위해 요소는 남기고 항상 숨김 -->
+          <div id="monthlyWeekSelector" style="display:none;"></div>
 
           <div id="todayTableContainer">
             <!-- JavaScript에서 동적 렌더링 -->
@@ -19289,7 +19359,16 @@ app.get("/my-learning", async (req, res) => {
 
         // 통합 AI 피드백 초기화 함수 (페이지 로드 시 호출, 주간모드 전환 시에도 호출)
         async function initAIFeedbacks(skipDelay = false) {
+          // 🧪 A안: 월간 뷰에서도 AI 피드백은 주간 스코프로 처리(회의 결정)
+          // 상위 let 변수(isWeeklyMode/isMonthlyMode) 스냅샷 캡처 후 runFeedback 내부에서
+          // var 섀도잉으로 isWeeklyMode를 강제 true로 오버라이드 → 기존 주간 로직 그대로 재사용.
+          const _outerWeeklyForAI = isWeeklyMode;
+          const _outerMonthlyForAI = (typeof isMonthlyMode !== 'undefined' && isMonthlyMode);
+
           const runFeedback = async () => {
+            // 월간 모드면 주간과 동일하게 취급 (var 호이스팅으로 함수 전 범위에 적용)
+            var isWeeklyMode = _outerWeeklyForAI || _outerMonthlyForAI;
+
             const feedbackSection = document.getElementById('aiFeedbackSection');
             const loadingBox = document.getElementById('aiFeedbackLoading');
             const contentBox = document.getElementById('aiFeedbackContent');
@@ -20068,7 +20147,15 @@ app.get("/my-learning", async (req, res) => {
           function updateIndexTrendChart() {
             let displayDates;
 
-            if (isWeeklyMode) {
+            if (typeof isMonthlyMode !== 'undefined' && isMonthlyMode) {
+              // 🧪 월간 모드: selectedMonthStart 기준 1일~말일, 데이터 있는 날만
+              const mStart = getMonthStart(selectedMonthStart);
+              const mEnd = getMonthEnd(selectedMonthStart);
+              displayDates = indexTrendAllDates.filter(d => {
+                const dt = new Date(d + 'T00:00:00');
+                return dt >= mStart && dt <= mEnd && indexTrendDateIndexMap[d];
+              });
+            } else if (isWeeklyMode) {
               // 주간 모드: selectedWeekStart 기준 월~일 7일
               const weekStart = new Date(selectedWeekStart);
               const weekDates = [];
@@ -20132,7 +20219,11 @@ app.get("/my-learning", async (req, res) => {
             };
 
             // 날짜 범위 표시
-            if (dateRangeSpan && isWeeklyMode) {
+            if (dateRangeSpan && typeof isMonthlyMode !== 'undefined' && isMonthlyMode) {
+              // 🧪 월간 모드: "YYYY년 M월 전체"
+              const mStart = getMonthStart(selectedMonthStart);
+              dateRangeSpan.textContent = mStart.getFullYear() + '년 ' + (mStart.getMonth() + 1) + '월 전체';
+            } else if (dateRangeSpan && isWeeklyMode) {
               // 주간 모드: 통일된 형식 사용 (2026년 1/6 (월) ~ 1/11 (일))
               const weekStart = new Date(selectedWeekStart);
               const weekEnd = getWeekEnd(weekStart);
@@ -20145,8 +20236,9 @@ app.get("/my-learning", async (req, res) => {
               dateRangeSpan.textContent = firstLabel + ' ~ ' + lastLabel;
             }
 
-            // 버튼 활성화 상태 (주간 모드에서는 숨김)
-            if (isWeeklyMode) {
+            // 버튼 활성화 상태 (주간/월간 모드에서는 숨김)
+            const _hideNav = (typeof isMonthlyMode !== 'undefined' && isMonthlyMode) || isWeeklyMode;
+            if (_hideNav) {
               if (prevBtn) prevBtn.style.display = 'none';
               if (nextBtn) nextBtn.style.display = 'none';
             } else {
@@ -20596,7 +20688,15 @@ app.get("/my-learning", async (req, res) => {
             let visibleDates;
             const daysToShow = 4; // 화면에 보여줄 날짜 수
 
-            if (isWeeklyMode) {
+            if (typeof isMonthlyMode !== 'undefined' && isMonthlyMode) {
+              // 🧪 월간 모드: 이달 1일~말일 중 데이터 있는 날만
+              const mStart = getMonthStart(selectedMonthStart);
+              const mEnd = getMonthEnd(selectedMonthStart);
+              visibleDates = subjectBarDatesWithData.filter(d => {
+                const dt = new Date(d + 'T00:00:00');
+                return dt >= mStart && dt <= mEnd;
+              });
+            } else if (isWeeklyMode) {
               // 주간 모드: selectedWeekStart 기준 월~일 7일 중 데이터가 있는 날짜
               const weekStart = new Date(selectedWeekStart);
               const weekDates = [];
@@ -20622,7 +20722,11 @@ app.get("/my-learning", async (req, res) => {
                 const date = new Date(d);
                 return (date.getMonth() + 1) + '/' + date.getDate();
               };
-              if (isWeeklyMode) {
+              if (typeof isMonthlyMode !== 'undefined' && isMonthlyMode) {
+                // 🧪 월간 모드
+                const mStart = getMonthStart(selectedMonthStart);
+                dateRangeSpan.textContent = mStart.getFullYear() + '년 ' + (mStart.getMonth() + 1) + '월 전체';
+              } else if (isWeeklyMode) {
                 // 주간 모드: 통일된 형식 사용 (2026년 1/5 (월) ~ 1/11 (일))
                 const weekStart = new Date(selectedWeekStart);
                 const weekEnd = getWeekEnd(weekStart);
@@ -20637,8 +20741,9 @@ app.get("/my-learning", async (req, res) => {
               }
             }
 
-            // 네비게이션 버튼 상태 (주간 모드에서는 숨김)
-            if (isWeeklyMode) {
+            // 네비게이션 버튼 상태 (주간/월간 모드에서는 숨김)
+            const _hideSubjBarNav = (typeof isMonthlyMode !== 'undefined' && isMonthlyMode) || isWeeklyMode;
+            if (_hideSubjBarNav) {
               if (prevBtn) prevBtn.style.display = 'none';
               if (nextBtn) nextBtn.style.display = 'none';
             } else {
@@ -20847,14 +20952,33 @@ app.get("/my-learning", async (req, res) => {
         // 날짜 네비게이션을 위한 현재 선택된 날짜 (기본: 오늘)
         let selectedDate = new Date();
 
-        // ===== 주간 모드 관련 변수 =====
-        // URL 파라미터에서 주간 모드 정보 읽기
+        // ===== 주간/월간 모드 관련 변수 =====
+        // URL 파라미터에서 모드 정보 읽기
         const weeklyUrlParams = new URLSearchParams(window.location.search);
         const weeklyParamValue = weeklyUrlParams.get('weekly');
+        const monthlyParamValue = weeklyUrlParams.get('monthly');
         const weekStartParam = weeklyUrlParams.get('weekStart');
+        const monthStartParam = weeklyUrlParams.get('monthStart');
 
-        let isWeeklyMode = (weeklyParamValue !== 'false'); // 기본값: 주간 모드 (weekly=false일 때만 일간 모드)
+        // 종합리포트 월간 뷰 베타 플래그 (서버 렌더 시 주입)
+        const IS_MONTHLY_BETA = ${isMonthlyBeta ? 'true' : 'false'};
+
+        // 초기 모드 판별 (베타 학생만 monthly 진입 가능):
+        // 1) ?weekly=true → 주간 (하위호환, 학부모 옛 링크)
+        // 2) ?weekly=false → 일간
+        // 3) ?monthly=true → 월간 (베타 학생 전용)
+        // 4) 파라미터 없음 → 베타는 월간, 비베타는 주간(기존 기본값)
+        let reportMode; // 'monthly' | 'weekly' | 'daily'
+        if (weeklyParamValue === 'true') reportMode = 'weekly';
+        else if (weeklyParamValue === 'false') reportMode = 'daily';
+        else if (monthlyParamValue === 'true' && IS_MONTHLY_BETA) reportMode = 'monthly';
+        else reportMode = IS_MONTHLY_BETA ? 'monthly' : 'weekly';
+
+        // 기존 코드 호환용 (주간/일간 로직이 이 플래그를 참조)
+        let isWeeklyMode = (reportMode === 'weekly');
+        let isMonthlyMode = (reportMode === 'monthly');
         let selectedWeekStart = weekStartParam ? new Date(weekStartParam) : getWeekStart(new Date()); // URL 파라미터 또는 현재 주의 월요일
+        let selectedMonthStart = monthStartParam ? new Date(monthStartParam) : (function(){ const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); })();
 
         // 해당 날짜가 속한 주의 월요일을 반환
         function getWeekStart(date) {
@@ -20871,6 +20995,27 @@ app.get("/my-learning", async (req, res) => {
           weekEnd.setDate(weekEnd.getDate() + 6);
           return weekEnd;
         }
+
+        // 🧪 월간 뷰 유틸 (베타)
+        function getMonthStart(date) {
+          const d = new Date(date);
+          return new Date(d.getFullYear(), d.getMonth(), 1);
+        }
+        function getMonthEnd(date) {
+          const d = new Date(date);
+          return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+        }
+        function changeMonth(delta) {
+          const d = new Date(selectedMonthStart);
+          d.setMonth(d.getMonth() + delta);
+          d.setDate(1);
+          const today = new Date();
+          const todayMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+          if (d > todayMonthStart) return; // 이번 달 이후로는 이동 불가
+          selectedMonthStart = d;
+          renderMonthlySection();
+        }
+        window.changeMonth = changeMonth;
 
         // 주간 레이더용 별도 주차 변수
         let selectedWeekRadarStart = getWeekStart(new Date());
@@ -20903,6 +21048,93 @@ app.get("/my-learning", async (req, res) => {
             }, '*');
           }
         }
+
+        // 세그먼트 컨트롤 UI 동기화 (베타 전용)
+        function updateReportSegmentUI() {
+          const seg = document.getElementById('reportModeSegment');
+          if (!seg) return;
+          seg.querySelectorAll('button[data-mode]').forEach(btn => {
+            const isActive = btn.dataset.mode === reportMode;
+            if (isActive) {
+              btn.style.background = 'linear-gradient(135deg, #ffd54f 0%, #fb8c00 100%)';
+              btn.style.color = '#1a1a1a';
+              btn.style.boxShadow = '0 2px 8px rgba(251,140,0,0.35)';
+            } else {
+              btn.style.background = 'transparent';
+              btn.style.color = '#fff';
+              btn.style.boxShadow = 'none';
+            }
+          });
+        }
+
+        // 3모드 스위처 (베타 전용) — Step 2/3에서 실제 렌더링 로직 붙일 예정
+        async function setReportMode(mode) {
+          if (!['monthly','weekly','daily'].includes(mode)) return;
+          if (mode === reportMode) return;
+          reportMode = mode;
+          isWeeklyMode = (mode === 'weekly');
+          isMonthlyMode = (mode === 'monthly');
+          updateReportSegmentUI();
+
+          // 공통: 모든 모드 전환 전에 각 네비/셀렉터 숨김 상태로 리셋
+          const _monthlyNav = document.getElementById('monthlyNavigator');
+          const _monthlySelector = document.getElementById('monthlyWeekSelector');
+          if (_monthlyNav) _monthlyNav.style.display = 'none';
+          if (_monthlySelector) _monthlySelector.style.display = 'none';
+
+          if (mode === 'weekly') {
+            // 기존 toggleWeeklyMode 로직 재사용을 위해 강제 전환
+            if (!document.getElementById('weeklyNavigator')) return; // 요소 없을 때 방어
+            // 주간 UI 켜기
+            const dailyNav = document.getElementById('dailyNavigator');
+            const weeklyNav = document.getElementById('weeklyNavigator');
+            const calendarIcon = document.getElementById('calendarIcon');
+            const weeklyRadarNav = document.getElementById('weeklyRadarNavigator');
+            const titleEl = document.getElementById('sectionTitleText');
+            if (dailyNav) dailyNav.style.display = 'none';
+            if (weeklyNav) weeklyNav.style.display = 'flex';
+            if (calendarIcon) calendarIcon.style.display = 'none';
+            if (weeklyRadarNav) weeklyRadarNav.style.display = 'flex';
+            if (titleEl) titleEl.textContent = '이번 주 나의 AI 학습 기록';
+            selectedWeekStart = getWeekStart(selectedDate);
+            selectedWeekRadarStart = new Date(selectedWeekStart);
+            await renderWeeklySection();
+            updateWeeklyRadarNav();
+            if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
+          } else if (mode === 'daily') {
+            const dailyNav = document.getElementById('dailyNavigator');
+            const weeklyNav = document.getElementById('weeklyNavigator');
+            const calendarIcon = document.getElementById('calendarIcon');
+            const weeklyRadarNav = document.getElementById('weeklyRadarNavigator');
+            const titleEl = document.getElementById('sectionTitleText');
+            if (dailyNav) dailyNav.style.display = 'flex';
+            if (weeklyNav) weeklyNav.style.display = 'none';
+            if (calendarIcon) calendarIcon.style.display = 'inline';
+            if (weeklyRadarNav) weeklyRadarNav.style.display = 'none';
+            if (titleEl) titleEl.textContent = 'Today 나의 AI 학습 기록';
+            renderTodaySection();
+            if (typeof initAIFeedbacks === 'function') initAIFeedbacks(false);
+          } else if (mode === 'monthly') {
+            const dailyNav = document.getElementById('dailyNavigator');
+            const weeklyNav = document.getElementById('weeklyNavigator');
+            const monthlyNav = document.getElementById('monthlyNavigator');
+            const monthlySelector = document.getElementById('monthlyWeekSelector');
+            const calendarIcon = document.getElementById('calendarIcon');
+            const weeklyRadarNav = document.getElementById('weeklyRadarNavigator');
+            const titleEl = document.getElementById('sectionTitleText');
+            if (dailyNav) dailyNav.style.display = 'none';
+            if (weeklyNav) weeklyNav.style.display = 'none';
+            if (monthlyNav) monthlyNav.style.display = 'flex';
+            if (monthlySelector) monthlySelector.style.display = 'flex';
+            if (calendarIcon) calendarIcon.style.display = 'none';
+            if (weeklyRadarNav) weeklyRadarNav.style.display = 'flex';
+            if (titleEl) titleEl.textContent = '📆 이달 나의 AI 학습 기록';
+            await renderMonthlySection();
+            updateWeeklyRadarNav();
+            if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
+          }
+        }
+        window.setReportMode = setReportMode;
 
         // 주간 모드 UI 초기화 함수 (페이지 로드 시 URL 파라미터로 주간 모드 활성화)
         async function initWeeklyModeFromUrl() {
@@ -22119,6 +22351,398 @@ app.get("/my-learning", async (req, res) => {
           if (typeof renderCreativeTable === 'function') renderCreativeTable();
         }
 
+        // 🧪 하루 학습기록 블록 HTML 생성 헬퍼 — 주간/월간 뷰 공용
+        // opts.rowsOnly === true: <thead> 생략하고 얇은 날짜 구분바(tr colspan) + 데이터 행만 반환
+        //   (여러 날짜를 하나의 <table>로 묶어 렌더할 때 사용 — 월간 뷰)
+        // opts.rowsOnly !== true: 자체 헤더+테이블+행 완결 블록 반환 (주간 뷰 기존 방식)
+        function buildDayBlockHtml(dateStr, dayLogs, dayGates, dayMidterms, opts) {
+          opts = opts || {};
+          const subjectMap = opts.subjectMap;
+          const fieldMap = opts.fieldMap;
+          const folderMap = opts.folderMap;
+          const marginTop = opts.marginTop || '0';
+          const rowsOnly = opts.rowsOnly === true;
+          const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+          const dateObj = new Date(dateStr + 'T00:00:00');
+          const dayName = dayNames[dateObj.getDay()];
+          const displayDate = (dateObj.getMonth() + 1) + '/' + dateObj.getDate() + ' (' + dayName + ')';
+          const totalCount = dayLogs.length + dayGates.length + dayMidterms.length;
+
+          let tableHtml = '';
+          if (rowsOnly) {
+            // 얇은 날짜 구분바 (tr colspan=8) — 시각 그룹핑 유지 + 컬럼 헤더는 상위 테이블 하나만 사용
+            tableHtml += '<tr class="date-divider-row" style="background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);">';
+            tableHtml += '<td colspan="8" style="padding: 8px 14px; border-top: 2px solid #c7d2fe; border-bottom: 1px solid #e0e7ff;">';
+            tableHtml += '<div style="display:flex; justify-content:space-between; align-items:center;">';
+            tableHtml += '<span style="color:#4338ca; font-weight:800; font-size:13px; letter-spacing:0.3px;">📅 ' + displayDate + '</span>';
+            tableHtml += '<span style="color:#667eea; font-size:12px; font-weight:600;">' + totalCount + '건</span>';
+            tableHtml += '</div>';
+            tableHtml += '</td></tr>';
+          } else {
+            tableHtml += '<div class="weekly-day-header" style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,249,250,0.95) 100%); padding: 12px 16px; margin-top: ' + marginTop + '; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(0,0,0,0.08); border-bottom: none;">';
+            tableHtml += '<span style="color: #333; font-weight: 700; font-size: 15px;">📅 ' + displayDate + '</span>';
+            tableHtml += '<span style="color: #667eea; font-size: 13px; font-weight: 600;">' + totalCount + '건</span>';
+            tableHtml += '</div>';
+            tableHtml += '<table class="today-table" style="margin-bottom: 0; border-radius: 0 0 10px 10px; overflow: hidden;"><thead><tr>';
+            tableHtml += '<th>#</th><th>시리즈</th><th>분야</th><th>단원명</th><th>등급</th><th>평균</th><th>독해시간</th><th>어휘</th>';
+            tableHtml += '</tr></thead><tbody>';
+          }
+
+          dayLogs.forEach((log, idx) => {
+            const unitCode = log.unit || '';
+            let subjectName = '-';
+            let subjectKey = '';
+            let numStr = '';
+            if (unitCode && unitCode.includes('_')) {
+              const parts = unitCode.split('_');
+              subjectKey = parts[0];
+              numStr = parts[1];
+              if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+                subjectKey = parts[1];
+                numStr = parts[2];
+              }
+              let number = numStr ? parseInt(numStr, 10) : 0;
+              if (subjectKey === 'world' && number > 40) subjectName = '세계문학2';
+              else subjectName = subjectMap[subjectKey] || subjectKey;
+            }
+            let series = 'BRAIN업';
+            if (unitCode.includes('on_')) series = 'BRAIN온';
+            else if (unitCode.includes('fit_')) series = 'BRAIN핏';
+            else if (unitCode.includes('deep_')) series = 'BRAIN딥';
+            const field = fieldMap[subjectKey] || '기타';
+            let shortName = unitCode;
+            if (unitCode && unitCode.includes('_')) {
+              const parts = unitCode.split('_');
+              let sk = parts[0], ns = parts[1];
+              if ((parts[0] === 'fit' || parts[0] === 'deep' || parts[0] === 'on') && parts.length >= 3) {
+                sk = parts[1]; ns = parts[2];
+              }
+              const subject = subjectMap[sk] || sk;
+              let number = ns ? parseInt(ns, 10) : 0;
+              shortName = subject + ' ' + number;
+            }
+            let fullTitle = UNIT_TITLES[unitCode];
+            if (!fullTitle && unitCode) {
+              let normalizedCode = unitCode;
+              if (unitCode.startsWith('fit_')) normalizedCode = unitCode.substring(4);
+              else if (unitCode.startsWith('deep_')) normalizedCode = unitCode.substring(5);
+              else if (unitCode.startsWith('on_')) normalizedCode = unitCode.substring(3);
+              fullTitle = UNIT_TITLES[normalizedCode];
+            }
+            let unitName = fullTitle ? (shortName + ' ' + fullTitle) : shortName;
+            const r = log.radar || {};
+            const scores = [r.literal, r.structural, r.lexical, r.inferential, r.critical].filter(s => s != null);
+            const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+            let badgeClass = 'badge-normal', badgeText = '보통';
+            if (avgScore >= 9) { badgeClass = 'badge-excellent'; badgeText = '우수'; }
+            else if (avgScore >= 8) { badgeClass = 'badge-good'; badgeText = '양호'; }
+            else if (avgScore >= 7) { badgeClass = 'badge-normal'; badgeText = '보통'; }
+            else { badgeClass = 'badge-encourage'; badgeText = '격려'; }
+            let unitProgress = UNIT_PROGRESS_MAP[unitCode] || {};
+            if (!unitProgress.vocabState) {
+              let normalizedUnitCode = unitCode;
+              if (unitCode.startsWith('fit_')) normalizedUnitCode = unitCode.substring(4);
+              else if (unitCode.startsWith('deep_')) normalizedUnitCode = unitCode.substring(5);
+              else if (unitCode.startsWith('on_')) normalizedUnitCode = unitCode.substring(3);
+              unitProgress = UNIT_PROGRESS_MAP[normalizedUnitCode] || {};
+            }
+            let vocabScorePercent = 0;
+            const vocabState = unitProgress.vocabState;
+            if (vocabState && vocabState.vocabData && Array.isArray(vocabState.vocabData)) {
+              const total = vocabState.vocabData.length;
+              const correct = vocabState.vocabData.filter(v => v.isCorrect).length;
+              if (total > 0) vocabScorePercent = Math.round((correct / total) * 100);
+            } else {
+              const reportState = unitProgress.reportState || {};
+              const vocabScoreRatio = reportState.vocabScoreRatio || 0;
+              vocabScorePercent = Math.round(vocabScoreRatio * 100);
+            }
+            const vocabScoreDisplay = vocabScorePercent > 0 ? vocabScorePercent + '점' : '-';
+            const folder = folderMap[subjectKey] || 'science';
+            const unitUrl = '/BRAINUP/' + folder + '/' + unitCode + '.html';
+            if (${isSharedMode}) {
+              tableHtml += '<tr style="cursor:default;">';
+            } else {
+              tableHtml += '<tr onclick="window.open(\\'' + unitUrl + '\\', \\'_blank\\')" style="cursor:pointer;">';
+            }
+            tableHtml += '<td>' + (idx + 1) + '</td>';
+            tableHtml += '<td>' + series + '</td>';
+            tableHtml += '<td>' + field + '</td>';
+            tableHtml += '<td>' + unitName + '</td>';
+            tableHtml += '<td><span class="badge ' + badgeClass + '">' + badgeText + '</span></td>';
+            tableHtml += '<td>' + avgScore.toFixed(1) + '</td>';
+            let readingDuration = READING_TIMES_MAP[unitCode] || 0;
+            if (readingDuration === 0) {
+              let normalizedReadingKey2 = unitCode;
+              if (unitCode.startsWith('fit_')) normalizedReadingKey2 = unitCode.substring(4);
+              else if (unitCode.startsWith('deep_')) normalizedReadingKey2 = unitCode.substring(5);
+              else if (unitCode.startsWith('on_')) normalizedReadingKey2 = unitCode.substring(3);
+              readingDuration = READING_TIMES_MAP[normalizedReadingKey2] || 0;
+            }
+            if (readingDuration === 0 && LEARNING_BEHAVIOR_READING_MAP[unitCode]) {
+              readingDuration = LEARNING_BEHAVIOR_READING_MAP[unitCode] * 1000;
+            }
+            if (readingDuration === 0 && log.readingTime) {
+              readingDuration = log.readingTime * 1000;
+            }
+            let readingTimeDisplay = '-';
+            if (readingDuration > 0) {
+              const totalSeconds = Math.floor(readingDuration / 1000);
+              const minutes = Math.floor(totalSeconds / 60);
+              const seconds = totalSeconds % 60;
+              readingTimeDisplay = minutes + ':' + String(seconds).padStart(2, '0');
+            }
+            tableHtml += '<td style="color:#059669; font-weight:600;">' + readingTimeDisplay + '</td>';
+            if (vocabScorePercent > 0) {
+              tableHtml += '<td><span style="color:#3b82f6; font-weight:600;">' + vocabScoreDisplay + '</span></td>';
+            } else {
+              tableHtml += '<td>' + vocabScoreDisplay + '</td>';
+            }
+            tableHtml += '</tr>';
+          });
+
+          if (dayGates.length > 0) {
+            dayGates.forEach((gateInfo) => {
+              const passedTime = gateInfo.passedAt ? new Date(gateInfo.passedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+              tableHtml += '<tr class="gate-pass-row" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); cursor: pointer;" onclick="showGateDetailModal(' + gateInfo.gate + ')">';
+              tableHtml += '<td style="text-align:center;">🏆</td>';
+              tableHtml += '<td colspan="2" style="font-weight:600; color:#92400e;">형성평가</td>';
+              tableHtml += '<td style="font-weight:700; color:#78350f;">관문 ' + gateInfo.gate + ' 통과</td>';
+              tableHtml += '<td><span class="badge" style="background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff;">통과</span></td>';
+              tableHtml += '<td style="color:#92400e;">' + passedTime + '</td>';
+              tableHtml += '<td></td>';
+              tableHtml += '<td></td>';
+              tableHtml += '</tr>';
+            });
+          }
+          if (dayMidterms.length > 0) {
+            dayMidterms.forEach((midtermInfo) => {
+              const completedTime = midtermInfo.completedAt ? new Date(midtermInfo.completedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+              const stageText = '단계 ' + midtermInfo.stage;
+              const passedText = midtermInfo.passed ? '통과' : '미통과';
+              const badgeStyle = midtermInfo.passed ? 'background:linear-gradient(135deg,#667eea,#764ba2); color:#fff;' : 'background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff;';
+              const rowBgStyle = midtermInfo.passed ? 'background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);' : 'background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);';
+              const scoreText = midtermInfo.score + '점';
+              tableHtml += '<tr class="midterm-row" style="' + rowBgStyle + ' cursor: pointer;" onclick="showMidtermDetailModal(' + midtermInfo.stage + ', ' + midtermInfo.attemptNumber + ')">';
+              tableHtml += '<td style="text-align:center;">📊</td>';
+              tableHtml += '<td colspan="2" style="font-weight:600; color:#4338ca;">중간평가</td>';
+              tableHtml += '<td style="font-weight:700; color:#3730a3;">' + stageText + ' (' + scoreText + ')</td>';
+              tableHtml += '<td><span class="badge" style="' + badgeStyle + '">' + passedText + '</span></td>';
+              tableHtml += '<td style="color:#4338ca;">' + completedTime + '</td>';
+              tableHtml += '<td></td>';
+              tableHtml += '<td></td>';
+              tableHtml += '</tr>';
+            });
+          }
+          if (!rowsOnly) {
+            tableHtml += '</tbody></table>';
+          }
+          return tableHtml;
+        }
+
+        // 🧪 월간 뷰 렌더링 (베타) — 이달 전체 학습을 한 테이블에 최신순 나열, 10건 초과 시 "더보기"
+        // 월간 페이지네이션 상태
+        let _monthlyDisplayLimit = 10;
+        let _monthlyDaysData = []; // [{dateStr, dayLogs, dayGates, dayMidterms, totalCount}] 최신순
+        async function renderMonthlySection() {
+          const monthStart = getMonthStart(selectedMonthStart);
+          const monthEnd = getMonthEnd(selectedMonthStart);
+
+          // 월 표시 업데이트
+          const monthDisplay = document.getElementById('currentMonthDisplay');
+          if (monthDisplay) {
+            monthDisplay.textContent = monthStart.getFullYear() + '년 ' + (monthStart.getMonth() + 1) + '월';
+          }
+          const description = document.getElementById('todayDescription');
+          if (description) {
+            description.textContent = '이달의 학습 기록입니다. 최신 학습이 맨 위에 나옵니다.';
+          }
+
+          // 주 선택 스트립은 새 UX(전체 나열)에서 사용 안 함 — 비움
+          const selector = document.getElementById('monthlyWeekSelector');
+          if (selector) selector.innerHTML = '';
+
+          // 다음 달 이동 잠금 (이번 달 이후 X)
+          const nextBtn = document.getElementById('monthNextBtn');
+          if (nextBtn) {
+            const today = new Date();
+            const todayMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            const disabled = monthStart >= todayMonthStart;
+            nextBtn.style.opacity = disabled ? '0.3' : '1';
+            nextBtn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+            nextBtn.disabled = disabled;
+          }
+
+          // 이달 로그 필터
+          const monthLogs = logsForChart.filter(log => {
+            if (!matchesSeries(log.unit, currentSeries)) return false;
+            const logDate = log.completedAt || log.timestamp;
+            if (!logDate) return false;
+            const d = new Date(logDate);
+            return d >= monthStart && d <= monthEnd;
+          });
+
+          const tableContainer = document.getElementById('todayTableContainer');
+          const radarWrap = document.getElementById('today-radar-wrap');
+
+          // 이달 활동 있는 날짜만 수집 (dateStr)
+          const activeDatesSet = new Set();
+          monthLogs.forEach(log => {
+            const d = new Date(log.completedAt || log.timestamp);
+            activeDatesSet.add(toKSTDateString(d));
+          });
+          const activeDates = Array.from(activeDatesSet).sort((a, b) => b < a ? -1 : b > a ? 1 : 0); // 최신 날짜 top
+
+          // 이달 관문·중간평가 병렬 조회 (활동 있는 날짜만)
+          const urlParamsM = new URLSearchParams(window.location.search);
+          const studentGradeM = urlParamsM.get('grade') || '';
+          const studentNameM = urlParamsM.get('name') || '';
+          const hideGateStudentsM = ['최수종'];
+
+          let monthGatesByDate = {};
+          if (!hideGateStudentsM.includes(studentNameM)) {
+            try {
+              const gatePromises = activeDates.map(dateStr =>
+                fetch('/api/gate-quiz/passed-by-date?grade=' + encodeURIComponent(studentGradeM) + '&name=' + encodeURIComponent(studentNameM) + '&date=' + dateStr)
+                  .then(res => res.json())
+                  .then(data => ({ date: dateStr, gates: data.ok && data.data ? data.data : [] }))
+              );
+              const results = await Promise.all(gatePromises);
+              results.forEach(item => { monthGatesByDate[item.date] = item.gates; });
+            } catch (err) {
+              console.error('월간 관문 데이터 조회 실패:', err);
+            }
+          }
+
+          let monthMidtermsByDate = {};
+          try {
+            const midtermPromises = activeDates.map(dateStr =>
+              fetch('/api/midterm/passed-by-date?grade=' + encodeURIComponent(studentGradeM) + '&name=' + encodeURIComponent(studentNameM) + '&date=' + dateStr)
+                .then(res => res.json())
+                .then(data => ({ date: dateStr, midterms: data.ok && data.data ? data.data : [] }))
+            );
+            const results = await Promise.all(midtermPromises);
+            results.forEach(item => { monthMidtermsByDate[item.date] = item.midterms; });
+          } catch (err) {
+            console.error('월간 중간평가 데이터 조회 실패:', err);
+          }
+
+          // 관문·중간평가에만 있는 날짜도 activeDates에 추가
+          Object.keys(monthGatesByDate).forEach(d => { if (monthGatesByDate[d].length > 0) activeDatesSet.add(d); });
+          Object.keys(monthMidtermsByDate).forEach(d => { if (monthMidtermsByDate[d].length > 0) activeDatesSet.add(d); });
+          const finalActiveDates = Array.from(activeDatesSet).sort((a, b) => b < a ? -1 : b > a ? 1 : 0);
+
+          // 날짜별 로그 그룹핑
+          const logsByDate = {};
+          monthLogs.forEach(log => {
+            const d = new Date(log.completedAt || log.timestamp);
+            const key = toKSTDateString(d);
+            (logsByDate[key] = logsByDate[key] || []).push(log);
+          });
+
+          // 페이지네이션 데이터 준비
+          _monthlyDaysData = finalActiveDates.map(dateStr => {
+            const dayLogs = logsByDate[dateStr] || [];
+            const dayGates = monthGatesByDate[dateStr] || [];
+            const dayMidterms = monthMidtermsByDate[dateStr] || [];
+            const totalCount = dayLogs.length + dayGates.length + dayMidterms.length;
+            return { dateStr, dayLogs, dayGates, dayMidterms, totalCount };
+          }).filter(d => d.totalCount > 0);
+
+          if (_monthlyDaysData.length === 0) {
+            if (tableContainer) tableContainer.innerHTML = '<div class="no-data-message" style="text-align:center; color:#333; padding:20px; font-size:14px;">이달 학습 기록이 없습니다.</div>';
+            if (radarWrap) radarWrap.innerHTML = '<div class="no-data-message" style="width:100%; text-align:center; color:#fff; padding:30px; font-size:14px;">이달 학습 기록이 없습니다.</div>';
+            return;
+          }
+
+          _monthlyDisplayLimit = 10;
+          renderMonthlyTable();
+
+          // 레이더 카드 — 이달 전체 로그로 렌더
+          renderWeeklyRadarCards(monthLogs, {'geo':'지리','bio':'생물','earth':'지구과학','physics':'물리','chem':'화학','soc':'사회문화','law':'법','pol':'정치경제','modern':'현대문학','classic':'고전문학','world':'세계문학1','world1':'세계문학1','world2':'세계문학2','people':'한국인물','people1':'한국인물','people2':'세계인물','person1':'한국인물','person2':'세계인물'});
+
+          // 레이더 네비게이터 라벨 (월 범위 표시)
+          const weekRadarDisplay = document.getElementById('currentWeekRadarDisplay');
+          if (weekRadarDisplay) {
+            weekRadarDisplay.textContent = monthStart.getFullYear() + '년 ' + (monthStart.getMonth() + 1) + '월 전체';
+          }
+          const radarTitle = document.getElementById('radarSectionTitle');
+          if (radarTitle) {
+            radarTitle.textContent = '📊 ' + (monthStart.getMonth() + 1) + '월 완료한 단원별 문해력 AI 레이더';
+          }
+
+          // 하단 지표 5종 이달 스코프로 갱신 (각 함수 내부에서 isMonthlyMode 분기 처리)
+          if (typeof window.updateIndexTrendChart === 'function') window.updateIndexTrendChart();
+          if (typeof window.updateSubjectBarChart === 'function') window.updateSubjectBarChart();
+          if (typeof renderVocabScoreChart === 'function') renderVocabScoreChart();
+          if (typeof renderCreativeTable === 'function') renderCreativeTable();
+        }
+        window.renderMonthlySection = renderMonthlySection;
+
+        // 월간 테이블 렌더 (표시 개수만큼) — "더보기" 클릭으로 재호출
+        // 구조: 컬럼 헤더 1번(sticky) + 날짜별 얇은 구분바(tr) + 데이터 행 반복
+        function renderMonthlyTable() {
+          const tableContainer = document.getElementById('todayTableContainer');
+          if (!tableContainer) return;
+
+          const subjectMap = {'geo':'지리','bio':'생물','earth':'지구과학','physics':'물리','chem':'화학','soc':'사회문화','law':'법','pol':'정치경제','modern':'현대문학','classic':'고전문학','world':'세계문학1','world1':'세계문학1','world2':'세계문학2','people':'한국인물','people1':'한국인물','people2':'세계인물','person1':'한국인물','person2':'세계인물'};
+          const fieldMap = {'bio':'과학분야','earth':'과학분야','physics':'과학분야','chem':'과학분야','geo':'사회분야','soc':'사회분야','law':'사회분야','pol':'사회분야','modern':'한국문학','classic':'한국문학','world':'세계문학','world1':'세계문학','world2':'세계문학','people':'인물분야','people1':'인물분야','people2':'인물분야','person1':'인물분야','person2':'인물분야'};
+          const folderMap = {'bio':'science','earth':'science','physics':'science','chem':'science','geo':'social','soc':'social','law':'social','pol':'social','modern':'korlit','classic':'korlit','world':'worldlit','world1':'worldlit','world2':'worldlit','people':'person','people1':'person','people2':'person','person1':'person','person2':'person'};
+
+          // 행 수 기준 페이지네이션: 초기 10건, 더보기 클릭 시 +10건
+          let displayedRows = 0;
+          const targetRows = _monthlyDisplayLimit;
+          let bodyRowsHtml = '';
+
+          for (let i = 0; i < _monthlyDaysData.length; i++) {
+            if (displayedRows >= targetRows) break;
+            const day = _monthlyDaysData[i];
+            bodyRowsHtml += buildDayBlockHtml(day.dateStr, day.dayLogs, day.dayGates, day.dayMidterms, {
+              rowsOnly: true,
+              subjectMap: subjectMap,
+              fieldMap: fieldMap,
+              folderMap: folderMap
+            });
+            displayedRows += day.totalCount;
+          }
+
+          // 남은 항목 계산
+          const totalRows = _monthlyDaysData.reduce((s, d) => s + d.totalCount, 0);
+          const remainingRows = totalRows - displayedRows;
+
+          // 하나의 테이블로 감싸기 (sticky thead)
+          let html = '';
+          html += '<div style="border-radius:12px; overflow:hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">';
+          html += '<table class="today-table monthly-table" style="margin-bottom:0; border-radius:0;">';
+          html += '<thead style="position: sticky; top: 0; z-index: 3;"><tr>';
+          html += '<th>#</th><th>시리즈</th><th>분야</th><th>단원명</th><th>등급</th><th>평균</th><th>독해시간</th><th>어휘</th>';
+          html += '</tr></thead>';
+          html += '<tbody>' + bodyRowsHtml + '</tbody>';
+          html += '</table>';
+          html += '</div>';
+
+          if (remainingRows > 0) {
+            html += '<div style="text-align:center; margin-top:16px;">';
+            html += '<button onclick="showMoreMonthly()" style="background: linear-gradient(135deg, #ffd54f 0%, #fb8c00 100%); border: none; color: #1a1a1a; padding: 12px 28px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(251,140,0,0.35);">📖 더보기 (' + remainingRows + '건 더)</button>';
+            html += '</div>';
+          } else if (totalRows > 10) {
+            html += '<div style="text-align:center; margin-top:12px; color:#fff; opacity:0.75; font-size:12px;">— 이달 학습 기록을 모두 표시했습니다 (총 ' + totalRows + '건) —</div>';
+          }
+
+          tableContainer.innerHTML = html;
+        }
+        window.renderMonthlyTable = renderMonthlyTable;
+
+        function showMoreMonthly() {
+          _monthlyDisplayLimit += 10;
+          renderMonthlyTable();
+          // 새로 나타난 항목이 화면에 보이도록 스크롤 살짝 아래로
+          const container = document.getElementById('todayTableContainer');
+          if (container) container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        window.showMoreMonthly = showMoreMonthly;
+
         // 주간 레이더 카드 렌더링 (일간과 동일한 방식 - Chart.js 사용)
         function renderWeeklyRadarCards(logs, subjectMap) {
           const radarWrap = document.getElementById('today-radar-wrap');
@@ -22306,11 +22930,37 @@ app.get("/my-learning", async (req, res) => {
           }
         }
 
-        // 페이지 로드 시 URL 파라미터에 따라 주간/일간 모드 초기화
-        if (!initWeeklyModeFromUrl()) {
-          // 일간 모드일 때만 Today 섹션 렌더링
-          renderTodaySection();
-        }
+        // 페이지 로드 시 URL 파라미터에 따라 주간/일간/월간 모드 초기화
+        (async function initReportMode() {
+          if (IS_MONTHLY_BETA) {
+            updateReportSegmentUI();
+            if (reportMode === 'monthly') {
+              // 월간 초기 진입
+              const monthlyNav = document.getElementById('monthlyNavigator');
+              const monthlySelector = document.getElementById('monthlyWeekSelector');
+              const dailyNav = document.getElementById('dailyNavigator');
+              const weeklyNav = document.getElementById('weeklyNavigator');
+              const calendarIcon = document.getElementById('calendarIcon');
+              const weeklyRadarNav = document.getElementById('weeklyRadarNavigator');
+              const titleEl = document.getElementById('sectionTitleText');
+              if (dailyNav) dailyNav.style.display = 'none';
+              if (weeklyNav) weeklyNav.style.display = 'none';
+              if (monthlyNav) monthlyNav.style.display = 'flex';
+              if (monthlySelector) monthlySelector.style.display = 'flex';
+              if (calendarIcon) calendarIcon.style.display = 'none';
+              if (weeklyRadarNav) weeklyRadarNav.style.display = 'flex';
+              if (titleEl) titleEl.textContent = '📆 이달 나의 AI 학습 기록';
+              await renderMonthlySection();
+              updateWeeklyRadarNav();
+              if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
+              return;
+            }
+          }
+          // 기존 흐름: 주간/일간
+          if (!(await initWeeklyModeFromUrl())) {
+            renderTodaySection();
+          }
+        })();
 
         // 지수별 추이 그래프 렌더링
         renderIndexTrendChart();
@@ -22385,7 +23035,26 @@ app.get("/my-learning", async (req, res) => {
 
           let dayLogs;
 
-          if (isWeeklyMode) {
+          if (typeof isMonthlyMode !== 'undefined' && isMonthlyMode) {
+            // 🧪 월간 모드: 이달 1일~말일
+            const mStart = getMonthStart(selectedMonthStart);
+            const mEnd = getMonthEnd(selectedMonthStart);
+
+            // 날짜 표시 업데이트 (월 범위)
+            dateDisplay.textContent = mStart.getFullYear() + '년 ' + (mStart.getMonth() + 1) + '월 전체';
+
+            // 네비게이션 버튼 숨김
+            if (prevBtn) prevBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+
+            // 이달 학습 기록 필터링
+            dayLogs = allLogs.filter(log => {
+              if (!log.timestamp || log.deleted) return false;
+              if (!matchesSeries(log.unit, currentSeries)) return false;
+              const dt = new Date(log.timestamp);
+              return dt >= mStart && dt <= mEnd;
+            });
+          } else if (isWeeklyMode) {
             // 주간 모드: selectedWeekStart 기준 월~일 7일
             const weekStart = new Date(selectedWeekStart);
             const weekEnd = getWeekEnd(weekStart);
@@ -22739,10 +23408,11 @@ app.get("/my-learning", async (req, res) => {
             return;
           }
 
-          console.log('[renderCreativeTable] 시작:', pageGrade, pageName, '주간모드:', isWeeklyMode);
+          const _isMonthly = (typeof isMonthlyMode !== 'undefined' && isMonthlyMode);
+          console.log('[renderCreativeTable] 시작:', pageGrade, pageName, '월간:', _isMonthly, '주간모드:', isWeeklyMode);
 
-          // 주간 모드일 때 네비게이션 버튼 숨김
-          if (isWeeklyMode) {
+          // 주간/월간 모드일 때 네비게이션 버튼 숨김
+          if (_isMonthly || isWeeklyMode) {
             if (prevBtn) prevBtn.style.display = 'none';
             if (nextBtn) nextBtn.style.display = 'none';
           } else {
@@ -22753,8 +23423,14 @@ app.get("/my-learning", async (req, res) => {
           // 날짜 표시
           let filteredData = [];
           let weekDates = [];
+          let _monthStartCal = null, _monthEndCal = null;
 
-          if (isWeeklyMode) {
+          if (_isMonthly) {
+            // 🧪 월간 모드: 월 범위 표시
+            _monthStartCal = getMonthStart(selectedMonthStart);
+            _monthEndCal = getMonthEnd(selectedMonthStart);
+            dateLabel.textContent = _monthStartCal.getFullYear() + '년 ' + (_monthStartCal.getMonth() + 1) + '월 전체';
+          } else if (isWeeklyMode) {
             // 주간 모드: 주간 범위 표시
             const weekStart = new Date(selectedWeekStart);
             const weekEnd = getWeekEnd(weekStart);
@@ -22804,7 +23480,20 @@ app.get("/my-learning", async (req, res) => {
           }
 
           // 데이터 필터링
-          if (isWeeklyMode) {
+          if (_isMonthly) {
+            // 🧪 월간 모드: 이달 1일~말일 데이터 필터링
+            filteredData = creativeDataCache.filter(item => {
+              if (!item.submittedAt) return false;
+              const dt = new Date(item.submittedAt);
+              if (dt < _monthStartCal || dt > _monthEndCal) return false;
+              // 시리즈 필터링
+              if (currentSelectedSeries && currentSelectedSeries !== 'all') {
+                const itemSeries = getSeriesFromUnit(item.unit);
+                return itemSeries === currentSelectedSeries;
+              }
+              return true;
+            });
+          } else if (isWeeklyMode) {
             // 주간 모드: 해당 주간의 데이터 필터링
             filteredData = creativeDataCache.filter(item => {
               if (!item.submittedAt) return false;
@@ -23054,8 +23743,20 @@ app.get("/my-learning", async (req, res) => {
           todayGridCharts = [];
 
           let filteredLogs;
+          const _isMonthlyRadar = (typeof isMonthlyMode !== 'undefined' && isMonthlyMode);
 
-          if (isWeeklyMode) {
+          if (_isMonthlyRadar) {
+            // 🧪 월간 모드: 이달 1일~말일 학습 로그
+            const mStart = getMonthStart(selectedMonthStart);
+            const mEnd = getMonthEnd(selectedMonthStart);
+            filteredLogs = logsForChart.filter(log => {
+              if (!matchesSeries(log.unit, currentSeries)) return false;
+              const logDate = log.completedAt || log.timestamp;
+              if (!logDate) return false;
+              const dt = new Date(logDate);
+              return dt >= mStart && dt <= mEnd;
+            });
+          } else if (isWeeklyMode) {
             // 주간 모드: selectedWeekRadarStart 기준으로 주간 데이터 필터링
             const weekStart = new Date(selectedWeekRadarStart);
             const weekEnd = getWeekEnd(weekStart);
@@ -23084,7 +23785,10 @@ app.get("/my-learning", async (req, res) => {
           }
 
           if (filteredLogs.length === 0) {
-            grid.innerHTML = '<div class="today-empty-cards">' + (isWeeklyMode ? '해당 주간의 학습 기록이 없습니다.' : '해당 날짜의 학습 기록이 없습니다.') + '</div>';
+            const emptyMsg = _isMonthlyRadar
+              ? '이달 학습 기록이 없습니다.'
+              : (isWeeklyMode ? '해당 주간의 학습 기록이 없습니다.' : '해당 날짜의 학습 기록이 없습니다.');
+            grid.innerHTML = '<div class="today-empty-cards">' + emptyMsg + '</div>';
             return;
           }
 
