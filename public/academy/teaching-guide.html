@@ -64845,25 +64845,31 @@
             : 'color:#1f2937;';
           return `<div style="display:flex; align-items:flex-start; gap:8px; padding: ${optPadding}; margin-left: 40px; ${textStyle} font-family: 'NanumSquare', 'Noto Sans KR', sans-serif;">
             <span style="font-weight:700; min-width: 18px; font-size: ${optFontSize + 1}px;">${circle}</span>
-            <span style="font-weight: 300; font-size:${optFontSize}px; line-height:${optLineHeight};">${opt}${isCorrect ? ' <span style="color:#dc2626;">✓</span>' : ''}</span>
+            <span style="font-weight: 300; font-size:${optFontSize}px; line-height:${optLineHeight}; word-break: keep-all; overflow-wrap: break-word;">${opt}${isCorrect ? ' <span style="color:#dc2626;">✓</span>' : ''}</span>
           </div>`;
         }).join('');
         const teacherExplain = isTeacher && det[`q${qNo}`]
           ? `<div style="margin: 6px 0 0 40px; padding:7px 10px; background:#fef2f2; border-left:3px solid #dc2626; border-radius:4px; font-size:10px; line-height:1.55; color:#7f1d1d; white-space:pre-wrap;">${det[`q${qNo}`]}</div>`
           : '';
-        // 우측 정답 괄호 — 교사용은 정답 동그라미 번호, 학생용은 빈 괄호
-        const answerSlot = (isTeacher && correctIdx)
-          ? `<span style="flex-shrink: 0; padding-top: 2px; font-size: 16px; color: #b45309; font-weight: 800; white-space: nowrap;">( ${CIRCLE_NUMS[parseInt(correctIdx)-1] || correctIdx} )</span>`
-          : `<span style="flex-shrink: 0; padding-top: 2px; font-size: 16px; color: #4b5563; white-space: nowrap;">(<span style="display:inline-block; width: 56px;">&nbsp;</span>)</span>`;
         // BRAIN핏만 문제 간격 추가 미세 축소
         const _isFitTightQuiz = typeof unitKey === 'string' && unitKey.startsWith('fit_');
+        // 우측 정답 괄호 — 교사용은 정답 동그라미 번호, 학생용은 빈 괄호
+        // BRAIN핏은 괄호 내부 너비 축소(56→40)해 문제 텍스트 공간 확보
+        const emptySlotInnerW = _isFitTightQuiz ? 40 : 56;
+        const answerSlot = (isTeacher && correctIdx)
+          ? `<span style="flex-shrink: 0; padding-top: 2px; font-size: 16px; color: #b45309; font-weight: 800; white-space: nowrap;">( ${CIRCLE_NUMS[parseInt(correctIdx)-1] || correctIdx} )</span>`
+          : `<span style="flex-shrink: 0; padding-top: 2px; font-size: 16px; color: #4b5563; white-space: nowrap;">(<span style="display:inline-block; width: ${emptySlotInnerW}px;">&nbsp;</span>)</span>`;
         const wrapperMb = isTeacher ? (_isFitTightQuiz ? '11px' : '16px') : (_isFitTightQuiz ? '12px' : (_isDeepTightQuiz ? '16px' : '24px'));
         const titleMb = isTeacher ? (_isFitTightQuiz ? '3px' : '5px') : (_isFitTightQuiz ? '4px' : (_isDeepTightQuiz ? '5px' : '8px'));
+        // BRAIN핏 문제 폰트 축소 — 긴 문장을 한 줄에 담아 "요?" orphan·2줄 넘김 방지
+        const qFontSize = _isFitTightQuiz
+          ? (isTeacher ? 12 : 13)
+          : (isTeacher ? 13.5 : 14.5);
         return `
           <div style="margin-bottom: ${wrapperMb};">
-            <div style="font-family: 'NanumSquare', 'Noto Sans KR', sans-serif; font-size: ${isTeacher ? 13.5 : 14.5}px; font-weight: 700; color:#1f2937; margin-bottom: ${titleMb}; display: flex; align-items: flex-start; gap: 10px;">
+            <div style="font-family: 'NanumSquare', 'Noto Sans KR', sans-serif; font-size: ${qFontSize}px; font-weight: 700; color:#1f2937; margin-bottom: ${titleMb}; display: flex; align-items: flex-start; gap: 10px;">
               ${questionBadge(qNo)}
-              <span style="flex: 1; line-height: 1.4; padding-top: 2px;">${qText}</span>
+              <span style="flex: 1; line-height: 1.4; padding-top: 2px; word-break: keep-all; overflow-wrap: break-word;">${qText}</span>
               ${answerSlot}
             </div>
             ${optsHtml}
@@ -64979,15 +64985,19 @@
           </div>`
         ];
       }
+      // BRAIN핏은 문제 간격을 더 좁혀 세로 여유 확보 (3-4번, 4-5번 사이)
+      const _isFitPageQuiz = typeof unitKey === 'string' && unitKey.startsWith('fit_');
+      const gap34 = _isFitPageQuiz ? 4 : 12;
+      const gap45 = _isFitPageQuiz ? 8 : 12;
       return `
         <div style="${WB_PAGE_STYLE}">
           ${wbHeader('', '핵심이해 · 구조 · 어휘 · 추론 · 비판/적용', { smallBadge: '유형별문제풀이', theme: T })}
           ${renderObjective(1, qz.q1_text || '', qz.q1_opts, key.q1)}
           ${renderObjective(2, qz.q2_text || '', qz.q2_opts, key.q2)}
           ${q3Block}
-          <div style="height: 12px;"></div>
+          <div style="height: ${gap34}px;"></div>
           ${q4Block}
-          <div style="height: 12px;"></div>
+          <div style="height: ${gap45}px;"></div>
           ${renderEssay(5, q5Text)}
           ${wbFooter(3, 6)}
         </div>`;
