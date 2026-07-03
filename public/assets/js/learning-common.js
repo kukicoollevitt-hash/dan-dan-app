@@ -2,10 +2,22 @@
      텍스트 선택(드래그) 차단 — 지문·어휘 콘텐츠 복사 방지
      - 전 단원 페이지 자동 적용
      - 예외: input / textarea / [contenteditable] (빈칸 쓰기, 창의활동 등)
+     - 예외 학생: 화이트리스트 계정(초3 김윤슬 — 본사 테스트/QA용)
      - 정답체크·onclick·타이핑 등 학습 상호작용 무손상
      - 롤백 시 이 IIFE 통째로 삭제하면 즉시 원복
   ========================================================= */
   (function disableTextSelection() {
+    // 🧪 화이트리스트: 본사 테스트/QA 계정은 드래그 허용 (콘텐츠 검수·복사 필요)
+    try {
+      const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+      const TEXT_SELECT_ALLOWED = [
+        { grade: '초3', name: '김윤슬' }
+      ];
+      if (TEXT_SELECT_ALLOWED.some(t => t.grade === user.grade && t.name === user.name)) {
+        return; // 드래그·선택 정상 허용
+      }
+    } catch (e) { /* sessionStorage 실패 시 무시하고 일반 차단 로직 진행 */ }
+
     const styleId = 'bmn-no-select-style';
     if (document.getElementById(styleId)) return; // 중복 주입 방지
     const style = document.createElement('style');
