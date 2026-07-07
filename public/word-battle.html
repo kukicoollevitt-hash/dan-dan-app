@@ -1603,6 +1603,8 @@
     document.title = '전국 어휘 월드컵';
     renderMonthlyLed();
     renderFieldTabs();
+    // 진입 시 과학 분야 자동 선택 · 단원 목록 즉시 노출
+    selectField('science');
     fetchMyStats();
     fetchOverallTop();
     fetchDailyStatus();
@@ -1950,13 +1952,28 @@
     `).join('');
   }
 
+  // 분야별 기본 과목 (분야 클릭 시 자동으로 이 과목이 로드됨)
+  const DEFAULT_SUBJECT = {
+    science:  'bio',
+    social:   'geo',
+    korlit:   'classic',
+    worldlit: 'world1',
+    person:   'people1'
+  };
+
   function selectField(fieldId) {
     currentField = fieldId;
     document.querySelectorAll('#fieldTabs .tab-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.field === fieldId);
     });
     renderSubjectTabs();
-    document.getElementById('unitList').innerHTML = '<div class="unit-empty">과목을 선택해주세요</div>';
+    // 분야별 기본 과목 자동 선택 → 단원 목록 즉시 노출
+    const def = DEFAULT_SUBJECT[fieldId];
+    if (def) {
+      selectSubject(def);
+    } else {
+      document.getElementById('unitList').innerHTML = '<div class="unit-empty">과목을 선택해주세요</div>';
+    }
   }
 
   function renderSubjectTabs() {
@@ -1985,21 +2002,6 @@
       unitListEl.innerHTML = '<div class="unit-empty">단원 정보를 불러올 수 없습니다.</div>';
       console.error(err);
     }
-  }
-
-  async function loadSubjectContent(subject) {
-    const dir = SUBJECT_DIRS[subject];
-    const path = `/BRAINUP/${dir}/on_${subject}_content.js`;
-    return new Promise((resolve, reject) => {
-      const existing = document.querySelector(`script[data-content-path="${path}"]`);
-      if (existing) { resolve(); return; }
-      const script = document.createElement('script');
-      script.src = path;
-      script.setAttribute('data-content-path', path);
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('load failed'));
-      document.head.appendChild(script);
-    });
   }
 
   function renderUnitList() {
@@ -2034,6 +2036,21 @@
       `);
     }
     listEl.innerHTML = rows.join('') || '<div class="unit-empty">단원이 없습니다.</div>';
+  }
+
+  async function loadSubjectContent(subject) {
+    const dir = SUBJECT_DIRS[subject];
+    const path = `/BRAINUP/${dir}/on_${subject}_content.js`;
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[data-content-path="${path}"]`);
+      if (existing) { resolve(); return; }
+      const script = document.createElement('script');
+      script.src = path;
+      script.setAttribute('data-content-path', path);
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('load failed'));
+      document.head.appendChild(script);
+    });
   }
 
   let _wbMyOverview = null;

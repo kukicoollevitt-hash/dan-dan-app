@@ -33147,6 +33147,56 @@ ${content}
       else openLiteracyKing(true); // 배지 메뉴 진입 — 닫을 때 배지 메뉴 복귀
     }
 
+    // ===== 전국 문해왕 선발전 · 로그인 시 자동 팝업 (하루 1회) =====
+    // 어휘 월드컵 팝업(wbVideoOverlay)이 이미 열려있으면 그 팝업이 닫힌 뒤에 표시
+    function shouldShowLkAuto() {
+      const today = new Date().toISOString().slice(0, 10);
+      return localStorage.getItem('lkAutoShownAt') !== today;
+    }
+    function markLkAutoShown() {
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.setItem('lkAutoShownAt', today);
+    }
+    function tryOpenLkAuto() {
+      if (!shouldShowLkAuto()) return;
+      // 세션에 학생 정보 없으면 스킵 (미로그인 상태)
+      try {
+        const u = JSON.parse(sessionStorage.getItem('user') || '{}');
+        if (!u.grade || !u.name) return;
+      } catch { return; }
+      markLkAutoShown();
+      if (typeof isLkLaunched === 'function' && isLkLaunched()) openLiteracyKingIntro();
+      else openLiteracyKing();
+    }
+    // 어휘 월드컵 팝업이 닫힌 뒤에 이어서 노출 · 원래 함수를 감싸서 후처리
+    (function chainLkAfterWb() {
+      const origClose = window.closeWbVideo;
+      const origHide  = window.hideTodayWbVideo;
+      if (typeof origClose === 'function') {
+        window.closeWbVideo = function () {
+          try { origClose(); } finally { setTimeout(tryOpenLkAuto, 250); }
+        };
+      }
+      if (typeof origHide === 'function') {
+        window.hideTodayWbVideo = function () {
+          try { origHide(); } finally { setTimeout(tryOpenLkAuto, 250); }
+        };
+      }
+    })();
+    // WB 팝업이 안 뜨는 경우엔 로드 후 즉시 LK 시도
+    function autoLkOnLoad() {
+      setTimeout(() => {
+        const wb = document.getElementById('wbVideoOverlay');
+        const wbShowing = wb && wb.classList.contains('show');
+        if (!wbShowing) tryOpenLkAuto();
+      }, 900);
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', autoLkOnLoad);
+    } else {
+      autoLkOnLoad();
+    }
+
     // ===== 고래도서관 — 인트로 영상 팝업 → 입장하기 →  goToWhaleStory =====
     function openWhaleLibraryIntro() {
       const existing = document.getElementById('whaleLibraryIntroOverlay');

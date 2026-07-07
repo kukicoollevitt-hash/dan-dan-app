@@ -1216,7 +1216,8 @@
       btn.classList.toggle('active', btn.dataset.series === series);
     });
     renderFieldTabs();
-    document.getElementById('unitList').innerHTML = '<div class="unit-empty">분야와 과목을 선택해주세요</div>';
+    // 시리즈 진입 시 과학 분야 자동 선택 → 단원 목록 즉시 노출
+    selectField('science');
     fetchMyStats();
     fetchOverallTop();
     fetchLkDailyStatus();
@@ -1229,6 +1230,14 @@
     `).join('');
     document.getElementById('subjectTabs').innerHTML = '';
   }
+  // 분야별 기본 과목 (분야 클릭 시 자동으로 이 과목이 로드됨)
+  const LK_DEFAULT_SUBJECT = {
+    science:  'bio',
+    social:   'geo',
+    korlit:   'classic',
+    worldlit: 'world1',
+    person:   'people1'
+  };
   function selectField(fieldId) {
     currentField = fieldId;
     document.querySelectorAll('#fieldTabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.field === fieldId));
@@ -1237,8 +1246,14 @@
     tabsEl.innerHTML = field.subjects.map(s => `
       <button class="tab-btn subject" data-subject="${s}" onclick="selectSubject('${s}')">${SUBJECT_NAMES[s]}</button>
     `).join('');
-    document.getElementById('unitList').innerHTML = '<div class="unit-empty">과목을 선택해주세요</div>';
-    currentSubject = null;
+    // 분야별 기본 과목 자동 선택 → 단원 목록 즉시 노출
+    const def = LK_DEFAULT_SUBJECT[fieldId];
+    if (def) {
+      selectSubject(def);
+    } else {
+      document.getElementById('unitList').innerHTML = '<div class="unit-empty">과목을 선택해주세요</div>';
+      currentSubject = null;
+    }
   }
   async function selectSubject(subject) {
     currentSubject = subject;
