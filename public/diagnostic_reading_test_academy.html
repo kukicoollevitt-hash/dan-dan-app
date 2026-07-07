@@ -1396,7 +1396,80 @@
     (async () => {
       await loadAcademies();
       initAcademySearch();
+      // 학원명 자동 프리필 (URL ?id= 우선 · 세션 폴백)
+      await autoPrefillAcademy();
     })();
+
+    // ========== 학원명 자동 프리필 (진단테스트 바로가기 / QR 진입용) ==========
+    async function autoPrefillAcademy() {
+      let academyName = '';
+      let source = '';   // 'url' | 'session'
+      let isSuperView = false;
+
+      // 1) URL ?id= 파라미터 우선
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const id = (params.get('id') || '').trim();
+        if (/^[a-fA-F0-9]{24}$/.test(id)) {
+          const res = await fetch(`/api/academy/lookup?id=${encodeURIComponent(id)}`);
+          const data = await res.json();
+          if (data && data.ok && data.academyName) {
+            academyName = data.academyName;
+            source = 'url';
+          }
+        }
+      } catch (err) {
+        console.warn('URL id 프리필 실패:', err);
+      }
+
+      // 2) URL 실패 시 세션(관리자 로그인) 폴백
+      if (!academyName) {
+        try {
+          const res = await fetch('/api/admin/info');
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.success && data.academyName) {
+              academyName = data.academyName;
+              source = 'session';
+              isSuperView = data.viewMode === 'super';
+            }
+          }
+        } catch (err) {
+          // 401 등 정상 (일반 사용자)
+        }
+      }
+
+      if (!academyName) return;   // 프리필 대상 없음 · 기존 수동 선택 유지
+
+      // 입력 필드 세팅
+      const searchInput = document.getElementById('branchNameSearch');
+      const hiddenInput = document.getElementById('branchName');
+      if (!searchInput || !hiddenInput) return;
+      searchInput.value = academyName;
+      hiddenInput.value = academyName;
+
+      // 슈퍼관리자 조회 모드는 잠그지 않음 (자유 변경 가능)
+      const shouldLock = !isSuperView;
+      if (shouldLock) {
+        searchInput.readOnly = true;
+        searchInput.style.cssText += ';background:#f1f5f9;color:#334155;cursor:not-allowed;';
+        searchInput.title = '진단테스트 링크로 진입해 학원이 자동 설정되었어요';
+        // 드롭다운 안 뜨게
+        const dropdown = document.getElementById('academyDropdown');
+        if (dropdown) dropdown.classList.remove('show');
+      }
+
+      // 상단 안내 뱃지 삽입
+      const wrapper = searchInput.closest('.academy-search-wrapper');
+      if (wrapper && !document.getElementById('academyAutoBadge')) {
+        const badge = document.createElement('div');
+        badge.id = 'academyAutoBadge';
+        badge.style.cssText = 'margin-top:8px;padding:10px 14px;background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1.5px solid #10b981;border-radius:10px;color:#065f46;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;';
+        const lockNote = shouldLock ? '' : ' · (슈퍼관리자 · 변경 가능)';
+        badge.innerHTML = `<span style="font-size:16px;">✅</span><span><b>${academyName}</b> 소속으로 자동 등록됩니다${lockNote}</span>`;
+        wrapper.parentElement.appendChild(badge);
+      }
+    }
 
     // 퀴즈 데이터 (25문항 - 5개 지문 × 5개 문해력 지수)
     const quizData = [

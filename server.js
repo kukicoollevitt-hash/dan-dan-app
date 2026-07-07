@@ -820,6 +820,30 @@ app.get("/api/academies", async (req, res) => {
   }
 });
 
+// ✅ 학원 이름 조회 API (진단테스트 자동 프리필 · QR용) — 세션 불필요
+// GET /api/academy/lookup?id=<adminId(ObjectId 24hex)>
+app.get("/api/academy/lookup", async (req, res) => {
+  try {
+    const id = String(req.query.id || "").trim();
+    // ObjectId 형식 검증 (24자리 hex)
+    if (!/^[a-fA-F0-9]{24}$/.test(id)) {
+      return res.json({ ok: false, message: "잘못된 id 형식" });
+    }
+    const admin = await Admin.findById(id).select("academyName userType deleted").lean();
+    if (!admin || admin.deleted || admin.userType !== "academy") {
+      return res.json({ ok: false, message: "존재하지 않거나 유효하지 않은 학원" });
+    }
+    const academyName = (admin.academyName || "").trim();
+    if (!academyName || academyName === "어드민") {
+      return res.json({ ok: false, message: "학원명 없음 또는 유효하지 않음" });
+    }
+    res.json({ ok: true, academyName });
+  } catch (err) {
+    console.error("❌ /api/academy/lookup 에러:", err);
+    res.json({ ok: false, message: "조회 실패" });
+  }
+});
+
 // ✅ 등록된 학교 목록 조회 API (로그인/회원가입용)
 app.get("/api/schools", async (req, res) => {
   try {
@@ -32925,10 +32949,12 @@ app.get("/api/admin/info", async (req, res) => {
     // 🔹 슈퍼관리자가 특정 학원 조회 중인 경우
     if (req.session.viewingBranch) {
       const viewing = req.session.viewingBranch;
+      // _id는 ObjectId일 수 있어 확실히 문자열로 (진단테스트 URL id 파라미터용)
+      const viewingId = viewing._id ? String(viewing._id) : "";
       return res.json({
         success: true,
         academyName: viewing.academyName || "",
-        adminId: viewing._id || "",
+        adminId: viewingId,
         grade: "",
         classNum: "",
         userType: "academy",
@@ -32943,7 +32969,8 @@ app.get("/api/admin/info", async (req, res) => {
     res.json({
       success: true,
       academyName: req.session.admin.academyName || "",
-      adminId: req.session.admin.adminId || "",
+      // 세션 저장 키가 id (server.js:591) · 진단테스트 자동 프리필용
+      adminId: req.session.admin.id || req.session.admin.adminId || "",
       grade: req.session.admin.grade || "",
       classNum: req.session.admin.classNum || "",
       userType: req.session.admin.userType || "school"  // 🔥 학교용/학원용 구분
@@ -41100,21 +41127,23 @@ app.post('/api/writing100/save-progress', async (req, res) => {
       }
     }
 
-    /* total · 항상 최종 스테이지 accuracies로부터 재계산 (신규 저장이든 병합 이후든 정확 유지) */
+    /* total · 5개 스테이지 pct 단순 평균 (미완료 스테이지도 0%로 포함)
+       · correct/attempts는 합계로 참고용 유지 */
     {
       const STAGE_KEYS = ['vocab', 'word', 'wordApply', 'sentence', 'paraOrder'];
-      let totC = 0, totA = 0;
+      let totC = 0, totA = 0, sumPct = 0;
       for (const k of STAGE_KEYS) {
         const a = mergedAccuracies[k];
         if (a) {
-          totC += Number(a.correct)  || 0;
-          totA += Number(a.attempts) || 0;
+          totC   += Number(a.correct)  || 0;
+          totA   += Number(a.attempts) || 0;
+          sumPct += Number(a.pct)      || 0;
         }
       }
       mergedAccuracies.total = {
         correct: totC,
         attempts: totA,
-        pct: totA > 0 ? Math.round((totC / totA) * 100) : 0
+        pct: Math.round(sumPct / STAGE_KEYS.length)
       };
     }
 
@@ -41165,22 +41194,23 @@ app.get('/api/writing100/report', async (req, res) => {
       writing: 1, composed: 1, wrongAnswers: 1
     }).sort({ day: 1 }).lean();
 
-    // 과거에 잘못 저장된 total도 실시간으로 스테이지 값에서 재계산해서 반환
+    // 과거에 잘못 저장된 total도 5개 스테이지 pct 평균으로 재계산해서 반환 (미완료 = 0%)
     const STAGE_KEYS = ['vocab', 'word', 'wordApply', 'sentence', 'paraOrder'];
     docs.forEach(r => {
       if (!r.accuracies) return;
-      let totC = 0, totA = 0;
+      let totC = 0, totA = 0, sumPct = 0;
       for (const k of STAGE_KEYS) {
         const a = r.accuracies[k];
         if (a) {
-          totC += Number(a.correct)  || 0;
-          totA += Number(a.attempts) || 0;
+          totC   += Number(a.correct)  || 0;
+          totA   += Number(a.attempts) || 0;
+          sumPct += Number(a.pct)      || 0;
         }
       }
       r.accuracies.total = {
         correct: totC,
         attempts: totA,
-        pct: totA > 0 ? Math.round((totC / totA) * 100) : 0
+        pct: Math.round(sumPct / STAGE_KEYS.length)
       };
     });
 

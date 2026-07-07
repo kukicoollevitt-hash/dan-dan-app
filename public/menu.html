@@ -36289,7 +36289,7 @@ ${content}
     .wr100-modal-close-floating {
       position: absolute;
       top: 14px; right: 14px;
-      z-index: 10;
+      z-index: 30;   /* 스티키 헤더(z:10) 위에 확실히 노출 */
       background: rgba(0,0,0,0.55);
       backdrop-filter: blur(6px);
       border: 2px solid rgba(255,255,255,0.75);
@@ -36397,11 +36397,12 @@ ${content}
       border-radius: 0;   /* 인접 챕터끼리 딱 붙음 · 일체감 */
       position: relative;
     }
-    .jchapter[data-c="1"] { background: linear-gradient(180deg, #e8f5e9 0%, rgba(232,245,233,0) 60%); }
-    .jchapter[data-c="2"] { background: linear-gradient(180deg, #e1f5fe 0%, rgba(225,245,254,0) 60%); }
-    .jchapter[data-c="3"] { background: linear-gradient(180deg, #fff3e0 0%, rgba(255,243,224,0) 60%); }
-    .jchapter[data-c="4"] { background: linear-gradient(180deg, #f3e5f5 0%, rgba(243,229,245,0) 60%); }
-    .jchapter[data-c="5"] { background: linear-gradient(180deg, #fff8e1 0%, rgba(255,248,225,0) 60%); }
+    /* 시즌 solid 배경 · 영상 로딩 전/전환 순간에도 흰색 대신 시즌 톤 노출 */
+    .jchapter[data-c="1"] { background: linear-gradient(180deg, #c8e6c9 0%, #a5d6a7 100%); }
+    .jchapter[data-c="2"] { background: linear-gradient(180deg, #bbdefb 0%, #90caf9 100%); }
+    .jchapter[data-c="3"] { background: linear-gradient(180deg, #ffe0b2 0%, #ffcc80 100%); }
+    .jchapter[data-c="4"] { background: linear-gradient(180deg, #e1bee7 0%, #ce93d8 100%); }
+    .jchapter[data-c="5"] { background: linear-gradient(180deg, #ffe082 0%, #ffd54f 100%); }
     .jchapter { position: relative; overflow: hidden; }
     /* 배경 영상 · 시즌 1~4에만 삽입 (autoplay + muted + loop) */
     .jchapter-bg-video {
@@ -36410,10 +36411,8 @@ ${content}
       object-fit: cover;
       z-index: 0;
       pointer-events: none;
-      opacity: 0;
-      transition: opacity .4s ease;
+      /* 페이드 없음 · 로딩 중엔 아래 시즌 solid 배경이 보임 */
     }
-    .jchapter-bg-video.ready { opacity: 1; }
     .jchapter-bg-overlay {
       position: absolute; inset: 0;
       background: linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.75) 100%);
@@ -36443,6 +36442,180 @@ ${content}
     }
     .jchapter-name { font-size: 18px; flex: 1; }
     .jchapter-days { font-size: 12px; opacity: 0.9; }
+    /* 시즌 문해구슬 진행 바 */
+    .jchapter-beads {
+      position: relative;
+      z-index: 2;
+      margin: -10px 12px 14px;
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 14px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.10);
+      display: flex; align-items: center; gap: 12px;
+      font-weight: 700;
+      color: #37474f;
+    }
+    /* 문해구슬 아이콘 · 별과 톤을 맞춘 CSS 마블 */
+    .jchapter-beads-icon {
+      position: relative;
+      display: inline-block;
+      vertical-align: middle;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 30%, #fff9c4 0%, #ffd54f 45%, #ff8f00 100%);
+      box-shadow:
+        0 3px 8px rgba(255,111,0,0.35),
+        inset 0 -2px 4px rgba(191,54,12,0.28),
+        inset 0 0 0 1.5px rgba(255,255,255,0.7);
+      flex-shrink: 0;
+    }
+    .jchapter-beads-icon::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 4px;
+      width: 8px; height: 6px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 70%);
+      pointer-events: none;
+    }
+    .jchapter-beads-text { font-size: 14px; letter-spacing: -0.2px; }
+    .jchapter-beads-text b { color: #ef6c00; font-size: 16px; margin: 0 2px; }
+    .jchapter-beads-track {
+      flex: 1;
+      height: 10px;
+      background: #eceff1;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+    .jchapter-beads-fill {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #ffb74d, #ff8f00);
+      border-radius: 999px;
+      transition: width 0.6s ease;
+    }
+    .jchapter[data-c="1"] .jchapter-beads-fill { background: linear-gradient(90deg, #81c784, #2e7d32); }
+    .jchapter[data-c="2"] .jchapter-beads-fill { background: linear-gradient(90deg, #64b5f6, #1565c0); }
+    .jchapter[data-c="3"] .jchapter-beads-fill { background: linear-gradient(90deg, #ffb74d, #e65100); }
+    .jchapter[data-c="4"] .jchapter-beads-fill { background: linear-gradient(90deg, #ba68c8, #6a1b9a); }
+    .jchapter[data-c="5"] .jchapter-beads-fill { background: linear-gradient(90deg, #ffd54f, #f57f17); }
+    .jchapter-beads.is-full {
+      background: linear-gradient(135deg, #fff8e1, #ffe082);
+      box-shadow: 0 6px 18px rgba(255,143,0,0.25);
+    }
+    .jchapter-beads-badge {
+      font-size: 12px;
+      font-weight: 800;
+      color: #bf360c;
+      background: #fff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      animation: starTwinkle 1.6s ease-in-out infinite;
+    }
+    @media (max-width: 600px) {
+      .jchapter-beads { gap: 8px; padding: 8px 12px; }
+      .jchapter-beads-text { font-size: 13px; }
+      .jchapter-beads-text b { font-size: 15px; }
+    }
+    /* 시즌 잠금 팝업에서 "부족한 Day" 클릭 시 노드 하이라이트 */
+    @keyframes jnodePulseHighlight {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,111,0,0); transform: scale(1); }
+      50%      { box-shadow: 0 0 0 14px rgba(255,111,0,0.35); transform: scale(1.06); }
+    }
+    .jnode.jnode-highlight-pulse .jnode-circle {
+      animation: jnodePulseHighlight 0.9s ease-in-out 2;
+    }
+    /* 시즌 완주 축하 애니메이션 */
+    @keyframes seasonClearPulse {
+      0%, 100% { transform: scale(1) rotate(-4deg); }
+      50%      { transform: scale(1.15) rotate(4deg); }
+    }
+    @keyframes seasonClearFall {
+      0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+      10%  { opacity: 1; }
+      100% { transform: translate(var(--drift, 0), 100vh) rotate(720deg); opacity: 0; }
+    }
+    /* 시즌 게이트 잠금 · 챕터 전체 톤다운 */
+    .jchapter.jchapter-season-locked .jchapter-head {
+      filter: grayscale(0.55) brightness(0.85);
+    }
+    .jchapter.jchapter-season-locked .jpath {
+      opacity: 0.55;
+      filter: grayscale(0.35);
+    }
+    .jchapter.jchapter-season-locked .jchapter-beads-fill {
+      background: linear-gradient(90deg, #b0bec5, #78909c) !important;
+    }
+    .jchapter.jchapter-season-locked .jchapter-beads {
+      background: rgba(236,239,241,0.95);
+    }
+    .jchapter-lock-hint {
+      display: inline-block;
+      margin-left: 8px;
+      font-size: 16px;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25));
+    }
+    /* 전체 문해구슬 카운터 (스티키 헤더) */
+    .wr100-total-beads {
+      position: sticky;
+      top: 14px;                 /* 살짝 아래로 · 닫기(X) 버튼과 겹치지 않게 */
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 64px 12px 18px;   /* 우측 여백 · X 버튼 자리 확보 */
+      margin: 14px 8px 18px;
+      background: linear-gradient(135deg, #fff8e1 0%, #ffe082 100%);
+      border-radius: 18px;
+      box-shadow: 0 6px 18px rgba(255,143,0,0.22);
+      border: 1.5px solid rgba(255,143,0,0.35);
+    }
+    .wr100-total-beads-icon {
+      font-size: 32px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+      animation: seasonClearPulse 2.4s ease-in-out infinite;
+    }
+    .wr100-total-beads-info { flex: 1; min-width: 0; }
+    .wr100-total-beads-text {
+      color: #4b3419;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: -0.2px;
+      margin-bottom: 4px;
+    }
+    .wr100-total-beads-text b { color: #bf360c; font-size: 18px; margin: 0 2px; }
+    .wr100-total-beads-track {
+      height: 10px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .wr100-total-beads-fill {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #ffb74d, #ff6f00, #d84315);
+      border-radius: 999px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+      transition: width 0.8s ease;
+    }
+    .wr100-total-beads-pct {
+      color: #bf360c;
+      font-weight: 900;
+      font-size: 20px;
+      letter-spacing: -0.5px;
+      min-width: 52px;
+      text-align: right;
+    }
+    @media (max-width: 600px) {
+      .wr100-total-beads { gap: 10px; padding: 10px 60px 10px 14px; margin: 12px 6px 14px; }
+      .wr100-total-beads-icon { font-size: 26px; }
+      .wr100-total-beads-text { font-size: 13px; }
+      .wr100-total-beads-text b { font-size: 15px; }
+      .wr100-total-beads-pct { font-size: 17px; min-width: 44px; }
+    }
     .jpath {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -36920,6 +37093,75 @@ ${content}
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 3px 8px rgba(0,0,0,0.15);
     }
+    /* 시즌 게이트 잠금 · 시즌 첫 Day는 강조된 자물쇠 배지 */
+    .jnode[data-season-lock="1"] { opacity: 0.75; }
+    .jnode[data-season-lock="1"] .jnode-circle::before {
+      content: '🔒';
+      position: absolute;
+      top: -14px; right: -14px;
+      bottom: auto; left: auto;
+      width: 36px; height: 36px;
+      font-size: 18px;
+      background: linear-gradient(135deg, #ffcc80, #ef6c00);
+      color: #fff;
+      border: 2px solid #fff;
+      box-shadow: 0 4px 12px rgba(191,54,12,0.35);
+      animation: seasonGatePulse 1.8s ease-in-out infinite;
+    }
+    .jnode[data-season-lock="1"] .jnode-circle::after {
+      content: '시즌 문';
+      position: absolute;
+      bottom: -22px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: 900;
+      color: #bf360c;
+      background: #fff8e1;
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    @keyframes seasonGatePulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 4px 12px rgba(191,54,12,0.35); }
+      50%      { transform: scale(1.1); box-shadow: 0 4px 20px rgba(191,54,12,0.6); }
+    }
+    /* 문해구슬 증가 뱃지 · 시즌 progress bar 위로 튀어오름 */
+    .jchapter-beads-pop {
+      position: absolute;
+      top: -6px;
+      right: 14px;
+      font-size: 14px;
+      font-weight: 900;
+      color: #bf360c;
+      background: #fff;
+      padding: 4px 12px;
+      border-radius: 999px;
+      box-shadow: 0 6px 18px rgba(255,111,0,0.35);
+      pointer-events: none;
+      animation: beadsPopRise 2s ease-out forwards;
+    }
+    @keyframes beadsPopRise {
+      0%   { transform: translateY(6px) scale(0.6); opacity: 0; }
+      15%  { transform: translateY(-16px) scale(1.15); opacity: 1; }
+      60%  { transform: translateY(-24px) scale(1); opacity: 1; }
+      100% { transform: translateY(-48px) scale(0.9); opacity: 0; }
+    }
+    /* 전체 카운터 tick 중 강조 */
+    .wr100-total-beads.is-ticking {
+      animation: totalBeadsShake 0.5s ease-in-out;
+      box-shadow: 0 8px 24px rgba(255,111,0,0.4);
+    }
+    .wr100-total-beads.is-ticking .wr100-total-beads-text b,
+    .wr100-total-beads.is-ticking .wr100-total-beads-pct {
+      color: #d84315;
+      text-shadow: 0 0 8px rgba(255,143,0,0.6);
+    }
+    @keyframes totalBeadsShake {
+      0%, 100% { transform: translateX(0); }
+      25%      { transform: translateX(-3px); }
+      75%      { transform: translateX(3px); }
+    }
     /* 준비중 */
     .jnode.jempty .jnode-circle { opacity: 0.85; }
     .jnode.jempty .jnode-day { color: #90a4b7; }
@@ -36954,17 +37196,29 @@ ${content}
       0%, 100% { box-shadow: 0 0 0 0 rgba(255,140,60,0.6), 0 8px 20px rgba(255,140,60,0.35); }
       50%      { box-shadow: 0 0 0 14px rgba(255,140,60,0), 0 8px 20px rgba(255,140,60,0.35); }
     }
-    /* 현재 위치 열기구 · 원 우측에 크게 (3x) · 약간 좌측 이동 */
+    /* 현재 위치 아이콘 · 원 우측 · 시즌별 사이즈 개별 지정 */
     .jnode-balloon {
       position: absolute;
-      top: -60px;
-      right: -110px;           /* 이전 -140 → 좌측으로 30px 당김 */
-      width: 186px; height: 186px;
       object-fit: contain;
       pointer-events: none;
       z-index: 5;
-      opacity: 1;              /* 항상 보임 (balloonAppear 제거) */
+      opacity: 1;
       transform-origin: 50% 60%;
+    }
+    /* 시즌1 열기구 · 기존 크기(186) 유지 */
+    .jchapter[data-c="1"] .jnode-balloon {
+      width: 186px; height: 186px;
+      top: -60px;
+      right: -110px;
+    }
+    /* 시즌2~5 잠수함·루돌프·우주선·구름 · 축소(100) */
+    .jchapter[data-c="2"] .jnode-balloon,
+    .jchapter[data-c="3"] .jnode-balloon,
+    .jchapter[data-c="4"] .jnode-balloon,
+    .jchapter[data-c="5"] .jnode-balloon {
+      width: 100px; height: 100px;
+      top: -32px;
+      right: -60px;
     }
     .jnode.jcurrent .jnode-balloon {
       /* balloonFloat 이 transform 담당 → 반드시 마지막 · balloonAppear 제거 (덮어씀 방지) */
@@ -37362,11 +37616,191 @@ ${content}
         } catch {}
       };
 
+      // 시즌 문해구슬 합계 (완료된 Day의 별 개수 합산 · 최대 120)
+      function beadsInSeason(seasonNo, done, dayTotalMap) {
+        const start = (seasonNo - 1) * 20 + 1;
+        const end = seasonNo * 20;
+        let total = 0;
+        for (let d = start; d <= end; d++) {
+          if (!done.has(d)) continue;
+          const pct = (dayTotalMap && dayTotalMap.get(d)) || 0;
+          total += starsFromPct(pct);
+        }
+        return total;
+      }
+      // 시즌 내 문해구슬 부족 Day 목록 (별<6)
+      function seasonShortageDays(seasonNo, done, dayTotalMap) {
+        const start = (seasonNo - 1) * 20 + 1;
+        const end = seasonNo * 20;
+        const list = [];
+        for (let d = start; d <= end; d++) {
+          const doneD = done.has(d);
+          const pct = doneD ? ((dayTotalMap && dayTotalMap.get(d)) || 0) : 0;
+          const stars = doneD ? starsFromPct(pct) : 0;
+          if (stars < 6) list.push({ day: d, stars, done: doneD, pct });
+        }
+        return list;
+      }
+
+      // 시즌 잠금 팝업 · 이전 시즌에서 문해구슬 부족한 Day 목록을 보여줌
+      function showSeasonLockPopup(prevSeasonNo, done, dayTotalMap) {
+        const beads = beadsInSeason(prevSeasonNo, done, dayTotalMap);
+        const shortage = seasonShortageDays(prevSeasonNo, done, dayTotalMap);
+        const need = Math.max(0, 120 - beads);
+        const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const seasonName = (CHAPTERS.find(c => c.c === prevSeasonNo) || {}).name || `시즌${prevSeasonNo}`;
+        const items = shortage.map(({ day, stars, done: d }) => {
+          const title = AUTHORED_TITLES[day] || '준비 중';
+          const need6 = 6 - stars;
+          const state = d
+            ? `<span style="color:#c62828;font-weight:800;">별 ${stars}/6</span> · ${need6}개 더 모아요`
+            : `<span style="color:#5a6b7a;font-weight:800;">아직 학습 전</span>`;
+          return `
+            <li data-day="${day}" style="margin-bottom:8px;padding:10px 12px;background:#fff8e1;border-left:4px solid #ff8b3d;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:10px;">
+              <div style="min-width:52px;text-align:center;font-weight:900;color:#bf360c;">Day ${day}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="color:#4b3419;font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(title)}</div>
+                <div style="color:#5a6b7a;font-size:12px;margin-top:2px;">${state}</div>
+              </div>
+              <span style="font-size:13px;color:#ef6c00;font-weight:900;">▶</span>
+            </li>`;
+        }).join('') || '<li style="color:#5a6b7a;text-align:center;padding:20px;">모두 완주했어요! 다시 확인해봐요.</li>';
+
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000600;display:flex;align-items:center;justify-content:center;padding:20px;';
+        ov.innerHTML = `
+          <div style="background:#fff;border-radius:22px;max-width:480px;width:100%;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.35);overflow:hidden;">
+            <div style="background:linear-gradient(135deg,#ffe0b2,#ffcc80);padding:18px 22px;">
+              <h3 style="margin:0;color:#bf360c;font-size:20px;font-weight:900;">🔒 다음 시즌은 아직 잠겨 있어요</h3>
+              <div style="margin-top:6px;color:#8a5a2e;font-size:13px;line-height:1.5;">
+                <b>${esc(seasonName)}</b>의 문해구슬를 <b>모두 모아야</b> 다음 시즌이 열려요!<br>
+                지금 <b>${beads}/120</b> · <b style="color:#c62828;">${need}개</b> 더 필요해요
+              </div>
+            </div>
+            <ul id="seasonLockShortList" style="list-style:none;padding:14px 18px 4px 18px;margin:0;overflow-y:auto;flex:1;">
+              ${items}
+            </ul>
+            <div style="padding:14px 20px 18px 20px;text-align:center;border-top:1px solid #eef2f5;">
+              <button id="seasonLockClose" style="background:linear-gradient(135deg,#ff8b3d,#ff6f00);color:#fff;border:none;padding:10px 26px;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(255,111,0,0.3);">확인</button>
+            </div>
+          </div>`;
+        document.body.appendChild(ov);
+        const close = () => ov.remove();
+        ov.querySelector('#seasonLockClose').addEventListener('click', close);
+        ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+        // 부족한 Day 클릭 → 해당 노드로 스크롤 + 하이라이트
+        ov.querySelectorAll('li[data-day]').forEach(li => {
+          li.addEventListener('click', () => {
+            const d = parseInt(li.dataset.day, 10);
+            close();
+            const targetNode = document.querySelector(`.jnode[data-day="${d}"]`);
+            if (targetNode) {
+              targetNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              targetNode.classList.add('jnode-highlight-pulse');
+              setTimeout(() => targetNode.classList.remove('jnode-highlight-pulse'), 2400);
+            }
+          });
+        });
+      }
+
       // 순차잠금 여부
-      function isDayLocked(day, done, isBeta) {
+      // 시즌 첫 Day(21·41·61·81)는 이전 시즌 문해구슬 120개(20 Day 각 6개)를 모두 모아야 열림
+      function isDayLocked(day, done, isBeta, dayTotalMap) {
         if (isBeta) return false;     // 김윤슬 우회
         if (day === 1) return false;   // Day 1 항상 열림
-        return !done.has(day - 1);     // 이전 Day 완료해야 열림
+        if (!done.has(day - 1)) return true;   // 순차 잠금 (이전 Day 완료)
+        // 시즌 게이트 · 시즌 첫 Day (21, 41, 61, 81)
+        if (day % 20 === 1 && day > 1 && dayTotalMap) {
+          const prevSeason = seasonOf(day) - 1;
+          if (beadsInSeason(prevSeason, done, dayTotalMap) < 120) return true;
+        }
+        return false;
+      }
+
+      // 이전 렌더의 시즌별 문해구슬 스냅샷 (증가분 이펙트용)
+      function getLastBeadsSnapshot() {
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          const key = `wr100_beadsSnap:${cs.grade}_${cs.name}`;
+          const obj = JSON.parse(localStorage.getItem(key) || '{}');
+          return obj;
+        } catch { return {}; }
+      }
+      function saveBeadsSnapshot(snap) {
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          const key = `wr100_beadsSnap:${cs.grade}_${cs.name}`;
+          localStorage.setItem(key, JSON.stringify(snap));
+        } catch {}
+      }
+
+      // 시즌 완주 축하 · 이미 축하한 시즌 로컬 저장
+      function getSeasonCelebratedSet() {
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          const key = `wr100_seasonCelebrated:${cs.grade}_${cs.name}`;
+          const arr = JSON.parse(localStorage.getItem(key) || '[]');
+          return new Set(arr);
+        } catch { return new Set(); }
+      }
+      function markSeasonCelebrated(seasonNo) {
+        try {
+          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+          const key = `wr100_seasonCelebrated:${cs.grade}_${cs.name}`;
+          const arr = JSON.parse(localStorage.getItem(key) || '[]');
+          if (!arr.includes(seasonNo)) arr.push(seasonNo);
+          localStorage.setItem(key, JSON.stringify(arr));
+        } catch {}
+      }
+      // 시즌 완주 축하 팝업 · 반짝이 비 + 다음 시즌 오픈 안내
+      function showSeasonClearedPopup(seasonNo) {
+        const cur = (CHAPTERS.find(c => c.c === seasonNo) || {}).name || `시즌${seasonNo}`;
+        const nxt = seasonNo < 5
+          ? ((CHAPTERS.find(c => c.c === seasonNo + 1) || {}).name || `시즌${seasonNo + 1}`)
+          : null;
+        const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000700;display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden;';
+        ov.innerHTML = `
+          <div class="season-cleared-box" style="background:linear-gradient(135deg,#fff8e1 0%,#ffe082 100%);border-radius:26px;max-width:460px;width:100%;padding:34px 30px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.4);position:relative;z-index:2;">
+            <div style="font-size:56px;line-height:1;margin-bottom:10px;animation:seasonClearPulse 1.4s ease-in-out infinite;">🏆</div>
+            <h2 style="color:#bf360c;font-size:24px;font-weight:900;margin:0 0 8px 0;letter-spacing:-0.5px;">${esc(cur)} 완주!</h2>
+            <p style="color:#4b3419;font-size:14px;line-height:1.6;margin:0 0 6px 0;">
+              문해구슬 <b style="color:#c62828;font-size:16px;">120</b>개를 모두 모았어요 ✨
+            </p>
+            ${nxt ? `
+              <div style="margin:16px 8px 4px 8px;padding:14px 16px;background:rgba(255,255,255,0.85);border-radius:16px;box-shadow:inset 0 0 0 1.5px rgba(255,143,0,0.3);">
+                <div style="color:#8a5a2e;font-size:12px;font-weight:700;margin-bottom:4px;">다음 여정</div>
+                <div style="color:#bf360c;font-size:16px;font-weight:900;">🔓 ${esc(nxt)} 오픈!</div>
+              </div>
+            ` : `
+              <div style="margin:16px 8px 4px 8px;padding:14px 16px;background:rgba(255,255,255,0.85);border-radius:16px;box-shadow:inset 0 0 0 1.5px rgba(255,143,0,0.3);">
+                <div style="color:#bf360c;font-size:16px;font-weight:900;">🎊 100 Day 대장정 완주!</div>
+              </div>
+            `}
+            <button id="seasonClearOk" style="margin-top:20px;background:linear-gradient(135deg,#ff8b3d,#ff6f00);color:#fff;border:none;padding:12px 34px;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(255,111,0,0.35);letter-spacing:-0.2px;">${nxt ? '다음 여정 시작' : '확인'}</button>
+          </div>
+          <div class="season-clear-sparkles" aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;z-index:1;"></div>
+        `;
+        document.body.appendChild(ov);
+        // 반짝이 비 60개 (다양한 이모지)
+        const sparks = ['✨','⭐','🌟','💫','🟡'];
+        const layer = ov.querySelector('.season-clear-sparkles');
+        for (let i = 0; i < 60; i++) {
+          const s = document.createElement('span');
+          const emoji = sparks[Math.floor(Math.random() * sparks.length)];
+          const left = Math.random() * 100;
+          const size = 12 + Math.random() * 22;
+          const dur = 2.4 + Math.random() * 2.2;
+          const delay = Math.random() * 1.4;
+          const drift = (Math.random() - 0.5) * 80;
+          s.textContent = emoji;
+          s.style.cssText = `position:absolute;left:${left}%;top:-40px;font-size:${size}px;--drift:${drift}px;animation:seasonClearFall ${dur}s ease-in ${delay}s forwards;`;
+          layer.appendChild(s);
+        }
+        const close = () => ov.remove();
+        ov.querySelector('#seasonClearOk').addEventListener('click', close);
+        ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
       }
 
       // 카드 HTML 생성
@@ -37465,7 +37899,20 @@ ${content}
         return set;
       }
 
-      // 두 노드 사이에 열기구를 포물선 궤적으로 날림
+      // 시즌별 현재 위치 아이콘 · 시즌1 열기구 · 시즌2 잠수함 · 시즌3 루돌프 · 시즌4 우주선 · 시즌5 구름
+      // v 쿼리스트링 · 이미지 교체 시 이 값 갱신하면 브라우저 캐시 무효화
+      const SEASON_VEHICLE = {
+        1: './images/열기구.png?v=20260707',
+        2: './images/잠수함.png?v=20260707',
+        3: './images/루돌프.png?v=20260707',
+        4: './images/우주선.png?v=20260707',
+        5: './images/구름.png?v=20260707'
+      };
+      function vehicleForDay(day) {
+        return SEASON_VEHICLE[seasonOf(day)] || SEASON_VEHICLE[1];
+      }
+
+      // 두 노드 사이에 시즌별 아이콘을 포물선 궤적으로 날림
       // 정적 위치: circle top:-10, right:-32, size 62 → 시작·도착점도 그 위치로 계산
       async function flyBalloon(fromDay, toDay, container) {
         const fromNode = container.querySelector(`.jnode[data-day="${fromDay}"] .jnode-circle`);
@@ -37474,12 +37921,16 @@ ${content}
         const cRect = container.getBoundingClientRect();
         const fRect = fromNode.getBoundingClientRect();
         const tRect = toNode.getBoundingClientRect();
-        const balloonSize = 186;
-        // 정적 열기구 위치 = 원 우측 (top:-60, right:-110)
-        const fx = fRect.right - cRect.left + 110 - balloonSize;
-        const fy = fRect.top   - cRect.top  - 60;
-        const tx = tRect.right - cRect.left + 110 - balloonSize;
-        const ty = tRect.top   - cRect.top  - 60;
+        // 시즌별 아이콘 크기·위치 (시즌1 열기구 186 · 시즌2~5 나머지 100)
+        const toSeason = seasonOf(toDay);
+        const isSeason1 = toSeason === 1;
+        const balloonSize = isSeason1 ? 186 : 100;
+        const rightOffset = isSeason1 ? 110 : 60;
+        const topOffset   = isSeason1 ? 60  : 32;
+        const fx = fRect.right - cRect.left + rightOffset - balloonSize;
+        const fy = fRect.top   - cRect.top  - topOffset;
+        const tx = tRect.right - cRect.left + rightOffset - balloonSize;
+        const ty = tRect.top   - cRect.top  - topOffset;
         // 포물선 아치 15단계 키프레임
         const kf = [];
         const steps = 15;
@@ -37495,7 +37946,7 @@ ${content}
         const dest = container.querySelector(`.jnode[data-day="${toDay}"] .jnode-balloon`);
         if (dest) dest.style.opacity = '0';
         const balloon = document.createElement('img');
-        balloon.src = './images/열기구.png';
+        balloon.src = vehicleForDay(toDay);   // 도착 Day의 시즌에 맞는 아이콘
         balloon.style.cssText = `position:absolute;left:0;top:0;width:${balloonSize}px;height:${balloonSize}px;object-fit:contain;pointer-events:none;z-index:20;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.35));`;
         container.appendChild(balloon);
         try { toNode.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {}
@@ -37592,7 +38043,9 @@ ${content}
         const meta = getDayMeta(day);
         const isAuthored = !!AUTHORED_TITLES[day];
         const isDone = done.has(day);
-        const isLocked = isDayLocked(day, done, isBeta);
+        const isLocked = isDayLocked(day, done, isBeta, dayTotalMap);
+        // 시즌 게이트로 잠긴 시즌 첫 Day 판정 (Day 지나갔는데도 잠금이면 시즌 게이트)
+        const isSeasonLock = isLocked && day % 20 === 1 && day > 1 && done.has(day - 1);
         const title = isAuthored ? AUTHORED_TITLES[day] : '준비 중';
         const isCurrent = currentDay === day;
         const needsRelearn = relearnSet && relearnSet.has(day);
@@ -37614,7 +38067,7 @@ ${content}
           : `Day ${day} · ${meta.field} · ${meta.subName} · ${title} · ${meta.genre}`;
         const genreClean = meta.genre.replace(/[^\s가-힣A-Za-z0-9]+/g, '').replace(/쓰기/, '').trim();
         const balloonHtml = isCurrent
-          ? `<img class="jnode-balloon" src="./images/열기구.png" alt="현재 위치">`
+          ? `<img class="jnode-balloon" src="${vehicleForDay(day)}" alt="현재 위치">`
           : '';
         const relearnHtml = needsRelearn
           ? `<div class="jnode-relearn-badge">🔁 재학습</div>`
@@ -37632,7 +38085,7 @@ ${content}
             })()
           : '';
         return `
-          <div class="${cls}" data-day="${day}" data-authored="${isAuthored ? '1' : '0'}" data-locked="${isLocked ? '1' : '0'}" style="--x:${x}; --subj-bg:${bgColor}; --subj-bg-done:${bgDone}" role="button" tabindex="0" title="${tip}" aria-label="${tip}">
+          <div class="${cls}" data-day="${day}" data-authored="${isAuthored ? '1' : '0'}" data-locked="${isLocked ? '1' : '0'}" data-season-lock="${isSeasonLock ? '1' : '0'}" style="--x:${x}; --subj-bg:${bgColor}; --subj-bg-done:${bgDone}" role="button" tabindex="0" title="${tip}" aria-label="${tip}">
             <div class="jnode-circle">
               ${relearnHtml}
               ${balloonHtml}
@@ -37650,14 +38103,8 @@ ${content}
       async function renderGrid() {
         const done = getDoneSet();
         const isBeta = isWr100Whitelisted();
-        // 현재 위치 = 완료 안 됐고 잠금 아니고 authored인 첫 Day
-        let currentDay = null;
-        for (let d = 1; d <= 100; d++) {
-          if (!done.has(d) && !isDayLocked(d, done, isBeta) && AUTHORED_TITLES[d]) {
-            currentDay = d; break;
-          }
-        }
         // 재학습 대상 · Day별 총 정답률 계산 (리포트 데이터 캐시로부터)
+        // ※ isDayLocked 시즌 게이트가 dayTotalMap을 참조하므로 currentDay 계산보다 먼저 수행
         let relearnSet = new Set();
         const dayTotalMap = new Map();
         try {
@@ -37670,8 +38117,58 @@ ${content}
             }
           });
         } catch {}
+        // 현재 위치 = 완료 안 됐고 잠금 아니고 authored인 첫 Day
+        let currentDay = null;
+        for (let d = 1; d <= 100; d++) {
+          if (!done.has(d) && !isDayLocked(d, done, isBeta, dayTotalMap) && AUTHORED_TITLES[d]) {
+            currentDay = d; break;
+          }
+        }
+        // 시즌 완주 축하 대상 감지 · 문해구슬 120 채웠는데 아직 축하 안 한 시즌
+        const celebratedSet = getSeasonCelebratedSet();
+        let clearToCelebrate = null;
+        for (const ch of CHAPTERS) {
+          const b = beadsInSeason(ch.c, done, dayTotalMap);
+          if (b >= 120 && !celebratedSet.has(ch.c)) { clearToCelebrate = ch.c; break; }
+        }
+        // 시즌 게이트 잠금 감지 · 이전 시즌 문해구슬 < 120이면 해당 시즌 전체 잠금
+        const chapterSeasonLocked = new Set();
+        if (!isBeta) {
+          for (const ch of CHAPTERS) {
+            if (ch.c === 1) continue;
+            if (beadsInSeason(ch.c - 1, done, dayTotalMap) < 120) chapterSeasonLocked.add(ch.c);
+          }
+        }
+        // 전체 문해구슬 카운터 (0~600) + 시즌별 증가분 감지
+        const lastSnap = getLastBeadsSnapshot();
+        const seasonBeads = {};   // 이번 렌더 시즌별 문해구슬
+        const seasonDelta = {};   // 이번 렌더 시즌별 증가분
+        let totalBeads = 0;
+        for (const ch of CHAPTERS) {
+          const b = beadsInSeason(ch.c, done, dayTotalMap);
+          seasonBeads[ch.c] = b;
+          const prev = Number(lastSnap[ch.c]) || 0;
+          seasonDelta[ch.c] = Math.max(0, b - prev);
+          totalBeads += b;
+        }
+        const lastTotal = Object.values(lastSnap).reduce((s, v) => s + (Number(v) || 0), 0);
+        const totalDelta = Math.max(0, totalBeads - lastTotal);
+        // 스냅샷 저장 (다음 렌더에서 참조)
+        saveBeadsSnapshot(seasonBeads);
+        // 전체 문해구슬 카운터 헤더 (챕터 컨테이너 상단 스티키)
+        const totalPct = Math.round((totalBeads / 600) * 100);
+        const totalHeader = `
+          <div class="wr100-total-beads">
+            <div class="wr100-total-beads-icon">🏆</div>
+            <div class="wr100-total-beads-info">
+              <div class="wr100-total-beads-text">전체 문해구슬 <b>${totalBeads}</b> / 600</div>
+              <div class="wr100-total-beads-track"><span class="wr100-total-beads-fill" style="width:${totalPct}%"></span></div>
+            </div>
+            <div class="wr100-total-beads-pct">${totalPct}%</div>
+          </div>
+        `;
         const container = document.getElementById('wr100Chapters');
-        container.innerHTML = CHAPTERS.map(ch => {
+        container.innerHTML = totalHeader + CHAPTERS.map(ch => {
           const [start, end] = ch.days;
           const nodes = [];
           for (let d = start; d <= end; d++) {
@@ -37685,44 +38182,58 @@ ${content}
             <video class="jchapter-bg-video" muted loop playsinline preload="metadata" data-src="./images/시즌${ch.c}배경.mp4"></video>
             <div class="jchapter-bg-overlay"></div>
           ` : '';
-          const reportBtn = ch.c === 1
-            ? `<button class="wr100-report-btn" onclick="openWr100Report()">📊 학습리포트</button>`
+          // 학습리포트 버튼 · 모든 시즌 헤더에 노출 (아래로 스크롤한 상태에서도 접근 가능)
+          const reportBtn = `<button class="wr100-report-btn" onclick="openWr100Report()">📊 학습리포트</button>`;
+          // 시즌별 문해구슬 진행 바 (0~120)
+          const beads = beadsInSeason(ch.c, done, dayTotalMap);
+          const beadsPct = Math.round((beads / 120) * 100);
+          const beadsFull = beads >= 120;
+          const beadsBar = `
+            <div class="jchapter-beads ${beadsFull ? 'is-full' : ''}" title="시즌${ch.c} 문해구슬 ${beads}/120">
+              <span class="jchapter-beads-icon" aria-hidden="true"></span>
+              <span class="jchapter-beads-text">문해구슬 <b>${beads}</b>/120</span>
+              <span class="jchapter-beads-track"><span class="jchapter-beads-fill" style="width:${beadsPct}%"></span></span>
+              ${beadsFull ? '<span class="jchapter-beads-badge">✨ 완주!</span>' : ''}
+            </div>
+          `;
+          const chLocked = chapterSeasonLocked.has(ch.c);
+          const chCls = ['jchapter', chLocked && 'jchapter-season-locked'].filter(Boolean).join(' ');
+          const lockHint = chLocked
+            ? `<span class="jchapter-lock-hint" title="이전 시즌 문해구슬를 모두 모아야 열려요">🔒</span>`
             : '';
           return `
-            <div class="jchapter" data-c="${ch.c}">
+            <div class="${chCls}" data-c="${ch.c}">
               ${videoHtml}
               <div class="jchapter-head">
                 <span class="jchapter-no">Chapter ${ch.c}</span>
-                <span class="jchapter-name">${ch.emoji ? ch.emoji + ' ' : ''}${ch.name}</span>
+                <span class="jchapter-name">${ch.emoji ? ch.emoji + ' ' : ''}${ch.name}${lockHint}</span>
                 <span class="jchapter-days">Day ${start}~${end}</span>
                 ${reportBtn}
               </div>
+              ${beadsBar}
               <div class="jpath">${nodes.join('')}</div>
             </div>
           `;
         }).join('');
 
-        // 배경 영상 뷰포트 진입 시에만 로드·재생 (성능 · 배터리)
+        // 배경 영상 뷰포트 진입 시 지연 로드 · 이후엔 계속 재생 (pause 없음 · 페이드 없음)
         const videos = container.querySelectorAll('.jchapter-bg-video');
         const modalBody = document.querySelector('.wr100-modal-body');
         if (videos.length && 'IntersectionObserver' in window) {
           const io = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
+              if (!entry.isIntersecting) return;
               const v = entry.target;
-              if (entry.isIntersecting) {
-                // 아직 src 없으면 세팅 (지연 로드)
-                if (!v.src && v.dataset.src) {
-                  v.src = v.dataset.src;
-                  v.addEventListener('canplay', () => v.classList.add('ready'), { once: true });
-                }
-                v.play().catch(() => {});
-              } else {
-                v.pause();
+              // 아직 src 없으면 세팅 (지연 로드) · 이후 계속 재생
+              if (!v.src && v.dataset.src) {
+                v.src = v.dataset.src;
               }
+              v.play().catch(() => {});
+              // 한 번 로드되면 관찰 해제 · 이후 pause/재개 레이스 없음
+              io.unobserve(v);
             });
           }, { root: modalBody || null, threshold: 0.05 });
           videos.forEach(v => io.observe(v));
-          // 정리용 참조 저장 (다음 render 시 disconnect)
           if (window._wr100VideoIO) window._wr100VideoIO.disconnect();
           window._wr100VideoIO = io;
         }
@@ -37753,7 +38264,57 @@ ${content}
           const flyTo = currentDay;
           setTimeout(() => flyBalloon(flyFrom, flyTo, container), 500);
         }
+        const _prevCurrentDayLocal = _prevCurrentDay;
         _prevCurrentDay = currentDay;
+
+        // 문해구슬 증가분 이펙트 · 각 시즌 progress bar에 +N 뱃지 튀어오르기, 전체 카운터 tick
+        if (totalDelta > 0) {
+          const showDelay = (_prevCurrentDayLocal !== null && currentDay !== null && _prevCurrentDayLocal !== currentDay) ? 4200 : 400;
+          setTimeout(() => {
+            // 시즌별 +N 뱃지
+            for (const ch of CHAPTERS) {
+              const d = seasonDelta[ch.c] || 0;
+              if (d <= 0) continue;
+              const beadsEl = container.querySelector(`.jchapter[data-c="${ch.c}"] .jchapter-beads`);
+              if (!beadsEl) continue;
+              const pop = document.createElement('span');
+              pop.className = 'jchapter-beads-pop';
+              pop.innerHTML = `+${d} <span class="jchapter-beads-icon" aria-hidden="true"></span>`;
+              beadsEl.appendChild(pop);
+              setTimeout(() => pop.remove(), 2000);
+            }
+            // 전체 카운터 tick 애니메이션 (lastTotal → totalBeads)
+            const totalEl = container.querySelector('.wr100-total-beads-text b');
+            const pctEl = container.querySelector('.wr100-total-beads-pct');
+            const wrapEl = container.querySelector('.wr100-total-beads');
+            if (totalEl && pctEl && wrapEl) {
+              wrapEl.classList.add('is-ticking');
+              const from = lastTotal;
+              const to = totalBeads;
+              const dur = 900;
+              const t0 = performance.now();
+              const tick = (now) => {
+                const p = Math.min(1, (now - t0) / dur);
+                const v = Math.round(from + (to - from) * p);
+                totalEl.textContent = v;
+                pctEl.textContent = Math.round((v / 600) * 100) + '%';
+                if (p < 1) requestAnimationFrame(tick);
+                else setTimeout(() => wrapEl.classList.remove('is-ticking'), 400);
+              };
+              requestAnimationFrame(tick);
+            }
+          }, showDelay);
+        }
+
+        // 시즌 완주 축하 팝업 · 열기구 도착 후 노출 (문해구슬 이펙트 뒤)
+        if (clearToCelebrate !== null) {
+          const base = (_prevCurrentDayLocal !== null && currentDay !== null && _prevCurrentDayLocal !== currentDay) ? 4400 : cleanupMs + 200;
+          const delay = totalDelta > 0 ? base + 1400 : base;
+          setTimeout(() => {
+            showSeasonClearedPopup(clearToCelebrate);
+            markSeasonCelebrated(clearToCelebrate);
+          }, delay);
+        }
 
         // 노드 클릭
         container.querySelectorAll('.jnode').forEach(node => {
@@ -37761,6 +38322,12 @@ ${content}
             const day = parseInt(node.dataset.day, 10);
             const authored = node.dataset.authored === '1';
             const locked = node.dataset.locked === '1';
+            const seasonLock = node.dataset.seasonLock === '1';
+            if (seasonLock) {
+              // 이전 시즌 문해구슬 미완주 → 부족한 Day 목록 팝업
+              showSeasonLockPopup(seasonOf(day) - 1, done, dayTotalMap);
+              return;
+            }
             if (locked) {
               const box = document.getElementById('wr100LockPopup');
               document.getElementById('wr100LockTitle').textContent = '🔒 아직 잠겨 있어요';
@@ -38135,7 +38702,6 @@ ${content}
           <div class="wr-day-grid">
             ${records.map(r => {
               const dayTotal = r.accuracies && r.accuracies.total ? (r.accuracies.total.pct || 0) : 0;
-              const hasWriting = !!(r.composed && r.composed.trim().length > 0);
               return `
                 <div class="wr-day-card">
                   <div class="wr-day-head">
@@ -38155,12 +38721,7 @@ ${content}
                       `;
                     }).join('')}
                   </div>
-                  ${(() => {
-                    const anyWrong = r.wrongAnswers && keys.some(k => Array.isArray(r.wrongAnswers[k]) && r.wrongAnswers[k].length > 0);
-                    // 완성글 or 오답 중 하나라도 있으면 상세보기 버튼
-                    if (!hasWriting && !anyWrong) return '';
-                    return `<button class="wr-day-writing-btn" onclick="openWr100Writing(${r.day})">🔍 상세보기</button>`;
-                  })()}
+                  <button class="wr-day-writing-btn" onclick="openWr100Writing(${r.day})">🔍 상세보기</button>
                 </div>
               `;
             }).join('')}
@@ -38175,18 +38736,40 @@ ${content}
         const r = records.find(x => x.day === day);
         if (!r) return;
         document.getElementById('wwmTitle').textContent = `Day ${r.day} · ${r.topic || ''} · 상세보기`;
+
         // 완성글 · 질문/답변
+        const hasAnyAnswer = (r.writing || []).some(qa => qa && qa.a && qa.a.trim().length > 0);
+        const hasComposed = !!(r.composed && r.composed.trim().length > 0);
         const qaHtml = (r.writing || []).map((qa, i) => `
           <div class="wwm-qa">
             <div class="wwm-q">Q${i+1}. ${(qa.q || '').replace(/</g,'&lt;')}</div>
             <div class="wwm-a">${qa.a ? qa.a.replace(/</g,'&lt;') : '<em>답변 없음</em>'}</div>
           </div>
         `).join('');
-        const hasWriting = !!(r.composed && r.composed.trim().length > 0) || (r.writing && r.writing.length > 0);
-        document.getElementById('wwmQA').innerHTML = qaHtml || '<div style="color:#94a3b8;padding:8px 0;">답변이 없어요.</div>';
-        document.getElementById('wwmComposed').textContent = r.composed || '완성 글이 없어요.';
-        document.getElementById('wwmQASection').style.display = hasWriting ? '' : 'none';
-        document.getElementById('wwmComposedSection').style.display = hasWriting ? '' : 'none';
+        // QA 섹션 · 질문 자체가 있으면 노출 (미답변도 볼 수 있게)
+        const qaSection = document.getElementById('wwmQASection');
+        if (r.writing && r.writing.length > 0) {
+          document.getElementById('wwmQA').innerHTML = qaHtml;
+          qaSection.style.display = '';
+        } else {
+          qaSection.style.display = 'none';
+        }
+        // 완성글 섹션 · 없으면 안내 메시지
+        const composedSection = document.getElementById('wwmComposedSection');
+        const composedEl = document.getElementById('wwmComposed');
+        if (hasComposed) {
+          composedEl.textContent = r.composed;
+          composedEl.style.color = '';
+          composedEl.style.fontStyle = '';
+          composedSection.style.display = '';
+        } else if (hasAnyAnswer) {
+          composedEl.textContent = '아직 AI 완성 글을 만들지 않았어요.';
+          composedEl.style.color = '#94a3b8';
+          composedEl.style.fontStyle = 'italic';
+          composedSection.style.display = '';
+        } else {
+          composedSection.style.display = 'none';
+        }
 
         // 오답 섹션 · 5개 스테이지 통합
         const stages = ['vocab','word','wordApply','sentence','paraOrder'];
@@ -38204,12 +38787,31 @@ ${content}
           `;
         }).filter(Boolean).join('');
         const wrongSection = document.getElementById('wwmWrongSection');
+        wrongSection.style.display = '';
         if (wrongCount > 0) {
           document.getElementById('wwmWrongBody').innerHTML = wrongSections;
           wrongSection.querySelector('.wwm-subtitle').textContent = `🔍 오답 상세 (총 ${wrongCount}개)`;
-          wrongSection.style.display = '';
         } else {
-          wrongSection.style.display = 'none';
+          // 완벽 정답 축하 메시지
+          document.getElementById('wwmWrongBody').innerHTML = `
+            <div style="text-align:center;padding:28px 20px;background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:16px;">
+              <div style="font-size:44px;line-height:1;margin-bottom:10px;">🎉</div>
+              <div style="color:#2e7d32;font-size:17px;font-weight:900;margin-bottom:4px;">완벽해요!</div>
+              <div style="color:#388e3c;font-size:13px;font-weight:600;">모든 문제를 정답으로 맞혔어요 ⭐</div>
+            </div>
+          `;
+          wrongSection.querySelector('.wwm-subtitle').textContent = '🎉 오답 없음';
+        }
+
+        // 아무것도 없을 때 안내 (질문/답변·완성글·오답 모두 없음 = 매우 드문 케이스)
+        if (qaSection.style.display === 'none' && composedSection.style.display === 'none' && wrongCount === 0) {
+          document.getElementById('wwmWrongBody').innerHTML = `
+            <div style="text-align:center;padding:28px 20px;background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:16px;">
+              <div style="font-size:44px;line-height:1;margin-bottom:10px;">🌟</div>
+              <div style="color:#2e7d32;font-size:17px;font-weight:900;margin-bottom:4px;">완벽한 학습!</div>
+              <div style="color:#388e3c;font-size:13px;font-weight:600;">오답도 없고, 학습을 훌륭하게 마쳤어요</div>
+            </div>
+          `;
         }
 
         document.getElementById('wr100WritingModal').classList.add('show');

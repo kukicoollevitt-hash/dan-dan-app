@@ -100,6 +100,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" data-tab="crit">📰 BRAIN비평 <span class="badge-count" id="tabCritCount">0</span></button>
     <button class="tab-btn" data-tab="kh">🇰🇷 BRAIN한국사 <span class="badge-count" id="tabKhCount">0</span></button>
+    <button class="tab-btn" data-tab="wr100">✍️ BRAIN입문 쓰기문해 <span class="badge-count" id="tabWr100Count">0</span></button>
   </div>
   <!-- 비평 섹션 -->
   <div class="section active" id="sectionCrit">
@@ -275,6 +276,69 @@
     </div>
     <div class="info-line" id="khCertInfo"></div>
     <div class="more-bar"><button class="more-btn" id="khCertMoreBtn" style="display:none;">더보기 (+10)</button></div>
+  </div>
+
+  <!-- 쓰기문해 섹션 -->
+  <div class="section" id="sectionWr100">
+    <h2 class="section-title">
+      ✍️ BRAIN입문 쓰기문해 (100일) 단원별 학습 기록
+      <span class="count" id="wr100Count">0건</span>
+    </h2>
+    <div class="filter-row">
+      <input type="text" id="wr100SearchName" placeholder="👤 이름 검색" />
+      <input type="text" id="wr100Grade" placeholder="🎓 학년 검색 (예: 초3)" />
+      <input type="text" id="wr100Academy" placeholder="🏫 센터(학원) 검색" />
+      <select id="wr100Sort">
+        <option value="date-desc">최근 완료 순</option>
+        <option value="date-asc">오래된 순</option>
+        <option value="day-asc">Day 오름차순</option>
+        <option value="day-desc">Day 내림차순</option>
+        <option value="total-desc">총 정답률 높은 순</option>
+        <option value="total-asc">총 정답률 낮은 순</option>
+        <option value="grade-asc">학년 오름차순</option>
+        <option value="name-asc">이름 가나다순</option>
+      </select>
+      <button class="reset-btn" onclick="resetWr100Filter()">초기화</button>
+    </div>
+    <div class="table-wrap" style="overflow-x:auto;">
+      <table style="min-width:1400px;table-layout:fixed;">
+        <thead>
+          <tr>
+            <th style="width:44px;">#</th>
+            <th data-sort-section="wr100" data-sort="grade" style="width:60px;">학년</th>
+            <th data-sort-section="wr100" data-sort="name" style="width:90px;">학생명</th>
+            <th data-sort-section="wr100" data-sort="academy" style="width:150px;">센터(학원)</th>
+            <th data-sort-section="wr100" data-sort="day" style="width:60px;">Day</th>
+            <th style="width:150px;">단원명</th>
+            <th style="width:64px;text-align:center;">어휘</th>
+            <th style="width:64px;text-align:center;">단어</th>
+            <th style="width:74px;text-align:center;">단어활용</th>
+            <th style="width:64px;text-align:center;">문장</th>
+            <th style="width:74px;text-align:center;">문단순서</th>
+            <th data-sort-section="wr100" data-sort="total" style="width:80px;text-align:center;">총정답률</th>
+            <th data-sort-section="wr100" data-sort="date" style="width:120px;">완료일</th>
+            <th style="width:90px;">리포트</th>
+            <th style="width:130px;">🎙️ 녹음</th>
+          </tr>
+        </thead>
+        <tbody id="wr100Tbody">
+          <tr><td colspan="15" class="empty">불러오는 중…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="info-line" id="wr100Info"></div>
+    <div class="more-bar"><button class="more-btn" id="wr100MoreBtn" style="display:none;">더보기 (+10)</button></div>
+  </div>
+</div>
+
+<!-- 녹음 목록 팝업 (개별 다운로드) -->
+<div id="recListOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9998;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:16px;max-width:520px;width:92%;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;">
+    <div style="padding:16px 22px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:white;display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="margin:0;font-size:16px;font-weight:800;">🎙️ 녹음 파일 목록</h3>
+      <button onclick="closeRecList()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;">×</button>
+    </div>
+    <div id="recListBody" style="padding:16px 22px;overflow-y:auto;flex:1;"></div>
   </div>
 </div>
 
@@ -690,36 +754,216 @@
   function switchTab(t) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    const target = document.getElementById(t === 'kh' ? 'sectionKh' : 'sectionCrit');
+    const targetId = t === 'kh' ? 'sectionKh' : (t === 'wr100' ? 'sectionWr100' : 'sectionCrit');
+    const target = document.getElementById(targetId);
     if (target) target.classList.add('active');
   }
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.onclick = () => switchTab(btn.dataset.tab);
   });
-  // ?tab=kh / ?tab=crit 으로 초기 탭 결정 (대시보드의 두 버튼에서 진입)
+  // ?tab=kh / ?tab=crit / ?tab=wr100 으로 초기 탭 결정
   try {
     const params = new URLSearchParams(location.search);
     const initialTab = params.get('tab');
-    if (initialTab === 'kh' || initialTab === 'crit') switchTab(initialTab);
+    if (['kh', 'crit', 'wr100'].includes(initialTab)) switchTab(initialTab);
   } catch {}
 
   // 카운트 동기화 — 섹션 count → 탭 배지
   const _origCritCount = document.getElementById('critCount');
   const _origKhCount = document.getElementById('khCount');
+  const _origWr100Count = document.getElementById('wr100Count');
   const _critObs = new MutationObserver(() => { document.getElementById('tabCritCount').textContent = _origCritCount.textContent.replace('건','').trim() || '0'; });
   const _khObs = new MutationObserver(() => { document.getElementById('tabKhCount').textContent = _origKhCount.textContent.replace('건','').trim() || '0'; });
+  const _wr100Obs = new MutationObserver(() => { document.getElementById('tabWr100Count').textContent = _origWr100Count.textContent.replace('건','').trim() || '0'; });
   _critObs.observe(_origCritCount, { childList: true, characterData: true, subtree: true });
   _khObs.observe(_origKhCount, { childList: true, characterData: true, subtree: true });
+  _wr100Obs.observe(_origWr100Count, { childList: true, characterData: true, subtree: true });
+
+  // ===== 쓰기문해 (writing100) 로드 =====
+  state.wr100 = { sort: 'date', dir: 'desc', offset: 0, total: 0, searchTimer: null };
+  async function loadWr100(reset) {
+    const st = state.wr100;
+    if (reset) { st.offset = 0; $('wr100Tbody').innerHTML = ''; }
+    document.querySelectorAll(`th[data-sort-section="wr100"]`).forEach(th => {
+      th.classList.remove('sorted-asc','sorted-desc');
+      if (th.dataset.sort === st.sort) th.classList.add(st.dir==='asc'?'sorted-asc':'sorted-desc');
+    });
+    const params = new URLSearchParams({
+      search: $('wr100SearchName').value.trim(),
+      grade: $('wr100Grade').value.trim(),
+      academy: $('wr100Academy').value.trim(),
+      sort: st.sort, dir: st.dir, limit: PAGE_SIZE, offset: st.offset
+    });
+    try {
+      const res = await fetch(`/api/admin/writing100-list?${params}`);
+      const data = await res.json();
+      if (!data.ok) {
+        $('wr100Tbody').innerHTML = `<tr><td colspan="15" class="empty" style="color:#c00;">${esc(data.message || '오류')}</td></tr>`;
+        return;
+      }
+      st.total = data.total;
+      $('wr100Count').textContent = `${data.total}건`;
+      $('wr100Info').textContent = `총 ${data.total}건 중 ${st.offset + data.items.length}건 표시`;
+      renderWr100Rows(data.items);
+      st.offset += data.items.length;
+      $('wr100MoreBtn').style.display = st.offset < st.total ? 'inline-block' : 'none';
+    } catch (err) {
+      console.error(err);
+      $('wr100Tbody').innerHTML = '<tr><td colspan="15" class="empty" style="color:#c00;">네트워크 오류</td></tr>';
+    }
+  }
+  function fmtPct(v) {
+    if (v == null) return '<span style="color:#cbd5e1">-</span>';
+    const p = parseInt(v);
+    let color = '#94a3b8';
+    if (p >= 90) color = '#0d9488';
+    else if (p >= 70) color = '#0891b2';
+    else if (p >= 50) color = '#d97706';
+    else color = '#c62828';
+    return `<span style="color:${color};font-weight:700;">${p}%</span>`;
+  }
+  function renderWr100Rows(items) {
+    const tbody = $('wr100Tbody');
+    if (state.wr100.offset === 0 && items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="15" class="empty">쓰기문해 학습 기록이 없습니다.</td></tr>';
+      return;
+    }
+    const html = items.map((it, idx) => {
+      const acc = it.accuracies || {};
+      const recCount = (it.recordings && it.recordings.length) || 0;
+      const recCell = recCount === 0
+        ? `<span style="color:#cbd5e1;font-size:12px;">없음</span>`
+        : `<button class="report-btn" style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:5px 10px;font-size:12px;white-space:nowrap;" onclick="openRecList('${esc(it.grade)}','${esc(it.name)}','${esc(it.unit)}')">🎙️ ${recCount}개 · 개별</button>`;
+      return `<tr>
+        <td class="num">${state.wr100.offset + idx + 1}</td>
+        <td style="white-space:nowrap;">${esc(it.grade)}</td>
+        <td style="white-space:nowrap;"><b>${esc(it.name)}</b></td>
+        <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(it.academyName || '-')}</td>
+        <td style="text-align:center;font-weight:800;color:#0d9488;">${it.day || '-'}</td>
+        <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(it.topic || '-')}</td>
+        <td style="text-align:center;">${fmtPct(acc.vocab?.pct)}</td>
+        <td style="text-align:center;">${fmtPct(acc.word?.pct)}</td>
+        <td style="text-align:center;">${fmtPct(acc.wordApply?.pct)}</td>
+        <td style="text-align:center;">${fmtPct(acc.sentence?.pct)}</td>
+        <td style="text-align:center;">${fmtPct(acc.paraOrder?.pct)}</td>
+        <td style="text-align:center;font-weight:900;">${fmtPct(acc.total?.pct)}</td>
+        <td style="font-size:12px;color:#6b7280;white-space:nowrap;">${fmtDate(it.updatedAt)}</td>
+        <td><button class="report-btn" style="white-space:nowrap;" onclick="openReport('wr100','${esc(it.grade)}','${esc(it.name)}')">📋 리포트</button></td>
+        <td>${recCell}</td>
+      </tr>`;
+    }).join('');
+    if (state.wr100.offset === 0) tbody.innerHTML = html;
+    else tbody.insertAdjacentHTML('beforeend', html);
+  }
+
+  // 녹음 목록 팝업 (특정 학생 전체 · Day별 그룹)
+  window.openRecList = async function(grade, name, unit) {
+    const ov = document.getElementById('recListOverlay');
+    ov.style.display = 'flex';
+    const body = document.getElementById('recListBody');
+    body.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;">불러오는 중…</div>';
+    try {
+      const res = await fetch(`/api/admin/writing100-recordings?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`);
+      const data = await res.json();
+      if (!data.ok || !data.records || data.records.length === 0) {
+        body.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;">녹음 기록 없음</div>';
+        return;
+      }
+      // 특정 unit만 필터링
+      const targetRec = data.records.find(r => r.unit === unit);
+      const list = targetRec ? [targetRec] : data.records;
+      body.innerHTML = list.map(r => {
+        if (!r.recordings || r.recordings.length === 0) return '';
+        return `
+          <div style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px dashed #e5e7eb;">
+            <div style="font-weight:800;color:#0d9488;margin-bottom:6px;">
+              Day ${r.day} · ${esc(r.topic || '-')}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              ${r.recordings.map(rec => {
+                const kb = Math.round((rec.size || 0) / 1024);
+                const dt = new Date(rec.createdAt).toLocaleString('ko-KR');
+                return `
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f0fdfa;border-radius:8px;">
+                    <div style="font-size:13px;">
+                      <b>${esc(rec.part)}</b>
+                      <span style="color:#94a3b8;margin-left:6px;font-size:11px;">${kb}KB · ${dt}</span>
+                    </div>
+                    <a class="report-btn" style="text-decoration:none;padding:4px 10px;font-size:11px;background:linear-gradient(135deg,#14b8a6,#0d9488);"
+                       href="/api/admin/writing100-recording-download?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&unit=${encodeURIComponent(r.unit)}&filename=${encodeURIComponent(rec.filename)}"
+                       download>⬇️ 다운로드</a>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('') || '<div style="padding:20px;text-align:center;color:#94a3b8;">이 단원 녹음 없음</div>';
+    } catch (err) {
+      body.innerHTML = '<div style="padding:20px;text-align:center;color:#c00;">불러오기 실패</div>';
+    }
+  };
+  window.closeRecList = function() {
+    document.getElementById('recListOverlay').style.display = 'none';
+  };
+  document.getElementById('recListOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'recListOverlay') closeRecList();
+  });
+
+  // 학생 전체 zip 다운로드 (모든 Day 녹음 하나로)
+  window.downloadWr100StudentZip = function(grade, name) {
+    const url = `/api/admin/writing100-student-zip?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`;
+    window.location.href = url;
+  };
+  function bindWr100Controls() {
+    $('wr100SearchName').oninput = debounce('wr100', () => loadWr100(true));
+    $('wr100Grade').oninput      = debounce('wr100', () => loadWr100(true));
+    $('wr100Academy').oninput    = debounce('wr100', () => loadWr100(true));
+    $('wr100Sort').onchange = () => {
+      const [s, d] = $('wr100Sort').value.split('-');
+      state.wr100.sort = s; state.wr100.dir = d;
+      loadWr100(true);
+    };
+    $('wr100MoreBtn').onclick = () => loadWr100(false);
+  }
+  window.resetWr100Filter = function() {
+    $('wr100SearchName').value = ''; $('wr100Grade').value = ''; $('wr100Academy').value = ''; $('wr100Sort').value = 'date-desc';
+    state.wr100.sort = 'date'; state.wr100.dir = 'desc';
+    loadWr100(true);
+  };
+  // wr100 컬럼 정렬 클릭
+  document.querySelectorAll('th[data-sort-section="wr100"]').forEach(th => {
+    th.onclick = () => {
+      const key = th.dataset.sort;
+      const st = state.wr100;
+      if (st.sort === key) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
+      else { st.sort = key; st.dir = 'desc'; }
+      st.offset = 0;
+      loadWr100(true);
+    };
+  });
+
+  // 리포트 열기 라우팅에 wr100 추가
+  const _origOpenReport = window.openReport;
+  window.openReport = function(type, grade, name) {
+    if (type === 'wr100') {
+      window.open(`/menu?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&autoOpen=wr100Report`, '_blank');
+      return;
+    }
+    _origOpenReport(type, grade, name);
+  };
 
   // 초기 로드
   bindCritControls();
   bindKhControls();
   bindKhExamControls();
   bindKhCertControls();
+  bindWr100Controls();
   loadCrit(true);
   loadKh(true);
   loadKhExam(true);
   loadKhCert(true);
+  loadWr100(true);
 </script>
 </body>
 </html>

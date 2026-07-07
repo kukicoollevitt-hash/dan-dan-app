@@ -423,6 +423,14 @@
   }
   .ai-btn:hover { transform: translateY(-2px); }
   .ai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ai-btn.ai-btn-locked {
+    background: linear-gradient(135deg, #b0bec5, #78909c);
+    box-shadow: 0 3px 8px rgba(120,144,156,0.28);
+    opacity: 1;
+    cursor: not-allowed;
+    pointer-events: auto;   /* title 툴팁은 보이도록 */
+  }
+  .ai-btn.ai-btn-locked:hover { transform: none; }
   .ai-result {
     display: none;
     background: linear-gradient(135deg, #f3e5f5, #ede7f6);
@@ -1205,12 +1213,13 @@ function accuracyPct(key) {
   return Math.round((a.correct / a.attempts) * 100);
 }
 function totalAccuracyPct() {
-  let c = 0, at = 0;
+  /* 5개 스테이지 pct 단순 평균 · 미완료 스테이지(attempts=0)는 0%로 포함 */
+  let sumPct = 0;
   for (const k of ACC_KEYS) {
-    c  += STATE.stageAccuracy[k].correct;
-    at += STATE.stageAccuracy[k].attempts;
+    const a = STATE.stageAccuracy[k];
+    sumPct += (a && a.attempts > 0) ? Math.round((a.correct / a.attempts) * 100) : 0;
   }
-  return at === 0 ? 0 : Math.round((c / at) * 100);
+  return Math.round(sumPct / ACC_KEYS.length);
 }
 function showAccuracyToast(pct, stageName) {
   document.querySelectorAll('.accuracy-toast').forEach(t => t.remove());
@@ -2606,10 +2615,43 @@ function renderStage7(card) {
       if (!ta.value.endsWith(' ') && ta.value.length > 0) ta.value += ' ';
       ta.value += chip;
       ta.focus();
+      updateAiBtnState();
     });
   });
+  // 각 textarea input 이벤트 · 실시간 버튼 상태 갱신
+  card.querySelectorAll('.q-input').forEach(ta => {
+    ta.addEventListener('input', updateAiBtnState);
+  });
+  updateAiBtnState();
   // AI 완성 버튼
   document.getElementById('aiBtn').addEventListener('click', doAiCompose);
+}
+
+/* 각 질문의 실입력 길이 계산 (lead 접두어 제외) */
+function getWritingRealLen(i) {
+  const q = DATA.writing.questions[i];
+  const ta = document.getElementById(`qInput${i}`);
+  if (!q || !ta) return 0;
+  const lead = (q.lead || '').trim();
+  const val = (ta.value || '').trim();
+  const real = (val.startsWith(lead) ? val.slice(lead.length) : val).trim();
+  return real.length;
+}
+const AI_MIN_LEN = 5;   // 각 질문 최소 실입력 길이
+
+function updateAiBtnState() {
+  const btn = document.getElementById('aiBtn');
+  if (!btn) return;
+  const total = DATA.writing.questions.length;
+  const shortCount = [];
+  for (let i = 0; i < total; i++) {
+    if (getWritingRealLen(i) < AI_MIN_LEN) shortCount.push(i);
+  }
+  const ok = shortCount.length === 0;
+  btn.classList.toggle('ai-btn-locked', !ok);
+  btn.title = ok
+    ? 'AI가 완성해요'
+    : `아직 ${shortCount.length}개 질문에 ${AI_MIN_LEN}자 이상 답해주세요`;
 }
 
 function showRefModal(ref) {
@@ -2645,17 +2687,21 @@ function showRefModal(ref) {
 
 async function doAiCompose() {
   const btn = document.getElementById('aiBtn');
+  // 안전장치 · 실입력(lead 제외) 5자 미만 질문 목록
+  const short = [];
+  DATA.writing.questions.forEach((q, i) => {
+    const len = getWritingRealLen(i);
+    if (len < AI_MIN_LEN) short.push({ i, len });
+  });
+  if (short.length > 0) {
+    showAiShortModal(short);
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = '✨ AI가 글을 쓰고 있어요…';
 
   const answers = DATA.writing.questions.map((q, i) => document.getElementById(`qInput${i}`).value.trim());
-  const emptyIdx = answers.findIndex(a => !a || a === DATA.writing.questions[answers.indexOf(a)]?.lead?.trim());
-  if (answers.some(a => !a || a.length < 3)) {
-    encourage('각 질문에 한 줄씩만 답해 주세요');
-    btn.disabled = false;
-    btn.textContent = '✨ AI가 완성해줘요';
-    return;
-  }
 
   try {
     const res = await fetch('/api/writing100/compose', {
@@ -2682,6 +2728,47 @@ async function doAiCompose() {
     btn.disabled = false;
     btn.textContent = '✨ 다시 완성하기';
   }
+}
+
+/* AI 완성 클릭 시 실입력 미달 질문 안내 팝업 */
+function showAiShortModal(shortList) {
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const items = shortList.map(({ i, len }) => {
+    const q = DATA.writing.questions[i];
+    const need = Math.max(0, AI_MIN_LEN - len);
+    return `<li style="margin-bottom:10px;padding:10px 12px;background:#fff8e1;border-left:4px solid #ff8b3d;border-radius:8px;">
+      <div style="color:#bf360c;font-weight:800;margin-bottom:4px;">Q${i+1}. ${esc(q.q)}</div>
+      <div style="color:#5a6b7a;font-size:13px;">현재 <b style="color:#c62828;">${len}자</b> · ${need}자 더 써 봐요</div>
+    </li>`;
+  }).join('');
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML = `
+    <div style="background:#fff;border-radius:22px;max-width:460px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.35);">
+      <div style="background:linear-gradient(135deg,#ffe0b2,#ffcc80);padding:18px 22px;">
+        <h3 style="margin:0;color:#bf360c;font-size:19px;font-weight:900;">✏️ 조금 더 써 봐요!</h3>
+        <div style="margin-top:6px;color:#8a5a2e;font-size:13px;">각 질문에 <b>${AI_MIN_LEN}자 이상</b> 답을 채워야 AI가 글을 완성해줘요</div>
+      </div>
+      <ul style="list-style:none;padding:16px 20px 8px 20px;margin:0;overflow-y:auto;flex:1;">
+        ${items}
+      </ul>
+      <div style="padding:14px 20px 18px 20px;text-align:center;">
+        <button id="aiShortOk" style="background:linear-gradient(135deg,#ff8b3d,#ff6f00);color:#fff;border:none;padding:10px 26px;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(255,111,0,0.3);">확인</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(ov);
+  const close = () => {
+    ov.remove();
+    // 미달 첫 번째 질문으로 스크롤 + 포커스
+    if (shortList.length > 0) {
+      const first = shortList[0].i;
+      const ta = document.getElementById(`qInput${first}`);
+      if (ta) { ta.focus(); ta.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    }
+  };
+  ov.querySelector('#aiShortOk').addEventListener('click', close);
+  ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
 }
 
 /* API가 아직 없을 때 로컬 조합 폴백 */
