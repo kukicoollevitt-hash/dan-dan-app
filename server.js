@@ -1,5 +1,9 @@
 require("dotenv").config();
 
+// 로컬 라우터 DNS가 SRV 쿼리를 거부하는 이슈 대응 · 공용 DNS로 강제
+const dns = require('dns');
+try { dns.setServers(['8.8.8.8', '1.1.1.1', ...dns.getServers()]); } catch {}
+
 const express = require("express");
 const axios = require("axios");
 const bodyParser = require("body-parser");
@@ -393,6 +397,7 @@ const PromotionOrder = require("./models/PromotionOrder");
 const CenterContract = require("./models/CenterContract");
 const CritiqueSubmission = require("./models/CritiqueSubmission");
 const KhSubmission = require("./models/KhSubmission");
+const Writing100Submission = require("./models/Writing100Submission");
 const KhExamResult = require("./models/KhExamResult");
 const KhCertExam = require("./models/KhCertExam");
 
@@ -35398,6 +35403,22 @@ const midtermEvalSchema = new mongoose.Schema({
 });
 const MidtermEval = mongoose.model("MidtermEval", midtermEvalSchema);
 
+// 🧪 설명회 시연용 데모 계정 — 관문/중간평가에서 항상 정상 응답 보장
+// (완료 이력이 부족해도 안전한 프리셋으로 자동 보완)
+const GATE_QUIZ_DEMO_ACCOUNTS = [
+  { grade: '초3', name: '김윤슬' }
+];
+function isGateQuizDemoAccount(grade, name) {
+  return GATE_QUIZ_DEMO_ACCOUNTS.some(a => a.grade === grade && a.name === name);
+}
+// 관문별 데모 프리셋 (q1/q2 파싱 검증된 안전 단원 5개씩)
+const GATE_QUIZ_DEMO_PRESETS = {
+  1: ['bio_01', 'bio_02', 'bio_03', 'bio_04', 'bio_05'],
+  2: ['bio_06', 'bio_07', 'bio_08', 'bio_09', 'bio_10'],
+  3: ['bio_11', 'bio_12', 'bio_13', 'bio_14', 'bio_15'],
+  4: ['bio_16', 'bio_17', 'bio_18', 'bio_19', 'bio_20']
+};
+
 // 관문 문제 생성 API
 app.get("/api/gate-quiz/generate", async (req, res) => {
   try {
@@ -35408,6 +35429,11 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
 
     if (!grade || !name) {
       return res.json({ ok: false, message: "학생 정보가 필요합니다." });
+    }
+
+    const isDemo = isGateQuizDemoAccount(grade, name);
+    if (isDemo) {
+      console.log(`[gate-quiz/generate] 🧪 데모 계정 감지 (${grade} ${name}) — 완료 이력 부족 시 프리셋으로 보완`);
     }
 
     // 1) 해당 학생의 완료된 단원 조회 (완료 시간순 정렬, grade + name 조합으로만 검색)
@@ -35442,8 +35468,22 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
     const endIdx = gateLevel * 5;          // 관문 1: 5, 관문 2: 10, 관문 3: 15
 
     // 완료 순서대로 해당 범위의 단원들
-    const gateUnits = allCompletedUnits.slice(startIdx, endIdx);
+    let gateUnits = allCompletedUnits.slice(startIdx, endIdx);
     console.log(`[gate-quiz/generate] 관문 ${gateLevel} 범위 단원 (${startIdx + 1}~${endIdx}번째 완료): ${gateUnits.length}개`, gateUnits);
+
+    // 🧪 데모 계정: 완료 이력 부족 시 프리셋으로 보완 (실제 완료 단원 우선)
+    if (isDemo && gateUnits.length < 5) {
+      const preset = GATE_QUIZ_DEMO_PRESETS[gateLevel] || GATE_QUIZ_DEMO_PRESETS[1];
+      const existing = new Set(gateUnits);
+      for (const u of preset) {
+        if (gateUnits.length >= 5) break;
+        if (!existing.has(u)) {
+          gateUnits.push(u);
+          existing.add(u);
+        }
+      }
+      console.log(`[gate-quiz/generate] 🧪 데모 프리셋 보완 → ${gateUnits.length}개`, gateUnits);
+    }
 
     if (gateUnits.length < 5) {
       return res.json({
@@ -35638,6 +35678,72 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
     }
 
     console.log(`[gate-quiz/generate] 생성된 문제: ${quizzes.length}개`);
+
+    // 🧪 데모 계정 최후 안전망: 파싱 실패로 10문제가 안 나오면 bio_01~05 프리셋으로 강제 보완
+    if (isDemo && quizzes.length < 10) {
+      console.log(`[gate-quiz/generate] 🧪 데모 최후 안전망 발동 (현재 ${quizzes.length}/10) — bio_01~05 프리셋 재추출 시도`);
+      const usedKeys = new Set(quizzes.map(q => `${q.unit}::${q.qType}`));
+      const fallbackUnits = GATE_QUIZ_DEMO_PRESETS[1];
+      const fallbackPath = path.join(__dirname, 'public', 'BRAINUP', 'science', 'bio_content.js');
+      if (fs.existsSync(fallbackPath)) {
+        const fallbackContent = fs.readFileSync(fallbackPath, 'utf8');
+        for (const fbCode of fallbackUnits) {
+          if (quizzes.length >= 10) break;
+          const fbMatch = fbCode.match(/([a-z]+\d?)_(\d{1,2})/);
+          if (!fbMatch) continue;
+          const fbNum = fbMatch[2].padStart(2, '0');
+          const fbKey = fbCode;
+          const labelNoMatch = fallbackContent.match(new RegExp(`labelNo:\\s*["']${fbNum}["']`));
+          if (!labelNoMatch) continue;
+          const unitIndex = fallbackContent.indexOf(labelNoMatch[0]);
+          const nextUnitMatch = fallbackContent.slice(unitIndex + 100).match(/labelNo:\s*["']\d{2}["']/);
+          const endIndex = nextUnitMatch ? unitIndex + 100 + fallbackContent.slice(unitIndex + 100).indexOf(nextUnitMatch[0]) : fallbackContent.length;
+          const unitBlock = fallbackContent.slice(unitIndex, endIndex);
+          const titleMatch = unitBlock.match(/title:\s*["'](.+?)["']/);
+          const unitTitle = titleMatch ? titleMatch[1] : fbKey;
+          const answerKeyMatch = unitBlock.match(/answerKey:\s*\{([^}]+)\}/);
+          let q1Answer = 1, q2Answer = 1;
+          if (answerKeyMatch) {
+            const b = answerKeyMatch[1];
+            const q1AM = b.match(/q1:\s*['"]?(\d)['"]?/);
+            const q2AM = b.match(/q2:\s*['"]?(\d)['"]?/);
+            if (q1AM) q1Answer = parseInt(q1AM[1]);
+            if (q2AM) q2Answer = parseInt(q2AM[1]);
+          }
+          const passageMatch = unitBlock.match(/passage:\s*\[([\s\S]*?)\],?\s*\n\s*vocab:/);
+          let passages = [];
+          if (passageMatch) {
+            passages = passageMatch[1].match(/'((?:\\'|[^'])+)'/g)?.map(s => s.slice(1, -1).replace(/\\'/g, "'")) || [];
+          }
+          for (const q of ['q1', 'q2']) {
+            if (quizzes.length >= 10) break;
+            if (usedKeys.has(`${fbKey}::${q}`)) continue;
+            const tMatch = unitBlock.match(new RegExp(`${q}_text:\\s*'((?:\\\\'|[^'])+?)'`)) ||
+                           unitBlock.match(new RegExp(`${q}_text:\\s*"((?:\\\\"|[^"])+?)"`));
+            const oMatch = unitBlock.match(new RegExp(`${q}_opts:\\s*\\[([\\s\\S]*?)\\]`));
+            if (!tMatch || !oMatch) continue;
+            const question = tMatch[1].replace(/\\'/g, "'").replace(/\\"/g, '"');
+            let options = oMatch[1].match(/'((?:\\'|[^'])+)'|"((?:\\"|[^"])+)"/g)?.map(s => {
+              let opt = s.slice(1, -1).replace(/\\'/g, "'").replace(/\\"/g, '"').trim();
+              return opt.replace(/^[①②③④]\s*/, '');
+            }) || [];
+            if (options.length !== 4) continue;
+            quizzes.push({
+              unit: fbKey,
+              unitCode: fbCode,
+              unitTitle,
+              passage: passages,
+              question,
+              options,
+              correct: q === 'q1' ? q1Answer : q2Answer,
+              qType: q
+            });
+            usedKeys.add(`${fbKey}::${q}`);
+            console.log(`[gate-quiz/generate] 🧪 최후 안전망 ${fbKey} ${q} 보완 (총 ${quizzes.length}/10)`);
+          }
+        }
+      }
+    }
 
     if (quizzes.length < 10) {
       return res.json({
@@ -40851,6 +40957,314 @@ app.post('/api/kh/save-creative', async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────
+// 🖋️ BRAIN입문 쓰기문해 · 7단계 AI 글 완성 (5문답 → 자연스러운 한 편)
+// ─────────────────────────────────────────────────────
+app.post('/api/writing100/compose', async (req, res) => {
+  try {
+    const { topic, writingType, answers, questions } = req.body || {};
+    if (!Array.isArray(answers) || answers.length < 3) {
+      return res.status(400).json({ ok: false, message: 'answers 필요' });
+    }
+    if (!Array.isArray(questions) || questions.length !== answers.length) {
+      return res.status(400).json({ ok: false, message: 'questions/answers 개수 불일치' });
+    }
+    const wType = String(writingType || '설명문').replace(/\s*쓰기$/, '');
+    const tp = String(topic || '').slice(0, 60);
+
+    // 갈래별 톤 힌트
+    const tonHint = {
+      '설명문':      '주제를 쉽고 명확하게 설명하는 어조 · 차분한 서술',
+      '설명하는 글': '주제를 쉽고 명확하게 설명하는 어조 · 차분한 서술',
+      '논설문':      '자기 생각을 밝히고 그 이유를 설명하는 어조 · 근거 제시',
+      '감상문':      '느낌과 생각을 부드럽게 표현하는 어조 · 인상 깊은 부분 강조',
+      '독서감상문':  '느낌과 생각을 부드럽게 표현하는 어조 · 인상 깊은 부분 강조',
+      '편지글':      '받는 사람에게 마음을 담아 전하는 어조 · 인사·본문·끝인사',
+      '편지':        '받는 사람에게 마음을 담아 전하는 어조 · 인사·본문·끝인사'
+    };
+    const tone = tonHint[wType] || tonHint['설명문'];
+
+    const qaLines = questions.map((q, i) => `${i+1}. ${q} → ${(answers[i] || '').trim()}`).join('\n');
+
+    const systemMsg = `당신은 초등학교 2~4학년 아이들의 글쓰기를 도와주는 다정한 선생님입니다.
+아이가 쓴 짧은 답변들을 자연스럽게 이어붙이고 살짝 다듬어서 완성된 글 한 편으로 만들어 줍니다.
+아이 눈높이의 쉬운 문장, 아이의 목소리와 표현은 최대한 유지합니다.
+글은 반드시 짧고 간결하게 씁니다.`;
+
+    const userMsg = `주제: ${tp}
+글의 종류: ${wType}
+톤: ${tone}
+
+아이가 5개 질문에 한 줄씩 답한 내용:
+${qaLines}
+
+작성 지침:
+- 아이의 답변 내용을 최대한 유지하되, 자연스럽게 연결하고 어색한 표현만 살짝 다듬어 줍니다.
+- 초2~4학년 눈높이의 쉬운 어휘와 짧고 명확한 문장 위주로 씁니다.
+- 전체 길이는 반드시 150~200자 이내로 짧게 씁니다. (공백 포함)
+- 문단은 2~3개로 자연스럽게 나누되, 각 문단은 2~3문장 정도로만 간결하게 씁니다.
+- 5개 답변을 그대로 5줄 나열하지 않고, 핵심만 골라 자연스럽게 이어 씁니다.
+- 처음·중간·끝의 흐름이 있도록 배치합니다.
+- 이모지, 마크다운 기호, 머리말(예: "다음은 ~"), 꼬리말(예: "이상입니다") 없이 완성된 글 본문만 출력합니다.
+- 편지글이면 "○○에게" 인사말과 끝인사(안녕, ○○이가)를 포함하되 전체 길이는 여전히 200자 이내로 유지합니다.
+
+완성된 ${wType} (150~200자):`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0.6,
+      max_tokens: 260,
+      messages: [
+        { role: 'system', content: systemMsg },
+        { role: 'user',   content: userMsg }
+      ]
+    });
+    const text = (completion.choices?.[0]?.message?.content || '').trim();
+    if (!text) throw new Error('빈 응답');
+    res.json({ ok: true, text });
+  } catch (err) {
+    console.error('[writing100] compose:', err && err.message);
+    res.status(500).json({ ok: false, message: 'AI 완성 실패' });
+  }
+});
+
+// ─────────────────────────────────────────────────────
+// 📚 BRAIN입문 쓰기문해 · 단원별 학습 저장 (정답률 포함)
+// ─────────────────────────────────────────────────────
+app.post('/api/writing100/save-progress', async (req, res) => {
+  try {
+    const { grade, name, day, unit, topic, stagesDone, accuracies, writing, composed, readingElapsedMs } = req.body || {};
+    if (!grade || !name || !unit) {
+      return res.status(400).json({ ok: false, message: '학생/단원 정보 필요' });
+    }
+    const _user = await User.findOne({ grade, name }, { academyName: 1 }).lean();
+
+    /* 재학습 시 "최고 기록만 유지" 병합 로직
+       · accuracies: 정답률(pct) 높은 쪽 유지 (스테이지별)
+       · stagesDone:  한 번이라도 완료(true)면 유지 (OR 병합)
+       · readingElapsedMs: 실제로 읽은 값 중 짧은 쪽 유지
+       · writing / composed: 최신 것으로 갱신 (학생 최근 표현이 반영)          */
+    const existing = await Writing100Submission.findOne({ grade, name, unit }).lean();
+    let mergedAccuracies = accuracies || {};
+    let mergedStagesDone = Array.isArray(stagesDone) ? stagesDone : [];
+    let mergedReadingMs = Number(readingElapsedMs) || 0;
+
+    if (existing) {
+      /* accuracies · 스테이지별 pct 비교하여 큰 쪽 채택 */
+      const existingAcc = existing.accuracies || {};
+      const keys = new Set([...Object.keys(existingAcc), ...Object.keys(mergedAccuracies)]);
+      const acc = {};
+      for (const k of keys) {
+        const oldA = existingAcc[k];
+        const newA = mergedAccuracies[k];
+        if (!oldA) { acc[k] = newA; continue; }
+        if (!newA) { acc[k] = oldA; continue; }
+        acc[k] = (Number(newA.pct) >= Number(oldA.pct)) ? newA : oldA;
+      }
+      mergedAccuracies = acc;
+
+      /* stagesDone · OR 병합 (기존 완료 스테이지는 계속 완료) */
+      const oldStages = Array.isArray(existing.stagesDone) ? existing.stagesDone : [];
+      const len = Math.max(oldStages.length, mergedStagesDone.length);
+      const stagesOr = [];
+      for (let i = 0; i < len; i++) stagesOr[i] = !!(oldStages[i] || mergedStagesDone[i]);
+      mergedStagesDone = stagesOr;
+
+      /* readingElapsedMs · 실제 읽은 시간 중 짧은 쪽 유지 (0은 미완료로 취급) */
+      const oldMs = Number(existing.readingElapsedMs) || 0;
+      if (oldMs > 0 && mergedReadingMs > 0) {
+        mergedReadingMs = Math.min(oldMs, mergedReadingMs);
+      } else if (oldMs > 0) {
+        mergedReadingMs = oldMs;
+      }
+    }
+
+    const doc = await Writing100Submission.findOneAndUpdate(
+      { grade, name, unit },
+      {
+        $set: {
+          grade, name,
+          academyName: _user?.academyName || '',
+          day: day || 1,
+          unit,
+          topic: topic || '',
+          stagesDone: mergedStagesDone,
+          readingElapsedMs: mergedReadingMs,
+          accuracies: mergedAccuracies,
+          writing: Array.isArray(writing) ? writing : [],
+          composed: composed || '',
+          updatedAt: new Date()
+        },
+        $setOnInsert: { createdAt: new Date() }
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    // 7단계 전부 완료 && firstCompletedAt 아직 없음 → 최초 완료 시각 기록 (재학습 배지 기준)
+    if (doc && !doc.firstCompletedAt
+        && Array.isArray(doc.stagesDone)
+        && doc.stagesDone.length >= 7
+        && doc.stagesDone.every(Boolean)) {
+      doc.firstCompletedAt = new Date();
+      await doc.save();
+    }
+    res.json({ ok: true, submission: doc });
+  } catch (err) {
+    console.error('[writing100] save-progress:', err && err.message);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 학생별 100day 전체 조회 (리포트용)
+app.get('/api/writing100/report', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
+    const docs = await Writing100Submission.find({ grade, name }, {
+      day: 1, unit: 1, topic: 1, accuracies: 1, stagesDone: 1,
+      firstCompletedAt: 1, updatedAt: 1,
+      writing: 1, composed: 1
+    }).sort({ day: 1 }).lean();
+    res.json({ ok: true, records: docs });
+  } catch (err) {
+    console.error('[writing100] report:', err && err.message);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// ─────────────────────────────────────────────────────
+// 🎙️ 음성 녹음 WebM → MP4/AAC 변환 (카톡·구형기기 호환)
+// ─────────────────────────────────────────────────────
+app.post('/api/writing100/convert-recording',
+  express.raw({ type: 'audio/webm', limit: '30mb' }),
+  async (req, res) => {
+    const { spawn } = require('child_process');
+    const os = require('os');
+    const fsp = require('fs').promises;
+    const path = require('path');
+    if (!req.body || req.body.length === 0) {
+      return res.status(400).json({ ok: false, message: '오디오 데이터 필요' });
+    }
+    const stamp = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const tmpIn = path.join(os.tmpdir(), `wr100rec_${stamp}.webm`);
+    const tmpOut = path.join(os.tmpdir(), `wr100rec_${stamp}.mp4`);
+    try {
+      await fsp.writeFile(tmpIn, req.body);
+      await new Promise((resolve, reject) => {
+        const p = spawn('ffmpeg', [
+          '-y', '-i', tmpIn,
+          '-vn', '-c:a', 'aac', '-b:a', '64k',
+          '-movflags', '+faststart',
+          tmpOut
+        ]);
+        let stderr = '';
+        p.stderr.on('data', d => stderr += d.toString());
+        p.on('close', code => code === 0 ? resolve() : reject(new Error('ffmpeg ' + code + ': ' + stderr.slice(-200))));
+        p.on('error', reject);
+      });
+      const buf = await fsp.readFile(tmpOut);
+
+      // 서버 로컬 저장 (관리자·선생님 다운로드용)
+      const grade = String(req.query.grade || '').trim();
+      const name  = String(req.query.name  || '').trim();
+      const day   = parseInt(req.query.day || '0', 10);
+      const part  = String(req.query.part || '').trim();
+      if (grade && name && day > 0 && part) {
+        try {
+          const now = new Date();
+          const pad = n => String(n).padStart(2, '0');
+          const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+          const safeStudent = `${grade}_${name}`.replace(/[^\w가-힣]/g, '');
+          const safePart = part.replace(/[^\w가-힣]/g, '');
+          const dayFolder = `Day${String(day).padStart(3, '0')}`;
+          const uploadRoot = path.join(__dirname, 'uploads', 'writing100');
+          const studentDir = path.join(uploadRoot, safeStudent, dayFolder);
+          await fsp.mkdir(studentDir, { recursive: true });
+          const filename = `${safePart}_${ts}.mp4`;
+          const savePath = path.join(studentDir, filename);
+          await fsp.writeFile(savePath, buf);
+          const relPath = path.relative(path.join(__dirname, 'uploads'), savePath).replace(/\\/g, '/');
+          const unit = `100day_${String(day).padStart(3, '0')}`;
+          // Writing100Submission의 recordings 배열에 push (동일 part는 최근 것만 유지)
+          const doc = await Writing100Submission.findOne({ grade, name, unit });
+          if (doc) {
+            // 기존 같은 part 녹음 파일은 제거 (최신 것 하나만 유지)
+            const oldSame = doc.recordings.filter(r => r.part === safePart);
+            oldSame.forEach(r => {
+              const old = path.join(__dirname, 'uploads', r.filename);
+              fsp.unlink(old).catch(() => {});
+            });
+            doc.recordings = doc.recordings.filter(r => r.part !== safePart);
+            doc.recordings.push({ part: safePart, filename: relPath, size: buf.length, createdAt: now });
+            doc.updatedAt = now;
+            await doc.save();
+          } else {
+            // 문서가 아직 없으면 삽입 (save-progress 아직 안 왔을 수도 있음)
+            await Writing100Submission.create({
+              grade, name, day, unit,
+              recordings: [{ part: safePart, filename: relPath, size: buf.length, createdAt: now }]
+            });
+          }
+        } catch (saveErr) {
+          console.warn('[녹음 서버 저장 실패]', saveErr && saveErr.message);
+        }
+      }
+
+      res.set('Content-Type', 'audio/mp4');
+      res.send(buf);
+    } catch (err) {
+      console.error('[녹음 변환]', err && err.message);
+      res.status(500).json({ ok: false, message: '변환 실패' });
+    } finally {
+      fsp.unlink(tmpIn).catch(() => {});
+      fsp.unlink(tmpOut).catch(() => {});
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────
+// 📢 TTS (OpenAI gpt-4o-mini-tts) — 100day 본문학습 낭독 샘플
+// ─────────────────────────────────────────────────────
+const _ttsCache = new Map();   // 텍스트+voice+speed 기반 인메모리 캐시 (프로세스 재시작 시 초기화)
+app.post('/api/tts', async (req, res) => {
+  try {
+    const { text, voice, speed } = req.body || {};
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ ok: false, message: 'text 필수' });
+    }
+    if (text.length > 1200) {
+      return res.status(400).json({ ok: false, message: '최대 1200자' });
+    }
+    const useVoice = ['alloy','echo','fable','onyx','nova','shimmer'].includes(voice) ? voice : 'nova';
+    const useSpeed = Math.max(0.7, Math.min(1.3, parseFloat(speed) || 1.0));
+    const cacheKey = `${useVoice}:${useSpeed}:${text}`;
+    if (_ttsCache.has(cacheKey)) {
+      const cached = _ttsCache.get(cacheKey);
+      res.set('Content-Type', 'audio/mpeg');
+      res.set('X-Cache', 'HIT');
+      return res.send(cached);
+    }
+    const speech = await openai.audio.speech.create({
+      model: 'gpt-4o-mini-tts',
+      voice: useVoice,
+      input: text,
+      speed: useSpeed
+    });
+    const buffer = Buffer.from(await speech.arrayBuffer());
+    // 캐시 관리 (최근 200개 유지)
+    if (_ttsCache.size > 200) {
+      const firstKey = _ttsCache.keys().next().value;
+      _ttsCache.delete(firstKey);
+    }
+    _ttsCache.set(cacheKey, buffer);
+    res.set('Content-Type', 'audio/mpeg');
+    res.set('X-Cache', 'MISS');
+    res.send(buffer);
+  } catch (err) {
+    console.error('[TTS] 오류:', err && err.message);
+    res.status(500).json({ ok: false, message: 'TTS 생성 실패' });
+  }
+});
+
 // 리포트 조회 (해당 학생의 전체 강의 기록)
 app.get('/api/kh/report', async (req, res) => {
   try {
@@ -41074,6 +41488,196 @@ app.get('/api/admin/kh-list', requireAdminLogin, async (req, res) => {
     res.status(500).json({ ok: false, message: '서버 오류' });
   }
 });
+
+// 관리자: BRAIN입문 쓰기문해 (100일) 학생·단원별 제출 목록
+app.get('/api/admin/writing100-list', requireAdminLogin, async (req, res) => {
+  try {
+    const acFilter = getAdminAcademyFilter(req);
+    if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
+
+    const { search, grade, academy, sort = 'date', dir = 'desc', limit = 10, offset = 0 } = req.query;
+    const query = {};
+    if (acFilter) query.academyName = acFilter.academyName;
+    else if (academy && academy.trim()) query.academyName = { $regex: academy.trim(), $options: 'i' };
+    if (grade && grade.trim()) query.grade = { $regex: grade.trim(), $options: 'i' };
+    if (search) query.name = { $regex: search.trim(), $options: 'i' };
+
+    const sortObj = {};
+    if (sort === 'date') sortObj.updatedAt = dir === 'asc' ? 1 : -1;
+    else if (sort === 'day') sortObj.day = dir === 'asc' ? 1 : -1;
+    else if (sort === 'grade') sortObj.grade = dir === 'asc' ? 1 : -1;
+    else if (sort === 'academy') sortObj.academyName = dir === 'asc' ? 1 : -1;
+    else if (sort === 'name') sortObj.name = dir === 'asc' ? 1 : -1;
+    else if (sort === 'total') sortObj['accuracies.total.pct'] = dir === 'asc' ? 1 : -1;
+    else sortObj.updatedAt = -1;
+
+    const lim = Math.min(parseInt(limit) || 10, 200);
+    const off = Math.max(parseInt(offset) || 0, 0);
+
+    const total = await Writing100Submission.countDocuments(query);
+    const items = await Writing100Submission.find(query, {
+      grade: 1, name: 1, academyName: 1, day: 1, unit: 1, topic: 1,
+      accuracies: 1, updatedAt: 1, firstCompletedAt: 1,
+      recordings: 1
+    }).sort(sortObj).skip(off).limit(lim).lean();
+
+    // 학생 학교명 매핑
+    const keys = [...new Set(items.map(i => `${i.grade}|${i.name}`))];
+    const users = keys.length ? await User.find({
+      $or: keys.map(k => { const [g, n] = k.split('|'); return { grade: g, name: n }; })
+    }, { grade: 1, name: 1, school: 1 }).lean() : [];
+    const schoolMap = {};
+    users.forEach(u => { schoolMap[`${u.grade}|${u.name}`] = u.school || ''; });
+
+    res.json({
+      ok: true,
+      items: items.map(i => ({
+        grade: i.grade, name: i.name,
+        school: schoolMap[`${i.grade}|${i.name}`] || '',
+        academyName: i.academyName || '',
+        day: i.day || 0,
+        unit: i.unit,
+        topic: i.topic || '',
+        accuracies: i.accuracies || {},
+        updatedAt: i.updatedAt,
+        firstCompletedAt: i.firstCompletedAt || null,
+        recordings: (i.recordings || []).map(r => ({ part: r.part, filename: r.filename, size: r.size, createdAt: r.createdAt }))
+      })),
+      total
+    });
+  } catch (err) {
+    console.error('[admin/writing100-list] 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// ─────────────────────────────────────────────────────
+// 🎙️ 쓰기문해 녹음 파일 · 관리자 다운로드
+// ─────────────────────────────────────────────────────
+// 특정 학생·단원의 녹음 목록 조회
+app.get('/api/admin/writing100-recordings', requireAdminLogin, async (req, res) => {
+  try {
+    const acFilter = getAdminAcademyFilter(req);
+    if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
+    const q = { grade, name };
+    if (acFilter) q.academyName = acFilter.academyName;
+    const docs = await Writing100Submission.find(q, {
+      day: 1, unit: 1, topic: 1, recordings: 1
+    }).sort({ day: 1 }).lean();
+    res.json({ ok: true, records: docs.map(d => ({
+      day: d.day, unit: d.unit, topic: d.topic,
+      recordings: (d.recordings || []).map(r => ({
+        part: r.part, size: r.size, createdAt: r.createdAt,
+        filename: r.filename
+      }))
+    })) });
+  } catch (err) {
+    console.error('[wr100-recordings]', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 개별 녹음 다운로드
+app.get('/api/admin/writing100-recording-download', requireAdminLogin, async (req, res) => {
+  const path = require('path');
+  const fs = require('fs');
+  try {
+    const acFilter = getAdminAcademyFilter(req);
+    if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
+    const { grade, name, unit, filename } = req.query;
+    if (!grade || !name || !unit || !filename) {
+      return res.status(400).json({ ok: false, message: '파라미터 부족' });
+    }
+    const q = { grade, name, unit };
+    if (acFilter) q.academyName = acFilter.academyName;
+    const doc = await Writing100Submission.findOne(q).lean();
+    if (!doc) return res.status(404).json({ ok: false, message: '기록 없음' });
+    const rec = (doc.recordings || []).find(r => r.filename === filename);
+    if (!rec) return res.status(404).json({ ok: false, message: '녹음 없음' });
+    const filepath = path.join(__dirname, 'uploads', rec.filename);
+    if (!fs.existsSync(filepath)) return res.status(404).json({ ok: false, message: '파일 없음' });
+    // 실제 다운로드 파일명
+    const safeUnit = unit.replace(/[^\w]/g, '');
+    const downloadName = `${grade}_${name}_${safeUnit}_${rec.part}.mp4`;
+    res.download(filepath, downloadName);
+  } catch (err) {
+    console.error('[wr100-recording-download]', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 특정 학생 전체 녹음 zip 다운로드
+app.get('/api/admin/writing100-student-zip', requireAdminLogin, async (req, res) => {
+  const path = require('path');
+  const fs = require('fs');
+  try {
+    const acFilter = getAdminAcademyFilter(req);
+    if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
+    const q = { grade, name };
+    if (acFilter) q.academyName = acFilter.academyName;
+    const docs = await Writing100Submission.find(q, {
+      day: 1, unit: 1, topic: 1, recordings: 1
+    }).sort({ day: 1 }).lean();
+    // 대상 파일 수 카운트
+    let fileCount = 0;
+    docs.forEach(d => { fileCount += (d.recordings || []).length; });
+    if (fileCount === 0) return res.status(404).json({ ok: false, message: '녹음 파일 없음' });
+
+    const archiver = require('archiver');
+    const zipName = `${grade}_${name}_녹음전체.zip`;
+    res.set('Content-Type', 'application/zip');
+    res.set('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(zipName)}`);
+    const zip = archiver('zip', { zlib: { level: 6 } });
+    zip.on('warning', w => console.warn('[zip warn]', w));
+    zip.on('error', err => { console.error(err); res.status(500).end(); });
+    zip.pipe(res);
+    for (const d of docs) {
+      for (const rec of (d.recordings || [])) {
+        const filepath = path.join(__dirname, 'uploads', rec.filename);
+        if (fs.existsSync(filepath)) {
+          const dayLabel = `Day${String(d.day).padStart(3, '0')}` + (d.topic ? `_${d.topic}` : '');
+          const safeDayLabel = dayLabel.replace(/[^\w가-힣]/g, '_');
+          const entryName = `${safeDayLabel}/${rec.part}.mp4`;
+          zip.file(filepath, { name: entryName });
+        }
+      }
+    }
+    await zip.finalize();
+  } catch (err) {
+    console.error('[wr100-student-zip]', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 6개월 자동 삭제 스케줄러 (매일 03:15 KST)
+cron.schedule('15 3 * * *', async () => {
+  const path = require('path');
+  const fsp = require('fs').promises;
+  try {
+    const SIX_MONTHS_MS = 6 * 30 * 24 * 60 * 60 * 1000;
+    const cutoff = new Date(Date.now() - SIX_MONTHS_MS);
+    const docs = await Writing100Submission.find({ 'recordings.createdAt': { $lt: cutoff } });
+    let deleted = 0;
+    for (const doc of docs) {
+      const kept = [];
+      for (const rec of doc.recordings) {
+        if (new Date(rec.createdAt) < cutoff) {
+          const fp = path.join(__dirname, 'uploads', rec.filename);
+          try { await fsp.unlink(fp); deleted++; } catch {}
+        } else kept.push(rec);
+      }
+      doc.recordings = kept;
+      await doc.save();
+    }
+    if (deleted > 0) console.log(`✅ [녹음 6개월 정리] 삭제 ${deleted}개`);
+  } catch (err) {
+    console.error('[녹음 6개월 정리]', err);
+  }
+}, { timezone: 'Asia/Seoul' });
 
 // 관리자: 특정 학생의 비평 제출 내역 전체 (월 무관)
 app.get('/api/admin/critique-student-detail', requireAdminLogin, async (req, res) => {
