@@ -17,14 +17,14 @@
     overflow-x: hidden;
     position: relative;
   }
-  /* 시즌1 배경 이미지 워시 (미묘) */
+  /* 100day 공통 배경 이미지 워시 (미묘) */
   body::before {
     content: '';
     position: fixed;
     inset: -20px;   /* blur 경계선 감춤 */
-    background: url('../images/시즌1배경.jpg') center/cover no-repeat;
-    filter: blur(6px);
-    opacity: 0.13;
+    background: url('../images/100day/day공통배경.jpg') center/cover no-repeat;
+    filter: blur(2px);
+    opacity: 0.40;
     z-index: 0;
     pointer-events: none;
   }
@@ -133,9 +133,31 @@
     padding: 24px 26px;
     margin-bottom: 16px;
   }
+  .paragraph-view.stage1-para {
+    background-color: #fffbf0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding: 22px 26px;
+    position: relative;
+    aspect-ratio: 4 / 3;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+  }
+  .paragraph-view.stage1-para .para-bottom {
+    margin-top: auto;
+  }
   .paragraph-view h3 {
     font-size: 17px; color: #f57c00; margin-bottom: 14px;
     display: flex; align-items: center; gap: 8px;
+  }
+  .paragraph-view.stage1-para h3 {
+    display: inline-flex;
+    background: rgba(255,255,255,0.80);
+    padding: 6px 14px 6px 8px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
   .paragraph-view h3 .p-num {
     background: #ff8b3d; color: white; padding: 2px 10px; border-radius: 10px; font-size: 13px;
@@ -143,6 +165,13 @@
   .passage-text {
     font-size: 20px; line-height: 2.0; color: #2b3a4a;
     word-break: keep-all;
+  }
+  .stage1-para .passage-text {
+    background: rgba(255,255,255,0.75);
+    padding: 16px 18px;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+    margin-top: 10px;
   }
   .passage-text .word {
     display: inline-block;
@@ -173,6 +202,14 @@
   }
   .read-progress {
     font-size: 13px; color: #7a8fa4; margin-top: 10px;
+  }
+  .stage1-para .read-progress {
+    color: #55697c; margin-top: 12px;
+    background: rgba(255,255,255,0.80);
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
   .center-quiz {
     background: #eef6ff;
@@ -1132,8 +1169,20 @@ const STATE = {
     wordApply: { correct: 0, attempts: 0 },   // 4단계 단어활용
     sentence:  { correct: 0, attempts: 0 },   // 5단계 문장학습
     paraOrder: { correct: 0, attempts: 0 }    // 6단계 문단순서
+  },
+  wrongAnswers: {
+    vocab: [],
+    word: [],
+    wordApply: [],
+    sentence: [],
+    paraOrder: []
   }
 };
+/* 이번 세션의 오답을 스테이지별 배열에 push (bumpAccuracy 호출 지점에서 함께 사용) */
+function recordWrong(key, detail) {
+  const arr = STATE.wrongAnswers[key];
+  if (Array.isArray(arr)) arr.push(detail);
+}
 
 /* stageIdx (markDoneAndNext에 전달되는 값) → 정답률 키 매핑 */
 const STAGE_ACC_KEY  = { 0: 'vocab', 2: 'word', 3: 'wordApply', 4: 'sentence', 5: 'paraOrder' };
@@ -1539,6 +1588,7 @@ function drawVocabQuestion(state, card) {
     btn.addEventListener('click', () => {
       const isCorrect = btn.dataset.word === correct.word;
       bumpAccuracy('vocab', isCorrect);
+      if (!isCorrect) recordWrong('vocab', { idx: state.qIdx, meaning: correct.meaning, chosen: btn.dataset.word, correct: correct.word });
       if (isCorrect) {
         btn.classList.add('correct');
         block.querySelectorAll('.vq-card').forEach(b => b.disabled = true);
@@ -1607,11 +1657,14 @@ function drawStage1Para(st) {
     options[i] = (i === correctIdx) ? correctText : distractors[dIdx++];
   }
 
+  const paraImgSrc = `../images/100day/${DATA.day}day_${String(st.pIdx + 1).padStart(2, '0')}.jpg`;
   body.innerHTML = `
-    <div class="paragraph-view">
+    <div class="paragraph-view stage1-para" style="background-image:url('${paraImgSrc}')">
       <h3><span class="p-num">${st.pIdx + 1}문단</span> ${p.title}</h3>
-      <div class="passage-text" id="passageText">${wordSpans}</div>
-      <div class="read-progress" id="readProg">어절을 하나씩 눌러서 읽어 봐요 · 0 / ${words.length}</div>
+      <div class="para-bottom">
+        <div class="passage-text" id="passageText">${wordSpans}</div>
+        <div class="read-progress" id="readProg">어절을 하나씩 눌러서 읽어 봐요 · 0 / ${words.length}</div>
+      </div>
     </div>
     <div class="center-quiz" id="centerQuiz" style="display:none">
       <h4>💡 이 문단의 중심 내용은 무엇일까요?</h4>
@@ -2054,6 +2107,13 @@ function drawStage2Para(state) {
       if (zone.classList.contains('filled')) return;
       const isCorrect = chip.dataset.val === zone.dataset.ans;
       bumpAccuracy('word', isCorrect);
+      if (!isCorrect) {
+        const siEl = zone.closest('.drag-sentence');
+        const si = siEl ? parseInt(siEl.dataset.si, 10) : -1;
+        const sObj = si >= 0 ? DATA.stage2[si] : null;
+        const full = sObj ? (sObj.text[0] + '___' + (sObj.text[1] || '')) : '';
+        recordWrong('word', { idx: si, sentence: full, chosen: chip.dataset.val, correct: zone.dataset.ans });
+      }
       if (isCorrect) {
         zone.textContent = chip.dataset.val;
         zone.classList.add('filled');
@@ -2148,6 +2208,14 @@ function drawStage3Para(state) {
       if (zone.classList.contains('filled')) return;
       const isCorrect = chip.dataset.val === zone.dataset.ans;
       bumpAccuracy('wordApply', isCorrect);
+      if (!isCorrect) {
+        const siEl = zone.closest('.drag-sentence');
+        const shuffledIdx = siEl ? parseInt(siEl.dataset.si, 10) : -1;
+        const realIdx = shuffledIdx >= 0 ? state.order[shuffledIdx] : -1;
+        const sObj = realIdx >= 0 ? DATA.stage3[realIdx] : null;
+        const full = sObj ? (sObj.text[0] + '___' + (sObj.text[1] || '')) : '';
+        recordWrong('wordApply', { idx: realIdx, sentence: full, chosen: chip.dataset.val, correct: zone.dataset.ans });
+      }
       if (isCorrect) {
         zone.textContent = chip.dataset.val;
         zone.classList.add('filled');
@@ -2330,14 +2398,14 @@ function renderStage4(card) {
     </div>
     <div class="paragraph-view" style="padding:28px 34px">
       <h3 style="margin-bottom:18px"><span class="p-num">지문</span> 빠진 문장을 채워 완성해 봐요</h3>
-      <div class="passage-flow" style="font-size:17px;line-height:2.0;color:#2b3a4a">
+      <div class="passage-flow" style="font-size:17px;line-height:1.65;color:#2b3a4a">
         ${DATA.paragraphs.map((p, i) => {
           const blankIdx = DATA.stage4Blanks[i];
           const sentsHtml = p.sentences.map((s, si) => {
             if (si === blankIdx) {
               return `<div class="s4-blank word-blank" data-pi="${i}" data-ans="${s.replace(/"/g,'&quot;')}" style="display:block;min-height:54px;width:100%;padding:14px 18px;text-align:center;line-height:1.6;margin:8px 0;white-space:normal"></div>`;
             }
-            return `<div style="padding:6px 4px">${s}</div>`;
+            return `<div style="padding:2px 4px">${s}</div>`;
           }).join('');
           const isLast = i === DATA.paragraphs.length - 1;
           return `<div class="pf-para" style="margin-bottom:${isLast ? 0 : 22}px">${sentsHtml}</div>`;
@@ -2366,6 +2434,10 @@ function renderStage4(card) {
       if (zone.classList.contains('filled')) return;
       const isCorrect = chip.dataset.val === zone.dataset.ans;
       bumpAccuracy('sentence', isCorrect);
+      if (!isCorrect) {
+        const pi = parseInt(zone.dataset.pi, 10);
+        recordWrong('sentence', { paraIdx: pi, paraTitle: (DATA.paragraphs[pi] && DATA.paragraphs[pi].title) || '', chosen: chip.dataset.val, correct: zone.dataset.ans });
+      }
       if (isCorrect) {
         zone.textContent = chip.dataset.val;
         zone.classList.add('filled');
@@ -2445,6 +2517,17 @@ function renderStage6(card) {
       if (zone.classList.contains('filled')) return;
       const isCorrect = chip.dataset.pi === zone.dataset.pi;
       bumpAccuracy('paraOrder', isCorrect);
+      if (!isCorrect) {
+        const chosenPi = parseInt(chip.dataset.pi, 10);
+        const correctPi = parseInt(zone.dataset.pi, 10);
+        const chosenP = DATA.paragraphs[chosenPi];
+        const correctP = DATA.paragraphs[correctPi];
+        recordWrong('paraOrder', {
+          slotIdx: correctPi,
+          chosenTitle: (chosenP && chosenP.title) || '',
+          correctTitle: (correctP && correctP.title) || ''
+        });
+      }
       if (isCorrect) {
         const p = DATA.paragraphs[parseInt(zone.dataset.pi, 10)];
         zone.querySelector('.slot-content').innerHTML = `<b>${p.title}</b> — ${p.sentences[0]}`;
@@ -2652,37 +2735,112 @@ async function doPdf() {
     q: q.q, a: document.getElementById(`qInput${i}`).value.trim()
   }));
   const composed = document.getElementById('aiText').textContent;
-  const tmp = document.createElement('div');
-  tmp.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;padding:30px;background:white;font-family:Nanum Gothic,sans-serif;color:#2b3a4a';
-  tmp.innerHTML = `
-    <h2 style="color:#f57c00;border-bottom:2px solid #f57c00;padding-bottom:8px">Day ${DATA.day} · ${DATA.topic} · ${DATA.writingType} 필사지</h2>
-    <div style="margin-top:16px">
+  const WIDTH = 794;
+  const BG_CSS = "background:linear-gradient(135deg,#fff8e7 0%,#fef3d0 45%,#ffe8c9 100%);";
+  const containers = [];
+  function makeSection(padTop, padBot, htmlInner) {
+    const n = document.createElement('div');
+    n.style.cssText = "position:fixed;left:-10000px;top:0;width:" + WIDTH + "px;padding:" + padTop + "px 52px " + padBot + "px 52px;box-sizing:border-box;" + BG_CSS + "font-family:'Nanum Gothic','Pretendard',sans-serif;color:#2b3a4a;";
+    n.innerHTML = htmlInner;
+    document.body.appendChild(n);
+    containers.push(n);
+  }
+  // 1) 헤더
+  makeSection(46, 4, `
+    <div style="text-align:right;color:#c69353;font-size:11px;letter-spacing:1px;font-weight:600;margin-bottom:10px;">🌱 브레인문 · 쓰기문해</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <span style="background:linear-gradient(135deg,#ff8b3d,#ff6f00);color:#fff;padding:6px 18px;border-radius:22px;font-size:14px;font-weight:800;box-shadow:0 3px 8px rgba(255,111,0,0.3)">Day ${DATA.day}</span>
+      <span style="background:#fff2d1;color:#d05a1a;padding:6px 16px;border-radius:22px;font-size:13px;font-weight:700;border:1.5px solid #ffcc80">${DATA.writingType}</span>
+      <span style="background:#e1f5fe;color:#0277bd;padding:6px 14px;border-radius:22px;font-size:12px;font-weight:600">${DATA.subField || ''}</span>
+    </div>
+    <h1 style="color:#e65100;font-size:30px;margin:0 0 8px 0;font-weight:900;letter-spacing:-0.5px">✍️ ${DATA.topic}</h1>
+    <div style="height:5px;background:linear-gradient(90deg,#ff8b3d 0%,#ffb74d 40%,#fff2d1 80%,transparent 100%);border-radius:3px"></div>
+  `);
+  // 2) 내가 쓴 답 카드
+  makeSection(16, 4, `
+    <div style="background:rgba(255,255,255,0.88);border-radius:18px;padding:22px 26px;box-shadow:0 6px 18px rgba(0,0,0,0.06);border:1px solid rgba(255,183,77,0.35)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <span style="background:#ff8b3d;color:#fff;padding:5px 14px;border-radius:14px;font-size:13px;font-weight:800">📝 내가 쓴 답</span>
+        <span style="color:#d05a1a;font-size:13px;font-weight:600">다섯 가지 질문에 답한 내용</span>
+      </div>
       ${ans.map((x, i) => `
-        <div style="margin-bottom:12px">
-          <div style="color:#333;font-weight:700">Q${i+1}. ${x.q}</div>
-          <div style="color:#555;margin-top:4px">${x.a}</div>
+        <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed #ffcc80">
+          <div style="color:#e65100;font-weight:800;font-size:14px;margin-bottom:6px">Q${i+1}. ${x.q}</div>
+          <div style="color:#425466;font-size:15px;line-height:1.7">${x.a || '<span style=\"color:#bbb\">(답을 입력해요)</span>'}</div>
         </div>
       `).join('')}
     </div>
-    <hr style="margin:24px 0;border-top:2px dashed #ccc">
-    <h3 style="color:#6a1b9a">완성된 글</h3>
-    <div style="margin-top:10px;padding:16px;border:1px solid #ce93d8;border-radius:8px;line-height:1.9;white-space:pre-wrap">${composed}</div>
-    <div style="margin-top:20px;padding:20px;border:2px dashed #999;min-height:200px">
-      <div style="color:#999">✏️ 여기에 필사해요</div>
+  `);
+  // 3) 완성된 글 카드
+  makeSection(16, 4, `
+    <div style="background:rgba(255,255,255,0.92);border:2px solid #ce93d8;border-radius:18px;padding:22px 26px;box-shadow:0 6px 18px rgba(142,36,170,0.10)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <span style="background:linear-gradient(135deg,#ab47bc,#8e24aa);color:#fff;padding:5px 14px;border-radius:14px;font-size:13px;font-weight:800;box-shadow:0 3px 8px rgba(142,36,170,0.25)">✨ 완성된 글</span>
+        <span style="color:#6a1b9a;font-size:13px;font-weight:600">AI가 다듬은 나의 글</span>
+      </div>
+      <div style="color:#2b3a4a;font-size:16px;line-height:1.9;white-space:pre-wrap;padding:4px 2px">${composed}</div>
     </div>
-  `;
-  document.body.appendChild(tmp);
+  `);
+  // 4) 필사 노트 카드
+  makeSection(16, 4, `
+    <div style="background:rgba(255,255,255,0.88);border-radius:18px;padding:22px 26px;box-shadow:0 6px 18px rgba(0,0,0,0.06);border:1px solid rgba(76,175,80,0.3)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <span style="background:linear-gradient(135deg,#66bb6a,#43a047);color:#fff;padding:5px 14px;border-radius:14px;font-size:13px;font-weight:800;box-shadow:0 3px 8px rgba(76,175,80,0.25)">✏️ 필사 노트</span>
+        <span style="color:#2e7d32;font-size:13px;font-weight:600">완성된 글을 예쁘게 옮겨 써 봐요</span>
+      </div>
+      <div style="
+        background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 52px, #8ba9bd 52px, #8ba9bd 53.5px);
+        min-height: 520px;
+        border-radius: 8px;
+        padding: 8px 6px;
+      "></div>
+    </div>
+  `);
+  // 5) 하단 워터마크
+  makeSection(16, 42, `
+    <div style="text-align:center;color:#8a9db5;font-size:11px;letter-spacing:1px;font-weight:500">
+      🌱 브레인문 학원 · 100일 쓰기문해 여정 · Day ${DATA.day}
+    </div>
+  `);
   try {
-    const canvas = await html2canvas(tmp, { scale: 2 });
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const w = 210, h = canvas.height * w / canvas.width;
-    pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, w, Math.min(h, 297));
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = 210, pageH = 297;
+    const imgW = pageW;
+    const fillBg = () => {
+      pdf.setFillColor(255, 248, 231);
+      pdf.rect(0, 0, pageW, pageH, 'F');
+    };
+    fillBg();
+    let cursorMm = 0;
+    for (const node of containers) {
+      const canvas = await html2canvas(node, { scale: 2, backgroundColor: null, useCORS: true, logging: false });
+      const imgH = canvas.height * imgW / canvas.width;
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
+      if (imgH > pageH) {
+        if (cursorMm !== 0) { pdf.addPage(); fillBg(); cursorMm = 0; }
+        let remaining = imgH, offset = 0;
+        while (remaining > 0) {
+          pdf.addImage(dataUrl, 'JPEG', 0, -offset, imgW, imgH);
+          remaining -= pageH;
+          offset += pageH;
+          if (remaining > 0) { pdf.addPage(); fillBg(); }
+        }
+        cursorMm = 0;
+        pdf.addPage(); fillBg();
+        continue;
+      }
+      if (cursorMm + imgH > pageH) {
+        pdf.addPage(); fillBg(); cursorMm = 0;
+      }
+      pdf.addImage(dataUrl, 'JPEG', 0, cursorMm, imgW, imgH);
+      cursorMm += imgH;
+    }
     pdf.save(`Day${DATA.day}_${DATA.topic}_필사지.pdf`);
   } catch (e) {
     alert('PDF 저장 실패: ' + e.message);
   } finally {
-    tmp.remove();
+    containers.forEach(n => n.parentNode && n.parentNode.removeChild(n));
   }
 }
 
@@ -2715,6 +2873,7 @@ async function saveProgress() {
     stagesDone: STATE.stageDone,
     readingElapsedMs: STATE.readingElapsedMs,
     accuracies,
+    wrongAnswers: STATE.wrongAnswers,
     writing: DATA.writing.questions.map((q, i) => ({
       q: q.q,
       a: (document.getElementById(`qInput${i}`) || {}).value || ''

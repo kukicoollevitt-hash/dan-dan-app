@@ -41033,7 +41033,7 @@ ${qaLines}
 // ─────────────────────────────────────────────────────
 app.post('/api/writing100/save-progress', async (req, res) => {
   try {
-    const { grade, name, day, unit, topic, stagesDone, accuracies, writing, composed, readingElapsedMs } = req.body || {};
+    const { grade, name, day, unit, topic, stagesDone, accuracies, wrongAnswers, writing, composed, readingElapsedMs } = req.body || {};
     if (!grade || !name || !unit) {
       return res.status(400).json({ ok: false, message: '학생/단원 정보 필요' });
     }
@@ -41041,6 +41041,7 @@ app.post('/api/writing100/save-progress', async (req, res) => {
 
     /* 재학습 시 "최고 기록만 유지" 병합 로직
        · accuracies: 정답률(pct) 높은 쪽 유지 (스테이지별)
+       · wrongAnswers: 채택된 accuracies 쪽의 오답 상세와 함께 유지
        · stagesDone:  한 번이라도 완료(true)면 유지 (OR 병합)
        · readingElapsedMs: 실제로 읽은 값 중 짧은 쪽 유지
        · writing / composed: 최신 것으로 갱신 (학생 최근 표현이 반영)          */
@@ -41048,20 +41049,40 @@ app.post('/api/writing100/save-progress', async (req, res) => {
     let mergedAccuracies = accuracies || {};
     let mergedStagesDone = Array.isArray(stagesDone) ? stagesDone : [];
     let mergedReadingMs = Number(readingElapsedMs) || 0;
+    const newWrong = (wrongAnswers && typeof wrongAnswers === 'object') ? wrongAnswers : {};
+    let mergedWrong = {
+      vocab: Array.isArray(newWrong.vocab) ? newWrong.vocab : [],
+      word: Array.isArray(newWrong.word) ? newWrong.word : [],
+      wordApply: Array.isArray(newWrong.wordApply) ? newWrong.wordApply : [],
+      sentence: Array.isArray(newWrong.sentence) ? newWrong.sentence : [],
+      paraOrder: Array.isArray(newWrong.paraOrder) ? newWrong.paraOrder : []
+    };
 
     if (existing) {
-      /* accuracies · 스테이지별 pct 비교하여 큰 쪽 채택 */
+      /* accuracies · 스테이지별 pct 비교하여 큰 쪽 채택 · total은 스테이지 5개만 병합 후 재계산
+         wrongAnswers는 accuracies에서 채택된 쪽(더 잘한 시도)을 함께 유지 */
+      const STAGE_KEYS = ['vocab', 'word', 'wordApply', 'sentence', 'paraOrder'];
       const existingAcc = existing.accuracies || {};
-      const keys = new Set([...Object.keys(existingAcc), ...Object.keys(mergedAccuracies)]);
+      const existingWrong = existing.wrongAnswers || {};
       const acc = {};
-      for (const k of keys) {
+      const wrong = {};
+      for (const k of STAGE_KEYS) {
         const oldA = existingAcc[k];
         const newA = mergedAccuracies[k];
-        if (!oldA) { acc[k] = newA; continue; }
-        if (!newA) { acc[k] = oldA; continue; }
-        acc[k] = (Number(newA.pct) >= Number(oldA.pct)) ? newA : oldA;
+        const oldW = Array.isArray(existingWrong[k]) ? existingWrong[k] : [];
+        const newW = Array.isArray(mergedWrong[k]) ? mergedWrong[k] : [];
+        if (!oldA) { if (newA) { acc[k] = newA; wrong[k] = newW; } else { wrong[k] = []; } continue; }
+        if (!newA) { acc[k] = oldA; wrong[k] = oldW; continue; }
+        if (Number(newA.pct) >= Number(oldA.pct)) {
+          acc[k] = newA;
+          wrong[k] = newW;
+        } else {
+          acc[k] = oldA;
+          wrong[k] = oldW;
+        }
       }
       mergedAccuracies = acc;
+      mergedWrong = wrong;
 
       /* stagesDone · OR 병합 (기존 완료 스테이지는 계속 완료) */
       const oldStages = Array.isArray(existing.stagesDone) ? existing.stagesDone : [];
@@ -41079,6 +41100,24 @@ app.post('/api/writing100/save-progress', async (req, res) => {
       }
     }
 
+    /* total · 항상 최종 스테이지 accuracies로부터 재계산 (신규 저장이든 병합 이후든 정확 유지) */
+    {
+      const STAGE_KEYS = ['vocab', 'word', 'wordApply', 'sentence', 'paraOrder'];
+      let totC = 0, totA = 0;
+      for (const k of STAGE_KEYS) {
+        const a = mergedAccuracies[k];
+        if (a) {
+          totC += Number(a.correct)  || 0;
+          totA += Number(a.attempts) || 0;
+        }
+      }
+      mergedAccuracies.total = {
+        correct: totC,
+        attempts: totA,
+        pct: totA > 0 ? Math.round((totC / totA) * 100) : 0
+      };
+    }
+
     const doc = await Writing100Submission.findOneAndUpdate(
       { grade, name, unit },
       {
@@ -41091,6 +41130,7 @@ app.post('/api/writing100/save-progress', async (req, res) => {
           stagesDone: mergedStagesDone,
           readingElapsedMs: mergedReadingMs,
           accuracies: mergedAccuracies,
+          wrongAnswers: mergedWrong,
           writing: Array.isArray(writing) ? writing : [],
           composed: composed || '',
           updatedAt: new Date()
@@ -41122,8 +41162,28 @@ app.get('/api/writing100/report', async (req, res) => {
     const docs = await Writing100Submission.find({ grade, name }, {
       day: 1, unit: 1, topic: 1, accuracies: 1, stagesDone: 1,
       firstCompletedAt: 1, updatedAt: 1,
-      writing: 1, composed: 1
+      writing: 1, composed: 1, wrongAnswers: 1
     }).sort({ day: 1 }).lean();
+
+    // 과거에 잘못 저장된 total도 실시간으로 스테이지 값에서 재계산해서 반환
+    const STAGE_KEYS = ['vocab', 'word', 'wordApply', 'sentence', 'paraOrder'];
+    docs.forEach(r => {
+      if (!r.accuracies) return;
+      let totC = 0, totA = 0;
+      for (const k of STAGE_KEYS) {
+        const a = r.accuracies[k];
+        if (a) {
+          totC += Number(a.correct)  || 0;
+          totA += Number(a.attempts) || 0;
+        }
+      }
+      r.accuracies.total = {
+        correct: totC,
+        attempts: totA,
+        pct: totA > 0 ? Math.round((totC / totA) * 100) : 0
+      };
+    });
+
     res.json({ ok: true, records: docs });
   } catch (err) {
     console.error('[writing100] report:', err && err.message);
