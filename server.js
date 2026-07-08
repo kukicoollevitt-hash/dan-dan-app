@@ -1225,6 +1225,24 @@ function getAdminRegistrationName(source) {
   return getAdminDisplayName(source);
 }
 
+// ✅ 진단테스트/수강신청 branchName 필터 · 본명+별칭 모두 regex 매칭 ($or)
+//   · 세션 캐시가 오래됐을 수 있어 DB에서 최신 조회
+async function buildBranchNameFilter(req) {
+  if (!req.session || !req.session.admin) return null;
+  const admin = req.session.admin;
+  let names = [admin.academyName].filter(Boolean);
+  try {
+    if (admin.id) {
+      const fresh = await Admin.findById(admin.id).select('academyName academyAliases').lean();
+      if (fresh) names = getAdminAcademyNames(fresh);
+    }
+  } catch {}
+  const esc = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const clauses = names.map(n => ({ branchName: { $regex: esc(n), $options: 'i' } }));
+  if (clauses.length === 0) return null;
+  return clauses.length === 1 ? clauses[0] : { $or: clauses };
+}
+
 // ===== 월별 학원 학생수 스냅샷 (월말 cron이 기록) =====
 const monthlyStudentSnapshotSchema = new mongoose.Schema({
   academyName: { type: String, required: true, index: true },
@@ -33429,10 +33447,9 @@ app.get("/api/admin/diagnostic-tests", async (req, res) => {
     const adminGrade = req.session.admin.grade;
     const adminClassNum = req.session.admin.classNum;
 
-    // 지점명으로 필터링하여 조회 (지점명에 academyName이 포함된 경우 매칭)
-    const filter = {
-      branchName: { $regex: academyName, $options: 'i' }
-    };
+    // 지점명으로 필터링 · 본명+별칭 모두 허용
+    const branchFilter = await buildBranchNameFilter(req);
+    const filter = { ...(branchFilter || {}) };
 
     // ✅ "전체" 학년 선택 시 학년 필터링 건너뛰기 (해당 학교 전체 학년 표시)
     if (adminGrade && adminGrade !== "전체") {
@@ -33472,10 +33489,9 @@ app.get("/api/admin/course-applications", async (req, res) => {
     const adminGrade = req.session.admin.grade;
     const adminClassNum = req.session.admin.classNum;
 
-    // 지점명으로 필터링하여 조회 (지점명에 academyName이 포함된 경우 매칭)
-    const filter = {
-      branchName: { $regex: academyName, $options: 'i' }
-    };
+    // 지점명으로 필터링 · 본명+별칭 모두 허용
+    const branchFilter = await buildBranchNameFilter(req);
+    const filter = { ...(branchFilter || {}) };
 
     // ✅ "전체" 학년 선택 시 학년 필터링 건너뛰기
     if (adminGrade && adminGrade !== "전체") {
@@ -33483,13 +33499,21 @@ app.get("/api/admin/course-applications", async (req, res) => {
     }
 
     // ✅ 반 필터링: 기존 데이터는 studentClassNum이 없으므로, 해당 반이거나 빈 값인 경우 모두 포함
+    // branchFilter가 $or 를 이미 사용할 수 있어 $and 로 결합
     if (adminClassNum && adminClassNum !== "전체") {
-      filter.$or = [
+      const classClauses = [
         { studentClassNum: adminClassNum },
         { studentClassNum: { $exists: false } },
         { studentClassNum: '' },
         { studentClassNum: null }
       ];
+      if (filter.$or) {
+        // branchName $or 와 studentClassNum $or 결합 · $and 사용
+        filter.$and = [{ $or: filter.$or }, { $or: classClauses }];
+        delete filter.$or;
+      } else {
+        filter.$or = classClauses;
+      }
     }
 
     const applications = await CourseApplication.find(filter).sort({ createdAt: -1 });
@@ -33531,12 +33555,11 @@ app.delete("/api/admin/diagnostic-tests/delete-selected", async (req, res) => {
       return res.status(400).json({ success: false, message: "삭제할 항목을 선택해주세요." });
     }
 
-    const academyName = req.session.admin.academyName;
-
-    // 자신의 학교에 속한 항목만 삭제
+    // 자신의 학원(본명+별칭)에 속한 항목만 삭제
+    const branchFilter = await buildBranchNameFilter(req);
     const result = await DiagnosticTest.deleteMany({
       _id: { $in: ids },
-      branchName: { $regex: academyName, $options: 'i' }
+      ...(branchFilter || {})
     });
 
     res.json({ success: true, deletedCount: result.deletedCount });
@@ -33558,12 +33581,11 @@ app.delete("/api/admin/course-applications/delete-selected", async (req, res) =>
       return res.status(400).json({ success: false, message: "삭제할 항목을 선택해주세요." });
     }
 
-    const academyName = req.session.admin.academyName;
-
-    // 자신의 학교에 속한 항목만 삭제
+    // 자신의 학원(본명+별칭)에 속한 항목만 삭제
+    const branchFilter = await buildBranchNameFilter(req);
     const result = await CourseApplication.deleteMany({
       _id: { $in: ids },
-      branchName: { $regex: academyName, $options: 'i' }
+      ...(branchFilter || {})
     });
 
     res.json({ success: true, deletedCount: result.deletedCount });
