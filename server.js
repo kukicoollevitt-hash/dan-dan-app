@@ -3841,7 +3841,15 @@ app.get('/api/branch/over-snapshots', requireAdminLogin, async (req, res) => {
 
     // overThisMonth > 0 인 월만 조회 (최신월 먼저)
     // ※ 스냅샷은 본명 기준으로 저장되지만 학생 실체는 별칭에도 있을 수 있음
-    const academyNames = getAdminAcademyNames(sessionAdmin);
+    // 세션이 마이그레이션 이전이면 aliases 비어있을 수 있어 DB에서 최신 조회
+    let academyNames = [academyName];
+    try {
+      const adminId = sessionAdmin.id || (sessionAdmin._id && String(sessionAdmin._id));
+      if (adminId) {
+        const fresh = await Admin.findById(adminId).select('academyName academyAliases').lean();
+        if (fresh) academyNames = getAdminAcademyNames(fresh);
+      }
+    } catch {}
     const overSnapshots = await MonthlyStudentSnapshot.find({
       academyName,
       overThisMonth: { $gt: 0 }
@@ -31159,8 +31167,10 @@ async function runMonthlySnapshot(opts = {}) {
     }
 
     // 그 달 월말 시점의 현재 인원 (지금 카운트 — cron은 월말 직후 돌기 때문에 사실상 월말 카운트)
+    // 별칭이 있으면 본명 + 별칭 학생을 합산해 카운트
+    const countNames = getAdminAcademyNames(admin);
     const monthEndCount = await User.countDocuments({
-      academyName: admin.academyName,
+      academyName: { $in: countNames },
       userType: "academy",
       status: "approved",
       deleted: { $ne: true }
@@ -33373,11 +33383,17 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
     console.log("✅ 학원 학생 추가 완료:", newUser.name, "ID:", phone, "학원:", adminAcademyName);
 
     // 본사 SMS 알림 — 해당 학원의 현재 active 학생 수 포함 (비동기, 응답에 영향 X)
+    // 별칭이 있으면 통합 카운트 (본명 + 별칭 학생 모두 합산)
     (async () => {
       try {
+        let countNames = [adminAcademyName];
+        try {
+          const fresh = await Admin.findById(req.session.admin.id).select('academyName academyAliases').lean();
+          if (fresh) countNames = getAdminAcademyNames(fresh);
+        } catch {}
         const totalCount = await User.countDocuments({
           userType: 'academy',
-          academyName: adminAcademyName,
+          academyName: { $in: countNames },
           status: 'approved',
           deleted: { $ne: true }
         });
@@ -41524,17 +41540,35 @@ app.get('/api/kh/report', async (req, res) => {
 
 // ===================== 비평 및 특강 데이터 (관리자용) =====================
 // 학원 관리자: 자기 학원만 / 슈퍼관리자: 전체 (또는 viewingBranch 학원만)
-// 권한 헬퍼
-function getAdminAcademyFilter(req) {
+// 권한 헬퍼 · 별칭이 있으면 $in 으로 통합 조회
+// ⚠ async · 호출부에서 반드시 await
+async function getAdminAcademyFilter(req) {
   // 슈퍼관리자 조회 모드
   if (req.session && req.session.viewingBranch) {
-    return { academyName: req.session.viewingBranch.academyName };
+    const viewing = req.session.viewingBranch;
+    let names = [viewing.academyName].filter(Boolean);
+    try {
+      if (viewing._id) {
+        const fresh = await Admin.findById(viewing._id).select('academyName academyAliases').lean();
+        if (fresh) names = getAdminAcademyNames(fresh);
+      }
+    } catch {}
+    if (names.length === 0) return undefined;
+    return names.length > 1 ? { academyName: { $in: names } } : { academyName: names[0] };
   }
   if (req.session && req.session.admin) {
     const admin = req.session.admin;
     const isSuper = admin.role === 'super' || admin.isSuper === true;
     if (isSuper) return null; // 전체 허용
-    if (admin.academyName) return { academyName: admin.academyName };
+    if (!admin.academyName) return undefined;
+    let names = [admin.academyName];
+    try {
+      if (admin.id) {
+        const fresh = await Admin.findById(admin.id).select('academyName academyAliases').lean();
+        if (fresh) names = getAdminAcademyNames(fresh);
+      }
+    } catch {}
+    return names.length > 1 ? { academyName: { $in: names } } : { academyName: names[0] };
   }
   return undefined; // 미인증
 }
@@ -41542,7 +41576,7 @@ function getAdminAcademyFilter(req) {
 // 행 단위: 비평 1건 = 1행 (학생이 N일치 제출했으면 N행)
 app.get('/api/admin/critique-list', requireAdminLogin, async (req, res) => {
   try {
-    const acFilter = getAdminAcademyFilter(req);
+    const acFilter = await getAdminAcademyFilter(req);
     if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
 
     const { search, grade, academy, sort = 'date', dir = 'desc', limit = 10, offset = 0 } = req.query;
@@ -41606,7 +41640,7 @@ app.get('/api/admin/critique-list', requireAdminLogin, async (req, res) => {
 // 행 단위: 한국사 1단원 = 1행 (한 학생이 N단원 완료면 N행)
 app.get('/api/admin/kh-list', requireAdminLogin, async (req, res) => {
   try {
-    const acFilter = getAdminAcademyFilter(req);
+    const acFilter = await getAdminAcademyFilter(req);
     if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
 
     const { search, grade, academy, sort = 'date', dir = 'desc', limit = 10, offset = 0 } = req.query;
@@ -41696,7 +41730,7 @@ app.get('/api/admin/kh-list', requireAdminLogin, async (req, res) => {
 // 관리자: BRAIN입문 쓰기문해 (100일) 학생·단원별 제출 목록
 app.get('/api/admin/writing100-list', requireAdminLogin, async (req, res) => {
   try {
-    const acFilter = getAdminAcademyFilter(req);
+    const acFilter = await getAdminAcademyFilter(req);
     if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
 
     const { search, grade, academy, sort = 'date', dir = 'desc', limit = 10, offset = 0 } = req.query;
@@ -41761,7 +41795,7 @@ app.get('/api/admin/writing100-list', requireAdminLogin, async (req, res) => {
 // 특정 학생·단원의 녹음 목록 조회
 app.get('/api/admin/writing100-recordings', requireAdminLogin, async (req, res) => {
   try {
-    const acFilter = getAdminAcademyFilter(req);
+    const acFilter = await getAdminAcademyFilter(req);
     if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
     const { grade, name } = req.query;
     if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
@@ -41788,7 +41822,7 @@ app.get('/api/admin/writing100-recording-download', requireAdminLogin, async (re
   const path = require('path');
   const fs = require('fs');
   try {
-    const acFilter = getAdminAcademyFilter(req);
+    const acFilter = await getAdminAcademyFilter(req);
     if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
     const { grade, name, unit, filename } = req.query;
     if (!grade || !name || !unit || !filename) {
@@ -41817,7 +41851,7 @@ app.get('/api/admin/writing100-student-zip', requireAdminLogin, async (req, res)
   const path = require('path');
   const fs = require('fs');
   try {
-    const acFilter = getAdminAcademyFilter(req);
+    const acFilter = await getAdminAcademyFilter(req);
     if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
     const { grade, name } = req.query;
     if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
@@ -41886,7 +41920,7 @@ cron.schedule('15 3 * * *', async () => {
 // 관리자: 특정 학생의 비평 제출 내역 전체 (월 무관)
 app.get('/api/admin/critique-student-detail', requireAdminLogin, async (req, res) => {
   try {
-    const acFilter = getAdminAcademyFilter(req);
+    const acFilter = await getAdminAcademyFilter(req);
     if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
     const { grade, name } = req.query;
     if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
@@ -42183,7 +42217,7 @@ app.get('/api/kh-cert/detail', async (req, res) => {
 // 관리자: 예비검정시험 (5/4/3급) 응시 기록 목록
 app.get('/api/admin/kh-cert-list', requireAdminLogin, async (req, res) => {
   try {
-    const acFilter = getAdminAcademyFilter(req);
+    const acFilter = await getAdminAcademyFilter(req);
     if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
 
     const { search, grade, academy, level, sort = 'date', dir = 'desc', limit = 10, offset = 0 } = req.query;
@@ -42243,7 +42277,7 @@ app.get('/api/admin/kh-cert-list', requireAdminLogin, async (req, res) => {
 
 app.get('/api/admin/kh-exam-list', requireAdminLogin, async (req, res) => {
   try {
-    const acFilter = getAdminAcademyFilter(req);
+    const acFilter = await getAdminAcademyFilter(req);
     if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
 
     const { search, grade, academy, sort = 'date', dir = 'desc', limit = 10, offset = 0 } = req.query;
