@@ -558,9 +558,13 @@ app.post("/academy-admin-login", async (req, res) => {
     const { academyName, name, phone } = req.body;
     console.log("📥 [POST] /academy-admin-login:", { academyName, name, phone });
 
-    // DB에서 학원용 관리자 찾기
+    // DB에서 학원용 관리자 찾기 · academyName 본명·별칭(academyAliases)·신규등록명(newRegistrationName) 모두 허용
     const admin = await Admin.findOne({
-      academyName,
+      $or: [
+        { academyName },
+        { academyAliases: academyName },
+        { newRegistrationName: academyName }
+      ],
       name,
       phone,
       userType: "academy",
