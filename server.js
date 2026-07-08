@@ -3402,7 +3402,16 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
 
     // 🔥 학원용인 경우 academyName 필드로 필터링, 학교용인 경우 school 필드로 필터링
     // 별칭(academyAliases)이 있으면 함께 포함해 통합 조회 (본명 + 별칭)
-    const academyNames = getAdminAcademyNames(admin);
+    // ※ 세션이 마이그레이션 이전이면 aliases 비어있을 수 있어 DB에서 최신 조회
+    let adminSource = admin;
+    try {
+      const adminId = admin.id || (admin._id && String(admin._id));
+      if (adminId) {
+        const fresh = await Admin.findById(adminId).select('academyName academyAliases').lean();
+        if (fresh) adminSource = { academyName: fresh.academyName, academyAliases: fresh.academyAliases || [] };
+      }
+    } catch (e) {}
+    const academyNames = getAdminAcademyNames(adminSource);
     if (userType === "academy") {
       filter.academyName = academyNames.length > 1 ? { $in: academyNames } : academyName;
     } else {
@@ -3785,7 +3794,16 @@ app.post('/api/branch/hard-delete-user', requireAdminLogin, async (req, res) => 
     }
 
     // 학원 일치 + userType 일치 + 위 id 조건 중 하나 (본명 + 별칭 모두 허용)
-    const academyNames = getAdminAcademyNames(sessionAdmin);
+    // ※ 세션이 마이그레이션 이전이면 aliases 비어있을 수 있어 DB에서 최신 조회
+    let adminSource = sessionAdmin;
+    try {
+      const adminId = sessionAdmin.id || (sessionAdmin._id && String(sessionAdmin._id));
+      if (adminId) {
+        const fresh = await Admin.findById(adminId).select('academyName academyAliases').lean();
+        if (fresh) adminSource = { academyName: fresh.academyName, academyAliases: fresh.academyAliases || [] };
+      }
+    } catch (e) {}
+    const academyNames = getAdminAcademyNames(adminSource);
     const baseScope = (userType === 'academy')
       ? { academyName: { $in: academyNames }, userType: 'academy' }
       : { school: academyName };
@@ -33307,8 +33325,19 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
       return res.status(400).json({ success: false, message: "학년, 이름, 전화번호는 필수입니다." });
     }
 
-    // 관리자의 학원 정보 사용
-    const adminAcademyName = req.session.admin.academyName;
+    // 관리자 · 신규 등록명(newRegistrationName)이 세팅되어 있으면 그 이름으로 저장
+    // 세션은 오래되었을 수 있어 DB에서 최신 조회
+    let adminAcademyName = req.session.admin.academyName;
+    try {
+      const freshAdmin = await Admin.findById(req.session.admin.id).select('academyName newRegistrationName').lean();
+      if (freshAdmin) {
+        adminAcademyName = (freshAdmin.newRegistrationName && freshAdmin.newRegistrationName.trim())
+          || freshAdmin.academyName
+          || adminAcademyName;
+      }
+    } catch (e) {
+      console.warn('[add-student] Admin 최신 조회 실패, 세션 값 사용:', e && e.message);
+    }
 
     // 초과 인원도 추가 허용 (추가금 부과 정책 — 월말 cron이 누적/초과 산정)
 
