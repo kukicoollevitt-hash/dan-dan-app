@@ -37261,14 +37261,19 @@ ${content}
       top: -60px;
       right: -110px;
     }
-    /* 시즌2~5 잠수함·루돌프·우주선·구름 · 축소(100) */
+    /* 시즌2·4·5 잠수함·우주선·구름 · 축소(100) */
     .jchapter[data-c="2"] .jnode-balloon,
-    .jchapter[data-c="3"] .jnode-balloon,
     .jchapter[data-c="4"] .jnode-balloon,
     .jchapter[data-c="5"] .jnode-balloon {
       width: 100px; height: 100px;
       top: -32px;
       right: -60px;
+    }
+    /* 시즌3 루돌프 · 조금 더 크게(150) + 우측으로 이동해 DAY 숫자 노출 */
+    .jchapter[data-c="3"] .jnode-balloon {
+      width: 150px; height: 150px;
+      top: -48px;
+      right: -130px;
     }
     .jnode.jcurrent .jnode-balloon {
       /* balloonFloat 이 transform 담당 → 반드시 마지막 · balloonAppear 제거 (덮어씀 방지) */
@@ -37971,12 +37976,12 @@ ${content}
         const cRect = container.getBoundingClientRect();
         const fRect = fromNode.getBoundingClientRect();
         const tRect = toNode.getBoundingClientRect();
-        // 시즌별 아이콘 크기·위치 (시즌1 열기구 186 · 시즌2~5 나머지 100)
+        // 시즌별 아이콘 크기·위치 (시즌1 열기구 186 · 시즌3 루돌프 150 · 나머지 100)
         const toSeason = seasonOf(toDay);
-        const isSeason1 = toSeason === 1;
-        const balloonSize = isSeason1 ? 186 : 100;
-        const rightOffset = isSeason1 ? 110 : 60;
-        const topOffset   = isSeason1 ? 60  : 32;
+        let balloonSize, rightOffset, topOffset;
+        if (toSeason === 1)      { balloonSize = 186; rightOffset = 110; topOffset = 60; }
+        else if (toSeason === 3) { balloonSize = 150; rightOffset = 130; topOffset = 48; }
+        else                     { balloonSize = 100; rightOffset = 60;  topOffset = 32; }
         const fx = fRect.right - cRect.left + rightOffset - balloonSize;
         const fy = fRect.top   - cRect.top  - topOffset;
         const tx = tRect.right - cRect.left + rightOffset - balloonSize;
@@ -39127,17 +39132,25 @@ ${content}
         }
       };
 
-      window.openWr100Modal = function () {
+      window.openWr100Modal = async function () {
         // 초3 김윤슬 화이트리스트만 접근 가능
         if (!isWr100Whitelisted()) {
           if (typeof showComingSoonPopup === 'function') showComingSoonPopup();
           return;
         }
-        renderGrid();
         const ov = document.getElementById('wr100ModalOverlay');
         ov.style.display = 'flex';
         ov.style.zIndex = '1000100';   // 헤더·관문레벨 위 (kh 모달과 동일)
         ov.dataset.bgMode = '';
+        await renderGrid();
+        // 오늘 학습할 Day 위치로 자동 스크롤 (진입 시에만)
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          const container = document.getElementById('wr100Chapters');
+          const currentNode = container && container.querySelector('.jnode.jcurrent');
+          if (currentNode && typeof currentNode.scrollIntoView === 'function') {
+            currentNode.scrollIntoView({ behavior: 'auto', block: 'center' });
+          }
+        }));
       };
       // 학습 유닛 닫을 때 그리드 재렌더 (완료 배지 갱신)용
       window.rerenderWr100Grid = renderGrid;

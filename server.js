@@ -591,6 +591,8 @@ app.post("/academy-admin-login", async (req, res) => {
     req.session.admin = {
       id: admin._id.toString(),
       academyName: admin.academyName,
+      academyAliases: Array.isArray(admin.academyAliases) ? admin.academyAliases : [],
+      newRegistrationName: admin.newRegistrationName || '',
       name: admin.name,
       role: admin.role || "teacher",
       userType: "academy",
@@ -793,11 +795,18 @@ app.get("/menu", (req, res) => {
 // ✅ 등록된 학원 목록 조회 API (학원용 로그인/회원가입용)
 app.get("/api/academies", async (req, res) => {
   try {
-    // Admin 테이블에서 학원용 academyName 목록 가져오기
-    const adminAcademies = await Admin.find({
+    // Admin 문서에서 academyName + academyAliases + newRegistrationName 모두 취합
+    const adminDocs = await Admin.find({
       deleted: { $ne: true },
       userType: "academy"
-    }).distinct("academyName");
+    }).select("academyName academyAliases newRegistrationName").lean();
+
+    const adminAcademies = [];
+    for (const a of adminDocs) {
+      if (a.academyName) adminAcademies.push(a.academyName);
+      if (Array.isArray(a.academyAliases)) adminAcademies.push(...a.academyAliases);
+      if (a.newRegistrationName) adminAcademies.push(a.newRegistrationName);
+    }
 
     // User 테이블에서 학원용 academyName 목록 가져오기
     const userAcademies = await User.find({
@@ -829,7 +838,7 @@ app.get("/api/academy/lookup", async (req, res) => {
     if (!/^[a-fA-F0-9]{24}$/.test(id)) {
       return res.json({ ok: false, message: "잘못된 id 형식" });
     }
-    const admin = await Admin.findById(id).select("academyName userType deleted").lean();
+    const admin = await Admin.findById(id).select("academyName academyAliases newRegistrationName userType deleted").lean();
     if (!admin || admin.deleted || admin.userType !== "academy") {
       return res.json({ ok: false, message: "존재하지 않거나 유효하지 않은 학원" });
     }
@@ -837,7 +846,9 @@ app.get("/api/academy/lookup", async (req, res) => {
     if (!academyName || academyName === "어드민") {
       return res.json({ ok: false, message: "학원명 없음 또는 유효하지 않음" });
     }
-    res.json({ ok: true, academyName });
+    // 진단테스트 프리필/저장에 사용할 표시명 · 신규 등록명 우선
+    const displayName = getAdminDisplayName(admin);
+    res.json({ ok: true, academyName: displayName });
   } catch (err) {
     console.error("❌ /api/academy/lookup 에러:", err);
     res.json({ ok: false, message: "조회 실패" });
@@ -1092,7 +1103,20 @@ const User = mongoose.model("User", userSchema);
 
 // ✅ 브랜치 관리자(학원장) / 슈퍼관리자 스키마
 const adminSchema = new mongoose.Schema({
-  academyName: { type: String, required: true }, // 학원명/지점명
+  academyName: { type: String, required: true }, // 학원명/지점명 (내부 세션 · 로그인 키)
+
+  // 🔹 통합 관리용 별칭 · 조회 시 함께 포함 (예: ["브레인문해력_대치센터"])
+  //    → getAdminAcademyNames() 로 [academyName, ...academyAliases] 모두 대상으로 학생 조회
+  academyAliases: {
+    type: [String],
+    default: []
+  },
+  // 🔹 신규 학생 등록 시 학생 User.academyName 에 부여할 이름 (없으면 academyName 사용)
+  //    → 대시보드 UI 표시명으로도 우선 사용
+  newRegistrationName: {
+    type: String,
+    default: ''
+  },
 
   // 학년
   grade: {
@@ -1174,6 +1198,28 @@ const adminSchema = new mongoose.Schema({
 });
 
 const Admin = mongoose.model("Admin", adminSchema);
+
+// ✅ 관리자의 학원명 전체 목록 반환 (본명 + 별칭)
+//   · 학생 조회 시 { academyName: { $in: getAdminAcademyNames(admin) } } 형태로 사용
+//   · session.admin, session.viewingBranch, Admin document 모두 호환
+function getAdminAcademyNames(source) {
+  if (!source) return [];
+  const primary = source.academyName || '';
+  const aliases = Array.isArray(source.academyAliases) ? source.academyAliases : [];
+  const all = [primary, ...aliases].filter(Boolean);
+  return [...new Set(all)];
+}
+
+// ✅ 관리자의 표시명 (UI 노출용) · newRegistrationName 우선 · 없으면 academyName
+function getAdminDisplayName(source) {
+  if (!source) return '';
+  return (source.newRegistrationName && source.newRegistrationName.trim()) || source.academyName || '';
+}
+
+// ✅ 관리자의 신규 등록 학원명 (신규 학생에게 부여) · newRegistrationName || academyName
+function getAdminRegistrationName(source) {
+  return getAdminDisplayName(source);
+}
 
 // ===== 월별 학원 학생수 스냅샷 (월말 cron이 기록) =====
 const monthlyStudentSnapshotSchema = new mongoose.Schema({
@@ -2038,8 +2084,9 @@ app.get("/api/academy/gate-passes", requireAdminLogin, async (req, res) => {
       return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
     }
 
-    // 1. 해당 학원 학생 목록을 먼저 조회 (한 번만 DB 호출)
-    const academyUsers = await User.find({ academyName }).select('grade name').lean();
+    // 1. 해당 학원 학생 목록을 먼저 조회 (본명 + 별칭 모두 포함)
+    const academyNames = getAdminAcademyNames(req.session.admin);
+    const academyUsers = await User.find({ academyName: { $in: academyNames } }).select('grade name').lean();
 
     // 2. grade+name 조합으로 Set 생성 (빠른 검색용)
     const studentKeys = new Set(academyUsers.map(u => `${u.grade}||${u.name}`));
@@ -2115,9 +2162,10 @@ app.get("/api/academy/gate-pass-details", requireAdminLogin, async (req, res) =>
       return res.json({ ok: false, message: "필수 정보가 부족합니다." });
     }
 
-    // 학원 소속 학생인지 확인
+    // 학원 소속 학생인지 확인 (본명 + 별칭 모두 허용)
+    const academyNames = getAdminAcademyNames(req.session.admin);
     const user = await User.findOne({ grade, name }).lean();
-    if (!user || user.academyName !== academyName) {
+    if (!user || !academyNames.includes(user.academyName)) {
       return res.json({ ok: false, message: "해당 학생 정보를 찾을 수 없습니다." });
     }
 
@@ -2216,8 +2264,9 @@ app.get("/api/academy/learning-behaviors", requireAdminLogin, async (req, res) =
       return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
     }
 
-    // 1. 해당 학원 학생 목록을 먼저 조회 (한 번만 DB 호출)
-    const academyUsers = await User.find({ academyName }).select('grade name').lean();
+    // 1. 해당 학원 학생 목록을 먼저 조회 (본명 + 별칭 모두 포함)
+    const academyNames = getAdminAcademyNames(req.session.admin);
+    const academyUsers = await User.find({ academyName: { $in: academyNames } }).select('grade name').lean();
 
     // 2. grade+name 조합으로 Set 생성 (빠른 검색용)
     const studentKeys = new Set(academyUsers.map(u => `${u.grade}||${u.name}`));
@@ -2256,8 +2305,9 @@ app.get("/api/academy/midterm-pending", requireAdminLogin, async (req, res) => {
       return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
     }
 
-    // 해당 학원 학생 목록 조회
-    const academyUsers = await User.find({ academyName }).select('grade name school').lean();
+    // 해당 학원 학생 목록 조회 (본명 + 별칭)
+    const academyNames = getAdminAcademyNames(req.session.admin);
+    const academyUsers = await User.find({ academyName: { $in: academyNames } }).select('grade name school').lean();
     const studentKeys = new Set(academyUsers.map(u => `${u.grade}||${u.name}`));
     const studentMap = {};
     academyUsers.forEach(u => { studentMap[`${u.grade}||${u.name}`] = u; });
@@ -3351,8 +3401,10 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
     };
 
     // 🔥 학원용인 경우 academyName 필드로 필터링, 학교용인 경우 school 필드로 필터링
+    // 별칭(academyAliases)이 있으면 함께 포함해 통합 조회 (본명 + 별칭)
+    const academyNames = getAdminAcademyNames(admin);
     if (userType === "academy") {
-      filter.academyName = academyName;
+      filter.academyName = academyNames.length > 1 ? { $in: academyNames } : academyName;
     } else {
       filter.school = academyName;
     }
@@ -3654,8 +3706,9 @@ app.get('/api/branch/ai-tasks', requireAdminLogin, async (req, res) => {
 
     const academyName = admin.academyName;
 
-    // 해당 학원 학생들의 UserProgress만 조회
-    const allProgress = await UserProgress.find({ school: academyName });
+    // 해당 학원 학생들의 UserProgress만 조회 (본명 + 별칭 모두 허용)
+    const academyNames = getAdminAcademyNames(admin);
+    const allProgress = await UserProgress.find({ school: { $in: academyNames } });
 
     const aiTasksList = [];
 
@@ -3731,9 +3784,10 @@ app.post('/api/branch/hard-delete-user', requireAdminLogin, async (req, res) => 
       orClauses.push({ id }, { phone: id });
     }
 
-    // 학원 일치 + userType 일치 + 위 id 조건 중 하나
+    // 학원 일치 + userType 일치 + 위 id 조건 중 하나 (본명 + 별칭 모두 허용)
+    const academyNames = getAdminAcademyNames(sessionAdmin);
     const baseScope = (userType === 'academy')
-      ? { academyName, userType: 'academy' }
+      ? { academyName: { $in: academyNames }, userType: 'academy' }
       : { school: academyName };
 
     const filter = { $and: [ baseScope, { $or: orClauses } ] };
@@ -3768,6 +3822,8 @@ app.get('/api/branch/over-snapshots', requireAdminLogin, async (req, res) => {
     const maxStudentLimit = (adminDoc && adminDoc.maxStudentLimit) || 360;
 
     // overThisMonth > 0 인 월만 조회 (최신월 먼저)
+    // ※ 스냅샷은 본명 기준으로 저장되지만 학생 실체는 별칭에도 있을 수 있음
+    const academyNames = getAdminAcademyNames(sessionAdmin);
     const overSnapshots = await MonthlyStudentSnapshot.find({
       academyName,
       overThisMonth: { $gt: 0 }
@@ -3782,7 +3838,7 @@ app.get('/api/branch/over-snapshots', requireAdminLogin, async (req, res) => {
       const monthEndUTC = new Date(Date.UTC(yy, mm, 1) - 9 * 3600000);
 
       const users = await User.find({
-        academyName,
+        academyName: { $in: academyNames },
         userType: 'academy',
         deleted: { $ne: true },
         createdAt: { $gte: monthStartUTC, $lt: monthEndUTC }
@@ -5718,6 +5774,8 @@ app.get("/super/view-branch", requireSuperAdmin, async (req, res) => {
     req.session.viewingBranch = {
       _id: admin._id,
       academyName: admin.academyName,
+      academyAliases: Array.isArray(admin.academyAliases) ? admin.academyAliases : [],
+      newRegistrationName: admin.newRegistrationName || '',
       name: admin.name,
       phone: admin.phone,
       approvedSeries: admin.approvedSeries || []
@@ -27210,11 +27268,15 @@ app.get("/api/admin-session", async (req, res) => {
     try {
       const admin = await Admin.findById(viewing._id).lean();
       const approvedSeries = resolveApprovedSeries(admin);
+      // 표시명 · newRegistrationName 우선 (예: 브레인문해력_대치센터)
+      const displayName = getAdminDisplayName(admin || viewing);
       return res.json({
         ok: true,
         admin: {
           id: viewing._id,
-          academyName: viewing.academyName,
+          academyName: displayName,
+          primaryAcademyName: (admin && admin.academyName) || viewing.academyName,
+          academyAliases: (admin && admin.academyAliases) || viewing.academyAliases || [],
           name: viewing.name,
           userType: "academy",
           viewMode: "super",
@@ -27231,7 +27293,9 @@ app.get("/api/admin-session", async (req, res) => {
         ok: true,
         admin: {
           id: viewing._id,
-          academyName: viewing.academyName,
+          academyName: getAdminDisplayName(viewing),
+          primaryAcademyName: viewing.academyName,
+          academyAliases: viewing.academyAliases || [],
           name: viewing.name,
           userType: "academy",
           viewMode: "super",
@@ -27251,10 +27315,15 @@ app.get("/api/admin-session", async (req, res) => {
     try {
       const admin = await Admin.findById(req.session.admin.id).lean();
       const approvedSeries = resolveApprovedSeries(admin);
+      // 표시명 · newRegistrationName 우선 (예: 브레인문해력_대치센터)
+      const displayName = getAdminDisplayName(admin || req.session.admin);
       return res.json({
         ok: true,
         admin: {
           ...req.session.admin,
+          academyName: displayName,
+          primaryAcademyName: (admin && admin.academyName) || req.session.admin.academyName,
+          academyAliases: (admin && admin.academyAliases) || req.session.admin.academyAliases || [],
           seriesApproved: admin ? (admin.contractType === 'franchise' ? true : admin.seriesApproved) : false,
           approvedSeries,
           contractType: admin ? (admin.contractType || null) : null,
@@ -27268,6 +27337,7 @@ app.get("/api/admin-session", async (req, res) => {
         ok: true,
         admin: {
           ...req.session.admin,
+          academyName: getAdminDisplayName(req.session.admin),
           seriesApproved: false,
           approvedSeries: [],
           contractType: null,
@@ -32949,16 +33019,23 @@ app.get("/api/admin/info", async (req, res) => {
     // 🔹 슈퍼관리자가 특정 학원 조회 중인 경우
     if (req.session.viewingBranch) {
       const viewing = req.session.viewingBranch;
-      // _id는 ObjectId일 수 있어 확실히 문자열로 (진단테스트 URL id 파라미터용)
       const viewingId = viewing._id ? String(viewing._id) : "";
+      // DB에서 최신 별칭/신규명 조회 (세션은 마이그레이션 전에 저장됐을 수 있음)
+      let freshAdmin = null;
+      if (viewingId) {
+        try { freshAdmin = await Admin.findById(viewingId).select('academyName academyAliases newRegistrationName').lean(); } catch {}
+      }
+      const source = freshAdmin || viewing;
       return res.json({
         success: true,
-        academyName: viewing.academyName || "",
+        academyName: getAdminDisplayName(source),   // 표시명 (신규 등록명 우선)
+        primaryAcademyName: source.academyName || "",
+        academyAliases: source.academyAliases || [],
         adminId: viewingId,
         grade: "",
         classNum: "",
         userType: "academy",
-        viewMode: "super",  // 슈퍼관리자 조회 모드 표시
+        viewMode: "super",
         approvedSeries: viewing.approvedSeries || []
       });
     }
@@ -32966,11 +33043,19 @@ app.get("/api/admin/info", async (req, res) => {
     if (!req.session || !req.session.admin) {
       return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
     }
+    // DB에서 최신 별칭/신규명 조회 (세션이 오래됐을 수 있음)
+    const adminId = req.session.admin.id || req.session.admin.adminId;
+    let freshAdmin = null;
+    if (adminId) {
+      try { freshAdmin = await Admin.findById(adminId).select('academyName academyAliases newRegistrationName').lean(); } catch {}
+    }
+    const source = freshAdmin || req.session.admin;
     res.json({
       success: true,
-      academyName: req.session.admin.academyName || "",
-      // 세션 저장 키가 id (server.js:591) · 진단테스트 자동 프리필용
-      adminId: req.session.admin.id || req.session.admin.adminId || "",
+      academyName: getAdminDisplayName(source),   // 표시명 (신규 등록명 우선)
+      primaryAcademyName: source.academyName || "",
+      academyAliases: source.academyAliases || [],
+      adminId: adminId || "",
       grade: req.session.admin.grade || "",
       classNum: req.session.admin.classNum || "",
       userType: req.session.admin.userType || "school"  // 🔥 학교용/학원용 구분
