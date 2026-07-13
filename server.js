@@ -833,6 +833,8 @@ app.get("/signup", (req, res) => {
 // ✅ 학생 메뉴 페이지 (관리자에서 학생 이름 클릭 시 이동)
 app.get("/menu", (req, res) => {
   console.log("✅ [GET] /menu -> menu.html 제공 (grade:", req.query.grade, ", name:", req.query.name, ")");
+  // 🚫 브라우저 캐시 무효화 — 새로고침 시 옛 HTML이 노출되는 문제 방지
+  res.set('Cache-Control', 'no-cache, must-revalidate, private');
   res.sendFile(path.join(__dirname, "public", "menu.html"));
 });
 
@@ -11014,12 +11016,21 @@ app.post("/admin/assign-series", async (req, res) => {
       }
     }
 
+    // 🔹 학원 권한과 무관하게 모든 학원에서 자유롭게 부여·해제 가능한 시리즈 (BRAIN 입문 등)
+    const ALWAYS_ALLOWED_VALUES = new Set(['BRAIN입문']);
+
     let finalSeries;
     if (!academyAllowedValues) {
       finalSeries = normalizedSeries;
     } else {
-      const preserved = (user.assignedSeries || []).filter(v => !academyAllowedValues.includes(v));
-      const newAllowed = normalizedSeries.filter(v => academyAllowedValues.includes(v));
+      // preserved: 학원 권한 밖이면서 항상허용도 아닌 값 (본사가 부여한 것 등)
+      const preserved = (user.assignedSeries || []).filter(v =>
+        !academyAllowedValues.includes(v) && !ALWAYS_ALLOWED_VALUES.has(v)
+      );
+      // newAllowed: 학원 권한 안이거나 항상허용인 값
+      const newAllowed = normalizedSeries.filter(v =>
+        academyAllowedValues.includes(v) || ALWAYS_ALLOWED_VALUES.has(v)
+      );
       // 중복 제거
       finalSeries = Array.from(new Set([...preserved, ...newAllowed]));
     }

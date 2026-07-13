@@ -7648,10 +7648,10 @@ canvas[id^="confetti-canvas"] {
         <li class="series-item active" data-series="BRAINUP"><span>BRAIN업</span><span class="meta">성장문해</span></li>
         <li class="series-item" data-series="BRAINFIT"><span>BRAIN핏</span><span class="meta">확장문해</span></li>
         <li class="series-item" data-series="BRAINDEEP"><span>BRAIN딥</span><span class="meta">심화문해</span></li>
+        <li class="series-item wr100-item wr100-special" data-series="WRITING100" style="display:none;"><span>BRAIN입문</span><span class="meta">쓰기문해</span></li>
         <li class="series-item daily-special" data-series="BRAINCRITIQUE"><span>BRAIN비평</span><span class="meta">시사문해</span></li>
-        <li class="series-item" data-series="BRAINM" style="display:none;"><span>BRAIN실전</span><span class="meta">모의고사</span></li>
         <li class="series-item summer-special kh-coming-soon" data-series="BRAINKORHIST"><span>BRAIN한국사</span><span class="meta">역사특강</span></li>
-        <li class="series-item wr100-item" data-series="WRITING100" style="display:none;"><span>BRAIN입문</span><span class="meta">쓰기문해</span></li>
+        <li class="series-item" data-series="BRAINM" style="display:none;"><span>BRAIN실전</span><span class="meta">모의고사</span></li>
         <li class="series-item" data-series="BRAINNAESIN" style="display:none;"><span>📝 BRAIN내신</span><span class="meta">내신대비</span></li>
         <li class="series-item" data-series="BRAINSUNEUNG" style="display:none;"><span>🎯 BRAIN수능</span><span class="meta">수능대비</span></li>
       </ul>
@@ -7805,9 +7805,50 @@ canvas[id^="confetti-canvas"] {
         const data = await response.json();
 
         if (data.ok && data.user) {
-          // 서버 세션 정보를 sessionStorage에 저장
-          sessionStorage.setItem('user', JSON.stringify(data.user));
-          console.log('✅ Session data saved to sessionStorage:', data.user);
+          // 🛡️ view-as 모드(관리자가 학생 프리뷰) 감지 — localStorage.currentStudent와 세션 학생이 다르면 view-as
+          //    이 경우 관리자 세션이 sessionStorage.user를 덮어쓰면 학생의 assignedSeries가 사라져 시리즈 표시가 깨짐
+          let isViewAs = false;
+          try {
+            const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+            if (cs && cs.grade && cs.name && (cs.grade !== data.user.grade || cs.name !== data.user.name)) {
+              isViewAs = true;
+            }
+          } catch {}
+
+          if (!isViewAs) {
+            // 일반 로그인 상태 — 서버 세션 정보를 sessionStorage에 저장
+            sessionStorage.setItem('user', JSON.stringify(data.user));
+            console.log('✅ Session data saved to sessionStorage:', data.user);
+          } else {
+            console.log('🎯 view-as 모드 감지 — sessionStorage.user 덮어쓰기 건너뜀 (학생 데이터 보호)');
+          }
+
+          // 🔄 새로고침 대비 · 학생의 assignedSeries를 서버에서 강제 재조회하고 restrictions 재적용
+          //    (sessionStorage에 남은 stale assignedSeries가 시리즈 목록을 이상하게 그리는 버그 방지)
+          try {
+            const stu = (function () {
+              try {
+                const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+                if (cs && cs.grade && cs.name) return cs;
+              } catch {}
+              return data.user;
+            })();
+            if (stu && stu.grade && stu.name) {
+              const uRes = await fetch(`/api/user-info?grade=${encodeURIComponent(stu.grade)}&name=${encodeURIComponent(stu.name)}`);
+              if (uRes.ok) {
+                const uData = await uRes.json();
+                if (uData && !uData.error) {
+                  sessionStorage.setItem('user', JSON.stringify(uData));
+                  console.log('✅ [refresh-safe] fresh user-info → sessionStorage.user:', uData);
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('[refresh-safe] user-info 재조회 실패:', e);
+          }
+          if (typeof applySeriesRestrictions === 'function') {
+            try { applySeriesRestrictions(); } catch (e) { console.warn('applySeriesRestrictions 재실행 실패:', e); }
+          }
 
           // ✅ 현재 학생이 아닌 localStorage 데이터 삭제 (이전 학생 어휘퀴즈 뱃지 등)
           const currentStudent = JSON.parse(localStorage.getItem('currentStudent') || '{}');
@@ -11265,8 +11306,27 @@ if (logoutConfirmBtn) {
           return;
         }
 
-        // WRITING100 (BRAIN입문 쓰기문해 · 100일 완성)
+        // WRITING100 (BRAIN입문 쓰기문해 · 100일 완성) — 분야/과목/단원 없이 100day 모달만 사용
         if (series === 'WRITING100') {
+          // 시리즈 선택 상태 반영 (active 표시 + 저장)
+          document.querySelectorAll("#seriesList .series-item").forEach(x => x.classList.remove("active"));
+          li.classList.add("active");
+          currentSelectedSeries = series;
+          currentSelectedDomain = null;
+          currentSelectedSubject = null;
+          localStorage.setItem('selectedMenuSeries', series);
+          localStorage.removeItem('selectedMenuDomain');
+          localStorage.removeItem('selectedMenuSubject');
+          localStorage.removeItem('selectedMenuSubjectOffset');
+          // 분야·과목·단원 컬럼 비우기 (100day는 모달 진행이라 이 3컬럼 무의미)
+          if (typeof domainList !== 'undefined' && domainList) domainList.innerHTML = '';
+          if (typeof subjectList !== 'undefined' && subjectList) subjectList.innerHTML = '';
+          if (typeof unitList !== 'undefined' && unitList) unitList.innerHTML = '';
+          const unitTitleEl = document.getElementById("unitTitle");
+          const unitDescEl = document.getElementById("unitDesc");
+          if (unitTitleEl) unitTitleEl.textContent = "쓰기문해 100day";
+          if (unitDescEl) unitDescEl.textContent = "카드 그리드 모달에서 Day를 선택해 학습을 시작해요.";
+          // 100day 모달 오픈
           if (typeof window.openWr100Modal === 'function') {
             window.openWr100Modal();
           }
@@ -11465,6 +11525,22 @@ if (logoutConfirmBtn) {
 
         // ✅ 딥블루 테마 적용
         applyDeepBlueTheme(savedSeries);
+
+        // 🎯 WRITING100은 분야/과목/단원 없음 — 컬럼 비우고 시리즈만 active 표시
+        if (savedSeries === 'WRITING100') {
+          if (typeof domainList !== 'undefined' && domainList) domainList.innerHTML = '';
+          if (typeof subjectList !== 'undefined' && subjectList) subjectList.innerHTML = '';
+          if (typeof unitList !== 'undefined' && unitList) unitList.innerHTML = '';
+          const unitTitleEl = document.getElementById("unitTitle");
+          const unitDescEl = document.getElementById("unitDesc");
+          if (unitTitleEl) unitTitleEl.textContent = "쓰기문해 100day";
+          if (unitDescEl) unitDescEl.textContent = "카드 그리드 모달에서 Day를 선택해 학습을 시작해요.";
+          document.querySelectorAll("#seriesList .series-item").forEach(li => {
+            li.classList.remove("active");
+            if (li.dataset.series === savedSeries) li.classList.add("active");
+          });
+          return;
+        }
 
         renderDomains(savedSeries);
 
@@ -13594,6 +13670,7 @@ async function performLogout() {
 
         // 시리즈 이름 매핑 (모달에서 사용하는 이름 -> HTML data-series 값)
         const seriesMapping = {
+          'BRAIN입문': 'WRITING100',
           'BRAIN은': 'BRAINON',
           'BRAIN암': 'BRAINUP',
           'BRAIN빛': 'BRAINFIT',
@@ -13602,6 +13679,7 @@ async function performLogout() {
           'BRAIN중등': 'BRAINM',
           'BRAIN고등': 'BRAINH',
           // 역방향 매핑도 추가 (이미 영문 ID인 경우 대응)
+          'WRITING100': 'WRITING100',
           'BRAINON': 'BRAINON',
           'BRAINUP': 'BRAINUP',
           'BRAINFIT': 'BRAINFIT',
@@ -13664,25 +13742,24 @@ async function performLogout() {
             return;
           }
 
-          // 📝 BRAIN입문 쓰기문해(WRITING100) — 초3 김윤슬 테스트 계정 전용
+          // 📝 BRAIN입문 쓰기문해(WRITING100) — 부여된 학생만 노출·활성화
           if (seriesId === 'WRITING100') {
-            const WR100_TESTERS = [{ grade: '초3', name: '김윤슬' }];
-            let isWr100Tester = false;
-            try {
-              const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
-              isWr100Tester = WR100_TESTERS.some(t => t.grade === cs.grade && t.name === cs.name);
-            } catch {}
-            li.style.display = isWr100Tester ? '' : 'none';
-            if (isWr100Tester) li.classList.remove("disabled");
+            if (allowedSeriesIds.includes('WRITING100')) {
+              li.style.display = '';
+              li.classList.remove("disabled");
+            } else {
+              li.style.display = 'none';
+            }
             return;
           }
 
           if (allowedSeriesIds.includes(seriesId)) {
-            // 활성화
+            // 활성화 · 노출
+            li.style.display = '';
             li.classList.remove("disabled");
           } else {
-            // 비활성화
-            li.classList.add("disabled");
+            // 미부여 시리즈는 메뉴에서 숨김
+            li.style.display = 'none';
           }
         });
 
@@ -13711,13 +13788,23 @@ async function performLogout() {
             }
           });
 
-          // 분야 렌더링
-          renderDomains(firstAllowedSeries);
-
-          // 설명 텍스트 업데이트
-          if (seriesInfo[firstAllowedSeries]) {
-            document.getElementById("unitDesc").textContent =
-              seriesInfo[firstAllowedSeries].desc + " · 분야와 과목을 선택하세요.";
+          // 🎯 WRITING100은 분야/과목/단원 없음 — 컬럼 비우고 안내 문구만 표시
+          if (firstAllowedSeries === 'WRITING100') {
+            if (typeof domainList !== 'undefined' && domainList) domainList.innerHTML = '';
+            if (typeof subjectList !== 'undefined' && subjectList) subjectList.innerHTML = '';
+            if (typeof unitList !== 'undefined' && unitList) unitList.innerHTML = '';
+            const _unitTitleEl = document.getElementById("unitTitle");
+            const _unitDescEl = document.getElementById("unitDesc");
+            if (_unitTitleEl) _unitTitleEl.textContent = "쓰기문해 100day";
+            if (_unitDescEl) _unitDescEl.textContent = "카드 그리드 모달에서 Day를 선택해 학습을 시작해요.";
+          } else {
+            // 분야 렌더링
+            renderDomains(firstAllowedSeries);
+            // 설명 텍스트 업데이트
+            if (seriesInfo[firstAllowedSeries]) {
+              document.getElementById("unitDesc").textContent =
+                seriesInfo[firstAllowedSeries].desc + " · 분야와 과목을 선택하세요.";
+            }
           }
 
           // localStorage에 저장
@@ -13725,7 +13812,12 @@ async function performLogout() {
         } else {
           // ✅ 현재 선택된 시리즈의 분야 다시 렌더링 (비활성화 상태 적용)
           const currentSeries = savedSeries || currentSelectedSeries;
-          if (currentSeries) {
+          if (currentSeries === 'WRITING100') {
+            // WRITING100은 분야/과목/단원 없음 — 컬럼 비우기
+            if (typeof domainList !== 'undefined' && domainList) domainList.innerHTML = '';
+            if (typeof subjectList !== 'undefined' && subjectList) subjectList.innerHTML = '';
+            if (typeof unitList !== 'undefined' && unitList) unitList.innerHTML = '';
+          } else if (currentSeries) {
             renderDomains(currentSeries);
           }
         }
@@ -34641,6 +34733,23 @@ ${content}
       letter-spacing: 0.3px;
     }
 
+    /* 100day 시리즈 타일 배지 (BRAIN 입문 쓰기문해) */
+    .series-item.wr100-special { position: relative; }
+    .series-item.wr100-special::after {
+      content: '✏️ 100day';
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: linear-gradient(135deg, #bef264 0%, #65a30d 100%);
+      color: #fff;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(101, 163, 13, 0.4);
+      letter-spacing: 0.3px;
+    }
+
     /* 오픈 예정 상태 (BRAIN한국사) — 비활성 외관이지만 클릭은 가능 */
     .series-item.kh-coming-soon {
       opacity: 0.55;
@@ -37514,12 +37623,12 @@ ${content}
     // BRAIN입문 쓰기문해 (100일) · 진입점 + 카드 그리드
     // ═══════════════════════════════════════════════════════════
     (function () {
-      // 김윤슬 화이트리스트
-      const WR100_WHITELIST = [{ grade: '초3', name: '김윤슬' }];
+      // WRITING100 시리즈가 부여된 학생만 접근 허용
       function isWr100Whitelisted() {
         try {
-          const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
-          return WR100_WHITELIST.some(t => t.grade === cs.grade && t.name === cs.name);
+          const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+          const assignedSeries = user.assignedSeries || [];
+          return assignedSeries.includes('BRAIN입문') || assignedSeries.includes('WRITING100');
         } catch { return false; }
       }
 
@@ -38230,7 +38339,8 @@ ${content}
 
       async function renderGrid() {
         const done = getDoneSet();
-        const isBeta = isWr100Whitelisted();
+        // 전체 학생 오픈이지만 순차 잠금은 유지 (Day 1부터 순서대로 학습)
+        const isBeta = false;
         // 재학습 대상 · Day별 총 정답률 계산 (리포트 데이터 캐시로부터)
         // ※ isDayLocked 시즌 게이트가 dayTotalMap을 참조하므로 currentDay 계산보다 먼저 수행
         let relearnSet = new Set();
@@ -43094,6 +43204,7 @@ ${content}
     (function () {
       // ===== 비평 모달 모듈 =====
       const SERIES_TO_LEVEL = {
+        'BRAIN입문': { code: 'elem34',   label: 'ON',   desc: '초3~4' },   // 쓰기문해 → 비평 ON 등급
         'BRAIN은':   { code: 'elem34',   label: 'ON',   desc: '초3~4' },
         'BRAIN암':   { code: 'elem56',   label: 'UP',   desc: '초5~6' },
         'BRAIN빛':   { code: 'mid12',    label: 'FIT',  desc: '중1~2' },
