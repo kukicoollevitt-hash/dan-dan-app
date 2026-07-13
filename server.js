@@ -41598,12 +41598,34 @@ async function buildSeasonMergedPdf(season, type) {
     }
   }
 
-  // 병합 구조 · 앞표지(1) + 교재안내(7) + TOC(2) + Day PDFs + 뒷표지(1)
-  // Day별 시작 페이지 계산 · TOC는 페이지 번호 미표시라 참고용
+  // 병합 구조 · 앞표지1(1) + 문해학습계획표 + 앞표지2 + 교재안내(7) + 시즌목차 + Day PDFs + 뒷표지(1)
+  const imagesDir_ = path.join(__dirname, 'public', 'images', '100day');
+  const planPath = path.join(imagesDir_, '문해학습계획표.pdf');
+  const front2Path = path.join(imagesDir_, '앞표지(2).pdf');
+  const tocPath = path.join(imagesDir_, `쓰기문해0${season}목차.pdf`);
   const FRONT_PAGES = 1;
   const INTRO_PAGES = 7;   // 브레인입문교재안내7p.pdf
-  const TOC_PAGES = 2;
-  let cursor = FRONT_PAGES + INTRO_PAGES + TOC_PAGES + 1;
+  // 문해학습계획표·앞표지(2)·시즌목차 페이지 수 사전 조회
+  let PLAN_PAGES = 0, FRONT2_PAGES = 0, TOC_PAGES = 0;
+  if (fs.existsSync(planPath)) {
+    const planDoc = await PDFDocument.load(fs.readFileSync(planPath));
+    PLAN_PAGES = planDoc.getPageCount();
+  } else {
+    console.warn(`[wr100 season merge] 문해학습계획표 PDF 없음: ${planPath}`);
+  }
+  if (fs.existsSync(front2Path)) {
+    const f2Doc = await PDFDocument.load(fs.readFileSync(front2Path));
+    FRONT2_PAGES = f2Doc.getPageCount();
+  } else {
+    console.warn(`[wr100 season merge] 앞표지(2) PDF 없음: ${front2Path}`);
+  }
+  if (fs.existsSync(tocPath)) {
+    const tocDoc = await PDFDocument.load(fs.readFileSync(tocPath));
+    TOC_PAGES = tocDoc.getPageCount();
+  } else {
+    console.warn(`[wr100 season merge] 시즌${season} 목차 PDF 없음: ${tocPath}`);
+  }
+  let cursor = FRONT_PAGES + PLAN_PAGES + FRONT2_PAGES + INTRO_PAGES + TOC_PAGES + 1;
   const dayEntries = dayFiles.map(d => {
     const entry = {
       day: d.day,
@@ -41615,10 +41637,7 @@ async function buildSeasonMergedPdf(season, type) {
     return entry;
   });
 
-  // TOC PDF 생성
-  const { buildTocPdfBytes } = require('./scripts/wr100-guide-generator/toc');
-  const kindLabel = type === 'student' ? '학생용' : '교사용';
-  const tocBytes = await buildTocPdfBytes({ season, kindLabel }, dayEntries);
+  // TOC: 시즌별 사전 제작 PDF (쓰기문해0N목차.pdf) 사용 · 자동 생성 로직 제거
 
   // 표지 이미지 (앞표지: PNG · 뒷표지: JPG · 시즌별 1~5)
   const imagesDir = path.join(__dirname, 'public', 'images', '100day');
@@ -41657,10 +41676,24 @@ async function buildSeasonMergedPdf(season, type) {
     page.drawImage(img, { x, y, width: w, height: h });
   }
 
-  // 병합 · 앞표지 → 교재안내 → TOC → Day PDFs → 뒷표지
+  // 병합 · 앞표지1 → 문해학습계획표 → 앞표지(2) → 교재안내 → TOC → Day PDFs → 뒷표지
   const merged = await PDFDocument.create();
-  // 앞표지
+  // 앞표지1 (이미지)
   await addCoverPage(merged, frontImgPath, true);
+  // 문해학습계획표 (PDF · 모든 시즌 공통)
+  if (fs.existsSync(planPath)) {
+    const planBytes = fs.readFileSync(planPath);
+    const planDoc = await PDFDocument.load(planBytes);
+    const planPages = await merged.copyPages(planDoc, planDoc.getPageIndices());
+    planPages.forEach(p => merged.addPage(p));
+  }
+  // 앞표지(2) (PDF · 모든 시즌 공통)
+  if (fs.existsSync(front2Path)) {
+    const f2Bytes = fs.readFileSync(front2Path);
+    const f2Doc = await PDFDocument.load(f2Bytes);
+    const f2Pages = await merged.copyPages(f2Doc, f2Doc.getPageIndices());
+    f2Pages.forEach(p => merged.addPage(p));
+  }
   // 교재안내 (모든 시즌 공통 · 7페이지)
   const introPath = path.join(imagesDir, '브레인입문교재안내7p.pdf');
   if (fs.existsSync(introPath)) {
@@ -41671,10 +41704,13 @@ async function buildSeasonMergedPdf(season, type) {
   } else {
     console.warn(`[wr100 season merge] 교재안내 PDF 없음: ${introPath}`);
   }
-  // TOC 붙이기
-  const tocDoc = await PDFDocument.load(tocBytes);
-  const tocPages = await merged.copyPages(tocDoc, tocDoc.getPageIndices());
-  tocPages.forEach(p => merged.addPage(p));
+  // 시즌별 목차 PDF 붙이기 (쓰기문해0N목차.pdf)
+  if (fs.existsSync(tocPath)) {
+    const tocBytes = fs.readFileSync(tocPath);
+    const tocDoc = await PDFDocument.load(tocBytes);
+    const tocPages = await merged.copyPages(tocDoc, tocDoc.getPageIndices());
+    tocPages.forEach(p => merged.addPage(p));
+  }
   // Day PDFs 붙이기
   for (const { fp } of dayFiles) {
     const bytes = fs.readFileSync(fp);
