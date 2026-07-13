@@ -196,9 +196,12 @@ async function sendParentNotification(studentName, parentPhone, type, additional
       // [브레인문해력] 홍길동 학생이 학습을 완료하였어요! 많이 칭찬 해주세요!
       // 리포트 링크 생성 (grade 정보가 있으면 포함)
       const grade = additionalInfo.grade || '';
-      // 🧪 종합리포트 월간 뷰 베타 — 화이트리스트 학생만 월간 URL 발송
       let reportUrl;
-      if (typeof isMonthlyReportBeta === 'function' && isMonthlyReportBeta(grade, studentName)) {
+      // 🖋️ 쓰기문해 사용자 → 쓰기문해 전용 리포트 URL (통합 아님)
+      if (typeof isWr100User === 'function' && isWr100User(grade, studentName)) {
+        reportUrl = `https://brainmoon.kr/wr100-report.html?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&shared=true`;
+      // 🧪 종합리포트 월간 뷰 베타 — 화이트리스트 학생만 월간 URL 발송
+      } else if (typeof isMonthlyReportBeta === 'function' && isMonthlyReportBeta(grade, studentName)) {
         const monthStart = getMonthStartKey();
         reportUrl = `https://brainmoon.kr/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&monthly=true&monthStart=${monthStart}&shared=true`;
       } else {
@@ -223,6 +226,22 @@ async function sendParentNotification(studentName, parentPhone, type, additional
       }
       message = `[브레인문해력] ${studentName} 학생 "${unitTitle}" 학습 완료!`;
       break;
+    case 'wr100complete':
+      // [브레인문해력] 홍길동 학생 Day 5 "생물과 무생물" 학습 완료!
+      // additionalInfo.day = Day 번호, additionalInfo.topic = 주제(선택)
+      const dayNum = additionalInfo.day || '';
+      let topic = additionalInfo.topic || '';
+      const dayLabel = dayNum ? `Day ${dayNum}` : '';
+      const wr100Base = `[브레인문해력] ${studentName} 학생 ${dayLabel} "" 학습 완료!`;
+      const wr100BaseBytes = getByteLength(wr100Base);
+      const wr100AvailBytes = 90 - wr100BaseBytes - 6;
+      if (getByteLength(topic) > wr100AvailBytes) {
+        topic = truncateUnitTitle(topic, wr100AvailBytes - 6);
+      }
+      message = topic
+        ? `[브레인문해력] ${studentName} 학생 ${dayLabel} "${topic}" 학습 완료!`
+        : `[브레인문해력] ${studentName} 학생 ${dayLabel} 학습 완료!`;
+      break;
     default:
       message = `[브레인문해력] ${studentName} 학생 알림`;
   }
@@ -246,9 +265,18 @@ async function sendHQAdminNotification(studentName, grade, type, additionalInfo 
       console.log(`📱 [본사알림] 중복 방지: ${grade} ${studentName} ${additionalInfo.unitKey} (5분 내 이미 발송됨)`);
       return;
     }
-    // 즉시 캐시에 추가 (동기)
     hqNotifyCache.set(cacheKey, Date.now());
-    setTimeout(() => hqNotifyCache.delete(cacheKey), 5 * 60 * 1000); // 5분 후 삭제
+    setTimeout(() => hqNotifyCache.delete(cacheKey), 5 * 60 * 1000);
+  }
+  // 쓰기문해 Day 완료(wr100complete)일 때 중복 발송 방지 (5분)
+  if (type === 'wr100complete' && additionalInfo.day) {
+    const cacheKey = `hq-wr100:${grade}:${studentName}:${additionalInfo.day}`;
+    if (hqNotifyCache.has(cacheKey)) {
+      console.log(`📱 [본사알림] 중복 방지: ${grade} ${studentName} wr100 Day${additionalInfo.day} (5분 내 이미 발송됨)`);
+      return;
+    }
+    hqNotifyCache.set(cacheKey, Date.now());
+    setTimeout(() => hqNotifyCache.delete(cacheKey), 5 * 60 * 1000);
   }
 
   let message = '';
@@ -272,6 +300,18 @@ async function sendHQAdminNotification(studentName, grade, type, additionalInfo 
         unitTitle = truncateUnitTitle(unitTitle, 17);
       }
       message = `[본사알림] ${location} ${grade} ${studentName} "${unitTitle}" 완료`;
+      break;
+    case 'wr100complete':
+      // [본사알림] 브레인문해력_대치센터 초3 홍길동 Day 5 "생물과 무생물" 완료
+      const wr100Day = additionalInfo.day || '';
+      let wr100Topic = additionalInfo.topic || '';
+      const wr100DayLabel = wr100Day ? `Day ${wr100Day}` : '';
+      if (getByteLength(wr100Topic) > 20) {
+        wr100Topic = truncateUnitTitle(wr100Topic, 17);
+      }
+      message = wr100Topic
+        ? `[본사알림] ${location} ${grade} ${studentName} ${wr100DayLabel} "${wr100Topic}" 완료`
+        : `[본사알림] ${location} ${grade} ${studentName} ${wr100DayLabel} 완료`;
       break;
     case 'snackOrder':
       // CU 간식 응모. 상품명들과 총 뱃지 전달
@@ -1011,6 +1051,11 @@ if (process.env.CDN_URL) {
   });
   console.log(`✅ CDN 활성화: ${process.env.CDN_URL}`);
 }
+
+// ✅ 브라우저 자동 요청 favicon.ico → 이미 있는 favicon.png 로 리다이렉트 · 404 방지
+app.get("/favicon.ico", (req, res) => {
+  res.redirect(301, "/favicon.png");
+});
 
 // ✅ 2) 정적 파일 제공 (CSS, JS, menu.html, admin_*.html 등)
 app.use(express.static(path.join(__dirname, "public"), {
@@ -16215,6 +16260,16 @@ const MOBILE_CARD_BETA_TESTERS = [
 ];
 function isMobileCardBeta(grade, name) {
   return MOBILE_CARD_BETA_TESTERS.some(t => t.grade === grade && t.name === name);
+}
+
+// ===================== 브레인입문 쓰기문해 사용자 판정 =====================
+// 이 학생이 쓰기문해(wr100)를 하는지 여부 · 로그아웃 SMS 리포트 URL 분기용
+// 현재는 김윤슬 화이트리스트만 · 전체 확대 시 이 함수 확장
+const WR100_USERS = [
+  { grade: '초3', name: '김윤슬' }
+];
+function isWr100User(grade, name) {
+  return WR100_USERS.some(t => t.grade === grade && t.name === name);
 }
 
 // ===== 학생용 학습 이력 보기 (인증 불필요) =====
@@ -33091,7 +33146,8 @@ app.get("/api/admin/info", async (req, res) => {
     }
 
     if (!req.session || !req.session.admin) {
-      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+      // 브라우저 콘솔 노이즈 방지 · 200 + success:false 로 응답 (기존 클라이언트도 data.success 로 판정)
+      return res.json({ success: false, message: "로그인이 필요합니다." });
     }
     // DB에서 최신 별칭/신규명 조회 (세션이 오래됐을 수 있음)
     const adminId = req.session.admin.id || req.session.admin.adminId;
@@ -41325,12 +41381,35 @@ app.post('/api/writing100/save-progress', async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
     // 7단계 전부 완료 && firstCompletedAt 아직 없음 → 최초 완료 시각 기록 (재학습 배지 기준)
+    // + 학부모·본사 SMS 발송 (Day별 완료 알림 · 최초 1회만)
     if (doc && !doc.firstCompletedAt
         && Array.isArray(doc.stagesDone)
         && doc.stagesDone.length >= 7
         && doc.stagesDone.every(Boolean)) {
       doc.firstCompletedAt = new Date();
       await doc.save();
+
+      // 학생 학부모 연락처 조회 후 발송 (비동기 · 응답 지연 방지)
+      (async () => {
+        try {
+          const studentUser = await User.findOne({ grade, name }).select('parentPhone parentNotify academyName school').lean();
+          const wr100Info = { day: doc.day, topic: doc.topic || '' };
+          // 학부모 알림
+          if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
+            sendParentNotification(name, studentUser.parentPhone, 'wr100complete', wr100Info)
+              .catch(err => console.error('학부모 알림(wr100 완료) 실패:', err));
+          }
+          // 본사 알림 (5분 중복 방지)
+          sendHQAdminNotification(name, grade, 'wr100complete', {
+            ...wr100Info,
+            academyName: studentUser?.academyName || '',
+            school: studentUser?.school || ''
+          });
+          console.log(`📱 [wr100 완료 알림] ${grade} ${name} Day ${doc.day} "${doc.topic}"`);
+        } catch (e) {
+          console.error('[wr100] 완료 SMS 발송 준비 실패:', e && e.message);
+        }
+      })();
     }
     res.json({ ok: true, submission: doc });
   } catch (err) {
@@ -41374,6 +41453,304 @@ app.get('/api/writing100/report', async (req, res) => {
   } catch (err) {
     console.error('[writing100] report:', err && err.message);
     res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// 📚 브레인입문(쓰기문해) Day별 지도자료 다운로드 · 관리자 대상
+//   - 파일 위치: uploads/wr100-guides/100day_{NNN}_{student|teacher}.pdf
+//   - 접근 제한: session admin의 academyName(본명+별칭) 이 화이트리스트에 포함될 때만
+//   - 현재 화이트리스트: 브레인문해원_테스트 (별칭: 브레인문해력_대치센터)
+//   - 향후 확대 · WR100_GUIDE_ALLOWED_ACADEMIES 배열에 추가
+// ═══════════════════════════════════════════════════════════════
+const WR100_GUIDE_ALLOWED_ACADEMIES = new Set([
+  '브레인문해원_테스트',
+  '브레인문해력_대치센터'
+]);
+function isWr100GuideAllowed(req) {
+  const admin = req.session && req.session.admin;
+  const viewing = req.session && req.session.viewingBranch;
+  if (!admin && !viewing) return false;
+  // 슈퍼관리자(role: 'super') 조회 모드는 · viewingBranch 기반 판정
+  const source = viewing || admin;
+  // 세션에 저장된 primary academyName 또는 별칭 중 하나라도 화이트리스트에 있으면 허용
+  const names = getAdminAcademyNames(source);
+  return names.some(n => WR100_GUIDE_ALLOWED_ACADEMIES.has(n));
+}
+
+// Day별 메타 캐시 (topic · writingType) · 서버 lifetime 캐싱
+const _wr100DayMetaCache = new Map();
+function readWr100DayMeta(day) {
+  if (_wr100DayMetaCache.has(day)) return _wr100DayMetaCache.get(day);
+  const fs = require('fs');
+  const path = require('path');
+  const dayStr = String(day).padStart(3, '0');
+  const fp = path.join(__dirname, 'public', '100day', `100day_${dayStr}.html`);
+  if (!fs.existsSync(fp)) {
+    _wr100DayMetaCache.set(day, null);
+    return null;
+  }
+  try {
+    const src = fs.readFileSync(fp, 'utf8');
+    // const DATA = { ... topic: '...', ..., writingType: '...', ... }
+    // DATA 객체 내 첫 topic/writingType 매칭
+    const dataMatch = src.match(/const\s+DATA\s*=\s*\{([\s\S]*?)\n\s*\}\s*;/);
+    if (!dataMatch) {
+      _wr100DayMetaCache.set(day, null);
+      return null;
+    }
+    const dataBody = dataMatch[1];
+    const topicMatch = dataBody.match(/topic\s*:\s*['"]([^'"]+)['"]/);
+    const wtMatch = dataBody.match(/writingType\s*:\s*['"]([^'"]+)['"]/);
+    const meta = {
+      topic: topicMatch ? topicMatch[1] : '',
+      writingType: wtMatch ? wtMatch[1] : ''
+    };
+    _wr100DayMetaCache.set(day, meta);
+    return meta;
+  } catch (e) {
+    _wr100DayMetaCache.set(day, null);
+    return null;
+  }
+}
+
+// ✅ 지도자료 구성 조회 · 접근 권한 + Day별 파일 유무 + 단원명/글의갈래
+app.get('/api/wr100-guide/config', async (req, res) => {
+  try {
+    const allowed = isWr100GuideAllowed(req);
+    if (!allowed) {
+      // 권한 없음 · 응답에 allowed:false 만 반환 · 목록은 노출 안 함
+      return res.json({ ok: true, allowed: false, days: [] });
+    }
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.join(__dirname, 'uploads', 'wr100-guides');
+    if (!fs.existsSync(dir)) {
+      return res.json({ ok: true, allowed: true, days: [] });
+    }
+    // 100 Day 목록 · 파일 유무 체크 + 메타 (단원명/갈래)
+    const days = [];
+    for (let d = 1; d <= 100; d++) {
+      const dayStr = String(d).padStart(3, '0');
+      const studentFile = path.join(dir, `100day_${dayStr}_student.pdf`);
+      const teacherFile = path.join(dir, `100day_${dayStr}_teacher.pdf`);
+      const meta = readWr100DayMeta(d) || {};
+      days.push({
+        day: d,
+        topic: meta.topic || '',
+        writingType: meta.writingType || '',
+        hasStudent: fs.existsSync(studentFile),
+        hasTeacher: fs.existsSync(teacherFile)
+      });
+    }
+    res.json({ ok: true, allowed: true, days });
+  } catch (err) {
+    console.error('[wr100-guide/config] 오류:', err && err.message);
+    res.status(500).json({ ok: false, allowed: false, days: [] });
+  }
+});
+
+// ✅ 시즌 통합 PDF 다운로드 (20 Day 하나로 병합)
+// · 캐시 · uploads/wr100-guides/season-{N}-{type}.pdf
+// · 첫 요청 시 병합 후 저장 · 이후 재사용
+// · Day PDF가 새로 생성되면 캐시 파일을 삭제해야 재병합됨 (mtime 비교로 자동 갱신)
+const WR100_SEASONS = [
+  { c: 1, days: [1, 20],  name: '시즌1_숲의문해마을' },
+  { c: 2, days: [21, 40], name: '시즌2_바다의문해마을' },
+  { c: 3, days: [41, 60], name: '시즌3_얼음과불의문해마을' },
+  { c: 4, days: [61, 80], name: '시즌4_우주의문해마을' },
+  { c: 5, days: [81, 100],name: '시즌5_하늘의문해마을' }
+];
+
+async function buildSeasonMergedPdf(season, type) {
+  const fs = require('fs');
+  const path = require('path');
+  const { PDFDocument } = require('pdf-lib');
+  const cfg = WR100_SEASONS.find(s => s.c === season);
+  if (!cfg) throw new Error('invalid season');
+  const dir = path.join(__dirname, 'uploads', 'wr100-guides');
+  const cachePath = path.join(dir, `season-${season}-${type}.pdf`);
+
+  // Day PDF 목록 + 실제 페이지수 + Day 메타 (topic·writingType)
+  const dayFiles = [];
+  const [start, end] = cfg.days;
+  let latestDayMtime = 0;
+  for (let d = start; d <= end; d++) {
+    const dayStr = String(d).padStart(3, '0');
+    const fp = path.join(dir, `100day_${dayStr}_${type}.pdf`);
+    if (fs.existsSync(fp)) {
+      const bytes = fs.readFileSync(fp);
+      const doc = await PDFDocument.load(bytes);
+      const pageCount = doc.getPageCount();
+      const meta = readWr100DayMeta(d) || {};
+      dayFiles.push({ day: d, fp, pageCount, topic: meta.topic || '', writingType: meta.writingType || '' });
+      const m = fs.statSync(fp).mtimeMs;
+      if (m > latestDayMtime) latestDayMtime = m;
+    }
+  }
+  if (dayFiles.length === 0) return null;
+
+  // 캐시가 최신 Day PDF보다 오래됐으면 재생성
+  if (fs.existsSync(cachePath)) {
+    const cacheMtime = fs.statSync(cachePath).mtimeMs;
+    if (cacheMtime >= latestDayMtime) {
+      return cachePath;
+    }
+  }
+
+  // 병합 구조 · 앞표지(1) + 교재안내(7) + TOC(2) + Day PDFs + 뒷표지(1)
+  // Day별 시작 페이지 계산 · TOC는 페이지 번호 미표시라 참고용
+  const FRONT_PAGES = 1;
+  const INTRO_PAGES = 7;   // 브레인입문교재안내7p.pdf
+  const TOC_PAGES = 2;
+  let cursor = FRONT_PAGES + INTRO_PAGES + TOC_PAGES + 1;
+  const dayEntries = dayFiles.map(d => {
+    const entry = {
+      day: d.day,
+      topic: d.topic,
+      writingType: d.writingType,
+      startPage: cursor
+    };
+    cursor += d.pageCount;
+    return entry;
+  });
+
+  // TOC PDF 생성
+  const { buildTocPdfBytes } = require('./scripts/wr100-guide-generator/toc');
+  const kindLabel = type === 'student' ? '학생용' : '교사용';
+  const tocBytes = await buildTocPdfBytes({ season, kindLabel }, dayEntries);
+
+  // 표지 이미지 (앞표지: PNG · 뒷표지: JPG · 시즌별 1~5)
+  const imagesDir = path.join(__dirname, 'public', 'images', '100day');
+  const frontImgPath = path.join(imagesDir, `브레인입문앞표지${season}.png`);
+  const backImgPath = path.join(imagesDir, `브레인입문뒷표지${season}.jpg`);
+
+  // A4 세로 크기 (pdf-lib 단위: 1pt = 1/72inch · A4 = 595.28 × 841.89)
+  const A4_W = 595.28;
+  const A4_H = 841.89;
+
+  async function addCoverPage(doc, imgPath, isPng) {
+    if (!fs.existsSync(imgPath)) {
+      console.warn(`[wr100 season merge] 표지 이미지 없음: ${imgPath}`);
+      return;
+    }
+    const imgBytes = fs.readFileSync(imgPath);
+    const img = isPng ? await doc.embedPng(imgBytes) : await doc.embedJpg(imgBytes);
+    const page = doc.addPage([A4_W, A4_H]);
+    // 이미지 A4 페이지에 꽉 채워 · cover 효과 (contain 아님)
+    const imgAspect = img.width / img.height;
+    const pageAspect = A4_W / A4_H;
+    let w, h, x, y;
+    if (imgAspect > pageAspect) {
+      // 이미지가 더 넓음 · 높이 맞춤 · 좌우 잘림
+      h = A4_H;
+      w = h * imgAspect;
+      x = (A4_W - w) / 2;
+      y = 0;
+    } else {
+      // 이미지가 더 좁음 · 폭 맞춤 · 상하 잘림
+      w = A4_W;
+      h = w / imgAspect;
+      x = 0;
+      y = (A4_H - h) / 2;
+    }
+    page.drawImage(img, { x, y, width: w, height: h });
+  }
+
+  // 병합 · 앞표지 → 교재안내 → TOC → Day PDFs → 뒷표지
+  const merged = await PDFDocument.create();
+  // 앞표지
+  await addCoverPage(merged, frontImgPath, true);
+  // 교재안내 (모든 시즌 공통 · 7페이지)
+  const introPath = path.join(imagesDir, '브레인입문교재안내7p.pdf');
+  if (fs.existsSync(introPath)) {
+    const introBytes = fs.readFileSync(introPath);
+    const introDoc = await PDFDocument.load(introBytes);
+    const introPages = await merged.copyPages(introDoc, introDoc.getPageIndices());
+    introPages.forEach(p => merged.addPage(p));
+  } else {
+    console.warn(`[wr100 season merge] 교재안내 PDF 없음: ${introPath}`);
+  }
+  // TOC 붙이기
+  const tocDoc = await PDFDocument.load(tocBytes);
+  const tocPages = await merged.copyPages(tocDoc, tocDoc.getPageIndices());
+  tocPages.forEach(p => merged.addPage(p));
+  // Day PDFs 붙이기
+  for (const { fp } of dayFiles) {
+    const bytes = fs.readFileSync(fp);
+    const src = await PDFDocument.load(bytes);
+    const pages = await merged.copyPages(src, src.getPageIndices());
+    pages.forEach(p => merged.addPage(p));
+  }
+  // 뒷표지
+  await addCoverPage(merged, backImgPath, false);
+
+  const outBytes = await merged.save();
+  fs.writeFileSync(cachePath, outBytes);
+  return cachePath;
+}
+
+app.get('/api/wr100-guide/season-download', async (req, res) => {
+  try {
+    if (!isWr100GuideAllowed(req)) {
+      return res.status(403).json({ ok: false, message: '권한이 없습니다.' });
+    }
+    const season = parseInt(req.query.season, 10);
+    const type = String(req.query.type || '').trim();
+    if (!Number.isInteger(season) || season < 1 || season > 5) {
+      return res.status(400).json({ ok: false, message: '잘못된 season 값 (1~5)' });
+    }
+    if (type !== 'student' && type !== 'teacher') {
+      return res.status(400).json({ ok: false, message: '잘못된 type 값 (student|teacher)' });
+    }
+    const cachePath = await buildSeasonMergedPdf(season, type);
+    if (!cachePath) {
+      return res.status(404).json({ ok: false, message: '해당 시즌 PDF가 아직 준비되지 않았습니다.' });
+    }
+    const fs = require('fs');
+    const cfg = WR100_SEASONS.find(s => s.c === season);
+    const kindLabel = type === 'student' ? '학생용' : '교사용';
+    const downloadName = `쓰기문해_${cfg.name}_${kindLabel}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`);
+    fs.createReadStream(cachePath).pipe(res);
+  } catch (err) {
+    console.error('[wr100-guide/season-download] 오류:', err && err.message);
+    res.status(500).json({ ok: false, message: '시즌 다운로드 오류' });
+  }
+});
+
+// ✅ 지도자료 다운로드 · 파일 스트림 (권한 체크 + 파일 존재 확인)
+app.get('/api/wr100-guide/download', async (req, res) => {
+  try {
+    if (!isWr100GuideAllowed(req)) {
+      return res.status(403).json({ ok: false, message: '권한이 없습니다.' });
+    }
+    const day = parseInt(req.query.day, 10);
+    const type = String(req.query.type || '').trim();
+    if (!Number.isInteger(day) || day < 1 || day > 100) {
+      return res.status(400).json({ ok: false, message: '잘못된 day 값' });
+    }
+    if (type !== 'student' && type !== 'teacher') {
+      return res.status(400).json({ ok: false, message: '잘못된 type 값 (student|teacher)' });
+    }
+    const path = require('path');
+    const fs = require('fs');
+    const dayStr = String(day).padStart(3, '0');
+    const filename = `100day_${dayStr}_${type}.pdf`;
+    const filepath = path.join(__dirname, 'uploads', 'wr100-guides', filename);
+    if (!fs.existsSync(filepath)) {
+      return res.status(404).json({ ok: false, message: '파일이 아직 준비되지 않았습니다.' });
+    }
+    // 다운로드 파일명 · 한글 포함 UTF-8 인코딩
+    const kindLabel = type === 'student' ? '학생용' : '교사용';
+    const downloadName = `쓰기문해_Day${day}_${kindLabel}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`);
+    fs.createReadStream(filepath).pipe(res);
+  } catch (err) {
+    console.error('[wr100-guide/download] 오류:', err && err.message);
+    res.status(500).json({ ok: false, message: '다운로드 오류' });
   }
 });
 

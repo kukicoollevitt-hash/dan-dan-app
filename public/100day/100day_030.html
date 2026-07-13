@@ -196,6 +196,16 @@
     box-shadow: 0 0 0 0 rgba(255,140,60,0.5);
     animation: wordPulse 1.4s ease-in-out infinite;
   }
+  /* TTS 재생 중인 청크 강조 (모든 상태보다 우선) */
+  .passage-text .word.playing,
+  .passage-text .word.playing.read,
+  .passage-text .word.playing.next {
+    background: #1e88e5;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(30,136,229,0.45);
+    transform: translateY(-2px) scale(1.06);
+    animation: none;
+  }
   @keyframes wordPulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(255,140,60,0.55); }
     50%      { box-shadow: 0 0 0 8px rgba(255,140,60,0); }
@@ -412,6 +422,36 @@
     cursor: pointer;
   }
   .q-chip:hover { background: #d3e7f9; }
+  .q-chip.q-chip-particle {
+    background: #fff3e0;
+    border: 1px solid #ffb74d;
+    color: #e65100;
+  }
+  .q-chip.q-chip-particle:hover { background: #ffe0b2; }
+  /* 서술어 chip · 녹색 (문장 완성의 핵심) */
+  .q-chip.q-chip-predicate {
+    background: #e8f5e9;
+    border: 1px solid #66bb6a;
+    color: #2e7d32;
+    font-weight: 700;
+  }
+  .q-chip.q-chip-predicate:hover { background: #c8e6c9; }
+  /* 그룹 라벨 · 3가지 종류 구분 */
+  .q-chips-group {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 6px; padding-top: 6px;
+    border-top: 1px dashed #cfd8dc;
+    align-items: center;
+  }
+  .q-chips-group-label {
+    font-size: 11px;
+    font-weight: 700;
+    align-self: center;
+    margin-right: 4px;
+  }
+  .q-chips-group-label.words { color: #1565c0; }
+  .q-chips-group-label.particles { color: #ef6c00; }
+  .q-chips-group-label.predicates { color: #2e7d32; }
   .ai-btn {
     background: linear-gradient(135deg, #9c27b0, #6a1b9a);
     border: none; color: white;
@@ -1038,11 +1078,12 @@ const DATA = {
   subField: '세계인물',
   writingType: '편지글',
   onLink: 'on_people2_03',
+  theme: 5,   // 진빨강 · 인물
 
   vocab: [
     { word: '병원', meaning: '아픈 사람을 치료해 주는 곳' },
     { word: '간호', meaning: '아픈 사람을 옆에서 돌보는 일' },
-    { word: '밤',   meaning: '해가 지고 나서 어두운 시간' },
+    { word: '밤',   meaning: '해가 지고 나서 어두운 시간', ant: '낮' },
     { word: '등불', meaning: '어둠 속을 밝혀 주는 작은 불빛' },
     { word: '위로', meaning: '슬프거나 힘든 마음을 따뜻하게 달래 주는 것' },
     { word: '헌신', meaning: '자신의 편안함을 잊고 남을 위해 마음을 다하는 일' },
@@ -1054,8 +1095,8 @@ const DATA = {
     {
       title: '병사들을 돌본 병원',
       sentences: [
-        '나이팅게일 아주머니는 아픈 병사들이 모여 있는 병원을 돌보셨어요.',
-        '더러운 방을 깨끗이 하고, 정성껏 병사들을 간호하셨어요.'
+        '나이팅게일 아주머니는|아픈 병사들이 모여 있는|병원을|돌보셨어요.',
+        '더러운 방을|깨끗이 하고,|정성껏 병사들을|간호하셨어요.'
       ],
       centerAnswer: '나이팅게일은 병원에서 병사들을 정성껏 간호하셨어요.',
       centerSentence: {
@@ -1066,8 +1107,8 @@ const DATA = {
     {
       title: '깊은 밤을 밝힌 등불',
       sentences: [
-        '깊은 밤에도 아픈 병사들이 있으면 나이팅게일은 자리를 지키셨어요.',
-        '나이팅게일이 든 작은 등불은 어둠 속 병사들에게 큰 힘이 되었어요.'
+        '깊은 밤에도|아픈 병사들이 있으면|나이팅게일은|자리를|지키셨어요.',
+        '나이팅게일이 든|작은 등불은|어둠 속 병사들에게|큰 힘이|되었어요.'
       ],
       centerAnswer: '깊은 밤 나이팅게일의 등불은 병사들에게 큰 힘이 되었어요.',
       centerSentence: {
@@ -1078,8 +1119,8 @@ const DATA = {
     {
       title: '따뜻한 위로와 헌신',
       sentences: [
-        '두려움과 아픔에 지친 병사들을 나이팅게일은 따뜻한 말로 위로하셨어요.',
-        '자신의 편안함을 잊고 남을 위해 헌신하는 삶이었어요.'
+        '두려움과 아픔에 지친|병사들을|나이팅게일은|따뜻한 말로|위로하셨어요.',
+        '자신의 편안함을|잊고|남을 위해|헌신하는 삶이었어요.'
       ],
       centerAnswer: '나이팅게일은 병사들을 위로하며 헌신의 삶을 살았어요.',
       centerSentence: {
@@ -1090,8 +1131,8 @@ const DATA = {
     {
       title: '오늘도 이어지는 봉사와 감동',
       sentences: [
-        '나이팅게일 아주머니의 봉사는 오늘의 우리에게도 큰 감동을 남겨요.',
-        '지금도 많은 간호사들이 그 따뜻한 마음을 이어 가고 있어요.'
+        '나이팅게일 아주머니의 봉사는|오늘의 우리에게도|큰 감동을|남겨요.',
+        '지금도|많은 간호사들이|그 따뜻한 마음을|이어 가고 있어요.'
       ],
       centerAnswer: '나이팅게일의 봉사는 오늘의 우리에게 큰 감동을 남겨요.',
       centerSentence: {
@@ -1131,33 +1172,64 @@ const DATA = {
       {
         q: '나이팅게일 아주머니, 병원에서 어떤 일을 하셨나요?',
         ref: 1,
-        chips: ['병원', '간호', '병사', '아픈', '돌보셨어요', '정성껏', '깨끗이', '치료', '따뜻', '지키셨어요'],
+        chips: {
+          단어: ['병원', '간호', '병사', '아픈', '정성껏', '깨끗이', '치료', '따뜻'],
+          연결어: [],
+          서술어: ['돌보셨어요', '지키셨어요']
+        },
         lead: '나이팅게일 아주머니는 '
       },
       {
         q: '깊은 밤에도 등불을 들고 자리를 지킨 모습이 어떻게 다가왔나요?',
         ref: 2,
-        chips: ['밤', '등불', '어둠', '밝혀', '따뜻', '용기', '큰 힘', '고요', '지키셨어요', '든든'],
+        chips: {
+          단어: ['밤', '등불', '어둠', '밝혀', '따뜻', '용기', '큰 힘', '든든'],
+          연결어: [],
+          서술어: ['고요', '지키셨어요']
+        },
         lead: '깊은 밤에도 자리를 지킨 나이팅게일 아주머니를 보면 '
       },
       {
         q: '병사들을 위로하고 헌신하는 모습을 보며 어떤 생각이 들었나요?',
         ref: 3,
-        chips: ['위로', '헌신', '따뜻', '자기 자신', '잊고', '남을 위해', '벅찬', '고마움', '존경', '삶'],
+        chips: {
+          단어: ['위로', '헌신', '따뜻', '자기 자신', '잊고', '남을 위해', '벅찬', '고마움', '존경', '삶'],
+          연결어: [],
+          서술어: []
+        },
         lead: '병사들을 위로하고 헌신하는 모습을 보며 '
       },
       {
         q: '나이팅게일 아주머니의 봉사는 오늘의 우리에게 어떤 감동을 주나요?',
         ref: 4,
-        chips: ['봉사', '감동', '이어져요', '오늘', '간호사', '많은', '따뜻', '이어 가는', '기억', '용기'],
+        chips: {
+          단어: ['봉사', '감동', '오늘', '간호사', '많은', '따뜻', '이어 가는', '기억', '용기'],
+          연결어: [],
+          서술어: ['이어져요']
+        },
         lead: '나이팅게일 아주머니의 봉사는 오늘의 우리에게 '
       },
       {
         q: '나이팅게일 아주머니께 감사의 마음을 담아 편지를 써 볼까요?',
         ref: 0,
-        chips: ['감사합니다', '고맙습니다', '헌신', '봉사', '본받고', '기억', '따뜻', '이어', '아주머니처럼', '나도'],
+        chips: {
+          단어: ['헌신', '봉사', '본받고', '기억', '따뜻', '이어', '아주머니처럼', '나도'],
+          연결어: [],
+          서술어: ['감사합니다', '고맙습니다']
+        },
         lead: '나이팅게일 아주머니, '
       }
+    ]
+  },
+
+  /* 더보기 · 활동하기 (PDF 페이지 8) · 편지글 · 8어휘 자연 포함 */
+  activity: {
+    image: 'day30_더보기.png',
+    paragraphs: [
+      '나이팅게일 아주머니께. 아주머니, 안녕하세요. 저는 학교에서 아주머니의 이야기를 배우고 이렇게 편지를 씁니다. 아주머니는 옛날 전쟁으로 다친 사람들이 가득한 병원에서 밤낮없이 아픈 이들을 돌보셨다지요.',
+      '그때는 아픈 사람들을 옆에서 돌보는 간호 일을 힘들다고 여겨 아무도 하려 하지 않았대요. 하지만 아주머니는 그 어려운 길을 스스로 택하셨어요. 아프고 외로운 사람들 곁에 서 있어 주기 위해서였지요.',
+      '캄캄한 밤이 오면 아주머니는 작은 등불을 들고 병실 사이를 돌아다니셨어요. 아픈 병사들에게 다정한 말로 위로를 건네시며 그들의 마음까지 어루만져 주셨어요. 아주머니의 등불을 본 사람들은 그것을 "천사의 등불"이라 불렀대요.',
+      '아주머니의 헌신은 이후 많은 사람들이 봉사의 길을 걷게 하는 시작이 되었어요. 저는 아주머니의 이야기를 읽으며 큰 감동을 받았어요. 저도 아주머니처럼 다른 사람의 마음을 따뜻하게 해 주는 사람이 되겠어요. — 아주머니를 존경하는 학생 올림'
     ]
   }
 };
@@ -1448,8 +1520,22 @@ function renderProgress() {
   });
 }
 
+// 새로고침 후에도 같은 단계 유지 (Day별로 sessionStorage 키 분리)
+const STAGE_STORAGE_KEY = `wr100_stage_day${DATA.day || 1}`;
+function saveCurrentStage(n) {
+  try { sessionStorage.setItem(STAGE_STORAGE_KEY, String(n)); } catch {}
+}
+function loadSavedStage() {
+  try {
+    const v = parseInt(sessionStorage.getItem(STAGE_STORAGE_KEY), 10);
+    if (Number.isFinite(v) && v >= 1 && v <= 7) return v;
+  } catch {}
+  return 1;
+}
+
 function goStage(n) {
   STATE.currentStage = n;
+  saveCurrentStage(n);
   renderProgress();
   renderStage(n);
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1647,10 +1733,121 @@ function renderStage1(card) {
   drawStage1Para(state);
 }
 
+/* ─── 한국어 의미 단위 청킹 (초등 3~4학년 눈높이) ─── */
+function chunkKorean(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return [];
+  const words = raw.split(/\s+/);
+  if (words.length <= 1) return words;
+
+  const isDet = w => /^(이|그|저|한|두|세|네|다섯|여섯|일곱|여덟|아홉|열|여러|모든|온갖|새|헌|옛|현|다른|같은|어느|아무|무슨|어떤|웬|우리|저희|나의|너의|내|네|제|저의)$/.test(w);
+  const isShortAdv = w => /^(잘|못|다|안|덜|더|또|막|늘|참|꽤|매우|정말|아주|너무|많이|조금|잠깐|먼저|나중|자꾸|이제|가끔|자주|항상|드디어|마침내|갑자기|천천히|빨리|바로|겨우|이미|아직|벌써|스스로|서로|이렇게|저렇게|그렇게|처음|다시|또한)$/.test(w);
+  const isConn = w => /^(그리고|그러나|그런데|그래서|그러면|하지만|따라서|또한|즉|예를|한편|또는)$/.test(w);
+  // ~이라는/~라는 (간접인용 → 지시적 관형형 · 단독 청크로 취급)
+  const isIraneun = w => /(이?라는)$/.test(w);
+  // 관형형 어미로 끝나는지 (verb/adj + ~는/~은/~던) · 이라는은 별도
+  const isRel = w => {
+    // 던으로 끝나는건 대부분 회상 관형형
+    if (/던$/.test(w)) return true;
+    // ~는 (관형형): 앞이 동사 어간
+    if (/는$/.test(w)) {
+      return /(있|없|하|되|가|오|보|먹|자|살|앉|서|이|아니|받|주|타|올|내리|알|모르|좋|싫|같|다르|맞|틀리|나오|들어가|들어오|나가|만나|헤어지|시작하|끝내|공부하|사랑하|미워하|생각하|말하|가르치|배우|이야기하|묻|답하|웃|울|놀|쉬|일하|만들|짓|꺾|넘|건너|올라가|내려가|올라오|내려오|보내|얻|잃|찾|숨기|숨|보이|살펴보|나타나|사라지|돌|도)는$/.test(w);
+    }
+    // ~은 (관형형): 형용사/동사 관형형
+    if (/은$/.test(w)) {
+      return /(같|좋|많|적|높|낮|넓|좁|길|짧|밝|어둡|맑|흐리|굳|익|남|늦|이르|깊|얕|무겁|가볍|빠르|느리|착|굽|끝|시작한|끝난|사라진|나타난|다른|못한|않|닮|받|잡|얻|찾|본|죽|자|먹|입|열|닫|묻|묶|풀|찢|꺾|넘|건너|숨|눕|일어난|던진)은$/.test(w);
+    }
+    return false;
+  };
+  // 짧은 형용사·동사 관형형 (~ㄴ 받침, 화이트리스트 정확 매칭)
+  const isShortRelN = w => {
+    return /^(예쁜|큰|작은|빨간|하얀|노란|파란|검은|밝은|어두운|좋은|나쁜|뜨거운|차가운|많은|적은|먼|가까운|높은|낮은|넓은|좁은|긴|짧은|따뜻한|시원한|귀여운|무서운|재미있는|이상한|신기한|아름다운|용감한|성실한|친절한|다정한|남긴|줍은|본|잡은|얻은|받은|만든|지은|던진|열린|닫힌|묻힌|묶인|풀린|찢어진|사라진|나타난|숨은|익은|굳은|굽은|남은)$/.test(w);
+  };
+  // 조사 와/과 + 관형형 (예: 자기와 닮은, 친구와 다른)
+  const isWaGwa = w => /(와|과)$/.test(w) && w.length >= 2;
+  // 은/는 topic 조사 (관형형이 아닌 명사+topic) — 앞에 관형형 화이트리스트로 걸러짐
+  const isTopic = w => /[은는]$/.test(w) && !isRel(w) && !isShortRelN(w) && !isIraneun(w);
+  // 위치·의존명사구 (환경 속에서, 방 안에서, 상자 위에)
+  const isLocative = w => /^(속|안|위|아래|앞|뒤|옆|사이|밖|근처|주변)(에서|에|으로|로|의)$/.test(w);
+  // ~기 위해/~기 위한/~기 때문에
+  const isEndKi = w => /기$/.test(w);
+  const isKiTarget = w => /^(위해|위한|때문|때문에)/.test(w);
+  // 보조용언 앞말 (V+어/아/여) → 있다/없다/놓다/버리다/주다 등
+  const isAuxHead = w => /[아어여]$/.test(w) && w.length <= 3;
+  const isAux = w => /^(있|없|놓|버리|주|드리|가|오|보|말|계시)/.test(w);
+  // V+지 + 않다/못하다/말다
+  const isJi = w => /지$/.test(w) && w.length <= 3;
+  const isJiNeg = w => /^(않|못|말)/.test(w);
+
+  const shouldMerge = (prev, next) => {
+    if (!prev || !next) return false;
+    if (isConn(prev)) return false; // 접속사는 단독
+    if (isIraneun(prev)) return false; // ~이라는 뒤는 단독으로 끊기
+    // 다음이 관형사면 새 명사구 시작 → 항상 새 청크
+    if (isDet(next)) return false;
+    // 은/는 topic 조사 뒤에는 관형형과도 병합 X (문장 주어는 독립)
+    if (isTopic(prev) && (isRel(next) || isShortRelN(next) || isIraneun(next))) return false;
+    // 위치명사(속에서/안에서/위에/사이에) → 앞 명사와 병합
+    if (isLocative(next)) return true;
+    if (isDet(prev)) return true;
+    if (isRel(prev)) return true;
+    if (isShortRelN(prev)) return true;
+    if (isShortAdv(prev)) return true;
+    if (isEndKi(prev) && isKiTarget(next)) return true;
+    if (isAuxHead(prev) && isAux(next)) return true;
+    if (isJi(prev) && isJiNeg(next)) return true;
+    // 와/과 + 관형형 (자기와 닮은, 친구와 다른)
+    if (isWaGwa(prev) && (isRel(next) || isShortRelN(next))) return true;
+    // 다음이 관형형이면 앞의 명사구(주어부·주체)와 병합 (부모가 남긴, 아이가 그린)
+    if (isRel(next) || isShortRelN(next)) return true;
+    return false;
+  };
+
+  const chunks = [];
+  let buf = [words[0]];
+  for (let i = 1; i < words.length; i++) {
+    if (shouldMerge(buf[buf.length - 1], words[i])) {
+      buf.push(words[i]);
+    } else {
+      chunks.push(buf.join(' '));
+      buf = [words[i]];
+    }
+  }
+  chunks.push(buf.join(' '));
+  return chunks;
+}
+
+// 문장 → 청크 배열 (| 또는 ㅣ 수동 태깅 우선, 없으면 자동 청킹)
+function sentenceToChunks(s) {
+  if (typeof s === 'string' && /[|ㅣ]/.test(s)) {
+    return s.split(/[|ㅣ]/).map(c => c.trim()).filter(Boolean);
+  }
+  return chunkKorean(s);
+}
+// 문장에서 청크 태그(|, ㅣ)를 제거해 사람이 읽는 자연스러운 문장으로 반환
+function cleanSentence(s) {
+  return String(s || '').replace(/[|ㅣ]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// 청크 특성 기반 TTS 속도 자동 계산
+// 짧은 청크가 많을수록 → 느리게 (TTS가 짧은 구절을 빠르게 훑는 경향 보정)
+function autoTtsSpeed(chunks) {
+  if (!chunks || !chunks.length) return 0.95;
+  const totalChars = chunks.reduce((s, c) => s + c.length, 0);
+  const avgLen = totalChars / chunks.length;
+  // 평균 청크 길이별 속도 매핑
+  if (avgLen <= 3.5) return 0.82;
+  if (avgLen <= 4.5) return 0.85;
+  if (avgLen <= 5.5) return 0.88;
+  if (avgLen <= 7)   return 0.92;
+  return 0.95; // 평균 청크가 길면 기본 속도
+}
+
 function drawStage1Para(st) {
   const body = document.getElementById('s1body');
   const p = DATA.paragraphs[st.pIdx];
-  const words = p.sentences.join(' ').split(/\s+/);
+  // 문장별로 청킹 후 이어붙이기 (수동 | 태깅 있으면 우선, 없으면 자동)
+  const words = p.sentences.flatMap(sentenceToChunks);
   const wordSpans = words.map((w, i) => `<span class="word" data-widx="${i}">${w}</span>`).join(' ');
 
   // 4지선다: 정답 = 이 문단의 centerAnswer / 오답 = 다른 3개 문단의 centerAnswer
@@ -1672,7 +1869,7 @@ function drawStage1Para(st) {
       <h3><span class="p-num">${st.pIdx + 1}문단</span> ${p.title}</h3>
       <div class="para-bottom">
         <div class="passage-text" id="passageText">${wordSpans}</div>
-        <div class="read-progress" id="readProg">어절을 하나씩 눌러서 읽어 봐요 · 0 / ${words.length}</div>
+        <div class="read-progress" id="readProg">의미 단위를 하나씩 눌러서 읽어 봐요 · 0 / ${words.length}</div>
       </div>
     </div>
     <div class="center-quiz" id="centerQuiz" style="display:none">
@@ -1746,9 +1943,12 @@ function drawStage1Para(st) {
         // 낭독 패널 노출 + 버튼 연결 (문단 텍스트 · 문단 인덱스 전달)
         const vp = document.getElementById('voicePanel');
         vp.classList.add('show');
-        const paraText = p.sentences.join(' ');
+        // TTS: 의미 단위 청크 배열로 넘김 (수동 | 태깅 있으면 그대로)
+        // 문단 speed: p.speed 있으면 우선, 없으면 청크 평균 길이로 자동 계산
+        const paraChunks = p.sentences.flatMap(sentenceToChunks);
+        const paraSpeed = typeof p.speed === 'number' ? p.speed : autoTtsSpeed(paraChunks);
         const ttsBtn = document.getElementById('ttsBtn');
-        ttsBtn.onclick = () => playTts(paraText, ttsBtn);
+        ttsBtn.onclick = () => playTts(paraChunks, ttsBtn, paraSpeed);
         document.getElementById('recBtn').onclick = () => openRecModal(st.pIdx);
       } else {
         btn.classList.add('wrong');
@@ -1793,53 +1993,115 @@ function drawStage1Para(st) {
    TTS 낭독 (OpenAI gpt-4o-mini-tts) + 음성 녹음
    =================================================================== */
 window._ttsAudio = null;
-async function playTts(text, btn) {
-  // 이미 재생 중이면 일시정지
-  if (window._ttsAudio && !window._ttsAudio.paused) {
-    window._ttsAudio.pause();
+window._ttsChunkState = null;   // { chunks, aborted }
+const TTS_CHUNK_JOINER = ', , ';   // 청크 사이 문자 (쉼표 2개 → 조금 더 긴 호흡)
+
+async function fetchTtsAudio(text, speed = 0.95) {
+  const res = await fetch('/api/tts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, voice: 'nova', speed })
+  });
+  if (!res.ok) throw new Error('TTS 실패');
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+}
+
+async function playTts(input, btn, speed) {
+  // 이미 재생 중이면 정지
+  if (window._ttsChunkState && !window._ttsChunkState.aborted) {
+    window._ttsChunkState.aborted = true;
+    if (window._ttsAudio && !window._ttsAudio.paused) window._ttsAudio.pause();
     btn.classList.remove('playing');
     btn.textContent = '🔊 낭독 들어보기';
     return;
   }
-  // 이전에 로드된 오디오면 재개
-  if (window._ttsAudio && window._ttsAudio.dataset && window._ttsAudio.dataset.text === text) {
-    btn.classList.add('playing');
-    btn.textContent = '⏸️ 재생 중 (누르면 정지)';
-    try { await window._ttsAudio.play(); return; } catch {}
-  }
-  btn.disabled = true;
+  // 입력이 문자열이면 청크로 변환
+  const chunks = Array.isArray(input)
+    ? input
+    : (typeof chunkKorean === 'function'
+        ? String(input).split(/(?<=[.!?])\s+/).flatMap(s => chunkKorean(s))
+        : [String(input)]);
+
+  const state = { chunks, aborted: false };
+  window._ttsChunkState = state;
+
+  // 청크 span 강조 helper
+  const clearHighlight = () => {
+    document.querySelectorAll('.passage-text .word.playing').forEach(el => el.classList.remove('playing'));
+  };
+  const highlight = (idx) => {
+    clearHighlight();
+    const el = document.querySelector(`.passage-text .word[data-widx="${idx}"]`);
+    if (el) {
+      el.classList.add('playing');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    }
+  };
+
+  btn.disabled = false;
+  btn.classList.add('playing');
   btn.textContent = '⏳ 준비 중…';
+
   try {
-    const res = await fetch('/api/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, voice: 'nova', speed: 0.95 })
-    });
-    if (!res.ok) throw new Error('TTS 실패');
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    // 전체 문단을 한 번의 TTS 호출로 (청크 사이 쉼표로 자연스러운 호흡)
+    const fullText = chunks.join(TTS_CHUNK_JOINER);
+    const url = await fetchTtsAudio(fullText, speed);
+    if (state.aborted) return;
+
     const audio = new Audio(url);
-    audio.dataset && (audio.dataset.text = text);
     window._ttsAudio = audio;
-    audio.onended = () => {
-      btn.classList.remove('playing');
-      btn.textContent = '🔊 낭독 들어보기';
+
+    // metadata 로드 → duration 확보
+    await new Promise((resolve) => {
+      audio.addEventListener('loadedmetadata', resolve, { once: true });
+      audio.addEventListener('error', resolve, { once: true });
+      setTimeout(resolve, 800); // 폴백 (blob URL은 metadata 이벤트가 안 뜨는 경우 있음)
+    });
+
+    if (state.aborted) return;
+
+    // 각 청크 시작 시점 계산 (글자 수 비율)
+    const totalChars = chunks.reduce((s, c) => s + c.length, 0) || 1;
+    const dur = audio.duration || (totalChars * 0.13);
+    let cum = 0;
+    const chunkStarts = chunks.map((c) => {
+      const start = cum;
+      cum += (c.length / totalChars) * dur;
+      return start;
+    });
+
+    // 첫 청크 강조
+    highlight(0);
+    let currentIdx = 0;
+
+    audio.ontimeupdate = () => {
+      if (state.aborted) return;
+      const t = audio.currentTime;
+      let idx = 0;
+      for (let i = 0; i < chunkStarts.length; i++) {
+        if (t >= chunkStarts[i]) idx = i;
+      }
+      if (idx !== currentIdx) {
+        currentIdx = idx;
+        highlight(currentIdx);
+      }
     };
-    audio.onerror = () => {
-      btn.classList.remove('playing');
-      btn.textContent = '🔊 낭독 들어보기';
-      btn.disabled = false;
-    };
-    btn.disabled = false;
-    btn.classList.add('playing');
+
     btn.textContent = '⏸️ 재생 중 (누르면 정지)';
-    await audio.play();
+    await new Promise((resolve) => {
+      audio.onended = resolve;
+      audio.onerror = resolve;
+      audio.play().catch(resolve);
+    });
   } catch (err) {
     console.error('TTS 오류:', err);
     encourage('낭독 재생 실패, 다시 시도해주세요');
-    btn.disabled = false;
-    btn.textContent = '🔊 낭독 들어보기';
+  } finally {
+    clearHighlight();
     btn.classList.remove('playing');
+    btn.textContent = '🔊 낭독 들어보기';
+    if (window._ttsChunkState === state) window._ttsChunkState = null;
   }
 }
 
@@ -2396,7 +2658,7 @@ function shiftBlankInSentence(blank) {
    =================================================================== */
 function renderStage4(card) {
   const sentBank = DATA.paragraphs.map((p, i) => ({
-    pi: i, sentence: p.sentences[DATA.stage4Blanks[i]]
+    pi: i, sentence: cleanSentence(p.sentences[DATA.stage4Blanks[i]])
   }));
   const pool = shuffle(sentBank.map(x => x.sentence));
 
@@ -2411,10 +2673,11 @@ function renderStage4(card) {
         ${DATA.paragraphs.map((p, i) => {
           const blankIdx = DATA.stage4Blanks[i];
           const sentsHtml = p.sentences.map((s, si) => {
+            const clean = cleanSentence(s);
             if (si === blankIdx) {
-              return `<div class="s4-blank word-blank" data-pi="${i}" data-ans="${s.replace(/"/g,'&quot;')}" style="display:block;min-height:54px;width:100%;padding:14px 18px;text-align:center;line-height:1.6;margin:8px 0;white-space:normal"></div>`;
+              return `<div class="s4-blank word-blank" data-pi="${i}" data-ans="${clean.replace(/"/g,'&quot;')}" style="display:block;min-height:54px;width:100%;padding:14px 18px;text-align:center;line-height:1.6;margin:8px 0;white-space:normal"></div>`;
             }
-            return `<div style="padding:2px 4px">${s}</div>`;
+            return `<div style="padding:2px 4px">${clean}</div>`;
           }).join('');
           const isLast = i === DATA.paragraphs.length - 1;
           return `<div class="pf-para" style="margin-bottom:${isLast ? 0 : 22}px">${sentsHtml}</div>`;
@@ -2459,9 +2722,10 @@ function renderStage4(card) {
           // 전체 지문 낭독 · 녹음 패널 노출
           const vp = document.getElementById('voicePanelS5');
           vp.classList.add('show');
-          const wholePassage = DATA.paragraphs.map(pp => pp.sentences.join(' ')).join(' ');
+          // 전체 지문 TTS: 청크 단위로 자연스러운 호흡
+          const wholeChunks = DATA.paragraphs.flatMap(pp => pp.sentences.flatMap(sentenceToChunks));
           const ttsBtn = document.getElementById('ttsBtnS5');
-          ttsBtn.onclick = () => playTts(wholePassage, ttsBtn);
+          ttsBtn.onclick = () => playTts(wholeChunks, ttsBtn, autoTtsSpeed(wholeChunks));
           document.getElementById('recBtnS5').onclick = () => openRecModal(-1);   // -1 = 전체 지문
         }
       } else {
@@ -2493,7 +2757,7 @@ function reshuffleSentPool() {
    스테이지 5 · 문단순서 맞추기 (내부 함수명은 renderStage6 유지 · 대체 삭제 회피)
    =================================================================== */
 function renderStage6(card) {
-  const pool = shuffle(DATA.paragraphs.map((p, i) => ({ i, title: p.title, sample: p.sentences[0] })));
+  const pool = shuffle(DATA.paragraphs.map((p, i) => ({ i, title: p.title, sample: cleanSentence(p.sentences[0]) })));
 
   card.innerHTML = `
     <div class="stage-header">
@@ -2539,7 +2803,7 @@ function renderStage6(card) {
       }
       if (isCorrect) {
         const p = DATA.paragraphs[parseInt(zone.dataset.pi, 10)];
-        zone.querySelector('.slot-content').innerHTML = `<b>${p.title}</b> — ${p.sentences[0]}`;
+        zone.querySelector('.slot-content').innerHTML = `<b>${p.title}</b> — ${cleanSentence(p.sentences[0])}`;
         zone.classList.add('filled');
         chip.classList.add('used');
         solved++;
@@ -2560,6 +2824,9 @@ function renderStage6(card) {
    =================================================================== */
 function renderStage7(card) {
   const w = DATA.writing;
+  // 모듈 스코프 팔레트 참조
+  const PARTICLES = WRITING_GLOBAL_PARTICLES;
+  const PREDICATES = WRITING_GLOBAL_PREDICATES;
   card.innerHTML = `
     <div class="stage-header">
       <h2>✍️ 7단계 · ${DATA.writingType} 쓰기</h2>
@@ -2570,7 +2837,14 @@ function renderStage7(card) {
       <p>${w.guide}</p>
     </div>
     <div id="qList">
-      ${w.questions.map((q, i) => `
+      ${w.questions.map((q, i) => {
+        // chips 정규화: 배열이면 옛 형식(전부 단어), 객체면 새 형식(단어/연결어/서술어)
+        const chipData = getChipGroups(q);
+        const dayChipSet = new Set([...chipData.words, ...chipData.connectors, ...chipData.predicates]);
+        const globalParticles = PARTICLES.filter(p => !dayChipSet.has(p));
+        const globalPredicates = PREDICATES.filter(p => !dayChipSet.has(p));
+        const allPredicates = [...chipData.predicates, ...globalPredicates];
+        return `
         <div class="q-block">
           <div class="q-head">
             <span class="q-num">Q${i+1}</span>
@@ -2578,11 +2852,21 @@ function renderStage7(card) {
             ${q.ref ? `<span class="q-ref" data-ref="${q.ref}">💡 ${q.ref}문단 참고</span>` : `<span class="q-ref" data-ref="all">💡 전체 참고</span>`}
           </div>
           <textarea class="q-input" id="qInput${i}" placeholder="한 줄로 답해봐요">${q.lead}</textarea>
-          <div class="q-chips">
-            ${q.chips.map(c => `<span class="q-chip" data-chip="${c}" data-qi="${i}">${c}</span>`).join('')}
+          ${chipData.words.length ? `
+          <div class="q-chips-group">
+            <span class="q-chips-group-label words">📝 단어</span>
+            ${chipData.words.map(c => `<span class="q-chip" data-chip="${c}" data-qi="${i}">${c}</span>`).join('')}
+          </div>` : ''}
+          <div class="q-chips-group">
+            <span class="q-chips-group-label particles">✏️ 조사·연결어</span>
+            ${[...chipData.connectors, ...globalParticles].map(c => `<span class="q-chip q-chip-particle" data-chip="${c}" data-qi="${i}" data-particle="1">${c}</span>`).join('')}
+          </div>
+          <div class="q-chips-group">
+            <span class="q-chips-group-label predicates">🌿 서술어</span>
+            ${allPredicates.map(c => `<span class="q-chip q-chip-predicate" data-chip="${c}" data-qi="${i}" data-predicate="1">${c}</span>`).join('')}
           </div>
         </div>
-      `).join('')}
+      `;}).join('')}
     </div>
     <button class="ai-btn" id="aiBtn">✨ AI가 완성해줘요</button>
     <div class="ai-result" id="aiResult">
@@ -2603,14 +2887,22 @@ function renderStage7(card) {
       showRefModal(ref);
     });
   });
-  // 힌트 칩 클릭 → textarea에 삽입
+  // 힌트 칩 클릭 → textarea에 삽입 · 조사류는 공백 없이 붙임
   card.querySelectorAll('.q-chip').forEach(el => {
     el.addEventListener('click', () => {
       const qi = el.dataset.qi;
       const chip = el.dataset.chip;
+      const isParticle = el.dataset.particle === '1';
       const ta = document.getElementById(`qInput${qi}`);
-      if (!ta.value.endsWith(' ') && ta.value.length > 0) ta.value += ' ';
-      ta.value += chip;
+      if (isParticle) {
+        // 조사는 앞말에 붙여씀 · 공백 없이 바로 이어붙임
+        if (ta.value.endsWith(' ')) ta.value = ta.value.trimEnd();
+        ta.value += chip;
+      } else {
+        // 단어 chip · 기존 방식 (공백 후 추가)
+        if (!ta.value.endsWith(' ') && ta.value.length > 0) ta.value += ' ';
+        ta.value += chip;
+      }
       ta.focus();
       updateAiBtnState();
     });
@@ -2624,6 +2916,24 @@ function renderStage7(card) {
   document.getElementById('aiBtn').addEventListener('click', doAiCompose);
 }
 
+/* 글로벌 팔레트 · 조사·연결어 vs 종결 서술어 분리 */
+const WRITING_GLOBAL_PARTICLES = ['은','는','이','가','을','를','에','에서','로','으로','과','와','도','만','그리고','그래서','하지만'];
+const WRITING_GLOBAL_PREDICATES = ['이에요','예요','합니다','해요','였어요','있어요','없어요'];
+
+/* chip 그룹 정규화: 배열이면 옛 형식(전부 단어), 객체면 새 형식 */
+function getChipGroups(q) {
+  if (Array.isArray(q.chips)) {
+    // 옛 형식 (backward compat): flat 배열 → 단어로 취급
+    return { words: q.chips.slice(), connectors: [], predicates: [] };
+  }
+  const c = q.chips || {};
+  return {
+    words: (c.단어 || c.words || []).slice(),
+    connectors: (c.연결어 || c.조사연결어 || c.connectors || []).slice(),
+    predicates: (c.서술어 || c.predicates || []).slice()
+  };
+}
+
 /* 각 질문의 실입력 길이 계산 (lead 접두어 제외) */
 function getWritingRealLen(i) {
   const q = DATA.writing.questions[i];
@@ -2634,21 +2944,42 @@ function getWritingRealLen(i) {
   const real = (val.startsWith(lead) ? val.slice(lead.length) : val).trim();
   return real.length;
 }
+/* 서술어(Day + 글로벌) 하나 이상이 답변에 포함됐는지 검사 */
+function hasWritingPredicate(i) {
+  const q = DATA.writing.questions[i];
+  const ta = document.getElementById(`qInput${i}`);
+  if (!q || !ta) return true; // 데이터 없으면 통과 (backward compat)
+  const groups = getChipGroups(q);
+  const preds = [...groups.predicates, ...WRITING_GLOBAL_PREDICATES];
+  if (!preds.length) return true;
+  const val = (ta.value || '').trim();
+  return preds.some(p => val.includes(p));
+}
 const AI_MIN_LEN = 5;   // 각 질문 최소 실입력 길이
 
 function updateAiBtnState() {
   const btn = document.getElementById('aiBtn');
   if (!btn) return;
   const total = DATA.writing.questions.length;
-  const shortCount = [];
+  const shortList = [];
+  const missPredList = [];
   for (let i = 0; i < total; i++) {
-    if (getWritingRealLen(i) < AI_MIN_LEN) shortCount.push(i);
+    const short = getWritingRealLen(i) < AI_MIN_LEN;
+    const missPred = !hasWritingPredicate(i);
+    if (short) shortList.push(i);
+    else if (missPred) missPredList.push(i);  // 길이 미달일 때는 서술어 검사 스킵 (우선 순위)
   }
-  const ok = shortCount.length === 0;
+  const ok = shortList.length === 0 && missPredList.length === 0;
   btn.classList.toggle('ai-btn-locked', !ok);
-  btn.title = ok
-    ? 'AI가 완성해요'
-    : `아직 ${shortCount.length}개 질문에 ${AI_MIN_LEN}자 이상 답해주세요`;
+  if (ok) {
+    btn.title = 'AI가 완성해요';
+  } else if (shortList.length && missPredList.length) {
+    btn.title = `${shortList.length}개는 더 써야 하고, ${missPredList.length}개는 서술어를 채워야 해요`;
+  } else if (shortList.length) {
+    btn.title = `아직 ${shortList.length}개 질문에 ${AI_MIN_LEN}자 이상 답해주세요`;
+  } else {
+    btn.title = `${missPredList.length}개 질문에 서술어를 채워주세요`;
+  }
 }
 
 function showRefModal(ref) {
@@ -2661,14 +2992,14 @@ function showRefModal(ref) {
     inner = DATA.paragraphs.map((p, i) => `
       <div style="margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed #ffe0b2">
         <div style="color:#f57c00;font-weight:700;margin-bottom:4px">${i+1}문단 · ${p.title}</div>
-        <div style="color:#2b3a4a;line-height:1.7">${p.sentences.join(' ')}</div>
+        <div style="color:#2b3a4a;line-height:1.7">${p.sentences.map(cleanSentence).join(' ')}</div>
       </div>
     `).join('');
   } else {
     const p = DATA.paragraphs[parseInt(ref, 10) - 1];
     inner = `
       <div style="color:#f57c00;font-weight:700;margin-bottom:8px">${ref}문단 · ${p.title}</div>
-      <div style="color:#2b3a4a;line-height:1.9;font-size:16px">${p.sentences.join(' ')}</div>
+      <div style="color:#2b3a4a;line-height:1.9;font-size:16px">${p.sentences.map(cleanSentence).join(' ')}</div>
     `;
   }
   box.innerHTML = `
@@ -2686,12 +3017,14 @@ async function doAiCompose() {
   const btn = document.getElementById('aiBtn');
   // 안전장치 · 실입력(lead 제외) 5자 미만 질문 목록
   const short = [];
+  const missPred = [];
   DATA.writing.questions.forEach((q, i) => {
     const len = getWritingRealLen(i);
     if (len < AI_MIN_LEN) short.push({ i, len });
+    else if (!hasWritingPredicate(i)) missPred.push({ i });
   });
-  if (short.length > 0) {
-    showAiShortModal(short);
+  if (short.length > 0 || missPred.length > 0) {
+    showAiShortModal(short, missPred);
     return;
   }
 
@@ -2727,10 +3060,12 @@ async function doAiCompose() {
   }
 }
 
-/* AI 완성 클릭 시 실입력 미달 질문 안내 팝업 */
-function showAiShortModal(shortList) {
+/* AI 완성 클릭 시 실입력 미달·서술어 미충족 질문 안내 팝업 */
+function showAiShortModal(shortList, missPredList) {
+  shortList = shortList || [];
+  missPredList = missPredList || [];
   const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const items = shortList.map(({ i, len }) => {
+  const shortItems = shortList.map(({ i, len }) => {
     const q = DATA.writing.questions[i];
     const need = Math.max(0, AI_MIN_LEN - len);
     return `<li style="margin-bottom:10px;padding:10px 12px;background:#fff8e1;border-left:4px solid #ff8b3d;border-radius:8px;">
@@ -2738,28 +3073,47 @@ function showAiShortModal(shortList) {
       <div style="color:#5a6b7a;font-size:13px;">현재 <b style="color:#c62828;">${len}자</b> · ${need}자 더 써 봐요</div>
     </li>`;
   }).join('');
+  const predItems = missPredList.map(({ i }) => {
+    const q = DATA.writing.questions[i];
+    const groups = getChipGroups(q);
+    const preds = groups.predicates.slice(0, 4).map(p => `<span style="display:inline-block;background:#e8f5e9;color:#2e7d32;border:1px solid #66bb6a;border-radius:8px;padding:2px 8px;font-size:12px;font-weight:700;margin:2px 3px;">${esc(p)}</span>`).join('');
+    return `<li style="margin-bottom:10px;padding:10px 12px;background:#e8f5e9;border-left:4px solid #66bb6a;border-radius:8px;">
+      <div style="color:#1b5e20;font-weight:800;margin-bottom:4px;">Q${i+1}. ${esc(q.q)}</div>
+      <div style="color:#2e7d32;font-size:13px;margin-bottom:4px;">🌿 <b>서술어를 채워주세요</b></div>
+      <div>${preds}</div>
+    </li>`;
+  }).join('');
+  const showShort = shortList.length > 0;
+  const showPred = missPredList.length > 0;
+  const headBg = showShort ? 'linear-gradient(135deg,#ffe0b2,#ffcc80)' : 'linear-gradient(135deg,#c8e6c9,#a5d6a7)';
+  const headColor = showShort ? '#bf360c' : '#1b5e20';
+  const headText = showShort ? '✏️ 조금 더 써 봐요!' : '🌿 서술어를 채워주세요';
+  const subText = showShort && showPred
+    ? `<b>${AI_MIN_LEN}자 이상</b> 답을 채우고 <b>서술어</b>도 하나 이상 사용해야 AI가 완성해줘요`
+    : (showShort
+        ? `각 질문에 <b>${AI_MIN_LEN}자 이상</b> 답을 채워야 AI가 완성해줘요`
+        : `각 답변에 <b>서술어(녹색)</b>가 하나 이상 있어야 문장이 완성돼요`);
   const ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
   ov.innerHTML = `
     <div style="background:#fff;border-radius:22px;max-width:460px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.35);">
-      <div style="background:linear-gradient(135deg,#ffe0b2,#ffcc80);padding:18px 22px;">
-        <h3 style="margin:0;color:#bf360c;font-size:19px;font-weight:900;">✏️ 조금 더 써 봐요!</h3>
-        <div style="margin-top:6px;color:#8a5a2e;font-size:13px;">각 질문에 <b>${AI_MIN_LEN}자 이상</b> 답을 채워야 AI가 글을 완성해줘요</div>
+      <div style="background:${headBg};padding:18px 22px;">
+        <h3 style="margin:0;color:${headColor};font-size:19px;font-weight:900;">${headText}</h3>
+        <div style="margin-top:6px;color:${headColor};font-size:13px;opacity:0.85;">${subText}</div>
       </div>
       <ul style="list-style:none;padding:16px 20px 8px 20px;margin:0;overflow-y:auto;flex:1;">
-        ${items}
+        ${shortItems}${predItems}
       </ul>
       <div style="padding:14px 20px 18px 20px;text-align:center;">
-        <button id="aiShortOk" style="background:linear-gradient(135deg,#ff8b3d,#ff6f00);color:#fff;border:none;padding:10px 26px;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(255,111,0,0.3);">확인</button>
+        <button id="aiShortOk" style="background:linear-gradient(135deg,${showShort ? '#ff8b3d,#ff6f00' : '#66bb6a,#43a047'});color:#fff;border:none;padding:10px 26px;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.2);">확인</button>
       </div>
     </div>
   `;
   document.body.appendChild(ov);
   const close = () => {
     ov.remove();
-    // 미달 첫 번째 질문으로 스크롤 + 포커스
-    if (shortList.length > 0) {
-      const first = shortList[0].i;
+    const first = (shortList[0] && shortList[0].i) ?? (missPredList[0] && missPredList[0].i);
+    if (first != null) {
       const ta = document.getElementById(`qInput${first}`);
       if (ta) { ta.focus(); ta.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
     }
@@ -2779,12 +3133,22 @@ function showComposed(text) {
   document.getElementById('aiResult').classList.add('show');
   document.getElementById('aiResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
   fxStage7();
-  // AI 완성글 즉시 서버 저장 (완료 ✓ 안 눌러도 리포트에 반영)
+  // ✅ AI 완성 결과가 뜨는 순간 · 7단계 자동 완료 처리 (완료 ✓ 안 눌러도 SMS 발송)
+  //   재실행해도 stageDone[6] 이미 true라 무해 · firstCompletedAt 조건이 중복 SMS 차단
+  STATE.stageDone[6] = true;
   saveProgress().catch(err => console.warn('완성글 저장 실패:', err));
+  renderProgress();
 }
 
 function finishAndCelebrate() {
-  markDoneAndNext(6);   // 글쓰기=UI 7단계
+  // AI 완성 시점에 이미 자동 완료 처리됨 · 축하 팝업만 표시
+  if (STATE.stageDone[6]) {
+    populateCelebrateSummary();
+    document.getElementById('celebrate').classList.add('show');
+    renderProgress();
+    return;
+  }
+  markDoneAndNext(6);   // 글쓰기=UI 7단계 (안전망 · 이론상 도달 안 함)
 }
 
 function doPrint() {
@@ -3005,9 +3369,14 @@ function closeUnit() {
 /* ===================================================================
    init
    =================================================================== */
-renderProgress();
-renderStage(1);
-openVocabIntro();
+(function initApp() {
+  const saved = loadSavedStage();
+  STATE.currentStage = saved;
+  renderProgress();
+  renderStage(saved);
+  // 어휘학습 인트로 모달은 1단계 첫 진입 때만 노출 (새로고침으로 돌아온 경우 스킵)
+  if (saved === 1) openVocabIntro();
+})();
 </script>
 </body>
 </html>
