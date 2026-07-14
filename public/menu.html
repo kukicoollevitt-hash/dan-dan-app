@@ -18010,6 +18010,7 @@ async function performLogout() {
       const seriesBtns = document.querySelectorAll('#seriesBtnGroup .series-btn:not([disabled])');
       seriesBtns.forEach(btn => {
         btn.addEventListener('click', function() {
+          if (guardAutoTaskWhileRunning()) return;
           this.classList.toggle('selected');
           updateAutoTaskSettings();
         });
@@ -18021,6 +18022,7 @@ async function performLogout() {
       const dayBtns = document.querySelectorAll('#dayBtnGroup .day-btn');
       dayBtns.forEach(btn => {
         btn.addEventListener('click', function() {
+          if (guardAutoTaskWhileRunning()) return;
           const day = this.dataset.day;
 
           if (day === 'everyday') {
@@ -18047,6 +18049,7 @@ async function performLogout() {
       const domainBtns = document.querySelectorAll('#domainBtnGroup .domain-btn');
       domainBtns.forEach(btn => {
         btn.addEventListener('click', function() {
+          if (guardAutoTaskWhileRunning()) return;
           const domain = this.dataset.domain;
 
           if (domain === 'all') {
@@ -18080,6 +18083,24 @@ async function performLogout() {
           updateAutoTaskSettings();
         });
       }
+      // 🔒 실행 중에는 클릭/포커스/휠/키 입력 모두 차단 + 안내 팝업
+      const guard = (e) => {
+        if (guardTaskCountWhileRunning()) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (input) input.blur();
+        }
+      };
+      // input 자체와 감싸는 wrapper 모두에 걸어서 스핀 버튼/입력창/휠 전부 차단
+      const wrapper = document.querySelector('.task-count-input');
+      [input, wrapper].forEach(el => {
+        if (!el) return;
+        el.addEventListener('mousedown', guard, true);
+        el.addEventListener('click', guard, true);
+        el.addEventListener('focus', guard, true);
+        el.addEventListener('keydown', guard, true);
+        el.addEventListener('wheel', guard, true);
+      });
     }
 
     // 설정 업데이트 (UI에서 값 수집)
@@ -18224,6 +18245,25 @@ async function performLogout() {
       const startBtn = document.getElementById('autoTaskStartBtn');
       const pauseBtn = document.getElementById('autoTaskPauseBtn');
       const stopBtn = document.getElementById('autoTaskStopBtn');
+      const countInput = document.getElementById('autoTaskCount');
+
+      // 자동과제가 시작(또는 일시정지)된 상태 → 개수 입력 + 시리즈·요일·분야 버튼 그룹 시각적 잠금
+      const isActive = autoTaskSettings.status === 'running' || autoTaskSettings.status === 'paused';
+      if (countInput) {
+        countInput.disabled = isActive;
+        countInput.style.cursor = isActive ? 'not-allowed' : '';
+        countInput.style.opacity = isActive ? '0.55' : '';
+      }
+      // 시리즈/요일/분야 버튼 그룹 · 시각적 dim (실제 클릭 차단은 핸들러 내 guard가 담당)
+      ['seriesBtnGroup', 'dayBtnGroup', 'domainBtnGroup'].forEach(gid => {
+        const g = document.getElementById(gid);
+        if (!g) return;
+        g.style.opacity = isActive ? '0.6' : '';
+        g.style.cursor = isActive ? 'not-allowed' : '';
+        g.querySelectorAll('button').forEach(b => {
+          b.style.cursor = isActive ? 'not-allowed' : '';
+        });
+      });
 
       switch (autoTaskSettings.status) {
         case 'running':
@@ -18244,6 +18284,79 @@ async function performLogout() {
           break;
       }
     }
+
+    // 🔒 자동과제 실행 중 안내 팝업 (예쁜 커스텀 오버레이 · 오렌지 톤)
+    function showAutoTaskLockPopup(msg) {
+      const existing = document.getElementById('autoTaskLockPopup');
+      if (existing) existing.remove();
+      const overlay = document.createElement('div');
+      overlay.id = 'autoTaskLockPopup';
+      overlay.style.cssText = `
+        position: fixed; inset: 0;
+        background: rgba(20,25,40,0.55);
+        z-index: 1000500;
+        display: flex; align-items: center; justify-content: center;
+        padding: 20px;
+        backdrop-filter: blur(4px);
+        animation: atLockFadeIn 0.18s ease-out;
+      `;
+      const box = document.createElement('div');
+      box.style.cssText = `
+        background: linear-gradient(160deg, #fffbf0 0%, #fff3d0 100%);
+        border: 3px solid #ff8b3d;
+        border-radius: 22px;
+        max-width: 380px; width: 100%;
+        padding: 30px 26px 24px;
+        text-align: center;
+        box-shadow: 0 18px 50px rgba(0,0,0,0.32);
+        animation: atLockPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+      `;
+      box.innerHTML = `
+        <div style="font-size: 46px; margin-bottom: 8px;">⏸️</div>
+        <h3 style="margin: 6px 0 12px; font-size: 18px; font-weight: 800; color: #d05a1a; letter-spacing:-0.3px;">
+          자동과제 실행 중이에요
+        </h3>
+        <p style="font-size: 14px; color: #8b4a1a; line-height: 1.65; margin-bottom: 20px;">
+          ${msg || '설정을 바꾸려면<br><b style="color:#e65100;">"중단"</b> 버튼을 먼저 눌러 주세요.'}
+        </p>
+        <button id="autoTaskLockPopupBtn" type="button" style="
+          background: linear-gradient(135deg, #ffb84d, #ff8b3d);
+          color: #fff; border: none;
+          padding: 11px 34px; border-radius: 22px;
+          font-weight: 800; font-size: 14px; cursor: pointer;
+          box-shadow: 0 6px 14px rgba(255,139,61,0.4);
+          transition: transform 0.15s ease;
+        ">확인</button>
+      `;
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+      // 애니메이션 CSS 등록 (한 번만)
+      if (!document.getElementById('autoTaskLockPopupStyle')) {
+        const s = document.createElement('style');
+        s.id = 'autoTaskLockPopupStyle';
+        s.textContent = `
+          @keyframes atLockFadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes atLockPop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+        `;
+        document.head.appendChild(s);
+      }
+      const close = () => overlay.remove();
+      overlay.querySelector('#autoTaskLockPopupBtn').addEventListener('click', close);
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+      const esc = (e) => { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); } };
+      document.addEventListener('keydown', esc);
+    }
+
+    // 🔒 자동과제 실행 중 조작 차단 (개수/시리즈/요일/분야 공통)
+    function guardAutoTaskWhileRunning() {
+      if (autoTaskSettings.status === 'running' || autoTaskSettings.status === 'paused') {
+        showAutoTaskLockPopup();
+        return true;
+      }
+      return false;
+    }
+    // 하위 호환 · 기존 호출부 유지
+    function guardTaskCountWhileRunning() { return guardAutoTaskWhileRunning(); }
 
     // 상태 표시 업데이트
     function updateStatusDisplay() {
