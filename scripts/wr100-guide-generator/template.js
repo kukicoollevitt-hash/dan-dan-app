@@ -47,6 +47,37 @@ function whaleForDay(day) {
   return WHALE_URIS_MEMO[(n - 1) % WHALE_URIS_MEMO.length] || '';
 }
 
+// 🐋 데이별 색깔 고래 · 각 페이지 우측 상단 · 페이지 헤더 라인 걸침
+// 5-day 회전 (Day % 5): 과학·사회·한국문학·세계문학·인물
+// ⚠️ 임베드 크기 문제 방지 · 요청된 Day의 고래만 캐시하여 base64 로드
+const COLOR_WHALE_NAME_BY_SLOT = {
+  0: '빨간고래',   // Day 5,10,15... 인물
+  1: '녹색고래',   // Day 1,6,11... 과학
+  2: '파란고래',   // Day 2,7,12... 사회
+  3: '노란고래',   // Day 3,8,13... 한국문학
+  4: '주황고래'    // Day 4,9,14... 세계문학
+};
+const _colorWhaleCache = {};
+function colorWhaleForDay(day) {
+  const n = Math.max(1, Number(day) || 1);
+  const name = COLOR_WHALE_NAME_BY_SLOT[n % 5];
+  if (!name) return '';
+  if (_colorWhaleCache[name] !== undefined) return _colorWhaleCache[name];
+  try {
+    const buf = fs.readFileSync(path.join(WHALE_DIR, `${name}.png`));
+    _colorWhaleCache[name] = `data:image/png;base64,${buf.toString('base64')}`;
+  } catch (_) {
+    _colorWhaleCache[name] = '';
+  }
+  return _colorWhaleCache[name];
+}
+// 각 페이지 우측 상단에 삽입할 <img> HTML
+function pageColorWhaleHtml(day) {
+  const uri = colorWhaleForDay(day);
+  if (!uri) return '';
+  return `<img class="page-color-whale" src="${uri}" alt=""/>`;
+}
+
 
 const chosungOf = (str) => {
   const CS = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
@@ -194,6 +225,7 @@ function page1(DATA, mode) {
 
   return `
     <section class="page">
+      ${pageColorWhaleHtml(DATA.day)}
       ${pageHeader('어휘', '익히기', '오늘의 어휘를 예쁘게 따라 쓰고 · 뜻을 줄로 연결해 봐요', 'pill-right')}
       <div class="page-body">
         <div class="section-box">
@@ -242,6 +274,7 @@ function pageWriting(DATA, mode, pageNum) {
   }).join('');
   return `
     <section class="page">
+      ${pageColorWhaleHtml(DATA.day)}
       ${pageHeader('문장', '적어보기', '옅은 글자 위에 예쁘게 따라 써봐요', 'pill-right')}
       <div class="page-body">
         <div class="write-guide-banner">
@@ -288,6 +321,7 @@ function pageFillStage(DATA, mode, pageNum, stageKey, leftLine1, leftLine2, subt
   }).join('');
   return `
     <section class="page">
+      ${pageColorWhaleHtml(DATA.day)}
       ${pageHeader(leftLine1, leftLine2, subtitle, shape)}
       <div class="page-body">
         <div class="fill-guide">🎯 초성을 보고 · 빈 칸에 알맞은 어휘를 써봐요</div>
@@ -322,6 +356,7 @@ function page6(DATA, mode) {
   }).join('');
   return `
     <section class="page">
+      ${pageColorWhaleHtml(DATA.day)}
       ${pageHeader('중심내용', '찾기', '각 문단을 읽고 · 이 문단의 중심 내용을 한 문장으로 정리해 봐요', 'pill-right')}
       <div class="page-body">
         <div class="center-grid">${rows}</div>
@@ -337,6 +372,7 @@ function page7(DATA, mode) {
   const guide = (DATA.writing && DATA.writing.guide) || '';
   return `
     <section class="page">
+      ${pageColorWhaleHtml(DATA.day)}
       ${pageHeader('갈래별', '글쓰기', 'AI가 완성한 글을 예쁘게 옮겨 쓰고 · 나만의 생각으로 자유롭게 써봐요', 'pill-right')}
       <div class="page-body">
         <div class="write-guide">
@@ -426,6 +462,7 @@ function pageActivity(DATA, mode = 'student') {
 
   return `
     <section class="page">
+      ${pageColorWhaleHtml(DATA.day)}
       ${pageHeader('더보기', '활동하기', subtitle, 'pill-right')}
       <div class="page-body activity-body">
         ${imgHtml}
@@ -757,8 +794,8 @@ function buildHtml(DATA, mode = 'student') {
       margin: 0;
     }
     .activity-text p {
-      font-size: 13pt;
-      line-height: 2.0;              /* 넉넉한 행간 · O 그리기 공간 확보 */
+      font-size: 12.5pt;
+      line-height: 1.85;             /* O 그리기 공간 유지 · 100 Day 전 페이지 넘침 방지 */
       color: var(--text-dark);
       font-weight: 500;
       letter-spacing: -0.2px;
@@ -778,6 +815,19 @@ function buildHtml(DATA, mode = 'student') {
       padding: 0 1px;
       border-radius: 2px;
     }
+    /* 🐋 데이별 색깔 고래 · 페이지 우측 상단 · 헤더 하단 라인에 걸침 */
+    .page-color-whale {
+      position: absolute;
+      top: 8mm;
+      right: 6mm;
+      width: 32mm;
+      height: auto;
+      z-index: 5;
+      pointer-events: none;
+    }
+    /* 표지 페이지에는 고래 안 나오게 */
+    .page-cover .page-color-whale { display: none; }
+
     /* 헤더 · 좌측 컬러 박스 + 우측 subtitle · 브레인온 wbHeader 스타일 이식 */
     .page-header {
       /* 페이지 좌우/상단 여백까지 밀착 · 음수 마진으로 확장 */
