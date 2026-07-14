@@ -21049,6 +21049,10 @@ app.get("/my-learning", async (req, res) => {
             options: {
               responsive: true,
               maintainAspectRatio: false,
+              // 라인/포인트가 상·하단 경계에서 잘리지 않도록 픽셀 여백 확보
+              layout: {
+                padding: { top: 10, right: 8, bottom: 10, left: 8 }
+              },
               plugins: {
                 legend: {
                   display: false
@@ -21097,7 +21101,9 @@ app.get("/my-learning", async (req, res) => {
                   }
                 },
                 y: {
-                  min: 5,
+                  // 0~10 문해력 지수 전체 범위를 노출 · 양끝에 0.5 버퍼를 두어
+                  // 값 0 · 10 지점의 점 마커(반지름 4px)가 축 경계에 걸려 잘리지 않도록 함
+                  min: -0.5,
                   max: 10.5,
                   grid: {
                     display: false
