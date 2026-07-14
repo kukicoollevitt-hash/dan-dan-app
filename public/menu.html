@@ -11306,7 +11306,7 @@ if (logoutConfirmBtn) {
           return;
         }
 
-        // WRITING100 (BRAIN입문 쓰기문해 · 100일 완성) — 분야/과목/단원 없이 100day 모달만 사용
+        // WRITING100 (BRAIN입문 쓰기문해 · 100일 완성) — 인트로 영상 팝업 → 문해여행시작 → 100day 모달
         if (series === 'WRITING100') {
           // 시리즈 선택 상태 반영 (active 표시 + 저장)
           document.querySelectorAll("#seriesList .series-item").forEach(x => x.classList.remove("active"));
@@ -11326,16 +11326,22 @@ if (logoutConfirmBtn) {
           const unitDescEl = document.getElementById("unitDesc");
           if (unitTitleEl) unitTitleEl.textContent = "쓰기문해 100day";
           if (unitDescEl) unitDescEl.textContent = "카드 그리드 모달에서 Day를 선택해 학습을 시작해요.";
-          // 100day 모달 오픈
-          if (typeof window.openWr100Modal === 'function') {
+          // 인트로 영상 팝업 → 문해여행시작 클릭 시 100day 모달 오픈
+          if (typeof window.showWr100SeriesPopup === 'function') {
+            window.showWr100SeriesPopup();
+          } else if (typeof window.openWr100Modal === 'function') {
+            // 팝업 함수 미정의 시 폴백
             window.openWr100Modal();
           }
           return;
         }
 
-        // BRAINCRITIQUE(매일비평 시사문해) 클릭 — 비평 달력 모달 열기
+        // BRAINCRITIQUE(매일비평 시사문해) 클릭 — 인트로 영상 팝업 → 비평시작 → 비평 달력 모달
         if (series === 'BRAINCRITIQUE') {
-          if (typeof window.openCritiqueModal === 'function') {
+          if (typeof window.showBraincritiqueSeriesPopup === 'function') {
+            window.showBraincritiqueSeriesPopup();
+          } else if (typeof window.openCritiqueModal === 'function') {
+            // 팝업 함수 미정의 시 폴백
             window.openCritiqueModal();
           }
           return;
@@ -40640,7 +40646,7 @@ ${content}
 
         // 영상 (자동재생 + 무한반복 + 음소거) — 가로/세로 화면에 맞춰 자동 조절
         const video = document.createElement('video');
-        video.src = '/images/한국의역사영상.mp4';
+        video.src = '/images/100day/한국사영상.mp4';
         video.autoplay = true;
         video.loop = true;
         video.muted = true;
@@ -40734,6 +40740,240 @@ ${content}
       window.showKhSeriesPopup = showKhSeriesPopup;
       // 호환 alias — 기존 호출처 동작 유지
       window.showKhComingSoonPopup = showKhSeriesPopup;
+
+      // ✏️ BRAIN 입문 쓰기문해 (100day) 인트로 영상 팝업 — "문해여행시작" 클릭 시 100day 모달 진입
+      function showWr100SeriesPopup() {
+        const existing = document.getElementById('wr100SeriesIntroOverlay');
+        if (existing) existing.remove();
+
+        // === 오버레이 ===
+        const overlay = document.createElement('div');
+        overlay.id = 'wr100SeriesIntroOverlay';
+        overlay.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
+          z-index: 10005; backdrop-filter: blur(6px);
+        `;
+
+        // 영상 크기에 맞춰 팝업 사이즈 자동 조절 — 카드 padding 없이 영상 자체가 팝업
+        const box = document.createElement('div');
+        box.style.cssText = `
+          position: relative;
+          display: inline-block;
+          background: #000;
+          border: 2px solid #65a30d;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+          animation: wr100IntroPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          line-height: 0;
+        `;
+
+        const styleTag = document.createElement('style');
+        styleTag.textContent = `@keyframes wr100IntroPop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }`;
+        box.appendChild(styleTag);
+
+        // 닫기 (영상 우상단 오버레이)
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.title = '닫기';
+        closeBtn.style.cssText = `
+          position: absolute; top: 10px; right: 12px; z-index: 3;
+          width: 36px; height: 36px; border-radius: 50%;
+          background: rgba(0,0,0,0.55); color: #fff; border: none;
+          font-size: 22px; font-weight: 700; cursor: pointer; line-height: 1;
+          backdrop-filter: blur(6px);
+        `;
+        closeBtn.onclick = () => overlay.remove();
+
+        // 영상 (자동재생 + 무한반복 + 음소거) — 가로/세로 화면에 맞춰 자동 조절
+        const video = document.createElement('video');
+        video.src = '/images/100day/쓰기문해영상.mp4';
+        video.autoplay = true;
+        video.loop = true;
+        video.muted = true;
+        video.setAttribute('playsinline', '');
+        video.style.cssText = `
+          display: block;
+          max-width: 90vw; max-height: 86vh;
+          height: auto; width: auto;
+          background: #000;
+        `;
+
+        // 하단 액션 영역 (영상 하단 오버레이)
+        const actions = document.createElement('div');
+        actions.style.cssText = `
+          position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+          padding: 18px 16px 16px;
+          display: flex; gap: 10px; justify-content: center; align-items: center;
+          flex-wrap: wrap; line-height: 1.2;
+          background: linear-gradient(0deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 100%);
+        `;
+
+        // ✏️ 문해여행시작 버튼
+        const enterBtn = document.createElement('button');
+        enterBtn.innerHTML = '✏️ 문해여행시작';
+        enterBtn.style.cssText = `
+          padding: 14px 32px;
+          background: linear-gradient(135deg, #bef264 0%, #65a30d 100%);
+          color: #1a2e05; border: none; border-radius: 14px;
+          font-size: 16px; font-weight: 800; cursor: pointer;
+          box-shadow: 0 6px 16px rgba(101,163,13,0.4);
+          transition: transform 0.15s ease;
+          letter-spacing: 0.3px;
+        `;
+        enterBtn.onmouseover = () => enterBtn.style.transform = 'translateY(-2px)';
+        enterBtn.onmouseout = () => enterBtn.style.transform = '';
+        enterBtn.onclick = () => {
+          try { video.pause(); } catch {}
+          overlay.remove();
+          if (typeof window.openWr100Modal === 'function') {
+            window.openWr100Modal();
+          }
+        };
+        actions.appendChild(enterBtn);
+
+        box.appendChild(closeBtn);
+        box.appendChild(video);
+        box.appendChild(actions);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        // 배경 클릭으로 닫기
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) {
+            try { video.pause(); } catch {}
+            overlay.remove();
+          }
+        });
+        // ESC 닫기
+        const escHandler = (e) => {
+          if (e.key === 'Escape') {
+            try { video.pause(); } catch {}
+            overlay.remove();
+            document.removeEventListener('keydown', escHandler);
+          }
+        };
+        document.addEventListener('keydown', escHandler);
+      }
+      window.showWr100SeriesPopup = showWr100SeriesPopup;
+
+      // 📅 BRAIN 비평 시사문해 인트로 영상 팝업 — "비평시작" 클릭 시 비평 달력 모달 진입
+      function showBraincritiqueSeriesPopup() {
+        const existing = document.getElementById('critIntroOverlay');
+        if (existing) existing.remove();
+
+        // === 오버레이 ===
+        const overlay = document.createElement('div');
+        overlay.id = 'critIntroOverlay';
+        overlay.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
+          z-index: 10005; backdrop-filter: blur(6px);
+        `;
+
+        // 영상 크기에 맞춰 팝업 사이즈 자동 조절
+        const box = document.createElement('div');
+        box.style.cssText = `
+          position: relative;
+          display: inline-block;
+          background: #000;
+          border: 2px solid #6366f1;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+          animation: critIntroPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          line-height: 0;
+        `;
+
+        const styleTag = document.createElement('style');
+        styleTag.textContent = `@keyframes critIntroPop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }`;
+        box.appendChild(styleTag);
+
+        // 닫기 (영상 우상단 오버레이)
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.title = '닫기';
+        closeBtn.style.cssText = `
+          position: absolute; top: 10px; right: 12px; z-index: 3;
+          width: 36px; height: 36px; border-radius: 50%;
+          background: rgba(0,0,0,0.55); color: #fff; border: none;
+          font-size: 22px; font-weight: 700; cursor: pointer; line-height: 1;
+          backdrop-filter: blur(6px);
+        `;
+        closeBtn.onclick = () => overlay.remove();
+
+        // 영상 (자동재생 + 무한반복 + 음소거)
+        const video = document.createElement('video');
+        video.src = '/images/100day/시사문해영상.mp4';
+        video.autoplay = true;
+        video.loop = true;
+        video.muted = true;
+        video.setAttribute('playsinline', '');
+        video.style.cssText = `
+          display: block;
+          max-width: 90vw; max-height: 86vh;
+          height: auto; width: auto;
+          background: #000;
+        `;
+
+        // 하단 액션 영역
+        const actions = document.createElement('div');
+        actions.style.cssText = `
+          position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+          padding: 18px 16px 16px;
+          display: flex; gap: 10px; justify-content: center; align-items: center;
+          flex-wrap: wrap; line-height: 1.2;
+          background: linear-gradient(0deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 100%);
+        `;
+
+        // 📅 비평시작 버튼
+        const enterBtn = document.createElement('button');
+        enterBtn.innerHTML = '📅 비평시작';
+        enterBtn.style.cssText = `
+          padding: 14px 32px;
+          background: linear-gradient(135deg, #60a5fa 0%, #6366f1 100%);
+          color: white; border: none; border-radius: 14px;
+          font-size: 16px; font-weight: 800; cursor: pointer;
+          box-shadow: 0 6px 16px rgba(99,102,241,0.4);
+          transition: transform 0.15s ease;
+          letter-spacing: 0.3px;
+        `;
+        enterBtn.onmouseover = () => enterBtn.style.transform = 'translateY(-2px)';
+        enterBtn.onmouseout = () => enterBtn.style.transform = '';
+        enterBtn.onclick = () => {
+          try { video.pause(); } catch {}
+          overlay.remove();
+          if (typeof window.openCritiqueModal === 'function') {
+            window.openCritiqueModal();
+          }
+        };
+        actions.appendChild(enterBtn);
+
+        box.appendChild(closeBtn);
+        box.appendChild(video);
+        box.appendChild(actions);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        // 배경 클릭으로 닫기
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) {
+            try { video.pause(); } catch {}
+            overlay.remove();
+          }
+        });
+        // ESC 닫기
+        const escHandler = (e) => {
+          if (e.key === 'Escape') {
+            try { video.pause(); } catch {}
+            overlay.remove();
+            document.removeEventListener('keydown', escHandler);
+          }
+        };
+        document.addEventListener('keydown', escHandler);
+      }
+      window.showBraincritiqueSeriesPopup = showBraincritiqueSeriesPopup;
 
       const KH_OPEN_KEY = 'khModalOpen';
 
