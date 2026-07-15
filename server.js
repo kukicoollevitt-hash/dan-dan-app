@@ -34057,8 +34057,8 @@ const examDetailMappingsServer = {
     speechTalk: [1, 2, 3],
     speechIntegrated: [4, 5, 6, 7],
     speechWrite: [8, 9, 10],
-    grammarModern: [11, 13, 14, 15],
-    grammarClassic: [12],
+    grammarModern: [11, 12, 13, 14],
+    grammarClassic: [15],
     readingHumanities: [16, 17, 18, 19, 20, 21],
     readingLaw: [22, 23, 24, 25, 26],
     readingScience: [30, 31, 32, 33],
@@ -34087,13 +34087,13 @@ const examDetailMappingsServer = {
     speechWrite: [8, 9, 10],
     grammarModern: [11, 12, 13, 14, 15],
     grammarClassic: [],
-    readingHumanities: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
-    readingLaw: [],
+    readingLaw: [16, 17, 18, 19, 20],
+    readingHumanities: [21, 22, 23, 24, 25],
     readingScience: [26, 27, 28, 29, 30],
-    litModernPoem: [31, 32, 33, 34, 35, 36, 37],
-    litModernNovel: [],
-    litClassicPoem: [],
-    litClassicProse: [38, 39, 40, 41, 42, 43, 44, 45]
+    litModernPoem: [31, 32, 33],
+    litClassicPoem: [34, 35, 36, 37],
+    litModernNovel: [38, 39, 40, 41],
+    litClassicProse: [42, 43, 44, 45]
   },
   'korean_mock_8': {
     speechTalk: [1, 2, 3],
@@ -34104,10 +34104,10 @@ const examDetailMappingsServer = {
     readingScience: [16, 17, 18, 19, 20],
     readingLaw: [21, 22, 23, 24, 25],
     readingHumanities: [26, 27, 28, 29, 30],
-    litModernPoem: [31, 32, 33, 34, 43, 44, 45],
+    litClassicPoem: [31, 32, 33, 34],
     litModernNovel: [35, 36, 37, 38],
-    litClassicPoem: [],
-    litClassicProse: [39, 40, 41, 42]
+    litClassicProse: [39, 40, 41, 42],
+    litModernPoem: [43, 44, 45]
   },
   'korean_mock_9': {
     speechTalk: [1, 2, 3],
