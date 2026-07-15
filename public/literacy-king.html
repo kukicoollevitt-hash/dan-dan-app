@@ -1269,14 +1269,18 @@
     }
   }
 
-  async function loadSubjectContent(subject) {
-    const dir = SUBJECT_DIRS[subject];
-    const prefix = currentSeries === 'on' ? 'on_' : currentSeries === 'fit' ? 'fit_' : currentSeries === 'deep' ? 'deep_' : '';
-    // 'up' = BRAIN UP은 prefix 없음 (기본 단원)
-    const path = `/BRAINUP/${dir}/${prefix}${subject}_content.js`;
+  // 🔒 content.js 캐시 버전 · 콘텐츠 변경 시 이 값을 올려 캐시 즉시 무효화
+  //   (배포마다 브라우저 캐시로 옛 지문이 나오는 문제 방지)
+  const CONTENT_JS_VERSION = '20260715';
+
+  // 지정된 unitId가 로드된 CONTENTS 에 존재하는지 확인
+  function _hasUnit(unitId) {
+    return !!(window.CONTENTS && window.CONTENTS[unitId]);
+  }
+
+  // 단일 시도로 content.js 스크립트 태그를 붙이고 onload / onerror 를 기다림
+  function _loadScriptOnce(path) {
     return new Promise((resolve, reject) => {
-      const existing = document.querySelector(`script[data-content-path="${path}"]`);
-      if (existing) { resolve(); return; }
       const script = document.createElement('script');
       script.src = path;
       script.setAttribute('data-content-path', path);
@@ -1284,6 +1288,52 @@
       script.onerror = () => reject(new Error('load failed'));
       document.head.appendChild(script);
     });
+  }
+
+  async function loadSubjectContent(subject, opts = {}) {
+    const dir = SUBJECT_DIRS[subject];
+    const prefix = currentSeries === 'on' ? 'on_' : currentSeries === 'fit' ? 'fit_' : currentSeries === 'deep' ? 'deep_' : '';
+    // 'up' = BRAIN UP은 prefix 없음 (기본 단원)
+    const basePath = `/BRAINUP/${dir}/${prefix}${subject}_content.js`;
+    const marker = `${prefix}${subject}`;
+
+    // 이미 로드됐고 (기대하는 단원 keys 존재)이면 재로드 스킵
+    const alreadyLoaded = document.querySelector(`script[data-content-marker="${marker}"]`);
+    if (alreadyLoaded && !opts.force) {
+      // 정말 CONTENTS 에 이 subject 데이터가 있는지 최소 검증 (unit 01 이라도 있어야 정상)
+      const probeUnit = `${prefix}${subject}_01`;
+      if (_hasUnit(probeUnit)) return;
+      // 태그는 있으나 CONTENTS 비어 있음 → 강제 재로드
+    }
+
+    // 캐시 버스팅 버전 · opts.force 면 추가로 timestamp 붙여 완전 신선한 요청
+    const version = opts.force ? `${CONTENT_JS_VERSION}-${Date.now()}` : CONTENT_JS_VERSION;
+    const path = `${basePath}?v=${version}`;
+
+    try {
+      await _loadScriptOnce(path);
+      const s = document.querySelector(`script[data-content-path^="${basePath}"]`);
+      if (s) s.setAttribute('data-content-marker', marker);
+    } catch (err) {
+      // 1차 실패 → 캐시 우회 재시도
+      if (!opts.force) {
+        console.warn('[loadSubjectContent] 1차 실패 · 캐시 우회 재시도:', basePath);
+        return loadSubjectContent(subject, { force: true });
+      }
+      throw err;
+    }
+  }
+
+  // 특정 unitId가 로드된 CONTENTS 에 없으면 캐시 우회 재로드 시도
+  async function ensureUnitLoaded(unitId, subject) {
+    if (_hasUnit(unitId)) return true;
+    try {
+      await loadSubjectContent(subject, { force: true });
+    } catch (e) {
+      console.error('[ensureUnitLoaded] 재로드 실패:', unitId, e);
+      return false;
+    }
+    return _hasUnit(unitId);
   }
 
   function renderUnitList() {
@@ -1517,19 +1567,89 @@
   window.openLkRulesModal = openLkRulesModal;
   window.closeLkRulesModal = closeLkRulesModal;
 
+  // 예쁜 안내 팝업 (기존 alert 대체)
+  function showLkNoticePopup({ title, body, primaryLabel, onPrimary, secondaryLabel, onSecondary }) {
+    const existing = document.getElementById('lkNoticePopup');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'lkNoticePopup';
+    overlay.style.cssText = `
+      position: fixed; inset: 0;
+      background: rgba(20,25,40,0.6);
+      z-index: 1000600;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px; backdrop-filter: blur(4px);
+      animation: lkNoticeFadeIn 0.18s ease-out;
+    `;
+    const box = document.createElement('div');
+    box.style.cssText = `
+      background: linear-gradient(160deg, #ffffff 0%, #f5f3ff 100%);
+      border: 3px solid #7c3aed;
+      border-radius: 20px;
+      max-width: 400px; width: 100%;
+      padding: 28px 24px 22px;
+      text-align: center;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.3);
+      animation: lkNoticePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    `;
+    box.innerHTML = `
+      <div style="font-size: 42px; margin-bottom: 6px;">📖</div>
+      <h3 style="margin: 4px 0 10px; font-size: 17px; font-weight: 800; color: #6b21a8; letter-spacing:-0.3px;">${title || '알림'}</h3>
+      <p style="font-size: 14px; color: #4b5563; line-height: 1.65; margin-bottom: 18px;">${body || ''}</p>
+      <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+        ${secondaryLabel ? `<button id="lkNoticeSecondary" style="background:#e5e7eb; color:#374151; border:none; padding:10px 22px; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer;">${secondaryLabel}</button>` : ''}
+        <button id="lkNoticePrimary" style="background: linear-gradient(135deg, #a78bfa, #7c3aed); color:#fff; border:none; padding:10px 28px; border-radius:20px; font-weight:800; font-size:13px; cursor:pointer; box-shadow: 0 4px 12px rgba(124,58,237,0.35);">${primaryLabel || '확인'}</button>
+      </div>
+    `;
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    if (!document.getElementById('lkNoticePopupStyle')) {
+      const s = document.createElement('style');
+      s.id = 'lkNoticePopupStyle';
+      s.textContent = `@keyframes lkNoticeFadeIn { from{opacity:0} to{opacity:1} } @keyframes lkNoticePop { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }`;
+      document.head.appendChild(s);
+    }
+    const close = () => overlay.remove();
+    document.getElementById('lkNoticePrimary').addEventListener('click', () => { close(); if (typeof onPrimary === 'function') onPrimary(); });
+    if (secondaryLabel) {
+      document.getElementById('lkNoticeSecondary').addEventListener('click', () => { close(); if (typeof onSecondary === 'function') onSecondary(); });
+    }
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    const esc = (e) => { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); } };
+    document.addEventListener('keydown', esc);
+  }
+
   // ───── 게임 시작 ─────
-  function startGame(unitId) {
+  async function startGame(unitId) {
     // 도전권 소진 또는 누적 50회 한도 도달 시 차단 (단어월드컵과 동일)
     if (_lkDaily && (_lkDaily.dailyTotalLimitReached || (_lkDaily.balance ?? 1) <= 0)) {
       showLkLimitPopup();
       return;
     }
     currentUnit = unitId;
-    const unit = (window.CONTENTS || {})[unitId];
-    if (!unit || !Array.isArray(unit.passage) || unit.passage.length < 2) {
-      alert('이 단원은 아직 지문 데이터가 부족해요.');
-      return;
+
+    // 캐시로 인해 CONTENTS 에 이 단원이 없거나 지문 필드가 미완인 경우 → 캐시 우회 재로드 1회 시도
+    let unit = (window.CONTENTS || {})[unitId];
+    const needsReload = !unit
+      || !Array.isArray(unit.passage)
+      || unit.passage.length < 2;
+    if (needsReload) {
+      console.warn('[startGame] 캐시 의심 · 재로드 시도:', unitId, unit && unit.passage && unit.passage.length);
+      const ok = await ensureUnitLoaded(unitId, currentSubject);
+      unit = (window.CONTENTS || {})[unitId];
+      if (!ok || !unit || !Array.isArray(unit.passage) || unit.passage.length < 2) {
+        // 재로드 후에도 실패 → 실제 콘텐츠 결함 or 서버 응답 이상
+        showLkNoticePopup({
+          title: '지문을 불러오지 못했어요',
+          body: '단원 콘텐츠 로딩에 실패했어요.<br>인터넷 상태를 확인하고 새로고침 해주세요.<br><span style="font-size:12px; color:#9ca3af;">(계속 뜨면 콘텐츠 팀에 알려주세요)</span>',
+          primaryLabel: '새로고침',
+          onPrimary: () => location.reload(),
+          secondaryLabel: '취소'
+        });
+        return;
+      }
     }
+
     // 지문 → 문장 배열로 분할
     currentUnitData = {
       unitId,
@@ -1537,7 +1657,11 @@
       paragraphs: unit.passage.map(p => splitSentences(stripTags(p)))
     };
     if (currentUnitData.paragraphs.length < 4) {
-      alert('이 단원은 4문단 미만이라 게임 진행이 어려워요.');
+      showLkNoticePopup({
+        title: '이 단원은 게임 진행이 어려워요',
+        body: '문단 수가 <b>4개 미만</b>이라 문해왕 선발전을 진행할 수 없어요.<br>다른 단원을 선택해 주세요.',
+        primaryLabel: '다른 단원 선택'
+      });
       return;
     }
     document.getElementById('gameUnitName').textContent = unit.title || unitId;

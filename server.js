@@ -1229,16 +1229,16 @@ const adminSchema = new mongoose.Schema({
   // 🔹 계약 관리 (학원용)
   contractStartDate: { type: Date, default: null }, // 계약 시작일
   contractEndDate: { type: Date, default: null },   // 계약 종료일 (시작일 + 1년)
-  contractType: { type: String, enum: ['franchise', 'subscription'], default: null }, // 계약구분: franchise(가맹형), subscription(구독형)
-  yearlyFeePaid: { type: Boolean, default: false }, // 연 구독료 입금 상태 (구독형용)
+  contractType: { type: String, enum: ['franchise', 'subscription'], default: null }, // 계약구분: franchise(프리미엄), subscription(스탠다드)
+  yearlyFeePaid: { type: Boolean, default: false }, // 연 구독료 입금 상태 (스탠다드용)
   yearlyFeePaidYear: { type: Number, default: null }, // 입금 완료한 연도 기록 (예: 2026)
   yearlyFeePaidMonth: { type: Number, default: null }, // 입금 완료한 월 기록 (예: 3)
   isRenewal: { type: Boolean, default: false }, // 재계약 여부 (입금완료로 자동 생성된 경우 true)
   originalAdminId: { type: mongoose.Schema.Types.ObjectId, default: null }, // 원본 Admin ID (재계약의 경우)
 
-  // 🔹 가맹형 관리 필드
-  franchiseFee: { type: Number, default: 0 }, // 총가맹비 (가맹형)
-  franchiseContractDate: { type: Date, default: null }, // 가맹 계약일 (가맹형)
+  // 🔹 프리미엄 관리 필드
+  franchiseFee: { type: Number, default: 0 }, // 총가맹비 (프리미엄)
+  franchiseContractDate: { type: Date, default: null }, // 가맹 계약일 (프리미엄)
 
   // 🔹 누적 학생 수 (월말 cron이 갱신, 사이클 단위로 리셋)
   cumulativeStudentCount: { type: Number, default: 0 },
@@ -5229,8 +5229,8 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
               <label>계약유형 *</label>
               <select name="contractType" required>
                 <option value="">선택해주세요</option>
-                <option value="franchise">가맹형</option>
-                <option value="subscription">구독형</option>
+                <option value="franchise">프리미엄</option>
+                <option value="subscription">스탠다드</option>
               </select>
 
               <label>계약일 *</label>
@@ -5362,7 +5362,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
           async function updateContractType(selectEl) {
             const adminId = selectEl.dataset.adminId;
             const contractType = selectEl.value;
-            const typeLabel = contractType === 'franchise' ? '가맹형' : contractType === 'subscription' ? '구독형' : '미설정';
+            const typeLabel = contractType === 'franchise' ? '프리미엄' : contractType === 'subscription' ? '스탠다드' : '미설정';
 
             if (!confirm('계약구분을 "' + typeLabel + '"(으)로 변경할까요?')) {
               // 취소 시 원래 값으로 되돌리기
@@ -5442,8 +5442,8 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
             <select id="contractTypeFilter" onchange="filterTable()"
               style="padding: 10px 14px; border: 2px solid var(--line); border-radius: 10px; font-size: 14px; outline: none; cursor: pointer;">
               <option value="">전체 유형</option>
-              <option value="franchise">가맹형</option>
-              <option value="subscription">구독형</option>
+              <option value="franchise">프리미엄</option>
+              <option value="subscription">스탠다드</option>
               <option value="none">미설정</option>
             </select>
             <div style="position: relative;">
@@ -5523,12 +5523,10 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
         </a>
       `;
 
-      // 🔹 시리즈 체크박스 (계약구분에 따라 활성화/비활성화)
+      // 🔹 시리즈 체크박스 (프리미엄·스탠다드 모두 전 시리즈 선택 가능)
+      //   · 시리즈·기능은 두 계약구분 동일 · 차이는 학생 수 상한뿐 (프리미엄 360 / 스탠다드 120)
       const approvedSeries = a.approvedSeries || [];
       const contractTypeVal = a.contractType || "";
-
-      // 구독형: 브레인온, 브레인업만 선택 가능
-      // 가맹형: 모든 시리즈 선택 가능
       const allSeries = [
         { key: 'brainon', label: '온' },
         { key: 'brainup', label: '업' },
@@ -5537,20 +5535,13 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
         { key: 'brainreal', label: '실전' }
       ];
 
-      // 구독형일 때만 brainfit, braindeep, brainreal 비활성화
-      const subscriptionAllowed = ['brainon', 'brainup'];
-
       let seriesCheckboxes = '<div class="series-checkboxes">';
       allSeries.forEach(s => {
         const isChecked = approvedSeries.includes(s.key);
-        const isDisabled = contractTypeVal === 'subscription' && !subscriptionAllowed.includes(s.key);
         const checkedClass = isChecked ? 'checked' : '';
-        const disabledClass = isDisabled ? 'disabled' : '';
-        const disabledAttr = isDisabled ? 'disabled' : '';
-
         seriesCheckboxes += `
-          <label class="series-checkbox-label ${checkedClass} ${disabledClass}" title="${isDisabled ? '구독형은 브레인온, 브레인업만 선택 가능' : ''}">
-            <input type="checkbox" ${isChecked ? 'checked' : ''} ${disabledAttr}
+          <label class="series-checkbox-label ${checkedClass}">
+            <input type="checkbox" ${isChecked ? 'checked' : ''}
               onchange="toggleSeries('${a._id}', '${s.key}', this)" />
             ${s.label}
           </label>
@@ -5558,9 +5549,9 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
       });
       seriesCheckboxes += '</div>';
 
-      // 🔹 계약구분 (가맹형/구독형)
+      // 🔹 계약구분 (프리미엄/스탠다드)
       const contractType = a.contractType || "";
-      const contractTypeLabel = contractType === "franchise" ? "가맹형" : contractType === "subscription" ? "구독형" : "미설정";
+      const contractTypeLabel = contractType === "franchise" ? "프리미엄" : contractType === "subscription" ? "스탠다드" : "미설정";
       const contractTypeClass = contractType === "franchise" ? "badge-franchise" : contractType === "subscription" ? "badge-subscription" : "badge-pending";
 
       // 🔹 계약시작일
@@ -5577,8 +5568,8 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
           <td>
             <select class="contract-type-select" data-admin-id="${a._id}" onchange="updateContractType(this)">
               <option value="" ${!contractType ? "selected" : ""}>미설정</option>
-              <option value="franchise" ${contractType === "franchise" ? "selected" : ""}>가맹형</option>
-              <option value="subscription" ${contractType === "subscription" ? "selected" : ""}>구독형</option>
+              <option value="franchise" ${contractType === "franchise" ? "selected" : ""}>프리미엄</option>
+              <option value="subscription" ${contractType === "subscription" ? "selected" : ""}>스탠다드</option>
             </select>
           </td>
           <td>${contractStartDate}</td>
@@ -5656,16 +5647,13 @@ app.post("/super/academy-admin-add", requireSuperAdmin, async (req, res) => {
       return res.status(400).send("이미 등록된 전화번호입니다.");
     }
 
-    // 계약 유형에 따라 approvedSeries 자동 설정
+    // 계약 유형에 따라 approvedSeries 자동 설정 (프리미엄·스탠다드 모두 전 시리즈)
     let approvedSeries = [];
-    if (contractType === 'franchise') {
-      // 가맹형: 모든 시리즈
+    if (contractType === 'franchise' || contractType === 'subscription') {
       approvedSeries = ['brainon', 'brainup', 'brainfit', 'braindeep', 'brainreal'];
-    } else if (contractType === 'subscription') {
-      // 구독형: 브레인온, 브레인업만
-      approvedSeries = ['brainon', 'brainup'];
     }
 
+    // 🔹 계약구분별 학생 수 상한 자동 세팅 (가맹 360 / 구독 120)
     const newAdmin = new Admin({
       academyName,
       name,
@@ -5676,6 +5664,7 @@ app.post("/super/academy-admin-add", requireSuperAdmin, async (req, res) => {
       contractStartDate: new Date(contractStartDate),
       approvedSeries: approvedSeries,
       seriesApproved: approvedSeries.length > 0,
+      maxStudentLimit: getMaxStudentLimitForContract(contractType),
       createdAt: new Date()
     });
 
@@ -5789,9 +5778,9 @@ app.post("/super/api/toggle-series", requireSuperAdmin, async (req, res) => {
       return res.json({ success: false, message: "관리자를 찾을 수 없습니다." });
     }
 
-    // 구독형인 경우 brainfit, braindeep, brainreal 선택 불가
+    // 스탠다드인 경우 brainfit, braindeep, brainreal 선택 불가
     if (admin.contractType === 'subscription' && !['brainon', 'brainup'].includes(seriesKey) && enabled) {
-      return res.json({ success: false, message: "구독형은 브레인온, 브레인업만 선택 가능합니다." });
+      return res.json({ success: false, message: "스탠다드은 브레인온, 브레인업만 선택 가능합니다." });
     }
 
     let approvedSeries = admin.approvedSeries || [];
@@ -6739,7 +6728,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
         branchMap[branchKey].adminPhone = academyAdmin.phone || '';
         branchMap[branchKey].contractStartDate = academyAdmin.contractStartDate || null;
         branchMap[branchKey].contractEndDate = academyAdmin.contractEndDate || null;
-        branchMap[branchKey].contractType = academyAdmin.contractType || null; // 가맹형/구독형
+        branchMap[branchKey].contractType = academyAdmin.contractType || null; // 프리미엄/스탠다드
         branchMap[branchKey].yearlyFeePaid = academyAdmin.yearlyFeePaid || false; // 연 구독료 입금 상태
         branchMap[branchKey].yearlyFeePaidYear = academyAdmin.yearlyFeePaidYear || null; // 입금 완료 연도
         branchMap[branchKey].yearlyFeePaidMonth = academyAdmin.yearlyFeePaidMonth || null; // 입금 완료 월
@@ -6794,7 +6783,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     // 전체 통계 계산
     const activeAcademies = Object.values(branchMap).filter(b => b.subscriptionStatus === 'active').length;
     const inactiveAcademies = Object.values(branchMap).filter(b => b.subscriptionStatus === 'inactive').length;
-    // 가맹형 학원의 monthlyFee는 제외 (가맹형은 franchiseFee만 사용)
+    // 프리미엄 학원의 monthlyFee는 제외 (프리미엄은 franchiseFee만 사용)
     const totalMonthlyRevenue = Object.values(branchMap)
       .filter(b => b.type !== 'franchise')
       .reduce((sum, b) => sum + b.monthlyFee, 0);
@@ -6856,8 +6845,8 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       a.academyName.localeCompare(b.academyName, "ko")
     );
 
-    // 가맹형/구독형 분리 (선택한 연도 기준 필터링)
-    // 가맹형: contractStartDate 또는 contractEndDate가 selectedYear인 학원 포함
+    // 프리미엄/스탠다드 분리 (선택한 연도 기준 필터링)
+    // 프리미엄: contractStartDate 또는 contractEndDate가 selectedYear인 학원 포함
     // contractEndDate가 selectedYear인 경우 = 재계약 (이전 연도 계약이 만료되는 해)
     const franchiseBranches = branches.filter(b => {
       if (b.contractType !== 'franchise') return false;
@@ -6874,7 +6863,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       return false;
     });
 
-    // 가맹형 재계약 여부 플래그 추가 (contractEndDate의 연도가 selectedYear이고 contractStartDate의 연도는 다른 경우)
+    // 프리미엄 재계약 여부 플래그 추가 (contractEndDate의 연도가 selectedYear이고 contractStartDate의 연도는 다른 경우)
     franchiseBranches.forEach(b => {
       // contractEndDate가 selectedYear이고, contractStartDate가 selectedYear가 아닌 경우 = 재계약
       const startYear = b.contractStartDate ? new Date(b.contractStartDate).getFullYear() : null;
@@ -6889,7 +6878,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     });
     const unclassifiedBranches = branches.filter(b => !b.contractType);
 
-    // 연도 필터링된 전체 학원 (가맹형 + 구독형)
+    // 연도 필터링된 전체 학원 (프리미엄 + 스탠다드)
     const filteredBranches = [...franchiseBranches, ...subscriptionBranches];
     const filteredBranchCodes = new Set(filteredBranches.map(b => b.academyCode));
 
@@ -6916,13 +6905,13 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     const filteredApprovedUsers = filteredUsers.filter(u => u.status === 'approved');
     const filteredPendingUsers = filteredUsers.filter(u => u.status !== 'approved');
 
-    // 가맹형 통계
+    // 프리미엄 통계
     const franchiseApproved = franchiseBranches.reduce((sum, b) => sum + b.approvedCount, 0);
     const franchisePending = franchiseBranches.reduce((sum, b) => sum + b.pendingCount, 0);
     const franchiseActive = franchiseBranches.filter(b => b.lastAccess && (Date.now() - new Date(b.lastAccess).getTime()) < 7 * 24 * 60 * 60 * 1000).length;
     const franchiseInactive = franchiseBranches.filter(b => !b.lastAccess || (Date.now() - new Date(b.lastAccess).getTime()) > 30 * 24 * 60 * 60 * 1000).length;
     const franchiseMonthlyRevenue = franchiseBranches.reduce((sum, b) => sum + b.monthlyFee, 0);
-    // 가맹형 재계약임박/체크: contractEndDate가 selectedYear인 학원 중에서 계산 (contractStartDate와 무관)
+    // 프리미엄 재계약임박/체크: contractEndDate가 selectedYear인 학원 중에서 계산 (contractStartDate와 무관)
     const franchiseAllByEndYear = branches.filter(b => {
       if (b.contractType !== 'franchise') return false;
       if (!b.contractEndDate) return false;
@@ -7001,10 +6990,10 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       avgStudents: franchiseBranches.length > 0 ? (franchiseApproved / franchiseBranches.length).toFixed(1) : '0.0'
     };
 
-    // 가맹형 월별 매출 데이터 (franchiseContractDate 기준)
+    // 프리미엄 월별 매출 데이터 (franchiseContractDate 기준)
     const franchiseMonthlyData = [];
     for (let m = 1; m <= 12; m++) {
-      // 해당 월에 계약한 가맹형 학원들의 franchiseFee 합계
+      // 해당 월에 계약한 프리미엄 학원들의 franchiseFee 합계
       const branchesInMonth = franchiseBranches.filter(b => {
         if (!b.franchiseContractDate || !b.franchiseFee) return false;
         const contractDate = new Date(b.franchiseContractDate);
@@ -7015,18 +7004,18 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
 
       franchiseMonthlyData.push({
         month: m,
-        expected: 0, // 가맹형은 예상매출 없음
+        expected: 0, // 프리미엄은 예상매출 없음
         accumulated: accumulatedRevenue
       });
     }
 
-    // 구독형 통계
+    // 스탠다드 통계
     const subscriptionApproved = subscriptionBranches.reduce((sum, b) => sum + b.approvedCount, 0);
     const subscriptionPending = subscriptionBranches.reduce((sum, b) => sum + b.pendingCount, 0);
     const subscriptionActive = subscriptionBranches.filter(b => b.lastAccess && (Date.now() - new Date(b.lastAccess).getTime()) < 7 * 24 * 60 * 60 * 1000).length;
     const subscriptionInactive = subscriptionBranches.filter(b => !b.lastAccess || (Date.now() - new Date(b.lastAccess).getTime()) > 30 * 24 * 60 * 60 * 1000).length;
     const subscriptionMonthlyRevenue = subscriptionBranches.reduce((sum, b) => sum + b.monthlyFee, 0);
-    // 구독형 재계약임박/체크: contractEndDate가 selectedYear인 학원 중에서 계산 (contractStartDate와 무관)
+    // 스탠다드 재계약임박/체크: contractEndDate가 selectedYear인 학원 중에서 계산 (contractStartDate와 무관)
     const subscriptionAllByEndYear = branches.filter(b => {
       if (b.contractType !== 'subscription') return false;
       if (!b.contractEndDate) return false;
@@ -7048,7 +7037,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     // 입금완료된 구독 학원 수 계산
     const paidSubscriptionCount = subscriptionBranches.filter(b => b.yearlyFeePaid === true).length;
 
-    // 구독형 월별 매출 데이터 (최초계약월 기준) - 먼저 계산
+    // 스탠다드 월별 매출 데이터 (최초계약월 기준) - 먼저 계산
     // 최초계약월 = 계약시작일의 월 (contractStartDate)
     // 이미 입금완료한 학원은 계약기간이 변경되더라도 해당 월의 예상매출에 유지
 
@@ -7123,7 +7112,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       paidCount: paidSubscriptionCount
     };
 
-    // 구독형 연도별 매출 데이터 (각 연도별 재계약 예정 학원 기준)
+    // 스탠다드 연도별 매출 데이터 (각 연도별 재계약 예정 학원 기준)
     const subscriptionYearlyData = [];
     for (let year = currentYear - 2; year <= currentYear + 1; year++) {
       // 예상매출: 해당 연도에 재계약 예정이거나, 해당 연도에 이미 입금완료한 학원 (중복 제외)
@@ -7155,7 +7144,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       });
     }
 
-    // 전체 총 매출 (가맹형 + 구독형) - 가맹형은 franchiseStats, 구독형은 subscriptionStats에서 가져옴
+    // 전체 총 매출 (프리미엄 + 스탠다드) - 프리미엄은 franchiseStats, 스탠다드은 subscriptionStats에서 가져옴
     const totalMonthlyExpected = franchiseStats.monthlyExpected + subscriptionMonthlyExpected;
     const totalMonthlyAccumulated = franchiseStats.monthlyAccumulated + subscriptionMonthlyAccumulated;
     const totalYearlyExpected = franchiseStats.yearlyExpected + subscriptionYearlyExpected;
@@ -7612,10 +7601,10 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 0;">
           <div class="tabs" style="flex: 1; margin-bottom: 0;">
             <button class="tab-btn active" onclick="switchTab('subscription')">
-              📚 구독형 학원 <span style="background:#2563eb; color:white; padding:2px 8px; border-radius:10px; font-size:12px; margin-left:6px;">${subscriptionBranches.length}</span>
+              📚 스탠다드 학원 <span style="background:#2563eb; color:white; padding:2px 8px; border-radius:10px; font-size:12px; margin-left:6px;">${subscriptionBranches.length}</span>
             </button>
             <button class="tab-btn" onclick="switchTab('franchise')">
-              🏢 가맹형 학원 <span style="background:#dc2626; color:white; padding:2px 8px; border-radius:10px; font-size:12px; margin-left:6px;">${franchiseBranches.length}</span>
+              🏢 프리미엄 학원 <span style="background:#dc2626; color:white; padding:2px 8px; border-radius:10px; font-size:12px; margin-left:6px;">${franchiseBranches.length}</span>
             </button>
             <button class="tab-btn" onclick="switchTab('unclassified')">
               ⏳ 계약 대기 중 <span style="background:#6c757d; color:white; padding:2px 8px; border-radius:10px; font-size:12px; margin-left:6px;">${unclassifiedBranches.length}</span>
@@ -7623,7 +7612,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           </div>
         </div>
 
-        <!-- 가맹형 탭 -->
+        <!-- 프리미엄 탭 -->
         <div class="tab-content" id="tab-franchise">
           <!-- 1줄: 학원 통계 -->
           <div style="background: #fff5f5; border: 1px solid #fed7d7; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;">
@@ -7676,8 +7665,8 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           </div>
           ${franchiseBranches.length === 0 ? `
           <div class="empty-state">
-            <h3>등록된 가맹형 학원이 없습니다</h3>
-            <p>학원 선생님 관리 페이지에서 계약구분을 "가맹형"으로 설정하세요.</p>
+            <h3>등록된 프리미엄 학원이 없습니다</h3>
+            <p>학원 선생님 관리 페이지에서 계약구분을 "프리미엄"으로 설정하세요.</p>
           </div>
           ` : `
           <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -7724,7 +7713,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           `}
         </div>
 
-        <!-- 구독형 탭 -->
+        <!-- 스탠다드 탭 -->
         <div class="tab-content active" id="tab-subscription">
           <!-- 1줄: 학원+학생 통계 통합 -->
           <div style="background: #ebf8ff; border: 1px solid #bee3f8; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;">
@@ -7779,8 +7768,8 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           </div>
           ${subscriptionBranches.length === 0 ? `
           <div class="empty-state">
-            <h3>등록된 구독형 학원이 없습니다</h3>
-            <p>학원 선생님 관리 페이지에서 계약구분을 "구독형"으로 설정하세요.</p>
+            <h3>등록된 스탠다드 학원이 없습니다</h3>
+            <p>학원 선생님 관리 페이지에서 계약구분을 "스탠다드"으로 설정하세요.</p>
           </div>
           ` : `
           <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -7937,7 +7926,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       </div>`;
     };
 
-    // 구독형 전용 계약 기간 표시 (펜 아이콘 없음 - 최초계약일에서 수정하므로)
+    // 스탠다드 전용 계약 기간 표시 (펜 아이콘 없음 - 최초계약일에서 수정하므로)
     const getContractPeriodForSubscription = (b) => {
       if (!b.contractStartDate) {
         return '<span style="color:#999;">-</span>';
@@ -7975,7 +7964,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       </div>`;
     };
 
-    // 가맹형 전용 행 렌더링 함수
+    // 프리미엄 전용 행 렌더링 함수
     const renderFranchiseRow = (b, idx) => {
       // 재계약 배지 HTML (isFranchiseRenewal 플래그 사용)
       const renewalBadgeHtml = b.isFranchiseRenewal
@@ -8112,7 +8101,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       `;
     };
 
-    // 구독형 전용 행 렌더링 함수
+    // 스탠다드 전용 행 렌더링 함수
     const MONTHLY_FEE = 250000; // 월 구독료 고정값 25만원
     const YEARLY_FEE = MONTHLY_FEE * 12; // 연 구독료 300만원
 
@@ -8219,13 +8208,13 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       `;
     };
 
-    // 가맹형 테이블 데이터
+    // 프리미엄 테이블 데이터
     let franchiseRows = '';
     franchiseBranches.forEach((b, idx) => {
       franchiseRows += renderFranchiseRow(b, idx);
     });
 
-    // 구독형 테이블 데이터 (별도 컬럼 구조)
+    // 스탠다드 테이블 데이터 (별도 컬럼 구조)
     let subscriptionRows = '';
     subscriptionBranches.forEach((b, idx) => {
       subscriptionRows += renderSubscriptionRow(b, idx);
@@ -8326,22 +8315,22 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           const tbody = document.getElementById('revenueModalTbody');
           const data = revenueData[category];
 
-          const categoryNames = { total: '전체', franchise: '가맹형', subscription: '구독형' };
+          const categoryNames = { total: '전체', franchise: '프리미엄', subscription: '스탠다드' };
 
           if (type === 'monthly') {
             if (category === 'total') {
-              // 총 매출 클릭 시: 구독형 + 가맹형 분리 표시
+              // 총 매출 클릭 시: 스탠다드 + 프리미엄 분리 표시
               title.textContent = '📅 총 매출 월누적 상세 (' + currentYear + '년 ' + currentMonth + '월 기준)';
               const subscriptionData = revenueData.subscription;
               const franchiseData = revenueData.franchise;
 
               let rows = '';
               rows += '<tr style="background:#e3f2fd;">' +
-                '<td style="font-weight:600;">📘 구독형 월누적</td>' +
+                '<td style="font-weight:600;">📘 스탠다드 월누적</td>' +
                 '<td style="text-align:right; color:#1976d2; font-weight:600;">' + subscriptionData.monthlyAccumulated.toLocaleString() + '원</td>' +
               '</tr>';
               rows += '<tr style="background:#fff3e0;">' +
-                '<td style="font-weight:600;">📙 가맹형 월누적</td>' +
+                '<td style="font-weight:600;">📙 프리미엄 월누적</td>' +
                 '<td style="text-align:right; color:#e65100; font-weight:600;">' + franchiseData.monthlyAccumulated.toLocaleString() + '원</td>' +
               '</tr>';
               rows += '<tr style="background:#e8e0f0; border-top:2px solid #9c27b0;">' +
@@ -8364,18 +8353,18 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
             }
           } else {
             if (category === 'total') {
-              // 총 매출 연누적 클릭 시: 구독형 + 가맹형 분리 표시
+              // 총 매출 연누적 클릭 시: 스탠다드 + 프리미엄 분리 표시
               title.textContent = '📆 총 매출 연누적 상세 (' + currentYear + '년 기준)';
               const subscriptionData = revenueData.subscription;
               const franchiseData = revenueData.franchise;
 
               let rows = '';
               rows += '<tr style="background:#e3f2fd;">' +
-                '<td style="font-weight:600;">📘 구독형 연누적</td>' +
+                '<td style="font-weight:600;">📘 스탠다드 연누적</td>' +
                 '<td style="text-align:right; color:#1976d2; font-weight:600;">' + subscriptionData.yearlyAccumulated.toLocaleString() + '원</td>' +
               '</tr>';
               rows += '<tr style="background:#fff3e0;">' +
-                '<td style="font-weight:600;">📙 가맹형 연누적</td>' +
+                '<td style="font-weight:600;">📙 프리미엄 연누적</td>' +
                 '<td style="text-align:right; color:#e65100; font-weight:600;">' + franchiseData.yearlyAccumulated.toLocaleString() + '원</td>' +
               '</tr>';
               rows += '<tr style="background:#e8e0f0; border-top:2px solid #9c27b0;">' +
@@ -8752,9 +8741,9 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           updateSensitiveElements();
         });
 
-        // ===== 가맹형 전용 함수들 =====
+        // ===== 프리미엄 전용 함수들 =====
 
-        // 가맹형 계약일 업데이트
+        // 프리미엄 계약일 업데이트
         function updateFranchiseContractDate(input, adminId) {
           if (!isAdminUnlocked) {
             alert('편집 모드를 먼저 활성화하세요.');
@@ -8861,7 +8850,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           if (editDiv) editDiv.style.display = 'none';
         }
 
-        // ===== 가맹형 전용 함수들 끝 =====
+        // ===== 프리미엄 전용 함수들 끝 =====
 
         // 테이블 실시간 검색 필터링
         function filterTable(tabType) {
@@ -8907,15 +8896,15 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
             activeBadge.style.transform = 'scale(1.05)';
           }
 
-          // 정렬 로직 - 가맹형/구독형 컬럼 구조가 다름
-          // 가맹형: #(0), 학원명(1), 계약기간(2), 사용/남은일(3), 등록학년(4), 승인/대기(5), 월정산(6), 최근접속(7), 작업(8)
-          // 구독형: #(0), 학원명(1), 최초계약일(2), 월구독료(3), 연구독료(4), 계약기간(5), 재계약일(6), 승인/대기(7), 최근접속(8), 작업(9)
+          // 정렬 로직 - 프리미엄/스탠다드 컬럼 구조가 다름
+          // 프리미엄: #(0), 학원명(1), 계약기간(2), 사용/남은일(3), 등록학년(4), 승인/대기(5), 월정산(6), 최근접속(7), 작업(8)
+          // 스탠다드: #(0), 학원명(1), 최초계약일(2), 월구독료(3), 연구독료(4), 계약기간(5), 재계약일(6), 승인/대기(7), 최근접속(8), 작업(9)
           const isSubscription = tabType === 'subscription';
 
           rows.sort((a, b) => {
             if (sortBy === 'renewal') {
               if (isSubscription) {
-                // 구독형: D-day 기준 정렬 (최초계약일 index 2 - date input value)
+                // 스탠다드: D-day 기준 정렬 (최초계약일 index 2 - date input value)
                 // D-가 맨 위 (계약 시작 임박, 미래), D+가 맨 아래 (이미 계약 시작됨, 과거)
                 const inputA = a.cells[2] ? a.cells[2].querySelector('input[type="date"]') : null;
                 const inputB = b.cells[2] ? b.cells[2].querySelector('input[type="date"]') : null;
@@ -8943,7 +8932,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
                   return diffA - diffB; // 미래(음수)가 과거(양수)보다 먼저
                 }
               } else {
-                // 가맹형: D-day 기준 정렬 (계약일 index 2 - date input value)
+                // 프리미엄: D-day 기준 정렬 (계약일 index 2 - date input value)
                 // D-가 맨 위 (계약 시작 임박, 미래), D+가 맨 아래 (이미 계약 시작됨, 과거)
                 const inputA = a.cells[2] ? a.cells[2].querySelector('input[type="date"]') : null;
                 const inputB = b.cells[2] ? b.cells[2].querySelector('input[type="date"]') : null;
@@ -8972,7 +8961,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
                 }
               }
             } else if (sortBy === 'students') {
-              // 승인/대기 열 인덱스: 가맹형=5, 구독형=7
+              // 승인/대기 열 인덱스: 프리미엄=5, 스탠다드=7
               const studentsColIdx = isSubscription ? 7 : 5;
               const cellA = a.cells[studentsColIdx] ? a.cells[studentsColIdx].textContent : '';
               const cellB = b.cells[studentsColIdx] ? b.cells[studentsColIdx].textContent : '';
@@ -8983,14 +8972,14 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
               return studentsB - studentsA; // 내림차순 (학생 많은 순)
             } else if (sortBy === 'recent') {
               if (isSubscription) {
-                // 구독형: "최초계약일" 열 (index 2) - date input value (YYYY-MM-DD 형식)
+                // 스탠다드: "최초계약일" 열 (index 2) - date input value (YYYY-MM-DD 형식)
                 const inputA = a.cells[2] ? a.cells[2].querySelector('input[type="date"]') : null;
                 const inputB = b.cells[2] ? b.cells[2].querySelector('input[type="date"]') : null;
                 const dateA = inputA && inputA.value ? new Date(inputA.value).getTime() : 0;
                 const dateB = inputB && inputB.value ? new Date(inputB.value).getTime() : 0;
                 return dateB - dateA; // 내림차순 (최근 계약 먼저)
               } else {
-                // 가맹형: "계약기간" 열 (index 2) 에서 시작일 추출
+                // 프리미엄: "계약기간" 열 (index 2) 에서 시작일 추출
                 const cellA = a.cells[2] ? a.cells[2].textContent : '';
                 const cellB = b.cells[2] ? b.cells[2].textContent : '';
                 const matchA = cellA.match(/(\\d{4})\\.(\\d{2})\\.(\\d{2})/);
@@ -9093,7 +9082,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
 
         // 계약서 보기 모달 함수
         function showContractDocModal(academyName, adminId, type) {
-          const typeLabel = type === 'franchise' ? '가맹형' : '구독형';
+          const typeLabel = type === 'franchise' ? '프리미엄' : '스탠다드';
           document.getElementById('contractDocModalTitle').textContent = academyName + ' 계약서';
           document.getElementById('contractDocModal').classList.add('active');
         }
@@ -9427,7 +9416,7 @@ app.post("/super/api/set-contract", requireSuperAdmin, async (req, res) => {
   }
 });
 
-// 🔹 계약구분 설정 API (가맹형/구독형)
+// 🔹 계약구분 설정 API (프리미엄/스탠다드)
 app.post("/super/api/set-contract-type", requireSuperAdmin, async (req, res) => {
   try {
     const { adminId, contractType } = req.body;
@@ -9442,33 +9431,91 @@ app.post("/super/api/set-contract-type", requireSuperAdmin, async (req, res) => 
       return res.status(400).json({ success: false, message: "유효하지 않은 계약구분입니다." });
     }
 
-    // 계약 유형에 따라 approvedSeries 자동 설정
+    // 계약 유형에 따라 approvedSeries 자동 설정 (프리미엄·스탠다드 모두 전 시리즈)
     let approvedSeries = [];
-    if (contractType === 'franchise') {
-      // 가맹형: 모든 시리즈
+    if (contractType === 'franchise' || contractType === 'subscription') {
       approvedSeries = ['brainon', 'brainup', 'brainfit', 'braindeep', 'brainreal'];
-    } else if (contractType === 'subscription') {
-      // 구독형: 브레인온, 브레인업만
-      approvedSeries = ['brainon', 'brainup'];
     }
+
+    // 🔹 계약구분에 따라 학생 수 상한 자동 조정 (가맹 360 / 구독 120)
+    //   · 미설정으로 되돌리면 기본 360 유지
+    const newLimit = getMaxStudentLimitForContract(contractType);
 
     await Admin.findByIdAndUpdate(adminId, {
       contractType: contractType || null,
       approvedSeries: approvedSeries,
-      seriesApproved: approvedSeries.length > 0
+      seriesApproved: approvedSeries.length > 0,
+      maxStudentLimit: newLimit
     });
 
-    const typeLabel = contractType === 'franchise' ? '가맹형' : contractType === 'subscription' ? '구독형' : '미설정';
-    console.log("📋 계약구분 설정:", adminId, "->", typeLabel, "| approvedSeries:", approvedSeries);
+    const typeLabel = contractType === 'franchise' ? '프리미엄' : contractType === 'subscription' ? '스탠다드' : '미설정';
+    console.log("📋 계약구분 설정:", adminId, "->", typeLabel, "| approvedSeries:", approvedSeries, "| maxStudentLimit:", newLimit);
 
-    res.json({ success: true, message: "계약구분이 설정되었습니다.", approvedSeries });
+    res.json({ success: true, message: "계약구분이 설정되었습니다.", approvedSeries, maxStudentLimit: newLimit });
   } catch (err) {
     console.error("❌ /super/api/set-contract-type 에러:", err);
     res.status(500).json({ success: false, message: "계약구분 설정 중 오류가 발생했습니다." });
   }
 });
 
-// 🔹 구독형 입금 상태 토글 API
+// 🔹 기존 학원 admin의 maxStudentLimit 계약구분에 맞춰 재정렬 (safe backfill)
+//   · dryRun: true (기본) → 변경 없이 예상 결과만 반환 · 확인 후 dryRun: false로 실행
+//   · 프리미엄 → 360 / 스탠다드 → 120 · 미설정은 건드리지 않음
+//   · 이미 상한을 초과한 admin은 결과에 warning 표시 (cron이 초과 산정)
+app.post('/super/api/backfill-max-student-limit', requireSuperAdmin, async (req, res) => {
+  try {
+    const { pin, dryRun } = req.body || {};
+    if (pin !== SUPER_ADMIN_PIN) {
+      return res.status(401).json({ success: false, message: '슈퍼관리자 PIN이 필요합니다.' });
+    }
+    const isDry = dryRun !== false; // 기본 dryRun
+
+    const admins = await Admin.find({
+      userType: 'academy',
+      deleted: { $ne: true },
+      contractType: { $in: ['franchise', 'subscription'] }
+    });
+
+    const results = [];
+    for (const admin of admins) {
+      const oldLimit = admin.maxStudentLimit || 360;
+      const newLimit = getMaxStudentLimitForContract(admin.contractType);
+      const currentCumulative = admin.cumulativeStudentCount || 0;
+      const willOverflow = currentCumulative > newLimit;
+      const changed = oldLimit !== newLimit;
+
+      if (!isDry && changed) {
+        admin.maxStudentLimit = newLimit;
+        await admin.save();
+      }
+
+      results.push({
+        academyName: admin.academyName,
+        contractType: admin.contractType,
+        oldLimit,
+        newLimit,
+        cumulativeStudentCount: currentCumulative,
+        changed,
+        warning: willOverflow ? `현재 누적(${currentCumulative}) > 새 상한(${newLimit}) → 다음 월말 cron에서 초과 인원 산정됨` : null
+      });
+    }
+
+    console.log(`📋 maxStudentLimit ${isDry ? 'dryRun' : '실행'}: ${results.length}개 학원 중 변경 ${results.filter(r => r.changed).length}개`);
+    res.json({
+      success: true,
+      dryRun: isDry,
+      total: results.length,
+      changed: results.filter(r => r.changed).length,
+      warnings: results.filter(r => r.warning).length,
+      results
+    });
+  } catch (err) {
+    console.error("❌ /super/api/backfill-max-student-limit 에러:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 🔹 스탠다드 입금 상태 토글 API
 app.post("/super/api/toggle-payment-status", requireSuperAdmin, async (req, res) => {
   try {
     const { adminId, paid } = req.body;
@@ -9573,6 +9620,7 @@ app.post("/super/api/toggle-payment-status", requireSuperAdmin, async (req, res)
           contractStartDate: nextYearStartDate,
           contractEndDate: nextYearEndDate,
           contractType: 'subscription',
+          maxStudentLimit: getMaxStudentLimitForContract('subscription'),  // 스탠다드 120명
           yearlyFeePaid: false,  // 새 계약은 미입금 상태
           yearlyFeePaidYear: null,
           yearlyFeePaidMonth: null,
@@ -9703,7 +9751,7 @@ app.post("/super/api/update-contract-start-date", requireSuperAdmin, async (req,
   }
 });
 
-// 🔹 가맹형 계약일 업데이트 API
+// 🔹 프리미엄 계약일 업데이트 API
 app.post("/super/update-franchise-contract-date", requireSuperAdmin, async (req, res) => {
   try {
     const { adminId, contractDate } = req.body;
@@ -11002,9 +11050,12 @@ app.post("/admin/assign-series", async (req, res) => {
       const admins = await Admin.find({ academyName: user.academyName, deleted: { $ne: true } })
         .select('approvedSeries contractType').lean();
       if (admins.length > 0) {
-        // 🔹 가맹형 admin이 하나라도 있으면 전체 시리즈 허용 (contractType이 source of truth)
-        const hasFranchise = admins.some(a => a.contractType === 'franchise');
-        if (hasFranchise) {
+        // 🔹 프리미엄·스탠다드 admin이 하나라도 있으면 전체 시리즈 허용 (contractType이 source of truth)
+        //   · 두 계약구분 모두 시리즈·기능은 동일 · 차이는 학생 수 상한뿐
+        const hasFullAccessContract = admins.some(a =>
+          a.contractType === 'franchise' || a.contractType === 'subscription'
+        );
+        if (hasFullAccessContract) {
           academyAllowedValues = Object.values(KEY_TO_VALUE);
         } else {
           const allKeys = new Set();
@@ -27372,13 +27423,27 @@ app.get("/api/session", (req, res) => {
 });
 
 // ✅ 관리자(admin) 세션 정보 조회 API
-// 🔹 계약구분 기반 approvedSeries 보정: 가맹형이면 항상 모든 시리즈 열림으로 응답
+// 🔹 계약구분 기반 approvedSeries 보정: 프리미엄·스탠다드 모두 항상 모든 시리즈 열림으로 응답
 //    (DB의 stale approvedSeries 값 무시 — contractType이 source of truth)
+//    · 프리미엄(franchise)과 스탠다드(subscription) 모두 기능·시리즈는 동일하게 오픈
+//    · 유일한 차이는 학생 수 상한(maxStudentLimit)
 const ALL_SERIES_KEYS = ['brainon', 'brainup', 'brainfit', 'braindeep', 'brainreal'];
 function resolveApprovedSeries(admin) {
   if (!admin) return [];
-  if (admin.contractType === 'franchise') return ALL_SERIES_KEYS.slice();
+  if (admin.contractType === 'franchise' || admin.contractType === 'subscription') {
+    return ALL_SERIES_KEYS.slice();
+  }
   return admin.approvedSeries || [];
+}
+
+// 🔹 계약구분별 학생 수 상한 (프로모션 · 초과 시 추가금 산정 기준)
+//   · 프리미엄: 360명 / 스탠다드: 120명 / 미설정: 360명(기본)
+const MAX_STUDENT_LIMIT_BY_CONTRACT = {
+  franchise: 360,
+  subscription: 120
+};
+function getMaxStudentLimitForContract(contractType) {
+  return MAX_STUDENT_LIMIT_BY_CONTRACT[contractType] || 360;
 }
 
 app.get("/api/admin-session", async (req, res) => {
