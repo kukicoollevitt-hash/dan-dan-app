@@ -34052,6 +34052,118 @@ const examDetailMappingsServer = {
     litModernNovel: [26, 27, 28],
     litClassicPoem: [16, 17, 18, 19, 20],
     litClassicProse: [34, 35, 36, 37]
+  },
+  'korean_mock_5': {
+    speechTalk: [1, 2, 3],
+    speechIntegrated: [4, 5, 6, 7],
+    speechWrite: [8, 9, 10],
+    grammarModern: [11, 13, 14, 15],
+    grammarClassic: [12],
+    readingHumanities: [16, 17, 18, 19, 20, 21],
+    readingLaw: [22, 23, 24, 25, 26],
+    readingScience: [30, 31, 32, 33],
+    litModernNovel: [27, 28, 29],
+    litClassicProse: [34, 35, 36, 37],
+    litClassicPoem: [38, 39, 40, 41, 42],
+    litModernPoem: [43, 44, 45]
+  },
+  'korean_mock_6': {
+    speechTalk: [1, 2, 3],
+    speechIntegrated: [4, 5, 6, 7],
+    speechWrite: [8, 9, 10],
+    grammarModern: [11, 12, 13, 14, 15],
+    grammarClassic: [],
+    readingHumanities: [28, 29, 30, 31, 32, 33],
+    readingLaw: [19, 20, 21, 22],
+    readingScience: [38, 39, 40, 41, 42],
+    litModernPoem: [16, 17, 18],
+    litModernNovel: [34, 35, 36, 37],
+    litClassicPoem: [23, 24, 25, 26, 27],
+    litClassicProse: [43, 44, 45]
+  },
+  'korean_mock_7': {
+    speechTalk: [1, 2, 3],
+    speechIntegrated: [4, 5, 6, 7],
+    speechWrite: [8, 9, 10],
+    grammarModern: [11, 12, 13, 14, 15],
+    grammarClassic: [],
+    readingHumanities: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
+    readingLaw: [],
+    readingScience: [26, 27, 28, 29, 30],
+    litModernPoem: [31, 32, 33, 34, 35, 36, 37],
+    litModernNovel: [],
+    litClassicPoem: [],
+    litClassicProse: [38, 39, 40, 41, 42, 43, 44, 45]
+  },
+  'korean_mock_8': {
+    speechTalk: [1, 2, 3],
+    speechIntegrated: [4, 5, 6, 7],
+    speechWrite: [8, 9, 10],
+    grammarModern: [11, 12, 13, 14, 15],
+    grammarClassic: [],
+    readingScience: [16, 17, 18, 19, 20],
+    readingLaw: [21, 22, 23, 24, 25],
+    readingHumanities: [26, 27, 28, 29, 30],
+    litModernPoem: [31, 32, 33, 34, 43, 44, 45],
+    litModernNovel: [35, 36, 37, 38],
+    litClassicPoem: [],
+    litClassicProse: [39, 40, 41, 42]
+  },
+  'korean_mock_9': {
+    speechTalk: [1, 2, 3],
+    speechIntegrated: [4, 5, 6, 7],
+    speechWrite: [8, 9, 10],
+    grammarModern: [13, 14, 15],
+    grammarClassic: [11, 12],
+    readingHumanities: [20, 21, 22, 23, 24, 25],
+    readingLaw: [30, 31, 32, 33, 34],
+    readingScience: [38, 39, 40, 41],
+    litClassicPoem: [16, 17, 18, 19],
+    litClassicProse: [42, 43, 44, 45],
+    litModernNovel: [26, 27, 28, 29],
+    litModernPoem: [35, 36, 37]
+  },
+  'korean_mock_10': {
+    speechTalk: [1, 2, 3],
+    speechIntegrated: [4, 5, 6, 7],
+    speechWrite: [8, 9, 10],
+    grammarModern: [13, 14, 15],
+    grammarClassic: [11, 12],
+    readingHumanities: [16, 17, 18, 19, 20, 21],
+    readingLaw: [39, 40, 41, 42],
+    readingScience: [22, 23, 24, 25],
+    litClassicPoem: [30, 31, 32, 33, 34],
+    litClassicProse: [43, 44, 45],
+    litModernNovel: [26, 27, 28, 29],
+    litModernPoem: [35, 36, 37, 38]
+  },
+  'korean_mock_11': {
+    speechTalk: [1, 2, 3],
+    speechIntegrated: [4, 5, 6, 7],
+    speechWrite: [8, 9, 10],
+    grammarModern: [13, 14, 15],
+    grammarClassic: [11, 12],
+    readingHumanities: [16, 17, 18, 19, 20, 21],
+    readingLaw: [22, 23, 24, 25],
+    readingScience: [35, 36, 37, 38],
+    litClassicPoem: [31, 32, 33, 34],
+    litClassicProse: [26, 27, 28, 29, 30],
+    litModernNovel: [42, 43, 44, 45],
+    litModernPoem: [39, 40, 41]
+  },
+  'korean_mock_12': {
+    speechTalk: [1, 2, 3],
+    speechIntegrated: [4, 5, 6],
+    speechWrite: [24, 25, 26, 27, 28, 29, 30],
+    grammarModern: [7, 8, 9, 10],
+    grammarClassic: [],
+    readingHumanities: [],
+    readingLaw: [11, 12, 13, 14, 15, 16, 34, 35, 36, 37, 38],
+    readingScience: [17, 18, 19, 20],
+    litClassicPoem: [21, 22, 23],
+    litClassicProse: [31, 32, 33],
+    litModernNovel: [39, 40, 41, 42],
+    litModernPoem: [43, 44, 45]
   }
 };
 
@@ -37836,6 +37948,54 @@ app.post("/api/mock-exam/submit", async (req, res) => {
                 grammar: [11, 12, 13, 14, 15],
                 reading: [21, 22, 23, 24, 25, 29, 30, 31, 32, 33, 34, 38, 39, 40, 41, 42],
                 literature: [16, 17, 18, 19, 20, 26, 27, 28, 34, 35, 36, 37, 43, 44, 45]
+              },
+              'korean_mock_5': {
+                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                grammar: [11, 12, 13, 14, 15],
+                reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 30, 31, 32, 33],
+                literature: [27, 28, 29, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+              },
+              'korean_mock_6': {
+                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                grammar: [11, 12, 13, 14, 15],
+                reading: [19, 20, 21, 22, 28, 29, 30, 31, 32, 33, 38, 39, 40, 41, 42],
+                literature: [16, 17, 18, 23, 24, 25, 26, 27, 34, 35, 36, 37, 43, 44, 45]
+              },
+              'korean_mock_7': {
+                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                grammar: [11, 12, 13, 14, 15],
+                reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+                literature: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+              },
+              'korean_mock_8': {
+                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                grammar: [11, 12, 13, 14, 15],
+                reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+                literature: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+              },
+              'korean_mock_9': {
+                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                grammar: [11, 12, 13, 14, 15],
+                reading: [20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 38, 39, 40, 41],
+                literature: [16, 17, 18, 19, 26, 27, 28, 29, 35, 36, 37, 42, 43, 44, 45]
+              },
+              'korean_mock_10': {
+                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                grammar: [11, 12, 13, 14, 15],
+                reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 39, 40, 41, 42],
+                literature: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 43, 44, 45]
+              },
+              'korean_mock_11': {
+                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                grammar: [11, 12, 13, 14, 15],
+                reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 35, 36, 37, 38],
+                literature: [26, 27, 28, 29, 30, 31, 32, 33, 34, 39, 40, 41, 42, 43, 44, 45]
+              },
+              'korean_mock_12': {
+                speech: [1, 2, 3, 4, 5, 6, 24, 25, 26, 27, 28, 29, 30],
+                grammar: [7, 8, 9, 10],
+                reading: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 34, 35, 36, 37, 38],
+                literature: [21, 22, 23, 31, 32, 33, 39, 40, 41, 42, 43, 44, 45]
               }
             };
 
@@ -38302,10 +38462,18 @@ app.get("/api/mock-exam/my-exams", async (req, res) => {
 
     // 모의고사 목록 (현재는 하드코딩, 추후 DB에서 가져올 수 있음)
     const exams = [
-      { id: 'korean_mock_1', round: 1, title: 'AI 모의고사 1회차' },
-      { id: 'korean_mock_2', round: 2, title: 'AI 모의고사 2회차' },
-      { id: 'korean_mock_3', round: 3, title: 'AI 모의고사 3회차' },
-      { id: 'korean_mock_4', round: 4, title: 'AI 모의고사 4회차' }
+      { id: 'korean_mock_1', round: 1, title: '브레인 모의고사 1회차' },
+      { id: 'korean_mock_2', round: 2, title: '브레인 모의고사 2회차' },
+      { id: 'korean_mock_3', round: 3, title: '브레인 모의고사 3회차' },
+      { id: 'korean_mock_4', round: 4, title: '브레인 모의고사 4회차' },
+      { id: 'korean_mock_5', round: 5, title: '브레인 모의고사 5회차' },
+      { id: 'korean_mock_6', round: 6, title: '브레인 모의고사 6회차' },
+      { id: 'korean_mock_7', round: 7, title: '브레인 모의고사 7회차' },
+      { id: 'korean_mock_8', round: 8, title: '브레인 모의고사 8회차' },
+      { id: 'korean_mock_9', round: 9, title: '브레인 모의고사 9회차' },
+      { id: 'korean_mock_10', round: 10, title: '브레인 모의고사 10회차' },
+      { id: 'korean_mock_11', round: 11, title: '브레인 모의고사 11회차' },
+      { id: 'korean_mock_12', round: 12, title: '브레인 모의고사 12회차' }
     ];
 
     // 사용자의 시험 진행 상태와 완료된 결과 조회
@@ -38464,6 +38632,54 @@ app.get("/api/mock-exam/area-analysis/:userId", async (req, res) => {
         grammar: [11, 12, 13, 14, 15],              // 문법 (5문항)
         reading: [21, 22, 23, 24, 25, 29, 30, 31, 32, 33, 38, 39, 40, 41, 42], // 비문학 (15문항)
         literature: [16, 17, 18, 19, 20, 26, 27, 28, 34, 35, 36, 37, 43, 44, 45]  // 문학 (15문항)
+      },
+      'korean_mock_5': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 30, 31, 32, 33],
+        literature: [27, 28, 29, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_6': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [19, 20, 21, 22, 28, 29, 30, 31, 32, 33, 38, 39, 40, 41, 42],
+        literature: [16, 17, 18, 23, 24, 25, 26, 27, 34, 35, 36, 37, 43, 44, 45]
+      },
+      'korean_mock_7': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+        literature: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_8': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+        literature: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_9': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 38, 39, 40, 41],
+        literature: [16, 17, 18, 19, 26, 27, 28, 29, 35, 36, 37, 42, 43, 44, 45]
+      },
+      'korean_mock_10': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 39, 40, 41, 42],
+        literature: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 43, 44, 45]
+      },
+      'korean_mock_11': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 35, 36, 37, 38],
+        literature: [26, 27, 28, 29, 30, 31, 32, 33, 34, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_12': {
+        speech: [1, 2, 3, 4, 5, 6, 24, 25, 26, 27, 28, 29, 30],
+        grammar: [7, 8, 9, 10],
+        reading: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 34, 35, 36, 37, 38],
+        literature: [21, 22, 23, 31, 32, 33, 39, 40, 41, 42, 43, 44, 45]
       }
     };
     // 기본값 (1회차)
@@ -38540,10 +38756,76 @@ app.post("/api/mock-exam/generate-ai-feedback", async (req, res) => {
     // 영역별 전체 평균 계산 (모든 응시자 대상)
     const areaQuestionsByExam = {
       'korean_mock_1': {
+        speech: [1, 2, 4, 5, 6, 24, 25, 26, 27, 28, 29, 30],
+        grammar: [3, 7, 8, 9, 10],
+        reading: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+        literature: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_2': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 26, 27, 28, 29, 30, 31, 32, 33, 34],
+        literature: [22, 23, 24, 25, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_3': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [20, 21, 22, 23, 24, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37],
+        literature: [16, 17, 18, 19, 25, 26, 27, 38, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_4': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [21, 22, 23, 24, 25, 29, 30, 31, 32, 33, 38, 39, 40, 41, 42],
+        literature: [16, 17, 18, 19, 20, 26, 27, 28, 34, 35, 36, 37, 43, 44, 45]
+      },
+      'korean_mock_5': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 30, 31, 32, 33],
+        literature: [27, 28, 29, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_6': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [19, 20, 21, 22, 28, 29, 30, 31, 32, 33, 38, 39, 40, 41, 42],
+        literature: [16, 17, 18, 23, 24, 25, 26, 27, 34, 35, 36, 37, 43, 44, 45]
+      },
+      'korean_mock_7': {
         speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         grammar: [11, 12, 13, 14, 15],
         reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
         literature: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_8': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+        literature: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_9': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 38, 39, 40, 41],
+        literature: [16, 17, 18, 19, 26, 27, 28, 29, 35, 36, 37, 42, 43, 44, 45]
+      },
+      'korean_mock_10': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 39, 40, 41, 42],
+        literature: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 43, 44, 45]
+      },
+      'korean_mock_11': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 35, 36, 37, 38],
+        literature: [26, 27, 28, 29, 30, 31, 32, 33, 34, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_12': {
+        speech: [1, 2, 3, 4, 5, 6, 24, 25, 26, 27, 28, 29, 30],
+        grammar: [7, 8, 9, 10],
+        reading: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 34, 35, 36, 37, 38],
+        literature: [21, 22, 23, 31, 32, 33, 39, 40, 41, 42, 43, 44, 45]
       }
     };
 
@@ -38838,6 +39120,54 @@ app.get("/api/mock-exam/area-trend/:userId", async (req, res) => {
         grammar: [11, 12, 13, 14, 15],              // 문법 (5문항)
         reading: [21, 22, 23, 24, 25, 29, 30, 31, 32, 33, 38, 39, 40, 41, 42], // 비문학 (15문항)
         literature: [16, 17, 18, 19, 20, 26, 27, 28, 34, 35, 36, 37, 43, 44, 45]  // 문학 (15문항)
+      },
+      'korean_mock_5': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 30, 31, 32, 33],
+        literature: [27, 28, 29, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_6': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [19, 20, 21, 22, 28, 29, 30, 31, 32, 33, 38, 39, 40, 41, 42],
+        literature: [16, 17, 18, 23, 24, 25, 26, 27, 34, 35, 36, 37, 43, 44, 45]
+      },
+      'korean_mock_7': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+        literature: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_8': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+        literature: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_9': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 38, 39, 40, 41],
+        literature: [16, 17, 18, 19, 26, 27, 28, 29, 35, 36, 37, 42, 43, 44, 45]
+      },
+      'korean_mock_10': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 39, 40, 41, 42],
+        literature: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 43, 44, 45]
+      },
+      'korean_mock_11': {
+        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        grammar: [11, 12, 13, 14, 15],
+        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 35, 36, 37, 38],
+        literature: [26, 27, 28, 29, 30, 31, 32, 33, 34, 39, 40, 41, 42, 43, 44, 45]
+      },
+      'korean_mock_12': {
+        speech: [1, 2, 3, 4, 5, 6, 24, 25, 26, 27, 28, 29, 30],
+        grammar: [7, 8, 9, 10],
+        reading: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 34, 35, 36, 37, 38],
+        literature: [21, 22, 23, 31, 32, 33, 39, 40, 41, 42, 43, 44, 45]
       }
     };
 
