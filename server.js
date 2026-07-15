@@ -41541,23 +41541,14 @@ app.get('/api/writing100/report', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════
 // 📚 브레인입문(쓰기문해) Day별 지도자료 다운로드 · 관리자 대상
 //   - 파일 위치: uploads/wr100-guides/100day_{NNN}_{student|teacher}.pdf
-//   - 접근 제한: session admin의 academyName(본명+별칭) 이 화이트리스트에 포함될 때만
-//   - 현재 화이트리스트: 브레인문해원_테스트 (별칭: 브레인문해력_대치센터)
-//   - 향후 확대 · WR100_GUIDE_ALLOWED_ACADEMIES 배열에 추가
+//   - 접근 제한: 세션에 로그인된 학원 admin 이면 전 센터 허용 (전 학원 오픈)
+//     · 이전에는 WR100_GUIDE_ALLOWED_ACADEMIES 화이트리스트로 제한했으나 정책상 전면 오픈
 // ═══════════════════════════════════════════════════════════════
-const WR100_GUIDE_ALLOWED_ACADEMIES = new Set([
-  '브레인문해원_테스트',
-  '브레인문해력_대치센터'
-]);
 function isWr100GuideAllowed(req) {
   const admin = req.session && req.session.admin;
   const viewing = req.session && req.session.viewingBranch;
-  if (!admin && !viewing) return false;
-  // 슈퍼관리자(role: 'super') 조회 모드는 · viewingBranch 기반 판정
-  const source = viewing || admin;
-  // 세션에 저장된 primary academyName 또는 별칭 중 하나라도 화이트리스트에 있으면 허용
-  const names = getAdminAcademyNames(source);
-  return names.some(n => WR100_GUIDE_ALLOWED_ACADEMIES.has(n));
+  // 세션이 아예 없으면 차단, 로그인된 학원 admin(또는 슈퍼관리자 view-as 모드)이면 허용
+  return !!(admin || viewing);
 }
 
 // Day별 메타 캐시 (topic · writingType) · 서버 lifetime 캐싱
