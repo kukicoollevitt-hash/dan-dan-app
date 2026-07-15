@@ -1709,28 +1709,54 @@
     }
 
     // URL을 영상 임베드로 변환 — YouTube/Vimeo/네이버TV/카카오TV 지원
+    // 🎯 seek(시크바 클릭 → 원하는 시점 이동) 정상 동작 보장:
+    //   · Vimeo 언리스트 영상: URL 뒤 hash(/xxxxxxxx)를 ?h= 파라미터로 반드시 포함해야 함
+    //   · YouTube: allow 속성에 fullscreen · encrypted-media 포함
+    //   · 공통: allowfullscreen 속성 + allow 에 fullscreen 명시
     function anTryEmbedVideo(url) {
       // YouTube — watch / embed / shorts / live / v / youtu.be (music.youtube, m.youtube 포함)
       const yt = url.match(
         /(?:youtu\.be\/|(?:[a-z\.]*\.)?youtube\.com\/(?:watch\?(?:.*?&)?v=|embed\/|shorts\/|live\/|v\/))([A-Za-z0-9_-]{6,})/i
       );
       if (yt) {
-        return `<iframe src="https://www.youtube.com/embed/${anEscape(yt[1])}" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
+        return `<iframe src="https://www.youtube.com/embed/${anEscape(yt[1])}?rel=0&modestbranding=1" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture; web-share"></iframe>`;
       }
-      // Vimeo — vimeo.com/123456789  또는  player.vimeo.com/video/123456789
-      const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
-      if (vm) {
-        return `<iframe src="https://player.vimeo.com/video/${anEscape(vm[1])}" allowfullscreen allow="autoplay; fullscreen; picture-in-picture"></iframe>`;
+      // Vimeo — 다양한 형식 지원 · 언리스트 hash 파라미터 보존
+      //   vimeo.com/123456789
+      //   vimeo.com/123456789/abcdef1234    (언리스트 · hash 필수)
+      //   vimeo.com/video/123456789
+      //   player.vimeo.com/video/123456789?h=abcdef1234
+      //   vimeo.com/showcase/xxx/video/123456789
+      let vmId = null;
+      let vmHash = null;
+      // player.vimeo.com 형식 (hash 이미 ?h= 로 들어있을 수 있음)
+      let m = url.match(/player\.vimeo\.com\/video\/(\d+)(?:[?&]h=([A-Za-z0-9]+))?/i);
+      if (m) { vmId = m[1]; vmHash = m[2] || null; }
+      // vimeo.com/showcase/xxx/video/ID
+      if (!vmId) {
+        m = url.match(/vimeo\.com\/showcase\/[^\/]+\/video\/(\d+)/i);
+        if (m) vmId = m[1];
+      }
+      // vimeo.com/ID(/HASH) 또는 vimeo.com/video/ID(/HASH)
+      if (!vmId) {
+        m = url.match(/vimeo\.com\/(?:video\/)?(\d+)(?:\/([A-Za-z0-9]+))?/i);
+        if (m) { vmId = m[1]; vmHash = m[2] || null; }
+      }
+      if (vmId) {
+        // dnt=1(트래킹 해제) · title=0&byline=0&portrait=0(깔끔한 UI · seek 등 컨트롤은 유지)
+        const params = [`dnt=1`, `title=0`, `byline=0`, `portrait=0`];
+        if (vmHash) params.unshift(`h=${anEscape(vmHash)}`);
+        return `<iframe src="https://player.vimeo.com/video/${anEscape(vmId)}?${params.join('&')}" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
       }
       // 네이버TV — tv.naver.com/v/XXXX
       const naver = url.match(/tv\.naver\.com\/v\/(\d+)/i);
       if (naver) {
-        return `<iframe src="https://tv.naver.com/embed/${anEscape(naver[1])}" allowfullscreen></iframe>`;
+        return `<iframe src="https://tv.naver.com/embed/${anEscape(naver[1])}" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
       }
       // 카카오TV — tv.kakao.com/v/XXXX  또는  /channel/XXX/cliplink/XXX
       const kakao = url.match(/tv\.kakao\.com\/(?:v|channel\/\d+\/cliplink)\/(\d+)/i);
       if (kakao) {
-        return `<iframe src="https://tv.kakao.com/embed/player/cliplink/${anEscape(kakao[1])}/service/kakao_tv?autoplay=0" allowfullscreen></iframe>`;
+        return `<iframe src="https://tv.kakao.com/embed/player/cliplink/${anEscape(kakao[1])}/service/kakao_tv?autoplay=0" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
       }
       return null;
     }
@@ -1762,7 +1788,7 @@
         }
         // 줄 전체가 업로드된 영상 상대 경로
         if (relVideoRe.test(trimmed)) {
-          out.push(`<video src="${anEscape(trimmed)}" controls preload="metadata"></video>`);
+          out.push(`<video src="${anEscape(trimmed)}" controls preload="auto" playsinline controlsList="nodownload"></video>`);
           continue;
         }
 
@@ -1773,7 +1799,7 @@
           const videoEmbed = anTryEmbedVideo(url);
           if (videoEmbed) { out.push(videoEmbed); continue; }
           if (videoFileRe.test(url)) {
-            out.push(`<video src="${anEscape(url)}" controls preload="metadata"></video>`);
+            out.push(`<video src="${anEscape(url)}" controls preload="auto" playsinline controlsList="nodownload"></video>`);
             continue;
           }
           if (imgRe.test(url)) {
