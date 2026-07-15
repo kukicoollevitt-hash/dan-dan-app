@@ -539,6 +539,32 @@
     let specialItemId = 0;
     let vocabWbItemId = 0;
 
+    // 시리즈별 호수 개수 · 브레인입문 5호 · 나머지 12호
+    const BRAIN_ISSUE_COUNT = {
+      '브레인입문': 5,
+      '브레인온': 12,
+      '브레인업': 12,
+      '브레인핏': 12,
+      '브레인딥': 12
+    };
+
+    // 시리즈 select 변경 → 호수 옵션 동적 갱신
+    function updateBrainIssueOptions(seriesSelect) {
+      const item = seriesSelect.closest('.book-item');
+      if (!item) return;
+      const issueSelect = item.querySelectorAll('select')[1];
+      if (!issueSelect) return;
+      const series = seriesSelect.value;
+      const count = BRAIN_ISSUE_COUNT[series] || 12;
+      const prevValue = issueSelect.value;
+      let html = '<option value="">호수 선택</option>';
+      for (let i = 1; i <= count; i++) html += `<option value="${i}">${i}호</option>`;
+      issueSelect.innerHTML = html;
+      // 새 시리즈에서도 유효한 호수면 유지
+      if (prevValue && Number(prevValue) <= count) issueSelect.value = prevValue;
+      updateSummary();
+    }
+
     // 브레인문해력 아이템 추가
     function addBrainItem() {
       const container = document.getElementById('brainItems');
@@ -548,8 +574,9 @@
       brainItemId++;
       const itemHtml = `
         <div class="book-item" id="brain-${brainItemId}">
-          <select onchange="updateSummary()">
+          <select onchange="updateBrainIssueOptions(this)">
             <option value="">시리즈 선택</option>
+            <option value="브레인입문">브레인입문</option>
             <option value="브레인온">브레인온</option>
             <option value="브레인업">브레인업</option>
             <option value="브레인핏">브레인핏</option>
