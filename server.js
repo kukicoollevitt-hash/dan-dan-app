@@ -43804,6 +43804,78 @@ app.get("/api/academy-student-counts", async (req, res) => {
   }
 });
 
+// ===== PDF 서버측 렌더링 (Puppeteer, OS 무관 폰트 일관성 보장) =====
+// 클라이언트가 html2canvas 대신 이 엔드포인트로 HTML fragment 를 보내면
+// 서버 Chromium이 항상 동일 폰트로 렌더링해서 PDF 를 돌려줌.
+// 모든 사용자가 Mac 기준과 100% 동일한 PDF를 받게 됨.
+let _pdfBrowser = null;
+async function getPdfBrowser() {
+  if (_pdfBrowser && _pdfBrowser.isConnected()) return _pdfBrowser;
+  const puppeteer = require('puppeteer');
+  _pdfBrowser = await puppeteer.launch({
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--font-render-hinting=none'],
+  });
+  _pdfBrowser.on('disconnected', () => { _pdfBrowser = null; });
+  return _pdfBrowser;
+}
+
+app.post('/api/pdf/render-html', express.json({ limit: '25mb' }), async (req, res) => {
+  const { html, title, filename, orientation, marginMm } = req.body || {};
+  if (!html || typeof html !== 'string') {
+    return res.status(400).json({ ok: false, error: 'html 필드가 필요합니다.' });
+  }
+  const startedAt = Date.now();
+  let page;
+  try {
+    // 폰트 · 기본 CSS 를 감싸 완전한 HTML 문서로 만든 뒤 Puppeteer 로 렌더
+    const m = Math.max(0, Number(marginMm) || 10);
+    const wrapped = `<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>${(title || 'PDF').replace(/</g,'&lt;')}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4 ${orientation === 'landscape' ? 'landscape' : 'portrait'}; margin: ${m}mm; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color: #111;
+    line-height: 1.5;
+  }
+  img { max-width: 100%; }
+</style></head>
+<body>${html}</body></html>`;
+
+    const browser = await getPdfBrowser();
+    page = await browser.newPage();
+    await page.setViewport({ width: 900, height: 1200, deviceScaleFactor: 2 });
+    await page.setContent(wrapped, { waitUntil: 'networkidle0', timeout: 60000 });
+    // 웹폰트 로딩 확실히 대기
+    await page.evaluate(async () => { if (document.fonts && document.fonts.ready) await document.fonts.ready; });
+    const pdfBuf = await page.pdf({
+      format: 'A4',
+      landscape: orientation === 'landscape',
+      printBackground: true,
+      preferCSSPageSize: true,
+      margin: { top: `${m}mm`, bottom: `${m}mm`, left: `${m}mm`, right: `${m}mm` },
+    });
+    await page.close();
+    const safeName = (filename || 'document').replace(/[^\w가-힣\-_ ]+/g, '_');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(safeName)}.pdf`);
+    res.send(pdfBuf);
+    console.log(`✅ [PDF] ${safeName} 생성 완료 (${Math.round(pdfBuf.length/1024)}KB, ${Date.now()-startedAt}ms)`);
+  } catch (err) {
+    console.error('❌ [/api/pdf/render-html] 오류:', err);
+    try { if (page) await page.close(); } catch {}
+    res.status(500).json({ ok: false, error: err.message || 'PDF 생성 실패' });
+  }
+});
+
 // ===== 서버 시작 (MongoDB와 독립적으로) =====
 app.listen(PORT, () => {
   console.log(`✅ 서버 실행 중: ${PORT}`);

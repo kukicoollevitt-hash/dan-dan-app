@@ -2111,6 +2111,96 @@
     </style>
 </head>
 <body>
+<!-- pretty-confirm-modal -->
+<style>
+.pretty-modal-overlay {
+    position: fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(15,23,42,0.65); backdrop-filter: blur(8px);
+    display:none; align-items:center; justify-content:center;
+    z-index:99999; animation: pmFadeIn 0.18s ease;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
+}
+.pretty-modal-overlay.show { display:flex; }
+@keyframes pmFadeIn { from{opacity:0} to{opacity:1} }
+@keyframes pmSlideUp { from{opacity:0; transform:translateY(20px) scale(0.96)} to{opacity:1; transform:translateY(0) scale(1)} }
+.pretty-modal {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color:#fff; border-radius:22px; padding:34px 30px 28px;
+    max-width:440px; width:90%; box-shadow: 0 30px 70px rgba(0,0,0,0.55);
+    border:1px solid rgba(255,255,255,0.08);
+    animation: pmSlideUp 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.pretty-modal-icon {
+    width:68px; height:68px; margin:0 auto 20px;
+    background: linear-gradient(135deg, #fbbf24, #ef4444);
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:34px; box-shadow: 0 10px 26px rgba(239, 68, 68, 0.35);
+}
+.pretty-modal-title {
+    font-size:21px; font-weight:700; text-align:center; margin-bottom:12px;
+    color:#f8fafc; letter-spacing:-0.2px;
+}
+.pretty-modal-message {
+    font-size:15px; line-height:1.65; text-align:center; color:#cbd5e1;
+    margin-bottom:26px; white-space:pre-line;
+}
+.pretty-modal-actions {
+    display:flex; gap:10px; justify-content:center;
+}
+.pretty-modal-btn {
+    flex:1; padding:13px 20px; border-radius:13px; border:none;
+    font-size:15px; font-weight:600; cursor:pointer;
+    transition:all 0.15s ease; font-family:inherit;
+}
+.pretty-modal-btn.cancel {
+    background:#334155; color:#e2e8f0;
+}
+.pretty-modal-btn.cancel:hover { background:#475569; transform:translateY(-1px); }
+.pretty-modal-btn.confirm {
+    background: linear-gradient(135deg, #ef4444, #dc2626); color:#fff;
+    box-shadow: 0 4px 14px rgba(239,68,68,0.35);
+}
+.pretty-modal-btn.confirm:hover {
+    transform:translateY(-1px); box-shadow: 0 8px 22px rgba(239,68,68,0.5);
+}
+</style>
+<div class="pretty-modal-overlay" id="prettyModalOverlay">
+    <div class="pretty-modal">
+        <div class="pretty-modal-icon" id="prettyModalIcon">⚠️</div>
+        <div class="pretty-modal-title" id="prettyModalTitle">확인</div>
+        <div class="pretty-modal-message" id="prettyModalMessage"></div>
+        <div class="pretty-modal-actions">
+            <button class="pretty-modal-btn cancel" id="prettyModalCancel">취소</button>
+            <button class="pretty-modal-btn confirm" id="prettyModalConfirm">확인</button>
+        </div>
+    </div>
+</div>
+<script>
+window.showPrettyConfirm = function(opts) {
+    return new Promise(function(resolve) {
+        var overlay = document.getElementById('prettyModalOverlay');
+        document.getElementById('prettyModalIcon').textContent = opts.icon || '⚠️';
+        document.getElementById('prettyModalTitle').textContent = opts.title || '확인';
+        document.getElementById('prettyModalMessage').textContent = opts.message || '';
+        var cancelBtn = document.getElementById('prettyModalCancel');
+        var confirmBtn = document.getElementById('prettyModalConfirm');
+        cancelBtn.textContent = opts.cancelText || '취소';
+        confirmBtn.textContent = opts.confirmText || '확인';
+        function cleanup() {
+            overlay.classList.remove('show');
+            cancelBtn.onclick = null;
+            confirmBtn.onclick = null;
+            overlay.onclick = null;
+        }
+        cancelBtn.onclick = function() { cleanup(); resolve(false); };
+        confirmBtn.onclick = function() { cleanup(); resolve(true); };
+        overlay.onclick = function(e) { if (e.target === overlay) { cleanup(); resolve(false); } };
+        overlay.classList.add('show');
+    });
+};
+</script>
+<!-- /pretty-confirm-modal -->
+
     <!-- 드로잉 캔버스 -->
     <canvas id="drawingCanvas"></canvas>
 
@@ -5333,9 +5423,13 @@
 
             // 시험 중이면 확인 메시지
             if (timerInterval) {
-                if (confirm('시험을 종료하고 대시보드로 이동하시겠습니까?\n현재 진행 상황은 저장되지 않습니다.')) {
-                    window.location.href = '/mock_exam_dashboard.html';
-                }
+                showPrettyConfirm({
+                    title: '시험 종료',
+                    message: '시험을 종료하고 대시보드로 이동하시겠습니까?\n현재 진행 상황은 저장되지 않습니다.',
+                    confirmText: '이동',
+                    cancelText: '계속 시험',
+                    icon: '📋'
+                }).then(function(ok) { if (ok) window.location.href = '/mock_exam_dashboard.html'; })
             } else {
                 window.location.href = '/mock_exam_dashboard.html';
             }

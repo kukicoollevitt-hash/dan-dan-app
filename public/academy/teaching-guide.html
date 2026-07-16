@@ -61278,7 +61278,6 @@
           }
         });
 
-        // unitKey로 직접 찾기 (onclick에 unitKey가 없는 경우)
         if (!targetBody) {
           unitAccordions.forEach(accordion => {
             const titleEl = accordion.querySelector('.unit-title');
@@ -61288,11 +61287,7 @@
           });
         }
 
-        // 여전히 못 찾으면 버튼의 가장 가까운 unit-body 사용
-        if (!targetBody) {
-          targetBody = btn.closest('.unit-body');
-        }
-
+        if (!targetBody) targetBody = btn.closest('.unit-body');
         if (!targetBody) {
           alert('PDF 생성에 실패했습니다. 단원을 찾을 수 없습니다.');
           btn.disabled = false;
@@ -61300,73 +61295,44 @@
           return;
         }
 
-        // PDF 생성을 위한 임시 컨테이너 생성
-        const pdfContainer = document.createElement('div');
-        pdfContainer.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 800px; padding: 30px; background: #fff; font-family: "Noto Sans KR", sans-serif;';
+        // unit-body innerHTML 을 클론해서 PDF 다운로드 버튼 등 UI 제거
+        const clone = targetBody.cloneNode(true);
+        clone.querySelectorAll('.pdf-download-wrap, .pdf-download-btn').forEach(el => el.remove());
 
-        // 제목 추가
+        // 서버 렌더용 HTML 조각 (제목 헤더 + 본문)
         const headerHtml = `
-          <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #059669;">
-            <h1 style="font-size: 24px; color: #065f46; margin: 0 0 10px 0;">브레인문해력 수업 지침서</h1>
-            <h2 style="font-size: 18px; color: #1f2937; margin: 0;">${title}</h2>
-            <p style="font-size: 12px; color: #6b7280; margin-top: 10px;">단원 코드: ${unitKey}</p>
-          </div>
-        `;
+          <div style="text-align:center; margin-bottom:30px; padding-bottom:20px; border-bottom:3px solid #059669;">
+            <h1 style="font-size:24px; color:#065f46; margin:0 0 10px 0;">브레인문해력 수업 지침서</h1>
+            <h2 style="font-size:18px; color:#1f2937; margin:0;">${title}</h2>
+            <p style="font-size:12px; color:#6b7280; margin-top:10px;">단원 코드: ${unitKey}</p>
+          </div>`;
+        const fragment = headerHtml + clone.innerHTML;
 
-        pdfContainer.innerHTML = headerHtml + targetBody.innerHTML;
-
-        // PDF 다운로드 버튼 제거
-        const downloadWrap = pdfContainer.querySelector('.pdf-download-wrap');
-        if (downloadWrap) downloadWrap.remove();
-
-        document.body.appendChild(pdfContainer);
-
-        // html2canvas로 캡처
-        const canvas = await html2canvas(pdfContainer, {
-          scale: 1.5, // 품질과 용량 균형
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
+        // 서버 사이드 Puppeteer 렌더링 (OS 무관 폰트 일관성 100% 보장)
+        const res = await fetch('/api/pdf/render-html', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ html: fragment, title, filename: `수업지침서_${unitKey}`, marginMm: 10 }),
         });
-
-        // PDF 생성
-        const { jsPDF } = window.jspdf;
-        const imgData = canvas.toDataURL('image/jpeg', 0.8); // JPEG 압축으로 용량 최소화
-
-        const pdfWidth = 210; // A4 가로 (mm)
-        const pdfHeight = 297; // A4 세로 (mm)
-        const imgWidth = pdfWidth - 20; // 여백 10mm씩
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        const pdf = new jsPDF('p', 'mm', 'a4');
-
-        let heightLeft = imgHeight;
-        let position = 10;
-        let pageCount = 0;
-
-        // 여러 페이지로 분할
-        while (heightLeft > 0) {
-          if (pageCount > 0) {
-            pdf.addPage();
-            position = 10;
-          }
-
-          pdf.addImage(imgData, 'JPEG', 10, position - (pageCount * (pdfHeight - 20)), imgWidth, imgHeight);
-          heightLeft -= (pdfHeight - 20);
-          pageCount++;
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: '알 수 없는 오류' }));
+          throw new Error(err.error || 'PDF 생성 실패');
         }
-
-        // 다운로드
-        pdf.save(`수업지침서_${unitKey}.pdf`);
-
-        // 임시 컨테이너 제거
-        document.body.removeChild(pdfContainer);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `수업지침서_${unitKey}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
 
         btn.disabled = false;
         btn.innerHTML = originalText;
       } catch (error) {
         console.error('PDF 생성 오류:', error);
-        alert('PDF 생성 중 오류가 발생했습니다.');
+        alert('PDF 생성 중 오류가 발생했습니다. ' + (error.message || ''));
         btn.disabled = false;
         btn.innerHTML = originalText;
       }
