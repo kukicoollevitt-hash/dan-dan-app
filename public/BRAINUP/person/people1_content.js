@@ -291,6 +291,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '동굴에서 물을 마심 → 유학 결심 → 깨달음 → 해골 발견',
         '신라로 귀환 → 유학 결심 → 동굴에서 물을 마심 → 깨달음'
       ],
+      q3_html: `원효는 당나라로 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅎ">을 떠나려 했고, 해골 물 사건을 통해 <input class="inline-input" id="q3-2" type="text" placeholder="ㄲㄷㅇ">을 얻었다.`,
+      q4_html: `물맛을 달리 느끼게 한 것은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅁㅇ">이었고, 원효는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㅅ">에게 가르침을 전했다.`,
       q3_1_ph: 'ㅇㅎ', q3_2_ph: 'ㄲㄷㅇ',
       q4_1_ph: 'ㅁㅇ', q4_2_ph: 'ㅂㅅ',
       q5_text: '원효가 "물은 그대로인데 맛을 달리 느끼게 한 건 마음이었다"고 깨달은 내용이 우리 삶에 어떻게 적용될 수 있는지 자신의 생각을 써 보세요.'
@@ -463,6 +465,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '세종대왕의 등용 → 측우기 발명 → 노비 시절 → 자격루 발명',
         '말년의 사고 → 노비 시절 → 세종대왕의 등용 → 발명품 완성'
       ],
+      q3_html: `장영실은 물의 힘으로 저절로 시간을 알려주는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㄱㄹ">를 만들고, 비의 양을 정확히 측정하는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅊㅇㄱ">를 발명했습니다.`,
+      q4_html: `장영실은 <input class="inline-input" id="q4-1" type="text" placeholder="ㄴㅂ"> 출신이었지만 신분의 벽을 뛰어넘어 꿈을 이룬 <input class="inline-input" id="q4-2" type="text" placeholder="ㄷㅈ">과 노력의 상징입니다.`,
       q3_1_ph: 'ㅈㄱㄹ', q3_2_ph: 'ㅊㅇㄱ',
       q4_1_ph: 'ㄴㅂ', q4_2_ph: 'ㄷㅈ',
       q5_text: '장영실이 신분의 벽을 뛰어넘어 성공할 수 있었던 이유는 무엇이라고 생각하나요? 글의 내용을 바탕으로 자신의 생각을 써 보세요.'
@@ -631,6 +635,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '집현전 설치',
         '측우기 발명',
       ],
+      q3_html: `세종대왕은 백성을 가르치는 바른 소리라는 뜻의 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅁㅈㅇ">을 만들어 1446년에 세상에 널리 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㅍ">했습니다.`,
+      q4_html: `세종대왕은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅅ">을 사랑하는 마음으로 한글을 만들었고, 오늘날까지 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄱ">으로 기억되고 있습니다.`,
       q3_1_ph: 'ㅎㅁㅈㅇ', q3_2_ph: 'ㅂㅍ',
       q4_1_ph: 'ㅂㅅ', q4_2_ph: 'ㅅㄱ',
       q5_text: '세종대왕이 신하들의 반대에도 불구하고 훈민정음을 만든 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -716,6 +722,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '뛰어난 의술 실력 덕분에',
         '돈이 많아서',
       ],
+      q3_html: `허준은 의학 백과사전인 <input class="inline-input" id="q3-1" type="text" placeholder="ㄷㅇㅂㄱ">을 완성했고, 가난한 백성들도 쉽게 구할 수 있는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅇ">을 중심으로 처방을 기록했습니다.`,
+      q4_html: `허준은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅇ">이라는 낮은 신분이었지만, 뛰어난 의술로 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅈ">받아 왕실 의원이 되었습니다.`,
       q3_1_ph: 'ㄷㅇㅂㄱ', q3_2_ph: 'ㅎㅇ',
       q4_1_ph: 'ㅅㅇ', q4_2_ph: 'ㅇㅈ',
       q5_text: '허준이 낮은 신분에도 불구하고 위대한 업적을 남길 수 있었던 이유는 무엇이라고 생각하나요?'
@@ -801,6 +809,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '율곡 이이 성장 → 결혼과 자녀 교육 → 아버지의 지원 → 예술 작품 평가',
         '아버지의 지원 → 결혼과 자녀 교육 → 율곡 이이 성장 → 예술 작품 평가와 5만 원권 지폐',
       ],
+      q3_html: `신사임당은 풀과 벌레를 그린 <input class="inline-input" id="q3-1" type="text" placeholder="ㅊㅊㄷ">로 유명하며, 그녀의 아들 이이의 호는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㄱ">입니다.`,
+      q4_html: `신사임당은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅁ">과 예술을 배워 뛰어난 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅈ">을 이루었습니다.`,
       q3_1_ph: 'ㅊㅊㄷ', q3_2_ph: 'ㅇㄱ',
       q4_1_ph: 'ㅎㅁ', q4_2_ph: 'ㅇㅈ',
       q5_text: '신사임당이 당시 여성으로서 학문과 예술에서 성취를 이룰 수 있었던 이유는 무엇이라고 생각하나요?'
@@ -886,6 +896,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '일본에 미친 영향 → 성리학 연구 → 성장과 유학 공부',
         '성리학 연구 → 일본에 미친 영향 → 성장과 유학 공부',
       ],
+      q3_html: `이황은 인간의 마음과 도덕을 연구하는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㄹㅎ">을 발전시켰고, <input class="inline-input" id="q3-2" type="text" placeholder="ㄷㅅㅅㅇ">을 세워 제자들을 가르쳤습니다.`,
+      q4_html: `이황은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅁ"> 연구를 중요시했고, 일본에서는 그를 동방의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㅈ">라고 칭송했습니다.`,
       q3_1_ph: 'ㅅㄹㅎ', q3_2_ph: 'ㄷㅅㅅㅇ',
       q4_1_ph: 'ㅎㅁ', q4_2_ph: 'ㅈㅈ',
       q5_text: '이황이 관직보다 학문 연구와 후학 양성을 중요시한 이유는 무엇이라고 생각하나요?'
@@ -971,6 +983,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '저술과 업적 → 성장 → 기 철학',
         '기 철학 → 저술 → 성장과 과거 합격',
       ],
+      q3_html: `이이는 과거 시험에서 아홉 번이나 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅇ">을 차지했고, 10만 명의 군사를 기르는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂ">을 주장했습니다.`,
+      q4_html: `이이는 학문을 깊이 연구하는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅈ">였으며, 현실 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㅊ">에도 적극 참여했습니다.`,
       q3_1_ph: 'ㅈㅇ', q3_2_ph: 'ㅇㅂ',
       q4_1_ph: 'ㅎㅈ', q4_2_ph: 'ㅈㅊ',
       q5_text: '이이의 10만 양병설이 받아들여지지 않은 것이 어떤 결과를 가져왔는지 글을 바탕으로 설명해 보세요.'
@@ -1056,6 +1070,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '성장과 화성 설계 → 실학 연구와 유배 → 유배 중 저술과 업적 평가',
         '유배 중 저술 → 실학 연구 → 성장',
       ],
+      q3_html: `정약용은 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅈㄱ">를 발명했고, 실제 생활에 도움이 되는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅎ">을 발전시켰습니다.`,
+      q4_html: `정약용은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅂ">를 당했지만 <input class="inline-input" id="q4-2" type="text" placeholder="ㅍㄱ">하지 않고 학문 연구에 매진했습니다.`,
       q3_1_ph: 'ㄱㅈㄱ', q3_2_ph: 'ㅅㅎ',
       q4_1_ph: 'ㅇㅂ', q4_2_ph: 'ㅍㄱ',
       q5_text: '정약용이 18년의 유배 생활을 학문 연구에 바친 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -1141,6 +1157,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '영토 확장 → 광개토대왕릉비 → 왕위 즉위',
         '왕위 즉위와 정복 시작 → 신라 구원과 영토 확장 → 업적과 광개토대왕릉비',
       ],
+      q3_html: `광개토대왕은 대규모 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅂ"> 전쟁으로 고구려의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅌ">를 크게 넓혔습니다.`,
+      q4_html: `광개토대왕의 훌륭한 업적을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅇ">이라 하며, 그는 우리 민족의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅇ">입니다.`,
       q3_1_ph: 'ㅈㅂ', q3_2_ph: 'ㅇㅌ',
       q4_1_ph: 'ㅇㅇ', q4_2_ph: 'ㅇㅇ',
       q5_text: '광개토대왕이 어린 나이에도 불구하고 위대한 업적을 남길 수 있었던 이유는 무엇이라고 생각하나요?'
@@ -1226,6 +1244,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '영웅 평가 → 유인 작전 → 수나라 침입',
         '유인 작전 → 영웅 평가 → 수나라 침입',
       ],
+      q3_html: `을지문덕은 뛰어난 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㄹ">으로 적을 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅇ">하여 물리쳤습니다.`,
+      q4_html: `고구려군은 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷ">을 쌓아 물을 막았다가 터뜨려 적을 물리쳤고, 을지문덕은 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅇ">이 되었습니다.`,
       q3_1_ph: 'ㅈㄹ', q3_2_ph: 'ㅇㅇ',
       q4_1_ph: 'ㄷ', q4_2_ph: 'ㅇㅇ',
       q5_text: '을지문덕이 수적 열세를 극복하고 승리할 수 있었던 비결은 무엇이라고 생각하나요?'
@@ -1311,6 +1331,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '흥화진 전투 → 귀주대첩 → 성장 배경',
         '영웅 평가 → 거란 침입 → 성장 배경',
       ],
+      q3_html: `강감찬은 물을 이용한 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㄱ"> 작전을 펼쳤고, 거란군은 결국 <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅌ">를 결정했습니다.`,
+      q4_html: `강감찬은 뛰어난 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㄹ">으로 승리했고, <input class="inline-input" id="q4-2" type="text" placeholder="ㅎㄱ">의 영웅으로 기억됩니다.`,
       q3_1_ph: 'ㅅㄱ', q3_2_ph: 'ㅎㅌ',
       q4_1_ph: 'ㅈㄹ', q4_2_ph: 'ㅎㄱ',
       q5_text: '강감찬이 70세가 넘은 나이에도 전쟁을 승리로 이끌 수 있었던 이유는 무엇이라고 생각하나요?'
@@ -1396,6 +1418,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '왜구 침략과 화약 연구 필요성 → 화약 제조 성공과 화통도감 → 진포대첩과 업적 평가',
         '업적 평가 → 진포대첩 → 화약 연구',
       ],
+      q3_html: `최무선은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅇ">을 만들기 위해 주요 재료인 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅊ">를 구하는 방법을 알아냈습니다.`,
+      q4_html: `최무선은 수많은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅎ">을 거듭했고, 군사 과학의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄱㅈ">가 되었습니다.`,
       q3_1_ph: 'ㅎㅇ', q3_2_ph: 'ㅇㅊ',
       q4_1_ph: 'ㅅㅎ', q4_2_ph: 'ㅅㄱㅈ',
       q5_text: '최무선이 수십 년 동안 포기하지 않고 화약 연구에 매달린 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -1481,6 +1505,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '충절 평가 → 단심가 → 성장과 학문',
         '성장과 학문, 외교 활동 → 조선 건국 세력과의 갈등, 단심가 → 선죽교 최후와 충절 평가',
       ],
+      q3_html: `정몽주는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅊㅈ">의 상징이며, <input class="inline-input" id="q3-2" type="text" placeholder="ㄷㅅㄱ">라는 시로 충성심을 표현했습니다.`,
+      q4_html: `정몽주는 나라에 대한 <input class="inline-input" id="q4-1" type="text" placeholder="ㅊㅅ">으로 유명했고, 이성계도 그를 <input class="inline-input" id="q4-2" type="text" placeholder="ㅊㅁ">했습니다.`,
       q3_1_ph: 'ㅊㅈ', q3_2_ph: 'ㄷㅅㄱ',
       q4_1_ph: 'ㅊㅅ', q4_2_ph: 'ㅊㅁ',
       q5_text: '정몽주가 새 왕조에 합류하라는 권유를 거절하고 충절을 지킨 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -1566,6 +1592,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '업적 평가 → 영의정 역임 → 청렴한 생활',
         '공정한 조정 → 검소한 생활 → 성장',
       ],
+      q3_html: `황희는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅊㄹ">한 생활을 했고, <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅅ">하게 살며 백성들에게 모범을 보였습니다.`,
+      q4_html: `황희는 사람들의 입장을 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅎ">하고 넓은 마음으로 <input class="inline-input" id="q4-2" type="text" placeholder="ㅍㅇ">했습니다.`,
       q3_1_ph: 'ㅊㄹ', q3_2_ph: 'ㄱㅅ',
       q4_1_ph: 'ㅇㅎ', q4_2_ph: 'ㅍㅇ',
       q5_text: '황희가 청렴하고 공정하게 살았던 것에서 오늘날 우리가 배울 수 있는 점은 무엇인가요?'
@@ -1651,6 +1679,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '영토 편입 → 정복 결심 → 나무 사자 작전',
         '항복 → 영토 편입 → 정복 결심',
       ],
+      q3_html: `이사부는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅎ">를 발휘하여 나무 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅈ"> 인형으로 우산국을 정복했습니다.`,
+      q4_html: `이 사건으로 독도는 우리 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅌ">가 되었고, 이사부의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅈ">으로 기록되었습니다.`,
       q3_1_ph: 'ㅈㅎ', q3_2_ph: 'ㅅㅈ',
       q4_1_ph: 'ㅇㅌ', q4_2_ph: 'ㅇㅈ',
       q5_text: '이사부가 무력 대신 지혜로 우산국을 정복한 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -1736,6 +1766,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '지리 관심과 지도 제작 결심 → 전국 답사와 대동여지도 완성 → 정확성과 업적 평가',
         '전국 답사 → 업적 평가 → 지도 제작 결심',
       ],
+      q3_html: `김정호는 전국을 <input class="inline-input" id="q3-1" type="text" placeholder="ㄷㅅ">하고 <input class="inline-input" id="q3-2" type="text" placeholder="ㅊㄹ">하여 정확한 지도를 만들었습니다.`,
+      q4_html: `대동여지도는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅎㅅ">이 뛰어나며, <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅍ">으로 인쇄되었습니다.`,
       q3_1_ph: 'ㄷㅅ', q3_2_ph: 'ㅊㄹ',
       q4_1_ph: 'ㅈㅎㅅ', q4_2_ph: 'ㅁㅍ',
       q5_text: '김정호가 30년 넘게 지도 제작에 헌신한 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -1821,6 +1853,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '동양평화론 → 하얼빈 의거 → 성장',
         '성장과 독립운동 투신 → 하얼빈 의거 → 재판, 동양평화론과 순국',
       ],
+      q3_html: `안중근은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅂ"> 활동을 했으며, <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅇ">와 평화를 중시했습니다.`,
+      q4_html: `안중근은 나라를 위해 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㄱ">했으며, 그의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㄱㅅ">은 우리 민족의 정신적 지주가 되고 있습니다.`,
       q3_1_ph: 'ㅇㅂ', q3_2_ph: 'ㅈㅇ',
       q4_1_ph: 'ㅅㄱ', q4_2_ph: 'ㅇㄱㅅ',
       q5_text: '안중근이 도망치지 않고 당당히 체포된 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -1906,6 +1940,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '형무소 수감 → 아우내 만세운동 → 3·1 운동 참여',
         '3·1 운동 → 형무소 수감 → 아우내 만세운동',
       ],
+      q3_html: `유관순은 사람들을 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㄷ">하고 태극기를 나눠 주었으며, 아우내 장터에서 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㅅㅇㄷ">을 이끌었습니다.`,
+      q4_html: `많은 사람들이 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅅ">되었지만, 유관순의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㄱ">와 나라 사랑은 오늘날까지 감동을 주고 있습니다.`,
       q3_1_ph: 'ㅅㄷ', q3_2_ph: 'ㅁㅅㅇㄷ',
       q4_1_ph: 'ㅎㅅ', q4_2_ph: 'ㅇㄱ',
       q5_text: '유관순이 어린 나이에도 불구하고 만세운동을 이끌 수 있었던 이유는 무엇이라고 생각하나요?'
@@ -1991,6 +2027,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '순국 → 상하이 의거 → 성장과 중국행',
         '중국행 → 순국 → 상하이 의거',
       ],
+      q3_html: `윤봉길은 굳은 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅇ">로 중국으로 떠났고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅎㅇㅇㄱ">를 일으켜 세계에 한국 독립의 의지를 알렸습니다.`,
+      q4_html: `윤봉길은 나라를 위해 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㄱ">했으며, 그의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅎㅅ">은 한국 독립운동의 중요한 전환점이 되었습니다.`,
       q3_1_ph: 'ㄱㅇ', q3_2_ph: 'ㅅㅎㅇㅇㄱ',
       q4_1_ph: 'ㅅㄱ', q4_2_ph: 'ㅎㅅ',
       q5_text: '윤봉길이 의거 전 김구 선생과 시계를 바꾼 일화에서 느낄 수 있는 그의 마음은 무엇이었을까요?'
@@ -2076,6 +2114,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '성장과 임시정부 주석 취임 → 항일 투쟁과 광복 → 통일 노력과 서거',
         '광복 → 임시정부 주석 → 성장',
       ],
+      q3_html: `김구는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅇ"> 투쟁을 이끌었고, 1945년 조국이 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅂ">을 맞이했습니다.`,
+      q4_html: `김구는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅌㅇ"> 정부 수립을 위해 노력했고, <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅎ"> 강국을 꿈꾸었습니다.`,
       q3_1_ph: 'ㅎㅇ', q3_2_ph: 'ㄱㅂ',
       q4_1_ph: 'ㅌㅇ', q4_2_ph: 'ㅁㅎ',
       q5_text: '김구가 꿈꾼 "세계에서 가장 아름다운 나라"는 어떤 나라라고 생각하나요?'
@@ -2161,6 +2201,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '절 입학 → 명필 활동 → 떡 썰기 시합',
         '어린 시절과 절 입학 → 어머니와 떡 썰기 시합 → 명필이 되어 활동',
       ],
+      q3_html: `어머니는 아들을 위해 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅅ">했고, 한석봉은 더욱 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅈ">하여 명필이 되었습니다.`,
+      q4_html: `한석봉은 조선 최고의 <input class="inline-input" id="q4-1" type="text" placeholder="ㅁㅍ">이 되었으며, <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㄴ">와 노력의 상징입니다.`,
       q3_1_ph: 'ㅎㅅ', q3_2_ph: 'ㅈㅈ',
       q4_1_ph: 'ㅁㅍ', q4_2_ph: 'ㅇㄴ',
       q5_text: '한석봉 어머니가 아들을 다시 절로 보낸 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -2246,6 +2288,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예술적 가치 → 풍속화 대표작 → 성장',
         '도화서 화원 → 예술적 가치 → 풍속화 대표작',
       ],
+      q3_html: `김홍도는 사람들의 일상을 그린 <input class="inline-input" id="q3-1" type="text" placeholder="ㅍㅅㅎ">로 유명하며, <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㄷㅈ">인 장면을 잘 표현했습니다.`,
+      q4_html: `김홍도는 서민들의 삶에 깊은 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅅ">을 가진 위대한 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅅㄱ">입니다.`,
       q3_1_ph: 'ㅍㅅㅎ', q3_2_ph: 'ㅇㄷㅈ',
       q4_1_ph: 'ㄱㅅ', q4_2_ph: 'ㅇㅅㄱ',
       q5_text: '김홍도가 평범한 서민들의 삶을 그린 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -2331,6 +2375,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '예술적 가치 → 대표작 소개 → 성장',
         '화원 활동 → 예술적 가치 → 대표작 소개',
       ],
+      q3_html: `신윤복의 그림은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅅ">하고 아름다운 선이 특징이며, <input class="inline-input" id="q3-2" type="text" placeholder="ㄴㅁㅈ">인 장면을 잘 표현했습니다.`,
+      q4_html: `신윤복은 조선을 대표하는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㄱ">로, 아름다움과 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅅ">을 중시한 예술가입니다.`,
       q3_1_ph: 'ㅅㅅ', q3_2_ph: 'ㄴㅁㅈ',
       q4_1_ph: 'ㅎㄱ', q4_2_ph: 'ㄱㅅ',
       q5_text: '신윤복이 당시 기준으로 파격적인 주제를 그린 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -2416,6 +2462,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '성장과 실학 연구 → 열하일기 집필 → 소설 집필과 사회 비판',
         '실학 연구 → 소설 집필 → 열하일기',
       ],
+      q3_html: `박지원은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅎㅇㄱ">를 통해 청나라의 발전된 문물을 소개하고, 조선의 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅎ">을 촉구했습니다.`,
+      q4_html: `박지원은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅍ"> 정신으로 사회 문제를 지적한 위대한 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㄱ">입니다.`,
       q3_1_ph: 'ㅇㅎㅇㄱ', q3_2_ph: 'ㄱㅎ',
       q4_1_ph: 'ㅂㅍ', q4_2_ph: 'ㅈㄱ',
       q5_text: '박지원이 청나라의 발전된 문물을 배우자고 한 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -2501,6 +2549,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '신부 서품 → 순교 → 선교 활동',
         '성장과 신부 서품 → 선교 활동과 체포 → 순교와 시성',
       ],
+      q3_html: `천주교 신자들은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅂㅎ">를 받았지만, 김대건 신부는 조선에서 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㄱ"> 활동을 했습니다.`,
+      q4_html: `김대건 신부는 배교를 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅂ">했으며, 1984년 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅇ">으로 시성되었습니다.`,
       q3_1_ph: 'ㅂㅎ', q3_2_ph: 'ㅅㄱ',
       q4_1_ph: 'ㄱㅂ', q4_2_ph: 'ㅅㅇ',
       q5_text: '김대건 신부가 죽음 앞에서도 신앙을 지킨 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -2586,6 +2636,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '제자들 활동 → 한글 문법 → 성장',
         '한글 중요성 → 제자들 활동 → 문법 정리',
       ],
+      q3_html: `주시경은 한글의 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅂ">을 정리하고 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㄱ">에 힘썼습니다.`,
+      q4_html: `주시경은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅁㅈ">의 정체성을 지키기 위해 <input class="inline-input" id="q4-2" type="text" placeholder="ㅎㅅ">했습니다.`,
       q3_1_ph: 'ㅁㅂ', q3_2_ph: 'ㅂㄱ',
       q4_1_ph: 'ㅁㅈ', q4_2_ph: 'ㅎㅅ',
       q5_text: '주시경이 일제강점기에도 한글 연구를 계속한 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -2671,6 +2723,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '어린이날 제정 → 성장 → 동화 구연',
         '유언과 업적 → 어린이날 제정 → 성장',
       ],
+      q3_html: `방정환은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㄹㅇ">라는 말을 널리 퍼뜨렸고, <input class="inline-input" id="q3-2" type="text" placeholder="ㄷㅎ">를 쓰고 구연했습니다.`,
+      q4_html: `방정환은 어린이의 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㄹ">를 위해 헌신했으며, "어린이를 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄹ">해 주세요"라는 유언을 남겼습니다.`,
       q3_1_ph: 'ㅇㄹㅇ', q3_2_ph: 'ㄷㅎ',
       q4_1_ph: 'ㄱㄹ', q4_2_ph: 'ㅅㄹ',
       q5_text: '방정환이 어린이의 권리를 강조한 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -2756,6 +2810,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '성장과 당나라 활동 → 청해진 설치와 해적 소탕 → 무역 장악과 최후',
         '당나라 활동 → 무역 장악 → 청해진 설치',
       ],
+      q3_html: `해적들은 신라 사람들을 <input class="inline-input" id="q3-1" type="text" placeholder="ㄴㅇ">로 팔았지만, 장보고는 청해진을 동아시아 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㅇ">의 중심지로 발전시켰습니다.`,
+      q4_html: `장보고는 동아시아 바다를 지배한 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅅㅇ">이며, 바다를 통해 나라를 강하게 만든 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄱㅈ">입니다.`,
       q3_1_ph: 'ㄴㅇ', q3_2_ph: 'ㅁㅇ',
       q4_1_ph: 'ㅎㅅㅇ', q4_2_ph: 'ㅅㄱㅈ',
       q5_text: '장보고가 바다를 통해 나라를 강하게 만든 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -2841,6 +2897,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '즉위 → 인재 등용 → 첨성대 건립',
         '즉위와 배경 → 첨성대, 황룡사 등 업적 → 인재 등용과 삼국통일 기반',
       ],
+      q3_html: `선덕여왕은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅊㅅㄷ">를 세웠고, 황룡사 9층 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㅌ">을 건립했습니다.`,
+      q4_html: `선덕<input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅇ">은 최초의 여성 왕으로, 시대의 편견을 극복한 위대한 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㄷㅈ">입니다.`,
       q3_1_ph: 'ㅊㅅㄷ', q3_2_ph: 'ㅁㅌ',
       q4_1_ph: 'ㅇㅇ', q4_2_ph: 'ㅈㄷㅈ',
       q5_text: '선덕여왕이 여성으로서 시대의 편견을 극복한 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -2926,6 +2984,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '고구려 멸망 → 당나라 격퇴 → 정변',
         '권력 장악 → 고구려 멸망 → 당나라 격퇴',
       ],
+      q3_html: `당 태종이 고구려를 <input class="inline-input" id="q3-1" type="text" placeholder="ㅊㄹ">했지만, <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅅㅅ"> 전투에서 88일 동안 막아냈습니다.`,
+      q4_html: `연개소문의 강력한 <input class="inline-input" id="q4-1" type="text" placeholder="ㄹㄷㅅ">이 고구려를 지켰지만, 그의 사후 고구려는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅁ">했습니다.`,
       q3_1_ph: 'ㅊㄹ', q3_2_ph: 'ㅇㅅㅅ',
       q4_1_ph: 'ㄹㄷㅅ', q4_2_ph: 'ㅁㅁ',
       q5_text: '연개소문에 대한 평가가 엇갈리는 이유는 무엇이라고 생각하나요?'
@@ -3011,6 +3071,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '전사 → 결사대 편성 → 전투',
         '비장한 결심 → 전사 → 결사대 편성',
       ],
+      q3_html: `계백은 죽음을 각오한 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅅㄷ">를 이끌었고, 이는 결사의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅈ">를 보여줍니다.`,
+      q4_html: `계백과 결사대는 모두 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅅ">했지만, 황산벌 전투는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅊㅈ">의 상징으로 기억됩니다.`,
       q3_1_ph: 'ㄱㅅㄷ', q3_2_ph: 'ㅇㅈ',
       q4_1_ph: 'ㅈㅅ', q4_2_ph: 'ㅊㅈ',
       q5_text: '계백이 압도적인 수의 열세에도 불구하고 끝까지 싸운 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -3096,6 +3158,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '성장과 외적 격퇴 → 청렴한 삶 → 위화도 회군과 최후',
         '성장과 외적 격퇴 → 위화도 회군과 최후 → 청렴한 삶',
       ],
+      q3_html: `최영은 <input class="inline-input" id="q3-1" type="text" placeholder="ㄴㅁ">을 거절하고 청렴하게 살았으며, 나라에 대한 <input class="inline-input" id="q3-2" type="text" placeholder="ㅊㅅ">으로 유명합니다.`,
+      q4_html: `이성계의 위화도 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㄱ">으로 최영은 패배했지만, 그의 청렴함은 오늘날에도 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㄱ">이 됩니다.`,
       q3_1_ph: 'ㄴㅁ', q3_2_ph: 'ㅊㅅ',
       q4_1_ph: 'ㅎㄱ', q4_2_ph: 'ㄱㄱ',
       q5_text: '"황금 보기를 돌같이 하라"는 유언에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -3181,6 +3245,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '성장과 의병 활동 → 이후 활동과 업적 → 행주대첩 승리',
         '성장과 의병 활동 → 행주대첩 승리 → 이후 활동과 업적',
       ],
+      q3_html: `권율은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅂ">을 일으켜 일본군에 맞서 싸웠고, 행주대첩에서 적을 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅌ">했습니다.`,
+      q4_html: `권율은 뛰어난 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㄹ">과 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㄱ">로 적을 물리친 위대한 장군입니다.`,
       q3_1_ph: 'ㅇㅂ', q3_2_ph: 'ㄱㅌ',
       q4_1_ph: 'ㅈㄹ', q4_2_ph: 'ㅇㄱ',
       q5_text: '권율이 10배가 넘는 적을 물리칠 수 있었던 비결은 무엇이라고 생각하나요?'
@@ -3266,6 +3332,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '전국 의병의 계기와 은퇴 → 의병 모집과 저항 시작 → 게릴라 전투와 승리',
         '의병 모집과 저항 시작 → 전국 의병의 계기와 은퇴 → 게릴라 전투와 승리',
       ],
+      q3_html: `곽재우는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅂ">을 모집하여 관군이 무너진 상황에서 최초로 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅎ">을 시작했습니다.`,
+      q4_html: `곽재우의 승리는 경상도의 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㄱ">를 올렸고, 그는 임진왜란 의병의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅈ">으로 기억됩니다.`,
       q3_1_ph: 'ㅇㅂ', q3_2_ph: 'ㅈㅎ',
       q4_1_ph: 'ㅅㄱ', q4_2_ph: 'ㅅㅈ',
       q5_text: '곽재우가 전쟁 후 관직을 거절하고 고향에서 조용히 산 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -3351,6 +3419,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '의생활 개선 → 원나라와 목화씨 발견 → 목화씨 반입과 재배 성공',
         '원나라와 목화씨 발견 → 의생활 개선 → 목화씨 반입과 재배 성공',
       ],
+      q3_html: `문익점은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅎㅆ">를 붓대 끝에 숨겨 가져왔고, 목화 재배가 전국으로 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㄱ">되었습니다.`,
+      q4_html: `목화에서 얻는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅ">은 따뜻한 옷을 만들어, 문익점은 나라에 큰 <input class="inline-input" id="q4-2" type="text" placeholder="ㅎㅌ">을 주었습니다.`,
       q3_1_ph: 'ㅁㅎㅆ', q3_2_ph: 'ㅂㄱ',
       q4_1_ph: 'ㅅ', q4_2_ph: 'ㅎㅌ',
       q5_text: '문익점이 목숨의 위험을 무릅쓰고 목화씨를 가져온 것에서 우리가 배울 수 있는 점은 무엇인가요?'
@@ -3436,6 +3506,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '성장과 신동 시절 → 고난과 시 창작 → 사후 인정과 문학적 유산',
         '성장과 신동 시절 → 사후 인정과 문학적 유산 → 고난과 시 창작',
       ],
+      q3_html: `허난설헌은 자녀를 잃은 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅍ">을 시로 표현했으며, <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅅ">에 뛰어났습니다.`,
+      q4_html: `허난설헌의 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅈ">은 중국과 일본에서 출간되었고, 그녀는 조선을 대표하는 여성 <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅎㄱ">입니다.`,
       q3_1_ph: 'ㅅㅍ', q3_2_ph: 'ㅎㅅ',
       q4_1_ph: 'ㅅㅈ', q4_2_ph: 'ㅁㅎㄱ',
       q5_text: '허난설헌이 힘든 삶에서도 뛰어난 시를 남긴 것에서 우리가 배울 수 있는 점은 무엇인가요?'

@@ -62116,7 +62116,8 @@
       const folder = SUBJECTS[subjectKey]?.folder;
       if (!folder) return null;
       // 캐시 무효화: 옛 버전(q3_html 등 누락)을 잡지 않도록 버전 쿼리스트링 부여
-      const url = `/BRAINUP/${folder}/${prefix}${subjectKey}_content.js?v=20260622n`;
+      // 2026-07-16: world1/world2/classic/modern/people1 시리즈에 q3_html·q4_html 추가 이식 → 버전 갱신
+      const url = `/BRAINUP/${folder}/${prefix}${subjectKey}_content.js?v=20260716`;
 
       // 단원 자동 인식 IIFE가 location 기반으로 동작하지 않도록 미리 CUR_UNIT 지정
       window.CUR_UNIT = unitKey;
@@ -65333,9 +65334,21 @@
         || (unit.creative && unit.creative.topic)
         || '본문에서 가장 중요하다고 생각하는 점이 무엇인지 본문 내용을 바탕으로 자세히 설명해 보세요.';
 
-      // q3, q4 자동 선택: q3_html 있으면 빈칸형, 없으면 객관식
+      // q3, q4 자동 선택: q3_html 있으면 빈칸형, q3_text 있으면 객관식, 둘 다 없고 placeholder만 있으면 자동생성 (2026-07-16 세계문학2 대응)
+      // 자동생성 케이스: content.js에 q3_1_ph/q3_2_ph 만 있고 화면 렌더링용 문장이 누락된 단원 대응
+      function _autoGenFillHtml(n, ph1, ph2) {
+        const inp1 = `<input type="text" id="q${n}-1" placeholder="${ph1}">`;
+        const inp2 = ph2 ? `<input type="text" id="q${n}-2" placeholder="${ph2}">` : '';
+        return ph2
+          ? `본문에서 두 개의 핵심 어휘를 찾아 써 보세요. ${inp1}, ${inp2}`
+          : `본문의 핵심 어휘를 찾아 써 보세요. ${inp1}`;
+      }
       const hasFill3 = !!qz.q3_html;
       const hasFill4 = !!qz.q4_html;
+      const hasObj3 = !!qz.q3_text;
+      const hasObj4 = !!qz.q4_text;
+      const hasAutoFill3 = !hasFill3 && !hasObj3 && !!qz.q3_1_ph;
+      const hasAutoFill4 = !hasFill4 && !hasObj4 && !!qz.q4_1_ph;
       const ansForQ3 = isTeacher
         ? { 'q3-1': (Array.isArray(key.q3_1) ? key.q3_1[0] : key.q3_1) || '',
             'q3-2': (Array.isArray(key.q3_2) ? key.q3_2[0] : key.q3_2) || '' }
@@ -65346,10 +65359,14 @@
         : null;
       const q3Block = hasFill3
         ? renderFillIn(3, qz.q3_html, ansForQ3)
-        : renderObjective(3, qz.q3_text || '', qz.q3_opts, key.q3);
+        : hasAutoFill3
+          ? renderFillIn(3, _autoGenFillHtml(3, qz.q3_1_ph || '', qz.q3_2_ph || ''), ansForQ3)
+          : renderObjective(3, qz.q3_text || '', qz.q3_opts, key.q3);
       const q4Block = hasFill4
         ? renderFillIn(4, qz.q4_html, ansForQ4)
-        : renderObjective(4, qz.q4_text || '', qz.q4_opts, key.q4);
+        : hasAutoFill4
+          ? renderFillIn(4, _autoGenFillHtml(4, qz.q4_1_ph || '', qz.q4_2_ph || ''), ansForQ4)
+          : renderObjective(4, qz.q4_text || '', qz.q4_opts, key.q4);
 
       // deep_ 시리즈는 5번 서술형 제외, 1페이지에 q1~q4만 (교사·학생 동일)
       if (unit._skipQ5 === true) {

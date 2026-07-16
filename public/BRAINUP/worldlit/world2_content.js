@@ -417,6 +417,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「올리버 트위스트」 작품 소개와 약자를 향한 사회 정의의 메시지',
         '4문단 : 고아 올리버가 구빈원에서 비참하게 자라며 늘 배고픔에 시달림'
       ],
+      q3_html: `올리버는 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅂㅇ">에서 태어났고, 부모 없이 혼자 자라는 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅇ">였습니다.`,
+      q4_html: `올리버의 작은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅎ">은 구빈원의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㄷ">함을 세상에 알리는 시작이 되었습니다.`,
       q3_1_ph: 'ㄱㅂㅇ', q3_2_ph: 'ㄱㅇ',
       q4_1_ph: 'ㅈㅎ', q4_2_ph: 'ㅂㄷ',
       q5_text: '올리버가 "죽을 더 달라"고 말한 행동이 왜 용기 있는 행동이라고 할 수 있는지 본문 내용을 바탕으로 설명해 보세요.'
@@ -497,6 +499,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「허클베리 핀의 모험」 작품 소개와 자유·우정의 참된 의미',
         '4문단 : 헉과 짐이 뗏목 여행 중 사기꾼 왕과 공작을 만나 위기에 빠짐'
       ],
+      q3_html: `헉은 도망친 노예 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈ">과 함께 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㅅㅅㅍ">강을 따라 자유를 찾아 여행했습니다.`,
+      q4_html: `헉은 여행을 통해 진정한 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅈ">이 무엇인지 깨닫고, 짐을 위해 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㄱ">있는 선택을 했습니다.`,
       q3_1_ph: 'ㅈ', q3_2_ph: 'ㅁㅅㅅㅍ',
       q4_1_ph: 'ㅇㅈ', q4_2_ph: 'ㅇㄱ',
       q5_text: '헉이 사회의 규칙보다 자신의 양심을 따른 것에 대해 어떻게 생각하는지 설명해 보세요.'
@@ -574,6 +578,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 병약한 콜린을 정원으로 데려가 함께 치유되며 걷게 됨',
         '4문단 : 고아 메리가 삼촌 저택으로 와서 비밀의 정원 이야기를 듣게 됨'
       ],
+      q3_html: `외롭고 까다로운 소녀 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㄹ">는 비밀의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅇ">을 발견하고 마음이 열리기 시작했습니다.`,
+      q4_html: `죽은 줄 알았던 정원은 아이들에게 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅁ">을 주었고, 콜린의 몸과 마음도 함께 <input class="inline-input" id="q4-2" type="text" placeholder="ㅊㅇ">되었습니다.`,
       q3_1_ph: 'ㅁㄹ', q3_2_ph: 'ㅈㅇ',
       q4_1_ph: 'ㅎㅁ', q4_2_ph: 'ㅊㅇ',
       q5_text: '비밀의 정원이 메리와 콜린에게 어떤 변화를 가져다주었는지, 그리고 자연이 사람의 마음을 치유할 수 있다고 생각하는 이유를 설명해 보세요.'
@@ -650,6 +656,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 영국 도착 후 날짜 변경선으로 하루를 벌어 마지막 순간에 내기 성공',
         '4문단 : 포그가 클럽 회원들과 80일 세계일주 내기를 하고 파스파르투와 출발'
       ],
+      q3_html: `영국 신사 <input class="inline-input" id="q3-1" type="text" placeholder="ㅍㄱ">는 하인 <input class="inline-input" id="q3-2" type="text" placeholder="ㅍㅅㅍㄹㅌ">와 함께 80일 만에 세계를 일주하는 여행을 떠났습니다.`,
+      q4_html: `포그는 클럽 회원들과 <input class="inline-input" id="q4-1" type="text" placeholder="ㄴㄱ">를 했고, 마지막에 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄱ">을 정확히 맞춰 성공했습니다.`,
       q3_1_ph: 'ㅍㄱ', q3_2_ph: 'ㅍㅅㅍㄹㅌ',
       q4_1_ph: 'ㄴㄱ', q4_2_ph: 'ㅅㄱ',
       q5_text: '포그가 여러 어려움 속에서도 포기하지 않았던 이유는 무엇일까요? 여러분이라면 그런 상황에서 어떻게 했을지 써 보세요.'
@@ -722,6 +730,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「해저 2만리」 작품 소개와 과학적 상상력, 해양 탐험의 꿈',
         '4문단 : 네모 선장이 세 사람을 데려가고 자급자족하는 배의 놀라움을 보여줌'
       ],
+      q3_html: `신비로운 선장 <input class="inline-input" id="q3-1" type="text" placeholder="ㄴㅁ">는 잠수함 <input class="inline-input" id="q3-2" type="text" placeholder="ㄴㅌㄹㅅ">호를 타고 깊은 바다를 탐험했습니다.`,
+      q4_html: `네모 선장은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㄷ">속에서 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㅇ">를 찾으며 세상과 단절된 삶을 살았습니다.`,
       q3_1_ph: 'ㄴㅁ', q3_2_ph: 'ㄴㅌㄹㅅ',
       q4_1_ph: 'ㅂㄷ', q4_2_ph: 'ㅈㅇ',
       q5_text: '네모 선장은 왜 세상과 단절하고 바다에서만 살았을까요? 여러분이 네모 선장이라면 어떤 선택을 했을지 써 보세요.'
@@ -798,6 +808,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「왕자와 거지」 작품 소개와 신분·평등에 대한 깊은 성찰',
         '4문단 : 장난으로 옷을 바꿔 입고 운명이 뒤바뀌어 에드워드가 쫓겨남'
       ],
+      q3_html: `왕자 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㄷㅇㄷ">와 거지 소년 <input class="inline-input" id="q3-2" type="text" placeholder="ㅌ">은 똑같이 생긴 얼굴 때문에 서로 옷을 바꿔 입게 되었습니다.`,
+      q4_html: `에드워드는 거지로 살면서 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅂ">에 관계없이 사람을 대해야 한다는 것과 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㅅ">의 고통을 알게 되었습니다.`,
       q3_1_ph: 'ㅇㄷㅇㄷ', q3_2_ph: 'ㅌ',
       q4_1_ph: 'ㅅㅂ', q4_2_ph: 'ㅂㅅ',
       q5_text: '에드워드와 톰이 옷을 바꿔 입은 경험이 각자에게 어떤 영향을 주었는지 설명해 보세요.'
@@ -874,6 +886,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「톰 소여의 모험」 작품 소개와 어린 시절의 자유로움, 성장의 가치',
         '4문단 : 개구쟁이 톰이 벌로 울타리 칠하기를 받지만 기발한 꾀로 친구들에게 시킴'
       ],
+      q3_html: `장난꾸러기 소년 <input class="inline-input" id="q3-1" type="text" placeholder="ㅌ">과 친구 <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅋㅂㄹ">는 미시시피 강가 마을에서 모험을 즐겼습니다.`,
+      q4_html: `톰은 동굴에서의 <input class="inline-input" id="q4-1" type="text" placeholder="ㅁㅎ">을 통해 용기를 키웠고, 친구와의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅈ">도 더욱 깊어졌습니다.`,
       q3_1_ph: 'ㅌ', q3_2_ph: 'ㅎㅋㅂㄹ',
       q4_1_ph: 'ㅁㅎ', q4_2_ph: 'ㅇㅈ',
       q5_text: '톰이 겪은 모험 중 가장 인상 깊은 것은 무엇이며, 그 이유는 무엇인지 써 보세요.'
@@ -954,6 +968,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 인간 마을과 정글 사이에서 진정한 가족의 의미를 깨달음',
         '4문단 : 호랑이에게 쫓긴 아기가 늑대 무리에 입양되어 모글리로 불리며 자람'
       ],
+      q3_html: `인간 아이 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㄱㄹ">는 <input class="inline-input" id="q3-2" type="text" placeholder="ㄴㄷ"> 무리에게 입양되어 정글에서 자랐습니다.`,
+      q4_html: `모글리는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㄱ">의 법칙을 배우며 동물 친구들과 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅈ">처럼 지냈습니다.`,
       q3_1_ph: 'ㅁㄱㄹ', q3_2_ph: 'ㄴㄷ',
       q4_1_ph: 'ㅈㄱ', q4_2_ph: 'ㄱㅈ',
       q5_text: '모글리에게 늑대 가족과 정글 친구들이 어떤 의미인지, 그리고 여러분에게 가족이란 무엇인지 써 보세요.'
@@ -1024,6 +1040,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 웬디가 집에 돌아가고 피터팬만 홀로 네버랜드에 남음',
         '4문단 : 피터팬이 달링 가족 아이들을 요정 가루로 날게 해 네버랜드로 데려감'
       ],
+      q3_html: `영원히 자라지 않는 소년 <input class="inline-input" id="q3-1" type="text" placeholder="ㅍㅌㅍ">은 웬디를 <input class="inline-input" id="q3-2" type="text" placeholder="ㄴㅂㄹㄷ">로 데려갔습니다.`,
+      q4_html: `피터팬은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㄹ">이 되는 것을 거부하고, 영원히 <input class="inline-input" id="q4-2" type="text" placeholder="ㄲ">을 꾸는 아이로 살았습니다.`,
       q3_1_ph: 'ㅍㅌㅍ', q3_2_ph: 'ㄴㅂㄹㄷ',
       q4_1_ph: 'ㅇㄹ', q4_2_ph: 'ㄲ',
       q5_text: '피터팬은 왜 어른이 되기를 거부했을까요? 여러분은 어른이 되는 것에 대해 어떻게 생각하는지 써 보세요.'
@@ -1100,6 +1118,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 짐이 용감하게 배를 되찾고 벤 건의 도움으로 보물을 찾아 귀환함',
         '4문단 : 짐이 늙은 선장 빌리 본즈의 궤짝에서 보물지도를 발견함'
       ],
+      q3_html: `소년 짐은 해적의 <input class="inline-input" id="q3-1" type="text" placeholder="ㅂㅁㅈㄷ">를 발견하고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅍㅅㄴㅇㄹ">호를 타고 모험을 떠났습니다.`,
+      q4_html: `짐은 위험한 상황에서도 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㄱ">를 잃지 않고, 결국 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㅁ">을 찾는 데 성공했습니다.`,
       q3_1_ph: 'ㅂㅁㅈㄷ', q3_2_ph: 'ㅎㅍㅅㄴㅇㄹ',
       q4_1_ph: 'ㅇㄱ', q4_2_ph: 'ㅂㅁ',
       q5_text: '짐이 보물섬 모험을 통해 배운 점과 성장한 부분을 자신의 말로 설명해 보세요.'
@@ -1180,6 +1200,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「오즈의 마법사」 작품 소개와 자기 안의 능력, 집의 소중함',
         '4문단 : 도로시가 회오리바람에 휩쓸려 오즈의 나라에 도착하고 노란벽돌 길을 따라 출발'
       ],
+      q3_html: `도로시는 회오리바람에 휩쓸려 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅈ">의 나라에 도착했고, <input class="inline-input" id="q3-2" type="text" placeholder="ㄴㄹㅂㄷ ㄱ">을 따라 에메랄드 성으로 향했습니다.`,
+      q4_html: `도로시가 모험을 통해 깨달은 것은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈ">이야말로 가장 소중한 곳이라는 것이었습니다. 결국 도로시는 루비 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㄷ">의 힘으로 집에 돌아갔습니다.`,
       q3_1_ph: 'ㅇㅈ', q3_2_ph: 'ㄴㄹㅂㄷ ㄱ',
       q4_1_ph: 'ㅈ', q4_2_ph: 'ㄱㄷ',
       q5_text: '도로시의 친구들(허수아비, 양철 나무꾼, 겁쟁이 사자)이 이미 가지고 있던 것을 찾아 써 보세요.'
@@ -1260,6 +1282,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 하이드가 통제를 벗어나 지킬 박사가 비밀을 남기고 세상을 떠남',
         '4문단 : 존경받는 지킬 박사가 선과 악을 분리하는 약물을 만들어 하이드가 나타남'
       ],
+      q3_html: `존경받는 의사 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅋ">은 자신의 또 다른 모습인 <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅇㄷ">로 변신하는 비밀을 숨기고 있었습니다.`,
+      q4_html: `이 이야기는 한 사람 안에 있는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅ">과 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇ">의 대립을 보여줍니다.`,
       q3_1_ph: 'ㅈㅋ', q3_2_ph: 'ㅎㅇㄷ',
       q4_1_ph: 'ㅅ', q4_2_ph: 'ㅇ',
       q5_text: '지킬 박사가 하이드로 변신하면서 얻은 것과 잃은 것을 자신의 말로 설명해 보세요.'
@@ -1336,6 +1360,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 베스가 세상을 떠나고 조가 교수 배어를 만나 가족의 사랑을 깨달음',
         '4문단 : 전쟁 중 마치 가족의 네 자매(메그, 조, 베스, 에이미)가 검소하게 생활함'
       ],
+      q3_html: `마치 가의 네 자매 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㄱ">, <input class="inline-input" id="q3-2" type="text" placeholder="ㅈ">, 베스, 에이미는 각자의 꿈을 키워갔습니다.`,
+      q4_html: `조는 작가가 되는 꿈을 이루었고, 네 자매는 서로에 대한 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㄹ">과 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅈ">을 배우며 성장했습니다.`,
       q3_1_ph: 'ㅁㄱ', q3_2_ph: 'ㅈ',
       q4_1_ph: 'ㅅㄹ', q4_2_ph: 'ㄱㅈ',
       q5_text: '네 자매 중 가장 인상 깊은 인물을 골라 그 이유를 자신의 말로 설명해 보세요.'
@@ -1412,6 +1438,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 복수를 이룬 히스클리프가 행복하지 못하고 쓸쓸하게 죽음',
         '4문단 : 히스클리프가 언쇼 가족에게 입양되어 캐서린과 사랑이 싹틈'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅅㅋㄹㅍ">는 어린 시절 <input class="inline-input" id="q3-2" type="text" placeholder="ㅋㅅㄹ">과 함께 폭풍의 언덕에서 자랐습니다.`,
+      q4_html: `히스클리프의 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅅ">은 결국 자신과 주변 사람들 모두를 불행하게 만들었고, 이 이야기는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄹ">과 복수의 비극을 보여줍니다.`,
       q3_1_ph: 'ㅎㅅㅋㄹㅍ', q3_2_ph: 'ㅋㅅㄹ',
       q4_1_ph: 'ㅂㅅ', q4_2_ph: 'ㅅㄹ',
       q5_text: '히스클리프가 복수를 선택한 것이 옳았는지, 다른 방법은 없었는지 자신의 생각을 써 보세요.'
@@ -1492,6 +1520,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「제인 에어」 작품 소개와 자존심, 평등한 사랑의 의미',
         '4문단 : 고아 제인이 구박받으며 자라다 가정교사가 됨'
       ],
+      q3_html: `고아 소녀 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅇ">은 손필드 저택에서 가정교사로 일하며 <input class="inline-input" id="q3-2" type="text" placeholder="ㄹㅊㅅㅌ">를 만났습니다.`,
+      q4_html: `제인은 끝까지 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅈㅅ">을 지키며 살았고, 진정한 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄹ">을 얻었습니다.`,
       q3_1_ph: 'ㅈㅇ', q3_2_ph: 'ㄹㅊㅅㅌ',
       q4_1_ph: 'ㅈㅈㅅ', q4_2_ph: 'ㅅㄹ',
       q5_text: '제인 에어가 가진 강한 성격이 어려움을 이겨내는 데 어떤 도움이 되었는지 써 보세요.'
@@ -1572,6 +1602,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 탈출 후 부자가 되어 복수하지만 행복하지 않음을 깨닫고 용서를 선택',
         '4문단 : 행복한 단테스가 질투한 자들의 음모로 억울하게 투옥됨'
       ],
+      q3_html: `선원 <input class="inline-input" id="q3-1" type="text" placeholder="ㄷㅌㅅ">는 억울하게 감옥에 갇혔다가 탈출해 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㅌㅋㄹㅅㅌ ㅂㅈ">이 되었습니다.`,
+      q4_html: `단테스는 자신을 배신한 사람들에게 <input class="inline-input" id="q4-1" type="text" placeholder="ㅂㅅ">를 했지만, 결국 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅅ">의 중요성을 깨달았습니다.`,
       q3_1_ph: 'ㄷㅌㅅ', q3_2_ph: 'ㅁㅌㅋㄹㅅㅌ ㅂㅈ',
       q4_1_ph: 'ㅂㅅ', q4_2_ph: 'ㅇㅅ',
       q5_text: '단테스의 복수가 그에게 진정한 행복을 주었는지, 복수 외에 다른 방법은 없었는지 생각을 써 보세요.'
@@ -1652,6 +1684,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 프라이데이를 구출하고 28년 후 귀환에 성공함',
         '4문단 : 항해 중 난파되어 홀로 무인도에 표류하게 됨'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㄹㅂㅅ">은 폭풍으로 무인도에 표류하여 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅈ">의 지혜로 28년간 살아남았습니다.`,
+      q4_html: `로빈슨은 섬에서 구한 원주민 <input class="inline-input" id="q4-1" type="text" placeholder="ㅍㄹㅇㄷㅇ">와 함께 살며, 결국 지나가던 배를 타고 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅎ">할 수 있었습니다.`,
       q3_1_ph: 'ㄹㅂㅅ', q3_2_ph: 'ㅅㅈ',
       q4_1_ph: 'ㅍㄹㅇㄷㅇ', q4_2_ph: 'ㄱㅎ',
       q5_text: '로빈슨이 무인도에서 살아남을 수 있었던 비결을 자신의 말로 설명해 보세요.'
@@ -1732,6 +1766,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 라퓨타와 후이넘 등 신기한 나라들을 여행함',
         '4문단 : 소인국 릴리펏에서 거인처럼 살며 오해를 받고 탈출함'
       ],
+      q3_html: `항해 중 난파된 걸리버가 <input class="inline-input" id="q3-1" type="text" placeholder="ㄹㄹㅍ">에 도착하자 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅇㄱ"> 사람들에게 거인으로 여겨졌습니다.`,
+      q4_html: `<input class="inline-input" id="q4-1" type="text" placeholder="ㅂㄹㄷㄴ">에서는 반대로 걸리버가 손바닥 위의 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅇㄱ"> 난쟁이처럼 작아졌습니다.`,
       q3_1_ph: 'ㄹㄹㅍ', q3_2_ph: 'ㅅㅇㄱ',
       q4_1_ph: 'ㅂㄹㄷㄴ', q4_2_ph: 'ㄱㅇㄱ',
       q5_text: '걸리버가 소인국과 거인국에서 각각 느꼈을 점을 상상해서 써 보세요.'
@@ -1812,6 +1848,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「돈키호테」 작품 소개와 이상을 좇는 것의 의미',
         '4문단 : 기사 소설에 빠진 늙은 귀족이 돈키호테가 되어 모험을 시작함'
       ],
+      q3_html: `기사 소설에 빠진 <input class="inline-input" id="q3-1" type="text" placeholder="ㄷㅋㅎㅌ">는 종자 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅊ ㅍㅅ">와 함께 모험을 떠났습니다.`,
+      q4_html: `<input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅅ">을 쫓는 돈키호테와 <input class="inline-input" id="q4-2" type="text" placeholder="ㅎㅅ">적인 산초의 대비가 재미를 더합니다.`,
       q3_1_ph: 'ㄷㅋㅎㅌ', q3_2_ph: 'ㅅㅊ ㅍㅅ',
       q4_1_ph: 'ㅇㅅ', q4_2_ph: 'ㅎㅅ',
       q5_text: '돈키호테의 행동이 미친 짓인지, 아니면 꿈을 좇는 아름다운 일인지 자신의 생각을 써 보세요.'
@@ -1889,6 +1927,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 딤즈데일이 고백 후 죽고 숨긴 죄가 더 큰 고통을 줌을 보여줌',
         '4문단 : 헤스터가 간통죄로 주홍글씨를 달고 성실하게 살아감'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅎㅅㅌ">는 <input class="inline-input" id="q3-2" type="text" placeholder="A"> 낙인을 달고도 당당하게 살았습니다.`,
+      q4_html: `목사 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㄷㅇ">은 마지막에 자신의 죄를 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅂ">하고 숨을 거둡니다.`,
       q3_1_ph: 'ㅎㅅㅌ', q3_2_ph: 'A',
       q4_1_ph: 'ㄷㅈㄷㅇ', q4_2_ph: 'ㄱㅂ',
       q5_text: '잘못을 숨기는 것과 고백하는 것 중 어느 것이 더 나을지 자신의 생각을 써 보세요.'
@@ -1966,6 +2006,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 오해를 깨닫고 두 사람 모두 반성하여 서로를 이해하고 사랑함',
         '4문단 : 베넷 가족 소개와 거만해 보이는 다아시에 대한 나쁜 첫인상'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅇㄹㅈㅂㅅ">는 처음에 <input class="inline-input" id="q3-2" type="text" placeholder="ㄷㅇㅅ">를 거만하다고 오해했습니다.`,
+      q4_html: `엘리자베스의 <input class="inline-input" id="q4-1" type="text" placeholder="ㅍㄱ">과 다아시의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅁ">이 둘 사이를 가로막았습니다.`,
       q3_1_ph: 'ㅇㄹㅈㅂㅅ', q3_2_ph: 'ㄷㅇㅅ',
       q4_1_ph: 'ㅍㄱ', q4_2_ph: 'ㅇㅁ',
       q5_text: '첫인상과 달랐던 경험이 있다면 그 이야기를 자신의 말로 써 보세요.'
@@ -2043,6 +2085,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 온갖 것을 경험해도 행복하지 못하다가 헌신에서 깨달음을 얻음',
         '4문단 : 진리를 찾지 못한 파우스트 앞에 악마가 나타나 유혹함'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅍㅇㅅㅌ"> 박사는 악마 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㅍㅅㅌㅍㄹㅅ">와 계약을 맺었습니다.`,
+      q4_html: `끊임없이 <input class="inline-input" id="q4-1" type="text" placeholder="ㄴㄹ">한 자는 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅇ">받을 수 있습니다.`,
       q3_1_ph: 'ㅍㅇㅅㅌ', q3_2_ph: 'ㅁㅍㅅㅌㅍㄹㅅ',
       q4_1_ph: 'ㄴㄹ', q4_2_ph: 'ㄱㅇ',
       q5_text: '진정한 행복이 무엇인지 자신의 생각을 써 보세요.'
@@ -2120,6 +2164,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「레 미제라블」 작품 소개와 사랑·용서가 사람을 변화시킨다는 희망',
         '4문단 : 빵을 훔쳐 감옥살이를 한 장 발장이 주교의 자비를 받음'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅈ ㅂㅈ">은 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㄹㅇ"> 주교의 자비로 새 삶을 시작했습니다.`,
+      q4_html: `이 소설은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㄹ">과 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅅ">가 사람을 변화시킨다고 전합니다.`,
       q3_1_ph: 'ㅈ ㅂㅈ', q3_2_ph: 'ㅈㅂ',
       q4_1_ph: 'ㅅㄹ', q4_2_ph: 'ㅇㅅ',
       q5_text: '용서와 자비가 왜 중요한지 자신의 생각을 써 보세요.'
@@ -2195,6 +2241,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 안나는 비극으로 끝나고 레빈은 평범한 행복을 이룸',
         '4문단 : 완벽해 보이는 삶에서 공허함을 느끼던 안나가 브론스키를 만남'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅇㄴ">는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㄹㅅㅋ">와 사랑에 빠져 모든 것을 버렸습니다.`,
+      q4_html: `<input class="inline-input" id="q4-1" type="text" placeholder="ㄹㅂ">은 성실한 일상에서 <input class="inline-input" id="q4-2" type="text" placeholder="ㅎㅂ">을 찾았습니다.`,
       q3_1_ph: 'ㅇㄴ', q3_2_ph: 'ㅂㄹㅅㅋ',
       q4_1_ph: 'ㄹㅂ', q4_2_ph: 'ㅎㅂ',
       q5_text: '진정한 행복이란 무엇인지 자신의 생각을 써 보세요.'
@@ -2272,6 +2320,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 소냐를 만나 죄를 고백하고 시베리아 유형에서 진정한 회개를 찾음',
         '4문단 : 비범한 사람은 법을 어겨도 된다는 오만한 이론을 믿음'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㄹㅅㅋㄹㄴㅋㅍ">는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅅ">의 고통에 시달렸습니다.`,
+      q4_html: `<input class="inline-input" id="q4-1" type="text" placeholder="ㅅㄴ">의 권유로 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㅅ">를 결심했습니다.`,
       q3_1_ph: 'ㄹㅅㅋㄴㅋㅍ', q3_2_ph: 'ㅇㅅ',
       q4_1_ph: 'ㅅㄴ', q4_2_ph: 'ㅈㅅ',
       q5_text: '양심의 중요성에 대해 자신의 생각을 써 보세요.'
@@ -2349,6 +2399,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「변신」 작품 소개와 현대인의 소외, 고독, 가족 관계의 허상',
         '4문단 : 성실한 외판원 그레고르가 어느 날 벌레로 변신함'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄹㄱㄹ"> 잠자는 어느 날 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㄹ">로 변해 있었습니다.`,
+      q4_html: `이 소설은 현대인의 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅇ">와 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㄷ">을 다룹니다.`,
       q3_1_ph: 'ㄱㄹㄱㄹ', q3_2_ph: 'ㅂㄹ',
       q4_1_ph: 'ㅅㅇ', q4_2_ph: 'ㄱㄷ',
       q5_text: '가족의 의미에 대해 자신의 생각을 써 보세요.'
@@ -2426,6 +2478,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「이상한 나라의 앨리스」 작품 소개와 상상력, 자기 정체성의 중요성',
         '4문단 : 호기심에 토끼를 따라 이상한 나라에 도착함'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅇㄹㅅ">는 하얀 <input class="inline-input" id="q3-2" type="text" placeholder="ㅌㄲ">를 따라 이상한 나라로 들어갔습니다.`,
+      q4_html: `이 이야기는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㅅㄹ">의 힘과 자기 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㅊㅅ">을 지키는 것을 말합니다.`,
       q3_1_ph: 'ㅇㄹㅅ', q3_2_ph: 'ㅌㄲ',
       q4_1_ph: 'ㅅㅅㄹ', q4_2_ph: 'ㅈㅊㅅ',
       q5_text: '상상의 세계에 대해 자신의 생각을 써 보세요.'
@@ -2503,6 +2557,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「모비 딕」 작품 소개와 지나친 집착·복수가 파멸을 가져온다는 교훈',
         '4문단 : 에이햅 선장이 모비 딕에게 다리를 잃고 복수심에 불탐'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅇㅎ"> 선장은 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㅂ ㄷ">에게 복수하기 위해 목숨을 걸었습니다.`,
+      q4_html: `지나친 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅊ">은 <input class="inline-input" id="q4-2" type="text" placeholder="ㅍㅁ">을 가져온다는 것이 이 소설의 교훈입니다.`,
       q3_1_ph: 'ㅇㅇㅎ', q3_2_ph: 'ㅁㅂ ㄷ',
       q4_1_ph: 'ㅈㅊ', q4_2_ph: 'ㅍㅁ',
       q5_text: '집착의 위험성에 대해 자신의 생각을 써 보세요.'
@@ -2580,6 +2636,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「템페스트」 작품 소개와 용서·화해가 진정한 승리라는 교훈',
         '4문단 : 배신당해 섬에 쫓겨온 프로스페로가 마법을 익힘'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅍㄹㅅㅍㄹ">는 복수 대신 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅅ">를 선택했습니다.`,
+      q4_html: `<input class="inline-input" id="q4-1" type="text" placeholder="ㅁㄹㄷ">와 <input class="inline-input" id="q4-2" type="text" placeholder="ㅍㄷㄴㄷ">는 사랑에 빠져 결혼하게 됩니다.`,
       q3_1_ph: 'ㅍㄹㅅㅍㄹ', q3_2_ph: 'ㅇㅅ',
       q4_1_ph: 'ㅁㄹㄷ', q4_2_ph: 'ㅍㄷㄴㄷ',
       q5_text: '용서의 의미에 대해 자신의 생각을 써 보세요.'
@@ -2657,6 +2715,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「호밀밭의 파수꾼」 작품 소개와 청소년의 방황, 성장통의 깊은 탐구',
         '4문단 : 퇴학당한 홀든이 어른 세상의 위선에 환멸을 느낌'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅎㄷ">은 세상이 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅉ"> 같다고 느꼈습니다.`,
+      q4_html: `여동생 <input class="inline-input" id="q4-1" type="text" placeholder="ㅍㅂ">는 홀든에게 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅ">함의 상징이었습니다.`,
       q3_1_ph: 'ㅎㄷ', q3_2_ph: 'ㄱㅉ',
       q4_1_ph: 'ㅍㅂ', q4_2_ph: 'ㅅㅅ',
       q5_text: '청소년기의 방황에 대해 자신의 생각을 써 보세요.'
@@ -2734,6 +2794,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「노인과 바다」 작품 소개와 인간은 파괴될 수 있어도 패배하지 않는다는 교훈',
         '4문단 : 84일간 물고기를 못 잡았지만 포기하지 않고 바다로 나감'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅅㅌㅇㄱ">는 어려움 속에서도 <input class="inline-input" id="q3-2" type="text" placeholder="ㅍㄱ">하지 않았습니다.`,
+      q4_html: `인간은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅍㄱ">될 수 있어도 <input class="inline-input" id="q4-2" type="text" placeholder="ㅍㅂ">하지는 않습니다.`,
       q3_1_ph: 'ㅅㅌㅇㄱ', q3_2_ph: 'ㅍㄱ',
       q4_1_ph: 'ㅍㄱ', q4_2_ph: 'ㅍㅂ',
       q5_text: '포기하지 않는 정신에 대해 자신의 생각을 써 보세요.'
@@ -2823,6 +2885,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「동물농장」 작품 소개와 권력의 부패, 독재의 위험성 풍자',
         '4문단 : 동물들이 인간을 쫓아내고 평등한 동물농장을 세움'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㄴㅍㄹㅇ">은 권력을 독점한 후 <input class="inline-input" id="q3-2" type="text" placeholder="ㄷㅈ">들만 특권을 누리게 했습니다.`,
+      q4_html: `모든 동물은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅍㄷ">하지만, 어떤 동물은 <input class="inline-input" id="q4-2" type="text" placeholder="ㄷ ㅍㄷ">합니다.`,
       q3_1_ph: 'ㄴㅍㄹㅇ', q3_2_ph: 'ㄷㅈ',
       q4_1_ph: 'ㅍㄷ', q4_2_ph: 'ㄷ ㅍㄷ',
       q5_text: '권력의 부패에 대해 자신의 생각을 써 보세요.'
@@ -2911,6 +2975,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「위대한 개츠비」 작품 소개와 물질적 성공이 행복을 보장하지 않는다는 교훈',
         '4문단 : 신비로운 부자 개츠비가 데이지 집의 초록빛 불빛을 바라봄'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅊㅂ">는 데이지의 집에서 빛나는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅊㄹㅂ">을 바라보았습니다.`,
+      q4_html: `개츠비는 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㄱ">를 되돌리고 싶은 <input class="inline-input" id="q4-2" type="text" placeholder="ㄲ">을 쫓았습니다.`,
       q3_1_ph: 'ㄱㅊㅂ', q3_2_ph: 'ㅊㄹㅂ',
       q4_1_ph: 'ㄱㄱ', q4_2_ph: 'ㄲ',
       q5_text: '꿈과 현실의 차이에 대해 자신의 생각을 써 보세요.'
@@ -2999,6 +3065,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「앵무새 죽이기」 작품 소개와 무고한 존재를 해치는 것의 부당함',
         '4문단 : 변호사 애티커스가 흑인 청년 톰을 변호하기로 함'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅌㅋㅅ">는 편견에 맞서 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅇ">를 위해 싸웠습니다.`,
+      q4_html: `<input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅁㅅ">를 죽이는 것은 <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㄱㅎ"> 존재를 해치는 것입니다.`,
       q3_1_ph: 'ㅇㅌㅋㅅ', q3_2_ph: 'ㅈㅇ',
       q4_1_ph: 'ㅇㅁㅅ', q4_2_ph: 'ㅁㄱㅎ',
       q5_text: '편견 없이 사람을 대하는 것에 대해 자신의 생각을 써 보세요.'
@@ -3087,6 +3155,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「1984」 작품 소개와 전체주의의 공포, 개인 자유의 소중함 경고',
         '4문단 : 전체주의 국가에서 빅 브라더가 모든 것을 감시함'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅅㅌ">은 텔레스크린의 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅅ"> 속에서 살아갑니다.`,
+      q4_html: `<input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅇ">를 잃어버리면 그것이 얼마나 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅈ">했는지 깨닫게 됩니다.`,
       q3_1_ph: 'ㅇㅅㅌ', q3_2_ph: 'ㄱㅅ',
       q4_1_ph: 'ㅈㅇ', q4_2_ph: 'ㅅㅈ',
       q5_text: '자유의 소중함에 대해 자신의 생각을 써 보세요.'
@@ -3180,6 +3250,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「파리대왕」 작품 소개와 인간 내면의 악, 문명의 허약함 탐구',
         '4문단 : 무인도에 갇힌 소년들이 랠프를 대장으로 뽑고 규칙을 정함'
       ],
+      q3_html: `<input class="inline-input" id="q3-1" type="text" placeholder="ㄹㅍ">는 소라를 들고 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅅ">를 지키려 했습니다.`,
+      q4_html: `규칙이 사라지면 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅁ">이 시작되고 <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅁ">은 무너집니다.`,
       q3_1_ph: 'ㄹㅍ', q3_2_ph: 'ㅈㅅ',
       q4_1_ph: 'ㅇㅁ', q4_2_ph: 'ㅁㅁ',
       q5_text: '규칙과 질서의 중요성에 대해 자신의 생각을 써 보세요.'

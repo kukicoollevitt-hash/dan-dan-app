@@ -2199,6 +2199,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「성냥팔이 소녀」 작품 소개와 사회적 따뜻함의 필요성',
         '4문단 : 추위에 성냥을 켜자 따뜻한 난로, 음식 등 환상이 보임'
       ],
+      q3_html: `소녀는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅅㄴ">에 불을 붙일 때마다 따뜻한 <input class="inline-input" id="q3-2" type="text" placeholder="ㅎㅅ">을 보았습니다.`,
+      q4_html: `마지막으로 돌아가신 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅁㄴ">가 나타났고, 소녀는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅎㄴ">로 올라갔습니다.`,
       q3_1_ph: 'ㅅㄴ', q3_2_ph: 'ㅎㅅ',
       q4_1_ph: 'ㅎㅁㄴ', q4_2_ph: 'ㅎㄴ',
       q5_text: '이 이야기를 읽고 느낀 점과 우리가 해야 할 일을 설명해 보세요.'
@@ -2281,6 +2283,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「브레멘 음악대」 작품 소개와 협력의 가치',
         '4문단 : 사냥개, 고양이, 수탉을 만나 함께 여행'
       ],
+      q3_html: `늙은 <input class="inline-input" id="q3-1" type="text" placeholder="ㄷㄴㄱ">가 먼저 길을 떠났고, 동물들은 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㄹㅁ">에서 음악대가 되려 했습니다.`,
+      q4_html: `동물들이 함께 낸 무서운 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㄹ">에 <input class="inline-input" id="q4-2" type="text" placeholder="ㄷㄷ">들이 도망쳤습니다.`,
       q3_1_ph: 'ㄷㄴㄱ', q3_2_ph: 'ㅂㄹㅁ',
       q4_1_ph: 'ㅅㄹ', q4_2_ph: 'ㄷㄷ',
       q5_text: '늙고 버림받은 동물들이 힘을 합쳐 새 삶을 찾은 것에서 무엇을 배울 수 있는지 설명해 보세요.'
@@ -2363,6 +2367,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「개구리 왕자」 작품 소개와 약속의 중요성',
         '4문단 : 개구리가 공을 건져주는 대가로 친구가 되자고 약속'
       ],
+      q3_html: `공주의 황금 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱ">이 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅁ">에 빠졌습니다.`,
+      q4_html: `공주가 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅅ">을 지키자, 개구리는 멋진 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅈ">로 변했습니다.`,
       q3_1_ph: 'ㄱ', q3_2_ph: 'ㅇㅁ',
       q4_1_ph: 'ㅇㅅ', q4_2_ph: 'ㅇㅈ',
       q5_text: '약속을 지키는 것이 왜 중요한지 이 이야기를 바탕으로 설명해 보세요.'
@@ -2446,6 +2452,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「피리 부는 사나이」 작품 소개와 약속을 지키는 것의 중요성',
         '4문단 : 피리 소리로 쥐들을 강물에 빠뜨려 퇴치하고 금화 요구'
       ],
+      q3_html: `마을에 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈ">가 들끓었고, 사나이가 <input class="inline-input" id="q3-2" type="text" placeholder="ㅍㄹ"> 소리로 쥐를 몰아냈습니다.`,
+      q4_html: `마을 사람들이 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅅ">을 어기자, 사나이는 피리를 불어 <input class="inline-input" id="q4-2" type="text" placeholder="ㅇㅇㄷ">을 데려갔습니다.`,
       q3_1_ph: 'ㅈ', q3_2_ph: 'ㅍㄹ',
       q4_1_ph: 'ㅇㅅ', q4_2_ph: 'ㅇㅇㄷ',
       q5_text: '마을 사람들이 약속을 지켰다면 어떻게 되었을지 상상해서 설명해 보세요.'
@@ -2529,6 +2537,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「장화 신은 고양이」 작품 소개와 지혜·기지의 가치',
         '4문단 : 고양이가 왕에게 선물을 바치며 카라바스 후작 행세'
       ],
+      q3_html: `막내 아들은 유산으로 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅎ"> 신은 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅇㅇ">를 받았습니다.`,
+      q4_html: `고양이는 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅇ">을 속여 잡아먹게 하고, 주인을 카라바스 <input class="inline-input" id="q4-2" type="text" placeholder="ㅎㅈ">로 만들었습니다.`,
       q3_1_ph: 'ㅈㅎ', q3_2_ph: 'ㄱㅇㅇ',
       q4_1_ph: 'ㄱㅇ', q4_2_ph: 'ㅎㅈ',
       q5_text: '장화 신은 고양이의 계략에 대해 어떻게 생각하는지 설명해 보세요.'
@@ -2613,6 +2623,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「엄지공주」 작품 소개와 선한 마음의 보상',
         '4문단 : 두꺼비에게 납치되었다 탈출, 딱정벌레에게 버림받음'
       ],
+      q3_html: `앨리스는 "마셔봐"라고 적힌 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㄹ">를 마시고 몸이 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅇㅈ">습니다.`,
+      q4_html: `"먹어봐"라고 적힌 <input class="inline-input" id="q4-1" type="text" placeholder="ㅋㅇㅋ">를 먹으니 몸이 <input class="inline-input" id="q4-2" type="text" placeholder="ㅋㅈ">습니다.`,
       q3_1_ph: 'ㄷㄲㅂ', q3_2_ph: 'ㄷㄷㅈ',
       q4_1_ph: 'ㅈㅂ', q4_2_ph: 'ㅇㅈ',
       q5_text: '엄지공주가 어려운 상황에서도 희망을 잃지 않은 이유를 설명해 보세요.'
@@ -2697,6 +2709,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「늑대와 일곱 마리 아기 염소」 작품 소개와 부모 말씀 순종 교훈',
         '4문단 : 늑대가 분필로 목소리, 밀가루로 발을 꾸며 속임'
       ],
+      q3_html: `늑대는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅅㄹ">를 가늘게 하고, 발에 <input class="inline-input" id="q3-2" type="text" placeholder="ㅁㄱㄹ">를 발라 엄마 염소인 척했습니다.`,
+      q4_html: `막내는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅅㄱ"> 속에 숨어서 살았고, 엄마 염소가 늑대 배에 <input class="inline-input" id="q4-2" type="text" placeholder="ㄷ">을 채워 넣었습니다.`,
       q3_1_ph: 'ㅁㅅㄹ', q3_2_ph: 'ㅁㄱㄹ',
       q4_1_ph: 'ㅅㄱ', q4_2_ph: 'ㄷ',
       q5_text: '이 이야기에서 엄마 말씀을 잘 듣는 것이 왜 중요한지 설명해 보세요.'
@@ -2781,6 +2795,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「호두까기 인형」 작품 소개와 상상력·동심의 가치',
         '4문단 : 호두까기 인형이 쥐 왕과 싸우고 왕자로 변함'
       ],
+      q3_html: `찰리는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅎㄱ"> 티켓이 든 <input class="inline-input" id="q3-2" type="text" placeholder="ㅊㅋㄹ">을 발견했습니다.`,
+      q4_html: `착하고 정직한 찰리만 남아 웡카의 <input class="inline-input" id="q4-1" type="text" placeholder="ㄱㅈ"> <input class="inline-input" id="q4-2" type="text" placeholder="ㅎㄱㅈ">가 되었습니다.`,
       q3_1_ph: 'ㅈ ㅇ', q3_2_ph: 'ㅇㅈ',
       q4_1_ph: 'ㄱㅈ ㄴㄹ', q4_2_ph: 'ㄲ',
       q5_text: '클라라가 호두까기 인형을 도와 쥐 왕을 물리친 것에서 무엇을 배울 수 있는지 설명해 보세요.'
@@ -2865,6 +2881,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「빨간 구두」 작품 소개와 허영·욕심의 위험',
         '4문단 : 빨간 구두가 저주를 받아 멈추지 않고 춤을 추게 되어 고통받음'
       ],
+      q3_html: `왕자 동상은 자신의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅂ">과 <input class="inline-input" id="q3-2" type="text" placeholder="ㅂㅅ">을 가난한 사람들에게 나눠주었습니다.`,
+      q4_html: `<input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅂ">는 왕자 곁에 남아 함께 죽었고, 둘은 <input class="inline-input" id="q4-2" type="text" placeholder="ㅊㄱ">에서 행복해졌습니다.`,
       q3_1_ph: 'ㅎㅇ', q3_2_ph: 'ㅇㅅ',
       q4_1_ph: 'ㅂㅅ', q4_2_ph: 'ㅊㄱ',
       q5_text: '카렌의 이야기에서 우리가 배워야 할 교훈은 무엇인지 설명해 보세요.'
@@ -2949,6 +2967,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「금도끼 은도끼」 작품 소개와 정직의 가치',
         '4문단 : 산신령이 금도끼, 은도끼를 보여주며 나무꾼의 것인지 물음'
       ],
+      q3_html: `나무꾼의 도끼가 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅁ">에 빠졌고, <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅅㄹ">이 나타났습니다.`,
+      q4_html: `나무꾼은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅈ">하게 대답해서 도끼 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㄱ">를 모두 받았습니다.`,
       q3_1_ph: 'ㅇㅁ', q3_2_ph: 'ㅅㅅㄹ',
       q4_1_ph: 'ㅈㅈ', q4_2_ph: 'ㅅㄱ',
       q5_text: '정직하게 행동하는 것이 왜 중요한지 이 이야기를 바탕으로 설명해 보세요.'
@@ -3033,6 +3053,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「행복한 왕자」 작품 소개와 나눔·희생의 가치',
         '4문단 : 제비에게 루비와 사파이어, 금박을 가난한 사람들에게 나눠주라고 부탁함'
       ],
+      q3_html: `스크루지는 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄷㅅ">였고, 크리스마스 이브에 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㄹ">들을 만났습니다.`,
+      q4_html: `<input class="inline-input" id="q4-1" type="text" placeholder="ㄱㄱ">의 유령들을 통해 깨달음을 얻고, <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㅍㄴ"> 사람으로 변했습니다.`,
       q3_1_ph: 'ㄱㅂ', q3_2_ph: 'ㅂㅅ',
       q4_1_ph: 'ㅈㅂ', q4_2_ph: 'ㅊㄱ',
       q5_text: '행복한 왕자와 제비의 희생에서 무엇을 배울 수 있는지 설명해 보세요.'
@@ -3117,6 +3139,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「백조 왕자」 작품 소개와 가족 사랑·희생의 가치',
         '4문단 : 엘리사가 쐐기풀로 침묵 속에서 옷을 짜며 오빠들을 구하려 함'
       ],
+      q3_html: `악마의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅇ"> 조각이 카이의 눈과 심장에 박혀 그를 <input class="inline-input" id="q3-2" type="text" placeholder="ㅊㄱ">게 만들었습니다.`,
+      q4_html: `게르다의 따뜻한 <input class="inline-input" id="q4-1" type="text" placeholder="ㄴㅁ">이 카이의 얼어붙은 마음을 <input class="inline-input" id="q4-2" type="text" placeholder="ㄴㅇ">습니다.`,
       q3_1_ph: 'ㅂㅈ', q3_2_ph: 'ㅆㄱㅍ',
       q4_1_ph: 'ㅊㅁ', q4_2_ph: 'ㅎㅂ',
       q5_text: '엘리사가 오빠들을 구하기 위해 보여준 희생에 대해 설명해 보세요.'
@@ -3201,6 +3225,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「눈의 여왕」 작품 소개와 진정한 우정·사랑의 힘',
         '4문단 : 눈의 여왕이 카이를 데려가고, 게르다가 친구를 찾아 긴 여행을 떠남'
       ],
+      q3_html: `메리는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅅ">를 발견하고, 잠겨 있던 비밀의 <input class="inline-input" id="q3-2" type="text" placeholder="ㅈㅇ">에 들어갔습니다.`,
+      q4_html: `<input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅇ">을 가꾸며 메리와 콜린 모두 마음과 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㄱ">을 회복했습니다.`,
       q3_1_ph: 'ㄱㅇ', q3_2_ph: 'ㅊㄱ',
       q4_1_ph: 'ㄴㅁ', q4_2_ph: 'ㄴㅇ',
       q5_text: '게르다가 카이를 구하기 위해 보여준 우정에 대해 설명해 보세요.'
@@ -3285,6 +3311,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「어린 왕자」 작품 소개와 진정한 사랑·관계의 의미',
         '4문단 : 왕자가 별을 여행하며 이상한 어른들을 만나고, 여우에게 길들이다를 배움'
       ],
+      q3_html: `어린 왕자는 자신의 별에 있는 <input class="inline-input" id="q3-1" type="text" placeholder="ㅈㅁ">를 사랑했고, 여우에게 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㄷㅇ">의 의미를 배웠습니다.`,
+      q4_html: `길들여진 존재는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅇㅎ"> 존재가 되며, 중요한 것은 <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅇ">으로 봐야 한다고 했습니다.`,
       q3_1_ph: 'ㅈㅁ', q3_2_ph: 'ㄱㄷㅇ',
       q4_1_ph: 'ㅇㅇㅎ', q4_2_ph: 'ㅁㅇ',
       q5_text: '어린 왕자가 깨달은 "소중함"의 의미를 설명해 보세요.'
@@ -3367,6 +3395,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「양치기 소년과 늑대」 작품 소개와 신뢰·정직의 교훈',
         '4문단 : 두 번째 거짓말에 마을 사람들이 다시는 속지 않겠다고 화냄'
       ],
+      q3_html: `양치기 소년은 심심해서 "<input class="inline-input" id="q3-1" type="text" placeholder="ㄴㄷ">가 나타났다!"라고 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅈㅁ">을 했습니다.`,
+      q4_html: `<input class="inline-input" id="q4-1" type="text" placeholder="ㅈㅉ"> 늑대가 나타났을 때 아무도 소년을 <input class="inline-input" id="q4-2" type="text" placeholder="ㅁㅈ"> 않았습니다.`,
       q3_1_ph: 'ㄴㄷ', q3_2_ph: 'ㄱㅈㅁ',
       q4_1_ph: 'ㅈㅉ', q4_2_ph: 'ㅁㅈ',
       q5_text: '이 이야기에서 배울 수 있는 교훈을 설명해 보세요.'
@@ -3443,6 +3473,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 「토끼와 거북이」 작품 소개와 꾸준함·겸손의 교훈',
         '4문단 : 토끼가 앞서 나가다 낮잠을 자고, 거북이는 쉬지 않고 걸음'
       ],
+      q3_html: `토끼는 <input class="inline-input" id="q3-1" type="text" placeholder="ㄴㄹㅂ"> 거북이를 놀렸고, 둘은 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅈ">를 하기로 했습니다.`,
+      q4_html: `토끼는 여유를 부리다 <input class="inline-input" id="q4-1" type="text" placeholder="ㄴㅈ">을 잤고, <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅂㅇ">가 먼저 결승선에 도착했습니다.`,
       q3_1_ph: 'ㄴㄹㅂ', q3_2_ph: 'ㄱㅈ',
       q4_1_ph: 'ㄴㅈ', q4_2_ph: 'ㄱㅂㅇ',
       q5_text: '이 이야기에서 배울 수 있는 교훈을 설명해 보세요.'

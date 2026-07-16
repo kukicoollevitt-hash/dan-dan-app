@@ -74,6 +74,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `남원에 월매라는 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㅅ">이 살았고, <input class="inline-input" id="q3-2" type="text" placeholder="ㄷㅇ">날 춘향은 그네를 타러 광한루에 나갔다.`,
+      q4_html: `몽룡은 <input class="inline-input" id="q4-1" type="text" placeholder="ㅎㅇ">에 가서 <input class="inline-input" id="q4-2" type="text" placeholder="ㅂㅅ">에 오르면 꼭 돌아와 춘향을 데려가겠다고 약속했다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -143,6 +145,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `이도령은 과거 시험에서 으뜸으로 급제해 <input class="inline-input" id="q3-1" type="text" placeholder="ㅇㅎㅇㅅ"> 임무를 받았고, 춘향이 <input class="inline-input" id="q3-2" type="text" placeholder="ㅅㅊ">을 거절해 감옥에 갇혔다는 소식을 들었다.`,
+      q4_html: `임금은 춘향에게 <input class="inline-input" id="q4-1" type="text" placeholder="ㅈㄹㅂㅇ">이라는 칭호를 내렸는데, 이는 <input class="inline-input" id="q4-2" type="text" placeholder="ㅈㄱ">를 지킨 여인에게 주는 이름이다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -212,6 +216,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -281,6 +287,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -350,6 +358,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -419,6 +429,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -488,6 +500,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -557,6 +571,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -626,6 +642,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -695,6 +713,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -764,6 +784,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -833,6 +855,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -902,6 +926,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -971,6 +997,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1040,6 +1068,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1109,6 +1139,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1178,6 +1210,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1247,6 +1281,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1316,6 +1352,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1385,6 +1423,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1454,6 +1494,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1523,6 +1565,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1592,6 +1636,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1661,6 +1707,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1730,6 +1778,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1799,6 +1849,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1868,6 +1920,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -1937,6 +1991,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -2006,6 +2062,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -2075,6 +2133,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -2144,6 +2204,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -2213,6 +2275,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -2282,6 +2346,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -2351,6 +2417,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -2420,6 +2488,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -2489,6 +2559,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -2558,6 +2630,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -2627,6 +2701,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -2696,6 +2772,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
@@ -2765,6 +2843,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '정답',
         '오답 3'
       ],
+      q3_html: `산과 강, 도시와 나라의 <input class="inline-input" id="q3-1" type="text" placeholder="ㄱㄱ"> 을(를) 보여주는 지도는 <input class="inline-input" id="q3-2" type="text" placeholder="ㅇㅂㄷ"> 라고 합니다.`,
+      q4_html: `요즘은 기술의 발달로 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㅈㅌ"> 형태의 지도를 사용하여 <input class="inline-input" id="q4-2" type="text" placeholder="ㅅㅅㄱ"> 정보를 확인할 수 있습니다.`,
       q3_1_ph: 'ㅅㅍ1', q3_2_ph: 'ㅅㅍ2',
       q4_1_ph: 'ㅅㅍ3', q4_2_ph: 'ㅅㅍ4',
       q5_text: '샘플 서술형 문제입니다. 자유롭게 답변하세요.'
