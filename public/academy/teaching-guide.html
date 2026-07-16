@@ -62117,7 +62117,7 @@
       if (!folder) return null;
       // 캐시 무효화: 옛 버전(q3_html 등 누락)을 잡지 않도록 버전 쿼리스트링 부여
       // 2026-07-16: world1/world2/classic/modern/people1 시리즈에 q3_html·q4_html 추가 이식 → 버전 갱신
-      const url = `/BRAINUP/${folder}/${prefix}${subjectKey}_content.js?v=20260716`;
+      const url = `/BRAINUP/${folder}/${prefix}${subjectKey}_content.js?v=20260716c`;
 
       // 단원 자동 인식 IIFE가 location 기반으로 동작하지 않도록 미리 CUR_UNIT 지정
       window.CUR_UNIT = unitKey;
@@ -62743,7 +62743,7 @@
         'fit_pol_06': { folder: '정치경제06', count: 8, pattern: 'folderPrefixPng' },   // 정치경제06_NN.png (8컷)
         'fit_pol_07': { folder: '정치경제07', count: 7, pattern: 'folderPrefixPng' },   // 정치경제07_NN.png (7컷)
         'fit_pol_08': { folder: '정치경제08', count: 7, pattern: 'folderPrefixPng' },   // 정치경제08_NN.png (7컷)
-        'fit_pol_09': { folder: '정치경제09', count: 7, pattern: 'folderPrefixPng' },   // 정치경제09_NN.png (7컷)
+        'fit_pol_09': { folder: '정치경제09', count: 5, pattern: 'folderPrefixPng' },   // 정치경제09_NN.png (5컷 · 잘못된 원본 01·02 제거 후 재배치)
         'fit_pol_10': { folder: '정치경제10', count: 8, pattern: 'folderPrefixPng' },   // 정치경제10_NN.png (8컷)
         'fit_pol_11': { folder: '정치경제11', count: 7, pattern: 'folderPrefixPng' },   // 정치경제11_NN.png (7컷)
         'fit_pol_12': { folder: '정치경제12', count: 7, pattern: 'folderPrefixPng' },   // 정치경제12_NN.png (7컷)
@@ -63194,7 +63194,7 @@
         'on_pol_06':     { folder: '정치경제06', count: 8, pattern: 'folderPrefixPng' },     // 정치경제06_NN.png
         'on_pol_07':     { folder: '정치경제07', count: 7, pattern: 'folderPrefixPng' },     // 정치경제07_NN.png (7컷)
         'on_pol_08':     { folder: '정치경제08', count: 7, pattern: 'folderPrefixPng' },     // 정치경제08_NN.png (7컷)
-        'on_pol_09':     { folder: '정치경제09', count: 7, pattern: 'folderPrefixPng' },     // 정치경제09_NN.png (7컷)
+        'on_pol_09':     { folder: '정치경제09', count: 5, pattern: 'folderPrefixPng' },     // 정치경제09_NN.png (5컷 · 잘못된 원본 01·02 제거 후 재배치)
         'on_pol_10':     { folder: '정치경제10', count: 8, pattern: 'folderPrefixPng' },     // 정치경제10_NN.png
         'on_pol_11':     { folder: '정치경제11', count: 7, pattern: 'folderPrefixPng' },     // 정치경제11_NN.png (7컷)
         'on_pol_12':     { folder: '정치경제12', count: 7, pattern: 'folderPrefixPng' },     // 정치경제12_NN.png (7컷)
@@ -63538,7 +63538,7 @@
         'pol_06':        { folder: '정치경제06', count: 8, pattern: 'folderPrefixPng' },          // 정치경제06_NN.png (8컷)
         'pol_07':        { folder: '정치경제07', count: 7, pattern: 'folderPrefixPng' },          // 정치경제07_NN.png (7컷+인상 깊은 컷)
         'pol_08':        { folder: '정치경제08', count: 7, pattern: 'folderPrefixPng' },          // 정치경제08_NN.png (7컷+인상 깊은 컷)
-        'pol_09':        { folder: '정치경제09', count: 7, pattern: 'folderPrefixPng' },          // 정치경제09_NN.png (7컷+인상 깊은 컷)
+        'pol_09':        { folder: '정치경제09', count: 5, pattern: 'folderPrefixPng' },          // 정치경제09_NN.png (5컷 · 잘못된 원본 01·02 제거 후 재배치)
         'pol_10':        { folder: '정치경제10', count: 8, pattern: 'folderPrefixPng' },          // 정치경제10_NN.png (8컷)
         'pol_11':        { folder: '정치경제11', count: 7, pattern: 'folderPrefixPng' },          // 정치경제11_NN.png (7컷+인상 깊은 컷)
         'pol_12':        { folder: '정치경제12', count: 7, pattern: 'folderPrefixPng' },          // 정치경제12_NN.png (7컷+인상 깊은 컷)
@@ -63739,8 +63739,17 @@
         const prefix = cfg.prefix || cfg.folder;
         fileNameFn = (idx) => `${prefix}_${padNN(idx)}.jpg`;
       }
+      // 캐시버스터 — 2026-07-16 정치경제09 이미지 재배치 반영. 브라우저·CDN 캐시된 옛 이미지 강제 무효화.
+      // 특정 단원(pol_09)만 갱신하면 되므로 조건부 적용 (다른 단원 성능 영향 없음).
+      const _cacheBusterMap = {
+        'pol_09': '?v=20260716b',
+        'on_pol_09': '?v=20260716b',
+        'fit_pol_09': '?v=20260716b',
+        'deep_pol_09': '?v=20260716b'
+      };
+      const _cb = _cacheBusterMap[unitKey] || '';
       const images = Array.from({ length: count }, (_, i) =>
-        `${folder}/${fileNameFn(i)}`
+        `${folder}/${fileNameFn(i)}${_cb}`
       );
 
       // 이미지 셀 — 활동 가이드 제거·gap 축소·우측 음수 마진으로 이미지 최대 확대
