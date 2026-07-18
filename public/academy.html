@@ -3993,16 +3993,38 @@
     <script>
       // 🎬 브랜드 뮤직비디오 모달
       const BRAND_MV_VIMEO_ID = '1211008470';
+      let _brandMvPlayer = null;
+      function _ensureVimeoSDK() {
+        if (window.Vimeo && window.Vimeo.Player) return Promise.resolve();
+        return new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://player.vimeo.com/api/player.js';
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
       function openBrandMvModal() {
         // 브랜드송 오디오가 재생 중이면 중단
         try { window.brandSongStop && window.brandSongStop(); } catch(_) {}
         const frame = document.getElementById('brandMvFrame');
-        frame.src = `https://player.vimeo.com/video/${BRAND_MV_VIMEO_ID}?autoplay=1&title=0&byline=0&portrait=0`;
+        // dnt: 추적 금지, controls 유지, 종료 화면(관련영상)은 SDK ended 이벤트로 회피
+        frame.src = `https://player.vimeo.com/video/${BRAND_MV_VIMEO_ID}?autoplay=1&title=0&byline=0&portrait=0&dnt=1`;
         document.getElementById('brandMvModal').classList.add('show');
         document.body.style.overflow = 'hidden';
+        // Vimeo SDK로 ended 감지 → 관련 영상 뜨기 전에 모달 자동 닫기
+        _ensureVimeoSDK().then(() => {
+          try {
+            if (_brandMvPlayer) { _brandMvPlayer.destroy().catch(() => {}); _brandMvPlayer = null; }
+            _brandMvPlayer = new window.Vimeo.Player(frame);
+            _brandMvPlayer.on('ended', () => { closeBrandMvModal(); });
+          } catch (e) { console.warn('Vimeo SDK 초기화 실패:', e); }
+        }).catch(err => console.warn('Vimeo SDK 로드 실패:', err));
       }
       function closeBrandMvModal() {
         const frame = document.getElementById('brandMvFrame');
+        try { _brandMvPlayer && _brandMvPlayer.destroy().catch(() => {}); } catch(_) {}
+        _brandMvPlayer = null;
         frame.src = '';
         document.getElementById('brandMvModal').classList.remove('show');
         document.body.style.overflow = '';
