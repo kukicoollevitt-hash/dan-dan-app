@@ -4399,3 +4399,91 @@
     }, 100);
   });
 })();
+
+/* =========================================================
+   본문 순차 읽기 강제 (건너뛰면 팝업)
+   - 캡처 페이즈에서 처리하여 개별 *_content.js 클릭 핸들러보다 먼저 검증
+   - 각 파일 수정 없이 62개 시리즈에 일괄 적용
+========================================================= */
+(function initSequentialReadingEnforcer() {
+  let alertActive = false;
+
+  function showSequentialReadingAlert() {
+    if (alertActive) return;
+    alertActive = true;
+    if (!document.getElementById('seq-reading-alert-style')) {
+      const s = document.createElement('style');
+      s.id = 'seq-reading-alert-style';
+      s.textContent = `
+        .seq-reading-overlay {
+          position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+          display: flex; align-items: center; justify-content: center;
+          z-index: 99999; animation: seqFadeIn 0.2s ease;
+        }
+        @keyframes seqFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .seq-reading-box {
+          background: linear-gradient(145deg, #fffdf5 0%, #fff8e7 100%);
+          padding: 30px 40px; border-radius: 18px; text-align: center;
+          box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+          animation: seqPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          max-width: 340px; width: 90%;
+        }
+        @keyframes seqPop {
+          from { opacity: 0; transform: scale(0.85); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+        .seq-reading-emoji { font-size: 42px; margin-bottom: 10px; }
+        .seq-reading-title { font-size: 17px; font-weight: 800; color: #5a4a3a; margin-bottom: 8px; }
+        .seq-reading-msg { font-size: 14px; color: #7a6a5a; line-height: 1.65; margin-bottom: 20px; }
+        .seq-reading-btn {
+          background: linear-gradient(135deg, #ff8a5b, #ff6b3d);
+          color: #fff; border: none; padding: 11px 34px; border-radius: 22px;
+          font-size: 14px; font-weight: 700; cursor: pointer;
+          box-shadow: 0 4px 12px rgba(255, 107, 61, 0.4);
+        }
+        .seq-reading-btn:hover { transform: translateY(-1px); }
+      `;
+      document.head.appendChild(s);
+    }
+    const overlay = document.createElement('div');
+    overlay.className = 'seq-reading-overlay';
+    overlay.innerHTML = `
+      <div class="seq-reading-box">
+        <div class="seq-reading-emoji">📖</div>
+        <div class="seq-reading-title">순서대로 읽어 주세요</div>
+        <div class="seq-reading-msg">문장을 건너뛰지 않고<br>처음부터 차례대로 눌러가며 읽어 보아요</div>
+        <button type="button" class="seq-reading-btn">확인</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const close = () => { overlay.remove(); alertActive = false; };
+    overlay.querySelector('.seq-reading-btn').onclick = close;
+    overlay.onclick = (ev) => { if (ev.target === overlay) close(); };
+  }
+
+  document.addEventListener('click', function(e) {
+    const span = e.target && e.target.closest && e.target.closest('.passage-text .sentence');
+    if (!span) return;
+    // 이미 선택된 문장을 다시 눌러 해제하는 경우는 허용 (뒤로 되돌리기)
+    if (span.classList.contains('selected')) return;
+
+    const passageBox = span.closest('.passage-text');
+    if (!passageBox) return;
+    const all = Array.from(passageBox.querySelectorAll('.sentence'));
+    if (all.length === 0) return;
+
+    // DOM 순서상 "다음 읽어야 할 문장" = 아직 선택되지 않은 첫 문장
+    const nextIdx = all.findIndex(s => !s.classList.contains('selected'));
+    if (nextIdx === -1) return; // 이미 모두 완독
+
+    const clickedIdx = all.indexOf(span);
+    if (clickedIdx !== nextIdx) {
+      // 순서 위반 → 개별 파일의 클릭 핸들러 실행 전에 차단
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      showSequentialReadingAlert();
+    }
+  }, true); // capture phase — 개별 passageBox 리스너보다 먼저 실행
+
+  console.log('[learning-common.js] 본문 순차 읽기 강제 리스너 등록 완료');
+})();
