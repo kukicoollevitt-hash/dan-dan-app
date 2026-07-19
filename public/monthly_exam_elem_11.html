@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>브레인 월말 모의고사 1회 (중등) - 국어 영역</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Pretendard:wght@400;500;600;700;800;900&family=Gowun+Dodum&family=Gaegu:wght@400;700&display=swap');
+    @font-face { font-family: 'SM Jungmyungjo'; src: local('SM Jungmyungjo'), local('신명조'), local('SMJungmyungjo'); }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --brand: #d35a1a;
+      --brand-2: #f39c39;
+      --brand-soft: #fff3e8;
+      --ink: #1a1a1a;
+      --ink-mute: #6b7280;
+      --bg-1: #fbf7f2;
+      --bg-2: #f4ede2;
+      --success: #2e9c58;
+      --danger: #c62828;
+      --hl-y: #fff59d;
+      --hl-p: #f8bbd0;
+      --hl-b: #b3e5fc;
+    }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Pretendard', -apple-system, sans-serif;
+      background: radial-gradient(ellipse at top, var(--bg-1) 0%, var(--bg-2) 100%);
+      color: var(--ink); display: flex; flex-direction: column;
+    }
+
+    /* === 상단 헤더 (fixed) === */
+    .exam-topbar {
+      flex-shrink: 0;
+      background: #fff; border-bottom: 1px solid rgba(0,0,0,0.06);
+      padding: 12px 22px;
+      display: flex; align-items: center; gap: 20px; justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04); z-index: 100;
+    }
+    .brand-row { display: flex; align-items: center; gap: 12px; }
+    .brand-logo {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 17px; font-weight: 900;
+    }
+    .brand-text .badge {
+      display: inline-block; background: var(--ink); color: #fff;
+      padding: 2px 8px; font-size: 9px; font-weight: 800; letter-spacing: 1.5px;
+      border-radius: 12px; margin-bottom: 2px;
+    }
+    .brand-text h1 { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; }
+    .brand-text p { font-size: 11px; color: var(--ink-mute); margin-top: 1px; }
+
+    .center-nav {
+      display: flex; align-items: center; gap: 5px;
+    }
+    .nav-dot {
+      position: relative;
+      min-width: 44px; height: 42px; padding: 0 8px;
+      border-radius: 12px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1px;
+      background: #f0f0f0; color: var(--ink-mute);
+      cursor: pointer; transition: all 0.15s; user-select: none;
+      border: 1.5px solid transparent;
+    }
+    .nav-dot:hover { background: var(--brand-soft); color: var(--brand); }
+    .nav-dot-num { font-size: 13px; font-weight: 800; line-height: 1; }
+    .nav-dot-count {
+      font-family: 'Menlo', 'Consolas', monospace;
+      font-size: 9px; font-weight: 700; line-height: 1; opacity: 0.85;
+      display: inline-flex; align-items: center; gap: 1px;
+    }
+    .nav-dot.partial {
+      background: linear-gradient(180deg, #fff, var(--brand-soft));
+      color: var(--brand);
+      border-color: rgba(211,90,26,0.3);
+    }
+    .nav-dot.partial .nav-dot-count { color: var(--brand); }
+    .nav-dot.done {
+      background: linear-gradient(135deg, var(--success), #4bb572);
+      color: #fff;
+      border-color: var(--success);
+      box-shadow: 0 4px 12px rgba(46,156,88,0.35);
+    }
+    .nav-dot.done .nav-dot-num { color: #fff; }
+    .nav-dot.done .nav-dot-count { color: #fff; opacity: 0.95; }
+    .nav-dot.done .nav-dot-count::before {
+      content: "✓"; margin-right: 1px; font-family: 'Pretendard', sans-serif;
+    }
+    .nav-dot.done:hover {
+      background: linear-gradient(135deg, #237040, var(--success));
+      color: #fff;
+    }
+    /* 현재 활성 지문 — 미완료면 주황, 완료면 초록 유지 (완료 상태 우선) */
+    .nav-dot.active:not(.done) {
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      color: #fff; border-color: var(--brand);
+      box-shadow: 0 4px 14px rgba(211,90,26,0.4);
+      transform: scale(1.06);
+    }
+    .nav-dot.active:not(.done) .nav-dot-num,
+    .nav-dot.active:not(.done) .nav-dot-count { color: #fff; }
+    .nav-dot.active:not(.done) .nav-dot-count { opacity: 0.95; }
+    /* 완료 + 활성 — 초록 유지 + 활성 링·확대로 위치 표시 */
+    .nav-dot.active.done {
+      transform: scale(1.08);
+      box-shadow: 0 4px 14px rgba(46,156,88,0.5), 0 0 0 3px rgba(46,156,88,0.25);
+    }
+    /* 부분 응답 + 활성 — 주황 강조 유지 */
+    .nav-dot.active.partial {
+      transform: scale(1.06);
+      box-shadow: 0 4px 14px rgba(211,90,26,0.4), 0 0 0 3px rgba(211,90,26,0.2);
+    }
+    .nav-arrow {
+      width: 34px; height: 42px; border-radius: 10px; border: none;
+      background: #f5f5f5; color: var(--ink); cursor: pointer;
+      font-size: 16px; font-weight: 700; transition: all 0.15s;
+    }
+    .nav-arrow:hover { background: var(--brand); color: #fff; }
+    .nav-arrow:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* 상단 우측 (채점 + 타이머) */
+    .top-right {
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-grade-top {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      color: #fff; border: none; cursor: pointer;
+      padding: 9px 16px; border-radius: 12px;
+      font-family: inherit; font-size: 13px; font-weight: 800;
+      letter-spacing: -0.2px;
+      box-shadow: 0 4px 12px rgba(211,90,26,0.28);
+      transition: all 0.2s;
+    }
+    .btn-grade-top:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(211,90,26,0.42);
+      background: linear-gradient(135deg, #a34210, var(--brand));
+    }
+    .btn-grade-top .badge {
+      background: var(--danger); color: #fff;
+      font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 10px;
+      min-width: 18px; text-align: center;
+      display: none;
+    }
+    .btn-grade-top.has-remaining .badge { display: inline-block; }
+
+    .exam-timer {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--ink); color: #fff; padding: 8px 16px;
+      font-family: 'Menlo', 'Consolas', monospace; font-size: 18px; font-weight: 800;
+      border-radius: 12px;
+      letter-spacing: 1px;
+    }
+    .exam-timer.warn { background: var(--brand); }
+    .exam-timer.danger { background: var(--danger); animation: blink 0.9s infinite; }
+    @keyframes blink { 50% { opacity: 0.6; } }
+    .timer-lbl { font-size: 10px; opacity: 0.7; font-weight: 700; letter-spacing: 1px; font-family: 'Pretendard', sans-serif; }
+
+    /* === 2단 메인 === */
+    main {
+      flex: 1; overflow: hidden;
+      display: grid; grid-template-columns: 1.15fr 1fr;
+    }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+    }
+    .pane {
+      overflow-y: auto; padding: 20px 24px 100px;
+      scroll-behavior: smooth;
+    }
+    .pane-left {
+      background: linear-gradient(180deg, #fefaf5, #fdf4ea);
+      border-right: 1px solid rgba(211,90,26,0.08);
+    }
+    .pane-right {
+      background: #fff;
+    }
+
+    /* === 지문 영역 === */
+    .passage-topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .passage-info {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .p-badge {
+      background: var(--ink); color: #fff; padding: 4px 10px;
+      font-size: 11px; font-weight: 800; letter-spacing: 1px; border-radius: 20px;
+    }
+    .p-subject {
+      font-size: 12.5px; font-weight: 700; color: var(--brand);
+    }
+    /* 지문 툴바 우측 (글자 크기 + 형광펜) */
+    .passage-tools {
+      display: inline-flex; gap: 8px; align-items: center;
+    }
+    /* 글자 크기 툴바 */
+    .font-toolbar {
+      display: inline-flex; gap: 2px; background: #fff;
+      border-radius: 12px; padding: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      align-items: center;
+    }
+    .font-btn {
+      width: 30px; height: 30px; border-radius: 8px; border: none;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; background: transparent; transition: all 0.15s;
+      color: var(--ink); font-family: inherit; font-weight: 800;
+    }
+    .font-btn:hover:not(:disabled) { background: #f5f5f5; }
+    .font-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .font-btn.dec { font-size: 18px; }
+    .font-btn.inc { font-size: 15px; }
+    .font-btn.lbl {
+      width: auto; padding: 0 8px; font-family: 'Menlo', monospace;
+      font-size: 11px; color: var(--ink-mute); pointer-events: none;
+    }
+    .pen-toolbar {
+      display: inline-flex; gap: 4px; background: #fff;
+      border-radius: 12px; padding: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .pen-tool {
+      width: 30px; height: 30px; border-radius: 8px; border: none;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; background: transparent; transition: all 0.15s;
+      color: var(--ink);
+    }
+    .pen-tool:hover { background: #f5f5f5; }
+    .pen-tool.active { background: var(--ink); color: #fff; }
+    .pen-tool.color-y { background: var(--hl-y); }
+    .pen-tool.color-p { background: var(--hl-p); }
+    .pen-tool.color-b { background: var(--hl-b); }
+    .pen-tool.color-y.active { box-shadow: 0 0 0 2px var(--ink); background: var(--hl-y); }
+    .pen-tool.color-p.active { box-shadow: 0 0 0 2px var(--ink); background: var(--hl-p); }
+    .pen-tool.color-b.active { box-shadow: 0 0 0 2px var(--ink); background: var(--hl-b); }
+
+    .passage-card {
+      background: #fff; border-radius: 14px; padding: 20px 24px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.05);
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .passage-title {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 22px; font-weight: 800; margin-bottom: 14px;
+      color: var(--ink); line-height: 1.35;
+    }
+    .passage-text {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: var(--passage-fs, 16.5px); line-height: 1.95;
+      letter-spacing: -0.15px;
+      color: #1a1a1a;
+      user-select: text;
+      transition: font-size 0.15s;
+      font-weight: 500;
+    }
+    .passage-text p {
+      margin-bottom: 14px; text-indent: 0.5em;
+    }
+    .passage-text b { color: var(--brand); font-weight: 700; }
+    .passage-text .hl-y { background: var(--hl-y); padding: 1px 2px; border-radius: 2px; }
+    .passage-text .hl-p { background: var(--hl-p); padding: 1px 2px; border-radius: 2px; }
+    .passage-text .hl-b { background: var(--hl-b); padding: 1px 2px; border-radius: 2px; }
+    body.pen-erase .passage-text .hl-y,
+    body.pen-erase .passage-text .hl-p,
+    body.pen-erase .passage-text .hl-b { cursor: crosshair; }
+
+    /* === 문제 영역 === */
+    .questions-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .questions-header h3 {
+      font-size: 15px; font-weight: 800; color: var(--ink);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .questions-header h3::before {
+      content: ""; width: 4px; height: 18px; border-radius: 2px;
+      background: linear-gradient(180deg, var(--brand), var(--brand-2));
+    }
+    .questions-header .progress {
+      font-size: 12px; color: var(--ink-mute); font-weight: 600;
+    }
+    .questions-header .progress b { color: var(--brand); font-weight: 800; }
+
+    .question {
+      background: #fff; border-radius: 14px; padding: 18px 20px;
+      margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+      border: 1px solid rgba(0,0,0,0.05);
+      transition: border-color 0.2s;
+    }
+    .question.answered { border-color: rgba(211,90,26,0.25); }
+    .q-head {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .q-no {
+      background: var(--ink); color: #fff; padding: 3px 10px;
+      font-size: 12px; font-weight: 800; border-radius: 10px;
+    }
+    .q-area {
+      background: var(--brand-soft); color: var(--brand);
+      padding: 2px 8px; font-size: 10.5px; font-weight: 700; border-radius: 8px;
+      letter-spacing: 0.3px;
+    }
+    .q-score {
+      color: var(--ink-mute); font-size: 11px; font-weight: 600;
+      margin-left: auto;
+    }
+    .q-text {
+      font-size: 14.5px; line-height: 1.7; color: var(--ink);
+      margin-bottom: 12px; font-weight: 500;
+    }
+    .q-text b { color: var(--danger); }
+
+    /* 선지 박스 (클릭형 답안) */
+    .q-options {
+      display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;
+    }
+    .q-opt {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 12px 14px 12px 12px;
+      background: #fff; border: 2px solid #e5e5e5; border-radius: 12px;
+      cursor: pointer; transition: all 0.15s;
+      font-size: 13.8px; line-height: 1.65; color: var(--ink);
+      user-select: none;
+      position: relative;
+    }
+    .q-opt:hover {
+      border-color: var(--brand); background: var(--brand-soft);
+      transform: translateX(2px);
+    }
+    .q-opt-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 2px solid #ccc; background: #fff;
+      font-family: 'Menlo', monospace; font-weight: 800; font-size: 12px;
+      color: #999; flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .q-opt:hover .q-opt-num { border-color: var(--brand); color: var(--brand); }
+    .q-opt-text { flex: 1; padding-top: 2px; }
+
+    /* 선택된 선지 */
+    .q-opt.selected {
+      background: linear-gradient(180deg, #fff8ef 0%, var(--brand-soft) 100%);
+      border-color: var(--brand);
+      box-shadow: 0 4px 14px rgba(211,90,26,0.18);
+    }
+    .q-opt.selected .q-opt-num {
+      background: var(--ink); border-color: var(--ink); color: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .q-opt.selected .q-opt-text { font-weight: 600; color: var(--ink); }
+
+    /* 채점 후 표시 */
+    body.graded .q-opt { cursor: default; pointer-events: none; transform: none; }
+    body.graded .q-opt:hover { transform: none; background: #fff; border-color: #e5e5e5; }
+    body.graded .q-opt:hover .q-opt-num { border-color: #ccc; color: #999; }
+
+    body.graded .q-opt.correct-answer {
+      background: linear-gradient(180deg, #fff 0%, #e6f6ec 100%);
+      border-color: var(--success);
+      box-shadow: 0 4px 14px rgba(46,156,88,0.15);
+    }
+    body.graded .q-opt.correct-answer .q-opt-num {
+      background: var(--success); border-color: var(--success); color: #fff;
+    }
+    body.graded .q-opt.correct-answer::after {
+      content: "정답"; position: absolute; top: 8px; right: 12px;
+      background: var(--success); color: #fff;
+      font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;
+      letter-spacing: 0.5px;
+    }
+    body.graded .q-opt.user-wrong {
+      background: linear-gradient(180deg, #fff 0%, #fdecea 100%);
+      border-color: var(--danger);
+    }
+    body.graded .q-opt.user-wrong .q-opt-num {
+      background: var(--danger); border-color: var(--danger); color: #fff;
+    }
+    body.graded .q-opt.user-wrong::after {
+      content: "내 답"; position: absolute; top: 8px; right: 12px;
+      background: var(--danger); color: #fff;
+      font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;
+      letter-spacing: 0.5px;
+    }
+    /* 정답이면서 내가 고른 답 → 정답 태그만 */
+    body.graded .q-opt.correct-answer.user-selected .q-opt-num {
+      background: var(--success); border-color: var(--success); color: #fff;
+    }
+
+    /* 지문 하단 페이지 이동 */
+    .passage-footer-nav {
+      display: flex; gap: 10px; margin-top: 6px; padding: 6px 0 4px;
+      align-items: stretch;
+    }
+    /* 중앙 상태 배지 */
+    .pf-status {
+      flex: 0 0 auto; min-width: 140px;
+      padding: 10px 14px; border-radius: 14px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; text-align: center;
+      border: 1.5px solid rgba(0,0,0,0.06);
+      background: #fff; transition: all 0.2s;
+    }
+    .pf-status .pfs-row {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 700; color: var(--ink-mute);
+    }
+    .pf-status .pfs-row b {
+      font-family: 'Menlo', monospace; font-weight: 800; font-size: 13px;
+      color: var(--ink);
+    }
+    .pf-status .pfs-main {
+      font-size: 13.5px; font-weight: 800; letter-spacing: -0.2px;
+    }
+    .pf-status .pfs-main b {
+      font-family: 'Menlo', monospace; font-size: 16px; letter-spacing: 0;
+    }
+    /* 상태 - 완료 (초록) */
+    .pf-status.done {
+      background: linear-gradient(180deg, #fff, #e6f6ec);
+      border-color: rgba(46,156,88,0.35);
+    }
+    .pf-status.done .pfs-main,
+    .pf-status.done .pfs-main b { color: var(--success); }
+    .pf-status.done .pfs-check::before {
+      content: "✓"; margin-right: 3px; font-weight: 900;
+    }
+    /* 상태 - 부분 (주황) */
+    .pf-status.partial {
+      background: linear-gradient(180deg, #fff, var(--brand-soft));
+      border-color: rgba(211,90,26,0.3);
+    }
+    .pf-status.partial .pfs-main,
+    .pf-status.partial .pfs-main b { color: var(--brand); }
+    /* 상태 - 미응답 (회색) */
+    .pf-status.empty {
+      background: #f7f7f5; border-color: rgba(0,0,0,0.06);
+    }
+    .pf-status.empty .pfs-main { color: var(--ink-mute); }
+    .pf-status.empty .pfs-main b { color: var(--danger); }
+
+    .pf-btn {
+      flex: 1; padding: 14px 16px; border: none; border-radius: 14px;
+      font-family: inherit; font-size: 13.5px; font-weight: 800;
+      cursor: pointer; transition: all 0.2s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: #fff; color: var(--ink);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+      border: 1.5px solid rgba(0,0,0,0.06);
+    }
+    .pf-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+      border-color: var(--brand);
+      color: var(--brand);
+    }
+    .pf-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .pf-btn .pf-label { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; line-height: 1.2; }
+    .pf-btn.pf-next .pf-label { align-items: flex-end; }
+    .pf-btn .pf-hint { font-size: 10.5px; color: var(--ink-mute); font-weight: 700; }
+    .pf-btn .pf-title { font-size: 13.5px; font-weight: 800; }
+    .pf-btn .pf-arrow { font-size: 18px; opacity: 0.7; }
+    .pf-btn.pf-next {
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      color: #fff; border-color: var(--brand);
+      box-shadow: 0 6px 16px rgba(211,90,26,0.28);
+    }
+    .pf-btn.pf-next:hover:not(:disabled) {
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(211,90,26,0.4);
+      background: linear-gradient(135deg, #a34210, var(--brand));
+    }
+    .pf-btn.pf-next .pf-hint { color: rgba(255,255,255,0.85); }
+    /* 마지막 지문 → 채점 유도 버튼 */
+    .pf-btn.pf-grade {
+      background: linear-gradient(135deg, var(--success), #4bb572);
+      color: #fff; border-color: var(--success);
+      box-shadow: 0 6px 16px rgba(46,156,88,0.28);
+    }
+    .pf-btn.pf-grade:hover:not(:disabled) {
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(46,156,88,0.4);
+      background: linear-gradient(135deg, #237040, var(--success));
+    }
+    .pf-btn.pf-grade .pf-hint { color: rgba(255,255,255,0.85); }
+
+    /* 해설 (채점 후) */
+    .explain-toggle {
+      display: none; background: none; border: 1.5px solid var(--brand); color: var(--brand);
+      padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700;
+      cursor: pointer; margin-top: 4px; font-family: inherit;
+    }
+    .explain-toggle:hover { background: var(--brand); color: #fff; }
+    body.graded .explain-toggle { display: inline-block; }
+    .explain-box {
+      display: none; margin-top: 10px; padding: 12px 14px;
+      background: var(--bg-1); border-left: 4px solid var(--brand);
+      border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.75;
+    }
+    .explain-box.open { display: block; }
+    .explain-box h5 { color: var(--brand); font-size: 12px; margin-bottom: 4px; font-weight: 800; }
+    .explain-box p { margin-bottom: 8px; }
+
+    /* === 하단 fixed 바 === */
+    .exam-bottom {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(255,255,255,0.98); backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(0,0,0,0.08);
+      padding: 12px 22px; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+    }
+    .bottom-progress {
+      display: flex; align-items: center; gap: 12px; flex: 1;
+      cursor: pointer; padding: 4px 8px; border-radius: 10px;
+      transition: background 0.15s;
+    }
+    .bottom-progress:hover { background: var(--bg-1); }
+    .bp-label {
+      font-size: 12px; color: var(--ink-mute); font-weight: 700;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .bp-label .caret { font-size: 10px; transition: transform 0.2s; opacity: 0.6; }
+    body.omr-open .bp-label .caret { transform: rotate(180deg); }
+    .bp-bar {
+      flex: 1; max-width: 340px; height: 8px; background: #eee; border-radius: 5px; overflow: hidden;
+    }
+    .bp-fill {
+      height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-2));
+      width: 0%; transition: width 0.3s;
+    }
+    .bp-count {
+      font-family: 'Menlo', monospace; font-size: 13px; font-weight: 800; color: var(--ink);
+    }
+    .bp-count b { color: var(--brand); }
+    .bp-unanswered {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11.5px; color: var(--danger); font-weight: 800;
+      background: rgba(198,40,40,0.08); padding: 3px 10px; border-radius: 20px;
+      transition: opacity 0.2s;
+    }
+    .bp-unanswered.hidden { opacity: 0; pointer-events: none; }
+    .bottom-btns { display: flex; gap: 8px; }
+    /* 응시 중엔 중단 링크 숨김. 채점 후에만 "대시보드로"로 노출 */
+    .bottom-btns > a { display: none; }
+    body.graded .bottom-btns > a { display: inline-flex; }
+
+    /* === OMR 드로어 (하단→위 슬라이드업) === */
+    .omr-drawer-backdrop {
+      position: fixed; inset: 0; background: rgba(20,10,30,0.35);
+      backdrop-filter: blur(2px); z-index: 150;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    body.omr-open .omr-drawer-backdrop { opacity: 1; pointer-events: auto; }
+    .omr-drawer {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      background: linear-gradient(180deg, #fff 0%, var(--bg-1) 100%);
+      border-top-left-radius: 24px; border-top-right-radius: 24px;
+      box-shadow: 0 -12px 40px rgba(0,0,0,0.25);
+      transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+      max-height: 70vh; overflow-y: auto;
+      padding: 16px 24px 24px;
+    }
+    body.omr-open .omr-drawer { transform: translateY(0); }
+    .omr-drawer-handle {
+      width: 42px; height: 5px; background: #ddd; border-radius: 3px;
+      margin: 0 auto 12px; cursor: grab;
+    }
+    .omr-drawer-head {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+    }
+    .omr-drawer-title {
+      font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .omr-drawer-title::before {
+      content: ""; width: 5px; height: 18px; border-radius: 2px;
+      background: linear-gradient(180deg, var(--brand), var(--brand-2));
+    }
+    .omr-drawer-summary {
+      display: flex; gap: 8px; font-size: 11.5px; font-weight: 700;
+    }
+    .omr-sum {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 20px;
+    }
+    .omr-sum.done { background: rgba(46,156,88,0.12); color: var(--success); }
+    .omr-sum.left { background: rgba(198,40,40,0.1); color: var(--danger); }
+    .omr-drawer-close {
+      width: 30px; height: 30px; border-radius: 50%; border: none;
+      background: #f0f0f0; cursor: pointer; font-size: 14px; color: #666;
+      transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .omr-drawer-close:hover { background: var(--ink); color: #fff; transform: rotate(90deg); }
+
+    /* 드로어 본문 - 2단 그리드 (좌·우 지문 배치) */
+    #omrDrawerBody {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 24px;
+      row-gap: 4px;
+    }
+    @media (max-width: 780px) {
+      #omrDrawerBody { grid-template-columns: 1fr; column-gap: 0; }
+    }
+
+    /* 지문 그룹 (구분선) */
+    .omr-group {
+      margin-bottom: 10px;
+    }
+    .omr-group-head {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+      font-size: 12px; color: var(--ink-mute); font-weight: 700;
+    }
+    .omr-group-badge {
+      background: var(--ink); color: #fff; padding: 2px 8px;
+      font-size: 10px; font-weight: 800; border-radius: 10px;
+    }
+    .omr-group-line { flex: 1; height: 1px; background: rgba(0,0,0,0.06); }
+    .omr-group-status {
+      font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+    }
+    .omr-group-status.done { background: rgba(46,156,88,0.12); color: var(--success); }
+    .omr-group-status.partial { background: rgba(211,90,26,0.12); color: var(--brand); }
+    .omr-group-status.empty { background: rgba(0,0,0,0.05); color: var(--ink-mute); }
+
+    /* 문항 셀 그리드 - 지문당 5문항이므로 항상 5열 */
+    .omr-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px;
+    }
+    .omr-cell {
+      position: relative;
+      background: linear-gradient(180deg, #fff, var(--brand-soft));
+      border: 2px solid rgba(211,90,26,0.4); border-radius: 12px;
+      padding: 8px 6px; text-align: center; cursor: pointer;
+      transition: all 0.15s;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+    }
+    /* 미응답 셀 hover — 주황 강조 심화 */
+    .omr-cell:not(.answered):hover {
+      border-color: var(--brand);
+      background: linear-gradient(180deg, #fff, #ffe4c8);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(211,90,26,0.25);
+    }
+    /* 응답 완료 — 초록 계열 */
+    .omr-cell.answered {
+      background: linear-gradient(180deg, #fff, #e6f6ec);
+      border-color: var(--success);
+    }
+    .omr-cell.answered:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(46,156,88,0.22);
+      background: linear-gradient(180deg, #fff, #d7f0dc);
+    }
+    .omr-cell-num {
+      font-size: 13px; font-weight: 800; color: var(--brand);
+      line-height: 1;
+    }
+    .omr-cell.answered .omr-cell-num { color: var(--success); }
+    .omr-cell-ans {
+      font-family: 'Menlo', monospace; font-size: 15px; font-weight: 800;
+      color: var(--ink); line-height: 1;
+    }
+    .omr-cell.answered .omr-cell-ans { color: var(--success); }
+    .omr-cell-empty {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px dashed var(--brand); opacity: 0.6;
+    }
+    .omr-cell:not(.answered):hover .omr-cell-empty { opacity: 1; }
+    .btn {
+      padding: 10px 22px; border: none; border-radius: 12px;
+      font-size: 14px; font-weight: 800; cursor: pointer;
+      transition: all 0.2s; font-family: inherit;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      text-decoration: none;
+      text-align: center;
+      line-height: 1.2;
+    }
+    a.btn, a.btn:link, a.btn:visited, a.btn:hover, a.btn:active { text-decoration: none; }
+    .btn-outline {
+      background: #fff; color: var(--ink); border: 1.5px solid #ddd;
+    }
+    .btn-outline:hover { border-color: var(--ink); }
+    .btn-omr {
+      background: var(--bg-1); color: var(--ink);
+      border: 1.5px solid rgba(211,90,26,0.35);
+      display: inline-flex; align-items: center; gap: 8px;
+      position: relative;
+    }
+    .btn-omr:hover {
+      background: var(--brand-soft); border-color: var(--brand); color: var(--brand);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(211,90,26,0.15);
+    }
+    .btn-omr .omr-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 6px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      color: #fff; font-weight: 800; font-size: 11px;
+      letter-spacing: -0.5px;
+    }
+    .btn-omr .btn-omr-badge {
+      background: var(--danger); color: #fff;
+      font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 10px;
+      min-width: 20px; text-align: center;
+      display: none;
+    }
+    .btn-omr.has-remaining .btn-omr-badge { display: inline-block; }
+    .btn-omr .caret { font-size: 10px; opacity: 0.6; transition: transform 0.2s; }
+    body.omr-open .btn-omr .caret { transform: rotate(180deg); }
+    .btn-grade {
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      color: #fff; box-shadow: 0 4px 14px rgba(211,90,26,0.3);
+    }
+    .btn-grade:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(211,90,26,0.4); }
+    .btn-success {
+      background: linear-gradient(135deg, var(--success), #4bb572);
+      color: #fff; box-shadow: 0 4px 14px rgba(46,156,88,0.3);
+    }
+    .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(46,156,88,0.4); }
+
+    /* === 결과 오버레이 === */
+    .result-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75); z-index: 3000;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    body.graded .result-overlay { display: flex; animation: bmpFadeIn 0.3s; }
+    @keyframes bmpFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes rPop { from { transform: translateY(20px) scale(0.95); opacity: 0; } to { transform: none; opacity: 1; } }
+    .result-card {
+      position: relative;
+      background: #fff; border-radius: 24px; padding: 28px 30px;
+      max-width: 560px; width: 100%; text-align: center;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+      animation: rPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-height: 92vh; overflow-y: auto;
+    }
+    .result-close {
+      position: absolute; top: 14px; right: 14px;
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(0,0,0,0.05); border: none; color: var(--ink);
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: all 0.15s; font-family: inherit; z-index: 5;
+    }
+    .result-close:hover { background: var(--ink); color: #fff; transform: rotate(90deg); }
+    /* 결과 - 레이더 */
+    .result-radar {
+      display: flex; align-items: center; justify-content: center;
+      margin: 6px 0 4px;
+    }
+    /* 결과 - 과목별 정답률 */
+    .result-subjects {
+      background: var(--bg-1); padding: 14px 16px; border-radius: 12px;
+      margin-bottom: 18px;
+    }
+    .result-subjects-title {
+      font-size: 12px; font-weight: 800; color: var(--ink-mute);
+      margin-bottom: 10px; letter-spacing: 0.5px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .result-subject-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 11.5px;
+    }
+    .result-subject-row:last-child { margin-bottom: 0; }
+    .result-subject-row .sub-lbl { width: 60px; font-weight: 700; color: var(--ink); text-align: left; }
+    .result-subject-row .sub-bar-track { flex: 1; height: 7px; background: #e5d5c1; border-radius: 4px; overflow: hidden; }
+    .result-subject-row .sub-bar-fill { height: 100%; transition: width 0.6s; }
+    .result-subject-row .sub-bar-fill.hi { background: linear-gradient(90deg, var(--success), #4bb572); }
+    .result-subject-row .sub-bar-fill.mid { background: linear-gradient(90deg, var(--brand), var(--brand-2)); }
+    .result-subject-row .sub-bar-fill.lo { background: linear-gradient(90deg, var(--danger), #f26a6a); }
+    .result-subject-row .sub-rate { width: 62px; text-align: right; font-family: 'Menlo', monospace; font-size: 11px; font-weight: 800; }
+    .result-subject-row .sub-rate.hi { color: var(--success); }
+    .result-subject-row .sub-rate.mid { color: var(--brand); }
+    .result-subject-row .sub-rate.lo { color: var(--danger); }
+    /* 결과 - 섹션 헤더 */
+    .result-section-h {
+      font-size: 12px; font-weight: 800; color: var(--ink-mute);
+      letter-spacing: 0.5px; margin: 4px 0 4px; text-align: left;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .result-section-h::before {
+      content: ""; display: inline-block; width: 4px; height: 12px;
+      border-radius: 2px; background: linear-gradient(180deg, var(--brand), var(--brand-2));
+    }
+    /* 결과 - PDF 버튼 */
+    .btn-pdf {
+      background: #fff; color: var(--ink);
+      border: 1.5px solid rgba(0,0,0,0.08);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-pdf:hover:not(:disabled) {
+      background: var(--brand-soft); border-color: var(--brand); color: var(--brand);
+    }
+    .btn-pdf:disabled { opacity: 0.5; cursor: wait; }
+    .result-badge {
+      display: inline-block; background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      color: #fff; padding: 5px 14px; font-size: 11px; font-weight: 800;
+      letter-spacing: 2px; border-radius: 20px; margin-bottom: 14px;
+    }
+    .result-score-big {
+      font-size: 66px; font-weight: 900; color: var(--brand);
+      line-height: 1; margin-bottom: 6px; letter-spacing: -2px;
+    }
+    .result-score-big small { font-size: 22px; color: #999; font-weight: 700; }
+    .result-sub { color: var(--ink-mute); font-size: 13px; margin-bottom: 20px; }
+    .result-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px;
+    }
+    .result-stat {
+      background: var(--bg-1); padding: 12px 8px; border-radius: 12px;
+    }
+    .result-stat .lbl { font-size: 11px; color: var(--ink-mute); font-weight: 700; }
+    .result-stat .val { font-size: 20px; font-weight: 900; color: var(--ink); margin-top: 2px; }
+    .result-areas {
+      background: var(--bg-1); padding: 14px 16px; border-radius: 12px; margin-bottom: 20px;
+    }
+    .result-area-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 12px;
+    }
+    .result-area-row:last-child { margin-bottom: 0; }
+    .result-area-row .lbl { width: 46px; font-weight: 700; }
+    .result-area-row .track { flex: 1; height: 8px; background: #e5d5c1; border-radius: 4px; overflow: hidden; }
+    .result-area-row .fill { height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width 0.6s; }
+    .result-area-row .sc { width: 52px; text-align: right; font-family: 'Menlo', monospace; font-size: 11px; font-weight: 700; }
+    .result-actions { display: flex; gap: 8px; }
+    .result-actions .btn { flex: 1; padding: 12px; font-size: 14px; }
+
+    /* === 커스텀 컨펌 모달 === */
+    .confirm-overlay {
+      position: fixed; inset: 0; z-index: 6000;
+      background: radial-gradient(ellipse at center, rgba(30,20,50,0.8), rgba(0,0,0,0.9));
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .confirm-overlay.open { opacity: 1; pointer-events: auto; animation: bmpFadeIn 0.25s; }
+    .confirm-card {
+      background: linear-gradient(180deg, #fff 0%, var(--bg-1) 100%);
+      border-radius: 22px;
+      padding: 30px 32px 24px;
+      max-width: 440px; width: 100%;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+      text-align: center;
+      transform: translateY(20px) scale(0.96); opacity: 0;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .confirm-overlay.open .confirm-card {
+      transform: translateY(0) scale(1); opacity: 1;
+    }
+    .confirm-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 58px; height: 58px; border-radius: 50%;
+      margin-bottom: 14px;
+      font-size: 30px; font-weight: 900;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(211,90,26,0.3);
+    }
+    .confirm-icon.warn {
+      background: linear-gradient(135deg, #f39c39, #f4b400);
+      box-shadow: 0 8px 20px rgba(243,180,0,0.35);
+    }
+    .confirm-icon.info {
+      background: linear-gradient(135deg, #4c7fdb, #6ea8ff);
+      box-shadow: 0 8px 20px rgba(76,127,219,0.3);
+    }
+    .confirm-icon.danger {
+      background: linear-gradient(135deg, var(--danger), #f26a6a);
+      box-shadow: 0 8px 20px rgba(198,40,40,0.3);
+    }
+    .confirm-title {
+      font-size: 20px; font-weight: 800; color: var(--ink);
+      margin-bottom: 8px; letter-spacing: -0.3px;
+    }
+    .confirm-msg {
+      color: var(--ink-mute); font-size: 14px; line-height: 1.7;
+      margin-bottom: 22px; white-space: pre-line;
+    }
+    .confirm-msg b { color: var(--brand); font-weight: 800; }
+    .confirm-actions {
+      display: flex; gap: 8px;
+    }
+    .confirm-btn {
+      flex: 1; padding: 13px 20px; border: none; border-radius: 12px;
+      font-family: inherit; font-size: 14px; font-weight: 800;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .confirm-btn-cancel {
+      background: #fff; color: var(--ink);
+      border: 1.5px solid rgba(0,0,0,0.08);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .confirm-btn-cancel:hover {
+      background: #f5f5f5; border-color: rgba(0,0,0,0.15);
+    }
+    .confirm-btn-ok {
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(211,90,26,0.3);
+    }
+    .confirm-btn-ok:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(211,90,26,0.42);
+      background: linear-gradient(135deg, #a34210, var(--brand));
+    }
+    .confirm-btn-ok.success {
+      background: linear-gradient(135deg, var(--success), #4bb572);
+      box-shadow: 0 4px 14px rgba(46,156,88,0.3);
+    }
+    .confirm-btn-ok.success:hover {
+      box-shadow: 0 8px 20px rgba(46,156,88,0.42);
+      background: linear-gradient(135deg, #237040, var(--success));
+    }
+
+    /* === 시작 오버레이 === */
+    .start-overlay {
+      position: fixed; inset: 0; background: rgba(20,10,30,0.9); z-index: 5000;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      animation: bmpFadeIn 0.3s;
+    }
+    .start-card {
+      background: #fff; border-radius: 24px; padding: 34px 38px;
+      max-width: 480px; width: 100%; text-align: center;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+      animation: rPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .start-badge {
+      display: inline-block; background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      color: #fff; padding: 5px 14px; font-size: 11px; font-weight: 800;
+      letter-spacing: 2px; border-radius: 20px; margin-bottom: 12px;
+    }
+    .start-card h1 { font-size: 26px; font-weight: 900; margin-bottom: 6px; letter-spacing: -0.5px; }
+    .start-card .subtitle { color: var(--ink-mute); font-size: 13px; margin-bottom: 18px; }
+    .start-meta {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+      background: var(--bg-1); padding: 14px; border-radius: 14px; margin-bottom: 16px;
+    }
+    .start-meta-item .lbl { font-size: 10.5px; color: var(--ink-mute); font-weight: 700; }
+    .start-meta-item .val { font-size: 18px; font-weight: 900; color: var(--brand); margin-top: 1px; }
+    .start-rules {
+      text-align: left; background: var(--brand-soft); padding: 12px 16px;
+      border-radius: 12px; font-size: 12.5px; line-height: 1.8; margin-bottom: 18px;
+      color: #7a3d00;
+    }
+    .start-rules b { color: var(--brand); }
+    .start-card .btn { font-size: 15px; padding: 14px 36px; width: 100%; justify-content: center; }
+  </style>
+</head>
+<body>
+  <!-- 시작 오버레이 -->
+  <div class="start-overlay" id="startOverlay">
+    <div class="start-card">
+      <div class="start-badge">✦ BRAIN 월말</div>
+      <h1>초등 월말 11회차</h1>
+      <div class="subtitle">국어 영역 · 매월 1회 정규 응시</div>
+      <div class="start-meta">
+        <div class="start-meta-item"><div class="lbl">문항</div><div class="val">35</div></div>
+        <div class="start-meta-item"><div class="lbl">시간</div><div class="val">30<span style="font-size:12px;color:#999;">분</span></div></div>
+        <div class="start-meta-item"><div class="lbl">배점</div><div class="val">100</div></div>
+      </div>
+      <div class="start-rules">
+        · 시험 시작과 함께 <b>30분 타이머</b>가 흘러갑니다.<br>
+        · 문제는 <b>5지선다 객관식</b>입니다.<br>
+        · 지문에 <b>형광펜</b>으로 표시할 수 있습니다.<br>
+        · 채점 후 <b>정답·해설</b>을 바로 확인할 수 있습니다.
+      </div>
+      <button class="btn btn-grade" onclick="startExam()">✦ 응시 시작</button>
+    </div>
+  </div>
+
+  <!-- 상단 헤더 -->
+  <header class="exam-topbar">
+    <div class="brand-row">
+      <div class="brand-logo">B</div>
+      <div class="brand-text">
+        <span class="badge">✦ BRAIN 월말</span>
+        <h1>초등 월말 11회차</h1>
+        <p>국어 영역 · 35문항 · 30분</p>
+      </div>
+    </div>
+    <div class="center-nav" id="centerNav"></div>
+    <div class="top-right">
+      <button class="btn-grade-top" id="btnGradeTop" type="button" title="채점하기">
+        <span>✦ 채점하기</span>
+        <span class="badge" id="btnGradeTopBadge">0</span>
+      </button>
+      <div class="exam-timer" id="examTimer"><span class="timer-lbl">TIME</span><span id="timerTxt">30:00</span></div>
+    </div>
+  </header>
+
+  <!-- 2단 메인 -->
+  <main>
+    <!-- 좌측: 지문 -->
+    <div class="pane pane-left">
+      <div class="passage-topbar">
+        <div class="passage-info">
+          <span class="p-badge" id="pBadge">지문 1</span>
+          <span class="p-subject" id="pSubject">생물</span>
+        </div>
+        <div class="passage-tools">
+          <div class="font-toolbar" title="지문 글자 크기">
+            <button class="font-btn dec" id="fontDec" type="button" aria-label="글자 작게">−</button>
+            <span class="font-btn lbl" id="fontLbl">100%</span>
+            <button class="font-btn inc" id="fontInc" type="button" aria-label="글자 크게">＋</button>
+          </div>
+          <div class="pen-toolbar" title="지문에 형광펜으로 표시">
+            <button class="pen-tool active" data-tool="cursor" title="선택">👆</button>
+            <button class="pen-tool color-y" data-tool="hl-y" title="노랑"></button>
+            <button class="pen-tool color-p" data-tool="hl-p" title="분홍"></button>
+            <button class="pen-tool color-b" data-tool="hl-b" title="파랑"></button>
+            <button class="pen-tool" data-tool="erase" title="지우개">🧽</button>
+          </div>
+        </div>
+      </div>
+      <div class="passage-card">
+        <h2 class="passage-title" id="passageTitle"></h2>
+        <div class="passage-text" id="passageText"></div>
+      </div>
+    </div>
+
+    <!-- 우측: 문제 -->
+    <div class="pane pane-right">
+      <div class="questions-header">
+        <h3>이 지문의 문제</h3>
+        <div class="progress">전체 <b><span id="answeredCount">0</span></b> / 35 응답</div>
+      </div>
+      <div id="questionsHost"></div>
+    </div>
+  </main>
+
+  <!-- 하단 바 -->
+  <div class="exam-bottom">
+    <div class="bottom-progress" id="bottomProgress" title="답안 현황 보기">
+      <span class="bp-label">✎ OMR <span class="caret">▲</span></span>
+      <div class="bp-bar"><div class="bp-fill" id="bpFill"></div></div>
+      <span class="bp-count"><b id="bpCount">0</b> / 35</span>
+      <span class="bp-unanswered hidden" id="bpUnanswered">● 미응답 <b id="bpUnanswered_count">0</b></span>
+    </div>
+    <div class="bottom-btns">
+      <button class="btn btn-omr" id="btnOmr" type="button" title="답안 현황 · 미응답 확인">
+        <span class="omr-icon">✎</span>
+        <span>OMR 전체 보기</span>
+        <span class="btn-omr-badge" id="btnOmrBadge">0</span>
+        <span class="caret">▲</span>
+      </button>
+      <a href="/monthly_exam_dashboard_elem.html" class="btn btn-outline">중단</a>
+    </div>
+  </div>
+
+  <!-- 커스텀 컨펌 모달 -->
+  <div class="confirm-overlay" id="confirmOverlay" role="dialog" aria-modal="true">
+    <div class="confirm-card">
+      <div class="confirm-icon" id="confirmIcon">!</div>
+      <h3 class="confirm-title" id="confirmTitle">확인</h3>
+      <p class="confirm-msg" id="confirmMsg"></p>
+      <div class="confirm-actions">
+        <button class="confirm-btn confirm-btn-cancel" id="confirmCancel" type="button">취소</button>
+        <button class="confirm-btn confirm-btn-ok" id="confirmOk" type="button">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OMR 드로어 -->
+  <div class="omr-drawer-backdrop" id="omrBackdrop"></div>
+  <aside class="omr-drawer" id="omrDrawer" aria-label="답안 현황">
+    <div class="omr-drawer-handle"></div>
+    <div class="omr-drawer-head">
+      <div class="omr-drawer-title">답안 현황</div>
+      <div class="omr-drawer-summary" id="omrDrawerSummary"></div>
+      <button class="omr-drawer-close" id="omrDrawerClose" aria-label="닫기">✕</button>
+    </div>
+    <div id="omrDrawerBody"></div>
+  </aside>
+
+  <!-- 결과 오버레이 (채점 후) -->
+  <div class="result-overlay">
+    <div class="result-card">
+      <button class="result-close" onclick="closeResult()" aria-label="닫기" title="닫기">✕</button>
+      <div class="result-badge">✦ 채점 완료</div>
+      <div class="result-score-big" id="rScore">--<small>/100</small></div>
+      <div class="result-sub" id="rSub">초등 월말 11회차</div>
+      <div class="result-stats">
+        <div class="result-stat">
+          <div class="lbl">정답</div>
+          <div class="val" id="rCorrect">0<span style="font-size:12px;color:#999;">/35</span></div>
+        </div>
+        <div class="result-stat">
+          <div class="lbl">소요</div>
+          <div class="val" id="rDur">-</div>
+        </div>
+        <div class="result-stat">
+          <div class="lbl">정답률</div>
+          <div class="val" id="rRate">-<span style="font-size:12px;color:#999;">%</span></div>
+        </div>
+      </div>
+      <!-- 문해력 5지수 레이더 + 막대 -->
+      <div class="result-section-h">문해력 5지수</div>
+      <div class="result-radar">
+        <svg id="rRadar" width="230" height="230" viewBox="0 0 230 230"></svg>
+      </div>
+      <div class="result-areas" id="rAreas"></div>
+      <!-- 과목별 정답률 -->
+      <div class="result-section-h">지문별 정답률 <span style="margin-left:auto;font-weight:600;color:#999;font-size:10.5px;">7지문</span></div>
+      <div class="result-radar">
+        <svg id="rSubjectRadar" width="260" height="260" viewBox="0 0 260 260"></svg>
+      </div>
+      <div class="result-subjects" id="rSubjects"></div>
+      <div class="result-actions">
+        <button class="btn btn-outline" onclick="closeResult()">해설 확인</button>
+        <button class="btn btn-pdf" id="btnDownloadPdf" onclick="downloadPdf()">📄 PDF 다운로드</button>
+        <a class="btn btn-success" href="/monthly_exam_dashboard_elem.html">대시보드로</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/monthly_exam_data/monthly_elem_11.js"></script>
+  <script>
+    /* ========================================
+       BRAIN 월말 응시 렌더러 (2단 · OMR · 형광펜)
+    ======================================== */
+    const EXAM = window.MONTHLY_EXAM_DATA;
+    const STORAGE_KEY = 'monthly_elem_11_result';
+    let currentPassageIdx = 0;
+    let userAnswers = new Array(EXAM.totalQuestions + 1).fill(null);
+    let highlights = {}; // passageIdx → HTML with hl spans
+    let currentTool = 'cursor';
+    let graded = false;
+    let startedAt = null;
+    let timerId = null;
+
+    /* ========= 네비게이터 (지문 1~10) ========= */
+    function renderNav() {
+      const nav = document.getElementById('centerNav');
+      nav.innerHTML = '';
+      const prev = document.createElement('button');
+      prev.className = 'nav-arrow'; prev.textContent = '‹';
+      prev.onclick = () => switchPassage(currentPassageIdx - 1);
+      prev.title = '이전 지문';
+      nav.appendChild(prev);
+      EXAM.passages.forEach((p, i) => {
+        const total = p.questions.length;
+        const dot = document.createElement('div');
+        dot.className = 'nav-dot';
+        dot.dataset.pIdx = i;
+        dot.title = `지문 ${p.no} · ${p.subject}`;
+        dot.innerHTML = `
+          <span class="nav-dot-num">${p.no}</span>
+          <span class="nav-dot-count"><span data-role="done">0</span>/${total}</span>
+        `;
+        dot.onclick = () => switchPassage(i);
+        nav.appendChild(dot);
+      });
+      const next = document.createElement('button');
+      next.className = 'nav-arrow'; next.textContent = '›';
+      next.onclick = () => switchPassage(currentPassageIdx + 1);
+      next.title = '다음 지문';
+      nav.appendChild(next);
+    }
+    function updateNav() {
+      document.querySelectorAll('.nav-dot').forEach((d) => {
+        const i = parseInt(d.dataset.pIdx);
+        const passage = EXAM.passages[i];
+        const total = passage.questions.length;
+        const doneCount = passage.questions.filter(q => userAnswers[q.no] != null).length;
+        // 상태 클래스
+        d.classList.toggle('active', i === currentPassageIdx);
+        d.classList.toggle('done', doneCount === total && total > 0);
+        d.classList.toggle('partial', doneCount > 0 && doneCount < total);
+        // 카운트 텍스트
+        const doneSpan = d.querySelector('[data-role="done"]');
+        if (doneSpan) doneSpan.textContent = doneCount;
+        // 라벨 업데이트
+        const remaining = total - doneCount;
+        d.title = `지문 ${passage.no} · ${passage.subject} · 응답 ${doneCount}/${total}` + (remaining > 0 ? ` (미응답 ${remaining}개)` : ' ✓ 완료');
+      });
+      const arrows = document.querySelectorAll('.nav-arrow');
+      arrows[0].disabled = currentPassageIdx === 0;
+      arrows[1].disabled = currentPassageIdx === EXAM.passages.length - 1;
+    }
+
+    /* ========= 지문 렌더 ========= */
+    function renderPassage() {
+      const p = EXAM.passages[currentPassageIdx];
+      document.getElementById('pBadge').textContent = `지문 ${p.no}`;
+      document.getElementById('pSubject').textContent = p.subject;
+      document.getElementById('passageTitle').textContent = p.title;
+      const host = document.getElementById('passageText');
+      // 저장된 하이라이트가 있으면 그거 사용, 없으면 원본
+      if (highlights[currentPassageIdx]) {
+        host.innerHTML = highlights[currentPassageIdx];
+      } else {
+        host.innerHTML = p.text.map(par => `<p>${par}</p>`).join('');
+      }
+      attachHighlightHandlers();
+      // 좌측 pane 스크롤 리셋
+      document.querySelector('.pane-left').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ========= 문제 렌더 ========= */
+    function renderQuestions() {
+      const p = EXAM.passages[currentPassageIdx];
+      const host = document.getElementById('questionsHost');
+      host.innerHTML = '';
+      p.questions.forEach(q => host.appendChild(renderQuestion(q)));
+      host.appendChild(renderPassageFooterNav());
+      // 우측 pane 스크롤 리셋
+      document.querySelector('.pane-right').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderPassageFooterNav() {
+      const total = EXAM.passages.length;
+      const isFirst = currentPassageIdx === 0;
+      const isLast = currentPassageIdx === total - 1;
+      const prevP = !isFirst ? EXAM.passages[currentPassageIdx - 1] : null;
+      const nextP = !isLast ? EXAM.passages[currentPassageIdx + 1] : null;
+      const curP = EXAM.passages[currentPassageIdx];
+
+      const footer = document.createElement('div');
+      footer.className = 'passage-footer-nav';
+
+      // 이전 지문
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'pf-btn pf-prev';
+      prevBtn.disabled = isFirst;
+      prevBtn.innerHTML = `
+        <span class="pf-arrow">‹</span>
+        <span class="pf-label">
+          <span class="pf-hint">이전 지문</span>
+          <span class="pf-title">${prevP ? `${prevP.no}. ${prevP.subject}` : '처음 지문입니다'}</span>
+        </span>
+      `;
+      if (!isFirst) prevBtn.addEventListener('click', () => switchPassage(currentPassageIdx - 1));
+
+      // 중앙 상태 배지 (이 지문 응답 / 전체 응답)
+      const status = document.createElement('div');
+      const curTotal = curP.questions.length;
+      const curDone = curP.questions.filter(q => userAnswers[q.no] != null).length;
+      const overallDone = userAnswers.slice(1).filter(a => a != null).length;
+      let statusCls = 'empty';
+      if (curDone === curTotal) statusCls = 'done';
+      else if (curDone > 0) statusCls = 'partial';
+      status.className = `pf-status ${statusCls}`;
+      status.innerHTML = `
+        <div class="pfs-main"><span class="pfs-check"></span>이 지문 <b>${curDone}/${curTotal}</b></div>
+        <div class="pfs-row">전체 <b>${overallDone}/${EXAM.totalQuestions}</b> 응답</div>
+      `;
+
+      // 다음 지문 또는 채점 유도
+      const nextBtn = document.createElement('button');
+      if (!isLast) {
+        nextBtn.className = 'pf-btn pf-next';
+        nextBtn.innerHTML = `
+          <span class="pf-label">
+            <span class="pf-hint">다음 지문</span>
+            <span class="pf-title">${nextP.no}. ${nextP.subject}</span>
+          </span>
+          <span class="pf-arrow">›</span>
+        `;
+        nextBtn.addEventListener('click', () => switchPassage(currentPassageIdx + 1));
+      } else {
+        nextBtn.className = 'pf-btn pf-grade';
+        const remaining = EXAM.totalQuestions - overallDone;
+        nextBtn.innerHTML = `
+          <span class="pf-label">
+            <span class="pf-hint">${remaining > 0 ? `미응답 ${remaining}문항 · ` : '모두 응답 완료 · '}마지막 지문</span>
+            <span class="pf-title">✦ 채점하기</span>
+          </span>
+        `;
+        nextBtn.addEventListener('click', () => gradeExam());
+      }
+
+      footer.appendChild(prevBtn);
+      footer.appendChild(status);
+      footer.appendChild(nextBtn);
+      return footer;
+    }
+
+    function renderQuestion(q) {
+      const el = document.createElement('article');
+      el.className = 'question';
+      el.dataset.qNo = q.no;
+      if (userAnswers[q.no] != null) el.classList.add('answered');
+
+      const scoreLbl = Number.isInteger(q.score) ? q.score + '점' : q.score + '점';
+      const chosen = userAnswers[q.no];
+      el.innerHTML = `
+        <div class="q-head">
+          <span class="q-no">${q.no}</span>
+          <span class="q-area">${q.typeKo}</span>
+          <span class="q-score">${scoreLbl}</span>
+        </div>
+        <div class="q-text">${q.text}</div>
+        <div class="q-options" role="radiogroup" aria-label="선지">
+          ${q.options.map((opt, i) => {
+            const num = i + 1;
+            const isSel = chosen === num;
+            return `
+              <div class="q-opt ${isSel ? 'selected' : ''}" data-opt-num="${num}" role="radio" aria-checked="${isSel}" tabindex="0">
+                <span class="q-opt-num">${num}</span>
+                <span class="q-opt-text">${opt}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <button class="explain-toggle" onclick="toggleExplain(${q.no})">해설 보기 ▾</button>
+        <div class="explain-box" id="explain-${q.no}">
+          <h5>정답 근거</h5>
+          <p>${q.correct}</p>
+          <h5>오답 풀이</h5>
+          <p>${q.wrong}</p>
+        </div>
+      `;
+
+      // 선지 클릭 → 답변 선택
+      el.querySelectorAll('.q-opt').forEach(optEl => {
+        const pick = () => {
+          if (graded) return;
+          const num = parseInt(optEl.dataset.optNum);
+          userAnswers[q.no] = num;
+          el.querySelectorAll('.q-opt').forEach(o => {
+            o.classList.remove('selected');
+            o.setAttribute('aria-checked', 'false');
+          });
+          optEl.classList.add('selected');
+          optEl.setAttribute('aria-checked', 'true');
+          el.classList.add('answered');
+          updateProgress();
+          updateNav();
+        };
+        optEl.addEventListener('click', pick);
+        optEl.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); }
+        });
+      });
+      return el;
+    }
+
+    /* ========= 글자 크기 조절 ========= */
+    const FONT_LEVELS = [13, 14.5, 15.5, 17, 18.5, 20, 22];
+    const FONT_DEFAULT_IDX = 2; // 15.5px
+    const FONT_KEY = 'monthly_exam_passage_font_idx';
+    let fontIdx = FONT_DEFAULT_IDX;
+    function applyFontIdx() {
+      const px = FONT_LEVELS[fontIdx];
+      document.documentElement.style.setProperty('--passage-fs', px + 'px');
+      const pct = Math.round(px / FONT_LEVELS[FONT_DEFAULT_IDX] * 100);
+      const lbl = document.getElementById('fontLbl');
+      if (lbl) lbl.textContent = pct + '%';
+      const dec = document.getElementById('fontDec');
+      const inc = document.getElementById('fontInc');
+      if (dec) dec.disabled = fontIdx === 0;
+      if (inc) inc.disabled = fontIdx === FONT_LEVELS.length - 1;
+      try { localStorage.setItem(FONT_KEY, String(fontIdx)); } catch(e) {}
+    }
+    function initFontTools() {
+      // 저장된 값 복원
+      try {
+        const saved = parseInt(localStorage.getItem(FONT_KEY));
+        if (!isNaN(saved) && saved >= 0 && saved < FONT_LEVELS.length) fontIdx = saved;
+      } catch(e) {}
+      applyFontIdx();
+      document.getElementById('fontDec').addEventListener('click', () => {
+        if (fontIdx > 0) { fontIdx--; applyFontIdx(); }
+      });
+      document.getElementById('fontInc').addEventListener('click', () => {
+        if (fontIdx < FONT_LEVELS.length - 1) { fontIdx++; applyFontIdx(); }
+      });
+    }
+
+    /* ========= 형광펜 도구 ========= */
+    function initPenTools() {
+      document.querySelectorAll('.pen-tool').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.pen-tool').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentTool = btn.dataset.tool;
+          document.body.classList.toggle('pen-erase', currentTool === 'erase');
+        });
+      });
+    }
+    function attachHighlightHandlers() {
+      const passage = document.getElementById('passageText');
+      // 지우개: 하이라이트 span 클릭 시 제거
+      passage.querySelectorAll('.hl-y, .hl-p, .hl-b').forEach(sp => {
+        sp.addEventListener('click', (e) => {
+          if (currentTool !== 'erase') return;
+          e.stopPropagation();
+          const parent = sp.parentNode;
+          while (sp.firstChild) parent.insertBefore(sp.firstChild, sp);
+          parent.removeChild(sp);
+          parent.normalize();
+          highlights[currentPassageIdx] = passage.innerHTML;
+        });
+      });
+      // 형광펜: mouseup 시 selection이 있으면 감쌈
+      passage.addEventListener('mouseup', handleSelection);
+      passage.addEventListener('touchend', handleSelection);
+    }
+    function handleSelection() {
+      if (!['hl-y','hl-p','hl-b'].includes(currentTool)) return;
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+      const range = sel.getRangeAt(0);
+      const passage = document.getElementById('passageText');
+      // selection이 지문 안에 있어야
+      if (!passage.contains(range.startContainer) || !passage.contains(range.endContainer)) return;
+      try {
+        const span = document.createElement('span');
+        span.className = currentTool;
+        // 안전한 wrap (부분 노드에서만 동작)
+        if (range.startContainer === range.endContainer && range.startContainer.nodeType === 3) {
+          span.textContent = range.toString();
+          range.deleteContents();
+          range.insertNode(span);
+        } else {
+          // 여러 노드 걸치는 경우: extractContents + insertNode
+          span.appendChild(range.extractContents());
+          range.insertNode(span);
+        }
+        sel.removeAllRanges();
+        highlights[currentPassageIdx] = passage.innerHTML;
+        attachHighlightHandlers();
+      } catch(e) { console.warn('하이라이트 실패', e); }
+    }
+
+    /* ========= 지문 전환 ========= */
+    function switchPassage(idx) {
+      if (idx < 0 || idx >= EXAM.passages.length) return;
+      // 현재 지문 상태 저장
+      highlights[currentPassageIdx] = document.getElementById('passageText').innerHTML;
+      currentPassageIdx = idx;
+      renderPassage();
+      renderQuestions();
+      updateNav();
+    }
+
+    /* ========= 진행률 ========= */
+    function updateProgress() {
+      const answered = userAnswers.slice(1).filter(a => a != null).length;
+      const unanswered = EXAM.totalQuestions - answered;
+      document.getElementById('answeredCount').textContent = answered;
+      document.getElementById('bpCount').textContent = answered;
+      document.getElementById('bpFill').style.width = (answered / EXAM.totalQuestions * 100) + '%';
+      const un = document.getElementById('bpUnanswered');
+      const unCount = document.getElementById('bpUnanswered_count');
+      unCount.textContent = unanswered;
+      un.classList.toggle('hidden', unanswered === 0);
+      // OMR 버튼 미응답 배지
+      const btnOmr = document.getElementById('btnOmr');
+      const btnOmrBadge = document.getElementById('btnOmrBadge');
+      if (btnOmr && btnOmrBadge) {
+        btnOmr.classList.toggle('has-remaining', unanswered > 0);
+        btnOmrBadge.textContent = unanswered;
+      }
+      // 상단 채점 버튼 미응답 배지
+      const btnGradeTop = document.getElementById('btnGradeTop');
+      const btnGradeTopBadge = document.getElementById('btnGradeTopBadge');
+      if (btnGradeTop && btnGradeTopBadge) {
+        btnGradeTop.classList.toggle('has-remaining', unanswered > 0);
+        btnGradeTopBadge.textContent = unanswered;
+      }
+      // 하단 페이지 이동바 중앙 배지 실시간 반영
+      updatePassageFooterStatus();
+      // 마지막 지문에선 채점 버튼 안의 미응답 힌트도 갱신
+      updateGradeHintIfLast(answered, unanswered);
+      // 드로어가 열려있으면 실시간 반영
+      if (document.body.classList.contains('omr-open')) renderOmrDrawer();
+    }
+
+    function updatePassageFooterStatus() {
+      const status = document.querySelector('.pf-status');
+      if (!status) return;
+      const curP = EXAM.passages[currentPassageIdx];
+      const curTotal = curP.questions.length;
+      const curDone = curP.questions.filter(q => userAnswers[q.no] != null).length;
+      const overallDone = userAnswers.slice(1).filter(a => a != null).length;
+      let cls = 'empty';
+      if (curDone === curTotal) cls = 'done';
+      else if (curDone > 0) cls = 'partial';
+      status.className = `pf-status ${cls}`;
+      status.innerHTML = `
+        <div class="pfs-main"><span class="pfs-check"></span>이 지문 <b>${curDone}/${curTotal}</b></div>
+        <div class="pfs-row">전체 <b>${overallDone}/${EXAM.totalQuestions}</b> 응답</div>
+      `;
+    }
+
+    function updateGradeHintIfLast(answered, unanswered) {
+      const isLast = currentPassageIdx === EXAM.passages.length - 1;
+      if (!isLast) return;
+      const gradeBtn = document.querySelector('.pf-btn.pf-grade');
+      if (!gradeBtn) return;
+      const hint = gradeBtn.querySelector('.pf-hint');
+      if (hint) hint.textContent = (unanswered > 0 ? `미응답 ${unanswered}문항 · ` : '모두 응답 완료 · ') + '마지막 지문';
+    }
+
+    /* ========= OMR 드로어 ========= */
+    const CIRCLED = ['①','②','③','④','⑤'];
+    function renderOmrDrawer() {
+      const body = document.getElementById('omrDrawerBody');
+      let answered = 0;
+      const groups = EXAM.passages.map(p => {
+        const cells = p.questions.map(q => {
+          const user = userAnswers[q.no];
+          if (user != null) answered++;
+          return { q, user };
+        });
+        const doneInGroup = cells.filter(c => c.user != null).length;
+        return { p, cells, doneInGroup };
+      });
+
+      body.innerHTML = groups.map(g => {
+        let status, statusCls;
+        if (g.doneInGroup === g.p.questions.length) { status = '완료'; statusCls = 'done'; }
+        else if (g.doneInGroup > 0) { status = `${g.doneInGroup}/${g.p.questions.length}`; statusCls = 'partial'; }
+        else { status = '미응답'; statusCls = 'empty'; }
+        const isCurrent = g.p.no === EXAM.passages[currentPassageIdx].no;
+        return `
+          <div class="omr-group">
+            <div class="omr-group-head">
+              <span class="omr-group-badge">지문 ${g.p.no}</span>
+              <span>${g.p.subject}</span>
+              <span class="omr-group-line"></span>
+              <span class="omr-group-status ${statusCls}">${status}</span>
+            </div>
+            <div class="omr-grid">
+              ${g.cells.map(c => `
+                <button class="omr-cell ${c.user != null ? 'answered' : ''} ${isCurrent && c.q === g.p.questions.find(qq => qq.no === c.q.no) && c.q.no === (EXAM.passages[currentPassageIdx].questions[0]?.no) ? '' : ''}"
+                  data-q-no="${c.q.no}" data-p-idx="${EXAM.passages.indexOf(g.p)}"
+                  aria-label="문항 ${c.q.no}${c.user != null ? ' 답 ' + c.user + '번' : ' 미응답'}">
+                  <span class="omr-cell-num">${c.q.no}</span>
+                  ${c.user != null
+                    ? `<span class="omr-cell-ans">${CIRCLED[c.user - 1]}</span>`
+                    : `<span class="omr-cell-empty"></span>`}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 셀 클릭 → 해당 지문·문항 이동
+      body.querySelectorAll('.omr-cell').forEach(cell => {
+        cell.addEventListener('click', () => {
+          const pIdx = parseInt(cell.dataset.pIdx);
+          const qNo = parseInt(cell.dataset.qNo);
+          jumpToQuestion(pIdx, qNo);
+        });
+      });
+
+      // 상단 요약
+      const left = EXAM.totalQuestions - answered;
+      document.getElementById('omrDrawerSummary').innerHTML = `
+        <span class="omr-sum done">✓ 응답 ${answered}</span>
+        ${left > 0 ? `<span class="omr-sum left">● 미응답 ${left}</span>` : ''}
+      `;
+    }
+    function jumpToQuestion(pIdx, qNo) {
+      // 지문 전환이 필요하면 전환
+      if (pIdx !== currentPassageIdx) switchPassage(pIdx);
+      closeOmrDrawer();
+      // 렌더 후 해당 문항으로 스크롤 (다음 tick)
+      setTimeout(() => {
+        const el = document.querySelector(`.question[data-q-no="${qNo}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // 살짝 강조 효과
+          el.style.transition = 'box-shadow 0.3s';
+          el.style.boxShadow = '0 0 0 3px rgba(211,90,26,0.4)';
+          setTimeout(() => { el.style.boxShadow = ''; }, 1200);
+        }
+      }, 220);
+    }
+    function openOmrDrawer() {
+      renderOmrDrawer();
+      document.body.classList.add('omr-open');
+    }
+    function closeOmrDrawer() {
+      document.body.classList.remove('omr-open');
+    }
+    function toggleOmrDrawer() {
+      if (document.body.classList.contains('omr-open')) closeOmrDrawer();
+      else openOmrDrawer();
+    }
+
+    /* ========= 타이머 ========= */
+    function startTimer() {
+      const totalSec = EXAM.totalMinutes * 60;
+      startedAt = Date.now();
+      const box = document.getElementById('examTimer');
+      const txt = document.getElementById('timerTxt');
+      timerId = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+        const remain = Math.max(0, totalSec - elapsed);
+        const mm = String(Math.floor(remain / 60)).padStart(2, '0');
+        const ss = String(remain % 60).padStart(2, '0');
+        txt.textContent = `${mm}:${ss}`;
+        box.classList.remove('warn', 'danger');
+        if (remain <= 60) box.classList.add('danger');
+        else if (remain <= 300) box.classList.add('warn');
+        if (remain === 0) { clearInterval(timerId); gradeExam(true); }
+      }, 500);
+    }
+    function stopTimer() { if (timerId) clearInterval(timerId); }
+
+    /* ========= 커스텀 컨펌 모달 ========= */
+    function showConfirm({ title = '확인', message = '', icon = '!', iconType = 'warn', okText = '확인', cancelText = '취소', okSuccess = false } = {}) {
+      return new Promise(resolve => {
+        const overlay = document.getElementById('confirmOverlay');
+        const iconEl = document.getElementById('confirmIcon');
+        const titleEl = document.getElementById('confirmTitle');
+        const msgEl = document.getElementById('confirmMsg');
+        const okBtn = document.getElementById('confirmOk');
+        const cancelBtn = document.getElementById('confirmCancel');
+        iconEl.textContent = icon;
+        iconEl.className = 'confirm-icon ' + iconType;
+        titleEl.textContent = title;
+        msgEl.innerHTML = message;
+        okBtn.textContent = okText;
+        cancelBtn.textContent = cancelText;
+        okBtn.className = 'confirm-btn confirm-btn-ok' + (okSuccess ? ' success' : '');
+        overlay.classList.add('open');
+        const done = (val) => {
+          overlay.classList.remove('open');
+          okBtn.onclick = null; cancelBtn.onclick = null;
+          document.removeEventListener('keydown', esc);
+          overlay.removeEventListener('click', bgClick);
+          resolve(val);
+        };
+        okBtn.onclick = () => done(true);
+        cancelBtn.onclick = () => done(false);
+        const esc = e => { if (e.key === 'Escape') done(false); };
+        const bgClick = e => { if (e.target === overlay) done(false); };
+        document.addEventListener('keydown', esc);
+        overlay.addEventListener('click', bgClick);
+        setTimeout(() => okBtn.focus(), 100);
+      });
+    }
+
+    /* ========= 채점 ========= */
+    async function gradeExam(auto = false) {
+      if (graded) return;
+      if (!auto) {
+        const unanswered = userAnswers.slice(1).filter(a => a == null).length;
+        if (unanswered > 0) {
+          const ok = await showConfirm({
+            title: '아직 응답하지 않은 문항이 있어요',
+            message: `총 <b>${unanswered}문항</b>이 아직 응답되지 않았습니다.\n그래도 채점할까요?`,
+            icon: '!', iconType: 'warn',
+            okText: '그래도 채점', cancelText: '조금 더 풀기'
+          });
+          if (!ok) return;
+        }
+      }
+      graded = true;
+      stopTimer();
+      document.body.classList.add('graded');
+
+      let totalScore = 0, correctCount = 0;
+      const areaScore = {};
+      Object.keys(EXAM.areas).forEach(k => areaScore[k] = 0);
+      const detailByQ = {};
+
+      EXAM.passages.forEach(p => {
+        p.questions.forEach(q => {
+          const user = userAnswers[q.no];
+          const isCorrect = user === q.answer;
+          detailByQ[q.no] = { user, answer: q.answer, isCorrect };
+          if (isCorrect) {
+            totalScore += q.score;
+            correctCount++;
+            areaScore[q.type] += q.score;
+          }
+        });
+      });
+
+      // 결과 팝업
+      const dur = Math.floor((Date.now() - startedAt) / 1000);
+      const dMin = Math.floor(dur / 60), dSec = dur % 60;
+      document.getElementById('rScore').innerHTML = `${formatScore(totalScore)}<small>/100</small>`;
+      document.getElementById('rSub').textContent = `초등 월말 11회차 · ${new Date().toLocaleString('ko-KR')}`;
+      document.getElementById('rCorrect').innerHTML = `${correctCount}<span style="font-size:12px;color:#999;">/${EXAM.totalQuestions}</span>`;
+      document.getElementById('rDur').textContent = `${dMin}분 ${dSec}초`;
+      document.getElementById('rRate').innerHTML = `${Math.round(correctCount / EXAM.totalQuestions * 100)}<span style="font-size:12px;color:#999;">%</span>`;
+
+      const areaMax = {};
+      Object.keys(EXAM.areas).forEach(k => areaMax[k] = 0);
+      EXAM.passages.forEach(p => p.questions.forEach(q => { areaMax[q.type] += q.score; }));
+      const rAreas = document.getElementById('rAreas');
+      rAreas.innerHTML = Object.entries(EXAM.areas).map(([k, v]) => {
+        const max = areaMax[k];
+        const got = areaScore[k];
+        const pct = max > 0 ? got / max * 100 : 0;
+        return `
+          <div class="result-area-row">
+            <div class="lbl">${v.label}</div>
+            <div class="track"><div class="fill" style="width:${pct}%;"></div></div>
+            <div class="sc">${formatScore(got)}/${max}</div>
+          </div>
+        `;
+      }).join('');
+
+      // 5지수 레이더 차트
+      renderResultRadar(areaScore, areaMax);
+      // 과목별 정답률
+      renderResultSubjects(detailByQ);
+
+      // 각 문항에 정오 표시
+      applyGradedStyles(detailByQ);
+
+      // 상단 채점 버튼 숨김
+      const btnGradeTop = document.getElementById('btnGradeTop');
+      if (btnGradeTop) btnGradeTop.style.display = 'none';
+      // 하단 "중단" 버튼 → "대시보드로"로 변경 (같은 링크 유지)
+      const bottomBtns = document.querySelector('.bottom-btns');
+      const abortLink = bottomBtns ? bottomBtns.querySelector('a.btn-outline') : null;
+      if (abortLink) {
+        abortLink.textContent = '대시보드로';
+        abortLink.className = 'btn btn-success';
+      }
+
+      // 과목별 정답 수/문항 수 (누적 통계용)
+      const subjectScores = EXAM.passages.map(p => ({
+        subject: p.subject,
+        correct: p.questions.filter(q => detailByQ[q.no] && detailByQ[q.no].isCorrect).length,
+        total: p.questions.length
+      }));
+
+      // 저장
+      saveResult({
+        examKey: EXAM.examKey, grade: EXAM.grade, round: EXAM.round,
+        totalScore, correctCount, totalQuestions: EXAM.totalQuestions,
+        areaScore, areaMax,
+        subjectScores,
+        answers: userAnswers.slice(1),
+        answerKey: EXAM.passages.flatMap(p => p.questions.map(q => q.answer)),
+        submittedAt: new Date().toISOString(),
+        durationSec: dur
+      });
+    }
+
+    /* ========= 결과 - 5지수 레이더 ========= */
+    function renderResultRadar(areaScore, areaMax) {
+      const svg = document.getElementById('rRadar');
+      if (!svg) return;
+      const AREA_ORDER = ['literal','lexical','structural','inferential','critical'];
+      const AREA_LABEL = { literal:'사실적', lexical:'어휘적', structural:'구조적', inferential:'추론적', critical:'비판적' };
+      const cx = 115, cy = 115, R = 82;
+      const angles = AREA_ORDER.map((_, i) => -Math.PI / 2 + i * (2 * Math.PI / 5));
+      let bg = '';
+      for (let ring = 1; ring <= 4; ring++) {
+        const r = R * ring / 4;
+        const pts = angles.map(a => `${cx + Math.cos(a) * r},${cy + Math.sin(a) * r}`).join(' ');
+        bg += `<polygon points="${pts}" fill="${ring === 4 ? 'rgba(255,243,232,0.5)' : 'none'}" stroke="#e5d5c1" stroke-width="1"/>`;
+      }
+      angles.forEach(a => {
+        bg += `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos(a) * R}" y2="${cy + Math.sin(a) * R}" stroke="#e5d5c1" stroke-width="1"/>`;
+      });
+      const labels = angles.map((a, i) => {
+        const lx = cx + Math.cos(a) * (R + 18);
+        const ly = cy + Math.sin(a) * (R + 18) + 4;
+        return `<text x="${lx}" y="${ly}" text-anchor="middle" font-size="11" font-weight="800" fill="#333">${AREA_LABEL[AREA_ORDER[i]]}</text>`;
+      }).join('');
+      const scorePts = angles.map((a, i) => {
+        const key = AREA_ORDER[i];
+        const got = areaScore[key] || 0;
+        const max = areaMax[key] || 1;
+        const ratio = Math.max(0, Math.min(1, got / max));
+        return `${cx + Math.cos(a) * R * ratio},${cy + Math.sin(a) * R * ratio}`;
+      }).join(' ');
+      const scorePolygon = `<polygon points="${scorePts}" fill="url(#rRadarFill)" stroke="#d35a1a" stroke-width="2.5" stroke-linejoin="round"/>`;
+      const dots = angles.map((a, i) => {
+        const key = AREA_ORDER[i];
+        const got = areaScore[key] || 0;
+        const max = areaMax[key] || 1;
+        const ratio = Math.max(0, Math.min(1, got / max));
+        const x = cx + Math.cos(a) * R * ratio;
+        const y = cy + Math.sin(a) * R * ratio;
+        return `<circle cx="${x}" cy="${y}" r="4" fill="#d35a1a" stroke="#fff" stroke-width="2"/>`;
+      }).join('');
+      svg.innerHTML = `
+        <defs>
+          <radialGradient id="rRadarFill" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(243,156,57,0.55)"/>
+            <stop offset="100%" stop-color="rgba(211,90,26,0.28)"/>
+          </radialGradient>
+        </defs>
+        ${bg}${labels}${scorePolygon}${dots}
+      `;
+    }
+
+    /* ========= 결과 - 과목별 정답률 ========= */
+    function renderResultSubjects(detailByQ) {
+      const host = document.getElementById('rSubjects');
+      if (!host) return;
+      const rows = EXAM.passages.map(p => {
+        const qs = p.questions;
+        const correct = qs.filter(q => detailByQ[q.no] && detailByQ[q.no].isCorrect).length;
+        const total = qs.length;
+        const pct = Math.round(correct / total * 100);
+        let cls = 'mid';
+        if (pct >= 75) cls = 'hi';
+        else if (pct < 50) cls = 'lo';
+        return { subject: p.subject, correct, total, pct, cls };
+      });
+      host.innerHTML = rows.map(r => `
+        <div class="result-subject-row">
+          <div class="sub-lbl">${r.subject}</div>
+          <div class="sub-bar-track"><div class="sub-bar-fill ${r.cls}" style="width:${r.pct}%;"></div></div>
+          <div class="sub-rate ${r.cls}">${r.pct}% (${r.correct}/${r.total})</div>
+        </div>
+      `).join('');
+      renderResultSubjectRadar(rows);
+    }
+
+    /* ========= 결과 - 10과목 레이더 ========= */
+    function renderResultSubjectRadar(rows) {
+      const svg = document.getElementById('rSubjectRadar');
+      if (!svg) return;
+      svg.innerHTML = buildSubjectRadarSvg(rows, { cx: 130, cy: 130, R: 90 });
+    }
+    function buildSubjectRadarSvg(rows, opts = {}) {
+      const cx = opts.cx || 130, cy = opts.cy || 130, R = opts.R || 90;
+      const N = rows.length; // 10
+      // 위쪽 12시부터 시계방향
+      const angles = rows.map((_, i) => -Math.PI / 2 + i * (2 * Math.PI / N));
+      let bg = '';
+      // 격자링 (25/50/75/100%)
+      for (let ring = 1; ring <= 4; ring++) {
+        const r = R * ring / 4;
+        const pts = angles.map(a => `${cx + Math.cos(a) * r},${cy + Math.sin(a) * r}`).join(' ');
+        bg += `<polygon points="${pts}" fill="${ring === 4 ? '#fff5eb' : 'none'}" stroke="#e5d5c1" stroke-width="1"/>`;
+      }
+      // 축선
+      angles.forEach(a => {
+        bg += `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos(a) * R}" y2="${cy + Math.sin(a) * R}" stroke="#e5d5c1" stroke-width="1"/>`;
+      });
+      // 라벨 (과목명)
+      const labels = angles.map((a, i) => {
+        const lx = cx + Math.cos(a) * (R + 18);
+        const ly = cy + Math.sin(a) * (R + 18) + 3;
+        return `<text x="${lx}" y="${ly}" text-anchor="middle" font-size="10" font-weight="800" fill="#333">${rows[i].subject}</text>`;
+      }).join('');
+      // 점수 폴리곤 (정답률 기준)
+      const scorePts = angles.map((a, i) => {
+        const ratio = rows[i].pct / 100;
+        return `${cx + Math.cos(a) * R * ratio},${cy + Math.sin(a) * R * ratio}`;
+      }).join(' ');
+      // 꼭짓점 - 색상 신호등 반영
+      const dots = angles.map((a, i) => {
+        const ratio = rows[i].pct / 100;
+        const x = cx + Math.cos(a) * R * ratio;
+        const y = cy + Math.sin(a) * R * ratio;
+        const color = rows[i].pct >= 75 ? '#2e9c58' : rows[i].pct < 50 ? '#c62828' : '#d35a1a';
+        return `<circle cx="${x}" cy="${y}" r="3.5" fill="${color}" stroke="#fff" stroke-width="1.5"/>`;
+      }).join('');
+      return `
+        <defs>
+          <radialGradient id="rSubRadarFill" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(243,156,57,0.55)"/>
+            <stop offset="100%" stop-color="rgba(211,90,26,0.28)"/>
+          </radialGradient>
+        </defs>
+        ${bg}${labels}
+        <polygon points="${scorePts}" fill="url(#rSubRadarFill)" stroke="#d35a1a" stroke-width="2" stroke-linejoin="round"/>
+        ${dots}
+      `;
+    }
+
+    function applyGradedStyles(detailByQ) {
+      // 지문 이동 시에도 표시 유지되도록 매 렌더 후 호출
+      document.querySelectorAll('.question').forEach(el => {
+        const qNo = parseInt(el.dataset.qNo);
+        const d = detailByQ[qNo];
+        if (!d) return;
+        el.querySelectorAll('.q-opt').forEach(o => {
+          const n = parseInt(o.dataset.optNum);
+          o.classList.remove('correct-answer', 'user-wrong', 'user-selected', 'selected');
+          if (n === d.answer) o.classList.add('correct-answer');
+          if (d.user != null && n === d.user) {
+            o.classList.add('user-selected');
+            if (d.user !== d.answer) o.classList.add('user-wrong');
+          }
+        });
+      });
+    }
+
+    function toggleExplain(no) {
+      const box = document.getElementById('explain-' + no);
+      const btn = box.previousElementSibling;
+      box.classList.toggle('open');
+      btn.textContent = box.classList.contains('open') ? '해설 닫기 ▴' : '해설 보기 ▾';
+    }
+
+    function closeResult() {
+      document.querySelector('.result-overlay').style.display = 'none';
+    }
+
+    /* ========= PDF 다운로드 (새 창 → html2pdf.js 자동 저장 → 자동 닫힘) ========= */
+    function runInlinePdf(prev) {
+      // 답안 복원 → 채점 모드로 전환
+      try { prev.answers.forEach((a, idx) => userAnswers[idx+1] = a); } catch(e){}
+      try { startedAt = new Date(prev.submittedAt).getTime() - (prev.durationSec * 1000); } catch(e){}
+      try { updateProgress(); renderQuestions(); } catch(e){}
+      try { gradeExam(true); } catch(e){}
+
+      // 현재 탭 body 를 PDF 콘텐츠로 교체 (팝업 없음)
+      const container = buildPdfContent();
+      container.style.position = 'static';
+      container.style.opacity = '1';
+      container.style.zIndex = '';
+      container.style.pointerEvents = '';
+
+      const loader = document.createElement('div');
+      loader.style.cssText = 'position:fixed;inset:0;background:rgba(20,10,30,0.85);color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:999999;font-family:Pretendard,sans-serif;font-size:16px;font-weight:700;';
+      loader.innerHTML = '<div style="width:42px;height:42px;border-radius:50%;border:4px solid rgba(255,255,255,0.2);border-top-color:#f39c39;animation:spin 0.9s linear infinite;"></div><div>PDF 생성 중...</div><div style="font-size:12px;opacity:0.7;font-weight:500;">잠시만 기다려주세요</div>';
+      const styleTag = document.createElement('style');
+      styleTag.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+      document.head.appendChild(styleTag);
+
+      document.body.innerHTML = '';
+      document.body.style.cssText = 'margin:0;padding:0;background:#fff;width:820px;font-family:Pretendard,-apple-system,sans-serif;';
+      document.body.appendChild(container);
+      document.body.appendChild(loader);
+
+      const gradeLbl = (EXAM.grade === 'mid' || EXAM.grade === '중등') ? '중등' : '초등';
+      let stuName = '';
+      try {
+        const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+        stuName = cs.name || '';
+      } catch(e) {}
+      const fileTitle = gradeLbl + '월말_' + EXAM.round + '회' + (stuName ? '_' + stuName : '') + '_' + new Date().toISOString().slice(0,10) + '.pdf';
+
+      function generate() {
+        html2pdf().from(container).set({
+          margin: [10, 10, 10, 10],
+          filename: fileTitle,
+          image: { type: 'jpeg', quality: 0.95 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: 820, windowWidth: 820, x: 0, y: 0, scrollX: 0, scrollY: 0 },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+          pagebreak: { mode: ['css', 'legacy'] }
+        }).save().then(function(){
+          setTimeout(function(){ try { window.close(); } catch(e){} }, 400);
+        }).catch(function(err){
+          console.error(err);
+          loader.innerHTML = '<div>PDF 생성 실패</div><div style="font-size:12px;opacity:0.7;">브라우저 인쇄 → PDF 저장을 이용해주세요.</div>';
+        });
+      }
+
+      function loadLib() {
+        if (typeof html2pdf !== 'undefined') { generate(); return; }
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        s.onload = generate;
+        s.onerror = function(){ loader.innerHTML = '<div>PDF 라이브러리 로드 실패</div>'; };
+        document.head.appendChild(s);
+      }
+      loadLib();
+    }
+
+    async function downloadPdf() {
+      const btn = document.getElementById('btnDownloadPdf');
+      if (!btn || btn.disabled) return;
+
+      // 새 창에 완전히 독립된 HTML 문서로 렌더
+      const container = buildPdfContent();
+      const contentHtml = container.innerHTML;
+      const fileTitle = `초등월말_11회_${new Date().toISOString().slice(0,10)}`;
+
+      const win = window.open('', '_blank', 'width=900,height=1100,scrollbars=yes');
+      if (!win) {
+        alert('팝업이 차단되어 있습니다.\n브라우저 팝업 차단을 해제한 뒤 다시 시도해주세요.');
+        return;
+      }
+      const doc = win.document;
+      doc.open();
+      doc.write(`<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>${fileTitle}</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<scr` + `ipt src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></scr` + `ipt>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; width: 720px; }
+  body {
+    font-family: 'Pretendard', 'Nanum Myeongjo', -apple-system, sans-serif;
+    color: #111;
+  }
+  .pdf-doc {
+    width: 720px; margin: 0; padding: 0; background: #fff;
+    overflow: hidden;
+  }
+  #loading {
+    position: fixed; inset: 0; background: rgba(20,10,30,0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999999; color: #fff; font-size: 16px; font-weight: 700;
+    flex-direction: column; gap: 14px;
+  }
+  #loading .spinner {
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top-color: #f39c39;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="loading">
+  <div class="spinner"></div>
+  <div>PDF 생성 중...</div>
+  <div style="font-size:12px; opacity:0.7; font-weight:500;">잠시만 기다려주세요</div>
+</div>
+<div class="pdf-doc" id="pdfRoot">${contentHtml}</div>
+<scr` + `ipt>
+(function(){
+  var FILENAME = ${JSON.stringify(fileTitle + '.pdf')};
+  function generate(){
+    if (typeof html2pdf === 'undefined') {
+      alert('PDF 라이브러리 로드 실패');
+      return;
+    }
+    var el = document.getElementById('pdfRoot');
+    html2pdf().from(el).set({
+      margin: [10, 10, 10, 10],
+      filename: FILENAME,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: {
+        scale: 2, useCORS: true, backgroundColor: '#ffffff',
+        width: 720, windowWidth: 720,
+        x: 0, y: 0,
+        scrollX: 0, scrollY: 0
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+      pagebreak: { mode: ['css', 'legacy'] }
+    }).save().then(function(){
+      setTimeout(function(){ try { window.close(); } catch(e){} }, 400);
+    }).catch(function(err){
+      console.error(err);
+      document.getElementById('loading').innerHTML = '<div>PDF 생성 실패</div><div style="font-size:12px;opacity:0.7;">브라우저의 인쇄 → PDF 저장을 이용해주세요.</div>';
+    });
+  }
+  function waitLib(retries){
+    if (typeof html2pdf !== 'undefined') { generate(); return; }
+    if (retries <= 0) { alert('PDF 라이브러리를 불러오지 못했습니다.'); return; }
+    setTimeout(function(){ waitLib(retries - 1); }, 200);
+  }
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function(){ setTimeout(function(){ waitLib(30); }, 200); });
+  } else {
+    window.onload = function(){ setTimeout(function(){ waitLib(30); }, 400); };
+  }
+})();
+</scr` + `ipt>
+</body>
+</html>`);
+      doc.close();
+    }
+
+    function buildPdfContent() {
+      const wrap = document.createElement('div');
+      // 렌더 트리에서 정상 크기로 계산되도록 fixed 배치 + 시각적 감춤
+      wrap.style.cssText = [
+        'position: fixed',
+        'top: 0',
+        'left: 0',
+        'width: 820px',
+        'max-width: none',
+        'background: #ffffff',
+        'padding: 0',
+        'margin: 0',
+        'z-index: 999999',
+        'opacity: 0.01',
+        'pointer-events: none',
+        'font-family: "Pretendard", "Nanum Myeongjo", sans-serif',
+        'color: #111',
+        'box-sizing: border-box'
+      ].join(';');
+      const result = loadPreviousResult();
+      if (!result) {
+        wrap.innerHTML = '<div style="padding:40px;text-align:center;color:#c62828;font-size:20px;font-weight:800;">응시 결과를 찾을 수 없습니다.</div>';
+        return wrap;
+      }
+
+      const dur = result.durationSec;
+      const dMin = Math.floor(dur / 60), dSec = dur % 60;
+      const submitted = new Date(result.submittedAt);
+      const submittedStr = `${submitted.getFullYear()}.${String(submitted.getMonth()+1).padStart(2,'0')}.${String(submitted.getDate()).padStart(2,'0')} ${String(submitted.getHours()).padStart(2,'0')}:${String(submitted.getMinutes()).padStart(2,'0')}`;
+
+      // 지수별 점수·최대
+      const areaScore = result.areaScore || {};
+      const areaMax = result.areaMax || {};
+
+      // 문항별 정오 매핑
+      const answers = result.answers || [];
+      const answerKey = result.answerKey || [];
+
+      // 학생 정보
+      let studentGrade = '', studentName = '';
+      try {
+        const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+        studentGrade = cs.grade || '';
+        studentName = cs.name || '';
+      } catch(e) {}
+      const studentLine = (studentGrade || studentName)
+        ? `<div style="display:inline-flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; justify-content:center; align-items:center;">
+             ${studentGrade ? `<span style="background:linear-gradient(135deg,#7a3d00,#a34210); color:#fff; padding:3px 12px; font-size:12px; font-weight:800; border-radius:20px;">${studentGrade}</span>` : ''}
+             ${studentName ? `<span style="background:#fff; color:#d35a1a; padding:3px 12px; font-size:12px; font-weight:800; border-radius:20px; border:1.5px solid #d35a1a;">${studentName}</span>` : ''}
+           </div>`
+        : '';
+
+      // 헤더 + 요약
+      let html = `
+        <div style="text-align:center; padding: 24px 20px; border-bottom: 3px solid #d35a1a; margin-bottom: 24px;">
+          <div style="display:inline-block; background:#d35a1a; color:#fff; padding:4px 14px; font-size:11px; font-weight:800; letter-spacing:2px; border-radius:20px; margin-bottom:10px;">✦ BRAIN 월말 모의고사 결과</div>
+          <h1 style="font-size: 24px; font-weight: 900; margin: 0 0 8px;">초등 월말 11회차 · 국어 영역</h1>
+          ${studentLine}
+          <div style="font-size: 12px; color: #666;">응시일 ${submittedStr}  ·  소요 ${dMin}분 ${dSec}초  ·  총 35문항 · 100점</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0 20px; margin-bottom: 22px;">
+          ${pdfStat('총점', `${formatScore(result.totalScore)}<span style="font-size:12px;color:#999;">/100</span>`, '#d35a1a', '#fff3e8')}
+          ${pdfStat('정답', `${result.correctCount}<span style="font-size:12px;color:#999;">/${result.totalQuestions}</span>`, '#2e9c58', '#e6f6ec')}
+          ${pdfStat('정답률', `${Math.round(result.correctCount/result.totalQuestions*100)}<span style="font-size:12px;color:#999;">%</span>`, '#1a1a1a', '#f5f5f0')}
+          ${pdfStat('소요', `${dMin}<span style="font-size:12px;color:#999;">분 ${dSec}초</span>`, '#1a1a1a', '#f5f5f0')}
+        </div>
+      `;
+
+      // 5지수 레이더 + 막대
+      const radarSvg = buildPdfRadarSvg(areaScore, areaMax);
+      html += `
+        <div style="padding: 0 20px; margin-bottom: 24px; page-break-inside: avoid;">
+          <div style="font-size:13px; font-weight:800; color:#666; letter-spacing:0.5px; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-block; width:5px; height:16px; border-radius:2px; background: linear-gradient(180deg, #d35a1a, #f39c39);"></span>
+            문해력 5지수
+          </div>
+          <div style="display: grid; grid-template-columns: 240px 1fr; gap: 20px; align-items: center;">
+            <div style="display:flex; align-items:center; justify-content:center;">${radarSvg}</div>
+            <div>
+              ${Object.entries(EXAM.areas).map(([k, v]) => {
+                const max = (result.areaMax && result.areaMax[k]) || 0;
+                const got = areaScore[k] || 0;
+                const pct = max > 0 ? got / max * 100 : 0;
+                return `
+                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:12px;">
+                    <div style="width:52px; font-weight:800;">${v.label}</div>
+                    <div style="flex:1; height:9px; background:#e5d5c1; border-radius:5px; overflow:hidden;">
+                      <div style="height:100%; width:${pct}%; background:linear-gradient(90deg,#d35a1a,#f39c39);"></div>
+                    </div>
+                    <div style="width:60px; text-align:right; font-family:monospace; font-size:11px; font-weight:800;">${formatScore(got)}/${max}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      // 과목별 정답률 (레이더 + 막대)
+      const subjectRows = EXAM.passages.map(p => {
+        const correct = p.questions.filter(q => answers[q.no - 1] === q.answer).length;
+        const total = p.questions.length;
+        const pct = Math.round(correct/total*100);
+        return { subject: p.subject, correct, total, pct };
+      });
+      const subjectRadar = buildSubjectRadarSvg(subjectRows, { cx: 130, cy: 130, R: 90 });
+      html += `
+        <div style="padding: 0 20px; margin-bottom: 24px; page-break-inside: avoid;">
+          <div style="font-size:13px; font-weight:800; color:#666; letter-spacing:0.5px; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-block; width:5px; height:16px; border-radius:2px; background: linear-gradient(180deg, #d35a1a, #f39c39);"></span>
+            지문별 정답률
+          </div>
+          <div style="display: grid; grid-template-columns: 280px 1fr; gap: 16px; align-items: center; background:#fbf7f2; padding:14px 16px; border-radius:10px;">
+            <div style="display:flex; align-items:center; justify-content:center;">
+              <svg width="260" height="260" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">${subjectRadar}</svg>
+            </div>
+            <div>
+              ${subjectRows.map(r => {
+                const color = r.pct >= 75 ? '#2e9c58' : r.pct < 50 ? '#c62828' : '#d35a1a';
+                const bar = r.pct >= 75 ? 'linear-gradient(90deg,#2e9c58,#4bb572)' : r.pct < 50 ? 'linear-gradient(90deg,#c62828,#f26a6a)' : 'linear-gradient(90deg,#d35a1a,#f39c39)';
+                return `
+                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px; font-size:11px;">
+                    <div style="width:60px; font-weight:700;">${r.subject}</div>
+                    <div style="flex:1; height:6px; background:#e5d5c1; border-radius:4px; overflow:hidden;">
+                      <div style="height:100%; width:${r.pct}%; background:${bar};"></div>
+                    </div>
+                    <div style="width:70px; text-align:right; font-family:monospace; font-size:10.5px; font-weight:800; color:${color};">${r.pct}% (${r.correct}/${r.total})</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      html += `<div style="text-align:center; padding:12px 20px; font-size:10px; color:#999; border-top:1px solid #eee; margin-top:12px;">BRAIN 월말 모의고사 · 단단국어  ·  ${submittedStr}</div>`;
+
+      wrap.innerHTML = html;
+      return wrap;
+    }
+    function pdfStat(lbl, val, color, bg) {
+      return `
+        <div style="background:${bg}; padding:12px 8px; border-radius:8px; text-align:center;">
+          <div style="font-size:10px; color:#666; font-weight:700;">${lbl}</div>
+          <div style="font-size:24px; font-weight:900; color:${color}; margin-top:2px;">${val}</div>
+        </div>
+      `;
+    }
+    function buildPdfRadarSvg(areaScore, areaMax) {
+      const AREA_ORDER = ['literal','lexical','structural','inferential','critical'];
+      const AREA_LABEL = { literal:'사실적', lexical:'어휘적', structural:'구조적', inferential:'추론적', critical:'비판적' };
+      const cx = 115, cy = 115, R = 78;
+      const angles = AREA_ORDER.map((_, i) => -Math.PI / 2 + i * (2 * Math.PI / 5));
+      let bg = '';
+      for (let ring = 1; ring <= 4; ring++) {
+        const r = R * ring / 4;
+        const pts = angles.map(a => `${cx + Math.cos(a) * r},${cy + Math.sin(a) * r}`).join(' ');
+        bg += `<polygon points="${pts}" fill="${ring === 4 ? '#fff5eb' : 'none'}" stroke="#e5d5c1" stroke-width="1"/>`;
+      }
+      angles.forEach(a => {
+        bg += `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos(a) * R}" y2="${cy + Math.sin(a) * R}" stroke="#e5d5c1" stroke-width="1"/>`;
+      });
+      const labels = angles.map((a, i) => {
+        const lx = cx + Math.cos(a) * (R + 18);
+        const ly = cy + Math.sin(a) * (R + 18) + 4;
+        return `<text x="${lx}" y="${ly}" text-anchor="middle" font-size="11" font-weight="800" fill="#333">${AREA_LABEL[AREA_ORDER[i]]}</text>`;
+      }).join('');
+      const scorePts = angles.map((a, i) => {
+        const key = AREA_ORDER[i];
+        const got = areaScore[key] || 0;
+        const max = areaMax[key] || 1;
+        const ratio = Math.max(0, Math.min(1, got / max));
+        return `${cx + Math.cos(a) * R * ratio},${cy + Math.sin(a) * R * ratio}`;
+      }).join(' ');
+      const dots = angles.map((a, i) => {
+        const key = AREA_ORDER[i];
+        const got = areaScore[key] || 0;
+        const max = areaMax[key] || 1;
+        const ratio = Math.max(0, Math.min(1, got / max));
+        const x = cx + Math.cos(a) * R * ratio;
+        const y = cy + Math.sin(a) * R * ratio;
+        return `<circle cx="${x}" cy="${y}" r="4" fill="#d35a1a" stroke="#fff" stroke-width="2"/>`;
+      }).join('');
+      return `<svg width="230" height="230" viewBox="0 0 230 230" xmlns="http://www.w3.org/2000/svg">
+        ${bg}${labels}
+        <polygon points="${scorePts}" fill="rgba(211,90,26,0.35)" stroke="#d35a1a" stroke-width="2.5" stroke-linejoin="round"/>
+        ${dots}
+      </svg>`;
+    }
+
+    /* ========= 저장 (로컬 + 서버 동기화) ========= */
+    function saveResult(payload) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); }
+      catch(e) { console.error('저장 실패', e); }
+      // 서버 저장 (로그인 상태일 때만 · 실패해도 로컬은 유지)
+      try {
+        const examGrade = EXAM.examKey && EXAM.examKey.indexOf('mid') !== -1 ? 'mid' : 'elem';
+        fetch('/api/monthly-exam/result', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(Object.assign({}, payload, { examGrade, round: EXAM.round }))
+        }).catch(err => console.warn('[monthly-exam] 서버 저장 실패:', err));
+      } catch(e) { /* 무시 */ }
+    }
+    function loadPreviousResult() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch(e) { return null; }
+    }
+
+    /* ========= 시작 ========= */
+    function startExam() {
+      document.getElementById('startOverlay').style.display = 'none';
+      startTimer();
+      installExitGuard();
+    }
+
+    /* ========= 이탈 방지 (뒤로가기·새로고침) ========= */
+    let exitGuardActive = false;
+    let confirmingExit = false;
+    function beforeUnloadHandler(e) {
+      if (graded) return;
+      e.preventDefault();
+      e.returnValue = '';
+    }
+    function installExitGuard() {
+      if (exitGuardActive) return;
+      exitGuardActive = true;
+      history.pushState({ examGuard: true }, '', location.href);
+      window.addEventListener('popstate', handlePopstate);
+      window.addEventListener('beforeunload', beforeUnloadHandler);
+    }
+    function uninstallExitGuard() {
+      window.removeEventListener('popstate', handlePopstate);
+      window.removeEventListener('beforeunload', beforeUnloadHandler);
+      exitGuardActive = false;
+    }
+    async function handlePopstate() {
+      if (graded) { uninstallExitGuard(); location.href = '/monthly_exam_dashboard_elem.html'; return; }
+      if (confirmingExit) return;
+      confirmingExit = true;
+      const ok = await showConfirm({
+        title: '시험을 정말 중단하시겠습니까?',
+        message: '중단하면 모든 시험이 <b>초기화</b>됩니다.<br><span style="font-size:12px;color:#999;">응답한 문항·타이머·형광펜 표시가 모두 사라져요.</span>',
+        icon: '!', iconType: 'danger',
+        okText: '시험 중단', cancelText: '계속 응시'
+      });
+      confirmingExit = false;
+      if (ok) {
+        try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+        uninstallExitGuard();
+        location.href = '/monthly_exam_dashboard_elem.html';
+      } else {
+        history.pushState({ examGuard: true }, '', location.href);
+      }
+    }
+
+    function formatScore(n) {
+      const v = Number(n) || 0;
+      return v % 1 === 0 ? v.toFixed(0) : v.toFixed(1);
+    }
+
+    /* ========= 지문 전환 시 채점된 스타일도 반영 ========= */
+    const _origSwitch = switchPassage;
+    switchPassage = function(idx) {
+      _origSwitch(idx);
+      if (graded) {
+        const detailByQ = {};
+        EXAM.passages.forEach(p => {
+          p.questions.forEach(q => {
+            detailByQ[q.no] = { user: userAnswers[q.no], answer: q.answer, isCorrect: userAnswers[q.no] === q.answer };
+          });
+        });
+        applyGradedStyles(detailByQ);
+      }
+    };
+
+    /* ========= 초기화 ========= */
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!EXAM) { alert('시험 데이터 로드 실패'); return; }
+      renderNav();
+      renderPassage();
+      renderQuestions();
+      initFontTools();
+      initPenTools();
+      updateProgress();
+
+      // OMR 드로어 이벤트
+      document.getElementById('bottomProgress').addEventListener('click', toggleOmrDrawer);
+      document.getElementById('btnOmr').addEventListener('click', toggleOmrDrawer);
+      document.getElementById('omrBackdrop').addEventListener('click', closeOmrDrawer);
+      document.getElementById('omrDrawerClose').addEventListener('click', closeOmrDrawer);
+      // 상단 채점 버튼
+      document.getElementById('btnGradeTop').addEventListener('click', () => gradeExam());
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.body.classList.contains('omr-open')) closeOmrDrawer();
+      });
+
+      // 이전 결과 복원
+      const prev = loadPreviousResult();
+
+      // 🔥 대시보드에서 ?pdf=1 로 열면 현재 탭에서 직접 PDF 생성 (팝업 없이)
+      try {
+        const __up = new URLSearchParams(location.search);
+        if (__up.get('pdf') === '1' && prev && Array.isArray(prev.answers)) {
+          runInlinePdf(prev);
+          return;
+        }
+      } catch(e) { /* URLSearchParams 미지원 등 무시 */ }
+
+      if (prev && Array.isArray(prev.answers)) {
+        showConfirm({
+          title: '이전 응시 기록이 있어요',
+          message: `이전 회차 결과를 이어서 볼까요?<br><span style="font-size:12px;color:#999;">취소하면 기록을 지우고 새로 응시합니다.</span>`,
+          icon: '↺', iconType: 'info',
+          okText: '결과 이어서 보기', cancelText: '새로 응시',
+          okSuccess: true
+        }).then(ok => {
+          if (ok) {
+            prev.answers.forEach((a, idx) => userAnswers[idx+1] = a);
+            document.getElementById('startOverlay').style.display = 'none';
+            startedAt = new Date(prev.submittedAt).getTime() - (prev.durationSec * 1000);
+            updateProgress();
+            renderQuestions();
+            gradeExam(true);
+          } else {
+            localStorage.removeItem(STORAGE_KEY);
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

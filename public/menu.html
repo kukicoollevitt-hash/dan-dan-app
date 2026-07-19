@@ -7652,6 +7652,7 @@ canvas[id^="confetti-canvas"] {
         <li class="series-item daily-special" data-series="BRAINCRITIQUE"><span>BRAIN비평</span><span class="meta">시사문해</span></li>
         <li class="series-item summer-special kh-coming-soon" data-series="BRAINKORHIST"><span>BRAIN한국사</span><span class="meta">역사특강</span></li>
         <li class="series-item" data-series="BRAINM" style="display:none;"><span>BRAIN실전</span><span class="meta">모의고사</span></li>
+        <li class="series-item" data-series="BRAINMONTHLY" style="display:none;"><span>BRAIN월말</span><span class="meta">월말고사</span></li>
         <li class="series-item" data-series="BRAINNAESIN" style="display:none;"><span>📝 BRAIN내신</span><span class="meta">내신대비</span></li>
         <li class="series-item" data-series="BRAINSUNEUNG" style="display:none;"><span>🎯 BRAIN수능</span><span class="meta">수능대비</span></li>
       </ul>
@@ -8584,6 +8585,7 @@ canvas[id^="confetti-canvas"] {
       BRAINNAESIN: { name: "BRAIN내신", desc: "내신대비" },
       BRAINSUNEUNG: { name: "BRAIN수능", desc: "수능대비" },
       BRAINM: { name: "BRAIN실전", desc: "수능모고" },
+      BRAINMONTHLY: { name: "BRAIN월말", desc: "월말고사" },
       BRAINKORHIST: { name: "BRAIN한국사", desc: "역사특강" }
     };
 
@@ -11347,38 +11349,17 @@ if (logoutConfirmBtn) {
           return;
         }
 
-        // BRAINM(수능모고) 클릭 시 모의고사 대시보드로 이동
+        // BRAINM(수능모고) 클릭 시 인트로 영상 팝업 → "시험장이동" 버튼으로 모의고사 대시보드 진입
         if (series === 'BRAINM') {
-          try {
-            // 현재 화면이 보여주는 학생(localStorage.currentStudent 또는 URL 파라미터)
-            // 을 서버에 함께 전달 → 세션과 대조해 정확한 학생으로 모고 진입
-            let viewAsGrade = '', viewAsName = '';
-            try {
-              const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
-              if (cs.grade && cs.name) { viewAsGrade = cs.grade; viewAsName = cs.name; }
-            } catch {}
-            const res = await fetch('/api/mock-exam/auto-login', {
-              method: 'POST',
-              credentials: 'include',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ viewAsGrade, viewAsName })
-            });
-            const data = await res.json();
-            if (data.ok) {
-              // 모의고사 사용자 정보를 localStorage에 저장
-              localStorage.setItem('mockExamUser', JSON.stringify(data.user));
-              window.location.href = '/mock_exam_dashboard.html';
-            } else if (res.status === 403) {
-              alert(data.message || '권한이 없습니다.');
-            } else if (res.status === 401) {
-              alert(data.message || '브레인 문해력에 먼저 로그인해주세요.');
-            } else {
-              alert(data.message || '모의고사 연동에 실패했습니다. 다시 로그인해주세요.');
-            }
-          } catch (err) {
-            console.error('모의고사 자동 로그인 오류:', err);
-            alert('모의고사 연동 중 오류가 발생했습니다.');
+          if (typeof window.showBrainMockExamSeriesPopup === 'function') {
+            window.showBrainMockExamSeriesPopup();
           }
+          return;
+        }
+
+        // BRAIN월말(BRAINMONTHLY) — 학년 선택 팝업 → 초/중/고 대시보드로 이동
+        if (series === 'BRAINMONTHLY') {
+          window.showBrainMonthlyGradePicker();
           return;
         }
 
@@ -13745,6 +13726,19 @@ async function performLogout() {
             } catch {}
             li.style.display = isMockTester ? '' : 'none';
             if (isMockTester) li.classList.remove("disabled");
+            return;
+          }
+
+          // 🗓 BRAIN월말(BRAINMONTHLY) — 파일럿, 테스트 학생(초3 김윤슬)에게만 노출
+          if (seriesId === 'BRAINMONTHLY') {
+            const MONTHLY_TESTERS = [{ grade: '초3', name: '김윤슬' }];
+            let isMonthlyTester = false;
+            try {
+              const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+              isMonthlyTester = MONTHLY_TESTERS.some(t => t.grade === cs.grade && t.name === cs.name);
+            } catch {}
+            li.style.display = isMonthlyTester ? '' : 'none';
+            if (isMonthlyTester) li.classList.remove("disabled");
             return;
           }
 
@@ -41087,6 +41081,355 @@ ${content}
         document.addEventListener('keydown', escHandler);
       }
       window.showBraincritiqueSeriesPopup = showBraincritiqueSeriesPopup;
+
+      // 🎯 BRAIN 실전 (BRAINM · 수능모고) 인트로 영상 팝업 — "시험장이동" 클릭 시 자동 로그인 후 모의고사 대시보드 진입
+      function showBrainMockExamSeriesPopup() {
+        const existing = document.getElementById('mockIntroOverlay');
+        if (existing) existing.remove();
+
+        // === 오버레이 ===
+        const overlay = document.createElement('div');
+        overlay.id = 'mockIntroOverlay';
+        overlay.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
+          z-index: 10005; backdrop-filter: blur(6px);
+        `;
+
+        // 영상 크기에 맞춰 팝업 사이즈 자동 조절
+        const box = document.createElement('div');
+        box.style.cssText = `
+          position: relative;
+          display: inline-block;
+          background: #000;
+          border: 2px solid #1e40af;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+          animation: mockIntroPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          line-height: 0;
+        `;
+
+        const styleTag = document.createElement('style');
+        styleTag.textContent = `@keyframes mockIntroPop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }`;
+        box.appendChild(styleTag);
+
+        // 닫기 (영상 우상단 오버레이)
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.title = '닫기';
+        closeBtn.style.cssText = `
+          position: absolute; top: 10px; right: 12px; z-index: 3;
+          width: 36px; height: 36px; border-radius: 50%;
+          background: rgba(0,0,0,0.55); color: #fff; border: none;
+          font-size: 22px; font-weight: 700; cursor: pointer; line-height: 1;
+          backdrop-filter: blur(6px);
+        `;
+        closeBtn.onclick = () => overlay.remove();
+
+        // 영상 (자동재생 + 무한반복 + 음소거)
+        const video = document.createElement('video');
+        video.src = '/images/100day/브레인모의고사.mp4';
+        video.autoplay = true;
+        video.loop = true;
+        video.muted = true;
+        video.setAttribute('playsinline', '');
+        video.style.cssText = `
+          display: block;
+          max-width: 90vw; max-height: 86vh;
+          height: auto; width: auto;
+          background: #000;
+        `;
+
+        // 하단 액션 영역
+        const actions = document.createElement('div');
+        actions.style.cssText = `
+          position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+          padding: 18px 16px 16px;
+          display: flex; gap: 10px; justify-content: center; align-items: center;
+          flex-wrap: wrap; line-height: 1.2;
+          background: linear-gradient(0deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 100%);
+        `;
+
+        // 🎯 시험장이동 버튼
+        const enterBtn = document.createElement('button');
+        enterBtn.innerHTML = '🎯 시험장이동';
+        enterBtn.style.cssText = `
+          padding: 14px 32px;
+          background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+          color: white; border: none; border-radius: 14px;
+          font-size: 16px; font-weight: 800; cursor: pointer;
+          box-shadow: 0 6px 16px rgba(30,64,175,0.4);
+          transition: transform 0.15s ease;
+          letter-spacing: 0.3px;
+        `;
+        enterBtn.onmouseover = () => enterBtn.style.transform = 'translateY(-2px)';
+        enterBtn.onmouseout = () => enterBtn.style.transform = '';
+        enterBtn.onclick = async () => {
+          try { video.pause(); } catch {}
+          enterBtn.disabled = true;
+          enterBtn.innerHTML = '⏳ 이동 중...';
+          try {
+            let viewAsGrade = '', viewAsName = '';
+            try {
+              const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+              if (cs.grade && cs.name) { viewAsGrade = cs.grade; viewAsName = cs.name; }
+            } catch {}
+            const res = await fetch('/api/mock-exam/auto-login', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ viewAsGrade, viewAsName })
+            });
+            const data = await res.json();
+            if (data.ok) {
+              localStorage.setItem('mockExamUser', JSON.stringify(data.user));
+              window.location.href = '/mock_exam_dashboard.html';
+            } else if (res.status === 403) {
+              alert(data.message || '권한이 없습니다.');
+              overlay.remove();
+            } else if (res.status === 401) {
+              alert(data.message || '브레인 문해력에 먼저 로그인해주세요.');
+              overlay.remove();
+            } else {
+              alert(data.message || '모의고사 연동에 실패했습니다. 다시 로그인해주세요.');
+              overlay.remove();
+            }
+          } catch (err) {
+            console.error('모의고사 자동 로그인 오류:', err);
+            alert('모의고사 연동 중 오류가 발생했습니다.');
+            overlay.remove();
+          }
+        };
+        actions.appendChild(enterBtn);
+
+        box.appendChild(closeBtn);
+        box.appendChild(video);
+        box.appendChild(actions);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        // 배경 클릭으로 닫기
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) {
+            try { video.pause(); } catch {}
+            overlay.remove();
+          }
+        });
+        // ESC 닫기
+        const escHandler = (e) => {
+          if (e.key === 'Escape') {
+            try { video.pause(); } catch {}
+            overlay.remove();
+            document.removeEventListener('keydown', escHandler);
+          }
+        };
+        document.addEventListener('keydown', escHandler);
+      }
+      window.showBrainMockExamSeriesPopup = showBrainMockExamSeriesPopup;
+
+      // ─── 🗓 BRAIN월말 학년 선택 팝업 (초3 김윤슬 파일럿) ───
+      function showBrainMonthlyGradePicker() {
+        const existing = document.getElementById('brainMonthlyPickerOverlay');
+        if (existing) { existing.remove(); }
+
+        // 스타일 (한 번만 주입)
+        if (!document.getElementById('brainMonthlyPickerStyle')) {
+          const styleTag = document.createElement('style');
+          styleTag.id = 'brainMonthlyPickerStyle';
+          styleTag.textContent = `
+            #brainMonthlyPickerOverlay {
+              position: fixed; inset: 0; z-index: 99999;
+              background: radial-gradient(ellipse at center, rgba(30,20,50,0.85) 0%, rgba(0,0,0,0.92) 100%);
+              display: flex; align-items: center; justify-content: center;
+              animation: bmpFadeIn 0.25s ease-out;
+              font-family: 'Pretendard', -apple-system, sans-serif;
+              padding: 20px;
+            }
+            @keyframes bmpFadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes bmpPop { from { transform: translateY(20px) scale(0.96); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+            @keyframes bmpFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+            .bmp-modal {
+              background: linear-gradient(180deg, #ffffff 0%, #fbf7f2 100%);
+              border-radius: 24px;
+              padding: 38px 40px 32px;
+              max-width: 760px; width: 100%;
+              box-shadow: 0 30px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1) inset;
+              text-align: center; position: relative;
+              animation: bmpPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            .bmp-badge {
+              display: inline-flex; align-items: center; gap: 6px;
+              background: linear-gradient(135deg, #d35a1a, #f39c39);
+              color: #fff; padding: 6px 14px; font-size: 11px; font-weight: 800;
+              letter-spacing: 2px; border-radius: 20px; margin-bottom: 14px;
+              box-shadow: 0 4px 12px rgba(211,90,26,0.35);
+            }
+            .bmp-title {
+              font-size: 28px; font-weight: 800; margin-bottom: 8px;
+              background: linear-gradient(135deg, #1a1a1a, #4a2c1a);
+              -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+              background-clip: text; letter-spacing: -0.5px;
+            }
+            .bmp-sub {
+              color: #888; font-size: 14px; margin-bottom: 28px; font-weight: 500;
+            }
+            .bmp-grade-list {
+              display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+              margin-bottom: 22px;
+            }
+            @media (max-width: 720px) {
+              .bmp-grade-list { grid-template-columns: 1fr; }
+            }
+            .bmp-card {
+              position: relative; overflow: hidden;
+              background: #fff; border: 2px solid #eee;
+              border-radius: 18px; padding: 22px 18px 20px;
+              cursor: pointer; text-align: center;
+              transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+              font-family: inherit;
+            }
+            .bmp-card::before {
+              content: ""; position: absolute; top: -60%; left: -60%;
+              width: 220%; height: 220%; opacity: 0;
+              background: radial-gradient(circle, var(--card-glow, rgba(211,90,26,0.15)) 0%, transparent 60%);
+              transition: opacity 0.3s; pointer-events: none;
+            }
+            .bmp-card:hover::before { opacity: 1; }
+            .bmp-card:hover {
+              transform: translateY(-6px); border-color: var(--card-color);
+              box-shadow: 0 16px 40px rgba(0,0,0,0.15);
+            }
+            .bmp-card-icon {
+              font-size: 42px; line-height: 1; margin-bottom: 10px;
+              display: inline-block;
+              animation: bmpFloat 3s ease-in-out infinite;
+            }
+            .bmp-card-name {
+              font-size: 16px; font-weight: 800; color: #1a1a1a; margin-bottom: 4px;
+              white-space: nowrap;
+            }
+            .bmp-card-tag {
+              display: inline-block; font-size: 11px; font-weight: 700;
+              padding: 3px 10px; border-radius: 12px; letter-spacing: 0.3px;
+              margin-bottom: 12px;
+            }
+            .bmp-card-meta {
+              display: flex; justify-content: center; gap: 10px;
+              font-size: 12px; color: #666; font-weight: 600;
+            }
+            .bmp-card-meta span {
+              display: inline-flex; align-items: center; gap: 3px;
+            }
+            .bmp-card.elem {
+              --card-color: #2e9c58; --card-glow: rgba(46,156,88,0.18);
+              background: linear-gradient(180deg, #fff 0%, #f0f9f2 100%);
+            }
+            .bmp-card.elem .bmp-card-tag { background: #d7f0dc; color: #1e6b3d; }
+            .bmp-card.mid {
+              --card-color: #d35a1a; --card-glow: rgba(211,90,26,0.2);
+              background: linear-gradient(180deg, #fff 0%, #fff3e8 100%);
+              border-color: #f4d0a8;
+            }
+            .bmp-card.mid .bmp-card-tag { background: #ffe4c8; color: #a34210; }
+            .bmp-card.high {
+              --card-color: #1e40af; --card-glow: rgba(30,64,175,0.2);
+              background: linear-gradient(180deg, #fff 0%, #eef2ff 100%);
+              border-color: #c7d2fe;
+            }
+            .bmp-card.high::after {
+              content: "브레인실전"; position: absolute; top: 10px; right: 10px;
+              background: linear-gradient(135deg, #1e40af, #4f6ef5); color: #fff;
+              font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 10px;
+              letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(30,64,175,0.4);
+            }
+            .bmp-card.high .bmp-card-tag { background: #dbe4ff; color: #1e40af; }
+            .bmp-close {
+              background: none; border: none; color: #999;
+              font-size: 13px; cursor: pointer; padding: 6px 14px;
+              border-radius: 8px; transition: all 0.15s;
+              font-family: inherit; font-weight: 600;
+            }
+            .bmp-close:hover { background: #f5f5f5; color: #333; }
+            .bmp-x {
+              position: absolute; top: 18px; right: 18px;
+              width: 32px; height: 32px; border-radius: 50%;
+              background: #f5f5f5; border: none; cursor: pointer;
+              display: inline-flex; align-items: center; justify-content: center;
+              color: #666; font-size: 16px; transition: all 0.15s;
+            }
+            .bmp-x:hover { background: #e5e5e5; color: #111; transform: rotate(90deg); }
+          `;
+          document.head.appendChild(styleTag);
+        }
+
+        const overlay = document.createElement('div');
+        overlay.id = 'brainMonthlyPickerOverlay';
+        overlay.innerHTML = `
+          <div class="bmp-modal" role="dialog" aria-labelledby="bmpTitle">
+            <button class="bmp-x" id="bmpX" aria-label="닫기">✕</button>
+            <div class="bmp-badge">✦ BRAIN 월말</div>
+            <h2 class="bmp-title" id="bmpTitle">브레인 월말 모의고사</h2>
+            <p class="bmp-sub">응시할 학년을 선택하세요</p>
+            <div class="bmp-grade-list">
+              <button class="bmp-card elem" data-grade="elem">
+                <div class="bmp-card-icon">🌱</div>
+                <div class="bmp-card-name">초등 문해모의고사</div>
+                <div class="bmp-card-tag">초 5~6학년</div>
+                <div class="bmp-card-meta">
+                  <span>📝 35문항</span>
+                  <span>⏱ 30분</span>
+                </div>
+              </button>
+              <button class="bmp-card mid" data-grade="mid">
+                <div class="bmp-card-icon">🎯</div>
+                <div class="bmp-card-name">중등 문해모의고사</div>
+                <div class="bmp-card-tag">중 1~3학년</div>
+                <div class="bmp-card-meta">
+                  <span>📝 40문항</span>
+                  <span>⏱ 35분</span>
+                </div>
+              </button>
+              <button class="bmp-card high" data-grade="high">
+                <div class="bmp-card-icon">🎓</div>
+                <div class="bmp-card-name">고등 실전모의고사</div>
+                <div class="bmp-card-tag">고 1~3학년</div>
+                <div class="bmp-card-meta">
+                  <span>📝 수능형</span>
+                  <span>⏱ 80분</span>
+                </div>
+              </button>
+            </div>
+            <button class="bmp-close" id="brainMonthlyPickerClose">닫기</button>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+
+        overlay.querySelectorAll('.bmp-card').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const grade = btn.dataset.grade;
+            if (grade === 'mid') {
+              location.href = '/monthly_exam_dashboard_mid.html';
+            } else if (grade === 'elem') {
+              location.href = '/monthly_exam_dashboard_elem.html';
+            } else if (grade === 'high') {
+              overlay.remove();
+              if (typeof window.showBrainMockExamSeriesPopup === 'function') {
+                window.showBrainMockExamSeriesPopup();
+              } else {
+                alert('브레인실전 팝업을 불러올 수 없습니다.');
+              }
+            }
+          });
+        });
+        const close = () => overlay.remove();
+        document.getElementById('brainMonthlyPickerClose').addEventListener('click', close);
+        document.getElementById('bmpX').addEventListener('click', close);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+        const esc = (e) => { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); } };
+        document.addEventListener('keydown', esc);
+      }
+      window.showBrainMonthlyGradePicker = showBrainMonthlyGradePicker;
 
       const KH_OPEN_KEY = 'khModalOpen';
 

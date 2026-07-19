@@ -1303,6 +1303,31 @@ const monthlyStudentSnapshotSchema = new mongoose.Schema({
 monthlyStudentSnapshotSchema.index({ academyName: 1, yearMonth: 1 }, { unique: true });
 const MonthlyStudentSnapshot = mongoose.model("MonthlyStudentSnapshot", monthlyStudentSnapshotSchema);
 
+// ===== 브레인 월말 모의고사 결과 (초등·중등, 회차별) =====
+const monthlyExamResultSchema = new mongoose.Schema({
+  userId:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  studentName:  { type: String, required: true, index: true }, // 검색/조회용
+  grade:        { type: String, required: true },              // 학생 학년(예: '초3','중2')
+  academyName:  { type: String, default: '', index: true },    // 소속 학원 (있으면)
+  examGrade:    { type: String, enum: ['elem','mid'], required: true, index: true },
+  round:        { type: Number, min: 1, max: 12, required: true, index: true },
+  examKey:      { type: String, required: true }, // 예: 'monthly_elem_1'
+  totalScore:   { type: Number, default: 0 },
+  correctCount: { type: Number, default: 0 },
+  totalQuestions:{ type: Number, default: 0 },
+  areaScore:    { type: mongoose.Schema.Types.Mixed, default: {} },
+  areaMax:      { type: mongoose.Schema.Types.Mixed, default: {} },
+  subjectScores:{ type: [mongoose.Schema.Types.Mixed], default: [] },
+  answers:      { type: [mongoose.Schema.Types.Mixed], default: [] },
+  answerKey:    { type: [Number], default: [] },
+  durationSec:  { type: Number, default: 0 },
+  submittedAt:  { type: Date, default: Date.now, index: true },
+  updatedAt:    { type: Date, default: Date.now },
+}, { minimize: false });
+// 같은 사용자·같은 회차의 결과는 최신 하나만 유지
+monthlyExamResultSchema.index({ userId: 1, examGrade: 1, round: 1 }, { unique: true });
+const MonthlyExamResult = mongoose.model('MonthlyExamResult', monthlyExamResultSchema);
+
 // ===== 학습 행동 데이터 스키마 (본문학습 오답 추적) =====
 const learningBehaviorSchema = new mongoose.Schema({
   grade: String,
@@ -27419,6 +27444,120 @@ app.get("/api/session", (req, res) => {
     return res.json({ ok: true, user: req.session.user });
   } else {
     return res.json({ ok: false, user: null });
+  }
+});
+
+/* ============================================================
+   📝 브레인 월말 모의고사 결과 API
+   - 저장/조회는 로그인한 학생 본인 데이터로 제한
+   - 회차별 결과는 최신본이 이전 결과를 덮어씀 (재응시 시)
+   - GET: 대시보드/해설 페이지에서 결과 로드
+   - 학원 관리자용 조회는 별도 엔드포인트로 추가 예정
+   ============================================================ */
+function _requireStudentSession(req, res) {
+  if (!(req.session && req.session.user && req.session.user._id)) {
+    res.status(401).json({ ok: false, error: 'login_required' });
+    return null;
+  }
+  return req.session.user;
+}
+function _validExamGrade(g) { return g === 'elem' || g === 'mid'; }
+function _validRound(r) { return Number.isInteger(r) && r >= 1 && r <= 12; }
+
+// 결과 저장/덮어쓰기 (upsert)
+app.post("/api/monthly-exam/result", async (req, res) => {
+  try {
+    const user = _requireStudentSession(req, res);
+    if (!user) return;
+    const b = req.body || {};
+    const examGrade = String(b.examGrade || '').trim();
+    const round = parseInt(b.round, 10);
+    if (!_validExamGrade(examGrade)) return res.status(400).json({ ok: false, error: 'bad_examGrade' });
+    if (!_validRound(round))          return res.status(400).json({ ok: false, error: 'bad_round' });
+
+    // 화이트리스트 필드만 저장 (임의 필드 유입 차단)
+    const payload = {
+      userId: user._id,
+      studentName: user.name || '',
+      grade: user.grade || '',
+      academyName: user.academyName || user.school || '',
+      examGrade,
+      round,
+      examKey: String(b.examKey || `monthly_${examGrade}_${round}`),
+      totalScore:     Number.isFinite(+b.totalScore) ? +b.totalScore : 0,
+      correctCount:   Number.isFinite(+b.correctCount) ? +b.correctCount : 0,
+      totalQuestions: Number.isFinite(+b.totalQuestions) ? +b.totalQuestions : 0,
+      areaScore:      (b.areaScore && typeof b.areaScore === 'object') ? b.areaScore : {},
+      areaMax:        (b.areaMax   && typeof b.areaMax   === 'object') ? b.areaMax   : {},
+      subjectScores:  Array.isArray(b.subjectScores) ? b.subjectScores : [],
+      answers:        Array.isArray(b.answers) ? b.answers : [],
+      answerKey:      Array.isArray(b.answerKey) ? b.answerKey.map(x => Number(x) || null) : [],
+      durationSec:    Math.max(0, parseInt(b.durationSec, 10) || 0),
+      submittedAt:    b.submittedAt ? new Date(b.submittedAt) : new Date(),
+      updatedAt:      new Date(),
+    };
+    // 재응시 → 최신본으로 덮어쓰기
+    const doc = await MonthlyExamResult.findOneAndUpdate(
+      { userId: user._id, examGrade, round },
+      { $set: payload },
+      { upsert: true, new: true }
+    );
+    return res.json({ ok: true, id: String(doc._id) });
+  } catch (err) {
+    console.error('[POST /api/monthly-exam/result]', err);
+    return res.status(500).json({ ok: false, error: 'server_error' });
+  }
+});
+
+// 본인 결과 전체 조회 (대시보드용)
+app.get("/api/monthly-exam/results", async (req, res) => {
+  try {
+    const user = _requireStudentSession(req, res);
+    if (!user) return;
+    const examGrade = String(req.query.examGrade || '').trim();
+    const filter = { userId: user._id };
+    if (_validExamGrade(examGrade)) filter.examGrade = examGrade;
+    const rows = await MonthlyExamResult.find(filter)
+      .sort({ examGrade: 1, round: 1 })
+      .lean();
+    return res.json({ ok: true, results: rows });
+  } catch (err) {
+    console.error('[GET /api/monthly-exam/results]', err);
+    return res.status(500).json({ ok: false, error: 'server_error' });
+  }
+});
+
+// 본인 결과 회차 단건 조회 (해설/재응시용)
+app.get("/api/monthly-exam/result", async (req, res) => {
+  try {
+    const user = _requireStudentSession(req, res);
+    if (!user) return;
+    const examGrade = String(req.query.examGrade || '').trim();
+    const round = parseInt(req.query.round, 10);
+    if (!_validExamGrade(examGrade)) return res.status(400).json({ ok: false, error: 'bad_examGrade' });
+    if (!_validRound(round))          return res.status(400).json({ ok: false, error: 'bad_round' });
+    const row = await MonthlyExamResult.findOne({ userId: user._id, examGrade, round }).lean();
+    return res.json({ ok: true, result: row || null });
+  } catch (err) {
+    console.error('[GET /api/monthly-exam/result]', err);
+    return res.status(500).json({ ok: false, error: 'server_error' });
+  }
+});
+
+// 본인 결과 삭제 (재응시 전에 이전 기록 지우기 옵션)
+app.delete("/api/monthly-exam/result", async (req, res) => {
+  try {
+    const user = _requireStudentSession(req, res);
+    if (!user) return;
+    const examGrade = String(req.query.examGrade || req.body?.examGrade || '').trim();
+    const round = parseInt(req.query.round || req.body?.round, 10);
+    if (!_validExamGrade(examGrade)) return res.status(400).json({ ok: false, error: 'bad_examGrade' });
+    if (!_validRound(round))          return res.status(400).json({ ok: false, error: 'bad_round' });
+    await MonthlyExamResult.deleteOne({ userId: user._id, examGrade, round });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[DELETE /api/monthly-exam/result]', err);
+    return res.status(500).json({ ok: false, error: 'server_error' });
   }
 });
 

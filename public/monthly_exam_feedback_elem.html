@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>브레인 월말 · 초등 해설·피드백</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Pretendard:wght@400;600;700;800&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Pretendard', 'Nanum Myeongjo', sans-serif;
+      background: #f4f4f0; color: #111; min-height: 100vh; padding: 20px; padding-bottom: 60px;
+      line-height: 1.7;
+    }
+    .wrap { max-width: 1080px; margin: 0 auto; }
+
+    header {
+      background: #fff; border: 2px solid #111;
+      padding: 20px 26px; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 3px 4px 0 #111; flex-wrap: wrap; gap: 12px;
+    }
+    .brand { display: flex; flex-direction: column; gap: 4px; }
+    .badge { background: #d35a1a; color:#fff; padding: 3px 12px; font-size: 12px; font-weight: 700; border-radius: 2px; letter-spacing: 1px; width: fit-content; }
+    .brand h1 { font-size: 22px; font-weight: 800; }
+    .brand p { color: #666; font-size: 13px; }
+    .toolbar { display: flex; gap: 8px; align-items: center; }
+    .toolbar select {
+      background: #fff; border: 1.5px solid #111; padding: 8px 14px;
+      font-size: 13px; font-weight: 700; cursor: pointer; border-radius: 4px;
+      font-family: inherit;
+    }
+    .nav-btn {
+      background: #fff; border: 1.5px solid #111; padding: 8px 14px;
+      font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none;
+      color: #111; border-radius: 4px;
+    }
+    .nav-btn:hover { background: #111; color: #fff; }
+    .nav-btn.primary { background: #d35a1a; color: #fff; border-color: #d35a1a; }
+
+    /* 요약 카드 */
+    .summary-card {
+      background: #fff; border: 2px solid #111; padding: 20px 24px; margin-bottom: 20px;
+      box-shadow: 3px 4px 0 #111;
+      display: grid; grid-template-columns: 180px 1fr; gap: 20px;
+    }
+    @media (max-width: 700px) { .summary-card { grid-template-columns: 1fr; } }
+    .summary-score { text-align: center; padding: 10px 0; border-right: 1px dashed #ccc; }
+    @media (max-width: 700px) { .summary-score { border-right: none; border-bottom: 1px dashed #ccc; padding-bottom: 16px; } }
+    .summary-score .val { font-size: 40px; font-weight: 800; color: #d35a1a; }
+    .summary-score .val small { font-size: 14px; color: #888; }
+    .summary-score .lbl { font-size: 13px; color: #666; }
+    .summary-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 20px; align-content: center; font-size: 13px; }
+    .summary-details b { color: #d35a1a; }
+
+    .no-result {
+      background: #fff8e1; border: 1px dashed #d35a1a; padding: 30px;
+      text-align: center; color: #a34210; border-radius: 6px; margin-bottom: 20px;
+    }
+    .no-result h3 { margin-bottom: 6px; }
+    .no-result a { color: #d35a1a; font-weight: 700; text-decoration: underline; }
+
+    /* 필터 탭 */
+    .filter-tabs {
+      display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .filter-tab {
+      background: #fff; border: 1.5px solid #111; padding: 6px 14px;
+      font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 20px;
+    }
+    .filter-tab.active { background: #d35a1a; color: #fff; border-color: #d35a1a; }
+
+    /* 지문/문항 */
+    .passage-block {
+      background: #fff; border: 2px solid #111; margin-bottom: 20px;
+      box-shadow: 3px 4px 0 #111;
+    }
+    .passage-header {
+      background: #111; color: #fff; padding: 12px 20px; font-weight: 700;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .passage-header .p-badge {
+      background: #d35a1a; padding: 3px 10px; font-size: 11px; letter-spacing: 1px;
+    }
+    .passage-body { padding: 18px 22px; background: #fafafa; }
+    .passage-title { font-size: 17px; font-weight: 800; margin-bottom: 10px; }
+    .passage-text p { text-indent: 1em; margin-bottom: 10px; font-size: 14px; line-height: 1.8; }
+    .passage-text b { color: #d35a1a; }
+    .passage-toggle {
+      background: none; border: none; color: #d35a1a; font-weight: 700; font-size: 12px;
+      cursor: pointer; margin-top: 8px;
+    }
+    .passage-body.collapsed .passage-text,
+    .passage-body.collapsed .passage-title { display: none; }
+
+    .questions-block { padding: 6px 22px 20px; }
+    .q-item {
+      border-top: 1px dashed #ddd; padding: 16px 0;
+    }
+    .q-item:first-child { border-top: none; }
+    .q-item.hidden { display: none; }
+    .q-head {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;
+    }
+    .q-no { background: #111; color: #fff; padding: 3px 9px; font-weight: 700; font-size: 12px; border-radius: 3px; }
+    .q-area { background: #f4e6d6; color: #7a3d00; padding: 2px 8px; font-size: 11px; border-radius: 2px; font-weight: 700; }
+    .q-score { color: #888; font-size: 12px; font-weight: 600; }
+    .q-verdict { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 3px; }
+    .q-verdict.o { background: #e8f6ec; color: #2e7d32; }
+    .q-verdict.x { background: #fdecea; color: #c62828; }
+    .q-verdict.skip { background: #eee; color: #666; }
+    .q-text { font-size: 14.5px; font-weight: 500; margin-bottom: 8px; line-height: 1.7; }
+    .q-text b { color: #c62828; }
+
+    .options { list-style: none; display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+    .opt {
+      display: flex; gap: 8px; padding: 6px 10px;
+      background: #fafafa; border: 1px solid #eee; border-radius: 4px;
+      font-size: 13.5px; line-height: 1.6;
+    }
+    .opt.correct { background: #e8f6ec; border-color: #2e7d32; }
+    .opt.user { background: #fff3e8; border-color: #d35a1a; }
+    .opt.wrong-user { background: #fdecea; border-color: #c62828; }
+    .opt-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #999;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .opt.correct .opt-num { background: #2e7d32; color:#fff; border-color: #2e7d32; }
+    .opt.user .opt-num { background: #d35a1a; color:#fff; border-color: #d35a1a; }
+    .opt.wrong-user .opt-num { background: #c62828; color:#fff; border-color: #c62828; }
+    .opt-tag {
+      font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 2px;
+      align-self: center;
+    }
+    .opt-tag.correct { background: #2e7d32; color: #fff; }
+    .opt-tag.user { background: #d35a1a; color: #fff; }
+
+    .explain {
+      background: #f5f7fa; border-left: 4px solid #d35a1a; padding: 10px 14px;
+      font-size: 13px; line-height: 1.75; margin-top: 6px; border-radius: 0 4px 4px 0;
+    }
+    .explain h5 { color: #d35a1a; font-size: 12px; margin-bottom: 3px; }
+    .explain p { margin-bottom: 6px; }
+
+    .section-title {
+      display: flex; align-items: center; gap: 8px; margin: 24px 0 12px; font-size: 18px; font-weight: 800;
+    }
+    .section-title::before { content: ""; display: inline-block; width: 6px; height: 22px; background: #d35a1a; }
+
+    /* PDF 다운로드 푸터 */
+    .fb-pdf-footer {
+      display: flex; justify-content: center; margin: 40px 0 24px;
+    }
+    .fb-pdf-btn {
+      background: linear-gradient(135deg, #1a1a1a, #333);
+      color: #fff; border: none; padding: 14px 40px;
+      font-size: 14px; font-weight: 800; border-radius: 30px;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+      letter-spacing: 0.5px;
+      display: inline-flex; align-items: center; gap: 10px;
+      transition: all 0.2s;
+    }
+    .fb-pdf-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0,0,0,0.3); }
+    .fb-pdf-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* PDF 로딩 오버레이 */
+    .fb-pdf-loading {
+      position: fixed; inset: 0; background: rgba(20,10,30,0.85);
+      display: none; align-items: center; justify-content: center;
+      flex-direction: column; gap: 14px; z-index: 999999;
+      color: #fff; font-size: 16px; font-weight: 700;
+    }
+    .fb-pdf-loading.on { display: flex; }
+    .fb-pdf-loading .spinner {
+      width: 42px; height: 42px; border-radius: 50%;
+      border: 4px solid rgba(255,255,255,0.2); border-top-color: #f39c39;
+      animation: fbspin 0.9s linear infinite;
+    }
+    @keyframes fbspin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <span class="badge">BRAIN 월말 해설</span>
+        <h1>초등 월말 · 해설 · 피드백</h1>
+        <p>지문·문항·정답·해설·오답 풀이</p>
+      </div>
+      <div class="toolbar">
+        <select id="roundSelect">
+          <option value="1">1회차</option>
+          <option value="2">2회차</option>
+          <option value="3">3회차</option>
+          <option value="4">4회차</option>
+          <option value="5">5회차</option>
+          <option value="6">6회차</option>
+          <option value="7">7회차</option>
+          <option value="8">8회차</option>
+          <option value="9">9회차</option>
+          <option value="10">10회차</option>
+          <option value="11">11회차</option>
+          <option value="12">12회차</option>
+        </select>
+        <a href="/monthly_exam_dashboard_elem.html" class="nav-btn">대시보드</a>
+        <a href="/monthly_exam_elem_1.html" class="nav-btn primary" id="btnReExam">응시하기</a>
+      </div>
+    </header>
+
+    <!-- 요약 (응시 결과 있으면) -->
+    <div id="summaryHost"></div>
+
+    <!-- 필터 탭 -->
+    <div class="filter-tabs" id="filterTabs">
+      <button class="filter-tab active" data-filter="all">전체 (40)</button>
+      <button class="filter-tab" data-filter="wrong">오답만</button>
+      <button class="filter-tab" data-filter="literal">사실적</button>
+      <button class="filter-tab" data-filter="lexical">어휘적</button>
+      <button class="filter-tab" data-filter="structural">구조적</button>
+      <button class="filter-tab" data-filter="inferential">추론적</button>
+      <button class="filter-tab" data-filter="critical">비판적</button>
+    </div>
+
+    <!-- 지문·문항 -->
+    <div id="passageHost"></div>
+
+    <!-- PDF 다운로드 -->
+    <div class="fb-pdf-footer">
+      <button class="fb-pdf-btn" id="fbPdfBtn" onclick="downloadFeedbackPdf()">📄 해설 PDF 다운로드</button>
+    </div>
+  </div>
+
+  <div class="fb-pdf-loading" id="fbPdfLoading">
+    <div class="spinner"></div>
+    <div>PDF 생성 중...</div>
+    <div style="font-size:12px;opacity:0.7;font-weight:500;">잠시만 기다려주세요</div>
+  </div>
+
+  <script>
+    // URL의 round 파라미터에 따라 회차별 데이터 스크립트를 동기 로드
+    (function loadRoundData(){
+      const params = new URLSearchParams(location.search);
+      const r = parseInt(params.get('round') || '1', 10);
+      const round = (r >= 1 && r <= 12) ? r : 1;
+      document.write('<scr' + 'ipt src="/monthly_exam_data/monthly_elem_' + round + '.js"><\/scr' + 'ipt>');
+    })();
+  </script>
+  <script>
+    const EXAM = window.MONTHLY_EXAM_DATA;
+    const GRADE = 'elem';
+    const CUR_ROUND = (function(){
+      const r = parseInt(new URLSearchParams(location.search).get('round') || '1', 10);
+      return (r >= 1 && r <= 12) ? r : 1;
+    })();
+    const AREA_LABEL = { literal:'사실적', lexical:'어휘적', structural:'구조적', inferential:'추론적', critical:'비판적' };
+
+    function loadResult(round) {
+      try {
+        const raw = localStorage.getItem(`monthly_${GRADE}_${round}_result`);
+        return raw ? JSON.parse(raw) : null;
+      } catch(e) { return null; }
+    }
+
+    function renderSummary(result) {
+      const host = document.getElementById('summaryHost');
+      if (!result) {
+        host.innerHTML = `
+          <div class="no-result">
+            <h3>아직 응시 기록이 없습니다</h3>
+            <p>먼저 <a href="/monthly_exam_elem_${CUR_ROUND}.html">${CUR_ROUND}회차 응시</a>를 완료하면 여기에서 상세 해설을 볼 수 있어요.</p>
+          </div>
+        `;
+        return;
+      }
+      const durMin = Math.floor(result.durationSec / 60);
+      const durSec = result.durationSec % 60;
+      const submitted = new Date(result.submittedAt);
+      const submittedStr = `${submitted.getFullYear()}.${String(submitted.getMonth()+1).padStart(2,'0')}.${String(submitted.getDate()).padStart(2,'0')} ${String(submitted.getHours()).padStart(2,'0')}:${String(submitted.getMinutes()).padStart(2,'0')}`;
+
+      host.innerHTML = `
+        <div class="summary-card">
+          <div class="summary-score">
+            <div class="val">${formatScore(result.totalScore)}<small> / 100</small></div>
+            <div class="lbl">초등 월말 ${result.round}회차</div>
+          </div>
+          <div class="summary-details">
+            <div>맞힌 문항 <b>${result.correctCount} / ${result.totalQuestions}</b></div>
+            <div>소요 시간 <b>${durMin}분 ${durSec}초</b></div>
+            <div>응시 일시 <b>${submittedStr}</b></div>
+            <div>정답률 <b>${Math.round(result.correctCount / result.totalQuestions * 100)}%</b></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPassages(result) {
+      const host = document.getElementById('passageHost');
+      host.innerHTML = '';
+      EXAM.passages.forEach(p => {
+        const block = document.createElement('div');
+        block.className = 'passage-block';
+        block.dataset.passageNo = p.no;
+
+        const header = document.createElement('div');
+        header.className = 'passage-header';
+        header.innerHTML = `
+          <div><span class="p-badge">지문 ${p.no}</span> · ${p.subject}</div>
+          <div style="font-size:12px;opacity:0.85;">${p.sourceKey || ''}</div>
+        `;
+        block.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'passage-body';
+        body.innerHTML = `
+          <div class="passage-title">${p.title}</div>
+          <div class="passage-text">${p.text.map(par => `<p>${par}</p>`).join('')}</div>
+          <button class="passage-toggle">지문 접기 ▴</button>
+        `;
+        body.querySelector('.passage-toggle').addEventListener('click', (e) => {
+          body.classList.toggle('collapsed');
+          e.target.textContent = body.classList.contains('collapsed') ? '지문 펼치기 ▾' : '지문 접기 ▴';
+        });
+        block.appendChild(body);
+
+        const qBlock = document.createElement('div');
+        qBlock.className = 'questions-block';
+        p.questions.forEach(q => qBlock.appendChild(renderQuestion(q, result)));
+        block.appendChild(qBlock);
+        host.appendChild(block);
+      });
+    }
+
+    function renderQuestion(q, result) {
+      const userAnswer = result && result.answers ? result.answers[q.no - 1] : null;
+      const isCorrect = userAnswer === q.answer;
+      const skipped = userAnswer == null;
+
+      const el = document.createElement('div');
+      el.className = 'q-item';
+      el.dataset.qNo = q.no;
+      el.dataset.type = q.type;
+      el.dataset.correct = isCorrect ? '1' : '0';
+      el.dataset.skipped = skipped ? '1' : '0';
+
+      let verdictHtml = '';
+      if (result) {
+        if (skipped) verdictHtml = '<span class="q-verdict skip">미응답</span>';
+        else if (isCorrect) verdictHtml = '<span class="q-verdict o">정답</span>';
+        else verdictHtml = `<span class="q-verdict x">오답 (내 답: ${userAnswer})</span>`;
+      }
+      const scoreLabel = Number.isInteger(q.score) ? q.score + '점' : q.score + '점';
+      el.innerHTML = `
+        <div class="q-head">
+          <span class="q-no">${q.no}</span>
+          <span class="q-area">${q.typeKo}</span>
+          <span class="q-score">${scoreLabel}</span>
+          ${verdictHtml}
+        </div>
+        <div class="q-text">${q.text}</div>
+        <ul class="options">
+          ${q.options.map((opt, idx) => {
+            const num = idx + 1;
+            let cls = 'opt';
+            let tag = '';
+            if (num === q.answer) { cls += ' correct'; tag = '<span class="opt-tag correct">정답</span>'; }
+            if (userAnswer === num && num !== q.answer) { cls += ' wrong-user'; tag = '<span class="opt-tag user">내 답</span>'; }
+            else if (userAnswer === num && num === q.answer) { tag = '<span class="opt-tag user">내 답</span>'; }
+            return `<li class="${cls}"><span class="opt-num">${num}</span><span style="flex:1;">${opt}</span>${tag}</li>`;
+          }).join('')}
+        </ul>
+        <div class="explain">
+          <h5>정답 근거</h5>
+          <p>${q.correct}</p>
+          <h5>오답 풀이</h5>
+          <p>${q.wrong}</p>
+        </div>
+      `;
+      return el;
+    }
+
+    function formatScore(n) {
+      const v = Number(n) || 0;
+      return v % 1 === 0 ? v.toFixed(0) : v.toFixed(1);
+    }
+
+    /* 필터 */
+    function setupFilters() {
+      document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          applyFilter(tab.dataset.filter);
+        });
+      });
+    }
+    function applyFilter(filter) {
+      document.querySelectorAll('.q-item').forEach(q => {
+        let show = true;
+        if (filter === 'wrong') show = q.dataset.correct === '0';
+        else if (filter && filter !== 'all') show = q.dataset.type === filter;
+        q.classList.toggle('hidden', !show);
+      });
+      // 모든 문항이 hidden이면 지문 자체 숨김
+      document.querySelectorAll('.passage-block').forEach(pb => {
+        const anyShown = Array.from(pb.querySelectorAll('.q-item')).some(q => !q.classList.contains('hidden'));
+        pb.style.display = anyShown ? '' : 'none';
+      });
+    }
+
+    /* 서버에서 해당 회차 최신본 pull → 로컬 미러 */
+    async function syncOneFromServer(round) {
+      try {
+        const r = await fetch('/api/monthly-exam/result?examGrade=elem&round=' + round, {
+          credentials: 'same-origin',
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!r.ok) return;
+        const data = await r.json();
+        if (!data || !data.ok || !data.result) return;
+        const row = data.result;
+        const payload = {
+          examKey: row.examKey, grade: row.grade, round: row.round,
+          totalScore: row.totalScore, correctCount: row.correctCount,
+          totalQuestions: row.totalQuestions,
+          areaScore: row.areaScore || {}, areaMax: row.areaMax || {},
+          subjectScores: row.subjectScores || [],
+          answers: row.answers || [], answerKey: row.answerKey || [],
+          durationSec: row.durationSec || 0,
+          submittedAt: row.submittedAt || new Date().toISOString(),
+        };
+        const local = loadResult(round);
+        const serverAt = new Date(row.submittedAt || row.updatedAt || 0).getTime();
+        const localAt  = local ? new Date(local.submittedAt || 0).getTime() : 0;
+        if (!local || serverAt >= localAt) {
+          localStorage.setItem(`monthly_elem_${round}_result`, JSON.stringify(payload));
+        }
+      } catch (err) { console.warn('[feedback] 서버 동기화 실패:', err); }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(location.search);
+      const round = params.get('round') || '1';
+      document.getElementById('roundSelect').value = round;
+      document.getElementById('roundSelect').addEventListener('change', e => {
+        location.href = `/monthly_exam_feedback_elem.html?round=${e.target.value}`;
+      });
+      const reExamBtn = document.getElementById('btnReExam');
+      if (reExamBtn) reExamBtn.href = `/monthly_exam_elem_${round}.html`;
+
+      await syncOneFromServer(round);
+
+      const result = loadResult(round);
+      window.__FB_RESULT = result;
+      renderSummary(result);
+      renderPassages(result);
+      setupFilters();
+      const pdfBtn = document.getElementById('fbPdfBtn');
+      if (pdfBtn && !result) pdfBtn.disabled = true;
+    });
+
+    /* ========================================
+       해설 PDF 다운로드
+    ======================================== */
+    const AREA_KO = {
+      all: '전체', wrong: '오답만',
+      literal: '사실적', lexical: '어휘적', structural: '구조적',
+      inferential: '추론적', critical: '비판적'
+    };
+
+    function getCurrentFilter() {
+      const active = document.querySelector('.filter-tab.active');
+      return active ? active.dataset.filter : 'all';
+    }
+    function getStudentInfo() {
+      let cs = {}, su = {};
+      try { cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); } catch (e) {}
+      try { su = JSON.parse(sessionStorage.getItem('user') || '{}'); } catch (e) {}
+      return {
+        grade: cs.grade || su.grade || '',
+        name: cs.name || su.name || '',
+        academy: cs.academyName || su.academyName || ''
+      };
+    }
+
+    function buildFeedbackPdfContent(filter, result, stu) {
+      const filterLbl = AREA_KO[filter] || '전체';
+      const gradeLbl = '초등';
+      const roundNo = EXAM.round;
+      const subLine = filter === 'all' ? '전체 해설' : (filter === 'wrong' ? '오답만' : (AREA_KO[filter] + ' 영역'));
+      const submitted = result ? new Date(result.submittedAt) : null;
+      const submittedStr = submitted ? `${submitted.getFullYear()}.${String(submitted.getMonth()+1).padStart(2,'0')}.${String(submitted.getDate()).padStart(2,'0')}` : '';
+      const dur = result ? (Math.floor(result.durationSec/60) + '분 ' + (result.durationSec%60) + '초') : '';
+      const acc = result ? Math.round(result.correctCount / result.totalQuestions * 100) : 0;
+
+      // 필터에 맞는 문항 수집
+      const items = [];
+      EXAM.passages.forEach(p => {
+        const filtered = p.questions.filter(q => {
+          if (filter === 'all') return true;
+          if (filter === 'wrong') {
+            if (!result || !result.answers) return false;
+            return result.answers[q.no - 1] !== q.answer;
+          }
+          return q.type === filter;
+        });
+        if (filtered.length) items.push({ passage: p, questions: filtered });
+      });
+
+      let html = `
+        <div style="font-family:Pretendard,-apple-system,sans-serif; color:#111; background:#fff; padding:24px 30px;">
+          <div class="pdf-section" data-first="1">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; border-bottom:2px solid #d35a1a; margin-bottom:14px;">
+            <div style="font-size:16px; font-weight:900; color:#d35a1a; display:flex; align-items:center; gap:8px;">
+              <span style="display:inline-block; width:22px; height:22px; border-radius:6px; background:linear-gradient(135deg,#d35a1a,#f39c39);"></span>
+              ${stu.academy || '브레인 문해력'}
+            </div>
+            <div style="font-size:12px; color:#8a7862; font-weight:700;">월말 모의고사 · ${gradeLbl} ${roundNo}회차 · 해설 리포트</div>
+          </div>
+      `;
+
+      if (stu.grade || stu.name) {
+        html += `
+          <div style="background:#fbf7f2; border-radius:10px; padding:12px 16px; margin-bottom:14px; border:1px solid rgba(211,90,26,0.15); display:flex; gap:22px; flex-wrap:wrap;">
+            ${stu.grade ? `<div style="display:flex; align-items:baseline; gap:8px;"><span style="font-size:11px; font-weight:700; color:#8a7862; padding:3px 10px; background:#fff; border-radius:12px; border:1px solid rgba(211,90,26,0.2);">학년</span><span style="font-size:14px; font-weight:900;">${stu.grade}</span></div>` : ''}
+            ${stu.name ? `<div style="display:flex; align-items:baseline; gap:8px;"><span style="font-size:11px; font-weight:700; color:#8a7862; padding:3px 10px; background:#fff; border-radius:12px; border:1px solid rgba(211,90,26,0.2);">이름</span><span style="font-size:14px; font-weight:900;">${stu.name}</span></div>` : ''}
+            <div style="display:flex; align-items:baseline; gap:8px;"><span style="font-size:11px; font-weight:700; color:#8a7862; padding:3px 10px; background:#fff; border-radius:12px; border:1px solid rgba(211,90,26,0.2);">발급일</span><span style="font-size:14px; font-weight:900;">${new Date().toLocaleDateString('ko-KR')}</span></div>
+          </div>
+        `;
+      }
+
+      html += `
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
+          <span style="background:#d35a1a; color:#fff; padding:6px 14px; border-radius:16px; font-size:12px; font-weight:800;">📖 ${subLine}</span>
+          ${result ? `<span style="font-size:12px; color:#666;">총점 <b style="color:#d35a1a;">${formatScore(result.totalScore)}/100</b> · 정답 <b>${result.correctCount}/${result.totalQuestions}</b> · 정답률 <b>${acc}%</b> · 소요 ${dur} · 응시 ${submittedStr}</span>` : ''}
+        </div>
+      `;
+
+      if (!items.length) {
+        html += `<div style="padding:40px; text-align:center; color:#888; font-size:13px;">해당 필터에 표시할 문항이 없습니다.</div></div></div>`;
+        return html;
+      }
+
+      // 헤더 섹션 종료
+      html += `</div>`;
+
+      items.forEach(({ passage: p, questions }, passageIdx) => {
+        const passageBodyHtml = (p.text && p.text.length) ? `
+          <div style="background:#fafafa; border:1px solid #ddd; border-top:none; padding:14px 18px 12px;">
+            <div style="font-size:14px; font-weight:800; margin-bottom:8px; color:#1a1a1a;">${p.title}</div>
+            <div style="font-size:12px; line-height:1.75; color:#333;">
+              ${p.text.map(par => `<p style="text-indent:1em; margin-bottom:8px;">${par}</p>`).join('')}
+            </div>
+          </div>
+        ` : '';
+        html += `
+          <div class="pdf-section" style="margin-bottom:16px;">
+            <div style="background:#111; color:#fff; padding:8px 14px; font-size:12px; font-weight:800; display:flex; justify-content:space-between;">
+              <span><span style="background:#d35a1a; padding:2px 8px; border-radius:2px; margin-right:8px;">지문 ${p.no}</span> ${p.subject}</span>
+              <span style="opacity:0.75;">${p.title}</span>
+            </div>
+            ${passageBodyHtml}
+            <div style="border:1px solid #ddd; border-top:none; padding:8px 12px;">
+        `;
+        questions.forEach((q, qIdx) => {
+          const ua = result && result.answers ? result.answers[q.no - 1] : null;
+          const isCorrect = ua === q.answer;
+          const skipped = ua == null;
+          const verdict = skipped ? '미응시' : (isCorrect ? '정답' : '오답');
+          const vColor = skipped ? '#666' : (isCorrect ? '#2e7d32' : '#c62828');
+          const vBg = skipped ? '#eee' : (isCorrect ? '#e8f6ec' : '#fdecea');
+          html += `
+            <div class="pb-avoid" style="padding:10px 4px; border-top:1px dashed #ddd; page-break-inside:avoid; break-inside:avoid;">
+              <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px; flex-wrap:wrap;">
+                <span style="background:#111; color:#fff; padding:2px 8px; font-size:11px; font-weight:800; border-radius:3px;">${q.no}</span>
+                <span style="background:#f4e6d6; color:#7a3d00; padding:2px 8px; font-size:11px; font-weight:700; border-radius:2px;">${q.typeKo}</span>
+                <span style="color:#888; font-size:11px; font-weight:600;">${q.score}점</span>
+                <span style="background:${vBg}; color:${vColor}; padding:2px 8px; font-size:11px; font-weight:800; border-radius:3px;">${verdict}</span>
+              </div>
+              <div style="font-size:13px; font-weight:600; margin-bottom:6px; line-height:1.55;">${q.text}</div>
+              <div style="display:flex; flex-direction:column; gap:3px; margin-bottom:8px;">
+                ${q.options.map((opt, idx) => {
+                  const num = idx + 1;
+                  let bg = '#fafafa', bd = '#eee', tag = '';
+                  if (num === q.answer) { bg = '#e8f6ec'; bd = '#2e7d32'; tag = '<span style="background:#2e7d32; color:#fff; padding:1px 6px; font-size:10px; font-weight:700; border-radius:2px; margin-left:6px;">정답</span>'; }
+                  if (ua === num && num !== q.answer) { bg = '#fdecea'; bd = '#c62828'; tag = '<span style="background:#c62828; color:#fff; padding:1px 6px; font-size:10px; font-weight:700; border-radius:2px; margin-left:6px;">내 답</span>'; }
+                  else if (ua === num && num === q.answer) { tag += '<span style="background:#d35a1a; color:#fff; padding:1px 6px; font-size:10px; font-weight:700; border-radius:2px; margin-left:6px;">내 답</span>'; }
+                  return `<div style="display:flex; align-items:flex-start; gap:6px; padding:4px 8px; background:${bg}; border:1px solid ${bd}; border-radius:3px; font-size:12px; line-height:1.5;">
+                    <span style="display:inline-flex; width:18px; height:18px; border-radius:50%; background:${num===q.answer?'#2e7d32':(ua===num?'#c62828':'#fff')}; color:${num===q.answer||ua===num?'#fff':'#333'}; border:1.5px solid ${num===q.answer?'#2e7d32':(ua===num?'#c62828':'#999')}; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0;">${num}</span>
+                    <span style="flex:1;">${opt}</span>${tag}
+                  </div>`;
+                }).join('')}
+              </div>
+              <div style="background:#f5f7fa; border-left:3px solid #d35a1a; padding:8px 12px; font-size:12px; line-height:1.65; border-radius:0 4px 4px 0;">
+                <div style="color:#d35a1a; font-size:11px; font-weight:800; margin-bottom:2px;">정답 근거</div>
+                <div style="margin-bottom:6px;">${q.correct || ''}</div>
+                <div style="color:#d35a1a; font-size:11px; font-weight:800; margin-bottom:2px;">오답 풀이</div>
+                <div>${q.wrong || ''}</div>
+              </div>
+            </div>
+          `;
+        });
+        html += `</div></div>`;
+      });
+
+      html += `
+          <div style="margin-top:20px; padding-top:12px; border-top:1px solid #e8dcc7; display:flex; justify-content:space-between; font-size:10.5px; color:#8a7862;">
+            <span>${stu.academy || '브레인 문해력'} · ${gradeLbl} 월말 ${roundNo}회차 해설${stu.name ? ' · ' + stu.name : ''}</span>
+            <span>${new Date().toLocaleDateString('ko-KR')}</span>
+          </div>
+        </div>
+      `;
+      return html;
+    }
+
+    async function downloadFeedbackPdf() {
+      const result = window.__FB_RESULT;
+      if (!result) { alert('응시 결과가 없어 PDF 를 생성할 수 없습니다.'); return; }
+      const btn = document.getElementById('fbPdfBtn');
+      const loader = document.getElementById('fbPdfLoading');
+      btn.disabled = true;
+      loader.classList.add('on');
+
+      const filter = getCurrentFilter();
+      const stu = getStudentInfo();
+      const html = buildFeedbackPdfContent(filter, result, stu);
+
+      const overlay = document.createElement('div');
+      overlay.id = '__fbPdfOverlay';
+      overlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:#fff; overflow:auto; z-index:999997;';
+      const container = document.createElement('div');
+      container.style.cssText = 'width:720px; margin:20px auto; background:#fff; box-sizing:border-box;';
+      container.innerHTML = html;
+      overlay.appendChild(container);
+      document.body.appendChild(overlay);
+
+      const filterSlug = { all: '전체', wrong: '오답만', literal: '사실적', lexical: '어휘적', structural: '구조적', inferential: '추론적', critical: '비판적' }[filter] || '전체';
+      const fileTitle = `초등${stu.name ? '_' + stu.name : ''}_${EXAM.round}회_해설_${filterSlug}_${new Date().toISOString().slice(0,10)}.pdf`;
+
+      function cleanup() {
+        overlay.remove();
+        loader.classList.remove('on');
+        btn.disabled = false;
+      }
+
+      function loadScript(src) {
+        return new Promise((res, rej) => {
+          const s = document.createElement('script');
+          s.src = src; s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
+
+      async function ensureLibs() {
+        if (typeof html2canvas === 'undefined') {
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+        }
+        if (!(window.jspdf && window.jspdf.jsPDF)) {
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+        }
+        if (typeof html2canvas === 'undefined' || !(window.jspdf && window.jspdf.jsPDF)) {
+          throw new Error('필수 라이브러리 로드 실패');
+        }
+      }
+
+      async function generate() {
+        try {
+          await new Promise(r => setTimeout(r, 200));
+          await ensureLibs();
+          const jsPDFCtor = window.jspdf.jsPDF;
+
+          const pdf = new jsPDFCtor({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
+          const pageW = 210, pageH = 297;
+          const margin = 10;
+          const contentW = pageW - margin * 2;
+          const contentH = pageH - margin * 2;
+
+          const sections = container.querySelectorAll('.pdf-section');
+          let firstPage = true;
+
+          for (let i = 0; i < sections.length; i++) {
+            const el = sections[i];
+            const canvas = await html2canvas(el, {
+              scale: 2, useCORS: true, backgroundColor: '#ffffff',
+              scrollX: 0, scrollY: 0
+            });
+            const imgW = contentW;
+            const imgH = (canvas.height * imgW) / canvas.width;
+
+            if (imgH <= contentH) {
+              if (!firstPage) pdf.addPage();
+              firstPage = false;
+              pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', margin, margin, imgW, imgH);
+            } else {
+              // 섹션 자체가 페이지보다 큼 → 캔버스를 페이지 높이로 슬라이스
+              const pxPerMm = canvas.width / imgW;
+              const pageCanvasH = Math.floor(contentH * pxPerMm);
+              let sy = 0;
+              while (sy < canvas.height) {
+                const sliceH = Math.min(pageCanvasH, canvas.height - sy);
+                const slice = document.createElement('canvas');
+                slice.width = canvas.width;
+                slice.height = sliceH;
+                slice.getContext('2d').drawImage(canvas, 0, sy, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+                if (!firstPage) pdf.addPage();
+                firstPage = false;
+                pdf.addImage(slice.toDataURL('image/jpeg', 0.95), 'JPEG', margin, margin, imgW, (sliceH * imgW) / canvas.width);
+                sy += sliceH;
+              }
+            }
+          }
+
+          pdf.save(fileTitle);
+          setTimeout(cleanup, 300);
+        } catch (err) {
+          console.error(err);
+          cleanup();
+          alert('PDF 생성 실패. 브라우저 인쇄 → PDF 저장을 이용해 주세요.');
+        }
+      }
+
+      generate();
+    }
+  </script>
+</body>
+</html>
