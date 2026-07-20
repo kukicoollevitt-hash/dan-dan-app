@@ -38476,12 +38476,26 @@ ${content}
         try {
           const recs = await fetchReportRecords();
           relearnSet = computeRelearnDaySet(recs);
+          // 서버에 저장된 Day 는 완료로 간주 → 로컬 done 세트에 병합 (기기·브라우저·캐시 이슈 방지)
+          let mirrored = false;
           recs.forEach(r => {
             const tot = r && r.accuracies && r.accuracies.total;
             if (tot && typeof tot.pct === 'number') {
               dayTotalMap.set(r.day, Math.round(tot.pct));
             }
+            if (r && typeof r.day === 'number' && !done.has(r.day)) {
+              done.add(r.day);
+              mirrored = true;
+            }
           });
+          // 서버 → 로컬 미러링 (다음 렌더·다른 페이지에서도 즉시 사용 가능)
+          if (mirrored) {
+            try {
+              const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+              const key = `wr100_done:${cs.grade}_${cs.name}`;
+              localStorage.setItem(key, JSON.stringify(Array.from(done).sort((a, b) => a - b)));
+            } catch {}
+          }
         } catch {}
         // 현재 위치 = 완료 안 됐고 잠금 아니고 authored인 첫 Day
         let currentDay = null;
