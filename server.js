@@ -1275,12 +1275,14 @@ function getAdminRegistrationName(source) {
 // ✅ 진단테스트/수강신청 branchName 필터 · 본명+별칭 모두 regex 매칭 ($or)
 //   · 세션 캐시가 오래됐을 수 있어 DB에서 최신 조회
 async function buildBranchNameFilter(req) {
-  if (!req.session || !req.session.admin) return null;
-  const admin = req.session.admin;
+  if (!req.session || (!req.session.admin && !req.session.viewingBranch)) return null;
+  // 슈퍼관리자 학원 조회 모드면 조회 중인 학원 기준으로 필터
+  const admin = req.session.viewingBranch || req.session.admin;
   let names = [admin.academyName].filter(Boolean);
   try {
-    if (admin.id) {
-      const fresh = await Admin.findById(admin.id).select('academyName academyAliases').lean();
+    const adminId = admin.id || admin._id;
+    if (adminId) {
+      const fresh = await Admin.findById(adminId).select('academyName academyAliases').lean();
       if (fresh) names = getAdminAcademyNames(fresh);
     }
   } catch {}
@@ -33715,14 +33717,17 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
 // 진단테스트 목록 조회 (브랜치 관리자용 - 지점명/학년 필터링)
 app.get("/api/admin/diagnostic-tests", async (req, res) => {
   try {
-    // 세션에서 관리자 정보 확인
-    if (!req.session || !req.session.admin || !req.session.admin.academyName) {
+    // 세션에서 관리자 정보 확인 (슈퍼관리자 학원 조회 모드 허용)
+    const viewingBranch = req.session && req.session.viewingBranch;
+    if (!viewingBranch && (!req.session || !req.session.admin || !req.session.admin.academyName)) {
       return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
     }
 
-    const academyName = req.session.admin.academyName;
-    const adminGrade = req.session.admin.grade;
-    const adminClassNum = req.session.admin.classNum;
+    const sessionAdmin = viewingBranch || req.session.admin;
+    const academyName = sessionAdmin.academyName;
+    // 슈퍼관리자 조회 모드면 전체 학년/반 표시
+    const adminGrade = viewingBranch ? "" : req.session.admin.grade;
+    const adminClassNum = viewingBranch ? "" : req.session.admin.classNum;
 
     // 지점명으로 필터링 · 본명+별칭 모두 허용
     const branchFilter = await buildBranchNameFilter(req);
@@ -33746,7 +33751,7 @@ app.get("/api/admin/diagnostic-tests", async (req, res) => {
       academyName: academyName,
       adminGrade: adminGrade,
       adminClassNum: adminClassNum,
-      userType: req.session.admin.userType || 'school'  // 학원/학교 구분
+      userType: viewingBranch ? 'academy' : (req.session.admin.userType || 'school')  // 학원/학교 구분
     });
   } catch (error) {
     console.error("브랜치 관리자 진단테스트 조회 오류:", error);
@@ -33757,14 +33762,17 @@ app.get("/api/admin/diagnostic-tests", async (req, res) => {
 // 수강신청 목록 조회 (브랜치 관리자용 - 지점명 필터링)
 app.get("/api/admin/course-applications", async (req, res) => {
   try {
-    // 세션에서 관리자 정보 확인
-    if (!req.session || !req.session.admin || !req.session.admin.academyName) {
+    // 세션에서 관리자 정보 확인 (슈퍼관리자 학원 조회 모드 허용)
+    const viewingBranch = req.session && req.session.viewingBranch;
+    if (!viewingBranch && (!req.session || !req.session.admin || !req.session.admin.academyName)) {
       return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
     }
 
-    const academyName = req.session.admin.academyName;
-    const adminGrade = req.session.admin.grade;
-    const adminClassNum = req.session.admin.classNum;
+    const sessionAdmin = viewingBranch || req.session.admin;
+    const academyName = sessionAdmin.academyName;
+    // 슈퍼관리자 조회 모드면 전체 학년/반 표시
+    const adminGrade = viewingBranch ? "" : req.session.admin.grade;
+    const adminClassNum = viewingBranch ? "" : req.session.admin.classNum;
 
     // 지점명으로 필터링 · 본명+별칭 모두 허용
     const branchFilter = await buildBranchNameFilter(req);
