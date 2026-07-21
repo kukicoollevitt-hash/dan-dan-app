@@ -524,6 +524,24 @@ const PORT = process.env.PORT || 3000;
 const USERS_FILE = "users.json";
 const MONGO_URI = process.env.MONGODB_URI;
 
+// 🔹 학생 업로드 파일(쓰기문해 녹음 등) 저장 루트
+//   Render 같은 배포 환경은 재배포 시 컨테이너 파일시스템이 초기화되므로,
+//   영구 디스크를 마운트한 뒤 UPLOAD_DIR 환경변수로 그 경로를 지정해야 파일이 보존된다.
+//   예) 디스크를 /var/data 에 마운트 → UPLOAD_DIR=/var/data/uploads
+//   미설정 시 저장소 내 uploads 폴더를 사용한다(로컬 개발 기본값).
+//   ⚠️ uploads/wr100-guides 의 교사·학생 PDF는 git으로 배포되는 자산이므로
+//      이 경로가 아니라 항상 저장소 내 uploads 를 그대로 사용한다.
+const UPLOAD_DIR = process.env.UPLOAD_DIR
+  ? path.resolve(process.env.UPLOAD_DIR)
+  : path.join(__dirname, "uploads");
+try {
+  require("fs").mkdirSync(UPLOAD_DIR, { recursive: true });
+  console.log("📁 업로드 저장 루트:", UPLOAD_DIR,
+    process.env.UPLOAD_DIR ? "(영구 디스크)" : "(저장소 내부 · 재배포 시 초기화됨)");
+} catch (e) {
+  console.error("❌ 업로드 폴더 생성 실패:", UPLOAD_DIR, e.message);
+}
+
 // 🔹 슈퍼관리자 학원 조회 모드 지원 헬퍼 함수
 function getAcademyNameFromSession(req) {
   // 슈퍼관리자가 특정 학원 조회 중인 경우
@@ -42385,13 +42403,13 @@ app.post('/api/writing100/convert-recording',
           const safeStudent = `${grade}_${name}`.replace(/[^\w가-힣]/g, '');
           const safePart = part.replace(/[^\w가-힣]/g, '');
           const dayFolder = `Day${String(day).padStart(3, '0')}`;
-          const uploadRoot = path.join(__dirname, 'uploads', 'writing100');
+          const uploadRoot = path.join(UPLOAD_DIR, 'writing100');
           const studentDir = path.join(uploadRoot, safeStudent, dayFolder);
           await fsp.mkdir(studentDir, { recursive: true });
           const filename = `${safePart}_${ts}.mp4`;
           const savePath = path.join(studentDir, filename);
           await fsp.writeFile(savePath, buf);
-          const relPath = path.relative(path.join(__dirname, 'uploads'), savePath).replace(/\\/g, '/');
+          const relPath = path.relative(UPLOAD_DIR, savePath).replace(/\\/g, '/');
           const unit = `100day_${String(day).padStart(3, '0')}`;
           // Writing100Submission의 recordings 배열에 push (동일 part는 최근 것만 유지)
           const doc = await Writing100Submission.findOne({ grade, name, unit });
@@ -42399,7 +42417,7 @@ app.post('/api/writing100/convert-recording',
             // 기존 같은 part 녹음 파일은 제거 (최신 것 하나만 유지)
             const oldSame = doc.recordings.filter(r => r.part === safePart);
             oldSame.forEach(r => {
-              const old = path.join(__dirname, 'uploads', r.filename);
+              const old = path.join(UPLOAD_DIR, r.filename);
               fsp.unlink(old).catch(() => {});
             });
             doc.recordings = doc.recordings.filter(r => r.part !== safePart);
@@ -42823,8 +42841,23 @@ app.get('/api/admin/writing100-recording-download', requireAdminLogin, async (re
     if (!doc) return res.status(404).json({ ok: false, message: '기록 없음' });
     const rec = (doc.recordings || []).find(r => r.filename === filename);
     if (!rec) return res.status(404).json({ ok: false, message: '녹음 없음' });
-    const filepath = path.join(__dirname, 'uploads', rec.filename);
-    if (!fs.existsSync(filepath)) return res.status(404).json({ ok: false, message: '파일 없음' });
+    const filepath = path.join(UPLOAD_DIR, rec.filename);
+    if (!fs.existsSync(filepath)) {
+      // 오류를 JSON으로 내려보내면 <a download> 때문에 브라우저가 .json 파일로 저장해 버려
+      // 원인을 알 수 없다. 사람이 읽을 수 있는 HTML 안내를 반환한다.
+      console.warn('[wr100-recording-download] 파일 없음:', filepath);
+      return res.status(404).type('html').send(`<!doctype html><meta charset="utf-8">
+        <title>녹음 파일 없음</title>
+        <div style="font-family:system-ui,-apple-system,'Malgun Gothic',sans-serif;max-width:520px;margin:60px auto;padding:28px;border:1px solid #fecaca;background:#fef2f2;border-radius:12px;line-height:1.7;color:#7f1d1d;">
+          <h2 style="margin:0 0 12px;font-size:19px;">🎙️ 녹음 파일을 찾을 수 없습니다</h2>
+          <p style="margin:0 0 10px;"><b>${grade} ${name}</b> 학생의 <b>${rec.part}</b> 녹음이 서버에 남아 있지 않습니다.</p>
+          <p style="margin:0 0 10px;font-size:14px;color:#991b1b;">
+            제출 기록(용량·시각)은 남아 있지만 실제 음성 파일이 삭제된 상태입니다.
+            서버 재배포 과정에서 파일이 초기화되었을 수 있습니다.
+          </p>
+          <p style="margin:14px 0 0;font-size:13px;color:#b91c1c;">파일명: ${rec.filename}</p>
+        </div>`);
+    }
     // 실제 다운로드 파일명
     const safeUnit = unit.replace(/[^\w]/g, '');
     const downloadName = `${grade}_${name}_${safeUnit}_${rec.part}.mp4`;
@@ -42849,10 +42882,26 @@ app.get('/api/admin/writing100-student-zip', requireAdminLogin, async (req, res)
     const docs = await Writing100Submission.find(q, {
       day: 1, unit: 1, topic: 1, recordings: 1
     }).sort({ day: 1 }).lean();
-    // 대상 파일 수 카운트
+    // 대상 파일 수 카운트 — DB 기록이 아니라 실제 디스크에 남아 있는 파일 기준
     let fileCount = 0;
-    docs.forEach(d => { fileCount += (d.recordings || []).length; });
-    if (fileCount === 0) return res.status(404).json({ ok: false, message: '녹음 파일 없음' });
+    docs.forEach(d => {
+      (d.recordings || []).forEach(r => {
+        if (fs.existsSync(path.join(UPLOAD_DIR, r.filename))) fileCount++;
+      });
+    });
+    if (fileCount === 0) {
+      console.warn('[wr100-student-zip] 디스크에 남은 파일 없음:', grade, name);
+      return res.status(404).type('html').send(`<!doctype html><meta charset="utf-8">
+        <title>녹음 파일 없음</title>
+        <div style="font-family:system-ui,-apple-system,'Malgun Gothic',sans-serif;max-width:520px;margin:60px auto;padding:28px;border:1px solid #fecaca;background:#fef2f2;border-radius:12px;line-height:1.7;color:#7f1d1d;">
+          <h2 style="margin:0 0 12px;font-size:19px;">🎙️ 내려받을 녹음 파일이 없습니다</h2>
+          <p style="margin:0 0 10px;"><b>${grade} ${name}</b> 학생의 음성 파일이 서버에 남아 있지 않습니다.</p>
+          <p style="margin:0;font-size:14px;color:#991b1b;">
+            제출 기록은 남아 있지만 실제 파일이 삭제된 상태입니다.
+            서버 재배포 과정에서 초기화되었을 수 있습니다.
+          </p>
+        </div>`);
+    }
 
     const archiver = require('archiver');
     const zipName = `${grade}_${name}_녹음전체.zip`;
@@ -42864,7 +42913,7 @@ app.get('/api/admin/writing100-student-zip', requireAdminLogin, async (req, res)
     zip.pipe(res);
     for (const d of docs) {
       for (const rec of (d.recordings || [])) {
-        const filepath = path.join(__dirname, 'uploads', rec.filename);
+        const filepath = path.join(UPLOAD_DIR, rec.filename);
         if (fs.existsSync(filepath)) {
           const dayLabel = `Day${String(d.day).padStart(3, '0')}` + (d.topic ? `_${d.topic}` : '');
           const safeDayLabel = dayLabel.replace(/[^\w가-힣]/g, '_');
@@ -42893,7 +42942,7 @@ cron.schedule('15 3 * * *', async () => {
       const kept = [];
       for (const rec of doc.recordings) {
         if (new Date(rec.createdAt) < cutoff) {
-          const fp = path.join(__dirname, 'uploads', rec.filename);
+          const fp = path.join(UPLOAD_DIR, rec.filename);
           try { await fsp.unlink(fp); deleted++; } catch {}
         } else kept.push(rec);
       }
