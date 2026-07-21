@@ -1077,6 +1077,27 @@ app.get("/favicon.ico", (req, res) => {
   res.redirect(301, "/favicon.png");
 });
 
+// ✅ 백업·작업 잔여 파일 공개 차단
+// public/ 전체를 정적 서빙하므로 .bak / _backup / _original 류가 URL만 알면 열렸다.
+// 채점 로직(learning-common.js.bak*)과 콘텐츠 원본(*_content.js.backup*)이 노출되던 문제.
+// 파일은 그대로 두고 접근만 404 처리한다.
+// .bak / .bak13 / .bak_20260715_155125 / .backup2 / _backup / _original_20251121
+// / "_original_20251121 2.html"(macOS 복제본) / _OLD_BROKEN / .orig / 편집기 ~ 파일
+const BACKUP_FILE_PATTERN = /(\.bak|\.backup|\.orig)[\w.\- ]*$|(_backup|_original|_OLD_BROKEN)[\w.\- ]*$|~$/i;
+app.use((req, res, next) => {
+  let decoded;
+  try {
+    decoded = decodeURIComponent(req.path);
+  } catch {
+    decoded = req.path;           // 디코딩 실패 시 원본으로 검사
+  }
+  if (BACKUP_FILE_PATTERN.test(decoded)) {
+    console.warn(`[backup-block] 차단된 요청: ${decoded} (ip=${req.ip})`);
+    return res.status(404).send("Not Found");
+  }
+  next();
+});
+
 // ✅ 2) 정적 파일 제공 (CSS, JS, menu.html, admin_*.html 등)
 app.use(express.static(path.join(__dirname, "public"), {
   etag: true,
