@@ -42849,10 +42849,19 @@ app.get('/api/admin/writing100-recording-download', requireAdminLogin, async (re
       return res.status(404).json({ ok: false, code: 'FILE_MISSING',
         message: '녹음 파일이 서버에 없습니다. 재배포 과정에서 초기화되었을 수 있습니다.' });
     }
-    // 실제 다운로드 파일명
-    const safeUnit = unit.replace(/[^\w]/g, '');
-    const downloadName = `${grade}_${name}_${safeUnit}_${rec.part}.mp4`;
-    res.download(filepath, downloadName);
+    // 실제 다운로드 파일명: 학년_이름_Day{일}_단원명_문단
+    //   파일시스템에서 문제되는 문자만 걸러내고 한글은 그대로 둔다.
+    //   (\w 로 걸러내면 한글이 전부 사라져 "_6_____100day_001___1.mp4" 처럼 된다)
+    const sanitize = v => String(v || '').replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').trim();
+    const dayLabel = doc.day ? `Day${doc.day}` : sanitize(unit);
+    const topic = sanitize(doc.topic);
+    const parts = [sanitize(grade), sanitize(name), dayLabel, topic, sanitize(rec.part)].filter(Boolean);
+    const downloadName = `${parts.join('_')}.mp4`;
+    // res.download 의 기본 헤더는 비ASCII를 '_' 로 치환한 filename 을 함께 보내
+    //   클라이언트가 그쪽을 읽으면 한글이 깨진다. UTF-8 파일명만 명시한다.
+    res.setHeader('Content-Disposition',
+      `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`);
+    res.sendFile(filepath);
   } catch (err) {
     console.error('[wr100-recording-download]', err);
     res.status(500).json({ ok: false, message: '서버 오류' });

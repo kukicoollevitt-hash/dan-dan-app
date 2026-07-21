@@ -970,8 +970,12 @@
       // 서버가 지정한 파일명 우선 사용
       let filename = fallbackName;
       const cd = res.headers.get('Content-Disposition') || '';
-      const m = cd.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
-      if (m) { try { filename = decodeURIComponent(m[1]); } catch (_) { filename = m[1]; } }
+      // filename* (UTF-8) 을 먼저 본다. 일반 filename= 은 한글이 '_' 로 치환돼 있어
+      // 그쪽을 읽으면 "_6_____100day_001___1.mp4" 처럼 이름이 깨진다.
+      const mStar = cd.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
+      const mPlain = cd.match(/filename\s*=\s*"?([^";]+)"?/i);
+      if (mStar)      { try { filename = decodeURIComponent(mStar[1].trim()); } catch (_) { filename = mStar[1].trim(); } }
+      else if (mPlain) { filename = mPlain[1].trim(); }
       const blob = await res.blob();
       const objUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
