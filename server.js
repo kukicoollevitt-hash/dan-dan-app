@@ -42846,17 +42846,8 @@ app.get('/api/admin/writing100-recording-download', requireAdminLogin, async (re
       // 오류를 JSON으로 내려보내면 <a download> 때문에 브라우저가 .json 파일로 저장해 버려
       // 원인을 알 수 없다. 사람이 읽을 수 있는 HTML 안내를 반환한다.
       console.warn('[wr100-recording-download] 파일 없음:', filepath);
-      return res.status(404).type('html').send(`<!doctype html><meta charset="utf-8">
-        <title>녹음 파일 없음</title>
-        <div style="font-family:system-ui,-apple-system,'Malgun Gothic',sans-serif;max-width:520px;margin:60px auto;padding:28px;border:1px solid #fecaca;background:#fef2f2;border-radius:12px;line-height:1.7;color:#7f1d1d;">
-          <h2 style="margin:0 0 12px;font-size:19px;">🎙️ 녹음 파일을 찾을 수 없습니다</h2>
-          <p style="margin:0 0 10px;"><b>${grade} ${name}</b> 학생의 <b>${rec.part}</b> 녹음이 서버에 남아 있지 않습니다.</p>
-          <p style="margin:0 0 10px;font-size:14px;color:#991b1b;">
-            제출 기록(용량·시각)은 남아 있지만 실제 음성 파일이 삭제된 상태입니다.
-            서버 재배포 과정에서 파일이 초기화되었을 수 있습니다.
-          </p>
-          <p style="margin:14px 0 0;font-size:13px;color:#b91c1c;">파일명: ${rec.filename}</p>
-        </div>`);
+      return res.status(404).json({ ok: false, code: 'FILE_MISSING',
+        message: '녹음 파일이 서버에 없습니다. 재배포 과정에서 초기화되었을 수 있습니다.' });
     }
     // 실제 다운로드 파일명
     const safeUnit = unit.replace(/[^\w]/g, '');
@@ -42891,16 +42882,8 @@ app.get('/api/admin/writing100-student-zip', requireAdminLogin, async (req, res)
     });
     if (fileCount === 0) {
       console.warn('[wr100-student-zip] 디스크에 남은 파일 없음:', grade, name);
-      return res.status(404).type('html').send(`<!doctype html><meta charset="utf-8">
-        <title>녹음 파일 없음</title>
-        <div style="font-family:system-ui,-apple-system,'Malgun Gothic',sans-serif;max-width:520px;margin:60px auto;padding:28px;border:1px solid #fecaca;background:#fef2f2;border-radius:12px;line-height:1.7;color:#7f1d1d;">
-          <h2 style="margin:0 0 12px;font-size:19px;">🎙️ 내려받을 녹음 파일이 없습니다</h2>
-          <p style="margin:0 0 10px;"><b>${grade} ${name}</b> 학생의 음성 파일이 서버에 남아 있지 않습니다.</p>
-          <p style="margin:0;font-size:14px;color:#991b1b;">
-            제출 기록은 남아 있지만 실제 파일이 삭제된 상태입니다.
-            서버 재배포 과정에서 초기화되었을 수 있습니다.
-          </p>
-        </div>`);
+      return res.status(404).json({ ok: false, code: 'FILE_MISSING',
+        message: '내려받을 녹음 파일이 서버에 없습니다.' });
     }
 
     const archiver = require('archiver');

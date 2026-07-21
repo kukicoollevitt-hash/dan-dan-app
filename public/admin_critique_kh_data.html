@@ -889,9 +889,8 @@
                       <b>${esc(rec.part)}</b>
                       <span style="color:#94a3b8;margin-left:6px;font-size:11px;">${kb}KB · ${dt}</span>
                     </div>
-                    <a class="report-btn" style="text-decoration:none;padding:4px 10px;font-size:11px;background:linear-gradient(135deg,#14b8a6,#0d9488);"
-                       href="/api/admin/writing100-recording-download?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&unit=${encodeURIComponent(r.unit)}&filename=${encodeURIComponent(rec.filename)}"
-                       download>⬇️ 다운로드</a>
+                    <button class="report-btn" style="padding:4px 10px;font-size:11px;background:linear-gradient(135deg,#14b8a6,#0d9488);"
+                       onclick="downloadWr100Recording(this,'${encodeURIComponent(grade)}','${encodeURIComponent(name)}','${encodeURIComponent(r.unit)}','${encodeURIComponent(rec.filename)}')">⬇️ 다운로드</button>
                   </div>
                 `;
               }).join('')}
@@ -911,9 +910,54 @@
   });
 
   // 학생 전체 zip 다운로드 (모든 Day 녹음 하나로)
+  // 서버 응답을 먼저 확인한 뒤 저장한다.
+  // <a download>/location.href 로 바로 받으면 오류 응답(JSON·HTML)까지 파일로 저장돼
+  // "사이트에서 사용할 수 없는 파일"로 남기 때문에, fetch 로 상태를 확인한다.
+  async function fetchAndSave(url, fallbackName, btn) {
+    const prev = btn ? btn.textContent : null;
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ 준비 중'; }
+    try {
+      const res = await fetch(url, { credentials: 'same-origin' });
+      if (!res.ok) {
+        let msg = '';
+        try { msg = (await res.json()).message || ''; } catch (_) {}
+        if (res.status === 404) {
+          alert('🎙️ 녹음 파일을 찾을 수 없습니다.\n\n' +
+                '제출 기록은 남아 있지만 실제 음성 파일이 서버에 없습니다.\n' +
+                '이전 서버 재배포 과정에서 파일이 초기화되었을 수 있습니다.');
+        } else if (res.status === 403) {
+          alert('이 학생의 녹음을 내려받을 권한이 없습니다.');
+        } else {
+          alert('다운로드에 실패했습니다. ' + (msg || '(오류 ' + res.status + ')'));
+        }
+        return;
+      }
+      // 서버가 지정한 파일명 우선 사용
+      let filename = fallbackName;
+      const cd = res.headers.get('Content-Disposition') || '';
+      const m = cd.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+      if (m) { try { filename = decodeURIComponent(m[1]); } catch (_) { filename = m[1]; } }
+      const blob = await res.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objUrl; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
+    } catch (err) {
+      alert('다운로드 중 오류가 발생했습니다: ' + err.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = prev; }
+    }
+  }
+
+  window.downloadWr100Recording = function(btn, grade, name, unit, filename) {
+    const url = `/api/admin/writing100-recording-download?grade=${grade}&name=${name}&unit=${unit}&filename=${filename}`;
+    fetchAndSave(url, '녹음.mp4', btn);
+  };
+
   window.downloadWr100StudentZip = function(grade, name) {
     const url = `/api/admin/writing100-student-zip?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}`;
-    window.location.href = url;
+    fetchAndSave(url, `${grade}_${name}_녹음전체.zip`, null);
   };
   function bindWr100Controls() {
     $('wr100SearchName').oninput = debounce('wr100', () => loadWr100(true));
