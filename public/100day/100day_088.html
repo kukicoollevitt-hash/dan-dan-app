@@ -329,6 +329,24 @@
   .word-chip.dragging { opacity: 0.5; }
   .word-chip.used { display: none; }
 
+  /* 터치 드래그: 칩을 잡으면 화면 스크롤 대신 드래그가 되도록 */
+  .word-chip, .order-item {
+    touch-action: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  /* 손가락/마우스를 따라다니는 고스트 */
+  .drag-ghost {
+    position: fixed;
+    z-index: 10000;
+    pointer-events: none;
+    margin: 0;
+    opacity: 0.92;
+    transform: scale(1.04);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+    transition: none;
+  }
+
   /* ─── 스테이지 6: 문단순서 ─── */
   .order-slots { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
   .order-slot {
@@ -2288,40 +2306,80 @@ function shuffle(arr) {
   return a;
 }
 
-function setupDragChip(chip, onDrop) {
-  chip.setAttribute('draggable', 'true');
-  chip.addEventListener('dragstart', (e) => {
-    chip.classList.add('dragging');
-    e.dataTransfer.setData('text/plain', chip.dataset.val || chip.dataset.pi || '');
-    e.dataTransfer.effectAllowed = 'move';
-    window._dragChip = chip;
-  });
-  chip.addEventListener('dragend', () => {
-    chip.classList.remove('dragging');
-    window._dragChip = null;
+/* HTML5 Drag API는 터치스크린에서 동작하지 않으므로
+   Pointer Events(터치·마우스·펜 공용)로 직접 드래그를 구현한다. */
+function setupDragChip(chip) {
+  chip.addEventListener('pointerdown', (e) => {
+    if (chip.classList.contains('used')) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    const startX = e.clientX, startY = e.clientY;
+    const rect = chip.getBoundingClientRect();
+    let ghost = null;
+    let overZone = null;
+
+    const zoneAt = (ev) => {
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      return el && el.closest ? el.closest('[data-dropzone]') : null;
+    };
+    const onMove = (ev) => {
+      if (!ghost) {
+        // 6px 이상 움직여야 드래그 시작 (그 전에 떼면 탭 = 클릭 선택)
+        if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < 6) return;
+        ghost = chip.cloneNode(true);
+        ghost.classList.add('drag-ghost');
+        ghost.style.width = rect.width + 'px';
+        document.body.appendChild(ghost);
+        chip.classList.add('dragging');
+        window._dragChip = chip;
+      }
+      ghost.style.left = (rect.left + ev.clientX - startX) + 'px';
+      ghost.style.top = (rect.top + ev.clientY - startY) + 'px';
+      const zone = zoneAt(ev);
+      if (overZone && overZone !== zone) overZone.classList.remove('over');
+      overZone = zone;
+      if (zone && !zone.classList.contains('filled')) zone.classList.add('over');
+    };
+    const finish = (ev, dropped) => {
+      chip.removeEventListener('pointermove', onMove);
+      chip.removeEventListener('pointerup', onUp);
+      chip.removeEventListener('pointercancel', onCancel);
+      if (overZone) overZone.classList.remove('over');
+      if (!ghost) return;              // 드래그 없이 손을 뗀 경우 (탭)
+      ghost.remove();
+      chip.classList.remove('dragging');
+      window._dragChip = null;
+      chip._dragEndAt = Date.now();    // 드래그 직후 따라오는 click으로 선택되는 것 방지
+      if (dropped) {
+        const zone = zoneAt(ev);
+        if (zone && zone._onDrop) zone._onDrop(chip, zone);
+      }
+    };
+    const onUp = (ev) => finish(ev, true);
+    const onCancel = (ev) => finish(ev, false);
+    try { chip.setPointerCapture(e.pointerId); } catch (_) {}
+    chip.addEventListener('pointermove', onMove);
+    chip.addEventListener('pointerup', onUp);
+    chip.addEventListener('pointercancel', onCancel);
   });
 }
 
 function setupDropZone(zone, onDrop) {
-  zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('over'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('over'));
-  zone.addEventListener('drop', (e) => {
-    e.preventDefault(); zone.classList.remove('over');
-    const chip = window._dragChip;
-    if (!chip) return;
-    onDrop(chip, zone);
-  });
-  // 클릭도 지원 (모바일)
+  zone.dataset.dropzone = '1';
+  zone._onDrop = onDrop;
+  // 탭 방식도 지원: 칩을 탭해서 고른 뒤 빈칸을 탭
   zone.addEventListener('click', () => {
     if (window._selectedChip) {
-      onDrop(window._selectedChip, zone);
+      const chip = window._selectedChip;
+      chip.classList.remove('dragging');
       window._selectedChip = null;
+      onDrop(chip, zone);
     }
   });
 }
 
 function setupClickSelectChip(chip) {
   chip.addEventListener('click', () => {
+    if (Date.now() - (chip._dragEndAt || 0) < 400) return;   // 드래그 후 click 무시
     document.querySelectorAll('.word-chip.dragging, .order-item.dragging').forEach(c => c.classList.remove('dragging'));
     chip.classList.add('dragging');
     window._selectedChip = chip;
@@ -2891,11 +2949,15 @@ function renderStage7(card) {
   });
   // 힌트 칩 클릭 → textarea에 삽입 · 조사류는 공백 없이 붙임
   card.querySelectorAll('.q-chip').forEach(el => {
+    // 칩을 탭해도 입력칸 포커스를 빼앗지 않음 (입력 중이던 키보드 유지)
+    el.addEventListener('mousedown', (e) => e.preventDefault());
+    el.addEventListener('pointerdown', (e) => { el._pointerType = e.pointerType; });
     el.addEventListener('click', () => {
       const qi = el.dataset.qi;
       const chip = el.dataset.chip;
       const isParticle = el.dataset.particle === '1';
       const ta = document.getElementById(`qInput${qi}`);
+      const wasFocused = document.activeElement === ta;
       if (isParticle) {
         // 조사는 앞말에 붙여씀 · 공백 없이 바로 이어붙임
         if (ta.value.endsWith(' ')) ta.value = ta.value.trimEnd();
@@ -2905,7 +2967,9 @@ function renderStage7(card) {
         if (!ta.value.endsWith(' ') && ta.value.length > 0) ta.value += ' ';
         ta.value += chip;
       }
-      ta.focus();
+      // 터치에서는 칩 탭만으로 키보드가 올라오지 않도록,
+      // 이미 입력 중(포커스)이었을 때만 포커스를 유지
+      if (el._pointerType !== 'touch' || wasFocused) ta.focus();
       updateAiBtnState();
     });
   });
