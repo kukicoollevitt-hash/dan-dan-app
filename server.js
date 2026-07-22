@@ -41246,9 +41246,15 @@ async function aiGradeCritique({ article, sixW, thinking, teacherGuide, gradeLab
   // PII 익명화: 답안 본문만 전송 (학생 이름/전화는 안 보냄)
   const sixWLabels = { who:'누가', when:'언제', where:'어디서', what:'무엇을', why:'왜', how:'어떻게' };
   const myAnswers = Object.keys(sixWLabels).map(k => `[${sixWLabels[k]}] ${(sixW[k] || '').trim()}`).join('\n');
-  const tgAnswers = teacherGuide?.sixW
-    ? Object.keys(sixWLabels).map(k => `[${sixWLabels[k]}] ${(teacherGuide.sixW[k] || '').trim()}`).join('\n')
-    : '';
+  // 모범답안: 2축(sixWAxes)이 있으면 두 관점을 모두 제시해 어느 축으로 답해도 인정하게 한다.
+  const _fmtAxis = (ax) => Object.keys(sixWLabels).map(k => `[${sixWLabels[k]}] ${(ax[k] || '').trim()}`).join('\n');
+  const tgAxes = Array.isArray(teacherGuide?.sixWAxes) && teacherGuide.sixWAxes.length >= 2
+    ? teacherGuide.sixWAxes : null;
+  const tgAnswers = tgAxes
+    ? `〈관점 ①: ${tgAxes[0].label || tgAxes[0].who}〉\n${_fmtAxis(tgAxes[0])}\n\n〈관점 ②: ${tgAxes[1].label || tgAxes[1].who}〉\n${_fmtAxis(tgAxes[1])}`
+    : (teacherGuide?.sixW
+        ? Object.keys(sixWLabels).map(k => `[${sixWLabels[k]}] ${(teacherGuide.sixW[k] || '').trim()}`).join('\n')
+        : '');
   // 🎯 등급별 질문·답안 우선 사용 (elem34/elem56에만 byGrade가 있을 수 있음)
   const gradeKey = (() => {
     const g = (gradeLabel || '').trim();
@@ -41303,6 +41309,7 @@ async function aiGradeCritique({ article, sixW, thinking, teacherGuide, gradeLab
 
 == 6하원칙 다관점 인정 규칙 (매우 중요) ==
 하나의 기사에는 여러 주체/관점이 존재할 수 있습니다. 학생이 모범답안과 다른 주체("누가")를 선택했더라도, 그 선택을 기준으로 나머지 5W1H가 **본문 내용과 일관되게** 작성되어 있다면 **정답으로 인정**하세요.
+- ★ 모범답안이 〈관점 ①〉·〈관점 ②〉 두 가지로 제시된 경우: 학생이 **둘 중 어느 관점과 일치해도 정답**입니다. 두 관점 외에 본문에 근거한 제3의 관점을 일관되게 썼어도 정답입니다. 특정 한 관점만 정답으로 강요하지 마세요.
 - 예시 1: 모범답안은 "정부가 ~정책을 발표했다"인데, 학생이 "시민이 정책에 반대한다"고 적었다면, 학생이 선택한 "시민" 관점에서 무엇/왜/어떻게가 합리적으로 연결되었는지 보세요. 본문에 그 관점이 등장하면 정답입니다.
 - 예시 2: 모범답안은 기업 관점인데 학생이 소비자/직원 관점으로 일관되게 답했다면 인정.
 - 핵심: "모범답안과 다르다" ≠ "오답". 본문에 근거가 있고 학생 선택이 일관적이면 합리적 답안.

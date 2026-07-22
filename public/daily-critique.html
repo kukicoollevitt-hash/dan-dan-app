@@ -4259,13 +4259,41 @@
         z-index: 99998; display: flex; align-items: flex-start; justify-content: center;
         padding: 24px 16px; overflow-y: auto;
       `;
-      const sixWRows = Object.keys(sixWLabel).map(k => `
-        <tr>
-          <td style="padding:8px 10px;border:1px solid #e5d9c5;background:#fbf7ec;font-weight:700;color:#0d47a1;width:18%;vertical-align:top;font-size:12px;">${sixWLabel[k]}</td>
-          <td style="padding:8px 10px;border:1px solid #e5d9c5;font-size:12.5px;line-height:1.55;color:#222;vertical-align:top;">${escapeHtml(mySixW[k] || '-')}</td>
-          <td style="padding:8px 10px;border:1px solid #e5d9c5;background:#f0f9ff;font-size:12.5px;line-height:1.55;color:#0d47a1;vertical-align:top;">${escapeHtml((tg.sixW && tg.sixW[k]) || '-')}</td>
-        </tr>
-      `).join('');
+      // 2축 모범답안(sixWAxes)이 있으면 축별 열을 나눠 보여주고, 없으면 기존 단일 열 유지
+      const axes = Array.isArray(tg.sixWAxes) && tg.sixWAxes.length >= 2 ? tg.sixWAxes : null;
+      let sixWHead, sixWRows;
+      if (axes) {
+        const A = axes[0], B = axes[1];
+        sixWHead = `
+          <tr>
+            <th style="padding:6px;background:#1a1a1a;color:#fff;font-size:11px;letter-spacing:2px;border:1px solid #1a1a1a;">항목</th>
+            <th style="padding:6px;background:#1a1a1a;color:#fff;font-size:11px;letter-spacing:2px;border:1px solid #1a1a1a;">내 답안</th>
+            <th style="padding:6px;background:#0d47a1;color:#fff;font-size:11px;letter-spacing:1px;border:1px solid #0d47a1;">📌 모범 ①<br><span style="font-size:9px;opacity:0.85;">${escapeHtml(A.label || A.who || '')}</span></th>
+            <th style="padding:6px;background:#0b7a5b;color:#fff;font-size:11px;letter-spacing:1px;border:1px solid #0b7a5b;">📌 모범 ②<br><span style="font-size:9px;opacity:0.85;">${escapeHtml(B.label || B.who || '')}</span></th>
+          </tr>`;
+        sixWRows = Object.keys(sixWLabel).map(k => `
+          <tr>
+            <td style="padding:8px 10px;border:1px solid #e5d9c5;background:#fbf7ec;font-weight:700;color:#0d47a1;width:16%;vertical-align:top;font-size:12px;">${sixWLabel[k]}</td>
+            <td style="padding:8px 10px;border:1px solid #e5d9c5;font-size:12.5px;line-height:1.55;color:#222;vertical-align:top;">${escapeHtml(mySixW[k] || '-')}</td>
+            <td style="padding:8px 10px;border:1px solid #e5d9c5;background:#f0f9ff;font-size:12.5px;line-height:1.55;color:#0d47a1;vertical-align:top;">${escapeHtml(A[k] || '-')}</td>
+            <td style="padding:8px 10px;border:1px solid #e5d9c5;background:#effaf4;font-size:12.5px;line-height:1.55;color:#0b7a5b;vertical-align:top;">${escapeHtml(B[k] || '-')}</td>
+          </tr>
+        `).join('');
+      } else {
+        sixWHead = `
+          <tr>
+            <th style="padding:6px;background:#1a1a1a;color:#fff;font-size:11px;letter-spacing:2px;border:1px solid #1a1a1a;">항목</th>
+            <th style="padding:6px;background:#1a1a1a;color:#fff;font-size:11px;letter-spacing:2px;border:1px solid #1a1a1a;">내 답안</th>
+            <th style="padding:6px;background:#1a1a1a;color:#fff;font-size:11px;letter-spacing:2px;border:1px solid #1a1a1a;">📌 모범 답안 (예시)</th>
+          </tr>`;
+        sixWRows = Object.keys(sixWLabel).map(k => `
+          <tr>
+            <td style="padding:8px 10px;border:1px solid #e5d9c5;background:#fbf7ec;font-weight:700;color:#0d47a1;width:18%;vertical-align:top;font-size:12px;">${sixWLabel[k]}</td>
+            <td style="padding:8px 10px;border:1px solid #e5d9c5;font-size:12.5px;line-height:1.55;color:#222;vertical-align:top;">${escapeHtml(mySixW[k] || '-')}</td>
+            <td style="padding:8px 10px;border:1px solid #e5d9c5;background:#f0f9ff;font-size:12.5px;line-height:1.55;color:#0d47a1;vertical-align:top;">${escapeHtml((tg.sixW && tg.sixW[k]) || '-')}</td>
+          </tr>
+        `).join('');
+      }
       const THINKING_QUESTIONS = [
         '이 기사에서 가장 중요하다고 생각한 내용은 무엇인가요?',
         '나는 이 문제에 대해 어떻게 생각하나요?',
@@ -4300,16 +4328,10 @@
             ${gradingBlock}
             <div style="font-size:13px;font-weight:700;color:#0d47a1;margin:10px 0 6px;letter-spacing:1px;">육하원칙 비교</div>
             <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:8px 12px;margin-bottom:10px;border-radius:6px;font-size:12px;color:#92400e;line-height:1.5;">
-              💡 <strong>모범답안은 예시입니다.</strong> 본문에 근거가 있고 일관된 다른 관점의 답도 정답으로 인정돼요.
+              💡 <strong>모범답안은 예시입니다.</strong> ${axes ? '기사에는 여러 주체가 있어 <strong>모범 ①·②처럼 두 가지 관점</strong>이 모두 정답이에요. 본문에 근거가 있고 일관되면 다른 관점의 답도 정답으로 인정돼요.' : '본문에 근거가 있고 일관된 다른 관점의 답도 정답으로 인정돼요.'}
             </div>
             <table style="width:100%;border-collapse:collapse;border:1px solid #e5d9c5;margin-bottom:18px;">
-              <thead>
-                <tr>
-                  <th style="padding:6px;background:#1a1a1a;color:#fff;font-size:11px;letter-spacing:2px;border:1px solid #1a1a1a;">항목</th>
-                  <th style="padding:6px;background:#1a1a1a;color:#fff;font-size:11px;letter-spacing:2px;border:1px solid #1a1a1a;">내 답안</th>
-                  <th style="padding:6px;background:#1a1a1a;color:#fff;font-size:11px;letter-spacing:2px;border:1px solid #1a1a1a;">📌 모범 답안 (예시)</th>
-                </tr>
-              </thead>
+              <thead>${sixWHead}</thead>
               <tbody>${sixWRows}</tbody>
             </table>
 
