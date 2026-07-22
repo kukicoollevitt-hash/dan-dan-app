@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚗️ 빛나는 돌을 찾은 여인 — 마리 퀴리</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계인물03/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00897b 0%, #004d40 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 137, 123, 0.15);
+      color: #004d40;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00897b;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #004d40;
+      font-weight: 600;
+    }
+
+    .story-card .key-sentence {
+      display: block;
+      background: rgba(0, 137, 123, 0.1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-left: 4px solid #00897b;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #004d40;
+      font-size: 14px;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #4dd0e1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(0, 137, 123, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #80cbc4;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 137, 123, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 77, 64, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 137, 123, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⚗️ 빛나는 돌을 찾은 여인</h1>
+        <p class="subtitle">
+          — 포기하지 않은 과학자, 마리 퀴리 —<br>
+          교과기반 창작도서 · 세계인물 03
+        </p>
+        <div class="characters">
+          <h3>⚗️ 등장인물 소개</h3>
+          <p><strong>★ 마리 퀴리:</strong> 폴란드에서 태어난 소녀예요.<br>여자는 대학에 갈 수 없던 시절에도 배움을 포기하지 않았어요.</p>
+          <p><strong>★ 피에르 퀴리:</strong> 프랑스의 <span class="vocab-tip" data-meaning="자연의 이치를 연구하는 사람">과학자</span>예요.<br>마리를 도와주는 평생의 짝꿍이 돼요.</p>
+          <p><strong>★ 브로냐:</strong> 마리의 언니예요.<br>동생과 한 약속을 끝까지 지켜요.</p>
+          <p><strong>★ 라듐:</strong> 마리가 찾아낸 '빛나는 돌'이에요.<br>어둠 속에서 스스로 빛을 내요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p>마리는 공부가 너무 하고 싶어요.<br>하지만 "여자는 안 된다"는 말만 들어요.</p>
+          <p>드디어 빛나는 돌을 찾아냈어요.<br>그런데 그 빛이 마리의 몸을 아프게 해요.</p>
+          <p>마리는 과연 꿈을 이룰 수 있을까요?</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">배움을 갈망한 소녀</span>
+        <h2>바르샤바의 작은 불꽃</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>마음속 불꽃이 꺼지지 않으면, 길은 반드시 열려요.</p>
+        <p>1867년, 폴란드의 바르샤바에서 한 여자아이가 태어났어요.<br>
+이름은 마리아. 훗날 세상이 '마리 퀴리'라고 부르게 될 소녀예요.</p>
+        <p>마리는 어릴 때부터 좀 달랐어요.<br>
+다른 아이들이 인형을 가지고 놀 때, 마리는 아버지의 방에 들어가 유리 실험 도구를 구경했어요.<br><br><span class="dialogue">"아빠, 이 유리병 안에 든 건 뭐예요?"</span><br><br>아버지가 웃으며 말했어요.<br><br><span class="dialogue">"이건 과학이라는 마법의 도구란다."</span></p>
+        <p>그런데 그 시절 폴란드에서는 여자아이가 대학에 갈 수 없었어요.<br>
+학교 선생님은 이렇게 말했어요.<br><br><span class="dialogue">"여자가 과학을 한다고? 그건 남자들 일이야."</span><br><br>마리는 입술을 꽉 깨물었어요.<br>
+하지만 고개를 숙이지는 않았어요.</p>
+        <p>열다섯 살 때, 어머니가 병으로 세상을 떠났어요.<br>
+마리는 밤마다 울었어요.<br>
+그래도 어머니가 남긴 말을 잊지 않았어요.<br><br><span class="dialogue">"마리야, 절대 배움을 포기하지 마렴. 네 안의 빛은 아무도 끌 수 없단다."</span></p>
+        <p>마리는 언니 브로냐와 약속을 했어요.<br><br><span class="dialogue">"언니가 먼저 파리에서 공부해. 내가 돈을 벌어 보낼게. 그다음엔 내 차례야."</span><br><br>마리는 낮에는 남의 집 아이들을 가르치고, 밤에는 촛불 아래에서 혼자 공부했어요.<br>
+바르샤바의 바람은 차가웠지만, <span class="highlight">마리의 마음속 불꽃</span><br><br>은 꺼지지 않았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">추위와 배고픔을 이긴 열정</span>
+        <h2>파리의 다락방</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>진짜 열정은 힘든 일이 있어도 빛을 잃지 않아요.</p>
+        <p>1891년, 스물네 살이 된 마리는 드디어 파리로 가는 기차를 탔어요.<br>
+가방 하나와 아주 적은 돈이 전부였어요.<br><br><span class="dialogue">"드디어 공부할 수 있는 곳으로 가는 거야."</span><br><br>마리의 눈에서 기쁨의 눈물이 흘렀어요.</p>
+        <p>하지만 파리 생활은 쉽지 않았어요.<br>
+마리가 살게 된 곳은 6층 <span class="vocab-tip" data-meaning="지붕 바로 아래에 있는 좁은 방">다락방</span>이었어요.<br>
+난방이 안 돼서 겨울이면 물이 꽁꽁 얼었어요.<br>
+마리는 옷을 다 껴입고도 덜덜 떨었어요.</p>
+        <p>돈이 없어서 하루에 빵 한 조각으로 버티는 날도 많았어요.<br>
+너무 배가 고파 어지러운 날도 있었어요.<br><br><span class="dialogue">"마리, 오늘도 밥을 안 먹은 거야?"</span><br><br>친구가 걱정하자 마리는 웃으며 답했어요.<br><br><span class="dialogue">"괜찮아. 오늘 수업이 너무 재미있어서 배고픈 줄도 몰랐어."</span></p>
+        <p>교실에서 여학생은 마리 혼자일 때가 많았어요.<br>
+남학생들은 마리를 비웃기도 했어요.<br><br><span class="dialogue">"여자가 물리학을? 어차피 중간에 그만둘걸."</span><br><br>하지만 마리는 늘 맨 앞자리에 앉았어요.</p>
+        <p>촛불이 다 타면 달빛 아래에서 외웠어요.<br>
+도서관이 문을 닫으면 복도에서 책을 읽었어요.<br>
+그리고 1893년, 마리는 시험에서 <span class="highlight">전체 1등</span><br><br>을 했어요.<br>
+수백 명의 남학생을 모두 제친 거예요.<br><br><span class="dialogue">"엄마, 내가 해냈어."</span><br><br>그날 밤 마리는 차가운 다락방에서 조용히 울었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">피에르와의 만남</span>
+        <h2>운명의 실험실</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>진짜 짝꿍은 같은 꿈을 함께 꾸는 사람이에요.</p>
+        <p>1894년 봄, 마리는 한 과학자를 만났어요.<br>
+이름은 피에르 퀴리예요.</p>
+        <p>둘의 첫 만남은 좀 특별했어요.<br>
+꽃다발이나 달콤한 말은 없었어요.<br>
+만나자마자 자석과 <span class="vocab-tip" data-meaning="규칙적인 모양으로 굳은 알갱이">결정</span> 이야기부터 시작했거든요.<br><br><span class="dialogue">"당신이 자석을 재는 방법, 정말 대단하군요."</span><br><br>마리는 깜짝 놀랐어요.<br>
+자기 실력을 진심으로 인정해 준 사람은 처음이었어요.</p>
+        <p>하지만 마리는 쉽게 마음을 열지 않았어요.<br>
+폴란드로 돌아가고 싶었기 때문이에요.<br><br><span class="dialogue">"저는 프랑스에 계속 있을 생각이 없어요."</span><br><br>피에르는 편지를 썼어요.<br><br><span class="dialogue">"당신이 폴란드에서 과학을 한다면 나도 따라가겠습니다. 과학을 할 수 있는 곳이면 어디든 좋아요."</span></p>
+        <p>이 편지를 읽고 마리의 마음이 움직였어요.<br>
+자기를 '여자'가 아니라 '과학자'로 봐 주는 사람이었으니까요.</p>
+        <p>1895년, 두 사람은 결혼했어요.<br>
+마리는 하얀 웨딩드레스 대신 진한 남색 원피스를 입었어요.<br>
+그 옷은 나중에 실험실 작업복이 되었어요.<br><br><span class="dialogue">"가장 좋은 옷은 실험실에서도 입을 수 있는 옷이에요."</span><br><br>두 사람은 저녁마다 머리를 맞대고 실험 이야기를 나눴어요.<br>
+<span class="highlight">과학으로 만난 두 사람</span><br><br>은 과학으로 가장 좋은 짝꿍이 되었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">라듐의 발견</span>
+        <h2>빛나는 돌의 비밀</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>위대한 발견은 "왜?"라는 작은 질문에서 시작돼요.</p>
+        <p>1897년, 마리는 신기한 이야기를 들었어요.<br>
+우라늄이라는 물질이 들어 있는 돌이, 사진 종이를 까맣게 만든다는 거예요.<br>
+다른 과학자들은 그냥 넘어갔어요.<br>
+하지만 마리는 달랐어요.</p>
+        <p><span class="dialogue">"왜 우라늄은 스스로 힘을 내보내는 걸까?"</span><br><br>이 작은 질문이 모든 것의 시작이었어요.<br>
+마리는 수백 가지 돌을 하나하나 재기 시작했어요.</p>
+        <p>그런데 이상한 일이 생겼어요.<br><br><span class="dialogue">"피에르, 이것 좀 봐요! 이 돌에서 나오는 힘이 우라늄보다 훨씬 세요. 우라늄만으로는 설명이 안 돼요!"</span><br><br>피에르도 눈을 크게 떴어요.<br><br><span class="dialogue">"그럼 이 돌 안에 아직 아무도 모르는 새 <span class="vocab-tip" data-meaning="물질을 이루는 가장 기본이 되는 재료">원소</span>가 있다는 뜻이잖아!"</span></p>
+        <p>두 사람은 돌을 잘게 나누고 또 나누었어요.<br>
+지루하고 힘든 일이었어요.<br>
+1898년 7월, 드디어 새 원소를 찾아냈어요.<br>
+마리는 고향 폴란드의 이름을 따서 '<span class="highlight">폴로늄</span>'<br><br>이라고 불렀어요.</p>
+        <p>하지만 마리는 멈추지 않았어요.<br>
+남은 물질에서 아직도 강한 힘이 느껴졌거든요.<br>
+그리고 그해 12월, 두 번째 원소를 찾아냈어요.<br>
+'빛줄기'라는 뜻의 '<span class="highlight">라듐</span>'<br><br>이에요.<br><br><span class="dialogue">"피에르, 봐요. 빛나고 있어요."</span><br><br>어두운 실험실에서 작은 유리관 속 라듐이 푸르스름하게 빛났어요.<br>
+그런데 그 빛이 얼마나 위험한지는 아직 아무도 몰랐어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">빛나는 독을 다루는 손</span>
+        <h2>고통의 실험실</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>진짜 용기는 무섭지 않은 게 아니라, 무서워도 나아가는 거예요.</p>
+        <p>라듐이 진짜 있다는 걸 보여 주려면, 순수한 라듐을 뽑아내야 했어요.<br>
+그런데 라듐은 아주 조금밖에 없었어요.<br>
+돌 1톤에서 겨우 0.1그램이었어요.</p>
+        <p>두 사람에게 주어진 실험실은 낡은 헛간이었어요.<br>
+지붕에서 비가 새고, 겨울에는 찬바람이 들어왔어요.<br>
+마리는 매일 아침 그곳으로 갔어요.<br>
+큰 솥에 돌을 넣고 끓이고, 거르고, 또 끓였어요.</p>
+        <p>무거운 솥을 젓는 일은 정말 힘들었어요.<br>
+마리의 손은 갈라지고 빨갛게 헐었어요.<br><br><span class="dialogue">"마리, 좀 쉬어야 해. 손이 이 지경인데..."</span><br><br>피에르가 걱정하자 마리는 조용히 말했어요.<br><br><span class="dialogue">"괜찮아요. 라듐이 곧 나올 거예요. 포기할 수 없어요."</span></p>
+        <p>사실 마리의 몸은 이미 나빠지고 있었어요.<br>
+그때는 <span class="vocab-tip" data-meaning="눈에 보이지 않게 나오는 위험한 기운">방사능</span>이 위험하다는 걸 아무도 몰랐거든요.<br>
+마리는 라듐을 주머니에 넣고 다니기도 했어요.<br>
+잠잘 때 침대 옆에 두기도 했고요.</p>
+        <p>그렇게 4년이 흘렀어요.<br>
+1902년, 마리는 드디어 순수한 라듐 0.1그램을 만들어 냈어요.<br><br><span class="dialogue">"해냈어요, 피에르. 우리가 해냈어요."</span><br><br>그날 밤 어두운 헛간에서 라듐이 푸르스름하게 빛났어요.<br>
+아름다운 빛이었어요.<br>
+<span class="highlight">하지만 그 빛은 마리의 몸을 조금씩 아프게 하고 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">두 번의 노벨상</span>
+        <h2>세계가 놀란 날</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>진짜 훌륭한 일은 상을 받으려고 하는 게 아니에요.</p>
+        <p>1903년, 놀라운 소식이 왔어요.<br>
+마리와 피에르가 노벨 물리학상을 받게 된 거예요.</p>
+        <p>그런데 여기에는 숨은 이야기가 있어요.<br>
+처음에 노벨상 위원회는 피에르만 상을 주려고 했어요.<br>
+마리가 여자라는 이유였어요.<br>
+이 말을 들은 피에르는 화를 냈어요.<br><br><span class="dialogue">"마리 없이는 이 연구가 없습니다. 마리를 빼면 나도 상을 받지 않겠습니다."</span><br><br>그래서 마리의 이름도 함께 올라갔어요.</p>
+        <p>마리는 <span class="highlight">노벨상을 받은 최초의 여성</span><br><br>이 되었어요.<br>
+하지만 사람들의 눈길이 다 따뜻하지는 않았어요.<br>
+어떤 신문은 마리의 연구 대신 옷차림 이야기만 썼어요.<br>
+"피에르를 돕는 사람일 뿐"이라고 수군대는 사람도 있었어요.</p>
+        <p>1906년, 슬픈 일이 생겼어요.<br>
+피에르가 마차 사고로 갑자기 세상을 떠난 거예요.<br>
+마리는 일기에 이렇게 썼어요.<br><br><span class="dialogue">"피에르, 당신이 없는 실험실은 너무 조용해요."</span><br><br>그래도 마리는 무너지지 않았어요.<br>
+남편이 남긴 연구를 이어 가는 것이 가장 큰 사랑이라고 믿었거든요.</p>
+        <p>마리는 대학의 첫 여성 교수가 되었어요.<br>
+그리고 1911년, <span class="highlight">노벨 화학상을 또 받았어요.</span><br><br>서로 다른 분야에서 노벨상을 두 번 받은 사람은 마리가 처음이었어요.<br><br><span class="dialogue">"상은 중요하지 않아요. 과학이 사람들에게 도움이 되는 게 중요해요."</span><br><br>마리는 라듐을 자기 것으로 만들지 않았어요.<br>
+누구나 쓸 수 있게 세상에 그냥 내놓았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">여성 과학자의 고독한 싸움</span>
+        <h2>보이지 않는 벽</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>편견의 벽도, 포기하지 않는 사람 앞에서는 결국 금이 가요.</p>
+        <p>노벨상을 두 번 받았다고 세상의 <span class="vocab-tip" data-meaning="제대로 알아보지 않고 미리 나쁘게 생각하는 것">편견</span>이 사라지지는 않았어요.<br>
+오히려 마리가 유명해질수록 시샘도 커졌어요.</p>
+        <p>마리가 과학 아카데미 회원 투표에 나갔을 때였어요.<br><br><span class="dialogue">"여자가 들어온 적은 한 번도 없다! 전통을 깰 수 없다!"</span><br><br>한 나이 든 학자가 소리쳤어요.<br>
+마리의 실력이 훨씬 뛰어났는데도, 두 표 차이로 떨어졌어요.<br>
+마리는 아무 말 없이 자리를 떠났어요.</p>
+        <p>신문들은 더 심했어요.<br>
+마리를 "프랑스의 부끄러움"이라고 부른 신문도 있었어요.<br>
+사람들이 마리의 집 앞에 몰려와 돌을 던지기도 했어요.<br>
+두 딸을 데리고 이웃집으로 피해야 했던 밤도 있었어요.</p>
+        <p><span class="dialogue">"나는 그저 과학을 하고 싶었을 뿐인데..."</span><br><br>마리의 일기에 적힌 말이에요.<br>
+그래도 마리는 다시 실험실로 돌아갔어요.<br>
+마리에게 과학은 자기를 지켜 주는 방패였어요.</p>
+        <p>마리는 자기만을 위해 싸운 게 아니었어요.<br>
+공부 잘하는 여학생들에게 장학금을 주었어요.<br><br><span class="dialogue">"내 뒤를 따라올 여성들이 더 쉬운 길을 걸을 수 있다면, 그걸로 충분해요."</span><br><br>이 말은 진짜가 되었어요.<br>
+마리의 큰딸 이렌도 과학자가 되어, 1935년에 <span class="highlight">노벨 화학상을 받았거든요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">죽음의 전장을 누빈 과학자</span>
+        <h2>전쟁의 천사</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>과학의 진짜 가치는 사람을 살리는 곳에서 빛나요.</p>
+        <p>1914년, 큰 전쟁이 일어났어요.<br>
+날마다 수천 명의 다친 군인들이 병원으로 실려 왔어요.<br>
+몸속에 총알이 박혔는데 어디 있는지 몰라서 수술을 못 하는 경우가 많았어요.</p>
+        <p>마리는 실험실에 가만히 앉아 있을 수 없었어요.<br><br><span class="dialogue">"과학이 사람을 도울 수 있다면, 바로 지금이에요."</span><br><br>그때 <span class="vocab-tip" data-meaning="몸속을 사진처럼 들여다보는 기계">엑스레이</span>는 큰 병원에만 있었어요.<br>
+마리는 놀라운 생각을 했어요.<br>
+자동차에 엑스레이를 실어 전쟁터로 가져가는 거예요!</p>
+        <p>마리는 자기 연구비까지 털어서 차를 만들었어요.<br>
+사람들은 이 차를 '<span class="highlight">작은 퀴리</span>'<br><br>라고 불렀어요.<br>
+마리는 운전면허도 따고, 자동차 고치는 법도 배웠어요.<br>
+쉰일곱 살 노벨상 수상자가 트럭 밑에 누워 엔진을 고쳤어요.</p>
+        <p><span class="dialogue">"어머니, 제가 함께 갈게요."</span><br><br>열일곱 살 큰딸 이렌이 말했어요.<br>
+엄마와 딸은 함께 전쟁터로 갔어요.<br><br><span class="dialogue">"여기, 왼쪽에 파편이 있어요!"</span><br><br>마리가 사진을 보고 외치면, 의사는 바로 수술을 할 수 있었어요.</p>
+        <p>한 군인이 수술을 마치고 마리의 손을 잡고 울었어요.<br><br><span class="dialogue">"당신 덕분에 살았습니다."</span><br><br>마리는 조용히 웃으며 말했어요.<br><br><span class="dialogue">"과학이 당신을 살린 거예요."</span><br><br>전쟁이 끝날 때까지 마리가 도운 촬영은 100만 건이 넘었어요.<br>
+하지만 마리는 어떤 보상도 받지 않았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">연구는 삶 그 자체</span>
+        <h2>꺼지지 않는 불꽃</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>열정이 곧 삶인 사람에게는 멈춤이 없어요.</p>
+        <p>전쟁이 끝나고 마리는 다시 연구실로 돌아왔어요.<br>
+하지만 몸이 예전 같지 않았어요.<br>
+오랫동안 방사능을 쬔 탓이었어요.<br>
+손끝은 늘 아팠고, 눈도 점점 흐려졌어요.<br><br><span class="dialogue">"퀴리 부인, 더 이상 연구를 하시면 안 됩니다."</span><br><br>의사가 말렸어요.</p>
+        <p>그래도 마리는 아침이면 실험실로 걸어갔어요.<br>
+마리에게 과학을 빼앗는 건 숨을 쉬지 말라는 말과 같았어요.<br><br><span class="dialogue">"나는 실험실에서 태어났고, 실험실에서 죽을 거예요."</span></p>
+        <p>마리는 파리에 라듐 연구소를 세웠어요.<br>
+그곳에서는 남자든 여자든, 어느 나라 사람이든 똑같이 연구할 수 있었어요.<br><br><span class="dialogue">"과학에는 국경도 성별도 없어요. 오직 진실만 있을 뿐이에요."</span></p>
+        <p>어느 날 미국 기자가 물었어요.<br><br><span class="dialogue">"세상에서 가장 갖고 싶은 게 뭔가요?"</span><br><br>마리는 잠깐 생각하더니 대답했어요.<br><br><span class="dialogue">"1그램의 라듐이요."</span><br><br>기자는 깜짝 놀랐어요.<br>
+노벨상을 두 번이나 받은 사람이 라듐 살 돈이 없다니요.<br>
+라듐을 자기 것으로 만들지 않았기 때문이었어요.</p>
+        <p>이 이야기가 알려지자 미국 여성들이 돈을 모았어요.<br>
+그리고 대통령이 마리에게 라듐 1그램을 선물했어요.<br><br><span class="dialogue">"이 라듐은 나를 위한 게 아니라, 과학을 위한 것입니다."</span><br><br>눈이 나빠지자 <span class="highlight">글씨가 큰 기구를 따로 만들어</span><br><br> 썼어요.<br>
+손이 떨리면 더 천천히 했어요.<br>
+마리에게 과학은 직업이 아니라 삶 그 자체였어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물03/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">세상을 바꾼 한 여인의 이야기</span>
+        <h2>영원히 빛나는 유산</h2>
+        <p>📌 <span class="highlight">중심 문장:</span><br><br>한 사람의 열정은 시간이 지나도 사라지지 않는 빛이 돼요.</p>
+        <p>1934년 7월, 마리 퀴리는 조용히 눈을 감았어요.<br>
+예순여섯 해를 살았고, 그중 마흔 해를 실험실에서 보냈어요.</p>
+        <p>장례식은 아주 소박했어요.<br>
+마리가 평생 그리워한 폴란드의 흙 한 줌이 관 위에 뿌려졌어요.<br>
+두 딸 이렌과 에브도 그 자리에 있었어요.<br>
+이렌은 과학자가 되었고, 에브는 어머니의 삶을 책으로 썼어요.</p>
+        <p>1995년, 프랑스는 마리와 피에르를 <span class="vocab-tip" data-meaning="프랑스가 존경하는 위인을 모시는 곳">팡테옹</span>으로 옮겼어요.<br>
+마리는 자기가 이룬 일로 그곳에 모셔진 <span class="highlight">최초의 여성</span><br><br>이 되었어요.</p>
+        <p>마리가 남긴 것은 라듐만이 아니에요.<br>
+마리의 연구 덕분에 오늘날 암을 치료하고, 몸속을 사진으로 볼 수 있게 되었어요.<br>
+마리가 라듐을 세상에 그냥 내놓았기 때문에, 수많은 환자가 도움을 받았어요.</p>
+        <p>하지만 마리가 남긴 가장 큰 것은 따로 있어요.<br>
+바로 <span class="highlight">'포기하지 않는 것'</span><br><br>이에요.<br>
+여자라서 대학에 못 간다는 말을 들었을 때도, 추운 다락방에서 배를 곯을 때도, 마리는 한 번도 포기하지 않았어요.<br><br><span class="dialogue">"인생에서 두려워할 것은 아무것도 없어요. 다만 이해해야 할 것이 있을 뿐이에요."</span><br><br>어둠 속에서 빛나던 라듐처럼, 마리의 이야기는 지금도 빛나고 있어요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(46, 134, 171, 0.15); border-radius: 16px;">
+          <strong style="color: #2E86AB; font-size: 20px;">⚗️ 「한 사람의 열정은, 시간이 지나도 사라지지 않는 빛이 돼요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+      function goToQuiz() { window.location.href = '/creative-book/worldperson03_season1_quiz.html?season=season1'; }
+  </script>
+</body>
+</html>
