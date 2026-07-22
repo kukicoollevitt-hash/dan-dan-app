@@ -2953,11 +2953,15 @@ function renderStage7(card) {
   });
   // 힌트 칩 클릭 → textarea에 삽입 · 조사류는 공백 없이 붙임
   card.querySelectorAll('.q-chip').forEach(el => {
+    // 칩을 탭해도 입력칸 포커스를 빼앗지 않음 (입력 중이던 키보드 유지)
+    el.addEventListener('mousedown', (e) => e.preventDefault());
+    el.addEventListener('pointerdown', (e) => { el._pointerType = e.pointerType; });
     el.addEventListener('click', () => {
       const qi = el.dataset.qi;
       const chip = el.dataset.chip;
       const isParticle = el.dataset.particle === '1';
       const ta = document.getElementById(`qInput${qi}`);
+      const wasFocused = document.activeElement === ta;
       if (isParticle) {
         // 조사는 앞말에 붙여씀 · 공백 없이 바로 이어붙임
         if (ta.value.endsWith(' ')) ta.value = ta.value.trimEnd();
@@ -2967,7 +2971,9 @@ function renderStage7(card) {
         if (!ta.value.endsWith(' ') && ta.value.length > 0) ta.value += ' ';
         ta.value += chip;
       }
-      ta.focus();
+      // 터치에서는 칩 탭만으로 키보드가 올라오지 않도록,
+      // 이미 입력 중(포커스)이었을 때만 포커스를 유지
+      if (el._pointerType !== 'touch' || wasFocused) ta.focus();
       updateAiBtnState();
     });
   });
