@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRAIN 월말 모의고사 시험지</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #1a1a1a;
+    --line: #8a8a8a;
+    --page-w: 210mm;
+    --page-h: 296.8mm;
+    --page-pad-v: 11mm;
+    --page-pad-h: 10mm;
+    --col-gap: 8mm;
+  }
+
+  html, body { background: #e9ecef; }
+  body {
+    font-family: 'Batang', '바탕', 'Nanum Myeongjo', 'AppleMyungjo', serif;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+
+  /* ─── 화면 전용 툴바 ─── */
+  .toolbar {
+    position: sticky; top: 0; z-index: 10;
+    background: #1f2937; color: #fff;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px;
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  }
+  .toolbar .tb-title { font-weight: 700; font-size: 15px; flex: 1; }
+  .toolbar button {
+    border: none; border-radius: 8px; padding: 9px 18px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    font-family: inherit;
+  }
+  .tb-print { background: #059669; color: #fff; }
+  .tb-print:hover { background: #047857; }
+  .tb-hint { font-size: 12px; color: #cbd5e1; }
+
+  /* ─── A4 페이지 (화면·인쇄 동일 레이아웃) ─── */
+  #sheet { padding: 16px 0 40px; }
+  .page {
+    background: #fff;
+    width: var(--page-w);
+    height: var(--page-h);
+    padding: var(--page-pad-v) var(--page-pad-h);
+    margin: 0 auto 14px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+  .page-num {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 3.2mm;
+    text-align: center;
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-size: 8.5pt;
+    color: #555;
+  }
+  .page-foot {
+    position: absolute;
+    bottom: 3.6mm;
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-size: 6.5pt;
+    letter-spacing: 0.4px;
+    color: #999;
+  }
+  .page-foot.fl { left: var(--page-pad-h); }
+  .page-foot.fr { right: var(--page-pad-h); }
+
+  /* ─── 머리말 (1페이지 상단) ─── */
+  .paper-head {
+    border: 2.5px solid var(--ink);
+    padding: 10px 14px 9px;
+    margin-bottom: 6mm;
+    flex-shrink: 0;
+  }
+  .ph-top {
+    display: flex; align-items: baseline; justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 6px; margin-bottom: 6px;
+  }
+  .ph-series {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-size: 11pt; font-weight: 800; letter-spacing: 1px;
+  }
+  .ph-teacher {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-size: 9pt; font-weight: 800; color: #b91c1c;
+    border: 1.5px solid #b91c1c; border-radius: 4px; padding: 1px 8px;
+  }
+  .ph-explain {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-size: 9pt; font-weight: 800; color: #047857;
+    border: 1.5px solid #047857; border-radius: 4px; padding: 1px 8px;
+  }
+  .ph-main { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .ph-title { font-size: 16pt; font-weight: 800; letter-spacing: 2px; }
+  .ph-meta {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-size: 9pt; color: #333; text-align: right; line-height: 1.5;
+  }
+  .ph-name {
+    display: flex; gap: 14px; margin-top: 7px; padding-top: 6px;
+    border-top: 1px solid var(--line);
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-size: 10pt;
+  }
+  .ph-name .slot {
+    border-bottom: 1px solid var(--ink);
+    min-width: 34mm;
+    display: inline-block;
+    height: 9mm;              /* 손글씨 쓸 세로 공간 */
+    vertical-align: bottom;
+  }
+
+  /* ─── 2단 칼럼 영역 ─── */
+  .cols {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+  .col {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 9.8pt;
+    text-align: justify;
+  }
+  .col:first-child { padding-right: calc(var(--col-gap) / 2); }
+  .col + .col {
+    border-left: 1px solid #999;
+    padding-left: calc(var(--col-gap) / 2);
+  }
+
+  /* 지문 묶음 안내 [n~m] */
+  .p-range {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-weight: 800; font-size: 10pt;
+    margin-bottom: 2.5mm;
+  }
+
+  /* 지문 박스 */
+  .p-box {
+    border: 1.2px solid var(--ink);
+    padding: 3mm 3.5mm;
+    margin-bottom: 4mm;
+  }
+  .p-box .p-subject {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-size: 8pt; font-weight: 700; color: #555;
+    margin-bottom: 1.5mm;
+  }
+  .p-box p { margin-bottom: 2.2mm; text-indent: 3.2mm; }
+  .p-box p:last-child { margin-bottom: 0; }
+
+  /* 문항 */
+  .q { margin-bottom: 8mm; }
+  .q-stem { margin-bottom: 2.4mm; }
+  .q-stem .q-no { font-weight: 800; }
+  .q-stem .q-score {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-size: 8.5pt; color: #333;
+  }
+  .q-opts { list-style: none; font-size: 9pt; }
+  .q-opts li { display: flex; gap: 1.6mm; margin-bottom: 1.3mm; }
+  .q-opts .mark { flex-shrink: 0; }
+
+  /* 교사용 정답·해설 */
+  .q-answer {
+    border: 1px dashed #059669;
+    background: #f0fdf6;
+    padding: 2mm 2.5mm;
+    margin-top: 1.5mm;
+    font-size: 8.8pt;
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    color: #14532d;
+  }
+  .q-answer b { color: #047857; }
+  .q-answer .q-wrong { color: #57534e; margin-top: 1.2mm; }
+  .q-answer .q-wrong b { color: #78716c; }
+
+  /* 교사용 정답표 */
+  .answer-table-wrap { margin-top: 2mm; }
+  .answer-table-title {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-weight: 800; font-size: 10.5pt; margin-bottom: 2mm;
+  }
+  table.answer-table {
+    width: 100%; border-collapse: collapse;
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-size: 8.5pt; text-align: center;
+  }
+  table.answer-table th, table.answer-table td {
+    border: 1px solid var(--ink); padding: 1mm 0;
+  }
+  table.answer-table th { background: #efefef; }
+
+  .load-error {
+    padding: 40px; text-align: center;
+    font-family: 'Pretendard', sans-serif; color: #b91c1c; font-size: 15px;
+  }
+
+  /* ─── 인쇄 ─── */
+  @page { size: A4; margin: 0; }
+  @media print {
+    html, body { background: #fff; }
+    .toolbar { display: none; }
+    #sheet { padding: 0; }
+    .page {
+      margin: 0; box-shadow: none;
+      break-after: page;
+    }
+    .page:last-child { break-after: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="tb-title" id="tbTitle">시험지 준비 중…</div>
+  <div class="tb-hint">인쇄 창에서 ‘PDF로 저장’을 선택하면 파일로 저장돼요</div>
+  <button class="tb-print" onclick="window.print()">🖨 인쇄 · PDF 저장</button>
+</div>
+
+<div id="sheet">
+  <div class="load-error" id="loading">시험지를 불러오는 중입니다…</div>
+</div>
+
+<script>
+  const CIRCLED = ['①','②','③','④','⑤'];
+  const params = new URLSearchParams(location.search);
+  const level = params.get('level') === 'mid' ? 'mid' : 'elem';
+  const round = Math.min(12, Math.max(1, parseInt(params.get('round') || '1', 10) || 1));
+  const isTeacher = params.get('teacher') === '1';
+  const isExplain = params.get('answers') === '1';   // 해설지 (응시 완료 학생용)
+  const showAnswers = isTeacher || isExplain;
+
+  const script = document.createElement('script');
+  script.src = `/monthly_exam_data/monthly_${level}_${round}.js?v=${Date.now()}`;   // 데이터 캐시 방지
+  script.onload = render;
+  script.onerror = () => {
+    document.getElementById('loading').textContent = '시험지 데이터를 불러오지 못했습니다. 회차를 확인해 주세요.';
+  };
+  document.head.appendChild(script);
+
+  /* ── 페이지 조립: 실제 A4 페이지 DOM을 만들어 블록을 좌→우 칼럼 순서로 채움.
+        화면 미리보기와 인쇄 결과가 항상 동일함 ── */
+  function render() {
+    const d = window.MONTHLY_EXAM_DATA;
+    if (!d) return;
+    const levelKo = level === 'mid' ? '중등' : '초등';
+    const docKo = isExplain ? '해설지' : isTeacher ? '시험지(교사용)' : '시험지(학생용)';
+    document.title = `BRAIN월말_${levelKo}_${round}회차_${docKo}`;
+    document.getElementById('tbTitle').textContent = `${d.title} · ${docKo}`;
+
+    const sheet = document.getElementById('sheet');
+    sheet.innerHTML = '';
+
+    let colIdx = 0, cols = null;
+
+    function newPage(withHead) {
+      const page = document.createElement('div');
+      page.className = 'page';
+      if (withHead) {
+        page.innerHTML = `
+          <div class="paper-head">
+            <div class="ph-top">
+              <span class="ph-series">✦ BRAIN 월말 모의고사</span>
+              ${isTeacher ? '<span class="ph-teacher">교사용 · 정답/해설 포함</span>'
+                : isExplain ? '<span class="ph-explain">해설지 · 정답/해설 포함</span>'
+                : `<span class="ph-meta">제${round}회</span>`}
+            </div>
+            <div class="ph-main">
+              <div class="ph-title">${levelKo} 문해 모의고사 · ${round}회차</div>
+              <div class="ph-meta">${d.totalQuestions}문항 · ${d.totalMinutes}분 · ${d.totalScore}점 만점</div>
+            </div>
+            <div class="ph-name">
+              <span>학년 <span class="slot"></span></span>
+              <span>이름 <span class="slot"></span></span>
+              <span>점수 <span class="slot" style="min-width:20mm"></span></span>
+            </div>
+          </div>`;
+      }
+      const c = document.createElement('div');
+      c.className = 'cols';
+      c.innerHTML = '<div class="col"></div><div class="col"></div>';
+      page.appendChild(c);
+      sheet.appendChild(page);
+      cols = c.querySelectorAll('.col');
+      colIdx = 0;
+    }
+
+    const curCol = () => cols[colIdx];
+    function nextCol() {
+      if (colIdx === 0) colIdx = 1;
+      else newPage(false);
+    }
+    const fits = (col) => col.scrollHeight <= col.clientHeight + 1;
+
+    /* 블록을 현재 칼럼에 넣어보고, 넘치면 다음 칼럼으로 */
+    function place(el) {
+      curCol().appendChild(el);
+      if (fits(curCol())) return;
+      curCol().removeChild(el);
+      nextCol();
+      curCol().appendChild(el);
+    }
+
+    function el(tag, cls, html) {
+      const e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (html != null) e.innerHTML = html;
+      return e;
+    }
+
+    newPage(true);
+
+    d.passages.forEach(p => {
+      const qs = p.questions || [];
+      const first = qs[0] ? qs[0].no : '';
+      const last = qs.length ? qs[qs.length - 1].no : '';
+
+      /* [n~m] 안내 + 지문 첫 문단은 한 묶음으로 배치 (안내문만 칼럼 끝에 남는 고아 방지) */
+      const range = el('div', 'p-range', `[${first}~${last}] 다음 글을 읽고 물음에 답하시오.`);
+      let box = el('div', 'p-box', `<div class="p-subject">${p.subject} · ${p.title}</div>`);
+      const paras = p.text.map(t => el('p', '', t));
+
+      curCol().appendChild(range);
+      curCol().appendChild(box);
+      box.appendChild(paras[0]);
+      if (!fits(curCol())) {
+        curCol().removeChild(range);
+        curCol().removeChild(box);
+        nextCol();
+        curCol().appendChild(range);
+        curCol().appendChild(box);
+      }
+
+      /* 나머지 문단을 하나씩 채우고, 넘치면 다음 칼럼에 이어짐 박스로 분할 */
+      for (let i = 1; i < paras.length; i++) {
+        box.appendChild(paras[i]);
+        if (!fits(curCol())) {
+          box.removeChild(paras[i]);
+          nextCol();
+          box = el('div', 'p-box', `<div class="p-subject">${p.subject} · ${p.title} (이어서)</div>`);
+          curCol().appendChild(box);
+          box.appendChild(paras[i]);
+        }
+      }
+
+      qs.forEach(q => {
+        const qEl = el('div', 'q', `
+          <div class="q-stem"><span class="q-no">${q.no}.</span> ${q.text} <span class="q-score">[${q.score}점]</span></div>
+          <ul class="q-opts">
+            ${q.options.map((opt, i) => `<li><span class="mark">${CIRCLED[i]}</span><span>${opt}</span></li>`).join('')}
+          </ul>
+          ${showAnswers ? `<div class="q-answer"><b>정답 ${CIRCLED[q.answer - 1]}</b> · ${q.correct || ''}
+            ${q.wrong ? `<div class="q-wrong"><b>오답 풀이</b> · ${q.wrong}</div>` : ''}</div>` : ''}
+        `);
+        place(qEl);
+      });
+    });
+
+    if (showAnswers) {
+      const all = d.passages.flatMap(p => p.questions || []);
+      const perRow = 10;
+      let tableHtml = '';
+      for (let s = 0; s < all.length; s += perRow) {
+        const chunk = all.slice(s, s + perRow);
+        tableHtml += `
+          <tr><th>번호</th>${chunk.map(q => `<td>${q.no}</td>`).join('')}</tr>
+          <tr><th>정답</th>${chunk.map(q => `<td><b>${CIRCLED[q.answer - 1]}</b></td>`).join('')}</tr>
+          <tr><th>배점</th>${chunk.map(q => `<td>${q.score}</td>`).join('')}</tr>
+        `;
+      }
+      place(el('div', 'answer-table-wrap', `
+        <div class="answer-table-title">■ 빠른 정답표</div>
+        <table class="answer-table">${tableHtml}</table>
+      `));
+    }
+
+    /* 페이지 하단: 중앙 번호 + 좌우 꼬리말 */
+    sheet.querySelectorAll('.page').forEach((pg, i) => {
+      pg.appendChild(el('div', 'page-num', `- ${i + 1} -`));
+      pg.appendChild(el('div', 'page-foot fl', 'Brain Literacy Exam'));
+      pg.appendChild(el('div', 'page-foot fr', `${levelKo}문해모의고사`));
+    });
+  }
+</script>
+</body>
+</html>

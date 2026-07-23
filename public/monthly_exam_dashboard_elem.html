@@ -555,7 +555,11 @@
     function loadResult(round) {
       try {
         const raw = localStorage.getItem(`monthly_${GRADE}_${round}_result`);
-        return raw ? JSON.parse(raw) : null;
+        const r = raw ? JSON.parse(raw) : null;
+        // 과거 재열람 버그로 부풀려진 소요시간 보정
+        const durCap = (GRADE === 'mid' ? 35 : 30) * 60;
+        if (r && typeof r.durationSec === 'number' && r.durationSec > durCap) r.durationSec = durCap;
+        return r;
       } catch(e) { return null; }
     }
 
@@ -585,6 +589,8 @@
           actionsHtml = `
             <a href="/monthly_exam_elem_${r}.html" class="round-btn">다시 응시</a>
             <a href="/monthly_exam_feedback_elem.html?round=${r}" class="round-btn success">해설 보기</a>
+            <a href="/monthly_exam_paper.html?level=elem&round=${r}" target="_blank" rel="noopener" class="round-btn wide">🖨 시험지 다운로드</a>
+            <a href="/monthly_exam_paper.html?level=elem&round=${r}&answers=1" target="_blank" rel="noopener" class="round-btn success wide">📖 해설지 다운로드</a>
             <a href="/monthly_exam_elem_${r}.html?pdf=1" target="_blank" rel="noopener" class="round-btn pdf wide">📄 결과 PDF 다운로드</a>
           `;
         } else if (isOpen) {
@@ -601,6 +607,7 @@
           `;
           actionsHtml = `
             <a href="/monthly_exam_elem_${r}.html" class="round-btn primary">✦ 응시 시작</a>
+            <a href="/monthly_exam_paper.html?level=elem&round=${r}" target="_blank" rel="noopener" class="round-btn wide">🖨 시험지 다운로드</a>
           `;
         } else {
           statusHtml = '<span class="round-status status-locked">🔒 준비 중</span>';
@@ -1379,7 +1386,7 @@
             subjectScores: row.subjectScores || [],
             answers: row.answers || [],
             answerKey: row.answerKey || [],
-            durationSec: row.durationSec || 0,
+            durationSec: Math.min(row.durationSec || 0, (GRADE === 'mid' ? 35 : 30) * 60),
             submittedAt: row.submittedAt || new Date().toISOString(),
           };
           try {

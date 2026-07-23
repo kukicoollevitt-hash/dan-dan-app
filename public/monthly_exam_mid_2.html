@@ -1140,7 +1140,7 @@
     </div>
   </div>
 
-  <script src="/monthly_exam_data/monthly_mid_2.js"></script>
+  <script src="/monthly_exam_data/monthly_mid_2.js?v=20260723b"></script>
   <script>
     /* ========================================
        BRAIN 월말 응시 렌더러 (2단 · OMR · 형광펜)
@@ -1149,6 +1149,7 @@
     const STORAGE_KEY = 'monthly_mid_2_result';
     let currentPassageIdx = 0;
     let userAnswers = new Array(EXAM.totalQuestions + 1).fill(null);
+    let _restoredPrev = null;   // 완료 회차 재열람 시 원본 기록 보존
     let highlights = {}; // passageIdx → HTML with hl spans
     let currentTool = 'cursor';
     let graded = false;
@@ -1701,7 +1702,9 @@
       });
 
       // 결과 팝업
-      const dur = Math.floor((Date.now() - startedAt) / 1000);
+      const dur = _restoredPrev
+        ? Math.min(_restoredPrev.durationSec || 0, EXAM.totalMinutes * 60)
+        : Math.floor((Date.now() - startedAt) / 1000);
       const dMin = Math.floor(dur / 60), dSec = dur % 60;
       document.getElementById('rScore').innerHTML = `${formatScore(totalScore)}<small>/100</small>`;
       document.getElementById('rSub').textContent = `중등 월말 2회차 · ${new Date().toLocaleString('ko-KR')}`;
@@ -1758,7 +1761,7 @@
         subjectScores,
         answers: userAnswers.slice(1),
         answerKey: EXAM.passages.flatMap(p => p.questions.map(q => q.answer)),
-        submittedAt: new Date().toISOString(),
+        submittedAt: _restoredPrev ? _restoredPrev.submittedAt : new Date().toISOString(),
         durationSec: dur
       });
     }
@@ -1921,31 +1924,59 @@
     }
 
     /* ========= PDF 다운로드 (새 창 → html2pdf.js 자동 저장 → 자동 닫힘) ========= */
-    function runInlinePdf(prev) {
-      // 답안 복원 → 채점 모드로 전환
-      try { prev.answers.forEach((a, idx) => userAnswers[idx+1] = a); } catch(e){}
-      try { startedAt = new Date(prev.submittedAt).getTime() - (prev.durationSec * 1000); } catch(e){}
-      try { updateProgress(); renderQuestions(); } catch(e){}
-      try { gradeExam(true); } catch(e){}
+    /* html2canvas 는 캡처 시 레이아웃을 다시 그려 위치가 미세하게 어긋나므로,
+       콘텐츠를 '페이지 높이 고정 박스'로 미리 나눠 담아 경계 잘림을 원천 차단한다.
+       캡처 폭 880px 기준: 페이지 내부 높이 = 277mm × (880/190mm) */
+    function fixPdfPageBreaks(rootEl) {
+      rootEl.style.marginLeft = '20px';
+      var PAGE_H = Math.floor(277 * 900 / 190);
+      var SLACK = 120;
+      var blocks = [];
+      (function collect(children) {
+        for (var i = 0; i < children.length; i++) {
+          var el = children[i];
+          var h = el.getBoundingClientRect().height;
+          if (h > PAGE_H - SLACK && el.children.length > 1) {
+            var cs = getComputedStyle(el);
+            var pl = parseFloat(cs.paddingLeft) || 0, pr = parseFloat(cs.paddingRight) || 0;
+            var inner = Array.prototype.slice.call(el.children);
+            for (var j = 0; j < inner.length; j++) {
+              if (pl) inner[j].style.marginLeft = ((parseFloat(getComputedStyle(inner[j]).marginLeft) || 0) + pl) + 'px';
+              if (pr) inner[j].style.marginRight = ((parseFloat(getComputedStyle(inner[j]).marginRight) || 0) + pr) + 'px';
+            }
+            collect(inner);
+          } else {
+            blocks.push(el);
+          }
+        }
+      })(Array.prototype.slice.call(rootEl.children));
+      rootEl.innerHTML = '';
+      var pg = null;
+      function newPg() {
+        pg = document.createElement('div');
+        pg.style.cssText = 'overflow:hidden;';
+        rootEl.appendChild(pg);
+      }
+      newPg();
+      for (var k = 0; k < blocks.length; k++) {
+        pg.appendChild(blocks[k]);
+        if (pg.getBoundingClientRect().height > PAGE_H - SLACK && pg.children.length > 1) {
+          newPg();
+          pg.appendChild(blocks[k]);
+        }
+      }
+      for (var m = 0; m < rootEl.children.length; m++) rootEl.children[m].style.height = PAGE_H + 'px';
+    }
 
-      // 현재 탭 body 를 PDF 콘텐츠로 교체 (팝업 없음)
+    function runInlinePdf(prev) {
+      // 브라우저 인쇄 기반 PDF: 화면 레이아웃이 그대로 출력되고
+      // page-break-inside 를 브라우저가 직접 지켜 문항 잘림이 없음
       const container = buildPdfContent();
       container.style.position = 'static';
       container.style.opacity = '1';
       container.style.zIndex = '';
       container.style.pointerEvents = '';
-
-      const loader = document.createElement('div');
-      loader.style.cssText = 'position:fixed;inset:0;background:rgba(20,10,30,0.85);color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:999999;font-family:Pretendard,sans-serif;font-size:16px;font-weight:700;';
-      loader.innerHTML = '<div style="width:42px;height:42px;border-radius:50%;border:4px solid rgba(255,255,255,0.2);border-top-color:#f39c39;animation:spin 0.9s linear infinite;"></div><div>PDF 생성 중...</div><div style="font-size:12px;opacity:0.7;font-weight:500;">잠시만 기다려주세요</div>';
-      const styleTag = document.createElement('style');
-      styleTag.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
-      document.head.appendChild(styleTag);
-
-      document.body.innerHTML = '';
-      document.body.style.cssText = 'margin:0;padding:0;background:#fff;width:820px;font-family:Pretendard,-apple-system,sans-serif;';
-      document.body.appendChild(container);
-      document.body.appendChild(loader);
+      container.id = 'pdfPrintRoot';
 
       const gradeLbl = (EXAM.grade === 'mid' || EXAM.grade === '중등') ? '중등' : '초등';
       let stuName = '';
@@ -1953,134 +1984,37 @@
         const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
         stuName = cs.name || '';
       } catch(e) {}
-      const fileTitle = gradeLbl + '월말_' + EXAM.round + '회' + (stuName ? '_' + stuName : '') + '_' + new Date().toISOString().slice(0,10) + '.pdf';
+      document.title = gradeLbl + '월말_' + EXAM.round + '회' + (stuName ? '_' + stuName : '') + '_' + new Date().toISOString().slice(0,10);
 
-      function generate() {
-        html2pdf().from(container).set({
-          margin: [10, 10, 10, 10],
-          filename: fileTitle,
-          image: { type: 'jpeg', quality: 0.95 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: 820, windowWidth: 820, x: 0, y: 0, scrollX: 0, scrollY: 0 },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-          pagebreak: { mode: ['css', 'legacy'] }
-        }).save().then(function(){
-          setTimeout(function(){ try { window.close(); } catch(e){} }, 400);
-        }).catch(function(err){
-          console.error(err);
-          loader.innerHTML = '<div>PDF 생성 실패</div><div style="font-size:12px;opacity:0.7;">브라우저 인쇄 → PDF 저장을 이용해주세요.</div>';
-        });
-      }
+      const styleTag = document.createElement('style');
+      styleTag.textContent = [
+        '@page { size: A4; margin: 10mm; }',
+        '#pdfPrintRoot, #pdfPrintRoot * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }',
+        'html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; height: auto !important; overflow: visible !important; }',
+        '#pdfPrintRoot { width: 820px; zoom: 0.875; }',
+        '#pdfPrintRoot [style*="page-break-inside"] { break-inside: avoid; }',
+        '.pdf-print-toolbar { position: sticky; top: 0; z-index: 10; background: #1f2937; color: #fff; padding: 12px 20px; display: flex; gap: 12px; align-items: center; font-family: Pretendard, sans-serif; }',
+        '@media print { .pdf-print-toolbar { display: none !important; } }'
+      ].join('\n');
+      document.head.appendChild(styleTag);
 
-      function loadLib() {
-        if (typeof html2pdf !== 'undefined') { generate(); return; }
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-        s.onload = generate;
-        s.onerror = function(){ loader.innerHTML = '<div>PDF 라이브러리 로드 실패</div>'; };
-        document.head.appendChild(s);
-      }
-      loadLib();
+      document.body.innerHTML = '';
+      document.body.style.cssText = 'margin:0;padding:0;background:#fff;font-family:Pretendard,-apple-system,sans-serif;';
+      const bar = document.createElement('div');
+      bar.className = 'pdf-print-toolbar';
+      bar.innerHTML = '<div style="flex:1;font-weight:700;">결과 리포트 · 인쇄 창에서 “PDF로 저장”을 선택하세요</div>' +
+        '<button onclick="window.print()" style="border:none;border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;background:#059669;color:#fff;font-family:inherit;font-size:14px;">🖨 인쇄 · PDF 저장</button>';
+      document.body.appendChild(bar);
+      document.body.appendChild(container);
+
+      setTimeout(function(){ window.print(); }, 300);
     }
 
     async function downloadPdf() {
       const btn = document.getElementById('btnDownloadPdf');
       if (!btn || btn.disabled) return;
-
-      // 새 창에 완전히 독립된 HTML 문서로 렌더
-      const container = buildPdfContent();
-      const contentHtml = container.innerHTML;
-      const fileTitle = `중등월말_2회_${new Date().toISOString().slice(0,10)}`;
-
-      const win = window.open('', '_blank', 'width=900,height=1100,scrollbars=yes');
-      if (!win) {
-        alert('팝업이 차단되어 있습니다.\n브라우저 팝업 차단을 해제한 뒤 다시 시도해주세요.');
-        return;
-      }
-      const doc = win.document;
-      doc.open();
-      doc.write(`<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<title>${fileTitle}</title>
-<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<scr` + `ipt src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></scr` + `ipt>
-<style>
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: #fff; width: 720px; }
-  body {
-    font-family: 'Pretendard', 'Nanum Myeongjo', -apple-system, sans-serif;
-    color: #111;
-  }
-  .pdf-doc {
-    width: 720px; margin: 0; padding: 0; background: #fff;
-    overflow: hidden;
-  }
-  #loading {
-    position: fixed; inset: 0; background: rgba(20,10,30,0.85);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 999999; color: #fff; font-size: 16px; font-weight: 700;
-    flex-direction: column; gap: 14px;
-  }
-  #loading .spinner {
-    width: 42px; height: 42px; border-radius: 50%;
-    border: 4px solid rgba(255,255,255,0.2);
-    border-top-color: #f39c39;
-    animation: spin 0.9s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-</style>
-</head>
-<body>
-<div id="loading">
-  <div class="spinner"></div>
-  <div>PDF 생성 중...</div>
-  <div style="font-size:12px; opacity:0.7; font-weight:500;">잠시만 기다려주세요</div>
-</div>
-<div class="pdf-doc" id="pdfRoot">${contentHtml}</div>
-<scr` + `ipt>
-(function(){
-  var FILENAME = ${JSON.stringify(fileTitle + '.pdf')};
-  function generate(){
-    if (typeof html2pdf === 'undefined') {
-      alert('PDF 라이브러리 로드 실패');
-      return;
-    }
-    var el = document.getElementById('pdfRoot');
-    html2pdf().from(el).set({
-      margin: [10, 10, 10, 10],
-      filename: FILENAME,
-      image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: {
-        scale: 2, useCORS: true, backgroundColor: '#ffffff',
-        width: 720, windowWidth: 720,
-        x: 0, y: 0,
-        scrollX: 0, scrollY: 0
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-      pagebreak: { mode: ['css', 'legacy'] }
-    }).save().then(function(){
-      setTimeout(function(){ try { window.close(); } catch(e){} }, 400);
-    }).catch(function(err){
-      console.error(err);
-      document.getElementById('loading').innerHTML = '<div>PDF 생성 실패</div><div style="font-size:12px;opacity:0.7;">브라우저의 인쇄 → PDF 저장을 이용해주세요.</div>';
-    });
-  }
-  function waitLib(retries){
-    if (typeof html2pdf !== 'undefined') { generate(); return; }
-    if (retries <= 0) { alert('PDF 라이브러리를 불러오지 못했습니다.'); return; }
-    setTimeout(function(){ waitLib(retries - 1); }, 200);
-  }
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(function(){ setTimeout(function(){ waitLib(30); }, 200); });
-  } else {
-    window.onload = function(){ setTimeout(function(){ waitLib(30); }, 400); };
-  }
-})();
-</scr` + `ipt>
-</body>
-</html>`);
-      doc.close();
+      // 결과 인쇄 페이지(?pdf=1)를 새 탭으로 열어 인쇄 창에서 PDF 저장
+      window.open(location.pathname + '?pdf=1', '_blank');
     }
 
     function buildPdfContent() {
@@ -2156,29 +2090,31 @@
       const radarSvg = buildPdfRadarSvg(areaScore, areaMax);
       html += `
         <div style="padding: 0 20px; margin-bottom: 24px; page-break-inside: avoid;">
-          <div style="font-size:13px; font-weight:800; color:#666; letter-spacing:0.5px; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+          <div style="font-size:13px; font-weight:800; color:#666; letter-spacing:0; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
             <span style="display:inline-block; width:5px; height:16px; border-radius:2px; background: linear-gradient(180deg, #d35a1a, #f39c39);"></span>
             문해력 5지수
           </div>
-          <div style="display: grid; grid-template-columns: 240px 1fr; gap: 20px; align-items: center;">
-            <div style="display:flex; align-items:center; justify-content:center;">${radarSvg}</div>
-            <div>
+          <table style="width:100%; border-collapse:collapse; table-layout:fixed;"><tr>
+            <td style="width:240px; text-align:center; vertical-align:middle; padding:0;">${radarSvg}</td>
+            <td style="vertical-align:middle; padding:0 0 0 20px;">
+              <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
               ${Object.entries(EXAM.areas).map(([k, v]) => {
                 const max = v.score * v.count;
                 const got = areaScore[k] || 0;
                 const pct = max > 0 ? got / max * 100 : 0;
                 return `
-                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:12px;">
-                    <div style="width:52px; font-weight:800;">${v.label}</div>
-                    <div style="flex:1; height:9px; background:#e5d5c1; border-radius:5px; overflow:hidden;">
+                  <tr>
+                    <td style="width:52px; font-weight:800; font-size:12px; padding:3px 0;">${v.label}</td>
+                    <td style="padding:3px 8px;"><div style="height:9px; background:#e5d5c1; border-radius:5px; overflow:hidden;">
                       <div style="height:100%; width:${pct}%; background:linear-gradient(90deg,#d35a1a,#f39c39);"></div>
-                    </div>
-                    <div style="width:60px; text-align:right; font-family:monospace; font-size:11px; font-weight:800;">${formatScore(got)}/${max}</div>
-                  </div>
+                    </div></td>
+                    <td style="width:60px; text-align:right; font-size:11px; font-weight:800; padding:3px 0; white-space:nowrap;">${formatScore(got)}/${max}</td>
+                  </tr>
                 `;
               }).join('')}
-            </div>
-          </div>
+              </table>
+            </td>
+          </tr></table>
         </div>
       `;
 
@@ -2192,32 +2128,88 @@
       const subjectRadar = buildSubjectRadarSvg(subjectRows, { cx: 130, cy: 130, R: 90 });
       html += `
         <div style="padding: 0 20px; margin-bottom: 24px; page-break-inside: avoid;">
-          <div style="font-size:13px; font-weight:800; color:#666; letter-spacing:0.5px; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+          <div style="font-size:13px; font-weight:800; color:#666; letter-spacing:0; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
             <span style="display:inline-block; width:5px; height:16px; border-radius:2px; background: linear-gradient(180deg, #d35a1a, #f39c39);"></span>
             과목별 정답률
           </div>
-          <div style="display: grid; grid-template-columns: 280px 1fr; gap: 16px; align-items: center; background:#fbf7f2; padding:14px 16px; border-radius:10px;">
-            <div style="display:flex; align-items:center; justify-content:center;">
+          <div style="background:#fbf7f2; padding:14px 16px; border-radius:10px;">
+          <table style="width:100%; border-collapse:collapse; table-layout:fixed;"><tr>
+            <td style="width:280px; text-align:center; vertical-align:middle; padding:0;">
               <svg width="260" height="260" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">${subjectRadar}</svg>
-            </div>
-            <div>
+            </td>
+            <td style="vertical-align:middle; padding:0 0 0 16px;">
+              <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
               ${subjectRows.map(r => {
                 const color = r.pct >= 75 ? '#2e9c58' : r.pct < 50 ? '#c62828' : '#d35a1a';
                 const bar = r.pct >= 75 ? 'linear-gradient(90deg,#2e9c58,#4bb572)' : r.pct < 50 ? 'linear-gradient(90deg,#c62828,#f26a6a)' : 'linear-gradient(90deg,#d35a1a,#f39c39)';
                 return `
-                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px; font-size:11px;">
-                    <div style="width:60px; font-weight:700;">${r.subject}</div>
-                    <div style="flex:1; height:6px; background:#e5d5c1; border-radius:4px; overflow:hidden;">
+                  <tr>
+                    <td style="width:60px; font-weight:700; font-size:11px; padding:2.5px 0;">${r.subject}</td>
+                    <td style="padding:2.5px 8px;"><div style="height:6px; background:#e5d5c1; border-radius:4px; overflow:hidden;">
                       <div style="height:100%; width:${r.pct}%; background:${bar};"></div>
-                    </div>
-                    <div style="width:70px; text-align:right; font-family:monospace; font-size:10.5px; font-weight:800; color:${color};">${r.pct}% (${r.correct}/${r.total})</div>
-                  </div>
+                    </div></td>
+                    <td style="width:70px; text-align:right; font-size:10.5px; font-weight:800; color:${color}; padding:2.5px 0; white-space:nowrap;">${r.pct}% (${r.correct}/${r.total})</td>
+                  </tr>
                 `;
               }).join('')}
-            </div>
+              </table>
+            </td>
+          </tr></table>
           </div>
         </div>
       `;
+
+      // 오답 문항 다시 보기 · 틀린 문항만 결과 아래에 이어서 출력
+      const wrongList = [];
+      EXAM.passages.forEach(p => p.questions.forEach(q => {
+        const user = answers[q.no - 1];
+        if (user !== q.answer) wrongList.push({ q, user, subject: p.subject });
+      }));
+      if (wrongList.length) {
+        const CIRC = ['①','②','③','④','⑤'];
+        const wrongTitle = `
+          <div style="font-size:13px; font-weight:800; color:#666; letter-spacing:0; margin:18px 0 10px; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-block; width:5px; height:16px; border-radius:2px; background: linear-gradient(180deg, #c62828, #f26a6a);"></span>
+            오답 문항 다시 보기 <span style="color:#c62828;">(${wrongList.length}문항)</span>
+          </div>`;
+        const wrongCards = wrongList.map(w => {
+            const q = w.q;
+            const opts = q.options.map((opt, i) => {
+              const n = i + 1;
+              const isAns = n === q.answer;
+              const isMine = n === w.user;
+              const style = isAns
+                ? 'background:#e6f6ec; border:1.2px solid #2e9c58; color:#1b5e20; font-weight:700;'
+                : isMine
+                  ? 'background:#fdecec; border:1.2px solid #e57373; color:#b71c1c;'
+                  : 'border:1px solid #eee; color:#444;';
+              const tag = isAns
+                ? '<span style="font-size:10px; font-weight:800; color:#2e9c58; margin-left:6px;">✓ 정답</span>'
+                : isMine ? '<span style="font-size:10px; font-weight:800; color:#c62828; margin-left:6px;">✗ 내가 고른 답</span>' : '';
+              return `<div style="display:flex; gap:6px; align-items:flex-start; padding:5px 8px; border-radius:6px; margin-bottom:3px; font-size:11.5px; line-height:1.5; ${style}"><span>${CIRC[i]}</span><span style="flex:1;">${opt}${tag}</span></div>`;
+            }).join('');
+            return `
+            <div style="page-break-inside: avoid; border:1.5px solid #eee2d5; border-radius:10px; padding:12px 14px; margin-bottom:10px; background:#fffdfa;">
+              <div style="font-size:12.5px; font-weight:800; margin-bottom:8px; line-height:1.5;">
+                <span style="color:#c62828;">${q.no}.</span> ${q.text}
+                <span style="font-size:10px; color:#888; font-weight:700;">[${q.score}점 · ${w.subject} · ${q.typeKo || ''}]</span>
+                ${w.user == null ? '<span style="font-size:10px; font-weight:800; color:#c62828; margin-left:4px;">무응답</span>' : ''}
+              </div>
+              ${opts}
+              <div style="margin-top:8px; padding:8px 10px; background:#f2faf5; border:1px dashed #2e9c58; border-radius:8px; font-size:11px; color:#1b5e20; line-height:1.6;">
+                <b style="color:#2e9c58;">정답 ${CIRC[q.answer-1]}</b> · ${q.correct || ''}
+                ${q.wrong ? `<div style="margin-top:4px; color:#57534e;"><b style="color:#78716c;">오답 풀이</b> · ${q.wrong}</div>` : ''}
+              </div>
+            </div>`;
+          });
+        // 섹션 제목이 페이지 하단에 홀로 남지 않도록 첫 오답 카드와 한 묶음으로
+        html += `
+        <div style="padding: 0 20px; margin-bottom: 16px;">
+          <div style="page-break-inside: avoid;">${wrongTitle}${wrongCards[0] || ''}</div>
+          ${wrongCards.slice(1).join('')}
+        </div>
+        `;
+      }
 
       html += `<div style="text-align:center; padding:12px 20px; font-size:10px; color:#999; border-top:1px solid #eee; margin-top:12px;">BRAIN 월말 모의고사 · 단단국어  ·  ${submittedStr}</div>`;
 
@@ -2292,7 +2284,12 @@
     function loadPreviousResult() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : null;
+        const r = raw ? JSON.parse(raw) : null;
+        // 과거 재열람 버그로 부풀려진 소요시간 보정 (제한시간 초과 불가)
+        if (r && typeof r.durationSec === 'number' && r.durationSec > EXAM.totalMinutes * 60) {
+          r.durationSec = EXAM.totalMinutes * 60;
+        }
+        return r;
       } catch(e) { return null; }
     }
 
@@ -2425,6 +2422,7 @@
           okSuccess: true
         }).then(ok => {
           if (ok) {
+            _restoredPrev = prev;
             prev.answers.forEach((a, idx) => userAnswers[idx+1] = a);
             document.getElementById('startOverlay').style.display = 'none';
             startedAt = new Date(prev.submittedAt).getTime() - (prev.durationSec * 1000);

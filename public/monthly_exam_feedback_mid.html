@@ -259,7 +259,11 @@
     function loadResult(round) {
       try {
         const raw = localStorage.getItem(`monthly_${GRADE}_${round}_result`);
-        return raw ? JSON.parse(raw) : null;
+        const r = raw ? JSON.parse(raw) : null;
+        // 과거 재열람 버그로 부풀려진 소요시간 보정
+        const durCap = (GRADE === 'mid' ? 35 : 30) * 60;
+        if (r && typeof r.durationSec === 'number' && r.durationSec > durCap) r.durationSec = durCap;
+        return r;
       } catch(e) { return null; }
     }
 
@@ -426,7 +430,7 @@
           areaScore: row.areaScore || {}, areaMax: row.areaMax || {},
           subjectScores: row.subjectScores || [],
           answers: row.answers || [], answerKey: row.answerKey || [],
-          durationSec: row.durationSec || 0,
+          durationSec: Math.min(row.durationSec || 0, (GRADE === 'mid' ? 35 : 30) * 60),
           submittedAt: row.submittedAt || new Date().toISOString(),
         };
         const local = loadResult(round);
