@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💰 다 가질 수 없어서 — 다미의 저금통과 세 가지 소원</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작정치경제09/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>💰 다 가질 수 없어서 — 다미의 저금통과 세 가지 소원</h1>
+        <p class="subtitle">
+          — 선택은 잃는 것이 아니라, 가장 소중한 것을 지키는 것이에요 —<br>
+          교과기반 창작도서 · 정치경제 09 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>💰 등장인물 소개</h3>
+          <p><strong>★ 다미 (주인공):</strong> 소원 목록은 길고 저금통은 가벼운 아이예요. 고르는 법을 배우며 한 뼘 자라지요.</p>
+          <p><strong>★ 아빠:</strong> 이십 년째 가계부를 쓰는 분이에요. 희소성과 기회비용을 저녁 밥상에서 가르쳐 주지요.</p>
+          <p><strong>★ 할머니:</strong> 평생 고르며 살아온 분이에요. 선택의 참뜻을 알려 주는 지혜의 어른이지요.</p>
+          <p><strong>★ 뚱보 (돼지 저금통):</strong> 다미의 책상 위에 사는 저금통. 소원의 무게를 담는 그릇.</p>
+          <p><strong>★ 소원 목록:</strong> 갖고 싶은 것들이 길게 줄 선 종이. 무한한 마음과 한정된 용돈이 싸우는 전쟁터.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 마음의 갈등:</strong> 끝이 없는 갖고 싶은 것들 vs. 바닥이 훤히 보이는 저금통</p>
+          <p><strong>② 선택의 갈등:</strong> 자전거 vs. 놀이공원 vs. 할머니 생신 선물 — 전부는 안 된다</p>
+          <p><strong>③ 셈의 갈등:</strong> 머리로 따진 편익과 비용 vs. 마음이 시키는 충동</p>
+          <p><strong>④ 뜻의 갈등:</strong> 선택은 잃는 것이라는 생각 vs. 선택은 지키는 것이라는 지혜</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제09/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>끝나지 않는 소원 목록</h2>
+        <p>다미의 책상 서랍에는<br>
+특별한 종이가 한 장 들어 있어요.<br>
+제목은 '갖고 싶은 것들'.<br>
+하늘색 자전거, 새로 나온 스케치북,<br>
+놀이공원 자유이용권.<br>
+목록은 쓸 때마다 길어져서<br>
+뒷면까지 빼곡하게 차 있었지요.</p>
+        <p>그에 비해 돼지 저금통 뚱보는<br>
+이름값을 못 하고 있었어요.<br>
+흔들어 보면 동전 몇 개가<br>
+쓸쓸하게 달그락거릴 뿐이었지요.<br>
+다미의 한 달 용돈은 만 원.<br>
+하늘색 자전거는 육만 원이었어요.<br><br><span class="dialogue">"용돈이 너무 적어요! 사고 싶은 게 이렇게 많은데 만 원으로 뭘 어떻게 해요."</span><br><br><span class="dialogue">"다미야, 그건 용돈이 두 배가 되어도 똑같을걸? 사람의 원하는 마음에는 끝이 없거든. 그게 세상의 아주 오래된 비밀이란다."</span></p>
+        <p>다미는 입을 삐죽였어요.<br>
+하지만 그날 밤, 곰곰이 생각했지요.<br>
+정말로 용돈이 두 배가 되면<br>
+이 목록은 끝이 날까요?<br>
+어쩐지 아닐 것 같다는 생각이<br>
+태어나서 처음으로 들었어요.<br>
+<span class="highlight">원하는 것은 끝이 없고, 저금통은 바닥이 보였지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제09/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>반짝이 카드 사건</h2>
+        <p>그 주에 학교 앞 문방구에 난리가 났어요.<br>
+아이들 사이에 반짝이 카드<br>
+<span class="vocab-tip" data-meaning="많은 사람이 한꺼번에 몰리는 큰 유행">열풍</span>이 분 거예요.<br>
+반짝이는 전설 카드가 나오면<br>
+반에서 영웅이 되었지요.</p>
+        <p>다미도 열풍에 휩쓸렸어요.<br>
+한 봉지, 두 봉지.<br>
+전설 카드는 나오지 않았고,<br>
+오기가 생긴 다미는 그달 용돈 만 원을<br>
+사흘 만에 몽땅 쏟아부었지요.<br>
+손에 남은 것은<br>
+그저 그런 카드 서른 장뿐이었어요.</p>
+        <p>후회는 일주일 뒤에 몰려왔어요.<br>
+준비물을 사야 하는데<br>
+지갑이 텅 비어 있었던 거예요.<br>
+더 속상한 것은, 그 사이 카드 열풍이<br>
+싹 식어 버렸다는 사실이었지요.</p>
+        <p>일요일 저녁, 아빠가 이십 년째 쓰고 있다는<br>
+<span class="vocab-tip" data-meaning="집에 들어오고 나가는 돈을 적는 공책">가계부</span>를 들고 왔어요.<br><br><span class="dialogue">"아빠도 너만 할 때 딱지에 용돈을 다 날려 봤단다. 다미야, 아빠랑 경제 공부 한번 해 볼래? 용돈을 두 배로 만드는 공부는 아니고, 만 원을 두 배처럼 쓰는 공부야."</span><br><br><span class="highlight">다미의 경제 공부는 그렇게 쓰라린 수업료를 내고 시작되었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제09/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>세상의 오래된 비밀</h2>
+        <p>아빠의 첫 수업은<br>
+식탁에서 시작되었어요.<br><br><span class="dialogue">"다미야, 오늘 네가 한 일을 말해 볼래?"</span><br><br><span class="dialogue">"음... 밥 먹고, 학교 가고, 문방구에서 지우개 샀는데요?"</span><br><br><span class="dialogue">"그게 전부 <span class="vocab-tip" data-meaning="필요한 것을 만들고 나누고 사용하는 모든 일">경제 활동</span>이란다. 그리고 지난번에 말한 세상의 오래된 비밀. 그 비밀의 이름은 <span class="vocab-tip" data-meaning="원하는 것은 끝이 없지만 그것을 채워 줄 돈과 물건은 한정되어 있는 것">희소성</span>이야. 사람이 원하는 것은 끝이 없는데, 그걸 채워 줄 돈과 물건과 시간은 늘 한정되어 있다는 뜻이지."</span></p>
+        <p>다미는 눈이 커졌어요.<br><br><span class="dialogue">"나라도요? 나라는 돈을 찍어 내잖아요."</span><br><br><span class="dialogue">"나라도 쓸 수 있는 돈은 정해져 있어서, 도로를 넓힐지 학교를 지을지 골라야 한단다. 세상 모든 사람이 너처럼 고민하며 사는 거야."</span></p>
+        <p>자기만의 억울한 문제인 줄 알았는데,<br>
+대통령도 회사 사장님도<br>
+똑같은 문제 앞에 있다는 것이었지요.<br>
+문제의 이름을 알고 나니<br>
+조금 만만해 보였지요.</p>
+        <p>아빠는 숙제를 하나 냈어요.<br><br><span class="dialogue">"희소성이 있는 한, 우리는 늘 골라야 해. 그러니 다음 시간까지 소원 목록에서 딱 세 개만 남겨 오렴."</span><br><br><span class="highlight">원하는 것은 무한하고 자원은 한정되어 있어요.</span><br>
+세상의 오래된 비밀, 희소성이지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제09/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>세 가지 소원</h2>
+        <p>소원 목록을 세 개로 줄이는 일은<br>
+생각보다 훨씬 어려웠어요.<br>
+지우려다 다시 살리고,<br>
+살렸다가 다시 지우고.<br>
+여러 가지 가운데 몇 가지만 고르는<br>
+<span class="vocab-tip" data-meaning="여러 가지 가운데에서 하나를 고르는 것">선택</span>이란, 갖고 싶은 마음들끼리<br>
+싸움을 붙이는 일이었지요.</p>
+        <p>밤이 깊어서야 세 가지가 남았어요.<br>
+첫째, 하늘색 자전거.<br>
+둘째, 친구들과의 놀이공원 나들이.<br>
+셋째, 두 달 뒤 할머니의<br>
+일흔 번째 생신, <span class="vocab-tip" data-meaning="일흔 번째 생일">칠순</span> 선물.<br>
+이건 도저히 지울 수가 없었지요.</p>
+        <p>아빠는 용돈 기입장 쓰는 법을<br>
+가르쳐 주었어요.<br><br><span class="dialogue">"돈이 어디로 새는지 보여야, 어디로 모을지도 보인단다."</span><br><br>기입장을 쓰자 신기한 일이 벌어졌어요.<br>
+군것질이 한 달에 사천 원이 넘는다는 것이<br>
+눈에 보인 거예요.<br>
+다미는 군것질을 반으로 줄이고,<br>
+남은 돈을 뚱보에게 먹이기 시작했지요.</p>
+        <p>두 달이 지나자 뚱보 속에는<br>
+삼만 오천 원이 모였어요.<br>
+태어나서 처음 모아 본 큰돈이었지요.<br>
+<span class="highlight">고르고, 적고, 모으고. 다미의 경제 근육이 조금씩 붙기 시작했어요.</span><br>
+그러나 진짜 어려운 선택은<br>
+아직 다미를 기다리고 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제09/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>겹쳐 버린 소원들</h2>
+        <p>사건은 한꺼번에 몰려왔어요.<br>
+자전거 가게 앞에 크게 써 붙인<br>
+<span class="vocab-tip" data-meaning="글씨를 크게 써서 내걸어 알리는 천">현수막</span>이 붙은 거예요.<br>
+하늘색 자전거 마지막 세일,<br>
+육만 원이 사만 원으로.<br>
+단, 이번 주말까지.<br>
+뚱보 속 돈에 이번 달 용돈을 보태면<br>
+딱 살 수 있는 값이었지요.</p>
+        <p>그런데 바로 그날 저녁,<br>
+단짝 소민이에게서 연락이 왔어요.<br><br><span class="dialogue">"다미야! 놀이공원 표를 이번 주말에 미리 사야 한대. 삼만 원! 넷이 같이 가기로 한 거 알지? 너 빠지면 진짜 재미없어."</span><br><br>하필 같은 주말,<br>
+하필 비슷한 돈이었지요.</p>
+        <p>다미의 머릿속이 새하얘졌어요.<br>
+자전거를 사면 놀이공원은 못 가요.<br>
+놀이공원에 가면 세일이 끝나<br>
+자전거는 다시 육만 원이 되지요.<br>
+세 개로 줄이면 다 이룰 수 있을 줄 알았는데,<br>
+세 개조차 전부는 안 되는 것이었어요.</p>
+        <p>다음 날 다미는 아빠에게<br>
+울상으로 물었어요.<br><br><span class="dialogue">"아빠, 셋 다 소중한데 어떻게 골라요? 고르는 법을 배웠는데도 못 고르겠어요."</span><br><br><span class="dialogue">"드디어 진짜 수업을 할 때가 왔구나. 오늘 저녁, 기회비용 이야기를 해 주마."</span><br><br><span class="highlight">소원을 세 개로 줄여도, 전부 가질 수는 없었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제09/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>포기한 것의 이름</h2>
+        <p>저녁 식탁에서 아빠의<br>
+기회비용 수업이 열렸어요.<br><br><span class="dialogue">"다미야, 무언가를 고르면 반드시 무언가를 포기하게 돼. 그때 포기한 것들 중에서 가장 아까운 것, 그것을 <span class="vocab-tip" data-meaning="어떤 것을 고를 때 포기한 것 가운데 가장 아까운 것">기회비용</span>이라고 한단다. 좋은 선택이란, 얻는 기쁨이 그 기회비용보다 큰 선택이야. 얻는 기쁨과 만족을 <span class="vocab-tip" data-meaning="선택으로 얻게 되는 이득이나 만족">편익</span>, 치르는 것을 <span class="vocab-tip" data-meaning="선택을 위해 내거나 포기해야 하는 것">비용</span>이라고 하지."</span></p>
+        <p>다미는 공책에 표를 그려 보았어요.<br>
+자전거의 편익: 매일 탈 수 있다.<br>
+놀이공원의 편익: 친구들과의 추억.<br>
+표는 깔끔해졌는데, 이상하게 마음은<br>
+하나도 깔끔해지지 않았지요.</p>
+        <p>학교에서는 소민이가<br>
+자꾸 다미의 눈치를 살폈어요.<br><br><span class="dialogue">"너 설마 안 가려는 건 아니지?"</span><br><br>친구의 얼굴을 떠올리면 놀이공원 쪽으로,<br>
+텅 빈 자전거 보관소를 보면<br>
+자전거 쪽으로 마음이 기울었지요.</p>
+        <p>그날 밤 다미는 아빠에게 물었어요.<br><br><span class="dialogue">"표까지 그렸는데 왜 못 정하겠을까요?"</span><br><br><span class="dialogue">"네가 진짜로 원하는 게 무엇인지는, 표가 아니라 네 마음에 물어야 한단다. 이번 주말에 할머니 댁에 가자. 고르기의 달인을 만나게 해 주마."</span><br><br><span class="highlight">포기한 것 중 가장 아까운 것, 그것이 선택의 진짜 값이었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제09/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>결정하지 못한 값</h2>
+        <p>그런데 할머니 댁에 가기 전에,<br>
+다미는 그만 가장 나쁜 선택을 하고 말았어요.<br>
+바로 아무것도 선택하지 않은 거예요.<br>
+자전거 가게 앞을 세 번이나 서성이다 돌아섰고,<br>
+소민이에게는 "조금만 더 생각해 볼게"라는 말만<br>
+며칠째 되풀이했지요.</p>
+        <p>결과는 쓰라렸어요.<br>
+토요일 아침, 자전거 가게의<br>
+현수막이 내려가 있었지요.<br>
+세일이 끝나 버린 거예요.<br><br><span class="dialogue">"미안, 어제까지 답이 없어서... 옆 반 유나랑 가기로 했어. 표가 넉 장뿐이었단 말이야."</span><br><br>자전거도, 놀이공원도 한꺼번에<br>
+손가락 사이로 빠져나갔어요.</p>
+        <p>저녁에 아빠가 방문을 두드렸어요.<br>
+다미는 이불 속에서 울먹였지요.<br><br><span class="dialogue">"고르기가 무서웠어요. 뭘 고르든 하나를 잃으니까... 그래서 미뤘는데, 미뤘더니 둘 다 잃었어요."</span><br><br><span class="dialogue">"아프지만 오늘 아주 큰 것을 배웠구나. 선택을 미루는 것도 사실은 선택이야. 그것도 가장 비싼 선택이지. 시간은 기다려 주지 않는 자원이거든."</span></p>
+        <p><span class="highlight">고르지 않는 것도 선택이며, 때로는 가장 비싼 선택이었어요.</span><br>
+다미는 그 값을 자전거와 놀이공원,<br>
+둘 다로 치렀지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제09/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>고르기의 달인</h2>
+        <p>할머니는 다미의 이야기를 다 듣고는,<br>
+사십 년 된 살림 <span class="vocab-tip" data-meaning="들어오고 나간 돈을 적어 두는 공책">장부</span>를 꺼냈어요.<br><br><span class="dialogue">"할미는 평생 고르며 살았단다. 그때 터득한 비법이 하나 있어. 뭘 고를지 모르겠거든, 표를 덮고 이렇게 물어보는 거야. 일 년 뒤의 나는 어느 쪽을 골랐기를 바랄까? 하고 말이다. 오늘의 마음은 시끄럽지만, 일 년 뒤의 마음은 조용하고 정직하거든."</span></p>
+        <p>다미는 눈을 감고 물어보았어요.<br>
+놀이공원의 하루는 즐겁겠지만<br>
+사진 몇 장으로 남을 것이고,<br>
+자전거는 일 년 내내<br>
+다미를 태우고 달릴 거예요.<br>
+그리고 할머니의 칠순은<br>
+다시 오지 않을 단 한 번의 날이었지요.</p>
+        <p>마음이 조용해지자 순서가 보였어요.<br>
+첫째는 할머니의 생신, 둘째는 자전거.<br><br><span class="dialogue">"할머니! 그럼 자전거 사면, 친구들이랑 놀이공원 대신 한강으로 자전거 소풍을 가면 되잖아요? 돈도 훨씬 덜 들고요!"</span><br><br><span class="dialogue">"옳지, 그게 바로 지혜란다. 고르기란 하나를 버리는 게 아니라, 가장 소중한 걸 지키는 일이야."</span></p>
+        <p><span class="highlight">일 년 뒤의 나에게 물으니, 시끄럽던 마음이 조용해지고 순서가 보였어요.</span><br>
+고르기의 달인이 물려준 비법이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제09/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>지켜 낸 것들</h2>
+        <p>집으로 돌아온 다미는<br>
+순서대로 움직였어요.<br>
+먼저 할머니 칠순 선물을 위해<br>
+만 오천 원을 따로 봉투에 넣어 두었지요.<br>
+그리고 남은 돈에 용돈을 보태<br>
+하늘색 자전거를 샀어요.<br>
+가게 아저씨가 자물쇠를<br>
+<span class="vocab-tip" data-meaning="물건을 살 때 공짜로 더 얹어 주는 것">덤</span>으로 주었지요.</p>
+        <p>친구들에게는 한강 자전거 소풍을 제안했어요.<br><br><span class="dialogue">"놀이공원 못 가서 정말 미안해. 대신 다 같이 한강 어때? 자전거 빌려서 김밥 싸 들고. 돈은 오천 원이면 돼!"</span><br><br><span class="dialogue">"솔직히 놀이공원 표값 부담됐거든. 한강 소풍, 완전 좋아!"</span></p>
+        <p>소풍날, 넷은 강바람을 가르며 달렸어요.<br>
+웃음은 놀이기구 없이도 끊이지 않았지요.<br>
+오천 원으로 얻은 이 하루의 편익이<br>
+삼만 원짜리 하루보다 작지 않았어요.<br>
+적은 비용으로 큰 만족을 얻는<br>
+<span class="vocab-tip" data-meaning="적은 비용으로 큰 만족을 얻는 것">효율적</span>인 선택이 바로 이런 것이었지요.</p>
+        <p>할머니의 칠순 잔칫날,<br>
+다미는 할머니와 찍은 사진을 모아 만든<br>
+앨범을 내밀었어요.<br><br><span class="dialogue">"아이고, 이런 선물은 백만 원을 줘도 못 사는 것인데..."</span><br><br>마음을 담은 만 오천 원이<br>
+세상 어떤 비싼 선물보다 큰 기쁨이 되었지요.<br>
+<span class="highlight">세 가지 소원은 모습을 바꾸어, 결국 셋 다 이루어졌어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제09/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>저금통이 가르쳐 준 것</h2>
+        <p>가을 사회 시간, 다미는<br>
+자신의 여름 이야기를 발표했어요.<br>
+반짝이 카드로 날린 만 원부터,<br>
+미루다 둘 다 놓친 주말,<br>
+일 년 뒤의 나에게 묻는 비법까지.<br><br><span class="dialogue">"원하는 것은 무한하고 자원은 한정되어 있다는 희소성, 그게 세상의 규칙이었습니다. 그래서 우리는 고를 수밖에 없고, 고를 때마다 기회비용을 치릅니다."</span></p>
+        <p><span class="dialogue">"그러니까 잘 고르는 게 중요합니다. 얻는 편익이 비용보다 클 때 고르는 <span class="vocab-tip" data-meaning="편익이 비용보다 클 때 하는 현명한 선택">합리적 선택</span>을 해야 합니다. 갑자기 사고 싶은 <span class="vocab-tip" data-meaning="깊이 생각하지 않고 갑자기 일어나는 마음">충동</span>이 아니라 신중하게요."</span><br><br>교실에 웃음과 박수가 함께 터졌어요.</p>
+        <p>소원 목록은 여전히 길어요.<br>
+하지만 다미는 이제 그 목록이 밉지 않아요.<br>
+갖고 싶은 것이 많다는 것은,<br>
+하고 싶은 것이 많은<br>
+씩씩한 마음이라는 뜻이니까요.</p>
+        <p>하늘색 자전거는 오늘도<br>
+다미를 태우고 달려요.<br>
+이 자전거에는 포기한 놀이공원의 값이<br>
+담겨 있어서 더 소중하지요.<br>
+<span class="highlight">모든 것을 가질 수 없기에, 우리는 고르는 법을 배워요.</span><br>
+잘 고른 하나는 다 가진 것보다 오래 빛나지요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(212, 160, 23, 0.15); border-radius: 16px;">
+          <strong style="color: #B8860B; font-size: 20px;">💰 「선택은 잃는 것이 아니라, 가장 소중한 것을 지키는 것이에요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'politics09_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

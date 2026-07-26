@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📰 진짜를 찾는 아이들 — 소문이 삼킨 마을</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작사회문화09/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>📰 진짜를 찾는 아이들 — 소문이 삼킨 마을</h1>
+        <p class="subtitle">
+          — 빠른 것이 옳은 것은 아니다 —<br>
+          교과기반 창작도서 · 사회문화 09
+        </p>
+        <div class="characters">
+          <h3>📰 등장인물 소개</h3>
+          <p><strong>★ 하람 (주인공):</strong> 여섯 학년 학생. 학교 신문 동아리 부장. 무심코 퍼뜨린 소식 하나로 친구를 잃고, 그 뒤로 '확인하는 사람'이 된다.</p>
+          <p><strong>★ 도현 (친구):</strong> 조용하고 그림을 잘 그리는 아이. 근거 없는 소문의 주인공이 되어 하루아침에 혼자가 된다.</p>
+          <p><strong>★ 세인 (동아리 후배):</strong> 조회 수와 반응에 신이 나는 아이. "재미있으면 된 거 아니에요?"라고 묻는, 우리 안의 목소리.</p>
+          <p><strong>★ 윤 선생님:</strong> 답을 알려 주는 대신 <span class="vocab-tip" data-meaning="정보가 처음 나온 곳">출처</span>를 묻는 사람. 세 가지 확인 방법을 알려 준다.</p>
+          <p><strong>★ 익명의 글쓴이:</strong> 소문을 처음 올린 계정. 끝내 밝혀지지 않지만, 그가 노린 것이 무엇이었는지는 드러난다.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 내면의 갈등:</strong> 빨리 알리고 싶은 마음 vs. 한 번 더 확인해야 한다는 마음</p>
+          <p><strong>② 관계의 갈등:</strong> 소문을 퍼뜨린 사람 vs. 소문의 주인공이 된 친구</p>
+          <p><strong>③ 사회의 갈등:</strong> 조회 수를 노리고 만든 <span class="vocab-tip" data-meaning="사실이 아닌 것을 진짜 뉴스처럼 꾸며 퍼뜨리는 것">가짜 뉴스</span> vs. 그것을 걸러 내려는 노력</p>
+          <p><strong>④ 신뢰의 갈등:</strong> 한 번 속은 뒤 아무것도 못 믿게 되는 마음 vs. 그래도 확인하며 믿어 보려는 태도</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>조회 수 1,204</h2>
+        <p>하람이는 학교 신문 동아리 부장입니다. 한 달에 한 번 나오던 종이 신문을 없애고, 학교 누리집에 올리는 <span class="vocab-tip" data-meaning="종이가 아니라 인터넷에 올리는 신문">인터넷 신문</span>으로 바꾼 것이 하람이의 작품이었습니다. 종이로 낼 때는 아무도 읽지 않던 기사를 이제는 전교생이 봅니다.</p>
+        <p>바뀐 것이 하나 더 있었습니다. 기사 아래에 조회 수가 숫자로 뜬다는 점이었습니다. 하람이는 기사를 올리고 나면 몇 분마다 그 숫자를 새로고침해서 확인하는 버릇이 생겼습니다.</p>
+        <p>그런데 이상한 규칙이 하나 보였습니다. 정성 들여 쓴 기사일수록 숫자가 낮았습니다. 급식실 <span class="vocab-tip" data-meaning="병을 막기 위해 깨끗하게 관리하는 일">위생</span> 점검을 사흘이나 취재해 쓴 기사는 조회 수가 87이었습니다.</p>
+        <p>반대로 대충 쓴 기사가 잘 나갔습니다. '3학년 화장실에서 이상한 소리가 난다더라'라는 짧은 글은 하루 만에 1,204를 찍었습니다. 제목만 자극적이면 사람들이 눌렀습니다.</p>
+        <p>기사를 확인하던 후배 세인이가 신나서 말했습니다.<br><br><span class="dialogue">"선배, 이런 거 더 써요! 애들이 진짜 좋아해요."</span><br><br>하람이도 그 숫자를 볼 때 기분이 좋았습니다. 자기가 쓴 글을 천 명이 넘게 읽었다는 뜻이었으니까요.</p>
+        <p>숫자가 올라갈 때마다 잘하고 있다는 느낌이 들었습니다. 그러나 하람이는 그때 아주 중요한 한 가지를 잊고 있었습니다. 조회 수는 그 글이 <span class="highlight">얼마나 많이 읽혔는지</span>를 보여 줄 뿐, 그 글이 <span class="highlight">사실인지</span>는 조금도 알려 주지 않는다는 것이었습니다.</p>
+        <p>숫자가 커질수록 하람이는 무엇이든 더 빨리 올리고 싶어졌습니다. 사흘씩 취재하는 일이 점점 답답해졌고, 확인하는 데 걸리는 시간이 아깝게 느껴지기 시작했습니다. 다른 아이가 먼저 올리면 손해라는 생각도 들었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>스크린샷 한 장</h2>
+        <p>어느 월요일 아침, 하람이의 휴대전화가 계속 울렸습니다. 반 단체 대화방에 사진 한 장이 돌고 있었습니다. 학교 누리집 게시판을 찍은 <span class="vocab-tip" data-meaning="화면에 보이는 것을 그대로 찍어 저장한 사진">스크린샷</span>이었습니다.</p>
+        <p>사진 속 게시판에는 이렇게 적혀 있었습니다. '6학년 2반 ○○가 미술 대회에서 남의 그림을 베껴 상을 받았다더라. 원본 봤다는 애도 있음.' 글쓴이는 이름도 사진도 없는 계정이었습니다.</p>
+        <p>○○는 도현이였습니다. 조용하고 그림을 잘 그리는 아이, 지난달 시 대회에서 금상을 받은 그 도현이었습니다. 하람이와도 같은 반이었고, 몇 번 같이 급식을 먹은 사이였습니다.</p>
+        <p>대화방은 순식간에 시끄러워졌습니다. 어쩐지 잘 그린다 했다는 말, 평소에도 좀 이상했다는 말이 줄줄이 올라왔습니다. 놀랍게도 그중 누구도 베꼈다는 원본 그림을 실제로 본 적은 없었습니다. 다들 누군가에게 들었다고만 했습니다.</p>
+        <p>하람이는 잠깐 망설였습니다. 사실인지 아닌지 확인할 방법이 없었기 때문입니다. 그런데 이미 학교 전체가 다 아는 이야기처럼 보였습니다. 자기가 안 써도 어차피 퍼질 이야기라는 생각이 들었습니다. 신문 동아리 부장이 이걸 모른 척하는 것도 이상해 보였습니다.</p>
+        <p>결국 하람이는 쉬는 시간에 십 분 만에 글을 써서 학교 신문에 올렸습니다. 제목은 이랬습니다. '미술 대회 수상작 <span class="vocab-tip" data-meaning="남의 것을 몰래 가져다 자기 것처럼 쓰는 일">표절</span> 의혹, 사실일까?' 본문 끝에는 이렇게 적었습니다. 아직 확인된 바는 없다고 말입니다.</p>
+        <p><span class="highlight">그 한 줄을 붙였으니 괜찮다고 하람이는 생각했습니다.</span> 그러나 사람들이 기억한 것은 마지막 한 줄이 아니라 제목에 있는 '표절'이라는 두 글자였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 확산</span>
+        <h2>빈 자리</h2>
+        <p>기사는 올린 지 반나절 만에 조회 수 3,000을 넘겼습니다. 하람이가 쓴 글 가운데 가장 많이 읽힌 글이었습니다. 댓글도 백 개가 넘게 달렸습니다. 이렇게까지 반응이 온 적은 처음이었습니다.</p>
+        <p>다음 날 아침, 교실에 들어선 하람이는 도현이의 자리가 비어 있는 것을 보았습니다. 처음에는 그냥 아픈가 보다 했습니다. 그런데 그다음 날도 자리는 그대로 비어 있었습니다. 사흘째 되던 날, 아이들은 이미 도현이를 잊고 다른 이야기를 하고 있었습니다.</p>
+        <p>점심시간에 복도에서 마주친, 도현이와 친하게 지내던 아이가 하람이에게 말했습니다.<br><br><span class="dialogue">"도현이 학교 안 나온대. 미술 학원도 그만뒀다더라."</span></p>
+        <p>하람이는 그제야 가슴이 서늘해졌습니다. 자기가 쓴 글에는 분명 '확인된 바 없다'고 적어 두었습니다. 자기는 사실이라고 말한 적이 없었습니다. 그런데 어째서 도현이가 학교에 나오지 못하게 된 걸까요.</p>
+        <p>그날 저녁 하람이는 자기 기사에 달린 댓글을 하나도 빠뜨리지 않고 처음부터 끝까지 읽어 보았습니다. 백 개가 넘는 댓글 중에 '확인된 바 없다'는 부분을 언급한 댓글은 단 하나도 없었습니다.</p>
+        <p>대신 이런 말들이 빼곡했습니다. 실망이다, 상 돌려줘야 하는 거 아니냐, 얼굴 좀 보고 싶다. 이미 다들 사실이라고 믿고 있었습니다. 하람이가 붙인 마지막 한 줄은 아무도 읽지 않은 것이나 마찬가지였습니다.</p>
+        <p><span class="highlight">하람이는 그날 밤 처음으로 무서웠습니다.</span> 자기가 무슨 일을 저지른 것인지 그제야 조금 알 것 같았기 때문입니다. 글 하나가 사람을 학교 밖으로 밀어낼 수 있다는 사실이 믿기지 않았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 추적</span>
+        <h2>처음 올린 사람은 누구인가</h2>
+        <p>며칠을 고민하던 하람이는 결국 윤 선생님을 찾아갔습니다. 있었던 일을 사실대로 이야기하자 선생님은 뜻밖에도 야단치지 않았습니다. 대신 종이를 한 장 꺼내 놓고 물었습니다.<br><br><span class="dialogue">"그 이야기, 누구한테서 들었니?"</span></p>
+        <p>하람이는 반 대화방에서 봤다고 답했습니다. 선생님이 다시 물었습니다. 그럼 그 대화방에는 누가 처음 올렸느냐고 말입니다. 하람이는 잠깐 생각하다가 다른 반 아이에게 받은 것 같다고 했습니다.</p>
+        <p>그렇게 하나씩 거슬러 올라갔습니다. 사흘에 걸쳐 하람이는 열 명이 넘는 아이들에게 물었습니다. 다들 자기가 들은 사람을 가리켰고, 그 사람은 또 다른 사람을 가리켰습니다. 그리고 마침내 맨 처음에 닿았습니다.</p>
+        <p>맨 처음은 이름 없는 계정이 올린 글 한 개였습니다. 그 계정은 학교 학생 계정이 아니었고, 그 글 말고는 다른 글을 하나도 올린 적이 없었습니다. 베꼈다는 원본 그림을 실제로 봤다는 사람은 학교 어디에도 없었습니다. 이야기의 맨 앞에는 아무 근거도 없었던 것입니다.</p>
+        <p>종이에 그려진 화살표를 짚으며 선생님이 말했습니다.<br><br><span class="dialogue">"이야기가 퍼지는 동안, 사람들은 저마다 앞사람에게서 들었다고 말한단다. 그런데 맨 앞에는 아무것도 없는 경우가 아주 많아. 이걸 확인하는 게 <span class="vocab-tip" data-meaning="정보가 처음 나온 곳을 확인하는 일">출처 확인</span>이야."</span></p>
+        <p>하람이는 고개를 들지 못했습니다. 자기는 명색이 신문 동아리 부장이었습니다. 사흘만 물어보면 알 수 있는 일이었는데, 그때는 십 분도 쓰지 않고 글을 올렸습니다.</p>
+        <p><span class="highlight">확인하는 데 걸리는 시간을 아까워한 대가로, 한 사람이 두 달 동안 학교에 나오지 못하게 되었습니다.</span> 아낀 시간은 십 분이었고, 잃은 것은 그보다 훨씬 컸습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 반론</span>
+        <h2>재미있으면 된 거 아니에요?</h2>
+        <p>하람이는 동아리 회의를 열어 앞으로 확인되지 않은 것은 절대 쓰지 않겠다고 말했습니다. 그러자 회의실 뒤쪽에서 후배 세인이가 조심스럽게 손을 들었습니다.</p>
+        <p><span class="dialogue">"근데 선배, 그거 재미없어져요. 애들이 안 봐요."</span><br><br>세인이의 말에는 나름의 이유가 있었습니다. 사흘 동안 발품 팔아 취재한 급식 기사는 87명이 읽었고, 십 분 만에 대충 쓴 소문 기사는 3,000명이 읽었으니까요. 숫자만 놓고 보면 세인이 말이 맞았습니다.</p>
+        <p>잠시 뒤 세인이가 한마디 더 덧붙였습니다.<br><br><span class="dialogue">"그리고 우리가 안 써도 어차피 다 알아요. 우리만 안 쓰면 손해 아니에요?"</span></p>
+        <p>하람이는 바로 대답하지 못했습니다. 불과 몇 주 전이라면 자기도 세인이와 똑같이 말했을 것이기 때문입니다. 조회 수가 곧 실력이라고 믿던 때였습니다. 그날 저녁 하람이는 도현이에게 긴 사과 문자를 보냈습니다. 그러나 답장은 며칠이 지나도 오지 않았습니다.</p>
+        <p>며칠 뒤, 하람이는 인터넷에서 우연히 한 기사를 보았습니다. 어떤 사람들이 일부러 거짓 소식을 만들어 퍼뜨린다는 내용이었습니다. 사람들이 많이 누를수록 그만큼 광고비를 벌 수 있기 때문이었습니다. 거짓말이 돈이 되는 구조였습니다.</p>
+        <p>그 기사에는 특히 마음에 걸리는 말이 하나 있었습니다. 가짜 뉴스는 <span class="vocab-tip" data-meaning="화가 나거나 무서운 마음이 강하게 이는 것">분노와 공포</span>를 자극하도록 일부러 만들어진다는 것이었습니다. 사람은 화가 날 때 확인하지 않고 누르기 때문입니다.</p>
+        <p><span class="highlight">하람이는 그 문장 앞에서 한참을 멈춰 있었습니다.</span> 도현이 이야기를 처음 봤을 때 자기 기분이 정확히 그랬기 때문입니다. 놀랍고 화가 나서 확인할 생각조차 못 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>아무도 안 믿는 교실</h2>
+        <p>몇 주 뒤 학교에 또 새로운 소문이 돌았습니다. 이번에는 급식에 문제가 있다는 이야기였습니다. 대화방에 흐릿한 사진 한 장과 함께 글이 올라왔습니다. 전에 도현이 일이 퍼질 때와 똑같은 모양이었습니다.</p>
+        <p>그런데 이번에는 아이들의 반응이 전혀 달랐습니다. 아이들은 하나같이 시큰둥했습니다.<br><br><span class="dialogue">"또 가짜겠지."</span><br><br><span class="dialogue">"저번에도 그랬잖아. 안 믿어."</span></p>
+        <p>문제는 이번에 돈 이야기가 사실이었다는 점입니다. 실제로 급식실 냉장고 한 대가 며칠째 고장 나 있었고, 학교에서도 그날 저녁에 가정으로 안내문을 보냈습니다. 그런데도 아이들은 여전히 믿지 않았습니다.</p>
+        <p>하람이는 이상한 기분이 들었습니다. 지난번에는 아무 근거 없는 거짓말을 다들 그대로 믿었는데, 이번에는 학교가 인정한 사실조차 아무도 믿지 않았습니다. 순서가 완전히 뒤집혀 있었습니다.</p>
+        <p>그 이야기를 들은 윤 선생님이 조용히 말했습니다.<br><br><span class="dialogue">"가짜 뉴스가 남기는 가장 큰 피해가 그거란다. 한 번 속고 나면 사람들은 아무것도 안 믿게 돼. 그러면 진짜 중요한 소식도 전해지지 않지."</span></p>
+        <p>집에 돌아와서도 하람이는 선생님의 그 말을 오래 곱씹었습니다. 거짓이 한 번 크게 퍼지고 나면 그 거짓 하나만 문제가 되는 것이 아니었습니다. 그 뒤에 오는 진실까지 함께 무너뜨리고 있었습니다.</p>
+        <p><span class="highlight">아무것도 믿지 못하는 교실은 거짓말이 넘치는 교실보다 오히려 더 위험했습니다.</span> 무엇이 옳고 그른지 아무도 판단할 수 없게 되기 때문입니다. 그러면 정말로 위험한 일이 생겨도 아무도 나서서 움직이지 않습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 방법</span>
+        <h2>세 가지를 확인하기</h2>
+        <p>하람이는 동아리 아이들을 모아 앞으로 신문을 어떻게 만들지 규칙을 새로 정하기로 했습니다. 윤 선생님이 알려 준 세 가지가 그 바탕이 되었습니다. 아이들은 칠판에 하나씩 적어 나갔습니다.</p>
+        <p>첫째는 출처 확인이었습니다. 이 소식이 대체 어디에서 처음 나왔는지를 끝까지 따라가 보는 것입니다. 거슬러 올라간 맨 앞에 아무 근거도 없으면 그 소식은 아예 쓰지 않기로 했습니다.</p>
+        <p>둘째는 <span class="vocab-tip" data-meaning="어떤 내용이 사실인지 여러 자료를 대조해 확인하는 일">팩트체크</span>였습니다. 어느 하나만 보고 판단하지 않고, 같은 일을 다룬 다른 자료를 최소 두 곳 이상 찾아 서로 비교해 보기로 했습니다. 말이 엇갈리면 더 알아보기로 했습니다.</p>
+        <p>셋째가 가장 어려웠습니다. 감정에 휘둘리지 않는 것이었습니다. 읽자마자 화가 치밀거나 신이 나면, 바로 그때가 가장 조심해야 할 때라는 규칙이었습니다. 마음이 크게 움직인 만큼 판단은 흐려지기 때문입니다.</p>
+        <p>규칙을 적던 세인이가 고개를 갸웃하며 물었습니다.<br><br><span class="dialogue">"화나는 게 왜 위험해요?"</span><br><br>잠시 생각하던 하람이가 자기 경험을 떠올리며 답했습니다.<br><br><span class="dialogue">"화가 나면 확인을 안 하게 되거든. 그걸 노리고 만드는 거래."</span></p>
+        <p>동아리는 이 세 가지를 모두 통과한 기사에만 작은 표시를 붙이기로 했습니다. 확인을 마쳤다는 뜻의 도장 모양이었습니다. 세 가지 중 하나라도 확인하지 못한 것은 아무리 재미있어도 아예 올리지 않기로 했습니다.</p>
+        <p><span class="highlight">규칙을 정하고 나자 한 달에 올리는 기사 수가 절반으로 줄었습니다.</span> 그만큼 그동안 확인하지 않고 써 왔다는 뜻이기도 했습니다. 하람이는 그 사실이 부끄러웠습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 실행</span>
+        <h2>87명이 읽은 기사</h2>
+        <p>새 규칙을 정한 뒤 처음 쓴 기사는 급식실 취재였습니다. 하람이와 아이들은 영양사 선생님을 직접 찾아가 물었고, 냉장고 수리 기록을 눈으로 확인했으며, 비슷한 일이 있었던 다른 학교 사례까지 찾아보았습니다.</p>
+        <p>기사 하나를 완성하는 데 꼬박 일주일이 걸렸습니다. 그렇게 공들여 올린 기사의 조회 수는 다시 87 언저리에 머물렀습니다. 옆에서 지켜보던 세인이가 시무룩한 얼굴로 말했습니다.<br><br><span class="dialogue">"거봐요, 아무도 안 봐요."</span></p>
+        <p>그런데 며칠 뒤 뜻밖의 일이 있었습니다. 학부모 한 분이 학교에 전화를 걸어, 학교 신문에서 본 내용을 두고 자세히 문의를 했다는 것입니다. 87명 가운데 적어도 한 사람은 그 기사를 끝까지 꼼꼼히 읽었던 것입니다.</p>
+        <p>그리고 놀랍게도 그 문의 한 통 덕분에 학교의 냉장고 점검 주기가 앞당겨졌습니다. 3,000명이 읽고도 한 사람을 다치게 하기만 한 기사가 있었고, 87명이 읽고 학교를 조금이나마 바꾼 기사가 있었습니다. 하람이는 두 숫자를 나란히 놓고 오래 바라보았습니다.</p>
+        <p>그 이야기를 전해 들은 하람이는 그날 동아리 칠판에 한 문장을 크게 적었습니다.<br><br><span class="dialogue">"많이 읽히는 것과 옳은 것은 다르다."</span></p>
+        <p>세인이는 여전히 조회 수가 아쉬웠지만, 학부모 문의 이야기를 들은 뒤로는 말없이 취재를 따라다니기 시작했습니다. 직접 물어보고 기록을 찾아 맞춰 보는 일이 생각보다 재미있다는 것도 조금씩 알게 되었습니다.</p>
+        <p>동아리 아이들은 그때 처음으로 자기들이 하는 일이 무엇인지 알게 되었습니다. <span class="highlight">조회 수는 줄었지만 신문은 그때부터 진짜 신문이 되었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 회복</span>
+        <h2>도현이의 그림</h2>
+        <p>두 달이 지나서야 도현이가 학교에 돌아왔습니다. 여전히 말수가 적었고 쉬는 시간에도 혼자 앉아 있었습니다. 하람이는 며칠을 망설이다 도현이에게 다가갔습니다.</p>
+        <p>며칠 동안 준비한 말이 있었지만 하나도 나오지 않았습니다. 하람이는 결국 이렇게만 말했습니다.<br><br><span class="dialogue">"미안해. 내가 확인 안 하고 썼어. 그게 제일 잘못이야."</span><br><br>도현이는 창밖을 보며 한참 동안 아무 말도 하지 않았습니다.</p>
+        <p>한참 뒤에야 도현이가 조용히 물었습니다.<br><br><span class="dialogue">"내가 안 그랬다는 건, 이제 누가 알아?"</span></p>
+        <p>하람이는 아무 대답도 하지 못했습니다. 소문은 하루 만에 학교 전체가 알았지만, 그것이 사실이 아니었다는 것은 아무도 궁금해하지 않았기 때문입니다. 거짓은 저절로 퍼지고, 정정은 저절로 퍼지지 않았습니다.</p>
+        <p>그 물음을 듣고 하람이는 그 자리에서 마음을 정했습니다. 그리고 동아리 아이들과 함께 잘못을 바로잡는 <span class="vocab-tip" data-meaning="틀린 내용을 바르게 고치는 일">정정</span> 기사를 쓰기 시작했습니다. 처음 글이 어디서 시작되었는지, 원본이라는 그림이 왜 존재하지 않는지를 사흘에 걸쳐 밝혔습니다.</p>
+        <p>정정 기사를 올렸지만 예상대로 조회 수는 크게 오르지 않았습니다. 대신 하람이는 그 기사를 종이로 인쇄해 학년 게시판마다 붙였고, 반마다 직접 찾아가 짧게 소리 내어 읽었습니다. 자기 잘못을 스스로 밝히는 일이라 몹시 부끄러웠지만, 그것이 자기가 해야 할 일이라고 생각했습니다.</p>
+        <p><span class="highlight">한번 퍼진 말을 되돌리는 데는, 그것을 퍼뜨릴 때보다 훨씬 많은 시간과 품이 듭니다.</span> 하람이는 이번에는 그 시간을 조금도 아까워하지 않았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>한 번 더 묻는 습관</h2>
+        <p>한 학년이 끝나갈 무렵, 도현이는 조금씩 다시 그림을 그리기 시작했습니다. 학교 신문에는 도현이가 그린 삽화가 실렸습니다. 하람이가 부탁했고 도현이가 오래 생각한 끝에 받아들인 것이었습니다. 신문 동아리의 규칙은 그대로 남았습니다. 출처를 끝까지 확인할 것, 자료를 두 곳 이상 비교할 것, 감정이 앞설 때는 한 번 멈출 것. 후배들에게 물려주는 첫 번째 문서가 되었습니다.</p>
+        <p>하람이는 졸업을 앞두고 쓴 마지막 기사에 이런 이야기를 적었습니다. 우리가 사는 세상에는 하루에도 수천 개의 소식이 쏟아지고, 그중에는 누군가 돈을 벌거나 남을 흔들려고 일부러 만든 것도 섞여 있다고 말입니다.</p>
+        <p>그런 세상에서 자기를 지키는 방법은 생각보다 대단한 것이 아니었습니다. 무언가를 보고 마음이 확 움직였을 때, 손가락으로 누르기 전에 스스로에게 딱 한 번 묻는 것뿐이었습니다.<br><br><span class="dialogue">"이게 정말 사실일까?"</span></p>
+        <p>누르기 전에 던지는 그 물음 하나에 걸리는 시간은 길어야 십 초입니다. 하람이는 그 십 초가 아까워서 확인하지 않았고, 그 결과 한 사람을 두 달 동안 학교에 나오지 못하게 만들었습니다.</p>
+        <p>가짜 뉴스를 만드는 사람들은 우리가 그 십 초를 결코 쓰지 않을 것이라고 미리 계산해 둡니다. 사람들이 화가 나면 곧바로 누르고, 놀라면 곧바로 퍼뜨릴 것이라고 믿고 만드는 것입니다.</p>
+        <p><span class="highlight">그러니 확인하는 십 초는 시간 낭비가 아니라, 속지 않겠다는 가장 확실한 선택입니다.</span> 빠른 것이 늘 옳은 것은 아니기 때문입니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(70, 110, 170, 0.15); border-radius: 16px;">
+          <strong style="color: #466EAA; font-size: 20px;">📰 「퍼뜨리기 전에 묻는 십 초가, 한 사람을 지킨다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'social09_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

@@ -1,40 +1,146 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>🏘️ 이름 탐정 나리와 지명의 비밀</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏘️ 이름 탐정 소녀 '나리'와 지명 속 천 년의 비밀</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
-      font-family: 'Noto Sans KR', sans-serif;
-      background: #000;
-      color: #fff;
-      overflow-x: hidden;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 <span class="vocab-tip" data-meaning="땅의 모습을 줄여서 그린 그림">지도</span> 캔버스 */
     #map-container {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background-image: url('/images/창작도서/창작지리03/00.jpg');
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지리03/00.jpg');
       background-size: cover;
       background-position: center;
-      transition: background-image 0.8s ease-in-out;
-      z-index: 0;
-    }
-    #map-container::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
     }
 
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
     #content {
       position: relative;
-      z-index: 1;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #d35400 0%, #a04000 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(211, 84, 0, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(211, 84, 0, 0.15);
+      color: #a04000;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #d35400;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #a04000;
+      font-weight: 600;
     }
 
     /* 인트로 섹션 */
@@ -42,144 +148,212 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       text-align: center;
-      padding: 20px;
+      padding: 60px;
     }
+
     .intro-content {
-      max-width: 600px;
-    }
-    .intro-content h1 {
-      font-size: 2rem;
-      margin-bottom: 12px;
-      text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
-    }
-    .intro-content .subtitle {
-      font-size: 1rem;
-      opacity: 0.9;
-      margin-bottom: 30px;
-    }
-    .characters-box {
-      background: rgba(255,255,255,0.1);
+      background: rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 20px;
-      margin-top: 20px;
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
       text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
     }
-    .characters-box h3 {
-      font-size: 0.95rem;
-      margin-bottom: 12px;
-      color: #f4a460;
+
+    .intro-content .characters h3 {
+      color: #F4A460;
+      font-size: 16px;
+      margin-bottom: 15px;
     }
-    .characters-box p {
-      font-size: 0.85rem;
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 13px;
       line-height: 1.7;
-      color: #ddd;
       margin-bottom: 8px;
     }
 
-    /* 스토리 섹션 */
-    .story-section {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      padding: 60px 20px;
-    }
-    .story-card {
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(12px);
-      border-radius: 20px;
-      padding: 30px 24px;
-      max-width: 520px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      opacity: 0;
-      transform: translateX(-30px);
-      transition: opacity 0.8s ease, transform 0.8s ease;
-    }
-    .story-card.active {
-      opacity: 1;
-      transform: translateX(0);
-    }
-    .story-section:nth-child(odd) {
-      justify-content: flex-start;
-      padding-left: 5%;
-    }
-    .story-section:nth-child(even) {
-      justify-content: flex-end;
-      padding-right: 5%;
-    }
-    .story-section:nth-child(even) .story-card {
-      transform: translateX(30px);
-    }
-    .story-section:nth-child(even) .story-card.active {
-      transform: translateX(0);
-    }
-    .story-card h2 {
-      font-size: 1.15rem;
-      margin-bottom: 14px;
-      color: #f4a460;
-    }
-    .story-card p {
-      font-size: 0.92rem;
-      line-height: 1.9;
-      color: #e0e0e0;
-    }
-
-    /* 엔딩 섹션 */
-    .ending-section {
-      min-height: 60vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 40px 20px;
-    }
-    .ending-section p {
-      font-size: 1.1rem;
-      color: #aaa;
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
       margin-bottom: 30px;
     }
 
-    /* 네비게이션 버튼 */
-    .nav-buttons { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000;
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .nav-btn {
-      padding: 14px 28px;
-      border-radius: 30px;
-      font-size: 1rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: transform 0.3s, box-shadow 0.3s;
-    }
-    .nav-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    }
-    .nav-btn.back {
-      background: rgba(255,255,255,0.15);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.3);
-    }
-    .nav-btn.quiz {
-      background: linear-gradient(135deg, #f4a460, #e67e22);
-      color: #fff;
+    .intro-content .conflict h3 {
+      color: #f39c12;
+      font-size: 16px;
+      margin-bottom: 15px;
     }
 
-    .dialogue {
-      color: #f4a460;
-      font-weight: 600;
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 13px;
+      line-height: 1.7;
+      margin-bottom: 8px;
     }
-    .highlight {
-      color: #7ec8e3;
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
       font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
     }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(211, 84, 0, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(211, 84, 0, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(160, 64, 0, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(211, 84, 0, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
     .vocab-tip {
       position: relative;
       color: #e67e22;
@@ -206,114 +380,271 @@
     .vocab-tip:hover::after {
       opacity: 1;
     }
-</style>
+
+  </style>
 </head>
 <body>
-  <div id="map-container"></div>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
 
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
   <div id="content">
+    <!-- 인트로 -->
     <section class="intro-section">
       <div class="intro-content">
-        <h1>🏘️ 이름 탐정 나리와 지명의 비밀</h1>
-        <p class="subtitle">동네 이름에 숨은 천 년의 이야기 · 초3-4</p>
-        <div class="characters-box">
-          <h3>📋 등장인물</h3>
-          <p><strong>▸ 나리</strong> - 열세 살 소녀. 서울에서 밤골마을로 이사 온 '이름 탐정'. 처음에는 시골 마을 이름이 촌스럽다고 생각했지만, 지명에 담긴 <span class="vocab-tip" data-meaning="옛날부터 지금까지 이어온 일">역사</span>와 <span class="vocab-tip" data-meaning="사람들의 생활 방식">문화</span>를 발견하며 고장을 사랑하게 된다. 논리적이고 <span class="vocab-tip" data-meaning="잊지 않도록 적어 두는 것">기록</span>을 좋아하는 성격.</p>
-          <p><strong>▸ 두메 할아버지</strong> - 80년간 밤골마을에서 살아온 마을의 산 역사. 구전으로 전해지는 지명의 유래와 마을의 옛이야기를 기억하는 유일한 어른. 마을이 개발로 바뀌는 것을 걱정하면서도 젊은 세대에게 기억을 전하고 싶어한다.</p>
-          <p><strong>▸ 아리 언니</strong> - 고등학교 향토사 동아리 부장. 지명학(Toponymy)에 관심이 많아 마을의 옛 문서와 <span class="vocab-tip" data-meaning="땅을 줄여 그린 그림">지도</span>를 수집하고 연구한다. 나리에게 학문적 방법론을 알려주는 멘토 <span class="vocab-tip" data-meaning="맡은 일">역할</span>.</p>
-          <p><strong>▸ 하천 선생님</strong> - 중학교 <span class="vocab-tip" data-meaning="사람들이 모여 사는 집단">사회</span> 담당 교사. 지리와 역사를 통합해서 가르치며, 현장 학습을 통해 학생들이 직접 지명을 탐구하도록 이끈다.</p>
+        <h1>🏘️ 이름 탐정 소녀 '나리'와 지명 속 천 년의 비밀</h1>
+        <p class="subtitle">
+          지명의 유래와 지역 정체성 이야기<br>
+          교과기반 창작도서 · 지리 03 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>▸ 나리 (주인공):</strong> 열세 살 호기심 소녀. 전학 온 '밤골마을'의 이름이 왜 밤골인지 궁금해하면서 지명 탐정 모험을 시작한다.</p>
+          <p><strong>▸ 두메 할아버지:</strong> 밤골마을에서 80년을 산 토박이. 구전으로 전해진 마을의 전설과 역사를 기억하는 살아있는 백과사전.</p>
+          <p><strong>▸ <span class="vocab-tip" data-meaning="땅 위를 흐르는 물줄기">하천</span> 선생님:</strong> 나리의 학교 지리 교사. 지형학과 지명학을 전공했으며, 과학적 시선으로 지명의 비밀을 풀어주는 멘토.</p>
+          <p><strong>▸ 새론:</strong> 서울에서 밤골마을로 전학 온 나리의 첫 친구. 처음에는 '촌스러운 동네 이름'이라며 무시하지만, 편견을 버리게 된다.</p>
+          <p><strong>▸ 아리:</strong> 고등학교 1학년 언니로, 향토사 동아리 회장. 마을의 고문서와 옛 지도를 연구하는 소녀 역사학자.</p>
         </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>🏗️ 개발 vs 보존:</strong> 신도시 개발로 밤골마을이 사라질 위기, 편리함과 기억 사이의 선택</p>
+          <p><strong>😤 새론이의 편견:</strong> '촌스러운 동네 이름'이라며 무시하던 <span class="vocab-tip" data-meaning="사람이 많이 모여 사는 곳">도시</span> 출신 친구가 편견을 깨는 과정</p>
+          <p><strong>🇯🇵 일제 강점기의 지명 왜곡:</strong> 빼앗기고 되찾은 이름의 역사, 문화 정체성 말살의 상흔</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
       </div>
     </section>
 
+    <!-- Part 1 -->
     <section class="story-section" data-bg="/images/창작도서/창작지리03/01.jpg">
       <div class="story-card">
-        <h2>1화. 왜 '밤골'이라고 부를까</h2>
-        <p>나리는 열세 살 여자아이예요. 아빠의 직장 이전으로 서울 강남의 아파트에서 충청도의 밤골마을로 이사를 오게 됐어요. 처음 주소를 보고 나리는 투덜거렸죠.<br><br><span class="dialogue">"밤골? 뭐야, 밤에 밤을 줍는 마을이야? 촌스럽게..."</span><br><br>작은 시골 마을이었는데, 마을 뒷산에 밤나무가 몇 그루 서 있었어요. 전학 첫날, 나리가 자기소개를 할 때 아이들이 웃었어요.<br><br><span class="dialogue">"밤골마을? 거기 진짜 밤나무가 있어?"</span><br><br>나리도 솔직히 궁금했어요. 왜 하필 '밤골'이라는 이름이 붙었을까? 밤나무 몇 그루로 마을 이름이 정해진다고?<br><br>다음 날 마을 어귀에서 지팡이를 짚고 산책하시는 두메 할아버지를 만났어요. 마을에서 80년간 살아오신 분이래요.<br><br><span class="dialogue">"할아버지, 밤골이라는 이름은 어디서 온 거예요?"</span><br><br>할아버지의 흐릿하던 눈이 <span class="vocab-tip" data-meaning="아주 짧은 시간">순간</span> 반짝였어요.<br><br><span class="dialogue">"호호, 드디어 물어보는 젊은이가 있구나! 요즘 아이들은 관심들이 없어서..."</span><br><br>할아버지가 지팡이로 뒷산을 가리키며 이야기를 시작했어요.<br><br><span class="dialogue">"300년 전까지만 해도 저 산 전체가 밤나무 숲이었단다. 가을이면 밤이 비 오듯 떨어져서 마을 사람들이 주워도 주워도 끝이 없었지. 밤이 가득한 골짜기, 그래서 '<span class="highlight">밤골</span>'이 된 거야. 한자로는 '율곡(栗谷)'이라고 적었지."</span><br><br>나리는 그날 저녁 빈 노트를 꺼내 표지에 '밤골마을 이름 탐정 노트'라고 적었어요. 다른 이름들에도 이런 비밀이 숨어 있을까? 나리의 <span class="highlight"><span class="vocab-tip" data-meaning="땅과 장소의 이름을 연구하는 사람">지명(地名) 탐정</span></span> 모험이 시작됐어요.</p>
+        <span class="chapter">제1장</span>
+        <span class="theme">'밤골'이라는 이름이 이상해요</span>
+        <h2>동네 이름의 유래 — 이름 탐정의 시작</h2>
+        <p>나리는 서울에서 밤골마을로 이사를 왔어요.<br>
+논과 밭 사이로 좁은 골목이 이어지고,<br>
+뒷산에는 밤나무 몇 그루가 남아 있는 마을이었지요.<br>
+전학 첫날, 아이들이 킥킥 웃었어요.<br><br><span class="dialogue">"밤골이라... 밤에 밤을 줍는 마을인가?"</span><br><br>나리도 사실 궁금했어요.<br>
+왜 하필 '밤골'일까?</p>
+        <p>다음 날, 나리는 마을에서 가장 오래 사신<br>
+두메 할아버지를 만났어요.<br><br><span class="dialogue">"할아버지, 밤골이라는 이름은 어디서 온 거예요?"</span><br><br>할아버지의 눈이 반짝였지요.<br><br><span class="dialogue">"호호, 드디어 물어보는 아이가 있구나. 옛날 이 마을은 밤나무가 골짜기를 가득 채우고 있었단다. 그래서 '<span class="highlight">밤이 가득한 골짜기</span>', 줄여서 '밤골'이 된 거야."</span></p>
+        <p>나리는 그날부터 빈 노트를 꺼내 표지에 적었어요.<br>
+'밤골마을 이름 탐정 노트'.<br>
+동네 이름 하나에 이렇게 깊은 이야기가 숨어 있다면,<br>
+다른 이름들에는 또 어떤 비밀이 있을까요?<br>
+<span class="highlight">나리의 <span class="vocab-tip" data-meaning="땅이나 마을에 붙은 이름">지명</span> 탐정 모험이 시작되었어요.</span></p>
       </div>
     </section>
 
+    <!-- Part 2 -->
     <section class="story-section" data-bg="/images/창작도서/창작지리03/02.jpg">
       <div class="story-card">
-        <h2>2화. <span class="vocab-tip" data-meaning="땅의 모양">지형</span>이 이름을 지었다</h2>
-        <p>학교에서 하천 선생님이 사회 수업을 했어요. 주제는 '지명의 유래'였죠.<br><br><span class="dialogue">"한국의 동네 이름 중 상당수는 땅의 생김새, 즉 <span class="highlight"><span class="vocab-tip" data-meaning="땅의 생김새와 모양">지형(地形)</span></span>에서 왔어요. 이것을 연구하는 학문을 '<span class="highlight"><span class="vocab-tip" data-meaning="지명의 유래와 변화를 연구하는 학문">지명학</span></span>'이라고 해요."</span><br><br>선생님이 칠판에 지도를 붙이고 설명했어요.<br><br><span class="dialogue">"'<span class="highlight"><span class="vocab-tip" data-meaning="골짜기를 뜻하는 순우리말">골</span></span>'은 골짜기를 뜻하는 순우리말이에요. 밤골, 신림골, 절골, 돌골 모두 골짜기 지형에 있는 마을이에요. '<span class="highlight"><span class="vocab-tip" data-meaning="언덕의 옛말">덕(德)</span></span>'은 언덕의 옛말이에요. 능덕, 가덕, 인덕 같은 이름이 있죠."</span><br><br>나리가 열심히 노트에 받아 적었어요. 선생님이 계속했어요.<br><br><span class="dialogue">"'<span class="highlight"><span class="vocab-tip" data-meaning="냇물, 개울이 있는 곳">내</span></span>'가 들어가면 냇물, 개울이 있는 곳이에요. 두내, 세천, 갈내처럼요. '<span class="highlight"><span class="vocab-tip" data-meaning="넓은 들판을 뜻하는 말">벌</span></span>'은 넓은 들판이에요. '한밭'이 한자로 '<span class="highlight"><span class="vocab-tip" data-meaning="큰 들판, 한밭의 한자 표기">대전(大田)</span></span>'이 된 것처럼요. 큰(한) 들판(밭)이라는 뜻이죠."</span><br><br>친구 새론이가 손을 들었어요.<br><br><span class="dialogue">"그러면 서울은요? 서울도 지형에서 온 거예요?"</span><br><br><span class="dialogue">"좋은 질문이야! 서울의 어원에는 여러 설이 있는데, 가장 유력한 것은 신라의 <span class="vocab-tip" data-meaning="나라의 중심 도시">수도</span> '<span class="highlight">서라벌(徐羅伐)</span>'에서 왔다는 거예요. '서라'는 높다 또는 으뜸, '벌'은 넓은 땅이니까 '높고 넓은 으뜸 땅'이라는 뜻이에요. 수도라는 보통명사가 고유명사가 된 경우죠."</span><br><br>방과 후 나리는 마을 뒷산에 올라갔어요. 정상에서 내려다보니 밤골마을은 정말 양쪽이 산으로 둘러싸인 U자 모양의 골짜기에 자리 잡고 있었어요.<br><br><span class="dialogue">"땅의 모양을 보면 이름이 보여! 우리 조상들은 <span class="vocab-tip" data-meaning="사람 손이 닿지 않은 것">자연</span>을 관찰해서 이름을 지었구나."</span><br><br>지형은 지명의 가장 기본적인 재료였어요.</p>
+        <span class="chapter">제2장</span>
+        <span class="theme">땅의 모양이 이름을 짓다</span>
+        <h2><span class="vocab-tip" data-meaning="땅의 생김새">지형</span>과 관련된 이름 — 골·덕·내·벌</h2>
+        <p>지리 시간, 하천 선생님이<br>
+<span class="vocab-tip" data-meaning="땅의 생김새">지형</span>도를 펼치며 이야기해 주었어요.<br><br><span class="dialogue">"우리나라 지명 중 많은 것이 땅의 생김새에서 왔어요. '밤골'의 '골'은 골짜기를 뜻하지요? 절골, 돌골처럼 '골'이 들어간 이름은 모두 골짜기에서 왔어요."</span></p>
+        <p>선생님이 계속했어요.<br><br><span class="dialogue">"'덕'은 언덕, '내'는 개울, '벌'은 넓은 들판이에요. 한내, 큰내 같은 이름이 그렇지요."</span><br><br>새론이가 물었어요.<br><br><span class="dialogue">"그러면 서울은 무슨 뜻이에요?"</span><br><br><span class="dialogue">"옛날 신라의 수도를 뜻하던 '서라벌'에서 왔다는 이야기가 있어요. 높고 넓은 땅이라는 뜻이지요."</span></p>
+        <p>나리는 방과 후 뒷산에 올라 지형을 살펴보았어요.<br>
+정말로 밤골마을은 양쪽이 산으로 둘러싸인<br>
+골짜기에 자리 잡고 있었지요.<br><br><span class="dialogue">"땅의 모양을 보면 이름이 보인다!"</span><br><br>조상들은 자연을 <span class="vocab-tip" data-meaning="자세히 살펴보는 것">관찰</span>하고 그 특징을 이름에 담았어요.<br>
+<span class="highlight">지형이 곧 이름이 되고, 이름이 곧 지도가 되는 것이었지요.</span></p>
       </div>
     </section>
 
+    <!-- Part 3 -->
     <section class="story-section" data-bg="/images/창작도서/창작지리03/03.jpg">
       <div class="story-card">
-        <h2>3화. 사람의 발자취가 땅에 남다</h2>
-        <p>고등학생 아리 언니가 나리를 향토사 동아리 방으로 초대했어요. 벽에는 오래된 지도와 옛날 호적 서류, 마을 사진들이 붙어 있었어요.<br><br><span class="dialogue">"나리야, 지명에는 사람의 이름이나 발자취가 담긴 것도 많아. 이것을 '<span class="highlight"><span class="vocab-tip" data-meaning="사람의 이름이나 활동에서 유래한 지명">인문 지명</span></span>'이라고 해."</span><br><br>아리 언니가 조선 시대 밤골마을 주변 고지도를 펼쳤어요. 마을 북쪽에 '장군터'라는 곳이 표시되어 있었어요.<br><br><span class="dialogue">"전설에 따르면 고려 시대에 이 고장 출신 장군이 무예를 연습했던 곳이래. 1990년대 발굴 <span class="vocab-tip" data-meaning="알아보기 위해 찾아보는 것">조사</span>에서 실제로 화살촉과 말 뼈가 나왔어."</span><br><br>나리가 신기해했어요. 매일 자전거로 지나다니던 길 아래에 수백 년 전 장군의 이야기가 숨어 있다니!<br><br>아리 언니가 더 많은 <span class="vocab-tip" data-meaning="본보기로 드는 것">예시</span>를 알려줬어요.<br><br><span class="dialogue">"<span class="highlight">세종시</span>는 세종대왕 이름이야. <span class="highlight">율곡동</span>은 율곡 이이 선생, <span class="highlight">퇴계로</span>는 퇴계 이황, <span class="highlight">충무로</span>는 충무공 이순신. 역사적 인물의 이름이 거리와 <span class="vocab-tip" data-meaning="사람이 많이 사는 곳">도시</span>에 남아 있어."</span><br><br>두메 할아버지도 마을 인물 이야기를 들려주셨어요.<br><br><span class="dialogue">"마을 입구 느티나무 아래서 '<span class="highlight">밤은(栗隱)</span>' 선비가 서당을 열었단다. 밤나무의 은혜라는 뜻이야. 밤나무 숲에 숨어 학문을 닦았다고 해서 그런 호를 지었대. 그 서당 터가 지금의 밤골초등학교야."</span><br><br>나리는 탐정 노트에 적었어요. '<span class="highlight">지명은 사람의 발자취를 기록하는 살아있는 역사책이다.</span>' 이름 하나에 인물의 삶과 업적이 새겨져 있었어요.</p>
+        <span class="chapter">제3장</span>
+        <span class="theme">이 고장을 빛낸 사람들의 발자취</span>
+        <h2>역사 속 인물 — 사람의 이름이 담긴 땅</h2>
+        <p>아리 선배가 향토사 동아리실로 나리를 초대했어요.<br>
+벽에는 오래된 지도들이 가득 붙어 있었지요.<br><br><span class="dialogue">"나리, 지명에는 사람의 이름이 담긴 것도 있어."</span><br><br>선배가 옛 지도에서 '장군터'를 가리켰어요.<br><br><span class="dialogue">"조선 시대에 이 고장 출신 장군이 무예를 닦았던 곳이라는 <span class="vocab-tip" data-meaning="옛날부터 전해 내려오는 이야기">전설</span>이 있어."</span><br><br>매일 지나다니던 길 아래에<br>
+수백 년 전 장군의 이야기가 숨어 있었다니!</p>
+        <p>아리 선배가 더 많은 예를 들어주었어요.<br><br><span class="dialogue">"세종시는 세종대왕에서, 충무로는 충무공 이순신에서 온 이름이야."</span><br><br>수많은 거리와 도시에<br>
+역사 속 인물의 이름이 새겨져 있었지요.<br>
+<span class="highlight">그것은 그 인물의 정신을 기억하겠다는 공동체의 약속이었어요.</span></p>
+        <p>두메 할아버지도 이야기를 들려주었어요.<br><br><span class="dialogue">"마을 입구 느티나무 아래에서 조선 시대 한 선비가 서당을 열었단다. 마을 이름이 그 선비의 가르침과도 이어져 있다는 전설이 있지."</span><br><br>나리는 탐정 노트에 적었어요.<br>
+'지명은 사람의 발자취를 기록하는 또 하나의 역사책이다.'</p>
       </div>
     </section>
 
+    <!-- Part 4 -->
     <section class="story-section" data-bg="/images/창작도서/창작지리03/04.jpg">
       <div class="story-card">
-        <h2>4화. 물, 바람, 나무가 준 선물</h2>
-        <p>주말에 하천 선생님이 학생들을 데리고 현장 학습을 나갔어요. 주제는 '지명 탐사 여행'—밤골마을 주변의 자연 지명을 직접 확인하는 거였어요.<br><br>첫 번째 목적지는 마을 동쪽의 '<span class="highlight">찬샘터</span>'였어요. 바위틈에서 정말 차가운 물이 졸졸 흘러나오고 있었어요. 나리가 손을 담그자 시원함을 넘어 손이 저릴 정도였죠.<br><br><span class="dialogue">"한여름에도 수온이 12도 <span class="vocab-tip" data-meaning="어느 수준이나 범위">정도</span>로 차갑단다. 지하 깊은 곳에서 올라오는 물이거든. 그래서 '<span class="highlight">찬샘터</span>'라는 이름이 붙었어."</span><br><br>두 번째는 '<span class="highlight">솔밭재</span>'라는 고개였어요. 오르막길 양쪽으로 소나무 숲이 빽빽했어요.<br><br><span class="dialogue">"'솔'은 소나무, '밭'은 넓은 곳, '재'는 고개예요. 합치면 '소나무가 넓게 펼쳐진 고개'라는 뜻이죠. <span class="highlight"><span class="vocab-tip" data-meaning="한자가 아닌 고유어로 된 지명">순우리말 지명</span></span>의 전형적인 형태예요."</span><br><br>세 번째는 '<span class="highlight">바람들이</span>'라는 작은 마을이었어요. 산과 산 사이의 넓은 들판에 들어서자 사방에서 바람이 불었어요. 모자가 날아갈 것 같았죠.<br><br><span class="dialogue">"이 지형이 바람을 모으는 깔대기 역할을 해요. 바람이 들어오는 곳, 그래서 '바람들이'야. 옛날에는 풍차를 돌렸다는 기록도 있어."</span><br><br>나리가 감탄했어요. 찬샘터, 솔밭재, 바람들이. 이름만 들어도 그곳의 풍경이 눈앞에 펼쳐지는 것 같았어요.<br><br>새론이도 감동했어요.<br><br><span class="dialogue">"서울에서는 '○○동 △△번지' 숫자만 있었는데, 여기는 이름만으로 풍경이 보여. 시적이야."</span><br><br>물, 바람, 나무가 선물한 이름. <span class="highlight"><span class="vocab-tip" data-meaning="자연환경에서 유래한 지명">자연 지명</span></span>은 그 땅의 <span class="vocab-tip" data-meaning="둘러싼 자연이나 상황">환경</span>을 가장 직관적으로 담고 있었어요.</p>
+        <span class="chapter">제4장</span>
+        <span class="theme">물, 바람, 나무가 지어준 이름</span>
+        <h2>자연환경 영향 — 찬샘터, 솔밭재, 바람들이</h2>
+        <p>주말, 하천 선생님이 학생들과<br>
+'지명 탐사 여행'을 떠났어요.<br>
+첫 번째 장소는 '찬샘터'.<br>
+바위틈에서 정말 차가운 물이 흘러나오고 있었지요.<br><br><span class="dialogue">"한여름에도 손이 시릴 만큼 차갑단다. 그래서 '찬샘터'야. '샘', '물', '내'가 들어간 지명은 모두 물과 관련이 있어. 물이 있는 곳에 마을이 생기니까."</span></p>
+        <p>두 번째는 '솔밭재'라는 고개였어요.<br>
+정말 소나무 숲이 빽빽하게 우거져 있었지요.<br><br><span class="dialogue">"'솔'은 소나무, '재'는 고개. 소나무가 펼쳐진 고개, 그 모습 그대로가 이름이 된 거예요."</span><br><br>세 번째는 '바람들이'라는 마을.<br>
+들판에 서자 정말 사방에서 바람이 불어왔어요.<br><br><span class="dialogue">"바람이 들어오는 곳, 그래서 '바람들이'야."</span></p>
+        <p><span class="highlight">이름만 들어도 그곳의 풍경이 눈앞에 그려졌지요.</span><br><br>새론이도 처음으로 감동한 표정이었어요.<br><br><span class="dialogue">"서울에서는 땅 이름이 그냥 번호 같았는데... 여기는 이름만으로도 풍경이 보여."</span><br><br>자연이 선물한 이름들은 수백 년이 지나도<br>
+그 땅의 모습을 전해주고 있었지요.</p>
       </div>
     </section>
 
+    <!-- Part 5 -->
     <section class="story-section" data-bg="/images/창작도서/창작지리03/05.jpg">
       <div class="story-card">
-        <h2>5화. 마을의 상징물 - 장승과 당산나무</h2>
-        <p>현장 학습에서 돌아오는 길, 밤골마을 입구에 나무 장승 두 개가 서 있었어요. 하나에는 '<span class="highlight">천하대장군</span>', 다른 하나에는 '<span class="highlight">지하여장군</span>'이라고 새겨져 있었죠.<br><br><span class="dialogue">"이 장승은 마을의 수호신이자 동시에 <span class="highlight">이정표</span> 역할을 했어."</span><br><br>두메 할아버지가 설명해주셨어요.<br><br><span class="dialogue">"옛날에는 장승이 마을 경계를 표시하고, 나쁜 기운(역병, 도둑)을 막는다고 믿었단다. 동시에 '밤골까지 5리', '장터까지 2리'처럼 거리도 알려줬지. 지금의 이정표와 <span class="vocab-tip" data-meaning="구분되는 선이나 한계">경계</span> 표지판 역할을 한 거야."</span><br><br>나리는 마을을 둘러보며 다른 상징물도 찾았어요. 마을 중앙에 수백 년 된 거대한 느티나무가 있었어요.<br><br><span class="dialogue">"이 느티나무를 '<span class="highlight">당산나무</span>'라고 불러. 마을의 수호신이 깃든 신성한 나무지. 매년 정월 대보름에 당산제를 지냈단다."</span><br><br>마을 뒤편 작은 언덕에는 돌을 쌓아 만든 탑이 있었어요. '<span class="highlight">서낭당</span>'이라 불리는 이 돌탑은 마을 사람들이 지나가며 돌을 하나씩 올려 소원을 빌던 곳이었어요.<br><br>하천 선생님이 정리했어요.<br><br><span class="dialogue">"장승, 당산나무, 서낭당 같은 상징물은 마을의 <span class="highlight">정체성</span>을 보여줘요. 그 마을 사람들이 무엇을 믿고, 무엇을 두려워하고, 어떻게 공동체를 유지했는지 담긴 <span class="highlight">문화유산</span>이에요. 이런 것들이 있는 곳에는 반드시 그와 관련된 지명이 남아 있죠."</span><br><br>나리는 노트에 적었어요. '상징물은 마을의 심장, 지명은 마을의 기억.'</p>
+        <span class="chapter">제5장</span>
+        <span class="theme">마을 입구의 장승이 말해주는 것</span>
+        <h2>상징물의 의미 — 장승, 당산나무, 서낭당</h2>
+        <p>돌아오는 길, 마을 입구의<br>
+나무 <span class="vocab-tip" data-meaning="마을 입구에 세운 나무 조각상">장승</span> 앞에서 멈췄어요.<br>
+하나에는 '천하대장군',<br>
+다른 하나에는 '지하여장군'이라 새겨져 있었지요.<br><br><span class="dialogue">"이 장승은 마을의 수호신이자 <span class="vocab-tip" data-meaning="길과 거리를 알려주는 표시">이정표</span>야. 마을 경계를 표시하고, 나쁜 기운을 막아주었단다."</span></p>
+        <p>나리는 다른 상징물들도 발견했어요.<br>
+마을 가운데 오래된 느티나무는<br>
+수백 년 된 '당산나무'였고,<br>
+마을 뒤편에는 소원을 빌던<br>
+돌탑 '서낭당'이 쌓여 있었지요.<br><br><span class="dialogue">"이런 상징물은 마을 사람들의 믿음과 역사가 담긴 문화유산이에요."</span></p>
+        <p>전국의 많은 마을 이름이<br>
+이런 상징물에서 왔어요.<br>
+솟대가 있던 곳은 '솟대마을',<br>
+돌탑이 있던 곳은 '탑리'.<br>
+상징물은 사라져도 이름은 남아<br>
+그 마을의 옛 모습을 기억하게 했지요.<br><br>나리는 노트에 적었어요.<br>
+'<span class="highlight">상징물은 마을의 심장이고, 이름은 마을의 기억이다.</span>'</p>
       </div>
     </section>
 
+    <!-- Part 6 -->
     <section class="story-section" data-bg="/images/창작도서/창작지리03/06.jpg">
       <div class="story-card">
-        <h2>6화. 장터와 제사터 - 생활이 담긴 이름</h2>
-        <p>두메 할아버지가 나리를 마을 뒤편의 넓은 터로 데려갔어요. 지금은 잡초가 무성한 빈 공터였지만, 예전에는 달랐대요.<br><br><span class="dialogue">"여기가 옛날 '<span class="highlight">장터</span>'였단다. 매달 2일과 7일에 장이 섰어. '밤골장'이라 불렀지. 주변 다섯 마을 사람들이 모여서 물건을 사고팔았어."</span><br><br>조선 시대에는 전국에 1,000개가 넘는 <span class="highlight"><span class="vocab-tip" data-meaning="5일마다 열리는 전통 장터">5일장</span></span>이 있었대요. '장터', '장마당', '장동', '시장리' 같은 이름이 그때 생긴 거래요.<br><br><span class="dialogue">"밤골마을이 이 정도로 큰 것도 장이 서는 <span class="highlight"><span class="vocab-tip" data-meaning="사람과 물건이 오가는 것">교통</span> 요지</span>였기 때문이야. 사람이 모이면 마을이 커지고, 마을이 커지면 더 많은 사람이 모이지."</span><br><br>할아버지가 또 다른 곳을 가리켰어요. 마을 남쪽 작은 언덕인 '<span class="highlight">제터골</span>'이었어요.<br><br><span class="dialogue">"매년 정월 대보름과 추석에 여기서 마을 제사를 지냈어. 제사를 지내는 터가 있는 골짜기, 그래서 '제터골'이야. 마을의 안녕과 풍년을 빌었지."</span><br><br>아리 언니가 추가 정보를 알려줬어요.<br><br><span class="dialogue">"한국에는 '<span class="highlight">씨름터</span>', '<span class="highlight">그네장</span>', '<span class="highlight">줄다리기마당</span>' 같은 이름도 있어요. <span class="vocab-tip" data-meaning="오래전부터 전해 내려온 것">전통</span> 놀이와 축제에서 온 이름이에요. '<span class="highlight">사창리</span>'는 조선 시대 곡식 창고(社倉)가 있던 곳, '<span class="highlight">역리</span>'는 역참(驛站)이 있던 곳이에요."</span><br><br>나리가 깨달았어요. 지명에는 사람들이 무엇을 먹고, 무엇을 믿고, 무엇을 즐기고, 어떻게 교류했는지 <span class="highlight">생활의 모든 것</span>이 담겨 있었어요.<br><br>할아버지가 말했어요.<br><br><span class="dialogue">"이름을 기억하는 한 전통이 살아 있단다. 이름을 잊으면 그 역사도 사라지는 거야."</span></p>
+        <span class="chapter">제6장</span>
+        <span class="theme">장날, 제사, 축제가 남긴 이름들</span>
+        <h2>전통과 문화 — 장터와 제터골</h2>
+        <p>두메 할아버지가 나리를<br>
+마을 뒤편의 넓은 터로 데려갔어요.<br>
+지금은 잡초가 무성한 빈 공터였지요.<br><br><span class="dialogue">"여기가 옛날 '장터'였단다. 매달 2일과 7일에 장이 섰어. 수십 리 밖에서도 사람들이 찾아왔지."</span><br><br>장이 서던 곳은 사람이 모이고,<br>
+사람이 모이는 곳은 마을이 되었어요.</p>
+        <p>할아버지는 또 다른 곳을 가리켰어요.<br>
+마을 남쪽 작은 언덕 '제터골'.<br><br><span class="dialogue">"매년 정월 대보름에 여기서 마을 제사를 지냈어. '제사를 지내는 터가 있는 골짜기', 그래서 제터골이야."</span><br><br>아리 선배가 덧붙였지요.<br><br><span class="dialogue">"놀이와 축제에서 온 지명도 있어요. '씨름터', '그네장' 같은 이름이 그래요. 지금은 사라졌지만, 이름이 그 <span class="vocab-tip" data-meaning="옛날부터 이어져 내려오는 문화">전통</span>을 기억하고 있지요."</span></p>
+        <p>나리는 깨달았어요.<br>
+지명은 단순한 표지판이 아니었지요.<br>
+그 안에는 <span class="highlight">사람들이 무엇을 먹고, 무엇을 믿고, 무엇을 즐겼는지</span>가 담겨 있었어요.<br><br>할아버지가 말했지요.<br><br><span class="dialogue">"이름을 기억하는 한, 전통은 죽지 않는단다."</span></p>
       </div>
     </section>
 
+    <!-- Part 7 -->
     <section class="story-section" data-bg="/images/창작도서/창작지리03/07.jpg">
       <div class="story-card">
-        <h2>7화. 빼앗기고 되찾은 이름의 역사</h2>
-        <p>아리 언니가 소중한 자료를 가져왔어요. 조선 시대 지도, 일제 강점기 지도, 현대 지도를 나란히 펼쳐 놓았죠.<br><br><span class="dialogue">"같은 밤골마을인데, 시대마다 이름 표기가 달라."</span><br><br>조선 시대 지도에 밤골마을은 '<span class="highlight">율곡리(栗谷里)</span>'로 적혀 있었어요. 밤나무 골짜기라는 뜻 그대로를 한자로 옮긴 거죠.<br><br>그런데 1910년대 일제 강점기 지도에는 '<span class="highlight">율곡정(栗谷町)</span>'으로 바뀌어 있었어요. '리(里)'가 일본식 행정 단위인 '정(町)'으로 바뀐 거예요.<br><br><span class="dialogue">"일본 제국주의가 한국의 지명을 일본식으로 바꾸거나 아예 다른 이름을 붙였어. 우리 문화와 정체성을 지우려는 <span class="highlight">문화적 식민 정책</span>이었지."</span><br><br>나리는 화가 나고 슬펐어요. 이름을 빼앗는 것은 그 땅의 기억과 정체성을 빼앗는 것과 같았어요.<br><br><span class="dialogue">"해방 후에 많은 지명이 원래대로 돌아왔어. '율곡리'로 복원됐지. 하지만 사람들은 한자어보다 순우리말 '<span class="highlight">밤골</span>'을 더 많이 쓰게 됐어. 원래의 토착어가 더 정감이 있으니까."</span><br><br>하천 선생님이 덧붙였어요.<br><br><span class="dialogue">"지명은 시대에 따라 변해요. 발음이 변하고(<span class="highlight">음운 <span class="vocab-tip" data-meaning="달라지는 것">변화</span></span>), 한자 표기가 달라지고(<span class="highlight">차자 표기</span>), 행정 구역이 통폐합되기도 하죠. 하지만 <span class="highlight">변화의 <span class="vocab-tip" data-meaning="일이 진행되는 차례">과정</span> 자체가 역사</span>예요. 각 시대가 남긴 이름이 지층처럼 쌓여서 그 땅의 역사를 말해주고 있어요."</span><br><br>이름은 변하지만, 그 변화를 추적하면 역사가 보였어요. 지명은 시간의 화석이었어요.</p>
+        <span class="chapter">제7장</span>
+        <span class="theme">이름은 변하고, 이야기는 쌓인다</span>
+        <h2>세월의 흔적 — 빼앗기고 되찾은 이름</h2>
+        <p>아리 선배가 흥미로운 자료를 가져왔어요.<br>
+조선 시대 지도와 일제 강점기 지도,<br>
+그리고 지금의 지도를 나란히 놓은 것이었지요.<br><br><span class="dialogue">"같은 마을인데, 시대마다 이름이 달라."</span><br><br>조선 시대에는 '율곡리'였는데,<br>
+일제 강점기에는 일본식으로 바뀌어 있었어요.</p>
+        <p><span class="dialogue">"일본이 강제로 바꾼 거야. 한국식 지명을 일본식으로. <span class="highlight">이것은 단순한 이름 변경이 아니라, 우리 문화를 지우려는 시도</span>였지."</span><br><br>나리는 분노와 슬픔이 밀려왔어요.<br>
+이름을 빼앗는 것은<br>
+기억을 빼앗는 것과 같았지요.<br>
+해방 후에는 다시 이름을 되찾았고,<br>
+사람들은 순우리말 '밤골'을 더 많이 쓰게 되었어요.</p>
+        <p>하천 선생님이 설명했어요.<br><br><span class="dialogue">"지명은 고정된 것이 아니야. 시대에 따라 발음이 바뀌고, 이름이 통째로 바뀌기도 하지."</span><br><br>이름은 변하지만, 변하는 과정 자체가 역사였어요.<br>
+<span class="highlight">각 시대가 남긴 이름들은 땅 밑의 지층처럼 쌓여, 그 고장의 역사를 말없이 증언하고 있었지요.</span></p>
       </div>
     </section>
 
+    <!-- Part 8 -->
     <section class="story-section" data-bg="/images/창작도서/창작지리03/08.jpg">
       <div class="story-card">
-        <span class="theme">💔 사라지는 이름</span>
-        <h2>8화. 밤골마을이 사라진다고요?</h2>
-        <p>어느 날 마을에 큰 뉴스가 전해졌어요. 밤골마을이 정부의 신도시 개발 예정지에 포함됐대요. 마을 곳곳에 '<span class="highlight">밤골 뉴타운 개발 예정</span>'이라는 현수막이 걸렸죠.<br><br><span class="dialogue">"밤골마을이 사라져요?"</span><br><br>나리가 놀라서 물었어요. 개발 계획에 따르면, 논밭은 아파트 단지로, 옛 장터는 대형 마트로, 뒷산 밤나무 숲은 근린공원으로 바뀔 거래요. 지명도 '밤골 뉴타운'이나 '율곡 시티', '에코밸리'처럼 현대적인 이름으로 바뀔 수 있대요.<br><br>마을 어른들 사이에서 <span class="vocab-tip" data-meaning="어떤 일에 대한 생각">의견</span>이 갈렸어요.<br><br><span class="dialogue">"개발하면 도로도 좋아지고, 병원도 생기고, 편해지잖아."</span><br><br><span class="dialogue">"역사가 다 사라져! 느티나무는? 장승은? 수백 년 된 기억을 아파트로 덮어버리는 거야?"</span><br><br>두메 할아버지는 말이 없으셨어요. 80년간 살아온 마을이 바뀌는 건, 자신의 인생 기억이 지워지는 것과 같았으니까요.<br><br>나리가 선생님에게 물었어요.<br><br><span class="dialogue">"개발이 나쁜 거예요?"</span><br><br>하천 선생님이 신중하게 답했어요.<br><br><span class="dialogue">"개발 자체가 나쁜 건 아니야. 사람들에게 더 나은 삶의 환경을 주는 거니까. 하지만 개발하면서 그 땅의 역사와 문화, 정체성이 완전히 지워지는 게 <span class="vocab-tip" data-meaning="풀어야 할 어려운 일">문제</span>야. <span class="highlight">발전과 <span class="vocab-tip" data-meaning="잘 간직함">보존</span>은 양립할 수 있어야 해</span>."</span><br><br>새론이가 말했어요.<br><br><span class="dialogue">"밤골이라는 이름이 사라지면, 뭔가 정말 소중한 걸 잃는 것 같아."</span><br><br>변화는 필요하지만, 기억까지 지울 <span class="vocab-tip" data-meaning="꼭 있어야 함">필요</span>는 없었어요.</p>
+        <span class="chapter">제8장</span>
+        <span class="theme">밤나무 대신 아파트가 들어선다면</span>
+        <h2>변화하는 모습 — 신도시 개발의 위기</h2>
+        <p>어느 날, 마을에 큰 뉴스가 전해졌어요.<br>
+밤골마을이 신도시 <span class="vocab-tip" data-meaning="땅을 새롭게 바꾸어 만드는 것">개발</span> 예정지에 포함된 거예요.<br>
+곳곳에 현수막이 걸렸지요.<br><br><span class="dialogue">"밤골마을이 사라진다고요?"</span><br><br>논과 밭은 아파트로,<br>
+장터 공터는 대형 마트로 바뀔 예정이었어요.<br>
+마을 이름도 '율곡 시티'로<br>
+바뀔 수 있다고 했지요.</p>
+        <p>마을 어른들의 반응은 갈렸어요.<br><br><span class="dialogue">"개발하면 집값이 오르고 편리해지잖아."</span><br><br><span class="dialogue">"이 마을의 역사가 다 사라지는 거야. 느티나무는? 장승은? 찬샘터는?"</span><br><br>두메 할아버지는 말이 없으셨어요.<br>
+80년간 살아온 마을이 통째로 바뀌는 것은<br>
+자신의 기억이 지워지는 것과 같았기 때문이지요.</p>
+        <p>나리가 하천 선생님에게 물었어요.<br><br><span class="dialogue">"개발이 나쁜 건가요?"</span><br><br><span class="dialogue">"개발 자체가 나쁜 것은 아니야. 하지만 <span class="highlight">개발 과정에서 그 지역의 역사와 문화가 완전히 지워지는 경우가 많다</span>는 거야."</span><br><br>새론이가 진지하게 말했지요.<br><br><span class="dialogue">"밤골이라는 이름이 사라지면 뭔가 소중한 걸 잃는 것 같아."</span><br><br>변화는 어쩔 수 없지만,<br>
+기억까지 지울 필요는 없었어요.</p>
       </div>
     </section>
 
+    <!-- Part 9 -->
     <section class="story-section" data-bg="/images/창작도서/창작지리03/09.jpg">
       <div class="story-card">
-        <span class="theme">✨ 기억을 지키는 아이들</span>
-        <h2>9화. 밤골 이름 지키기 프로젝트</h2>
-        <p>나리는 가만히 있을 수 없었어요. 아리 언니, 새론이, 친구들과 함께 '<span class="highlight">밤골 이름 지키기 프로젝트</span>'를 시작했어요.<br><br><strong>첫 번째: 지명 기록.</strong> 나리의 탐정 노트가 공식 기록이 됐어요. 밤골, 찬샘터, 솔밭재, 바람들이, 장터, 제터골, 장군터, 서낭당... 마을의 모든 지명을 GPS 좌표와 함께 기록해서 '<span class="highlight">밤골마을 지명 사전</span>'을 만들었어요.<br><br><strong>두 번째: 구술 채록.</strong> 할아버지, 할머니들의 이야기를 녹음했어요. 두메 할아버지, 아리 언니의 외할머니, 옛 이장님... 지명의 유래와 마을 역사를 직접 들은 그대로 기록했죠.<br><br><span class="dialogue">"이 기억이 사라지면 다시는 복원할 수 없어. <span class="highlight">구술 역사(oral history)</span>는 문헌에 없는 생생한 정보를 담고 있어."</span><br><br>아리 언니가 말했어요.<br><br><strong>세 번째: 탄원서 작성.</strong> 군청과 개발 공사에 탄원서를 제출했어요.<br><br><span class="dialogue">"신도시를 건설하더라도, 거리 이름과 공원 이름에 원래 지명을 살려 주세요. 느티나무와 장승은 문화재로 보존해 주세요."</span><br><br>마을 주민 200명이 서명했어요.<br><br><strong>네 번째: 마을 간담회 발표.</strong> 나리가 개발 간담회에서 직접 발표했어요.<br><br><span class="dialogue">"밤골이라는 이름에는 300년간의 밤나무 숲, 밤은 선비의 서당, 5일장의 번영, 마을 제사의 전통이 담겨 있어요. 이 이름을 지키는 것은 과거를 박제하는 게 아니라, <span class="highlight">과거와 함께 미래를 만드는 것</span>이에요."</span><br><br>두메 할아버지가 눈시울을 붉히며 미소 지었어요.<br><br><span class="dialogue">"내 기억이 헛되지 않았구나."</span></p>
+        <span class="chapter">제9장</span>
+        <span class="theme">'밤골 지키기' 프로젝트가 시작되다</span>
+        <h2>고장의 자부심 — 기억을 보존하는 아이들</h2>
+        <p>나리는 가만히 있을 수 없었어요.<br>
+친구들과 함께 '밤골 이름 지키기 프로젝트'를 시작했지요.<br>
+첫 번째는 마을의 모든 지명을 기록하는 것.<br>
+밤골, 찬샘터, 솔밭재, 바람들이, 장터, 제터골.<br>
+크고 작은 이름들을 모아<br>
+'밤골마을 지명 사전'을 만들었어요.</p>
+        <p>두 번째는 어르신들의 이야기를 녹음하는 것이었어요.<br><br><span class="dialogue">"이 기억들이 사라지면 영원히 되살릴 수 없어."</span><br><br>세 번째는 지명을 지켜 달라고 요청하는 글을 쓰는 것.<br>
+"신도시를 지어도 거리 이름에<br>
+원래 지명을 살려 주세요."<br>
+마을 주민 200명의 서명을 받았지요.</p>
+        <p>나리가 마을 모임에서 발표했어요.<br><br><span class="dialogue">"밤골이라는 이름에는 밤나무의 기억, 선비의 가르침, 장터의 활기가 담겨 있습니다. <span class="highlight">이 이름을 지키는 것은 과거에 사는 것이 아니라, 과거와 함께 미래를 만드는 것</span>입니다."</span><br><br>두메 할아버지가 미소 지었어요.<br><br><span class="dialogue">"내 기억이 헛되지 않았구나."</span><br><br>고장을 사랑하는 방법은<br>
+이름을 알고, 기억하고, 전해주는 것이었지요.</p>
       </div>
     </section>
 
+    <!-- Part 10 -->
     <section class="story-section" data-bg="/images/창작도서/창작지리03/10.jpg">
       <div class="story-card">
-        <span class="theme">💝 할아버지의 눈물</span>
-        <h2>10화. 이름을 아는 것이 사랑하는 것</h2>
-        <p>봄이 됐어요. 밤골마을 뒷산의 밤나무에 새순이 돋았어요.<br><br>좋은 소식이 전해졌어요. 개발 계획이 수정됐대요. 느티나무와 장승은 <span class="highlight"><span class="vocab-tip" data-meaning="지역의 역사와 문화를 보여주는 보존 대상">향토문화재</span></span>로 지정되어 보존 구역이 됐고, 신도시 거리 이름에 '<span class="highlight">밤골로</span>', '<span class="highlight">찬샘길</span>', '<span class="highlight">솔밭재길</span>', '<span class="highlight">장군터공원</span>'이 들어가기로 했어요. 나리와 친구들의 <span class="vocab-tip" data-meaning="힘을 들여 애씀">노력</span>이 결실을 맺은 거예요.<br><br>학교에서 '우리 고장 이름 이야기' 발표회가 열렸어요. 나리의 탐정 노트는 두꺼운 책이 되어 마을 역사관에 기증됐어요.<br><br>나리가 발표대에 섰어요.<br><br><span class="dialogue">"처음 '밤골'이라는 이름을 들었을 때, 솔직히 촌스럽다고 생각했어요. 서울의 세련된 아파트 이름에 비하면 시골스럽게 느껴졌죠."</span><br><br>잠시 숨을 고르고 계속했어요.<br><br><span class="dialogue">"하지만 이제 알게 됐어요. '<span class="highlight">밤골</span>'이라는 두 글자 안에 천 년의 이야기가 숨어 있어요. 밤나무가 골짜기를 가득 채웠던 풍경, 선비가 서당을 열었던 느티나무, 다섯 마을 사람들이 모였던 5일장, 풍년을 빌던 마을 제사, 장군이 무예를 연마했던 터, 바람이 불어오던 들판까지."</span><br><br>목소리가 떨렸지만 또렷했어요.<br><br><span class="dialogue">"내가 사는 곳의 이름을 알고, 그 이름의 이야기를 기억하고, 다음 세대에게 전해주는 것. <span class="highlight">이름을 아는 것이 그 고장을 사랑하는 첫걸음</span>이에요."</span><br><br>두메 할아버지가 눈물을 닦으셨어요. 80년의 기억이 열세 살 소녀에게 전해졌어요.<br><br>이야기를 기억하는 한, 고장은 사라지지 않아요. 지명은 <span class="highlight">땅의 이름이자 시간의 기록이자 사람의 기억</span>이에요.</p>
+        <span class="chapter">제10장</span>
+        <span class="theme">이름을 아는 것이 곧 사랑하는 것이다</span>
+        <h2>지역 정체성 — 이야기를 기억하는 한</h2>
+        <p>봄이 되자, 뒷산 밤나무에 새순이 돋았어요.<br>
+개발 계획은 수정되어<br>
+느티나무와 장승은 <span class="vocab-tip" data-meaning="소중한 것을 잘 지키는 것">보존</span>되고,<br>
+신도시 거리 이름에 '밤골로', '찬샘길'이<br>
+살아남기로 했지요.<br>
+나리와 친구들의 노력이 작은 결실을 맺은 거예요.</p>
+        <p>학교에서 '우리 고장 이름 이야기' 발표회가 열렸어요.<br>
+발표대에 선 나리가 힘주어 말했지요.<br><br><span class="dialogue">"밤골이라는 이름이 촌스럽다고 생각한 적이 있었습니다. 하지만 이제 알게 되었습니다. 이 이름에는 천 년의 이야기가 숨어 있습니다. 밤나무 골짜기, 선비의 서당, 장터의 활기, 빼앗겼다가 되찾은 이름의 역사까지."</span></p>
+        <p>나리의 목소리가 떨렸지만 또렷했어요.<br><br><span class="dialogue">"내가 사는 곳의 이름을 알고, 이야기를 기억하고, 다음 사람에게 전해주는 것. <span class="highlight">이름을 아는 것이 곧 그 고장을 사랑하는 것</span>입니다."</span><br><br>두메 할아버지가 조용히 눈물을 닦으셨어요.<br>
+80년의 기억이 다음 세대로 전해지는 순간이었지요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(211, 84, 0, 0.15); border-radius: 16px;">
+          <strong style="color: #a04000; font-size: 20px;">🌱 「이야기를 기억하는 한 고장은 사라지지 않아요.」</strong><br><br>
+          <span style="color: #34495e; font-size: 14px;">이름을 아는 것이 곧 고장을 사랑하는 것이에요.</span>
+        </p>
       </div>
     </section>
+  </div>
 
-    <section class="ending-section">
-      <p>🏘️ 나리의 지명 탐정 이야기, 끝 🏘️</p>
-      <div class="nav-buttons">
-        <a href="/creative-book/geo03_season1_quiz.html?season=season1" class="nav-btn quiz">📝 관문평가</a>
-      </div>
-    </section>
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn quiz-btn" onclick="location.href='geo03_season1_quiz.html?season=season1'">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
   </div>
 
   <script>
     const mapContainer = document.getElementById('map-container');
     const sections = document.querySelectorAll('.story-section');
-    let currentBg = '/images/창작도서/창작지리03/00.jpg';
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
 
     function updateBackground() {
       const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
 
       sections.forEach((section, index) => {
         const rect = section.getBoundingClientRect();
@@ -321,12 +652,14 @@
         const sectionBottom = sectionTop + rect.height;
 
         if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
           const bgImage = section.dataset.bg;
           if (bgImage && bgImage !== currentBg) {
             currentBg = bgImage;
             mapContainer.style.backgroundImage = `url(${bgImage})`;
           }
 
+          // 카드 활성화
           const card = section.querySelector('.story-card');
           if (card && !card.classList.contains('active')) {
             card.classList.add('active');
@@ -335,14 +668,27 @@
       });
     }
 
-    window.addEventListener('scroll', updateBackground);
-    window.addEventListener('load', () => {
-      updateBackground();
-      const firstCard = document.querySelector('.story-section .story-card');
-      if (firstCard) {
-        setTimeout(() => firstCard.classList.add('active'), 500);
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
       }
     });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
   </script>
 </body>
 </html>

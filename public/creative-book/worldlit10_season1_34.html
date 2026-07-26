@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏝️ 스물여덟 해의 무인도 — 로빈슨 크루소</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계문학10/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🏝️ 스물여덟 해의 무인도 — 로빈슨 크루소</h1>
+        <p class="subtitle">
+          — 절망 속에서도 삶은 계속된다 —<br>
+          교과기반 창작도서 · 세계문학 10 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🏝️ 등장인물 소개</h3>
+          <p><strong>★ 로빈슨 크루소 (주인공):</strong> 바다를 꿈꾸던 젊은이예요. 무인도에 홀로 남겨져 28년 동안 맨손으로 살아 내요.</p>
+          <p><strong>★ 프라이데이:</strong> 로빈슨이 목숨을 구해 준 청년이에요. 둘도 없는 친구가 돼요.</p>
+          <p><strong>★ 아버지:</strong> 아들이 안전하게 살기를 바라며 항해를 반대한 사람이에요.</p>
+          <p><strong>★ 난파선:</strong> 폭풍에 부서진 배예요. 도구와 식량을 남겨 첫 살림 밑천이 되어 줘요.</p>
+          <p><strong>★ 무인도:</strong> 아무도 살지 않던 외딴섬이에요. 로빈슨의 28년 삶터가 되지요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 출발의 갈등:</strong> 아버지의 반대 vs. 바다를 향해 떠나려는 꿈</p>
+          <p><strong>② 생존의 갈등:</strong> 맨몸으로 던져진 무인도 vs. 살아남으려는 의지</p>
+          <p><strong>③ 외로움의 갈등:</strong> 수십 년의 외로움 vs. 스스로 찾아낸 마음의 평화</p>
+          <p><strong>④ 귀향의 갈등:</strong> 섬의 주인이 된 삶 vs. 고향을 향한 그리움</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학10/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 출발</span>
+        <h2>바다를 꿈꾼 젊은이</h2>
+        <p>옛날 영국의 어느 항구 도시에 로빈슨 크루소라는 젊은이가 살았어요.<br>
+로빈슨의 가슴속에는 단 하나의 꿈이 자라고 있었지요.<br>
+넓은 바다로 나아가 먼 세상을 여행해 보는 꿈이었어요.</p>
+        <p>그러나 아버지의 생각은 달랐어요.<br>
+아들이 고향에서 안전하게 살기를 바랐지요.<br><br><span class="dialogue">"바다는 위험한 곳이다. 여기서 성실하게 살면 그것이 행복이다."</span></p>
+        <p>로빈슨도 아버지의 마음을 모르지 않았어요.<br>
+그러나 항구로 들어오는 배들을 볼 때마다 가슴이 세차게 뛰었지요.<br>
+꿈이란 좀처럼 잠재워지지 않는 것이었어요.</p>
+        <p>오랜 고민 끝에 로빈슨은 아버지의 반대를 무릅쓰고 <span class="vocab-tip" data-meaning="배를 타고 바다를 건너 멀리 가는 것">항해</span>를 떠났어요.<br>
+몰래 배에 오르던 날,<br>
+젊은 가슴은 기대로 한껏 부풀어 있었지요.</p>
+        <p>배는 돛을 활짝 펴고 항구를 미끄러져 나갔어요.<br>
+멀어지는 고향 땅을 보며 로빈슨은 힘차게 손을 흔들었지요.<br>
+이 항해가 인생을 통째로 바꾸어 놓으리라는 것을,<br>
+그때는 꿈에도 알지 못했어요.</p>
+        <p><span class="highlight">꿈을 향한 출발이었지만, 바다는 호락호락한 길을 내주지 않았어요.</span> 시련은 생각보다 빨리 찾아왔지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학10/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>폭풍, 그리고 낯선 해변</h2>
+        <p>어느 날, 하늘이 갑자기 시커멓게 변하기 시작했어요.<br>
+무시무시한 폭풍이 몰려온 거예요.<br>
+산더미 같은 파도가 뱃전을 사정없이 내리쳤지요.<br>
+돛대는 금방이라도 부러질 듯 휘청거렸어요.</p>
+        <p>선원들은 죽을힘을 다해 버텼지만 소용없었어요.<br>
+배는 파도에 휩쓸려 끝내 <span class="vocab-tip" data-meaning="배가 부서지거나 뒤집혀 못 쓰게 되는 것">난파</span>되고 말았지요.<br>
+로빈슨은 바닷물 속으로 빨려 들어가며 정신을 잃었어요.</p>
+        <p>얼마나 시간이 지났을까요.<br>
+눈을 떠 보니 낯선 해변에 홀로 쓰러져 있었어요.<br>
+기적처럼 살아남은 거예요.<br>
+그러나 그 기쁨은 아주 잠시뿐이었지요.</p>
+        <p>해변을 아무리 둘러보아도 사람의 그림자 하나 없었어요.<br>
+이곳은 아무도 살지 않는 <span class="vocab-tip" data-meaning="사람이 살지 않는 외딴섬">무인도</span>였지요.<br>
+살아남은 사람은 저 혼자뿐이었어요.</p>
+        <p><span class="dialogue">"정말 아무도 없다니… 이 넓은 섬에 오직 나 혼자라니!"</span><br><br>로빈슨은 모래밭에 주저앉아 머리를 감쌌어요.<br>
+캄캄한 <span class="vocab-tip" data-meaning="희망이 없다고 느끼는 마음">절망</span>이 온몸으로 밀려왔지요.</p>
+        <p><span class="highlight">꿈꾸던 항해는 하루아침에 홀로 남겨진 표류로 바뀌었어요.</span> 그러나 절망의 바닥에서, 로빈슨은 다시 고개를 들게 되지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학10/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 수습</span>
+        <h2>난파선에서 건진 것들</h2>
+        <p>한참 절망에 잠겨 있던 로빈슨은 이윽고 정신을 차렸어요.<br>
+주저앉아 운다고 달라질 것은 없었지요.<br>
+살아남으려면 지금 당장 무엇이든 해야 했어요.</p>
+        <p>고개를 든 로빈슨의 눈에 난파선이 들어왔어요.<br>
+배는 부서졌지만 아직 가라앉지 않았지요.<br><br><span class="dialogue">"저 배 안에는 쓸 만한 물건들이 남아 있을 거야. 가라앉기 전에 서둘러야 한다!"</span></p>
+        <p>로빈슨은 나무를 엮어 <span class="vocab-tip" data-meaning="나무를 엮어 만든 물에 뜨는 탈것">뗏목</span>을 만들었어요.<br>
+그리고 몇 번이고 배를 오가며<br>
+도구와 식량, 총과 화약을 있는 대로 건져 왔지요.<br>
+못 하나, 밧줄 한 토막까지 버릴 것이 없었어요.</p>
+        <p>해변에 쌓인 짐 더미를 보며 로빈슨은 처음으로 안도감을 느꼈어요.<br>
+도끼가 있으니 나무를 벨 수 있어요.<br>
+총이 있으니 사냥을 할 수 있지요.<br>
+곡식 자루가 있으니 당장 굶지는 않을 거예요.</p>
+        <p>그날 밤 로빈슨은 굳게 다짐했어요.<br>
+하늘만 원망하는 대신,<br>
+가진 것을 헤아리며 하루하루를 힘껏 살아 내기로요.</p>
+        <p><span class="highlight">부서진 배는 끝이 아니라 시작이 되어 주었어요.</span> 절망을 밀어낸 자리에서 무인도 살림이 시작되지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학10/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 개척</span>
+        <h2>두 손으로 짓는 살림</h2>
+        <p>그날부터 로빈슨은 혼자 힘으로 사는 법을 하나씩 익혔어요.<br>
+맨 먼저 비바람을 피할 집을 마련해야 했지요.<br>
+나무를 베어 기둥을 세우고 울타리를 둘러,<br>
+튼튼한 오두막을 지어 올렸어요.</p>
+        <p>먹을거리도 스스로 마련해야 했어요.<br>
+로빈슨은 날쌘 야생 염소들을 끈기 있게 길들였지요.<br>
+가축으로 기르는 <span class="vocab-tip" data-meaning="소나 염소 같은 가축을 기르는 일">목축</span>을 시작한 거예요.<br>
+덕분에 젖과 고기를 꾸준히 얻게 되었지요.</p>
+        <p>농사도 지었어요.<br>
+자루 속에 남아 있던 밀알 몇 알을 심자,<br>
+신기하게도 싹이 트고 이삭이 여물었지요.<br>
+첫 <span class="vocab-tip" data-meaning="농사지은 곡식을 거두어들이는 것">수확</span>의 날, 로빈슨은 눈물이 핑 돌 만큼 기뻤어요.</p>
+        <p><span class="dialogue">"씨를 뿌리면 거두게 된다. 이 외딴섬에서도 부지런히 일하면 살아갈 수 있다!"</span><br><br>실패도 많았지만, 그때마다 툭툭 털고 다시 시도했지요.</p>
+        <p>직접 빵을 굽고, 흙으로 그릇을 빚고, 가죽으로 옷을 지어 입었어요.<br>
+로빈슨의 두 손은 하루도 쉴 틈이 없었지요.<br>
+그 손끝에서 무인도의 살림살이가 하나둘 갖추어져 갔어요.</p>
+        <p><span class="highlight">한 사람이 맨손으로 작은 세상을 다시 지어 올리고 있었어요.</span> 그러나 몸의 살림보다 어려운 것은 마음의 살림이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학10/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 고독</span>
+        <h2>달력과 마음의 평화</h2>
+        <p>몸의 살림이 자리를 잡아 갈수록,<br>
+로빈슨을 괴롭힌 것은 사무치는 외로움이었어요.<br>
+말을 걸 사람도, 대답해 줄 사람도 없었지요.<br>
+들리는 것은 파도 소리와 바람 소리뿐이었어요.</p>
+        <p>그래도 로빈슨은 시간을 놓치지 않으려 애썼어요.<br>
+해변에 기둥을 세우고,<br>
+날마다 칼로 금을 하나씩 그어 나만의 <span class="vocab-tip" data-meaning="날짜와 요일을 알 수 있게 만든 것">달력</span>을 만들었지요.</p>
+        <p><span class="dialogue">"날짜를 잃어버리면 나 자신도 잃어버릴 것 같다. 하루하루를 세는 것이, 사람답게 사는 첫걸음이다."</span><br><br>기둥에 새긴 금은 차곡차곡 늘어 갔어요.</p>
+        <p>마음이 무너질 것 같은 날이면,<br>
+로빈슨은 배에서 건져 온 성경을 조용히 펼쳤어요.<br>
+한 줄 한 줄 읽는 동안 요동치던 마음이 차분히 가라앉았지요.</p>
+        <p>하루하루를 살아 내는 사이, 생각도 달라졌어요.<br>
+잃은 것을 세며 한탄하는 대신,<br>
+가진 것을 세며 <span class="vocab-tip" data-meaning="고마운 마음">감사</span>하게 된 거예요.<br>
+목숨을 건졌고, 먹을 것이 있었고, 몸 누일 집이 있었지요.</p>
+        <p><span class="highlight">처음에는 외로움에 시달렸지만, 로빈슨은 점점 이 섬의 주인이 되어 갔어요.</span> 그렇게 한 해, 두 해가 쌓여 갔지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학10/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">전환 · 달인</span>
+        <h2>섬의 주인이 되다</h2>
+        <p>어느덧 세월이 흘러 수십 년이 지났어요.<br>
+처음 두려움에 떨던 젊은이는 이제 없었지요.<br>
+로빈슨은 혼자 힘으로 거뜬히 살아가는 <span class="vocab-tip" data-meaning="죽지 않고 살아남는 것">생존</span>의 달인이 되어 있었어요.</p>
+        <p>허름하던 오두막은 든든한 요새처럼 변했어요.<br>
+울타리 안에서는 염소 떼가 한가로이 풀을 뜯었지요.<br>
+밭에는 철마다 누런 밀이 넘실거렸어요.</p>
+        <p>섬의 구석구석도 손금처럼 훤했어요.<br>
+어느 골짜기에 맑은 샘이 있는지.<br>
+어느 언덕에 과일나무가 자라는지.<br>
+섬의 모든 것이 로빈슨의 살림 안에 들어와 있었지요.</p>
+        <p>가끔 로빈슨은 노을 지는 언덕에 앉아 지난 시간을 돌아보았어요.<br><br><span class="dialogue">"아무것도 없던 이 섬에서 나는 집을 짓고 밭을 일구어 냈다. 사람이란 생각보다 훨씬 강한 존재로구나."</span></p>
+        <p>고향에 대한 그리움이 사라진 것은 아니었어요.<br>
+수평선 너머로 배가 지나가지 않을까 살피는 일도 잊지 않았지요.<br>
+그러나 기다림에만 매달려 하루를 흘려보내지는 않았어요.</p>
+        <p><span class="highlight">로빈슨은 구조를 기다리는 사람이 아니라, 오늘을 살아 내는 사람이 되어 있었어요.</span> 그런 어느 날, 평온하던 섬에 서늘한 사건이 벌어지지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학10/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 사건</span>
+        <h2>모래 위의 발자국</h2>
+        <p>평화롭던 어느 날, 해변을 걷던 로빈슨이 그 자리에 얼어붙었어요.<br>
+모래 위에 틀림없는 사람의 발자국이 있었던 거예요.<br>
+수십 년 만에 처음 보는, 다른 사람의 <span class="vocab-tip" data-meaning="지나간 자리에 남은 자국">흔적</span>이었지요.</p>
+        <p><span class="dialogue">"발자국이라니! 이 섬에 나 말고 다른 사람이 왔단 말인가?"</span><br><br>반가움보다 두려움이 먼저 밀려왔어요.<br>
+발자국의 주인이 어떤 사람일지 알 수 없었으니까요.</p>
+        <p>조심스레 살핀 끝에, 로빈슨은 무서운 사실을 알게 되었어요.<br>
+다른 섬의 무서운 무리가 이따금 이 섬으로 건너와,<br>
+잡아 온 <span class="vocab-tip" data-meaning="싸움에서 사로잡힌 사람">포로</span>를 해치고 돌아간다는 것이었지요.</p>
+        <p>그 뒤로 평화롭던 섬이 살얼음판처럼 변했어요.<br>
+로빈슨은 울타리를 더 높이 쌓고 총을 손질하며 대비했지요.<br>
+낯선 연기가 피어오르는 날이면 심장이 철렁 내려앉았어요.</p>
+        <p>그러던 어느 날, 로빈슨은 언덕 위에서 그 무리를 발견했어요.<br>
+밧줄에 묶인 포로들이 끌려와 있었지요.<br>
+바로 그때, 포로 한 젊은이가 필사적으로 도망치기 시작했어요.<br>
+로빈슨이 있는 쪽으로요.</p>
+        <p><span class="highlight">수십 년의 고요를 깨뜨린 발자국 하나가, 로빈슨을 새로운 운명 앞에 세웠어요.</span> 로빈슨은 총을 쥐고 언덕을 내달렸지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학10/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 우정</span>
+        <h2>금요일에 만난 친구</h2>
+        <p>로빈슨은 용감하게 나서서 쫓기던 청년의 목숨을 구해 주었어요.<br>
+목숨을 건진 청년은 로빈슨 앞에 엎드려 고마움을 표했지요.<br>
+두려움에 떨던 눈망울이 차츰 믿음의 눈빛으로 바뀌어 갔어요.</p>
+        <p>말이 통하지 않았기에, 로빈슨은 이름부터 지어 주기로 했어요.<br>
+청년을 구한 날이 마침 금요일이었거든요.<br>
+그래서 금요일이라는 뜻의 프라이데이라는 이름을 지어 주었지요.<br><br><span class="dialogue">"오늘부터 너는 프라이데이다. 우리가 만난 날을 기억하자는 뜻이야."</span></p>
+        <p>수십 년 만에 생긴 귀한 <span class="vocab-tip" data-meaning="이야기를 나눌 수 있는 친구">말벗</span>이었어요.<br>
+로빈슨은 프라이데이에게 말을 가르치고,<br>
+농사짓는 법과 빵 굽는 법도 가르쳐 주었지요.<br>
+프라이데이는 배움이 빠르고 마음이 따뜻한 사람이었어요.</p>
+        <p>프라이데이는 충실한 친구가 되어 함께 살았어요.<br>
+홀로 지새우던 섬의 밤이 처음으로 이야기 소리로 채워졌지요.</p>
+        <p>말도 생김새도 달랐지만, 두 사람은 세상 어떤 사이보다 가까운 벗이 되었지요.</p>
+        <p><span class="highlight">수십 년의 외로움 끝에 찾아온 벗 하나가, 섬의 모든 것을 바꾸어 놓았어요.</span> 그리고 마침내, 기다리던 그날이 오지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학10/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 귀환</span>
+        <h2>28년 만의 귀향</h2>
+        <p>그러던 어느 날 아침, 수평선 위로 믿을 수 없는 광경이 나타났어요.<br>
+돛을 활짝 편 영국 배 한 척이 섬을 향해 다가오고 있었던 거예요.<br>
+로빈슨의 심장이 터질 듯이 뛰었어요.<br>
+무려 28년 동안 기다려 온 순간이었지요.</p>
+        <p>마침내 배가 섬에 닿았고, 긴 무인도 생활이 끝나게 되었어요.<br>
+배에 오르기 전, 로빈슨은 정든 섬 곳곳을 천천히 돌아보았지요.<br>
+손수 지은 오두막, 정든 밭과 염소들, 금을 그어 온 달력 기둥까지.<br>
+어느 것 하나 눈에 밟히지 않는 것이 없었어요.</p>
+        <p><span class="dialogue">"이 섬은 나를 가둔 감옥이었지만, 동시에 나를 키워 준 학교이기도 했다. 여기서 보낸 시간을 나는 평생 잊지 못할 것이다."</span></p>
+        <p>로빈슨은 28년 만에 그리운 고향으로 <span class="vocab-tip" data-meaning="떠났던 곳으로 다시 돌아오는 것">귀환</span>했어요.<br>
+청년으로 떠났던 사람이 머리 희끗한 어른이 되어 돌아온 거지요.<br>
+곁에는 충실한 벗 프라이데이도 함께했어요.</p>
+        <p>고향 땅을 밟은 로빈슨의 눈에 뜨거운 눈물이 고였어요.</p>
+        <p><span class="highlight">로빈슨은 무인도에서 살아 돌아온 것이 아니라, 무인도에서 살아 낸 사람으로 돌아왔어요.</span> 그 차이가 이 이야기의 전부이지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학10/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>모험 문학의 첫 페이지</h2>
+        <p>「로빈슨 크루소」는 영국 작가 대니얼 디포가 1719년에 발표한 긴 소설이에요.<br>
+무인도에서 28년 동안 혼자 살아남은<br>
+한 남자의 놀라운 생존 이야기를 담고 있지요.</p>
+        <p>실제로 무인도에서 살았던 선원의 이야기에서<br>
+<span class="vocab-tip" data-meaning="창작의 실마리가 되는 번쩍이는 생각">영감</span>을 받아 태어난 소설이라고 해요.</p>
+        <p>로빈슨이 도구를 만들고, 농사를 짓고, 집을 지어 가는 과정은<br>
+인간의 생존 <span class="vocab-tip" data-meaning="타고난 그대로의 능력과 마음">본능</span>과 지혜를 생생하게 보여 줘요.<br>
+아무것도 없는 곳에서 사람이 무엇을 해낼 수 있는지 말이에요.</p>
+        <p>이 소설은 모험 문학의 첫 페이지로 평가받아요.<br>
+훗날 나온 수많은 무인도 이야기들이<br>
+거의 모두 이 작품에 뿌리를 대고 있지요.</p>
+        <p>「로빈슨 크루소」는 300년이 넘은 오늘까지도 읽히는 고전이에요.<br>
+절망을 이겨 내는 인간의 이야기는 결코 낡지 않기 때문이지요.</p>
+        <p><span class="highlight">로빈슨은 무인도에 갇힌 사람이 아니라, 무인도를 살 만한 곳으로 바꾼 사람이었어요.</span> 삶이 우리를 낯선 섬에 떨어뜨릴 때, 이 이야기를 기억해 볼 일이에요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(70, 130, 150, 0.15); border-radius: 16px;">
+          <strong style="color: #468296; font-size: 20px;">🏝️ 「절망은 주저앉는 자의 것이고, 무인도는 일어서는 자의 밭이 돼요. 생존은 두 손으로 짓는 것이지요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'worldlit10_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

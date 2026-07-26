@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚖️ 사라진 무게를 찾아서 — 촛불의 비밀 - 시즌1 관문평가</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      background: url('/images/창작도서/창작화학08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 0;
+    }
+
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 30px;
+      padding: 50px;
+      max-width: 750px;
+      width: 100%;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.5s ease-out;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .quiz-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .quiz-header h1 {
+      font-size: 32px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .quiz-header .gate-number {
+      font-size: 18px;
+      color: #2d6a4f;
+      font-weight: 600;
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .quiz-header .category-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #2d6a4f 0%, #1b4332 100%);
+      border-radius: 10px;
+      transition: width 0.5s ease;
+    }
+
+    .question-box {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 20px;
+      margin-bottom: 30px;
+      border-left: 5px solid #2d6a4f;
+    }
+
+    .question-text {
+      font-size: 20px;
+      color: #2c3e50;
+      font-weight: 600;
+      line-height: 1.7;
+    }
+
+    .options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .option-btn {
+      background: white;
+      border: 2px solid #e0e0e0;
+      padding: 20px 25px;
+      border-radius: 15px;
+      font-size: 17px;
+      color: #2c3e50;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .option-btn:hover {
+      border-color: #2d6a4f;
+      background: #f0fff4;
+      transform: translateX(5px);
+    }
+
+    .option-btn.selected {
+      border-color: #2d6a4f;
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      color: white;
+    }
+
+    .option-btn.correct {
+      border-color: #27ae60;
+      background: #27ae60;
+      color: white;
+    }
+
+    .option-btn.wrong {
+      border-color: #e74c3c;
+      background: #e74c3c;
+      color: white;
+    }
+
+    .option-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(45, 106, 79, 0.4);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .result-message {
+      text-align: center;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: 600;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .result-message.correct {
+      background: #d4edda;
+      color: #155724;
+      border: 2px solid #28a745;
+    }
+
+    .result-message.wrong {
+      background: #f8d7da;
+      color: #721c24;
+      border: 2px solid #dc3545;
+    }
+
+    .congrats-container {
+      text-align: center;
+      animation: scaleIn 0.6s ease-out;
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .congrats-container h2 {
+      font-size: 44px;
+      margin-bottom: 20px;
+    }
+
+    .congrats-container p {
+      font-size: 18px;
+      color: #555;
+      margin-bottom: 30px;
+      line-height: 1.8;
+    }
+
+    .score-summary {
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 16px;
+      margin: 25px 0;
+      text-align: left;
+    }
+
+    .score-summary h3 {
+      font-size: 18px;
+      color: #2d6a4f;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .score-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .score-item:last-child {
+      border-bottom: none;
+    }
+
+    .score-item .category {
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .score-item .score {
+      font-weight: 700;
+      color: #2d6a4f;
+    }
+
+    .back-btn {
+      background: white;
+      border: 2px solid #2d6a4f;
+      color: #2d6a4f;
+      padding: 15px 30px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-right: 10px;
+    }
+
+    .back-btn:hover {
+      background: #2d6a4f;
+      color: white;
+    }
+
+    /* 레이더 차트 */
+    .radar-container {
+      display: flex;
+      justify-content: center;
+      margin: 25px 0;
+    }
+
+    .radar-chart {
+      position: relative;
+      width: 280px;
+      height: 280px;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .quiz-container {
+        padding: 30px 20px;
+      }
+      .quiz-header h1 {
+        font-size: 24px;
+      }
+      .question-text {
+        font-size: 17px;
+      }
+      .option-btn {
+        font-size: 15px;
+        padding: 15px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container" id="quizContainer">
+    <!-- 퀴즈 내용이 여기에 동적으로 생성됩니다 -->
+  </div>
+
+  <script>
+    // 퀴즈 문제 데이터 - 5가지 카테고리별 2문제씩 총 10문제
+    // 카테고리: 인물파악, 내용일치, 내용구조, 내용어휘, 내용추론
+    const quizDataSeason1 = [
+      {"gate": 1, "category": "인물파악", "question": "라온이는 어떤 것을 좋아하는 아이인가요?", "options": ["무엇이든 저울에 올려 무게를 재 보는 것", "곤충을 잡아 기르는 것", "그림을 그리는 것", "달리기 시합을 하는 것"], "correct": 0},
+      {"gate": 2, "category": "인물파악", "question": "저울 할아버지가 라온이를 가르치는 방식은 어떠했나요?", "options": ["책을 많이 읽으라고 숙제를 내 주었다", "실험은 위험하니 하지 말라고 말렸다", "답을 바로 알려 주는 대신 물음을 던져 스스로 깨닫게 했다", "정답을 칠판에 적어 외우게 했다"], "correct": 2},
+      {"gate": 3, "category": "내용일치", "question": "불붙인 초를 유리병에 넣고 뚜껑을 꼭 닫은 채 무게를 잰 실험의 결과는 어떠했나요?", "options": ["병이 뜨거워져 무게를 잴 수 없었다", "초가 타서 짧아졌는데도 병 전체의 무게는 처음과 똑같았다", "무게가 두 배로 늘어났다", "무게가 절반으로 줄어들었다"], "correct": 1},
+      {"gate": 4, "category": "내용일치", "question": "물기 있는 곳에 두어 녹이 슨 못의 무게는 어떻게 되었나요?", "options": ["무게가 줄어들었다", "무게가 변하지 않았다", "녹이 떨어져 나가 반쪽이 되었다", "산소가 달라붙은 만큼 오히려 늘어났다"], "correct": 3},
+      {"gate": 5, "category": "내용구조", "question": "병 속의 촛불이 저절로 꺼진 사건이 이야기에서 중요한 까닭은 무엇인가요?", "options": ["실험이 실패했다는 것을 보여 주기 때문에", "병이 튼튼하다는 것을 알려 주기 때문에", "불이 타는 데 필요한 보이지 않는 참가자, 산소를 알게 해 주기 때문에", "초의 품질이 나빴다는 것을 보여 주기 때문에"], "correct": 2},
+      {"gate": 6, "category": "내용구조", "question": "할아버지가 블록으로 집을 만들었다가 부수어 자동차를 만들어 보인 까닭은 무엇인가요?", "options": ["물질이 변해도 알갱이는 없어지지 않고 자리만 바꾼다는 것을 보여 주려고", "블록 조립 솜씨를 자랑하려고", "라온이에게 블록을 선물하려고", "집보다 자동차가 만들기 쉽다는 것을 보여 주려고"], "correct": 0},
+      {"gate": 7, "category": "내용어휘", "question": "'밀폐'의 뜻으로 알맞은 것은 무엇인가요?", "options": ["물건을 차곡차곡 쌓는 것", "불을 붙여 태우는 것", "안이 훤히 보이게 만드는 것", "공기가 드나들지 못하게 꼭 막는 것"], "correct": 3},
+      {"gate": 8, "category": "내용어휘", "question": "'질량 보존 법칙'의 뜻으로 알맞은 것은 무엇인가요?", "options": ["무거운 것이 가벼운 것보다 먼저 떨어진다는 법칙", "물질이 변해도 변하기 전과 후의 전체 무게는 같다는 법칙", "물은 100도에서 끓는다는 법칙", "쇠는 자석에 붙는다는 법칙"], "correct": 1},
+      {"gate": 9, "category": "내용추론", "question": "식초와 베이킹 소다 실험에서 병뚜껑을 살짝 열자 무게가 줄어든 까닭은 무엇인가요?", "options": ["갇혀 있던 기체가 빠져나간 만큼 가벼워졌기 때문에", "저울이 고장 났기 때문에", "식초가 증발해 버렸기 때문에", "거품이 저울을 밀어 올렸기 때문에"], "correct": 0},
+      {"gate": 10, "category": "내용추론", "question": "\"우리가 함부로 버리는 것도 결코 사라지지 않는다\"는 말에서 얻을 수 있는 교훈은 무엇인가요?", "options": ["버린 물건은 다시 주워 오면 된다는 것", "쓰레기는 태우면 완전히 없어진다는 것", "쓰레기와 매연도 어딘가에 남으므로 함부로 만들고 버리면 안 된다는 것", "무거운 쓰레기만 조심하면 된다는 것"], "correct": 2}
+    ];
+
+    // 시즌2 (5~6학년 수준) - 표현 약간 어렵게
+    const quizDataSeason2 = [
+      {"gate": 1, "category": "인물파악", "question": "촛농까지 모아 무게를 쟀는데도 가벼워진 결과 앞에서 라온이가 보인 태도는 무엇입니까?", "options": ["실험 도구를 탓하며 새 저울을 샀다", "우연이라 여기고 곧 잊어버렸다", "무서워져서 실험을 그만두었다", "수수께끼를 풀지 않고는 견딜 수 없어 전문가를 찾아 나섰다"], "correct": 3},
+      {"gate": 2, "category": "인물파악", "question": "저울 할아버지의 가르침에서 가장 두드러지는 특징은 무엇입니까?", "options": ["실험보다 암기를 강조한다", "질문을 통해 스스로 답에 이르도록 이끈다", "어려운 용어를 먼저 가르친다", "실패한 실험을 꾸짖는다"], "correct": 1},
+      {"gate": 3, "category": "내용일치", "question": "라부아지에의 실험에 대한 서술로 옳은 것은 무엇입니까?", "options": ["산소를 최초로 병에 담아 팔았다", "열린 접시에서 실험하여 무게가 준다는 것을 증명했다", "밀폐된 병 속에서 실험하여 변화 전후의 무게가 같음을 증명했다", "초가 타면 무게가 늘어난다고 주장했다"], "correct": 2},
+      {"gate": 4, "category": "내용일치", "question": "초가 탈 때 일어나는 일에 대한 설명으로 옳은 것은 무엇입니까?", "options": ["초의 물질이 산소와 만나 새로운 기체가 되어 날아간다", "초의 물질이 열에 의해 완전히 소멸한다", "초가 공기 중의 물을 빨아들여 무거워진다", "촛농이 모두 빛으로 변한다"], "correct": 0},
+      {"gate": 5, "category": "내용구조", "question": "'초는 가벼워지고 쇠는 무거워진다'는 두 사례를 나란히 배치한 구성의 효과는 무엇입니까?", "options": ["실험 재료의 다양함을 자랑하는 효과", "겉으로 반대처럼 보이는 현상이 같은 규칙(산소와의 결합)을 따름을 드러내는 효과", "불과 물의 대결 구도를 만드는 효과", "무게 재기의 어려움을 강조하는 효과"], "correct": 1},
+      {"gate": 6, "category": "내용구조", "question": "블록 비유가 설명하려는 핵심 개념은 무엇입니까?", "options": ["물질은 눈에 보이는 것보다 크다는 것", "블록이 많을수록 집이 튼튼하다는 것", "물질의 변화는 알갱이의 소멸이 아니라 재배열이라는 것", "장난감으로도 과학을 배울 수 있다는 것"], "correct": 2},
+      {"gate": 7, "category": "내용어휘", "question": "'밀폐'의 의미로 가장 적절한 것은 무엇입니까?", "options": ["기체나 공기가 드나들지 못하도록 빈틈없이 막음", "온도를 일정하게 유지함", "빛이 들어오지 않게 가림", "소리가 새어 나가지 않게 함"], "correct": 0},
+      {"gate": 8, "category": "내용어휘", "question": "'질량 보존 법칙'의 의미로 가장 적절한 것은 무엇입니까?", "options": ["질량이 큰 물체가 작은 물체를 끌어당긴다는 법칙", "물질은 온도에 따라 부피가 변한다는 법칙", "에너지는 형태를 바꿀 수 있다는 법칙", "화학 변화 전후에 물질 전체의 질량은 변하지 않는다는 법칙"], "correct": 3},
+      {"gate": 9, "category": "내용추론", "question": "사람들이 오랫동안 '타면 무게가 준다'고 믿었던 이유를 추론하면 무엇입니까?", "options": ["옛날 저울이 모두 부정확했기 때문", "열린 곳에서만 실험하여 날아가는 기체를 셈에 넣지 못했기 때문", "종교적인 금기 때문에 실험을 못 했기 때문", "무게에 관심을 가진 사람이 없었기 때문"], "correct": 1},
+      {"gate": 10, "category": "내용추론", "question": "촛불의 기체를 나무가 다시 붙잡아 잎과 줄기를 만든다는 이야기에서 추론할 수 있는 것은 무엇입니까?", "options": ["물질은 자연 속에서 사라지지 않고 끝없이 돌고 돈다는 것", "나무는 불에 타지 않는다는 것", "촛불 연기는 식물에게 해롭다는 것", "나무가 자라려면 촛불이 필요하다는 것"], "correct": 0}
+    ];
+
+    // 시즌3 (중1~2 수준) - 표현 더 어렵게
+    const quizDataSeason3 = [
+      {"gate": 1, "category": "인물파악", "question": "라온이의 탐구 과정을 관통하는 과학적 태도로 가장 적절한 것은 무엇인가?", "options": ["권위 있는 학자의 결론을 우선 신뢰하는 태도", "'사라진 것처럼 보이는 것은 내 눈이 놓친 것이 아닐까'라고 되묻고 측정으로 확인하는 태도", "다수의 상식을 따르는 태도", "직관적 확신을 실험보다 앞세우는 태도"], "correct": 1},
+      {"gate": 2, "category": "인물파악", "question": "저울 할아버지가 '뚜껑 닫은 병' 실험을 직접 해 보게 한 교육적 의도는 무엇인가?", "options": ["실험 도구 사용법을 익히게 하려는 것", "위험한 불 실험을 감독하려는 것", "실패의 경험을 맛보게 하려는 것", "보이지 않는 것까지 측정 범위에 넣으면 진실이 드러남을 몸소 확인하게 하려는 것"], "correct": 3},
+      {"gate": 3, "category": "내용일치", "question": "연소에 대한 이 책의 설명으로 옳은 것은 무엇인가?", "options": ["연소는 물질이 산소와 결합하여 새로운 물질을 만드는 변화다", "연소는 물질이 완전히 소멸하는 과정이다", "연소에는 산소가 필요하지 않다", "연소 후 생성물의 질량은 항상 반응 전보다 크다"], "correct": 0},
+      {"gate": 4, "category": "내용일치", "question": "식초와 베이킹 소다 실험의 전개로 옳은 것은 무엇인가?", "options": ["거품이 나며 병이 깨져 실험이 중단되었다", "뚜껑을 연 채로도 무게가 그대로였다", "밀폐 상태에서는 무게가 같았고, 뚜껑을 열자 기체가 빠져나간 만큼 줄었다", "반응 후 무게가 크게 늘어났다"], "correct": 2},
+      {"gate": 5, "category": "내용구조", "question": "'라온이의 실험 → 라부아지에의 역사'로 이어지는 구성이 주는 효과는 무엇인가?", "options": ["아이의 소박한 궁금증이 과학사의 위대한 발견과 같은 길 위에 있음을 보여 준다", "역사 지식이 실험보다 중요함을 강조한다", "프랑스 과학의 우수성을 부각한다", "실험 없이 책만으로도 충분함을 보여 준다"], "correct": 0},
+      {"gate": 6, "category": "내용구조", "question": "촛불에서 시작해 '우리 몸과 지구'로 확장되는 결말 구조의 의도는 무엇인가?", "options": ["과학 지식의 어려움을 보여 주려는 것", "질량 보존이 실험실을 넘어 생태계와 환경 문제까지 관통하는 보편 법칙임을 보여 주려는 것", "다양한 실험 주제를 소개하려는 것", "지구과학으로 과목을 전환하려는 것"], "correct": 1},
+      {"gate": 7, "category": "내용어휘", "question": "'밀폐(密閉)'의 개념으로 가장 적절한 것은 무엇인가?", "options": ["온도와 습도를 일정하게 조절함", "물질의 출입이 불가능하도록 계(系)를 빈틈없이 닫음", "내부를 진공 상태로 만듦", "외부의 빛과 소리를 차단함"], "correct": 1},
+      {"gate": 8, "category": "내용어휘", "question": "'질량 보존 법칙'의 개념으로 가장 적절한 것은 무엇인가?", "options": ["질량은 속도에 따라 증가한다는 법칙", "무거운 물체와 가벼운 물체는 같은 속도로 떨어진다는 법칙", "화학 반응 전후에 반응에 참여한 물질들의 총질량이 일정하게 유지된다는 법칙", "기체의 부피는 압력에 반비례한다는 법칙"], "correct": 2},
+      {"gate": 9, "category": "내용추론", "question": "'저울은 거짓말하지 않는다'는 표현이 과학적 방법론에 대해 시사하는 바를 추론하면 무엇인가?", "options": ["측정 도구는 오차가 전혀 없다", "눈짐작이 측정보다 빠르고 정확하다", "현상이 이상해 보일 때 의심할 것은 자연의 규칙이 아니라 측정의 범위와 방법이다", "저울은 가장 오래된 과학 도구다"], "correct": 2},
+      {"gate": 10, "category": "내용추론", "question": "「아무것도 사라지지 않아요. 다만 자리를 옮길 뿐이지요.」라는 경구가 환경 문제와 결합할 때 도출되는 결론은 무엇인가?", "options": ["물질은 순환하므로 환경은 저절로 회복된다", "버린 것은 소멸하지 않고 어딘가에 남으므로 생산과 폐기에 대한 책임 있는 선택이 필요하다", "쓰레기는 보이지 않는 곳에 모아 두면 된다", "자연은 인간의 개입 없이 완전하다"], "correct": 1}
+    ];
+
+    // URL 파라미터에서 시즌 정보 가져오기
+    function getSeasonFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('season') || 'season1';
+    }
+
+    // 시즌에 따른 퀴즈 데이터 선택
+    const season = getSeasonFromUrl();
+    const quizData = season === 'season1' ? quizDataSeason1
+                   : season === 'season2' ? quizDataSeason2
+                   : quizDataSeason3;
+
+
+    let currentGate = 0;
+    let selectedAnswer = null;
+    let categoryScores = {
+      "인물파악": 0,
+      "내용일치": 0,
+      "내용구조": 0,
+      "내용어휘": 0,
+      "내용추론": 0
+    };
+
+    function renderQuiz() {
+      const container = document.getElementById('quizContainer');
+      const quiz = quizData[currentGate];
+
+      container.innerHTML = `
+        <div class="quiz-header">
+          <h1>🌿 관문평가</h1>
+          <p class="gate-number">10개 관문 중 ${quiz.gate}번째</p>
+          <span class="category-badge">${quiz.category}</span>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar" style="width: ${(quiz.gate / 10) * 100}%"></div>
+        </div>
+
+        <div class="question-box">
+          <p class="question-text">${quiz.question}</p>
+        </div>
+
+        <div class="options-container">
+          ${quiz.options.map((option, index) => `
+            <button class="option-btn" onclick="selectAnswer(${index})">
+              ${index + 1}. ${option}
+            </button>
+          `).join('')}
+        </div>
+
+        <button class="submit-btn" onclick="submitAnswer()" disabled>
+          답안 제출
+        </button>
+      `;
+    }
+
+    function selectAnswer(index) {
+      selectedAnswer = index;
+
+      // 모든 버튼 선택 해제
+      const buttons = document.querySelectorAll('.option-btn');
+      buttons.forEach(btn => btn.classList.remove('selected'));
+
+      // 선택한 버튼 표시
+      buttons[index].classList.add('selected');
+
+      // 제출 버튼 활성화
+      document.querySelector('.submit-btn').disabled = false;
+    }
+
+    function submitAnswer() {
+      const quiz = quizData[currentGate];
+      const buttons = document.querySelectorAll('.option-btn');
+      const submitBtn = document.querySelector('.submit-btn');
+
+      // 버튼 비활성화
+      buttons.forEach(btn => btn.disabled = true);
+      submitBtn.disabled = true;
+
+      const isCorrect = selectedAnswer === quiz.correct;
+
+      if (isCorrect) {
+        // 정답 - 카테고리 점수 추가
+        categoryScores[quiz.category]++;
+        buttons[selectedAnswer].classList.remove('selected');
+        buttons[selectedAnswer].classList.add('correct');
+        showResult(true);
+      } else {
+        // 오답 - 정답 표시
+        buttons[selectedAnswer].classList.remove('selected');
+        buttons[selectedAnswer].classList.add('wrong');
+        buttons[quiz.correct].classList.add('correct');
+        showResult(false);
+      }
+    }
+
+    function showResult(isCorrect) {
+      const container = document.getElementById('quizContainer');
+
+      // 결과 메시지 추가
+      const resultMsg = document.createElement('div');
+      if (isCorrect) {
+        resultMsg.className = 'result-message correct';
+        resultMsg.innerHTML = '🎉 정답입니다! 다음 관문으로 이동합니다...';
+      } else {
+        resultMsg.className = 'result-message wrong';
+        resultMsg.innerHTML = '❌ 틀렸습니다. 다음 관문으로 이동합니다...';
+      }
+      container.insertBefore(resultMsg, container.firstChild);
+
+      // 1.5초 후 다음 문제로
+      setTimeout(() => {
+        currentGate++;
+        selectedAnswer = null;
+
+        if (currentGate >= quizData.length) {
+          // 모든 관문 완료!
+          showCongratulations();
+        } else {
+          renderQuiz();
+        }
+      }, 1500);
+    }
+
+    // 영역별 점수를 10점 만점으로 환산 (2문제=10점, 1문제=5점, 0문제=1점)
+    function convertToRadarScore(correctCount) {
+      if (correctCount === 2) return 10;
+      if (correctCount === 1) return 5;
+      return 1;
+    }
+
+    // 레이더 차트 그리기
+    function drawRadarChart(scores) {
+      const canvas = document.getElementById('radarCanvas');
+      const ctx = canvas.getContext('2d');
+      const centerX = 140;
+      const centerY = 140;
+      const maxRadius = 100;
+
+      // 5각형 좌표 계산 (상단부터 시계방향)
+      const angles = [];
+      for (let i = 0; i < 5; i++) {
+        angles.push((Math.PI * 2 * i / 5) - Math.PI / 2);
+      }
+
+      // 배경 격자 그리기 (10, 5, 1 레벨)
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.lineWidth = 1;
+
+      [1, 0.5, 0.1].forEach(ratio => {
+        ctx.beginPath();
+        for (let i = 0; i <= 5; i++) {
+          const angle = angles[i % 5];
+          const x = centerX + Math.cos(angle) * maxRadius * ratio;
+          const y = centerY + Math.sin(angle) * maxRadius * ratio;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      });
+
+      // 축 그리기
+      ctx.strokeStyle = '#d0d0d0';
+      angles.forEach(angle => {
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX + Math.cos(angle) * maxRadius, centerY + Math.sin(angle) * maxRadius);
+        ctx.stroke();
+      });
+
+      // 데이터 영역 그리기
+      const categories = ['인물파악', '내용일치', '내용구조', '내용어휘', '내용추론'];
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(45, 106, 79, 0.3)';
+      ctx.strokeStyle = '#2d6a4f';
+      ctx.lineWidth = 2;
+
+      categories.forEach((cat, i) => {
+        const score = scores[cat];
+        const ratio = score / 10;
+        const x = centerX + Math.cos(angles[i]) * maxRadius * ratio;
+        const y = centerY + Math.sin(angles[i]) * maxRadius * ratio;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 데이터 포인트 그리기
+      ctx.fillStyle = '#1b4332';
+      categories.forEach((cat, i) => {
+        const score = scores[cat];
+        const ratio = score / 10;
+        const x = centerX + Math.cos(angles[i]) * maxRadius * ratio;
+        const y = centerY + Math.sin(angles[i]) * maxRadius * ratio;
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 라벨 그리기
+      ctx.fillStyle = '#2c3e50';
+      ctx.font = 'bold 12px "Noto Sans KR", sans-serif';
+      ctx.textAlign = 'center';
+
+      const labelOffset = 18;
+      const labels = ['인물파악', '내용일치', '내용구조', '내용어휘', '내용추론'];
+      labels.forEach((label, i) => {
+        const x = centerX + Math.cos(angles[i]) * (maxRadius + labelOffset);
+        const y = centerY + Math.sin(angles[i]) * (maxRadius + labelOffset);
+        ctx.fillText(label, x, y + 4);
+      });
+    }
+
+    function showCongratulations() {
+      const container = document.getElementById('quizContainer');
+
+      // 영역별 레이더 점수 계산 (10점 만점)
+      const radarScores = {
+        "인물파악": convertToRadarScore(categoryScores["인물파악"]),
+        "내용일치": convertToRadarScore(categoryScores["내용일치"]),
+        "내용구조": convertToRadarScore(categoryScores["내용구조"]),
+        "내용어휘": convertToRadarScore(categoryScores["내용어휘"]),
+        "내용추론": convertToRadarScore(categoryScores["내용추론"])
+      };
+
+      // 총점 계산 (100점 만점)
+      const totalRadarScore = Object.values(radarScores).reduce((a, b) => a + b, 0);
+      const totalScore100 = totalRadarScore * 2; // 50점 만점 → 100점 만점으로 환산
+
+      container.innerHTML = `
+        <div class="congrats-container">
+          <h2>🎊 관문평가 완료! 🎊</h2>
+          <p>
+            10개의 관문을 모두 완료했습니다!<br>
+            '사라진 무게를 찾아서' 이야기를 잘 이해하셨네요.
+          </p>
+
+          <div class="radar-container">
+            <canvas id="radarCanvas" width="280" height="280"></canvas>
+          </div>
+
+          <div class="score-summary">
+            <h3>📊 영역별 점수 (각 10점 만점)</h3>
+            <div class="score-item">
+              <span class="category">👤 인물파악</span>
+              <span class="score">${radarScores["인물파악"]} / 10</span>
+            </div>
+            <div class="score-item">
+              <span class="category">✅ 내용일치</span>
+              <span class="score">${radarScores["내용일치"]} / 10</span>
+            </div>
+            <div class="score-item">
+              <span class="category">🏗️ 내용구조</span>
+              <span class="score">${radarScores["내용구조"]} / 10</span>
+            </div>
+            <div class="score-item">
+              <span class="category">📚 내용어휘</span>
+              <span class="score">${radarScores["내용어휘"]} / 10</span>
+            </div>
+            <div class="score-item">
+              <span class="category">🔍 내용추론</span>
+              <span class="score">${radarScores["내용추론"]} / 10</span>
+            </div>
+            <div class="score-item" style="border-top: 2px solid #2d6a4f; margin-top: 10px; padding-top: 15px;">
+              <span class="category" style="font-size: 18px;">총점</span>
+              <span class="score" style="font-size: 22px; color: #1b4332;">${totalScore100}점</span>
+            </div>
+          </div>
+
+          <button class="back-btn" onclick="goBack()">
+            ← 목록으로 돌아가기
+          </button>
+          <button class="submit-btn" onclick="retryQuiz()" style="margin-top: 10px;">
+            🔄 다시 풀기
+          </button>
+        </div>
+      `;
+
+      // 레이더 차트 그리기
+      setTimeout(() => {
+        drawRadarChart(radarScores);
+      }, 100);
+
+      // 결과 저장 (서버 API 호출)
+      saveQuizResult(radarScores, totalScore100);
+
+      // 결과 저장 (부모 창에 전달)
+      if (window.parent !== window) {
+        window.parent.postMessage({
+          action: 'quizComplete',
+          storyId: 'chem08',
+          season: getSeasonFromUrl(),
+          scores: radarScores,
+          totalScore: totalScore100
+        }, '*');
+      }
+    }
+
+    // 서버에 결과 저장
+    async function saveQuizResult(scores, totalScore) {
+      try {
+        // 로그인 정보 가져오기 (sessionStorage 'user' 키 사용)
+        const userInfo = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
+        const grade = userInfo.grade || '';
+        const name = userInfo.name || '';
+
+        if (!grade || !name) {
+          console.log('[saveQuizResult] 로그인 정보 없음 - 저장 건너뜀');
+          return;
+        }
+
+        // URL 파라미터에서 시즌 가져오기
+        const season = getSeasonFromUrl();
+
+        const response = await fetch('/api/creative-quiz/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade,
+            name,
+            storyId: 'chem08',
+            season,
+            scores,
+            totalScore
+          })
+        });
+
+        const result = await response.json();
+        if (result.ok) {
+          console.log('[saveQuizResult] 저장 완료:', result);
+        } else {
+          console.error('[saveQuizResult] 저장 실패:', result.message);
+        }
+      } catch (err) {
+        console.error('[saveQuizResult] 오류:', err);
+      }
+    }
+
+    function goBack() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function retryQuiz() {
+      currentGate = 0;
+      selectedAnswer = null;
+      categoryScores = {
+        "인물파악": 0,
+        "내용일치": 0,
+        "내용구조": 0,
+        "내용어휘": 0,
+        "내용추론": 0
+      };
+      renderQuiz();
+    }
+
+    // 페이지 로드 시 첫 번째 퀴즈 표시
+    window.addEventListener('DOMContentLoaded', () => {
+      renderQuiz();
+    });
+
+    // ESC 키로 뒤로가기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (confirm('퀴즈를 종료하고 목록으로 돌아가시겠습니까?')) {
+          goBack();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⛵ 강물 위의 노래 — 배따라기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/현대문학08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⛵ 강물 위의 노래 — 배따라기</h1>
+        <p class="subtitle">
+          — 김동인의 액자 소설로 읽는 오해가 부른 비극 —<br>
+          교과기반 창작도서 · 현대문학 08
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 그(사공):</strong> 동생과 아내를 오해하여 돌이킬 수 없는 비극을 겪고, 평생 그 회한을 안고 떠도는 뱃사람.</p>
+          <p><strong>★ 나(듣는 이):</strong> 대동강에서 사공의 구슬픈 노래와 사연을 전해 듣는 서술자. 액자의 바깥 이야기를 이룬다.</p>
+          <p><strong>★ 감상 길잡이:</strong> 「배따라기」는 김동인이 1921년에 발표한 액자 소설로, 근거 없는 의심이 부른 비극을 통해 오해의 무서움을 애절하게 그려 냈습니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 바깥 이야기</span>
+        <h2>대동강의 구슬픈 가락</h2>
+        <p>어느 봄날, 나는 대동강 기슭을 거닐다 어디선가 들려오는 구슬픈 노랫가락을 들었습니다. 그것은 뱃사람들이 부르는 배따라기라는 노래였습니다. 그 애절한 가락에는 형언할 수 없는 슬픔이 배어 있었습니다.</p>
+        <p>나는 그 노래를 부르는 한 사공을 만나게 되었습니다. 사공의 얼굴에는 깊은 한과 회한이 서려 있었습니다. 나는 그 구슬픈 노래에 어떤 사연이 담겨 있는지 궁금해졌습니다.</p>
+        <p>사공은 내 청에 못 이겨, 자신이 겪은 지난날의 이야기를 천천히 풀어놓기 시작했습니다. 그것은 오래도록 그의 가슴에 사무쳐 온 비극적인 사연이었습니다. 나는 그 이야기에 조용히 귀를 기울였습니다.</p>
+        <p>이 대목은 이야기의 바깥 틀을 이루는 도입 단계입니다. 이렇게 바깥 이야기 속에 또 하나의 이야기가 담기는 구성을 액자 소설이라고 합니다. 대동강의 구슬픈 노래가, 안쪽의 비극적인 이야기로 자연스럽게 독자를 이끕니다. 노래라는 실마리로 안 이야기를 열어젖히는 이 구성이 작품에 서정적 깊이를 더합니다.</p>
+        <p>「배따라기」는 이렇게 액자의 바깥에서 시작됩니다. 구슬픈 뱃노래를 실마리로, 한 사공의 가슴 아픈 사연이 서서히 펼쳐집니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 안 이야기</span>
+        <h2>사공의 옛이야기</h2>
+        <p>사공은 젊은 시절, 어느 바닷가 마을에서 살았다고 했습니다. 그에게는 사이좋은 동생이 하나 있었고, 아름답고 정 많은 아내가 있었습니다. 겉으로 보기에 그의 삶은 더없이 평온하고 행복했습니다.</p>
+        <p>사공은 아내를 무척 사랑했습니다. 그러나 그의 사랑에는 지나친 구석이 있었습니다. 그는 아내를 아끼는 만큼, 아내를 향한 의심과 질투도 함께 품고 있었습니다.</p>
+        <p>동생은 성격이 밝고 붙임성이 좋아 누구에게나 다정했습니다. 아내 역시 시동생을 스스럼없이 대했습니다. 그런데 사공은 그 다정한 사이를 점점 이상한 눈으로 바라보기 시작했습니다.</p>
+        <p>이 대목은 액자 안쪽의 이야기가 시작되는 도입 단계입니다. 행복해 보이는 가정 속에, 사공의 지나친 질투라는 불씨가 감춰져 있습니다. 이 작은 불씨가 훗날 돌이킬 수 없는 비극으로 번지게 됩니다.</p>
+        <p>겉으로는 평온한 이 가정에, 사공의 마음속 의심이 조금씩 그림자를 드리우고 있었습니다. 그 의심이 어떤 결과를 낳을지, 이야기는 불안하게 나아갑니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 화목</span>
+        <h2>사이좋은 형제</h2>
+        <p>사공과 동생은 본래 우애가 깊은 형제였습니다. 어린 시절부터 서로를 아끼며 함께 자라 온 사이였습니다. 동생은 형을 따랐고, 형도 동생을 아꼈습니다.</p>
+        <p>아내 역시 착하고 다정한 사람이어서, 시동생을 친동생처럼 살갑게 대했습니다. 세 사람은 겉으로 보기에 더없이 화목한 한 가족이었습니다. 마을 사람들도 그들의 다정함을 부러워했습니다.</p>
+        <p>그러나 이 화목함이 도리어 사공의 마음에 의심의 씨앗을 키웠습니다. 아내와 동생이 다정하게 지내는 모습을 볼 때마다, 사공의 마음속에서는 까닭 모를 질투가 고개를 들었습니다. 사랑이 지나쳐 의심으로 변질되어 간 것입니다.</p>
+        <p>이 대목은 화목한 가정에 의심이 스며드는 전개의 단계입니다. 다정함이 오히려 질투를 키우는 역설이 그려집니다. 사공의 지나친 사랑과 의심이 평온한 가정을 서서히 갉아먹기 시작합니다.</p>
+        <p>사공은 아무 근거도 없이 아내와 동생을 의심하기 시작했습니다. 그 의심은 마음속에서 점점 자라나, 마침내 걷잡을 수 없는 지경에 이르렀습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 의심</span>
+        <h2>마음속에 심긴 가시</h2>
+        <p>사공의 의심은 시간이 갈수록 커져만 갔습니다. 아내와 동생이 함께 웃고 이야기하는 모습만 보아도, 사공의 가슴에는 질투의 가시가 돋았습니다. 아무 일도 없었지만, 사공의 마음은 이미 의심으로 가득 차 있었습니다.</p>
+        <p>사공은 아내에게 까닭 없이 차갑게 굴기 시작했습니다. 다정하던 부부 사이에 점점 냉기가 흘렀습니다. 아내는 남편이 왜 그러는지 영문을 몰라 마음 아파했습니다.</p>
+        <p>사공의 의심은 어떤 증거에도 근거하지 않은, 오직 그의 마음속에서 자라난 것이었습니다. 근거 없는 의심은 이렇게 사람의 눈을 멀게 하고 판단을 흐리게 합니다. 사공은 스스로 만든 의심의 감옥에 갇혀 갔습니다.</p>
+        <p>이 대목은 근거 없는 의심이 사공을 사로잡는 전개의 단계입니다. 아무 증거도 없는 의심이 한 사람의 마음을 어떻게 갉아먹는지가 그려집니다. 이 의심이 곧 비극의 직접적인 원인이 됩니다. 지나친 사랑이 도리어 파멸의 씨앗이 될 수 있음을 이 작품은 서늘하게 보여 줍니다.</p>
+        <p>사공의 마음속 가시는 점점 날카로워졌습니다. 그리고 마침내, 사소한 오해 하나가 그 가시를 폭발시키는 계기가 되고 맙니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 오해</span>
+        <h2>차가워진 집</h2>
+        <p>어느 날, 사공은 집에 돌아왔다가 아내와 동생이 함께 있는 모습을 보게 되었습니다. 사실 그것은 아무 잘못도 없는, 지극히 평범한 상황이었습니다. 그러나 의심에 사로잡힌 사공의 눈에는 그렇게 보이지 않았습니다.</p>
+        <p>그날 아내는 쥐를 잡느라 옷매무새가 흐트러져 있었고, 동생도 그 일을 돕고 있었을 뿐이었습니다. 그러나 사공은 그 광경을 완전히 오해하고 말았습니다. 그의 눈에는 아내와 동생이 부정을 저지른 것처럼 비쳤습니다.</p>
+        <p>사소한 오해가 걷잡을 수 없는 분노로 번졌습니다. 오랫동안 마음속에 쌓여 온 의심이, 이 작은 계기로 한꺼번에 터져 나온 것입니다. 사공은 이성을 잃고 아내와 동생에게 심한 말을 퍼부었습니다.</p>
+        <p>이 대목은 사소한 오해가 폭발하는 위기의 단계입니다. 아무 잘못도 없는 상황이 의심의 눈으로 인해 완전히 뒤틀려 버립니다. 근거 없는 의심이 어떻게 진실을 왜곡하는지를 이 장면은 여실히 보여 줍니다. 같은 광경도 마음가짐에 따라 전혀 다르게 보인다는 사실이 뼈아프게 다가옵니다.</p>
+        <p>사공의 분노는 걷잡을 수 없이 타올랐습니다. 그리고 그 분노는 돌이킬 수 없는 비극을 향해 치닫기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 파국</span>
+        <h2>어두운 결심</h2>
+        <p>사공의 심한 말과 분노에 아내는 깊은 상처를 받았습니다. 결백을 아무리 호소해도 남편은 믿어 주지 않았습니다. 아내는 억울함과 절망에 휩싸였습니다.</p>
+        <p>동생 역시 형의 오해에 크게 상심했습니다. 아무 잘못도 없이 형에게 의심받고 내쫓기다시피 한 것입니다. 화목하던 가정은 사공의 의심 하나로 순식간에 무너져 내렸습니다.</p>
+        <p>결백을 인정받지 못한 아내는 절망 끝에 스스로 목숨을 끊고 말았습니다. 근거 없는 의심이 마침내 한 사람의 목숨을 앗아 간 것입니다. 사공은 뒤늦게 자신의 의심이 아내를 죽음으로 내몰았음을 깨달았습니다.</p>
+        <p>이 대목은 오해가 돌이킬 수 없는 파국으로 치닫는 위기의 단계입니다. 근거 없는 의심이 결국 가장 사랑하는 사람을 잃게 만듭니다. 오해의 무서움이 가장 비극적인 형태로 드러나는 순간입니다. 한번 내뱉은 의심의 말은 다시 주워 담을 수 없다는 것을 이 비극은 아프게 일깨웁니다.</p>
+        <p>아내를 잃은 사공은 그제야 자신의 의심이 얼마나 어리석은 것이었는지 깨달았습니다. 그러나 모든 것은 이미 돌이킬 수 없게 된 뒤였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 뒤늦은 진실</span>
+        <h2>밤의 강 한가운데</h2>
+        <p>아내가 죽은 뒤, 동생은 형의 곁을 떠나 정처 없이 사라져 버렸습니다. 하루아침에 아내와 동생을 모두 잃은 사공은 홀로 남겨졌습니다. 화목하던 가정은 흔적도 없이 무너졌습니다.</p>
+        <p>뒤늦게 사공은 아내와 동생이 아무 잘못도 없었음을 온전히 깨달았습니다. 모든 것이 자신의 근거 없는 의심이 만들어 낸 비극이었습니다. 그러나 그 깨달음은 너무나 늦게 찾아왔습니다.</p>
+        <p>사공은 사무치는 후회 속에서 동생을 찾아 헤매기 시작했습니다. 자신의 잘못을 빌고, 무너진 것을 조금이라도 되돌리고 싶었기 때문입니다. 그러나 한번 떠난 동생은 좀처럼 찾을 수 없었습니다.</p>
+        <p>이 대목은 뒤늦게 진실을 깨닫는 절정의 단계입니다. 모든 것을 잃고 나서야 자신의 오해를 깨닫는 사공의 회한이 애절하게 그려집니다. 되돌릴 수 없는 시간 앞에서, 뒤늦은 깨달음은 더욱 큰 고통이 됩니다. 진실은 언제나 너무 늦게 찾아온다는 사실이 이 비극을 한층 애처롭게 합니다.</p>
+        <p>사공은 동생을 찾아 이 강 저 강을 떠돌게 되었습니다. 그의 떠돎은 곧 씻을 수 없는 죄책감의 여정이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 회한</span>
+        <h2>너무 늦은 진실</h2>
+        <p>여러 해가 흐른 뒤, 사공은 우연히 동생을 다시 만나게 되었습니다. 오랜 세월 그리워하던 동생과의 재회였습니다. 그러나 그 만남은 반가움보다 짙은 슬픔으로 가득했습니다.</p>
+        <p>동생은 형을 원망하지 않는다고 했지만, 두 사람 사이에 벌어진 상처는 이미 너무나 깊었습니다. 잃어버린 아내도, 무너진 세월도 이제는 되돌릴 수 없었습니다. 재회의 기쁨조차 회한에 가려졌습니다.</p>
+        <p>동생은 다시 형의 곁을 떠났고, 사공은 또다시 홀로 남겨졌습니다. 뒤늦게 진실을 깨달았지만, 그 깨달음으로 되돌릴 수 있는 것은 아무것도 없었습니다. 사공에게 남은 것은 오직 평생의 회한뿐이었습니다.</p>
+        <p>이 대목은 사공의 회한이 절정에 이르는 단계입니다. 뒤늦은 재회조차 잃어버린 것을 되돌리지 못하는 데서, 비극은 더욱 깊어집니다. 근거 없는 의심이 남긴 상처가 얼마나 크고 오래가는지를 보여 줍니다.</p>
+        <p>사공은 그 뒤로 배를 타고 정처 없이 떠도는 신세가 되었습니다. 그리고 구슬픈 배따라기를 부르며 평생의 회한을 노래에 담았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 여운</span>
+        <h2>강가의 노래</h2>
+        <p>이야기를 마친 사공은 다시 구슬픈 배따라기를 부르기 시작했습니다. 그 노래에는 평생 지울 수 없는 회한과 그리움이 고스란히 담겨 있었습니다. 나는 그 애절한 가락에 가슴이 먹먹해졌습니다.</p>
+        <p>사공은 오늘도 대동강을 떠돌며 그 노래를 부릅니다. 잃어버린 아내와 동생을 그리워하며, 자신의 어리석은 의심을 뉘우치는 노래였습니다. 그 노래는 오해가 부른 비극에 대한 끝없는 참회였습니다.</p>
+        <p>액자 소설의 바깥 이야기로 돌아온 이 대목은, 안쪽 이야기의 여운을 더욱 짙게 합니다. 사공의 노래를 듣는 나의 감정을 통해, 그 비극의 슬픔이 독자에게까지 전해집니다. 노래는 사공의 회한을 담은 하나의 상징이 됩니다.</p>
+        <p>이 대목은 안 이야기를 마치고 바깥 이야기로 돌아오는 결말의 단계입니다. 구슬픈 배따라기가 비극의 여운을 오래도록 이어 갑니다. 액자 구성이 안팎의 이야기를 하나로 엮으며 깊은 감동을 완성합니다. 노래로 시작해 노래로 끝나는 구성이 작품 전체에 애절한 통일감을 부여합니다.</p>
+        <p>사공의 노래는 대동강 물결을 따라 멀리 퍼져 나갔습니다. 그 구슬픈 가락은 나의 마음속에도 오래도록 남았습니다. 노래가 잦아든 뒤에도, 그 애절한 사연은 쉬이 잊히지 않았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>이야기 속의 이야기</h2>
+        <p>「배따라기」는 근거 없는 의심이 부른 비극을 액자 소설의 형식으로 애절하게 그린 작품입니다. 지나친 사랑에서 비롯된 사공의 의심은, 아무 잘못도 없는 아내와 동생을 파멸로 이끌었습니다. 그 비극은 사공 자신에게도 평생의 회한으로 남았습니다.</p>
+        <p>이 작품이 지닌 특징은 여럿입니다. 첫째는 바깥 이야기 속에 안 이야기를 담은 액자 소설의 구성이요, 둘째는 구슬픈 배따라기라는 노래를 통해 비극의 정서를 짙게 전한 점입니다. 김동인은 이를 통해 오해의 무서움을 애절하게 형상화했습니다.</p>
+        <p>무엇보다 이 소설은, 근거 없는 의심이 얼마나 무서운 결과를 낳는가를 일깨웁니다. 사공의 의심에는 어떤 증거도 없었지만, 그 의심 하나가 세 사람의 삶을 송두리째 무너뜨렸습니다. 의심은 이렇게 사람의 눈을 멀게 하고 진실을 왜곡합니다. 믿음이 있어야 할 자리에 의심이 들어설 때 어떤 비극이 벌어지는지를 이 작품은 절절히 보여 줍니다.</p>
+        <p>대동강에 울려 퍼지는 구슬픈 배따라기는, 오해가 부른 비극에 대한 끝없는 참회의 노래입니다. 이 작품은 우리에게 함부로 의심하지 말고, 사랑하는 사람을 믿으라는 묵직한 교훈을 남깁니다. 액자 속에 담긴 이 비극은 오래도록 독자의 마음에 여운을 남깁니다.</p>
+        <p><span class="highlight">근거 없는 의심은 사람의 눈을 멀게 하고, 가장 사랑하는 이를 잃게 만듭니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'modern08_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

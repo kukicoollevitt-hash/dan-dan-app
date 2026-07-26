@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🕯️ 비녀 하나의 마음 — 빈처 이야기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/현대문학09/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🕯️ 비녀 하나의 마음 — 빈처 이야기</h1>
+        <p class="subtitle">
+          — 현진건의 자전적 소설로 읽는 가난 속의 사랑 —<br>
+          교과기반 창작도서 · 현대문학 09
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 나:</strong> 글을 쓰지만 아직 이름을 얻지 못한 가난한 무명작가. 물질과 정신 사이에서 고뇌한다.</p>
+          <p><strong>★ 아내:</strong> 가난한 살림 속에서도 남편의 꿈을 묵묵히 지지하는 헌신적인 아내.</p>
+          <p><strong>★ 감상 길잡이:</strong> 「빈처」는 현진건이 1921년에 발표한 자전적 소설로, 가난한 무명작가 부부의 삶을 통해 물질과 정신, 그리고 변치 않는 사랑을 그려 냈습니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 인물</span>
+        <h2>방 한 칸의 살림</h2>
+        <p>나는 글을 쓰는 사람이지만, 아직 세상에 이름을 얻지 못한 무명작가입니다. 이렇다 할 수입이 없어, 우리 부부의 살림은 늘 궁핍했습니다. 방 한 칸의 좁은 셋집에서 하루하루를 힘겹게 이어 갔습니다.</p>
+        <p>아내는 그런 가난한 살림을 묵묵히 꾸려 나갔습니다. 변변한 벌이가 없는 남편을 원망할 법도 하건만, 아내는 좀처럼 불평하지 않았습니다. 오히려 남편의 글쓰기를 조용히 응원해 주었습니다.</p>
+        <p>나는 언젠가 훌륭한 작품을 써서 이름을 떨치리라는 꿈을 품고 있었습니다. 그러나 그 꿈은 좀처럼 이루어지지 않았고, 가난은 나날이 우리를 짓눌렀습니다. 나는 무력감과 자괴감에 시달렸습니다. 아내를 고생시키고 있다는 미안함이 늘 마음 한구석을 짓눌렀습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 가난한 무명작가 부부의 고달픈 살림입니다. 이 자전적 소설은 작가 자신의 경험을 바탕으로, 물질적 궁핍 속에서 지식인이 겪는 고뇌를 진솔하게 그려 냅니다. 방 한 칸의 살림이 그 궁핍을 압축해 보여 줍니다.</p>
+        <p>「빈처」는 이렇게 가난한 부부의 방 한 칸에서 시작됩니다. 궁핍한 현실 속에서 두 사람의 사랑이 어떻게 지켜지는가가 이 작품의 중심을 이룹니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 헌신</span>
+        <h2>바느질하는 밤</h2>
+        <p>아내는 밤늦도록 바느질을 하며 살림에 보탰습니다. 남편의 벌이가 없으니, 아내가 삯바느질로라도 생계를 도와야 했습니다. 희미한 등불 아래에서 아내는 밤을 지새우며 바늘을 놀렸습니다.</p>
+        <p>아내는 자신의 고생을 조금도 내색하지 않았습니다. 힘든 기색 없이, 그저 묵묵히 자신이 할 수 있는 일을 해 나갔습니다. 나는 그런 아내를 볼 때마다 미안함과 고마움이 뒤엉켰습니다.</p>
+        <p>아내의 헌신은 말없는 사랑이었습니다. 남편의 꿈을 위해 자신을 희생하면서도, 아내는 그것을 당연한 듯 여겼습니다. 그 조용한 헌신이 가난한 살림을 지탱하는 힘이었습니다.</p>
+        <p>이 대목은 아내의 헌신을 보여 주는 도입의 단계입니다. 삯바느질로 밤을 지새우는 아내의 모습에, 말없는 사랑과 희생이 담겨 있습니다. 이러한 아내의 헌신이 앞으로 이야기의 중요한 축을 이룹니다.</p>
+        <p>나는 아내의 헌신에 고마우면서도, 무능한 자신이 부끄러웠습니다. 그 부끄러움은 지식인으로서의 자괴감과 뒤섞여 나를 더욱 괴롭혔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 고뇌</span>
+        <h2>글이 무슨 소용인가</h2>
+        <p>나는 때때로 회의에 빠졌습니다. 밥벌이도 되지 않는 글을 쓰는 것이 과연 무슨 소용인가 하는 생각이 들었기 때문입니다. 가난한 현실 앞에서 나의 꿈은 자꾸만 초라해 보였습니다.</p>
+        <p>주변 사람들은 글쓰기를 그만두고 돈벌이가 되는 일을 하라고 권했습니다. 그럴 때마다 나는 흔들렸습니다. 정신적인 가치를 좇는 삶과, 당장의 생계를 위한 삶 사이에서 나는 갈등했습니다.</p>
+        <p>이 갈등은 물질과 정신 사이의 고민이었습니다. 예술과 이상을 좇고 싶은 마음과, 현실의 가난을 벗어나고 싶은 마음이 팽팽히 맞섰습니다. 지식인으로서 나는 이 두 가치 사이에서 끊임없이 고뇌했습니다.</p>
+        <p>이 대목은 물질과 정신 사이에서 갈등하는 지식인의 고뇌를 보여 주는 전개의 단계입니다. 밥이 되지 못하는 글에 대한 회의가, 나를 흔들어 놓습니다. 이상과 현실의 괴리가 이 작품이 그리는 지식인의 고민입니다. 이러한 갈등은 그 시대를 살아간 많은 지식인이 함께 겪은 고민이기도 했습니다.</p>
+        <p>그러던 어느 날, 물질적으로 성공한 친구 T가 우리 집을 찾아왔습니다. 그의 방문은 나의 고뇌를 더욱 깊게 만들었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 대비</span>
+        <h2>친구 T가 오다</h2>
+        <p>친구 T는 사업으로 돈을 많이 벌어 넉넉하게 사는 사람이었습니다. 그는 좋은 옷을 입고, 아내에게 값비싼 선물을 안겨 주며 풍족한 삶을 누렸습니다. 우리 부부의 가난한 살림과는 너무나 대조적이었습니다.</p>
+        <p>T의 아내는 남편이 사 준 화려한 옷과 장신구를 자랑했습니다. 그 모습을 지켜보는 나의 마음은 편치 않았습니다. 무능한 남편을 둔 나의 아내가 자꾸만 마음에 걸렸기 때문입니다.</p>
+        <p>T의 풍족한 삶은 우리 부부의 궁핍을 더욱 도드라지게 했습니다. 물질적 성공을 이룬 친구 앞에서, 나는 자괴감을 느꼈습니다. 정신적 가치를 좇는 나의 삶이 초라하게만 느껴졌습니다.</p>
+        <p>이 대목은 물질적으로 성공한 친구와 나의 처지를 대비하는 전개의 단계입니다. T의 풍족함이 우리 부부의 가난을 더욱 선명하게 드러냅니다. 이 대비를 통해, 물질과 정신 사이의 갈등이 한층 깊어집니다. 남과 견주는 순간 마음의 평화가 흔들린다는 것을 이 장면은 잘 보여 줍니다.</p>
+        <p>나는 화려한 T의 아내와, 삯바느질로 밤을 지새우는 나의 아내를 나도 모르게 견주어 보았습니다. 그 생각은 나를 더욱 괴롭게 만들었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 흔들림</span>
+        <h2>뼈아픈 말</h2>
+        <p>그날, 나의 아내는 무심코 T의 아내가 부럽다는 듯한 말을 흘렸습니다. 화려한 옷과 장신구를 두고 한 말이었습니다. 그 말은 나의 가슴에 뼈아프게 박혔습니다.</p>
+        <p>나는 순간 화가 치밀었습니다. 가난한 살림을 함께 견뎌 온 아내마저 물질을 부러워한다고 느꼈기 때문입니다. 나는 아내에게 심한 말을 내뱉고 말았습니다.</p>
+        <p>그러나 아내의 그 말은 진심에서 나온 것이 아니었습니다. 오랜 가난에 지친 아내가 무심코 흘린, 사람이라면 누구나 가질 법한 부러움일 뿐이었습니다. 나는 그것을 헤아리지 못하고 아내에게 상처를 주었습니다.</p>
+        <p>이 대목은 물질 앞에서 부부의 마음이 잠시 흔들리는 위기의 단계입니다. 아내의 무심한 말과 나의 성난 반응이 부부 사이에 균열을 냅니다. 그러나 이 흔들림은 곧 두 사람의 사랑을 다시 확인하는 계기가 됩니다.</p>
+        <p>심한 말을 내뱉은 나는 곧 후회했습니다. 그리고 아내가 정말로 물질만을 좇는 사람인지 되돌아보게 되었습니다. 그 답은 뜻밖의 곳에서 찾아왔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 성찰</span>
+        <h2>달빛 아래에서</h2>
+        <p>그날 밤, 나는 잠 못 이루며 아내와 함께한 지난날을 떠올렸습니다. 아내는 그 오랜 가난 속에서도 단 한 번 진심으로 나를 원망한 적이 없었습니다. 언제나 나의 꿈을 조용히 지지해 준 사람이었습니다.</p>
+        <p>달빛 아래에서 나는 아내의 진심을 되새겼습니다. 아내가 흘린 그 한마디는 잠깐의 부러움일 뿐, 결코 나를 저버리는 말이 아니었습니다. 아내의 마음속에는 여전히 남편에 대한 변함없는 사랑이 자리하고 있었습니다.</p>
+        <p>나는 물질에 흔들려 아내를 오해한 자신이 부끄러웠습니다. 정작 물질에 마음을 빼앗긴 것은 아내가 아니라 나 자신이었는지도 몰랐습니다. 나는 아내의 헌신과 사랑을 다시금 깨달았습니다.</p>
+        <p>이 대목은 나 자신을 돌아보는 성찰의 단계입니다. 아내를 오해했던 자신을 반성하며, 변치 않는 사랑의 소중함을 깨닫습니다. 물질에 흔들리던 마음이 다시 제자리를 찾아가는 전환점입니다. 정작 물질에 마음을 빼앗긴 것은 아내가 아니라 나 자신이었음을 나는 뉘우쳤습니다.</p>
+        <p>이튿날, 나는 아내에게 미안한 마음을 전하고 싶었습니다. 그때 아내가 뜻밖의 물건 하나를 내밀었습니다. 그것은 나의 마음을 크게 흔들어 놓았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 상징</span>
+        <h2>책상 위의 비녀</h2>
+        <p>며칠 뒤, 아내는 나에게 낡은 비녀 하나를 내밀었습니다. 그것은 아내가 시집올 때 가져온, 아내에게 가장 소중한 물건이었습니다. 아내는 그 비녀를 팔아 살림에 보태자고 했습니다.</p>
+        <p>나는 그 비녀를 보고 가슴이 먹먹해졌습니다. 아내는 자신의 가장 소중한 것을 기꺼이 내놓으면서까지 가난한 살림을 지키려 한 것입니다. 그것은 물질을 부러워하기는커녕, 자신의 것마저 희생하는 헌신이었습니다.</p>
+        <p>이 비녀는 이 소설에서 아내의 변치 않는 사랑을 상징합니다. 화려한 장신구를 부러워하던 아내가, 정작 자신의 유일한 장신구인 비녀를 내놓은 것입니다. 그 모순 속에 아내의 진심이 오롯이 담겨 있었습니다.</p>
+        <p>이 대목은 이야기의 절정으로, 비녀를 통해 아내의 진심이 드러나는 단계입니다. 자신의 가장 소중한 것을 내놓는 아내의 헌신이 깊은 감동을 자아냅니다. 비녀 하나가 물질을 넘어선 사랑의 상징이 됩니다. 화려한 장신구를 부러워하던 아내가 정작 자신의 장신구를 내놓는 이 역설이 진한 울림을 줍니다.</p>
+        <p>나는 그 비녀를 차마 받을 수 없었습니다. 아내의 마음이 그 어떤 값진 물건보다 소중하다는 것을, 나는 그제야 온전히 깨달았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>참아 낸 눈물</h2>
+        <p>비녀를 내미는 아내 앞에서, 나는 참았던 눈물을 흘리고 말았습니다. 아내의 헌신과 사랑에 가슴이 벅차올랐기 때문입니다. 나는 아내의 손을 꼭 잡았습니다.</p>
+        <p>그 순간 나는 중요한 것을 깨달았습니다. 우리가 비록 물질적으로는 가난하지만, 그보다 훨씬 값진 것을 가지고 있다는 사실을 말입니다. 그것은 어떤 가난에도 변치 않는 부부의 사랑이었습니다.</p>
+        <p>T의 풍족한 삶이 부럽지 않은 것은 아니었습니다. 그러나 물질로는 결코 살 수 없는 것이 우리 부부에게 있었습니다. 서로를 향한 변함없는 믿음과 사랑, 그것이 진정한 부유함이었습니다.</p>
+        <p>이 대목은 이야기의 정신적 절정, 곧 나의 각성입니다. 물질의 가난 속에서도 변치 않는 사랑이라는 참된 부유함을 깨닫는 순간입니다. 비녀 하나를 통해, 물질을 넘어선 정신적 가치의 소중함이 온전히 드러납니다.</p>
+        <p>나는 아내와 함께라면 어떤 가난도 견딜 수 있으리라 믿었습니다. 물질의 부러움에 흔들리던 나의 마음은, 아내의 사랑 앞에서 다시 단단해졌습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 확인</span>
+        <h2>두 사람의 꿈</h2>
+        <p>나는 다시 붓을 들었습니다. 아내의 헌신과 사랑에 보답하기 위해서라도, 나의 꿈을 포기하지 않기로 다짐했습니다. 아내는 그런 나를 변함없이 응원해 주었습니다.</p>
+        <p>우리 부부는 여전히 가난했지만, 그 가난은 더 이상 두렵지 않았습니다. 서로를 믿고 의지하는 사랑이 있는 한, 어떤 어려움도 함께 이겨 낼 수 있으리라 믿었기 때문입니다. 두 사람은 같은 꿈을 바라보며 나아갔습니다.</p>
+        <p>이 소설은 물질적 성공을 이룬 이야기로 끝나지 않습니다. 다만 가난 속에서도 변치 않는 사랑을 확인하는 것으로 마무리됩니다. 그 잔잔한 결말이 오히려 더 깊은 울림을 남깁니다.</p>
+        <p>이 대목은 부부의 사랑과 꿈을 다시 확인하는 결말의 단계입니다. 가난은 여전하지만, 두 사람은 그보다 값진 것을 지켜 냈습니다. 물질을 넘어선 사랑이 삶을 지탱하는 힘임을 이 작품은 보여 줍니다.</p>
+        <p>가난한 방 한 칸에는 여전히 궁핍이 감돌았지만, 그 안에는 무엇보다 따뜻한 사랑이 자리하고 있었습니다. 두 사람은 그 사랑으로 하루하루를 밝혀 갔습니다. 그 따뜻함은 어떤 풍족함으로도 대신할 수 없는 것이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>가난한 아내의 초상</h2>
+        <p>「빈처」는 가난한 무명작가 부부의 삶을 통해, 물질과 정신 사이의 갈등과 변치 않는 사랑을 그린 자전적 소설입니다. 궁핍 속에서도 남편의 꿈을 지지하고 자신을 희생하는 아내의 모습은, 가난해도 변하지 않는 소중한 가치를 보여 줍니다. 비녀 하나에 담긴 그 사랑이 깊은 감동을 남깁니다.</p>
+        <p>이 작품이 지닌 특징은 여럿입니다. 첫째는 작가 자신의 경험을 바탕으로 한 진솔한 자전적 성격이요, 둘째는 물질과 정신 사이에서 고뇌하는 지식인의 내면을 섬세하게 그린 점입니다. 현진건은 이를 통해 시대를 살아가는 지식인의 고민을 진솔하게 담아냈습니다.</p>
+        <p>무엇보다 이 소설은, 가난 속에서도 변하지 않는 것이 있음을 일깨웁니다. 물질적 풍요가 전부가 아니며, 서로를 향한 믿음과 사랑이야말로 진정한 부유함이라는 것입니다. 비녀를 내미는 아내의 헌신이 그 진리를 조용히 증언합니다. 물질에 쉬이 흔들리는 오늘의 우리에게도 이 이야기는 깊은 울림을 건넵니다.</p>
+        <p>가난한 아내의 초상 속에는, 물질로는 살 수 없는 참된 사랑이 담겨 있습니다. 이 작품은 물질에 흔들리기 쉬운 우리에게, 정말로 소중한 것이 무엇인지를 되묻습니다. 궁핍한 방 한 칸을 밝힌 그 사랑은, 오래도록 독자의 마음에 따뜻한 여운을 남깁니다.</p>
+        <p><span class="highlight">가난해도 변하지 않는 것이 있습니다. 서로를 향한 믿음과 사랑이야말로 참된 부유함입니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'modern09_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

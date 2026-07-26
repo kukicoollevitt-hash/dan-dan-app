@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⛵ 강물 위의 노래 — 배따라기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/현대문학08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⛵ 강물 위의 노래 — 배따라기</h1>
+        <p class="subtitle">
+          — 근거 없는 의심은 눈을 멀게 한다 —<br>
+          교과기반 창작도서 · 현대문학 08
+        </p>
+        <div class="characters">
+          <h3>⛵ 등장인물 소개</h3>
+          <p><strong>★ 나 (화자):</strong> 평양 대동강에서 뱃놀이를 하다 구슬픈 노래를 듣고, 그 노래에 얽힌 옛이야기를 듣게 되는 사람.</p>
+          <p><strong>★ 사공:</strong> 배를 젓는 뱃사람. 담배를 피우며 배따라기 노래에 얽힌 형제의 슬픈 이야기를 들려준다.</p>
+          <p><strong>★ 형:</strong> 물고기를 잡아 살아가는 어부. 근거 없는 의심에 사로잡혀 돌이킬 수 없는 일을 저지른다.</p>
+          <p><strong>★ 아우:</strong> 형을 도우며 형과 형수를 극진히 모시는 사람. 영문도 모른 채 형의 의심을 받는다.</p>
+          <p><strong>★ 형의 아내:</strong> 마을 사람들이 부러워할 만큼 아름다운 사람. 아무 잘못 없이 남편의 의심 속에 살게 된다.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 마음의 갈등:</strong> 근거 없이 자라나는 의심 vs. 죄 없는 사람들의 진심</p>
+          <p><strong>② 형제의 갈등:</strong> 질투에 사로잡힌 형 vs. 영문도 모르는 아우</p>
+          <p><strong>③ 진실의 갈등:</strong> 뒤늦게 밝혀진 진실 vs. 이미 돌이킬 수 없게 된 일</p>
+          <p><strong>④ 노래의 갈등:</strong> 구슬프게 흐르는 배따라기 가락 vs. 평생 갚을 수 없는 회한</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>대동강의 구슬픈 가락</h2>
+        <p>따스한 봄날, 나는 평양 대동강에서 뱃놀이를 하고 있었습니다. 강물은 비단처럼 잔잔했고, 강가의 버드나무는 연둣빛 가지를 물 위로 드리우고 있었습니다. 배는 물결을 따라 천천히 미끄러져 갔습니다. 물 위에는 다른 놀잇배들도 한가로이 떠 있었습니다.</p>
+        <p>그때였습니다. 어디선가 노랫소리가 강물을 타고 흘러왔습니다.<br><br><span class="dialogue">"배따라기... 배따라기..."</span><br><br>처음 듣는 노래였는데도, 이상하게 가슴 한구석이 저릿해졌습니다. 그 노랫소리는 흥겨운 뱃노래들 사이에서 홀로 결이 달랐습니다.</p>
+        <p>그 노래의 <span class="vocab-tip" data-meaning="노래의 가락, 멜로디">곡조</span>는 구슬프면서도 애절했습니다. 즐거워야 할 봄날의 뱃놀이가 무색해질 만큼, 노래에는 깊은 슬픔이 배어 있었습니다. 마치 누군가 평생 가슴에 묻어 둔 이야기를 강물에 풀어놓는 것 같았습니다. 한 소절이 끝날 때마다 긴 한숨 같은 여운이 따라붙었습니다.</p>
+        <p>나는 노를 젓던 뱃사람에게 물었습니다.<br><br><span class="dialogue">"저 노래는 대체 무슨 노래요? 어째서 저리도 슬프게 들리는 것이오?"</span><br><br>묻고 나서야, 그것이 예사 노래가 아님을 더욱 확신하게 되었습니다.</p>
+        <p>뱃사람은 잠시 노를 멈추고 소리가 들려오는 강 저편을 바라보았습니다. 그 눈빛에는 무언가 알고 있는 사람만이 지을 수 있는 표정이 어려 있었습니다. 나는 어쩐지 그 노래의 사연이 궁금해서 견딜 수가 없었습니다. 봄바람이 다시 불어와도 그 가락은 흩어지지 않고 귓가에 남았습니다.</p>
+        <p><span class="highlight">구슬픈 가락 하나가, 잔잔하던 봄날의 강물에 파문을 일으켰습니다.</span> 그 노래에는 아주 오래된 이야기가 잠겨 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>사공의 옛이야기</h2>
+        <p>내 곁에는 마침 늙은 <span class="vocab-tip" data-meaning="배를 젓는 일을 하는 뱃사람">사공</span> 한 사람이 있었습니다. 나는 그에게 노래의 <span class="vocab-tip" data-meaning="어떤 것이 생겨나 전해 내려온 까닭과 내력">유래</span>를 물었습니다. 저 배따라기라는 노래가 어디서 온 것이냐고 말입니다. 사공의 얼굴에는 강바람에 새겨진 주름이 깊어, 평생을 이 강에서 늙은 듯한 사람이었습니다.</p>
+        <p>사공은 곰방대에 담배를 꾹꾹 눌러 담고 불을 붙였습니다. 담배 연기가 강바람에 풀어지는 동안, 사공은 말없이 강물만 바라보았습니다. 서두르지 않는 그 침묵이 오히려 이야기의 무게를 말해 주는 듯했습니다. 오래 배를 몬 사람다운 느긋함이었습니다.</p>
+        <p>이윽고 사공이 낮은 목소리로 입을 열었습니다.<br><br><span class="dialogue">"옛날, 이 강 근처 마을에 형제가 살았다오. 참으로 딱한 이야기지. 들어 보시려오?"</span><br><br>나는 뱃전에 바싹 다가앉았습니다.</p>
+        <p>나는 고개를 끄덕였습니다. 배는 물결에 몸을 맡긴 채 흔들리고, 멀리서 배따라기 가락이 실낱처럼 이어졌다 끊어졌다 했습니다. 사공의 이야기는 그 가락을 배경으로 천천히 풀려나오기 시작했습니다. 물결이 뱃전을 두드리는 소리가 장단처럼 이야기에 스며들었습니다.</p>
+        <p>지금부터 펼쳐지는 것은 사공이 들려준 그 옛이야기입니다. 이야기 속의 이야기, 강물처럼 흘러온 어느 형제의 사연입니다. 사공은 이렇게 시작했습니다.<br><br><span class="dialogue">"그 형제는 사이가 참 좋았다오. 처음에는 말이오..."</span><br><br>사공의 목소리가 한층 낮아졌습니다.</p>
+        <p><span class="highlight">'처음에는'이라는 말에는, 나중에는 그렇지 못했다는 뜻이 숨어 있었습니다.</span> 나는 저도 모르게 이야기 속으로 빨려 들어갔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 평온</span>
+        <h2>사이좋은 형제</h2>
+        <p>옛날, 대동강 근처 어느 마을에 형제가 살았습니다. 형은 물고기를 잡아 생계를 잇는 어부였습니다. 새벽이면 배를 몰고 강으로 나가 그물을 던졌고, 저녁이면 잡은 물고기를 지고 돌아왔습니다. 그물질 솜씨가 마을에서 알아주는 것이어서, 배가 가득 차게 돌아오는 날이 많았습니다.</p>
+        <p>아우는 그런 형을 도우며 한집에서 함께 살았습니다. 그물을 손질하고, 배를 고치고, 형이 잡아 온 물고기를 장에 내다 파는 일까지 아우의 손이 닿지 않는 곳이 없었습니다. 형제는 마을에서 소문난 의좋은 사이였습니다. 사람들은 저 형제만 같아라 하고 입버릇처럼 말했습니다.</p>
+        <p>형에게는 아름다운 아내가 있었습니다. 그 고운 얼굴과 상냥한 마음씨를 마을 사람들 모두가 부러워했습니다.<br><br><span class="dialogue">"저 집은 참 복도 많지. 형제간에 우애 좋지, 안주인은 곱지."</span></p>
+        <p>아우는 형과 형수를 <span class="vocab-tip" data-meaning="마음과 정성을 다하는 모양">극진</span>히 모셨습니다. 무거운 물동이는 얼른 받아 들고, 좋은 물고기가 잡히면 형님 내외 밥상에 먼저 올렸습니다. 형수도 그런 시동생을 친동생처럼 아꼈습니다. 장에 다녀오는 길이면 아우는 형수가 쓸 참빗을 사 오기도 했습니다.</p>
+        <p>저녁이면 세 사람이 등잔불 아래 둘러앉아 도란도란 하루 이야기를 나누었습니다. 가난했지만 웃음이 끊이지 않는 집이었습니다. 강바람도 그 집 앞에서는 순해지는 것 같았습니다. 이웃들은 담 너머 웃음소리를 들으며 덩달아 미소 지었습니다.</p>
+        <p><span class="highlight">그 시절 그 집에는 부러울 것이 없었습니다.</span> 그러나 행복이란, 때로 아주 작은 틈에서부터 금이 가기 시작합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 발단</span>
+        <h2>마음속에 심긴 가시</h2>
+        <p>그러던 어느 날부터, 형의 마음속에 이상한 생각이 자라나기 시작했습니다. 아우와 아내의 사이를 의심하게 된 것입니다. 아우가 형수에게 친절하게 대하는 모습이 어느 순간부터 눈에 거슬리기 시작했습니다. 처음에는 형 자신도 그 생각을 떨쳐 내려 애썼습니다.</p>
+        <p>아우가 형수의 물동이를 받아 드는 것도, 형수가 시동생의 해진 옷을 기워 주는 것도, 예전에는 흐뭇하게 보아 넘기던 일들이었습니다. 그런데 이제는 그 하나하나가 다르게 보였습니다. 같은 장면도 마음에 따라 이렇게 다르게 보이는 법입니다.</p>
+        <p>한번 심긴 <span class="vocab-tip" data-meaning="남이 잘되거나 사랑받는 것을 미워하고 시기하는 마음">질투</span>의 가시는 무섭게 자랐습니다. 형은 아무 증거도 없이, 오직 제 마음속 의심만을 키워 갔습니다. 의심은 먹이를 주지 않아도 스스로 살이 찌는 짐승 같았습니다. 질투는 그렇게 소리 없이 자라는 병이었습니다.</p>
+        <p>강에 나가 그물을 던지면서도 형의 머릿속에는 온통 그 생각뿐이었습니다.<br><br><span class="dialogue">'지금쯤 집에서 둘이 무슨 이야기를 나누고 있을까. 어째서 아우는 형수에게 저리도 살가운가.'</span><br><br>그물에 물고기가 걸려도 기쁜 줄을 몰랐습니다.</p>
+        <p>돌아보면 아무것도 아닌 일들이었습니다. 아우의 친절은 형에 대한 고마움이었고, 형수의 다정함은 식구를 아끼는 마음이었습니다. 그러나 의심의 눈으로 보면, 세상 모든 것이 의심스럽게 보이는 법입니다. 형은 이미 색안경을 낀 눈으로만 집안을 보고 있었습니다.</p>
+        <p><span class="highlight">형의 마음속에서 의심은 어느새 사실처럼 단단해져 갔습니다.</span> 아무도 심지 않은 가시나무가 홀로 무성해지고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 균열</span>
+        <h2>차가워진 집</h2>
+        <p>형의 태도가 눈에 띄게 달라졌습니다. 아내에게는 차갑게 대하기 시작했고, 아우는 아예 피해 다녔습니다. 밥상 앞에서도 말 한마디 없었고, 아내가 말을 붙이면 퉁명스러운 대꾸만 돌아왔습니다. 이유를 말해 주지 않는 냉랭함이 집 안 공기를 얼렸습니다.</p>
+        <p>웃음이 넘치던 집에서 웃음소리가 사라졌습니다. 등잔불 아래 도란도란 이야기꽃을 피우던 저녁도 없어졌습니다. 세 사람은 한집에 살면서도 서로 다른 섬에 사는 사람들처럼 멀어져 갔습니다. 아우는 밥을 먹다 말고 형의 눈치를 살피는 날이 늘었습니다.</p>
+        <p>아우는 당혹스러웠습니다. 자신이 무엇을 잘못했는지 도무지 알 수 없었기 때문입니다.<br><br><span class="dialogue">"형님, 제가 뭘 잘못했습니까? 말씀을 해 주셔야 고치지요."</span><br><br>그러나 형은 대답 대신 싸늘한 눈길만 던지고 돌아섰습니다.</p>
+        <p>아내도 영문을 몰라 속만 태웠습니다. 남편의 마음속에 무엇이 자라고 있는지 짐작조차 하지 못한 채, 그저 예전처럼 정성껏 살림을 살 뿐이었습니다. 그 정성마저 형의 눈에는 곱게 보이지 않았습니다. 아내는 밤이면 홀로 바느질을 하며 한숨만 깊어졌습니다.</p>
+        <p>형의 의심은 날이 갈수록 심해졌습니다. 이제는 아우의 인사 한마디, 형수의 웃음 한 번까지 모두 수상해 보였습니다. 마음의 병은 몸의 병보다 빠르게 깊어졌고, 형의 눈빛은 점점 어두워져 갔습니다. 보다 못한 아내가 말을 꺼내려 하면, 형은 자리를 박차고 나가 버렸습니다.</p>
+        <p><span class="highlight">진실을 물어볼 용기가 없던 형은, 의심을 홀로 키우는 쪽을 택했습니다.</span> 그것이 모든 비극의 시작이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>어두운 결심</h2>
+        <p>의심은 마침내 형의 온 마음을 집어삼켰습니다. 밥을 먹어도 모래알을 씹는 것 같았고, 잠자리에 누워도 잠이 오지 않았습니다. 감은 눈꺼풀 안쪽에서 의심이 만들어 낸 장면들만 어른거렸습니다.</p>
+        <p>형은 점점 딴사람이 되어 갔습니다. 그 순하던 얼굴에서 웃음기가 완전히 걷히고, 밤이면 홀로 강가에 나가 어두운 강물만 노려보았습니다. 수척해진 얼굴을 보고 마을 사람들이 걱정할 정도였습니다. 마을 사람들이 인사를 건네도 못 들은 척 지나쳤습니다.</p>
+        <p>누구에게도 속을 털어놓지 않은 것이 화근이었습니다. 의심이란 햇빛을 쬐면 사그라들지만, 어둠 속에 가두어 두면 걷잡을 수 없이 자라는 법입니다. 형은 그 의심을 꽁꽁 싸매어 혼자 어둠 속에서 키웠습니다.</p>
+        <p>그리고 어느 날, 형의 마음속에서 무서운 생각이 고개를 들었습니다. 급기야 형은 아우를 없애기로 마음먹기에 이른 것입니다. 의심이 사람의 마음을 얼마나 멀리까지 끌고 갈 수 있는지, 형 자신도 몰랐을 것입니다. 무서운 생각일수록 그렇게 조용히 자리를 잡는 법입니다.</p>
+        <p>그날도 아우는 아무것도 모른 채 그물을 손질하고 있었습니다. 형이 다가와 낮은 목소리로 말했습니다.<br><br><span class="dialogue">"오늘 밤, 나와 함께 배를 타자. 강에 나가 볼 일이 있다."</span><br><br>아우는 반가운 마음에 선뜻 따라나섰습니다. 오랜만에 형이 먼저 말을 걸어 준 것이 그저 기뻤던 것입니다.</p>
+        <p><span class="highlight">햇빛을 보지 못한 의심은, 마침내 사람을 해칠 칼날이 되어 있었습니다.</span> 밤의 강은 아무것도 모른 채 두 형제를 기다리고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 비극</span>
+        <h2>밤의 강 한가운데</h2>
+        <p>그날 밤, 형은 아우를 배에 태우고 노를 저어 강 한가운데로 나아갔습니다. 달빛도 흐리고 강바람이 유난히 차가운 밤이었습니다. 강기슭의 불빛이 점점 멀어지고, 사방은 검은 물뿐이었습니다. 노 젓는 소리만 어둠 속에 규칙적으로 울렸습니다.</p>
+        <p>배가 강 복판에 이르자 형은 노를 놓았습니다. 그리고 아우를 향해 돌아앉았습니다. 그 눈빛이 심상치 않다는 것을, 아우는 그제야 알아차렸습니다.<br><br><span class="dialogue">"네가... 내 아내와 무슨 사이냐."</span><br><br>형의 손이 가늘게 떨리고 있었습니다.</p>
+        <p>아우는 하늘이 무너지는 것 같았습니다. 형이 그동안 차가웠던 까닭이 이것이었다니요.<br><br><span class="dialogue">"형님! 그게 무슨 말씀입니까! 하늘에 맹세코 아무 일도 없습니다!"</span><br><br>그 목소리는 떨렸지만 한 점 부끄러움이 없었습니다.</p>
+        <p>그러나 오랜 의심으로 굳어 버린 형의 귀에는 그 어떤 말도 들리지 않았습니다. 형은 매달리는 아우를 강물로 밀어 넣고 말았습니다. 아우는 억울함을 호소하며 형에게 매달렸지만, 끝내 차가운 강물이 아우를 삼켰습니다. 아무리 진실을 외쳐도, 들을 마음이 없는 귀에는 닿지 않았던 것입니다.</p>
+        <p>강은 다시 고요해졌습니다. 방금까지 동생의 목소리가 있던 자리에는 검은 물결만 일렁였습니다. 형은 텅 빈 배 위에 홀로 앉아, 자기가 무슨 일을 저질렀는지도 실감하지 못한 채 오들오들 떨고 있었습니다.</p>
+        <p><span class="highlight">단 한 번만 물어보았다면, 단 한 번만 믿어 주었다면 일어나지 않았을 일이었습니다.</span> 그러나 강물은 되돌릴 수 없이 흘러가 버렸습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 진실</span>
+        <h2>너무 늦은 진실</h2>
+        <p>형은 집으로 돌아왔지만 마음이 편할 리 없었습니다. 시간이 지날수록 아우의 얼굴이 자꾸만 눈앞에 떠올랐습니다. 그물을 손질하던 손, 형님 하고 부르던 목소리, 마지막 순간의 그 억울한 눈빛까지도. 고요한 집이 오히려 형을 꾸짖는 것 같았습니다.</p>
+        <p>밥상 앞에 앉으면 아우가 즐겨 앉던 빈자리가 보였습니다. 강에 나가면 아우와 함께 던지던 그물이 손에 잡혔습니다. 집 안 어디를 보아도 아우의 흔적이 없는 곳이 없었습니다. 아우가 고쳐 놓은 배는 여전히 강가에 단단히 매여 있었습니다.</p>
+        <p>견디다 못한 형은 마침내 아내에게 진실을 캐물었습니다. 아내는 남편의 물음에 놀라 눈물을 흘리며 대답했습니다.<br><br><span class="dialogue">"아우님과 저 사이에는 아무 일도 없었어요. 하늘에 맹세할 수 있어요. 대체 어찌하여 그런 생각을..."</span></p>
+        <p>아내의 눈빛에는 한 점의 거짓도 없었습니다. 형은 그제야 모든 것이 자신의 오해였음을 깨달았습니다. 아우의 친절도, 아내의 다정함도 전부 식구를 아끼는 진심이었을 뿐입니다. 의심의 색안경을 벗고 나니, 모든 것이 너무나 분명하게 보였습니다.</p>
+        <p>형의 다리에서 힘이 풀렸습니다. 자신이 <span class="vocab-tip" data-meaning="아무 잘못이나 죄가 없음">무고</span>한 아우를, 세상에 하나뿐인 동생을 제 손으로 해쳤다는 사실이 그제야 온몸을 덮쳐 왔습니다.<br><br><span class="dialogue">"내가... 내가 무슨 짓을 한 것인가..."</span><br><br>땅을 치며 울어도 소용없는 일이었습니다.</p>
+        <p><span class="highlight">진실은 언제나 그 자리에 있었습니다. 형이 묻지 않았을 뿐입니다.</span> 그리고 진실을 알았을 때는, 이미 모든 것이 늦어 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 회한</span>
+        <h2>강가의 노래</h2>
+        <p>그날 이후 형은 죄책감에서 벗어나지 못했습니다. 잠이 들면 아우의 꿈을 꾸었고, 깨어 있으면 아우의 목소리가 환청처럼 들렸습니다. 밥이 넘어가지 않았고, 사람을 만나는 일도 두려워졌습니다. 마을 사람들의 눈에도 형이 하루가 다르게 말라 가는 것이 보였습니다.</p>
+        <p>죄 없는 동생을 제 손으로 해쳤다는 사실은, 그 어떤 벌보다 무거운 형벌이 되어 형을 짓눌렀습니다. 형은 그 무게에 짓눌려 결국 미쳐 버리고 말았습니다. 마음이 무너져 내린 것입니다. 몸의 병은 약으로 고친다지만, 이런 병에는 고칠 약이 없었습니다.</p>
+        <p>그 후로 형은 날마다 강가에 나왔습니다. 그리고 아우가 잠긴 강물을 바라보며 노래를 불렀습니다.<br><br><span class="dialogue">"배따라기... 배따라기..."</span><br><br>동생을 그리워하는 마음이, 구슬픈 가락이 되어 강물 위로 흘렀습니다.</p>
+        <p>비가 오나 눈이 오나 노래는 그치지 않았습니다. 마을 사람들은 그 노랫소리를 들을 때마다 가슴이 먹먹해져 걸음을 멈추었습니다. 노래 속에 담긴 사연을 아는 사람일수록 차마 형을 탓하지 못하고 눈물지었습니다. 노래는 형이 세상과 나누는 마지막 말이기도 했습니다.</p>
+        <p>평생을 갚아도 갚을 수 없는 <span class="vocab-tip" data-meaning="지난 잘못을 뉘우치며 한스러워하는 마음">회한</span>이었습니다. 형이 할 수 있는 일이라고는, 아우를 삼킨 강가에서 그 이름 대신 노래를 부르는 것뿐이었습니다. 그렇게 세월이 흘렀고, 그 노래가 입에서 입으로 전해져 오늘날까지 강가에 남은 것입니다.</p>
+        <p><span class="highlight">배따라기는 노래이기 이전에, 한 사람의 평생에 걸친 사죄였습니다.</span> 사공의 이야기는 여기서 끝이 났습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학08/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>이야기 속의 이야기</h2>
+        <p>사공의 이야기가 끝난 뒤에도, 나는 한동안 아무 말도 할 수 없었습니다. 강 저편에서 배따라기 가락이 여전히 흐르고 있었습니다. 나는 그날, 인간의 질투가 얼마나 무서운 것인지 뼈저리게 깨달았습니다.</p>
+        <p>「배따라기」는 김동인이 쓴 단편 소설로, 대동강을 배경으로 질투와 오해가 빚어낸 형제의 비극을 그린 작품입니다. 근거 없는 의심 하나가 한 가족을 어떻게 무너뜨리는지를 보여 줍니다. 짧은 소설이지만 그 울림은 결코 짧지 않습니다.</p>
+        <p>이 작품의 짜임새도 눈여겨볼 만합니다. 현재의 '나'가 사공에게서 옛이야기를 전해 듣는 방식인데, 이런 짜임을 <span class="vocab-tip" data-meaning="바깥 이야기 안에 또 하나의 이야기가 들어 있는 소설의 짜임">액자식 구성</span>이라고 부릅니다. 그림을 감싸는 액자처럼, 바깥 이야기가 안쪽 이야기를 감싸고 있는 것입니다.</p>
+        <p>액자식 구성 덕분에 형제의 사연은 마치 강가에 오래 전해 내려온 전설처럼 아득하고 신비로운 분위기를 갖게 됩니다. 또한 배따라기 노래는 형의 회한과 슬픔을 상징하며 작품 전체에 구슬프게 흐릅니다. 노래 하나가 소설 전체를 하나로 묶어 주는 셈입니다.</p>
+        <p>「배따라기」는 인간 내면의 어두운 감정이 가져오는 비극을 <span class="vocab-tip" data-meaning="감정과 분위기를 시처럼 아름답게 그려 내는 것">서정적</span>으로 그려 낸 작품으로 평가받습니다. 슬픈 이야기이지만, 그 슬픔이 노래처럼 아름답게 그려져 오래도록 마음에 남습니다.</p>
+        <p><span class="highlight">의심은 묻지 않으면 자라고, 물으면 사라집니다.</span> 형이 평생 강가에서 부른 노래가, 우리에게 그것을 일러 주고 있습니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(70, 110, 160, 0.15); border-radius: 16px;">
+          <strong style="color: #466EA0; font-size: 20px;">⛵ 「의심은 어둠 속에서 자라 사람을 삼킨다. 강물 위의 노래는 돌이킬 수 없는 후회의 소리였다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'modern08_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

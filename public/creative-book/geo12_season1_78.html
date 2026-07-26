@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧳 밀고 당기는 힘 — 결이네 이삿날</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지리12/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🧳 밀고 당기는 힘 — 결이네 이삿날</h1>
+        <p class="subtitle">
+          — 배출 요인과 흡인 요인으로 읽는 인구 이동 —<br>
+          교과기반 창작도서 · 지리 12
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 결이:</strong> 가족의 이사를 겪으며 사람들이 왜, 어떻게 이동하는지를 탐구하는 아이.</p>
+          <p><strong>★ 할아버지:</strong> 여러 번의 이동을 겪어 온 어른. 인구 이동의 힘과 뿌리내림의 의미를 들려준다.</p>
+          <p><strong>★ 핵심 개념:</strong> 인구 이동, 배출 요인과 흡인 요인, 이촌향도, 이동의 유형과 영향.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리12/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>저녁 밥상의 폭탄선언</h2>
+        <p>어느 저녁, 결이네 밥상에서 뜻밖의 이야기가 나왔습니다. 아빠의 일자리가 다른 도시로 옮겨 가게 되어, 온 가족이 이사를 해야 한다는 것이었습니다. 결이는 갑작스러운 소식에 밥숟가락을 놓고 말았습니다.</p>
+        <p>결이는 정든 동네와 친구들을 떠나야 한다는 사실이 도무지 받아들여지지 않았습니다. 왜 우리 가족이 굳이 낯선 곳으로 옮겨 가야 하는지 이해할 수 없었습니다. 결이는 이사가 원망스럽기만 했습니다.</p>
+        <p>그런 결이에게 할아버지는, 사람이 한곳에만 머물러 사는 것이 오히려 드문 일이라고 말했습니다. 사람들은 저마다의 까닭으로 이곳에서 저곳으로 옮겨 다니며 살아왔다는 것이었습니다. 결이는 할아버지의 말이 무슨 뜻인지 궁금해졌습니다.</p>
+        <p>이야기의 첫머리에서 결이가 겪는 이사는, 인구 이동의 원리를 알아 가는 출발점이 됩니다. 사람들이 왜 살던 곳을 떠나 다른 곳으로 옮겨 가는지, 결이는 자기 가족의 이사를 통해 배우게 됩니다. 원망스럽던 이사가 곧 살아 있는 배움의 계기가 되는 것입니다.</p>
+        <p>결이는 마지못해 이사를 받아들이면서도, 사람들이 움직이는 까닭을 알고 싶어졌습니다. 할아버지는 그 답을 하나씩 들려주겠다고 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리12/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>우리 가족 이동의 역사</h2>
+        <p>할아버지는 결이에게 우리 가족이 살아온 이동의 역사를 들려주었습니다. 할아버지도 젊은 시절 시골을 떠나 도시로 왔고, 아빠도 공부를 위해 여러 도시를 옮겨 다녔다는 것이었습니다. 결이는 자기 가족이 이미 여러 번 이동해 왔음을 알게 되었습니다.</p>
+        <p>할아버지는 자신이 시골을 떠난 것은 일자리를 찾기 위해서였다고 했습니다. 농사만으로는 살기 어려워, 일거리가 많은 도시로 향할 수밖에 없었다는 것이었습니다. 결이는 사람들이 무언가를 찾아 이동한다는 것을 어렴풋이 느꼈습니다.</p>
+        <p>할아버지는 이렇게 사람들이 살던 곳을 떠나 다른 지역으로 옮겨 가는 것을 인구 이동이라 부른다고 알려 주었습니다. 인구 이동은 개인의 일 같지만, 수많은 사람이 모이면 나라 전체의 큰 흐름이 된다는 것이었습니다. 결이는 자기 가족의 이사도 그 큰 흐름의 한 조각임을 깨달았습니다.</p>
+        <p>이 대목은 결이가 인구 이동이라는 개념을 처음으로 만나는 사건의 시작입니다. 자기 가족의 이동 역사를 통해, 사람들이 늘 움직이며 살아왔음을 알게 된 것입니다. 이사가 우리 가족만의 일이 아니라는 사실이 결이에게 위로가 되기도 했습니다.</p>
+        <p>결이는 그렇다면 사람들이 대체 무엇 때문에 이동하는지 그 힘의 정체가 궁금해졌습니다. 할아버지는 그것을 밀고 당기는 두 힘으로 설명해 주겠다고 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리12/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>밀어내는 힘, 끌어당기는 힘</h2>
+        <p>할아버지는 인구 이동에 두 가지 힘이 작용한다고 설명했습니다. 하나는 살던 곳에서 사람을 밀어내는 힘이고, 다른 하나는 새로운 곳으로 사람을 끌어당기는 힘이었습니다. 이 두 힘이 함께 작용해 사람들이 움직인다는 것이었습니다.</p>
+        <p>살던 곳에서 사람을 밀어내는 힘을 배출 요인이라고 합니다. 일자리가 부족하거나, 살기가 힘들거나, 교육과 의료 시설이 모자란 것이 바로 그런 힘이었습니다. 할아버지가 시골을 떠난 것도 이런 배출 요인 때문이었습니다.</p>
+        <p>반대로 새로운 곳으로 사람을 끌어당기는 힘을 흡인 요인이라고 합니다. 많은 일자리와 높은 임금, 좋은 학교와 병원 같은 것이 사람들을 불러 모으는 힘이었습니다. 결이는 아빠가 새 일자리를 찾아 옮겨 가는 것도 바로 이 흡인 요인 때문임을 깨달았습니다.</p>
+        <p>이 대목은 결이가 인구 이동을 일으키는 두 힘을 만나는 전개의 단계입니다. 밀어내는 배출 요인과 끌어당기는 흡인 요인이라는 개념을 통해, 사람들의 이동을 또렷이 설명할 수 있게 된 것입니다. 막연하던 이사의 까닭이 하나의 원리로 정리되었습니다.</p>
+        <p>결이는 자기 가족의 이사를 이 두 힘으로 다시 헤아려 보았습니다. 낯설던 이사가 이제 하나의 이치로 이해되기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리12/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>움직이는 사람들의 지도</h2>
+        <p>결이는 배운 것을 바탕으로 사람들의 이동을 지도에 그려 보기로 했습니다. 할아버지 세대가 시골에서 도시로 향한 큰 흐름을 화살표로 표시해 보았습니다. 수많은 화살표가 도시를 향해 몰려드는 모습이 한눈에 들어왔습니다.</p>
+        <p>할아버지는 이렇게 촌락에서 도시로 사람들이 이동하는 것을 이촌향도라고 부른다고 알려 주었습니다. 산업이 발달하면서 도시에 일자리가 많아지자, 사람들이 일거리를 찾아 도시로 몰려들었다는 것이었습니다. 결이는 앞서 배운 배출 요인과 흡인 요인이 이 큰 흐름을 만들어 냈음을 이해했습니다.</p>
+        <p>결이는 인구 이동에 여러 종류가 있다는 것도 알게 되었습니다. 한 나라 안에서 옮겨 가는 이동이 있는가 하면, 나라와 나라 사이를 오가는 이동도 있었습니다. 잠시 머물다 돌아오는 이동과 아예 삶터를 옮기는 이동도 있었습니다.</p>
+        <p>이 대목은 결이가 인구 이동의 흐름과 유형을 직접 그려 보는 전개의 시도 단계입니다. 이촌향도라는 큰 흐름을 지도로 확인하면서, 이동이 나라 전체의 모습을 바꾼다는 것을 실감한 것입니다. 개인의 이사가 모여 사회의 큰 변화를 이룬다는 것을 알게 되었습니다.</p>
+        <p>결이는 자신이 그린 화살표들을 바라보며, 이동이 단순한 이사 이상의 큰 의미를 지닌다는 것을 느꼈습니다. 사람들의 움직임이 곧 세상을 움직이고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리12/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>결정된 이사</h2>
+        <p>여러 가지를 배웠지만, 막상 이사 날짜가 정해지자 결이의 마음은 다시 무거워졌습니다. 정든 방을 정리하고 짐을 싸면서, 결이는 눈물이 핑 돌았습니다. 아무리 이치를 안다 해도 이별의 슬픔은 어쩔 수 없었습니다.</p>
+        <p>결이는 친구들과 헤어지는 것이 무엇보다 아쉬웠습니다. 함께 뛰놀던 골목과 학교를 떠난다고 생각하니 가슴이 먹먹했습니다. 인구 이동의 원리를 배우는 것과, 정작 그 이동을 겪는 것은 전혀 다른 일이었습니다.</p>
+        <p>할아버지는 그런 결이의 마음을 이해한다며 어깨를 다독였습니다. 이동에는 새로운 기회라는 밝은 면과 함께, 정든 곳을 떠나는 아쉬움이라는 그늘도 있다는 것이었습니다. 사람의 이동은 숫자로만 설명할 수 없는 마음의 일이기도 했습니다.</p>
+        <p>이 대목은 결이가 이동의 아픔을 온몸으로 겪는 위기의 단계입니다. 원리로 이해한 것과 실제 겪는 감정 사이의 거리를 느낀 것입니다. 그러나 이 아픔조차 인구 이동이 지닌 하나의 진실임을 결이는 알아 가고 있었습니다.</p>
+        <p>결이는 짐을 실은 이삿짐 차에 오르며, 정든 동네를 오래도록 돌아보았습니다. 새로운 곳에서의 삶이 어떠할지, 두려움과 기대가 뒤섞였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리12/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>같은 도시, 다른 화살표</h2>
+        <p>새 도시에 도착한 결이는 그곳이 사람들로 북적이는 큰 도시임을 알게 되었습니다. 결이네처럼 다른 곳에서 옮겨 온 사람이 무척 많았습니다. 결이는 자신이 그렸던 지도 속 화살표의 끝에 자신이 서 있음을 실감했습니다.</p>
+        <p>그런데 결이는 이 큰 도시에도 그늘이 있음을 보게 되었습니다. 너무 많은 사람이 몰려들어 집이 부족하고 길이 붐볐습니다. 흡인 요인에 이끌려 사람들이 몰려든 도시가, 그만큼의 어려움도 함께 안고 있었던 것입니다.</p>
+        <p>할아버지는 인구 이동이 떠나는 지역과 도착하는 지역 모두에 영향을 준다고 설명했습니다. 사람들이 떠난 시골은 인구가 줄어 활기를 잃고, 사람들이 몰린 도시는 지나친 집중으로 몸살을 앓는다는 것이었습니다. 이동은 두 지역 모두를 변화시키는 힘이었습니다.</p>
+        <p>이 대목은 결이가 인구 이동의 두 얼굴을 깊이 이해하는 위기의 심화 단계입니다. 이동이 개인에게도, 지역에도 밝은 면과 어두운 면을 함께 가져온다는 것을 깨달은 것입니다. 인구 이동은 단순히 좋고 나쁨으로 가를 수 없는 복잡한 흐름이었습니다.</p>
+        <p>결이는 새 도시의 낯선 풍경 속에서, 자신이 배운 원리가 실제로 펼쳐지는 것을 보았습니다. 지리는 결이의 삶 한복판에서 살아 움직이고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리12/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>골목과의 작별</h2>
+        <p>새 도시에 온 지 얼마 되지 않아, 결이는 심한 외로움에 빠졌습니다. 친구도 없고 익숙한 것도 없는 낯선 곳에서, 결이는 예전 골목이 사무치게 그리웠습니다. 결이는 이사를 온 것을 후회하기도 했습니다.</p>
+        <p>밤마다 결이는 떠나온 동네를 떠올리며 잠을 설쳤습니다. 새로운 기회를 찾아왔다지만, 정든 곳을 잃은 빈자리는 쉽게 채워지지 않았습니다. 결이는 이동이 이렇게 아픈 것인 줄 미처 몰랐습니다.</p>
+        <p>이 대목은 결이가 이동의 외로움 속에서 가장 힘겨워하는 절정의 바닥입니다. 그러나 바로 이 지점에서 결이는 할아버지의 말을 다시 떠올리게 됩니다. 사람은 밀려서도 끌려서도 움직이지만, 뿌리내리는 힘은 제 안에 있다는 말이었습니다.</p>
+        <p>결이는 자신이 새로운 곳에 뿌리를 내리려면, 스스로 마음을 열고 다가가야 한다는 것을 어렴풋이 느꼈습니다. 낯선 곳을 원망만 하기보다, 그곳을 새 삶터로 가꾸어 가는 것이 자신의 몫임을 깨닫기 시작했습니다. 바닥에서 결이는 조금씩 일어설 힘을 얻었습니다.</p>
+        <p>결이는 다음 날 용기를 내어 새 학교의 친구에게 먼저 말을 걸어 보기로 마음먹었습니다. 뿌리내리는 힘을 스스로 찾아 나서기로 한 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리12/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>열아홉 살의 기차</h2>
+        <p>그 무렵 할아버지는 결이에게 자신의 열아홉 살 시절 이야기를 들려주었습니다. 시골을 떠나 도시로 향하던 기차 안에서, 할아버지도 결이처럼 두렵고 외로웠다는 것이었습니다. 그러나 그 낯선 도시에 뿌리를 내리며 새 삶을 일구었다고 했습니다.</p>
+        <p>할아버지는 사람은 배출 요인에 밀리고 흡인 요인에 끌려 움직이지만, 결국 그곳에 뿌리내리는 힘은 자기 안에 있다고 말했습니다. 어디로 가든 그곳을 삶터로 가꾸는 것은 스스로의 마음에 달렸다는 것이었습니다. 결이는 그 말에 큰 울림을 받았습니다.</p>
+        <p>그 순간 결이는 중요한 깨달음을 얻었습니다. 이동은 밀고 당기는 힘으로 시작되지만, 그 뒤 새로운 곳에서 삶을 꽃피우는 것은 결국 자신의 몫이라는 것을 말입니다. 이동의 슬픔에 머무르지 않고, 새 땅에 뿌리를 내리기로 결이는 마음먹었습니다.</p>
+        <p>이 대목은 이야기의 정신적 절정, 곧 결이의 각성입니다. 인구 이동의 원리를 넘어, 이동 속에서 사람이 어떻게 살아가야 하는지를 깨달은 것입니다. 밀리고 끌리는 힘 너머에, 스스로 뿌리내리는 힘이 있음을 결이는 배웠습니다.</p>
+        <p>결이는 할아버지의 열아홉 살 기차를 떠올리며, 자신의 새 출발도 그처럼 씩씩한 것이 되기를 바랐습니다. 낯선 도시가 조금씩 자신의 자리로 느껴지기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리12/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>바닷가의 새 학교</h2>
+        <p>용기를 낸 결이는 새 학교에서 조금씩 친구를 사귀기 시작했습니다. 바닷가에 자리한 새 학교는 처음엔 낯설었지만, 시간이 지날수록 정이 들어 갔습니다. 결이는 새로운 곳에도 좋은 것이 많다는 것을 알아 갔습니다.</p>
+        <p>결이는 자신이 겪은 이동을 되돌아보며, 그것이 아픔인 동시에 성장의 기회였음을 깨달았습니다. 정든 곳을 떠나는 슬픔이 있었지만, 새로운 세상과 친구를 얻는 기쁨도 있었습니다. 이동의 두 얼굴을 결이는 온몸으로 이해하게 되었습니다.</p>
+        <p>이 대목은 결이가 배운 것을 온전히 자기 것으로 만드는 결말의 돌파입니다. 인구 이동의 원리를 아는 것을 넘어, 그 이동을 자신의 삶으로 살아 낸 것입니다. 낯선 땅에 뿌리를 내린 결이는 한 뼘 더 자라 있었습니다.</p>
+        <p>결이는 예전 동네의 친구들과도 편지로 소식을 주고받으며 인연을 이어 갔습니다. 떠나온 곳과 새로 온 곳, 두 곳 모두가 결이에게 소중해졌습니다. 이동은 하나를 잃는 것이 아니라, 두 개의 삶터를 얻는 일이기도 했습니다.</p>
+        <p>결이는 바닷가 학교의 운동장에서 새 친구들과 뛰어놀며 환하게 웃었습니다. 밀고 당기는 힘에 실려 온 그 자리에, 결이는 마침내 튼튼히 뿌리를 내리고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리12/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>여름, 두 개의 고향</h2>
+        <p>그해 여름, 결이는 예전 동네를 다시 찾았습니다. 그리운 골목과 친구들을 만나면서도, 이제는 돌아갈 새 삶터가 있다는 사실이 든든하게 느껴졌습니다. 결이에게는 어느새 두 개의 고향이 생긴 것입니다.</p>
+        <p>이 이야기가 우리에게 남기는 것은 분명합니다. 사람들은 살던 곳에서 밀어내는 배출 요인과 새로운 곳으로 끌어당기는 흡인 요인에 따라 이동한다는 사실입니다. 그리고 촌락에서 도시로 향하는 이촌향도가 우리 사회의 큰 흐름을 이루어 왔다는 깨달음입니다.</p>
+        <p>무엇보다 이 이야기는, 이동이 밀고 당기는 힘으로 시작되지만 새 땅에 뿌리내리는 힘은 제 안에 있음을 일깨웁니다. 어디로 옮겨 가든 그곳을 삶터로 가꾸는 것은 스스로의 마음에 달렸습니다. 이동은 끝이 아니라 새로운 시작입니다.</p>
+        <p>결이는 앞으로도 사람들이 움직이는 까닭과 그 흐름을 눈여겨보기로 했습니다. 두 개의 고향을 지닌 결이에게, 인구 이동은 더 이상 원망의 대상이 아니라 삶의 자연스러운 한 모습이 되었습니다. 밀고 당기는 힘 속에서도 결이는 자신의 자리를 스스로 만들어 갈 것입니다.</p>
+        <p><span class="highlight">사람은 밀려서도 끌려서도 움직이지만, 새 땅에 뿌리내리는 힘은 제 안에 있습니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'geo12_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

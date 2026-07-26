@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌿 번호 대신 이름을 부른 사람, 제인 구달</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계인물10/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00897b 0%, #004d40 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 137, 123, 0.15);
+      color: #004d40;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00897b;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #004d40;
+      font-weight: 600;
+    }
+
+    .story-card .key-sentence {
+      display: block;
+      background: rgba(0, 137, 123, 0.1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-left: 4px solid #00897b;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #004d40;
+      font-size: 14px;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #4dd0e1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(0, 137, 123, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #80cbc4;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 137, 123, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 77, 64, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 137, 123, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌿 번호 대신 이름을 부른 사람, 제인 구달</h1>
+        <p class="subtitle">
+          — 가까이 다가가 오래 바라본 사람만이 볼 수 있는 것 —<br>
+          교과기반 창작도서 · 세계인물 10 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🌿 등장인물 소개</h3>
+          <p><strong>★ 제인 구달 (주인공):</strong> 1934년 영국 런던에서 태어났어요. 닭장에 네 시간을 숨어 앉아 있을 만큼 <span class="vocab-tip" data-meaning="자세히 살펴보는 일">관찰</span>을 좋아한 아이였지요. 아프리카 밀림에 들어가 세상의 생각을 바꾸었어요.</p>
+          <p><strong>★ 어머니 밴:</strong> 딸이 사라졌다고 온 집이 뒤집혔을 때, 돌아온 아이를 혼내지 않고 무엇을 보았는지 물어보았어요. 훗날 아프리카까지 따라가지요.</p>
+          <p><strong>★ 루이스 리키 (고고학자):</strong> 제인에게 침팬지 연구를 맡긴 학자예요. 학위가 없다는 점을 오히려 장점으로 보았지요.</p>
+          <p><strong>★ 데이비드 그레이비어드 (침팬지):</strong> 제인을 처음으로 받아들인 침팬지예요. 흰 수염 때문에 그렇게 불렸지요. 인류의 생각을 바꾼 장면의 주인공이에요.</p>
+          <p><strong>★ 학계의 목소리:</strong> "동물에게 이름을 붙이면 과학이 아니다"라고 말한 사람들이에요. 제인이 넘어야 했던 보이지 않는 벽이었지요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 내면의 갈등:</strong> 밀림에 가고 싶은 꿈 vs. 대학 갈 돈조차 없는 형편</p>
+          <p><strong>② 시대의 갈등:</strong> 여자가 홀로 아프리카에 간다는 것 vs. 그래도 가겠다는 고집</p>
+          <p><strong>③ 학계의 갈등:</strong> 번호를 붙여야 과학이라는 규칙 vs. 이름을 붙여야 보이는 것</p>
+          <p><strong>④ 시간의 갈등:</strong> 성과를 재촉하는 연구비 vs. 몇 해가 걸려야 열리는 신뢰</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물10/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>닭장에서 사라진 아이</h2>
+        <p>1934년 영국 런던에서 태어난 제인 구달은<br>
+어릴 적부터 동물이라면<br>
+무엇이든 좋아하는 아이였어요.<br>
+지렁이를 침대로 데려와<br>
+어머니를 놀라게 한 적도 있었지요.</p>
+        <p>다섯 살 무렵의 어느 날,<br>
+제인이 온데간데없이 사라졌어요.<br>
+온 집안이 발칵 뒤집혔고<br>
+경찰에 신고까지 했지요.<br>
+제인이 흙투성이가 되어 돌아온 것은<br>
+네 시간이 훌쩍 지난 뒤였어요.<br>
+아이는 닭장 한구석에<br>
+웅크리고 앉아 있었던 거예요.<br><br><span class="dialogue">"제인, 거기서 뭘 보았니?"</span><br><br><span class="dialogue">"엄마, 알이 어디서 나오는지 아무도 안 알려 줘서 제가 직접 봤어요. 닭이 몸을 웅크리더니 정말로 알이 나왔어요!"</span></p>
+        <p>어머니는 혼내지 않고<br>
+이야기를 끝까지 들었어요.<br>
+그날 밤 어머니가 남긴 말이<br>
+제인의 평생을 따라다녔지요.<br><br><span class="dialogue">"궁금하면 직접 보렴. 그게 가장 정직한 방법이란다."</span></p>
+        <p><span class="highlight">답을 듣는 대신 직접 오래 바라보는 것.</span><br>
+훗날 아프리카 밀림에서 하게 될 일을,<br>
+다섯 살의 아이는 닭장 안에서<br>
+이미 하고 있었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물10/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>인형 침팬지와 타잔</h2>
+        <p>제인이 아주 어릴 때<br>
+아버지가 인형 하나를 선물했어요.<br>
+털이 부숭부숭한 침팬지 인형이었지요.<br>
+어른들은 무섭게 생겼다며 걱정했지만,<br>
+제인은 주빌리라는 이름을 붙이고<br>
+어디를 가든 데리고 다녔어요.</p>
+        <p>열 살 무렵 제인은 『타잔』을 읽었어요.<br>
+아프리카 밀림에서 동물들과<br>
+함께 사는 이야기였지요.<br>
+책을 덮은 아이는 그날로 마음을 정했어요.<br>
+언젠가 아프리카에 가서 사람이 기르지 않은<br>
+<span class="vocab-tip" data-meaning="사람이 기르지 않고 자연에서 저절로 살아가는 것">야생</span> 동물들과 함께 살며<br>
+그들에 대한 글을 쓰겠다는 것이었지요.</p>
+        <p>어린아이의 꿈치고는 너무 멀었어요.<br>
+제인의 집은 넉넉하지 않았고,<br>
+그 시절에는 여자가 혼자 그런 곳에<br>
+간다는 것을 아무도 상상하지 않았지요.<br><br><span class="dialogue">"제인, 꿈은 좋지만 현실을 봐야지. 여자아이가 어떻게 밀림에 가니?"</span><br><br>그러나 어머니만은 다르게 말했어요.<br><br><span class="dialogue">"정말 하고 싶은 일이라면 열심히 하고, 기회를 찾고, 절대 포기하지 마라."</span></p>
+        <p>그 말은 위로가 아니라<br>
+<span class="highlight">해야 할 일의 목록</span>이었어요.<br>
+제인은 그 세 가지를 그대로 지켰지요.<br>
+다만 꿈을 이루기까지<br>
+십삼 년이 더 걸렸어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물10/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>비서 학교와 식당 접시</h2>
+        <p>학교를 마칠 무렵 제인은<br>
+냉정한 현실과 마주했어요.<br>
+동물을 공부하려면 대학에 가야 하는데,<br>
+학비를 낼 형편이 되지 않았지요.</p>
+        <p>제인은 주저앉는 대신<br>
+비서 학교를 골랐어요.<br>
+일자리를 구해 돈을 모아서,<br>
+아프리카로 가는 배를 타는 값,<br>
+곧 <span class="vocab-tip" data-meaning="배를 타는 데 내는 돈">뱃삯</span>을 스스로 벌기로 한 거예요.<br>
+낮에는 사무실에서 일하고,<br>
+저녁에는 식당에서 접시를 날랐지요.<br>
+번 돈은 거의 쓰지 않고 모았어요.<br><br><span class="dialogue">"그 돈 모아서 뭐 하려고 그래?"</span><br><br><span class="dialogue">"아프리카에 갈 거예요."</span><br><br>동료는 웃었어요.<br>
+농담인 줄 알았기 때문이지요.</p>
+        <p>그렇게 몇 해가 지난 어느 날,<br>
+친구에게서 편지가 왔어요.<br>
+케냐에 있는 농장으로<br>
+놀러 오라는 초대였지요.<br>
+그동안 모은 돈이 마침<br>
+뱃삯에 닿아 있었어요.</p>
+        <p>스물세 살이 되던 해, 제인은<br>
+아프리카로 가는 배에 올랐어요.<br>
+<span class="highlight">열 살에 정한 목적지에, 십삼 년 동안 접시를 나르며 도착한 거예요.</span><br>
+가장 어려운 것은<br>
+포기하지 않는 일이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물10/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>학위가 없어서 좋다</h2>
+        <p>케냐에서 지내던 제인은<br>
+루이스 리키라는 학자를 만났어요.<br>
+인류의 <span class="vocab-tip" data-meaning="어떤 것이 처음 생겨난 뿌리">기원</span>을 파헤치는<br>
+<span class="vocab-tip" data-meaning="땅에 묻힌 옛 흔적을 파내어 옛사람의 삶을 연구하는 학자">고고학자</span>로,<br>
+이름이 널리 알려진 사람이었지요.<br>
+대학 <span class="vocab-tip" data-meaning="대학에서 공부를 마쳤음을 인정해 주는 자격">학위</span>가 있느냐고 묻자<br>
+제인은 없다고 솔직히 답했어요.</p>
+        <p>그런데 리키는 오히려 눈을 반짝였어요.<br>
+그는 야생 침팬지를 오래 관찰할 사람을<br>
+찾고 있었는데, 지식이 많은 사람보다<br>
+편견 없이 있는 그대로 볼 사람을<br>
+원했기 때문이지요.<br><br><span class="dialogue">"학위가 없다는 건 배운 편견도 없다는 뜻이지요. 나는 그런 눈이 필요합니다."</span></p>
+        <p>리키는 탄자니아의 곰베라는 곳을 제안했어요.<br>
+침팬지 <span class="vocab-tip" data-meaning="함께 모여 사는 짐승의 떼">무리</span>가 사는,<br>
+사람의 발길이 거의 닿지 않은<br>
+<span class="vocab-tip" data-meaning="나무가 빽빽하게 우거진 더운 지방의 숲">밀림</span>이었지요.<br>
+허가에는 조건이 하나 붙었어요.<br>
+보호자 한 사람이 함께 가야 한다는 것이었지요.<br>
+그때 손을 든 사람이 어머니 밴이었어요.</p>
+        <p>텐트를 치던 날 저녁, 어머니가 말했어요.<br><br><span class="dialogue">"닭장에서 네 시간을 앉아 있던 아이니까, 여기서도 앉아 있을 수 있을 거야."</span><br><br><span class="highlight">그 말은 곧 사실이 되었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물10/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>도망가는 그림자들</h2>
+        <p>1960년, 스물여섯 살이 된 제인은<br>
+마침내 곰베 숲에 발을 들였어요.<br>
+그리고 곧 알게 되었지요.<br>
+침팬지 연구에서 가장 어려운 것은<br>
+침팬지를 만나는 일이라는 사실을요.</p>
+        <p>제인은 새벽에 산등성이에 올라<br>
+하루 종일 기다렸어요.<br>
+조심조심 다가가 보면<br>
+이미 아무것도 남아 있지 않았고,<br>
+눈이 마주치면 침팬지들은<br>
+순식간에 숲 속으로 사라졌지요.<br>
+공책에는 "멀리서 그림자만 보임"이라는<br>
+똑같은 기록만 쌓여 갔어요.</p>
+        <p>어려움은 숲 안에만 있지 않았어요.<br>
+연구비를 대는 쪽에서<br>
+재촉하는 편지가 날아왔지요.<br>
+일해서 얻은 결과, 곧 <span class="vocab-tip" data-meaning="일을 해서 얻은 좋은 결과">성과</span>가 없으면<br>
+지원을 끊겠다는 것이었어요.<br><br><span class="dialogue">"성과가 없으면 계속할 수 없습니다."</span><br><br>여기서 실패하면 다시는<br>
+이런 기회가 오지 않을 것이 분명했지요.</p>
+        <p>그래도 그녀는 연구 방법을 바꾸지 않았어요.<br>
+대신 바꾼 것은 자기 자신이었지요.<br>
+날마다 같은 시간에, 같은 자리에,<br>
+같은 색 옷을 입고 나타났어요.<br>
+<span class="highlight">침팬지들이 자신을 숲의 한 부분으로 여길 때까지 기다리기로 한 거예요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물10/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>기다림이라는 일</h2>
+        <p>기다리는 일은 생각보다<br>
+훨씬 고된 일이었어요.<br>
+제인은 모기가 옮기는 열병인<br>
+<span class="vocab-tip" data-meaning="모기가 옮기는, 높은 열이 나는 병">말라리아</span>에 걸려<br>
+며칠씩 심한 열에 시달렸지요.<br>
+그래도 열이 조금 내리면<br>
+다시 산으로 올라갔어요.</p>
+        <p>그렇게 몇 달을 보내는 사이,<br>
+조금씩 무언가가 달라졌어요.<br>
+100미터 밖에서도 도망치던 침팬지들이,<br>
+어느 날은 50미터 앞에서 그녀를 흘끗 보고<br>
+아무 일 없다는 듯 열매를 따 먹었지요.<br>
+제인은 숨소리조차 크게 내지 못한 채<br>
+그 자리에 앉아 있었어요.<br>
+한 걸음만 잘못 내디뎌도 지난 몇 달의<br>
+기다림이 사라진다는 것을 알았기 때문이지요.</p>
+        <p>이 무렵부터 제인은 침팬지들을<br>
+하나하나 구별할 수 있게 되었어요.<br>
+얼굴 생김새도, 걸음걸이도,<br>
+<span class="vocab-tip" data-meaning="저마다 다르게 지닌 성질">개성</span>도 저마다 달랐지요.<br>
+그래서 공책에 번호 대신<br>
+이름을 적기 시작했어요.<br>
+턱에 흰 수염이 난 점잖은 수컷에게는<br>
+데이비드라는 이름을 붙여 주었지요.<br>
+<span class="highlight">그때는 그것이 훗날 자기를 가장 크게 공격받게 할 일이 될 줄 몰랐어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물10/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>나뭇가지를 다듬는 손</h2>
+        <p>곰베에 들어온 지 여섯 달이 되어 가던<br>
+어느 아침이었어요.<br>
+제인은 흙으로 쌓아 올린 흰개미 집 근처에서<br>
+데이비드를 발견했지요.</p>
+        <p>데이비드는 풀줄기 하나를 꺾어 들고,<br>
+거기 붙은 잎을 손으로 쭉 훑어 냈어요.<br>
+매끈해진 줄기를 흰개미 집 구멍 속으로<br>
+조심스럽게 밀어 넣었지요.<br>
+잠시 뒤 천천히 빼내자<br>
+줄기에는 흰개미들이 잔뜩 매달려 나왔어요.<br>
+데이비드는 그것을 훑어 먹고,<br>
+몇 번이고 되풀이했지요.</p>
+        <p>제인은 얼어붙은 듯 굳었어요.<br>
+데이비드는 그냥 나뭇가지를<br>
+집어 쓴 것이 아니라, 쓰기 좋은 모양으로<br>
+<span class="highlight">고쳐 만든 것</span>이었지요.<br>
+그때까지 사람들은 <span class="vocab-tip" data-meaning="어떤 일을 하려고 만들어 쓰는 물건">도구</span>를<br>
+스스로 만들어 쓰는 것이<br>
+오직 인간만의 특징이라고 굳게 믿어 왔어요.<br>
+학교에서도 그렇게 가르쳤지요.</p>
+        <p>제인은 떨리는 손으로 공책을 펴서<br>
+방금 본 장면을 그대로 적었어요.<br>
+소식을 들은 리키는 이렇게 답을 보냈지요.<br><br><span class="dialogue">"이제 우리는 도구를 다시 정의하거나, 인간을 다시 정의하거나, 침팬지를 인간으로 받아들여야 합니다."</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물10/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>이름을 붙였다는 이유로</h2>
+        <p>제인의 발견은 곧 세상에 널리 알려졌어요.<br>
+신문과 잡지에 크게 실렸고,<br>
+학문을 연구하는 사람들의 모임인<br>
+<span class="vocab-tip" data-meaning="학문을 연구하는 사람들의 사회">학계</span> 전체가 술렁였지요.<br>
+그러나 모두가 그녀를 인정한 것은 아니었어요.<br>
+공격의 이유는 발견 자체가 아니라<br>
+그녀가 쓴 공책이었지요.</p>
+        <p>학자들은 침팬지 한 마리 한 마리에게<br>
+이름을 붙인 것을 문제 삼았어요.<br>
+그 시절 동물 연구에서는<br>
+번호를 붙이는 것이 당연한 규칙이었지요.<br><br><span class="dialogue">"동물에게 이름을 붙이고 성격을 말하다니, 그건 과학이 아니라 동화입니다."</span></p>
+        <p>그러나 이름을 붙이고<br>
+한 마리씩 따로 보았기 때문에,<br>
+제인은 저마다 다른 성격과 관계를<br>
+알아볼 수 있었어요.<br>
+번호만 적었다면 모두가<br>
+똑같은 침팬지로 보였을 거예요.<br>
+데이비드라는 이름으로 알아보았기 때문에,<br>
+그가 어제도 그제도 그랬다는 것을<br>
+이어서 볼 수 있었지요.</p>
+        <p><span class="highlight">가까이 다가가 오래도록 바라본 사람만이 볼 수 있는 것이 분명히 있었어요.</span><br>
+제인은 물러서지 않고 자신이 본 것을<br>
+계속 기록해 나갔지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물10/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>학위 없는 학생이 박사가 되다</h2>
+        <p>리키는 제인을 영국 케임브리지 대학으로<br>
+보냈어요.<br>
+학위도 없는 사람이 곧바로<br>
+박사 과정에 들어가는 것은<br>
+매우 드문 일이었지요.</p>
+        <p>대학에서도 그녀는 똑같은 말을 들었어요.<br>
+교수들은 연구를 정리해 쓴 글인<br>
+<span class="vocab-tip" data-meaning="연구한 내용을 정리해 쓴 글">논문</span>에서 이름을 모두 지우고<br>
+번호로 바꾸라고 했지요.<br>
+제인은 다른 지적은 대부분 받아들였지만,<br>
+침팬지들의 이름만은<br>
+끝까지 지우지 않았어요.</p>
+        <p>시간이 흐르면서 상황은<br>
+차츰 그녀의 편이 되어 주었어요.<br>
+관찰 기록이 쌓일수록 침팬지들도<br>
+기쁨과 슬픔과 두려움을 느낀다는 증거가<br>
+차곡차곡 늘어났기 때문이지요.<br>
+제인은 보기 좋은 것만 골라 적지 않았어요.</p>
+        <p>여러 해 끝에 제인은<br>
+마침내 박사 학위를 받았어요.<br>
+그녀가 고집하던 방식은 이제<br>
+모두가 따르는 <span class="vocab-tip" data-meaning="모두가 함께 따르는 기준">표준</span>이 되었지요.<br>
+<span class="highlight">규칙을 몰랐던 사람이 규칙을 바꾼 셈이었어요.</span><br>
+리키가 학위 없는 사람을 고른 이유를<br>
+그제야 모두가 이해하게 되었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물10/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>숲이 줄어들던 날</h2>
+        <p>여러 해가 지난 어느 날, 제인은<br>
+작은 비행기를 타고 가다<br>
+곰베를 내려다보았어요.<br>
+예전에는 <span class="vocab-tip" data-meaning="멀리 하늘과 땅이 맞닿아 보이는 선">지평선</span>까지 이어지던 숲이,<br>
+작은 초록 섬처럼 남아 있었지요.<br>
+사람들이 먹고살기 위해 밭을 일구느라<br>
+나무를 베어 낸 결과였어요.<br>
+침팬지를 지키려면 숲을 지켜야 하고,<br>
+숲을 지키려면 그곳 사람들의 <span class="vocab-tip" data-meaning="사람이 살아가는 형편과 모습">삶</span>도<br>
+함께 나아져야 한다는 것을 그때 알았지요.</p>
+        <p>그날 이후 제인은 숲에서 나왔어요.<br>
+평생 하고 싶었던 관찰을 뒤로 미루고,<br>
+세계를 돌며 이야기하는 사람이 된 거예요.<br>
+그녀는 청소년들과 함께<br>
+'뿌리와 새싹'이라는 모임을 만들었지요.<br>
+작아 보여도 세상을 바꿀 수 있다는 뜻이었어요.</p>
+        <p>아흔이 넘은 나이에도 제인 구달은<br>
+한 해에 삼백 일 넘게 여행하며<br>
+세계 곳곳에서 사람들을 만났어요.<br>
+다섯 살에 닭장에 앉아 있던 아이가,<br>
+평생을 그렇게 살았지요.</p>
+        <p>그녀가 한 일을 한 문장으로 줄이면 이래요.<br>
+<span class="highlight">멀리서 번호를 매기는 대신, 가까이 다가가 이름을 부르며 오래 바라본 것.</span><br>
+그 단순한 차이가 인간과 동물 사이의 선을<br>
+다시 긋게 만들었어요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(70, 140, 90, 0.15); border-radius: 16px;">
+          <strong style="color: #468C5A; font-size: 20px;">🌿 「번호를 붙였다면, 끝내 보지 못했을 것이다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+      function goToQuiz() { window.location.href = '/creative-book/worldperson10_season1_quiz.html?season=season1'; }
+  </script>
+</body>
+</html>

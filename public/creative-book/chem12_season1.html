@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍬 설탕은 어디로 사라졌을까 — 솔이의 부엌 실험실</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작화학12/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(106, 17, 203, 0.15);
+      color: #6a11cb;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6a11cb;
+      font-weight: 600;
+    }
+
+    .vocab-tip {
+      position: relative;
+      color: #6a11cb;
+      border-bottom: 1px dotted #6a11cb;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+    .story-card .dialogue {
+      color: #2575fc;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #a78bfa;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(106, 17, 203, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(37, 117, 252, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 117, 252, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🍬 설탕은 어디로 사라졌을까 — 솔이의 부엌 실험실</h1>
+        <p class="subtitle">
+          — 모든 것은 제 온도에서, 제 만큼만 녹는다 —<br>
+          교과기반 창작도서 · 화학 12
+        </p>
+        <div class="characters">
+          <h3>🍬 등장인물 소개</h3>
+          <p><strong>★ 솔이 (주인공):</strong> 궁금한 것을 그냥 넘기지 못하는 아이. 녹지 않은 설탕 한 숟갈에서 시작해 용해의 세계로 들어간다.</p>
+          <p><strong>★ 할머니 (조력자):</strong> 매실청과 장아찌의 달인. 부엌에서 평생 용해의 과학을 몸으로 익힌 사람.</p>
+          <p><strong>★ 송이 (동생):</strong> 솔이의 실험을 맛으로 평가하는 꼬마 심사위원. 솔직한 한마디로 이야기를 굴린다.</p>
+          <p><strong>★ 설탕 (용질):</strong> 물속으로 사라졌다가 반짝이는 결정으로 되살아나는, 이 이야기의 숨은 주인공.</p>
+          <p><strong>★ 물 (용매):</strong> 무엇이든 제 품에 안는 너른 존재. 그러나 안을 수 있는 양에는 한계가 있다.</p>
+          <p><strong>★ 김빠진 사이다:</strong> 기체도 물에 녹아 있다는 것을 알려 주는 뜻밖의 선생님.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 궁금증의 갈등:</strong> 찬물에서 버티는 설탕 vs. 뜨거운 물에서 술술 녹는 설탕</p>
+          <p><strong>② 한계의 갈등:</strong> 얼마든지 녹을 것 같은 마음 vs. 딱 제 만큼만 녹는 용해도</p>
+          <p><strong>③ 온도의 갈등:</strong> 뜨거울수록 잘 녹는 고체 vs. 차가울수록 잘 녹아 있는 기체</p>
+          <p><strong>④ 기다림의 갈등:</strong> 당장 결과를 보고 싶은 솔이 vs. 천천히 자라나는 설탕 결정</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학12/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>가라앉은 설탕</h2>
+        <p>한여름 오후였습니다. 매미 소리가 쨍쨍한 마당에서 놀다 들어온 동생 송이가 목이 마르다고 칭얼거렸습니다. 솔이는 언니답게 팔을 걷어붙였습니다. 시원한 미숫가루를 타 주기로 한 것입니다. 컵에 찬물을 받고 미숫가루를 넣은 다음, 설탕도 두 숟갈 듬뿍 넣고 힘차게 저었습니다.</p>
+        <p>그런데 아무리 저어도 숟가락 끝에 깔깔한 것이 자꾸 걸렸습니다. 설탕이 녹지 않고 바닥에 가라앉아 있었던 것입니다. 한 모금 마신 송이가 얼굴을 찡그리며 말했습니다.<br><br><span class="dialogue">"언니, 이거 하나도 안 달아. 밍밍해!"</span></p>
+        <p>솔이는 억울했습니다. 분명히 설탕을 두 숟갈이나 넣었는데, 물은 조금도 달지 않았습니다. 단맛은 전부 컵 바닥에 모래처럼 깔려 있었습니다. 숟가락으로 아무리 휘휘 저어도 설탕 알갱이들은 물속을 뱅글뱅글 돌기만 할 뿐, 좀처럼 사라지지 않았습니다.</p>
+        <p>이상한 일이었습니다. 지난겨울 엄마가 타 주던 뜨거운 코코아에서는 가루도 설탕도 눈 깜짝할 사이에 사라졌습니다. 그런데 왜 이 찬물 속의 설탕은 이렇게 고집스럽게 버티고 있는 걸까요. 솔이는 컵을 들여다보며 골똘히 생각에 잠겼습니다.</p>
+        <p>마침 내일은 방학을 맞아 시골 할머니 댁에 가는 날이었습니다. 할머니는 매실청과 장아찌를 기가 막히게 담그는, 온 동네가 인정하는 부엌의 달인입니다. 설탕과 소금을 다루는 일이라면 할머니만큼 잘 아는 사람도 없을 것입니다.</p>
+        <p><span class="highlight">설탕은 어디로 사라지고, 또 왜 어떤 때는 사라지지 않는 걸까.</span> 솔이는 이 궁금증을 가방에 챙겨 넣었습니다. 이번 여름 방학, 할머니의 부엌에서 그 답을 꼭 찾아보기로 마음먹은 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학12/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>뜨거운 물의 마법</h2>
+        <p>할머니 댁 마루에는 크고 작은 항아리들이 반질반질 윤이 나게 줄지어 있었습니다. 짐을 풀기가 무섭게 솔이는 할머니에게 미숫가루 사건을 낱낱이 일러바쳤습니다. 설탕을 두 숟갈이나 넣었는데 물이 하나도 달지 않았다고, 세상에 그런 억울한 일이 어디 있느냐고 말입니다.</p>
+        <p>이야기를 다 들은 할머니는 빙그레 웃더니 컵 두 개를 꺼냈습니다. 한쪽에는 찬물을, 다른 한쪽에는 따뜻한 물을 담고, 양쪽에 설탕을 똑같이 한 숟갈씩 넣었습니다.<br><br><span class="dialogue">"자, 솔이 네가 직접 저어 보렴. 어느 쪽이 먼저 사라지나."</span></p>
+        <p>결과는 놀라웠습니다. 찬물 속 설탕은 여전히 바닥에 소복이 쌓여 버티는데, 따뜻한 물 속 설탕은 몇 번 젓기도 전에 스르르 자취를 감춘 것입니다. 솔이의 눈이 동그래졌습니다. 미숫가루의 수수께끼가 눈앞에서 그대로 다시 벌어지고 있었습니다.</p>
+        <p>할머니가 따뜻한 물을 한 모금 떠서 솔이에게 맛보게 했습니다.<br><br><span class="dialogue">"달지? 설탕이 없어진 게 아니란다. 눈에 안 보일 만큼 잘게 흩어져서 물속에 골고루 퍼진 거야. 이렇게 한 물질이 다른 물질에 골고루 섞여 퍼지는 것을 <span class="vocab-tip" data-meaning="한 물질이 다른 물질에 골고루 섞여 균일하게 퍼지는 현상">용해</span>라고 한단다."</span></p>
+        <p>정말 그랬습니다. 물은 위쪽을 떠 마셔도 달고, 아래쪽을 떠 마셔도 똑같이 달았습니다. 설탕은 사라진 것이 아니라, 온 물에 고루고루 스며들어 숨어 있었던 것입니다. 무게를 재 보면 설탕의 무게까지 물에 고스란히 더해져 있다고 할머니는 덧붙였습니다.</p>
+        <p><span class="highlight">설탕은 없어진 것이 아니라, 물속에 골고루 숨어 있었습니다.</span> 그런데 왜 뜨거운 물에서는 술술 숨고, 찬물에서는 고집을 부리는 걸까요. 솔이의 여름 방학 숙제가 이렇게 정해졌습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학12/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>녹이는 것과 녹는 것</h2>
+        <p>다음 날 아침, 할머니는 마당에서 노랗게 잘 익은 매실을 소쿠리 가득 들고 왔습니다. 매실청을 담그는 날이었습니다. 솔이는 얼른 조수를 자청했습니다. 설탕을 다루는 일이라면 이제 하나도 놓치고 싶지 않았기 때문입니다.</p>
+        <p>매실을 씻으며 할머니가 말했습니다.<br><br><span class="dialogue">"부엌에서 녹이는 일에는 이름이 있단다. 설탕물에서 설탕처럼 녹는 물질은 <span class="vocab-tip" data-meaning="용매에 녹는 물질">용질</span>, 물처럼 녹이는 물질은 <span class="vocab-tip" data-meaning="다른 물질을 녹이는 물질">용매</span>, 그렇게 녹아서 하나로 골고루 섞인 것은 <span class="vocab-tip" data-meaning="용매에 용질이 녹아 있는 균일한 혼합물">용액</span>이라고 하지."</span></p>
+        <p>솔이는 손가락을 꼽으며 정리해 보았습니다. 설탕물이라면 설탕이 용질, 물이 용매, 달콤한 설탕물이 용액입니다. 소금물이라면 소금이 용질이고 물이 용매입니다. 이름을 알고 나니 부엌의 일들이 갑자기 과학 시간처럼 또렷하게 보였습니다.</p>
+        <p>할머니는 물이 아주 특별한 용매라고 했습니다. 설탕도 소금도, 매실의 새콤한 즙도, 산 같은 물질까지도 두루두루 녹여 내기 때문에 물을 '보편적 용매'라고 부른다는 것입니다. 물론 물만 용매가 되는 것은 아니어서, 매니큐어를 지우는 아세톤이나 소독약에 쓰이는 에탄올도 용매의 식구라고 했습니다.</p>
+        <p>솔이는 그날 하루 종일 용액 찾기 놀이를 했습니다. 짭짤한 바닷물도 용액, 새콤한 식초도 용액, 할머니의 까만 간장도 용액이었습니다. 그러다 냉장고 속 사이다에서 손이 멈추자 할머니가 귀띔했습니다.<br><br><span class="dialogue">"그 톡 쏘는 것도 물에 녹아 있는 거란다. 나중에 재미난 걸 알게 될 게다."</span></p>
+        <p><span class="highlight">부엌은 온통 용매와 용질과 용액의 세계였습니다.</span> 이름을 알게 된 솔이의 눈에는 항아리 하나하나가 모두 커다란 실험 도구로 보이기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학12/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>몇 숟갈까지 녹을까</h2>
+        <p>매실청 항아리를 채우고 난 오후, 솔이의 머릿속에 새로운 궁금증이 피어올랐습니다. 물 한 컵에는 설탕이 대체 몇 숟갈까지 녹을 수 있을까. 열 숟갈? 스무 숟갈? 끝없이 녹을까? 솔이는 공책을 펴 놓고 본격적인 실험을 시작했습니다.</p>
+        <p>컵에 물을 받고 설탕을 한 숟갈 넣고 저었습니다. 스르르 녹았습니다. 두 숟갈, 세 숟갈, 네 숟갈. 물은 군말 없이 설탕을 받아들였습니다. 다섯 숟갈, 여섯 숟갈째에도 설탕은 사라졌습니다. 솔이는 숟갈 수를 공책에 바를 정 자로 꼬박꼬박 적었습니다.</p>
+        <p>그런데 어느 순간부터 분위기가 달라졌습니다. 아무리 오래, 아무리 힘차게 저어도 설탕이 더는 사라지지 않고 바닥에 남기 시작한 것입니다. 물이 마치 배가 잔뜩 부르다는 듯 설탕을 밀어내고 있었습니다.</p>
+        <p>지켜보던 할머니가 고개를 끄덕이며 말했습니다.<br><br><span class="dialogue">"물이 안을 수 있는 양은 정해져 있단다. 그렇게 더 못 녹일 만큼 가득 찬 용액을 <span class="vocab-tip" data-meaning="용해도만큼 용질이 녹아 더 이상 녹지 않는 용액">포화 용액</span>이라고 해. 아직 더 녹일 수 있는 용액은 불포화 용액이라고 하지."</span></p>
+        <p>솔이는 실험을 한 가지 더 해 보았습니다. 이번에는 따뜻한 물로 똑같이 해 본 것입니다. 그러자 찬물이 밀어내던 설탕을 따뜻한 물은 몇 숟갈이나 더 받아 주었습니다. 같은 물인데도 온도가 높아지면 안을 수 있는 설탕의 양이 늘어나는 것이었습니다.</p>
+        <p><span class="highlight">얼마든지 녹을 줄 알았던 설탕에도 분명한 한계가 있었습니다.</span> 그리고 그 한계는 온도에 따라 달라졌습니다. 물의 한계를 제 손으로 찾아낸 솔이는 공책을 끌어안고 뿌듯해했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학12/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>김빠진 사이다</h2>
+        <p>유난히 무더운 날이었습니다. 솔이는 동생 송이를 위해 특별한 간식을 준비하기로 했습니다. 바로 사이다 화채였습니다. 커다란 유리 대접에 사이다를 콸콸 붓고, 수박과 참외를 동동 띄우니 보기만 해도 시원했습니다. 솔이는 대접을 마루 평상에 차려 두고 송이를 부르러 갔습니다.</p>
+        <p>그런데 마당에서 노는 송이를 데려오는 데 시간이 한참 걸렸습니다. 돌아와 보니 화채는 뜨뜻미지근해져 있었습니다. 한 국자 떠서 맛을 본 송이가 고개를 저었습니다.<br><br><span class="dialogue">"언니, 이거 하나도 톡 쏘지 않아. 그냥 단물 맛이야."</span></p>
+        <p>정말이었습니다. 그렇게 보글보글 올라오던 거품이 온데간데없고, 톡 쏘던 맛도 감쪽같이 사라져 버렸습니다. 사이다 속에서 무언가가 조용히 빠져나가 버린 것입니다. 솔이는 미숫가루 사건 때처럼 또 억울해졌습니다.</p>
+        <p>당황한 솔이는 화채를 되살려 보려고 애를 썼습니다. 얼음을 잔뜩 넣으니 이번에는 맛이 싱거워졌고, 설탕을 더 넣으니 차가워진 물이 설탕을 잘 받아 주지 않아 바닥에 가라앉기만 했습니다. 손을 대면 댈수록 화채는 점점 더 엉망이 되어 갔습니다.</p>
+        <p>솔이는 어깨가 축 처졌습니다. 설탕의 한계까지 알아냈다고 뿌듯해했는데, 부엌의 과학은 아직도 솔이가 모르는 규칙으로 가득한 모양이었습니다. 녹지 않아서 속상하더니, 이번에는 녹아 있던 것이 빠져나가서 속상했습니다.</p>
+        <p><span class="highlight">그 톡 쏘던 것도 물에 녹아 있던 것이라면, 왜 저 혼자 빠져나가 버린 걸까.</span> 할머니가 귀띔했던 사이다의 비밀. 솔이는 김빠진 화채 대접을 앞에 두고 새로운 물음표와 마주 앉았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학12/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>거꾸로 노는 기체</h2>
+        <p>저녁상을 물리고 나서, 할머니는 시무룩한 솔이를 곁에 앉혔습니다.<br><br><span class="dialogue">"사이다 속에서 톡 쏘던 것은 이산화탄소라는 기체란다. 기체도 설탕처럼 물에 녹을 수 있어. 사이다는 물에 단맛과 함께 이산화탄소를 꾹꾹 눌러 녹여 놓은 용액이지."</span></p>
+        <p>할머니는 말을 이었습니다.<br><br><span class="dialogue">"일정한 온도에서 물이 녹일 수 있는 용질의 최대량을 <span class="vocab-tip" data-meaning="일정한 온도에서 용매에 녹을 수 있는 용질의 최대량">용해도</span>라고 한단다. 용해도는 물질마다 다르고, 온도에 따라서도 달라지지. 네가 실험으로 찾아낸 그 한계가 바로 설탕의 용해도야."</span></p>
+        <p>그런데 여기에 놀라운 반전이 있었습니다. 설탕 같은 고체는 대부분 온도가 높아질수록 용해도가 커집니다. 따뜻한 물이 설탕을 더 많이 받아 준 까닭입니다. 하지만 기체는 정반대라는 것입니다. 온도가 높아질수록 용해도가 작아져서, 물이 미지근해지면 녹아 있던 기체가 슬금슬금 빠져나가 버립니다.</p>
+        <p>솔이는 무릎을 탁 쳤습니다. 화채가 미지근해지는 동안 이산화탄소가 빠져나가 김이 빠진 것이었습니다. 탄산음료를 차갑게 보관해야 하는 것도, 냉장고에서 갓 꺼낸 사이다가 유난히 톡 쏘는 것도 모두 같은 까닭이었습니다.</p>
+        <p>솔이는 공책에 커다랗게 화살표 두 개를 그렸습니다. 고체는 온도가 올라가면 용해도도 올라간다. 기체는 온도가 올라가면 용해도가 내려간다. 설탕과 이산화탄소는 물속에서 서로 거꾸로 노는 사이였던 것입니다.</p>
+        <p><span class="highlight">실패의 이유는 온도였습니다. 온도가 용해도를 쥐고 흔드는 열쇠였던 것입니다.</span> 김빠진 화채 덕분에 솔이는 용해의 세계에서 가장 중요한 규칙 하나를 손에 넣었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학12/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>사흘째, 아무 일도</h2>
+        <p>용해도의 규칙을 알게 된 솔이는 여름 방학 최대의 도전을 시작하기로 했습니다. 바로 얼음사탕 만들기였습니다. 할머니가 어릴 적 이야기를 들려준 것이 발단이었습니다. 진한 설탕물에 실을 드리워 두면, 며칠 뒤 실에 투명하게 반짝이는 설탕 <span class="vocab-tip" data-meaning="물질의 알갱이가 규칙적으로 늘어서 반짝이는 고체">결정</span>이 주렁주렁 맺힌다는 것이었습니다.</p>
+        <p>솔이는 배운 것을 총동원했습니다. 뜨거운 물일수록 설탕을 많이 안을 수 있으니, 팔팔 끓기 직전의 물에 설탕을 더 못 녹을 때까지 잔뜩 녹였습니다. 그 진하고 뜨거운 설탕물을 유리병에 조심조심 붓고, 나무 막대를 하나 세워 두었습니다. 이제 기다리면 되는 것이었습니다.</p>
+        <p>하루가 지났습니다. 막대에는 아무것도 맺히지 않았습니다. 이틀이 지났습니다. 여전히 병 속은 조용했습니다. 사흘째 아침에도 막대는 들어갈 때 모습 그대로 맨숭맨숭했습니다. 솔이는 하루에도 열두 번씩 병을 들여다보았지만, 병은 묵묵부답이었습니다.</p>
+        <p>곁에서 지켜보던 송이가 고개를 갸웃하며 말했습니다.<br><br><span class="dialogue">"언니, 이번 실험은 실패했나 봐. 사탕이 하나도 안 생겼잖아."</span><br><br>솔이는 아무 대꾸도 하지 못했습니다. 정말 실패인 것 같았기 때문입니다.</p>
+        <p>그렇게 잘 맞아떨어지던 용해의 규칙들이 처음으로 솔이를 배신한 기분이었습니다. 솔이는 시무룩한 얼굴로 유리병을 선반 구석으로 밀어 두었습니다. 반짝이던 부엌 실험실이 처음으로 미워지려고 하는, 여름 방학에서 가장 길고 심심한 사흘이었습니다.</p>
+        <p><span class="highlight">그러나 솔이가 등을 돌린 그 병 속에서는, 눈에 보이지 않는 일이 아주 천천히 일어나고 있었습니다.</span> 조용한 것과 멈춘 것은 다르다는 사실을, 솔이는 아직 모르고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학12/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>반짝이는 되돌아옴</h2>
+        <p>며칠 뒤 아침, 할머니가 부엌에서 솔이를 불렀습니다.<br><br><span class="dialogue">"솔이야, 네가 구석에 밀어 둔 병 좀 다시 보렴."</span><br><br>시큰둥하게 다가간 솔이는 병을 들여다보고 숨을 멈췄습니다. 나무 막대와 병 바닥 여기저기에, 작지만 또렷하게 반짝이는 알갱이들이 돋아나 있었던 것입니다.</p>
+        <p>할머니가 차근차근 설명해 주었습니다.<br><br><span class="dialogue">"뜨거운 물은 설탕을 잔뜩 안을 수 있지. 그런데 물이 식으면 용해도가 줄어들어서, 그 많은 설탕을 다 안고 있을 수가 없게 된단다. 그러면 물이 미처 안지 못하게 된 설탕이 알갱이로 다시 나오는 거야."</span></p>
+        <p><span class="dialogue">"이렇게 녹였던 것을 다시 결정으로 얻는 것을 <span class="vocab-tip" data-meaning="용액을 식히거나 졸여서 녹아 있던 물질을 다시 결정으로 얻는 방법">재결정</span>이라고 한단다. 과학자들은 이 방법으로 물질에 섞인 티끌을 걸러 내고 깨끗한 알갱이만 얻기도 하지."</span><br><br>솔이는 눈을 반짝이며 병 속의 결정을 다시 들여다보았습니다.</p>
+        <p>그러니까 실험은 실패한 것이 아니었습니다. 물이 천천히 식고, 물기가 조금씩 날아가는 동안, 넘치게 된 설탕이 아주 조용히, 아주 천천히 알갱이로 돌아오고 있었던 것입니다. 사흘 동안 아무 일도 없어 보였던 병 속에서는 사실 쉬지 않고 일이 벌어지고 있었습니다.</p>
+        <p>솔이는 유리병을 다시 볕이 잘 드는 선반 한가운데로 옮겨 놓았습니다. 그리고 공책에 새 쪽을 펴서 '결정 관찰 일기'라고 큼직하게 적었습니다. 서두른다고 되는 일이 아니라면, 이제부터는 기다림도 실험의 한 부분이었습니다.</p>
+        <p><span class="highlight">사라졌던 설탕이 반짝이는 결정이 되어 돌아오고 있었습니다.</span> 용해는 없어지는 것이 아니라 잠시 숨는 것임을, 솔이는 제 눈으로 똑똑히 확인한 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학12/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>백 그램의 약속</h2>
+        <p>일주일 뒤, 나무 막대에는 투명한 얼음사탕이 주렁주렁 열렸습니다. 햇빛에 비추면 유리구슬처럼 반짝였습니다. 한 알 얻어먹은 송이는 세상에서 제일 맛있는 사탕이라며 폴짝폴짝 뛰었습니다. 사흘의 침묵을 견뎌 낸 솔이의 첫 번째 작품이었습니다.</p>
+        <p>이제 할머니는 솔이를 제법 어엿한 조수로 대접해 주었습니다. 오이 장아찌 절임물을 만드는 날, 할머니는 소금물 만들기를 통째로 솔이에게 맡기며 말했습니다.<br><br><span class="dialogue">"용액에 용질이 얼마나 녹아 있는지를 나타내는 것을 <span class="vocab-tip" data-meaning="용액에 용질이 얼마나 녹아 있는지 나타내는 값">농도</span>라고 한단다. 장아찌 맛은 이 농도가 좌우하지."</span></p>
+        <p><span class="dialogue">"농도를 나타낼 때는 <span class="vocab-tip" data-meaning="용액 100g 속에 용질이 몇 g 녹아 있는지 나타낸 농도">퍼센트 농도</span>를 많이 쓴단다. 용액 100g 중에 용질이 몇 g인지를 따지는 거야. 소금 10g을 물 90g에 녹이면 소금물 100g이 되니까, 농도는 10%가 되는 거지."</span><br><br>솔이는 저울로 소금과 물의 무게를 꼼꼼히 재어 딱 맞는 절임물을 만들어 냈습니다.</p>
+        <p>할머니는 이 지식이 부엌 밖에서도 큰일을 한다고 알려 주었습니다. 약을 만드는 사람은 몸에 꼭 맞는 농도로 성분을 녹이고, 음료수 공장도 세제를 만드는 사람들도 용해도를 따져 가며 일한다는 것입니다. 재결정으로 물질을 깨끗하게 거르는 일도 화학의 기본 기술이라고 했습니다.</p>
+        <p>솔이는 어느새 달라진 자신을 발견했습니다. 예전에는 무엇이든 눈대중과 감으로 대충 넣었지만, 이제는 무게를 재고 온도를 살피는 버릇이 생긴 것입니다. 같은 부엌인데, 규칙을 알고 서 있으니 전혀 다른 곳처럼 느껴졌습니다.</p>
+        <p><span class="highlight">할머니의 손맛 뒤에는 농도와 용해도의 정확한 과학이 숨어 있었습니다.</span> 눈대중처럼 보이던 할머니의 손이 사실은 평생의 실험으로 다져진 저울이었다는 것을, 솔이는 이제 압니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학12/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>부엌 실험실</h2>
+        <p>어느덧 방학 마지막 날이 되었습니다. 솔이의 가방에는 얼음사탕이 담긴 유리병과 빼곡히 적힌 관찰 공책이 소중하게 들어 있었습니다. 할머니는 마당까지 나와 손을 흔들며, 매실청이 잘 익으면 겨울 방학에 함께 거르자고 약속해 주었습니다.</p>
+        <p>집으로 돌아오는 길, 솔이는 창밖을 보며 이번 여름에 알게 된 것들을 하나하나 되짚어 보았습니다. 찬물에서 설탕이 버티던 까닭도, 사이다의 김이 빠져 버린 까닭도 이제는 훤히 압니다. 고체와 기체는 온도 앞에서 서로 반대로 움직인다는 것까지 말입니다.</p>
+        <p>집에 도착한 솔이는 가장 먼저 부엌으로 갔습니다. 그러고는 동생 송이를 불러 미숫가루를 다시 탔습니다. 이번에는 달랐습니다. 먼저 따뜻한 물 조금에 설탕을 술술 녹여 달콤한 설탕물을 만들고, 거기에 찬물과 얼음을 더한 것입니다. 송이가 한 모금 마시더니 엄지를 번쩍 들었습니다.<br><br><span class="dialogue">"언니, 이제 진짜 달아!"</span></p>
+        <p>여름의 첫날 솔이를 골탕 먹이던 그 문제가, 여름의 마지막 날 이렇게 시원하게 풀렸습니다. 규칙을 모르면 물과 설탕에게 번번이 지지만, 규칙을 알면 얼마든지 이길 수 있는 것이었습니다.</p>
+        <p>솔이는 이제 부엌을 지날 때마다 용액들의 인사를 받습니다. 냉장고 속 사이다는 차가운 자리를 지키고, 선반 위 매실청은 천천히 익어 가고, 유리병 속 얼음사탕은 반짝반짝 빛납니다. 모두 이번 여름 솔이가 배운 규칙들의 살아 있는 증거입니다.</p>
+        <p><span class="highlight">부엌은 세상에서 가장 가까운 실험실이었습니다.</span> 녹지 않던 설탕 한 숟갈에서 시작된 여름의 궁금증은, 솔이에게 기다림과 정확함을 아는 눈을 선물해 주었습니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(211, 90, 26, 0.15); border-radius: 16px;">
+          <strong style="color: #d35a1a; font-size: 20px;">🍬 「모든 것은 제 온도에서 제 만큼만 녹는다. 넘친 만큼은 반짝이는 결정이 된다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/chem12_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

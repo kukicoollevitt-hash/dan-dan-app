@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌸 동백꽃</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/현대문학06/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #F06292 0%, #E91E63 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(240, 98, 146, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(240, 98, 146, 0.15);
+      color: #C2185B;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #C2185B;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #F06292;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #F8BBD9;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(240, 98, 146, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #F8BBD9;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(240, 98, 146, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(240, 98, 146, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(233, 30, 99, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(240, 98, 146, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>💕 사랑손님과 어머니</h1>
+        <p class="subtitle">
+          — 주요섭의 소설로 읽는 어린아이의 눈에 비친 어른들의 마음 —<br>
+          교과기반 창작도서 · 현대문학 06
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 옥희:</strong> 여섯 살 난 어린 소녀. 순수한 눈으로 어머니와 사랑손님 사이의 미묘한 감정을 지켜보는 서술자이다.</p>
+          <p><strong>★ 어머니·사랑손님:</strong> 서로에게 마음이 끌리지만, 당대의 윤리 앞에서 그 마음을 끝내 절제하는 두 어른.</p>
+          <p><strong>★ 감상 길잡이:</strong> 「사랑손님과 어머니」는 주요섭의 소설로, 어린아이의 순수한 시점을 통해 어른들의 절제된 사랑을 섬세하게 그려 냈습니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학06/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 인물</span>
+        <h2>옥희의 집</h2>
+        <p>옥희는 여섯 살 난 어린 소녀입니다. 옥희는 일찍 아버지를 여의고, 젊은 어머니와 단둘이 살고 있습니다. 옥희에게 어머니는 세상에서 가장 소중한 사람입니다.</p>
+        <p>옥희네 집에는 사랑방이 하나 있었습니다. 어느 날 그 사랑방에 한 손님이 하숙을 하게 되었습니다. 옥희는 그 손님을 사랑손님이라고 불렀습니다.</p>
+        <p>사랑손님은 돌아가신 옥희 아버지의 친구로, 점잖고 다정한 사람이었습니다. 옥희는 그 아저씨를 무척 따르게 되었습니다. 아저씨도 옥희를 귀여워하며 살갑게 대해 주었습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 여섯 살 옥희의 눈으로 바라본 집안의 풍경입니다. 이 소설은 어린아이를 서술자로 삼아, 어른들의 미묘한 감정을 순수한 시선으로 그려 냅니다. 이러한 어린이 관찰자 시점이 이 작품의 큰 특징입니다.</p>
+        <p>「사랑손님과 어머니」는 이렇게 옥희의 눈을 통해 시작됩니다. 어린아이의 천진한 시선이, 어른들의 감춰진 마음을 오히려 더 애틋하게 비춥니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학06/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">전개 · 관찰</span>
+        <h2>달라진 어머니</h2>
+        <p>사랑손님이 온 뒤로, 옥희는 어머니에게서 조금씩 달라진 모습을 느꼈습니다. 어머니는 예전보다 몸단장에 더 신경을 쓰고, 얼굴이 발그레해지곤 했습니다. 옥희는 그 까닭을 알지 못했습니다.</p>
+        <p>어머니는 사랑손님의 이야기가 나올 때면 어딘가 어색해하고 수줍어했습니다. 옥희의 눈에는 그저 이상하게만 보였습니다. 어린 옥희는 어머니의 그 미묘한 감정을 온전히 이해하지 못했습니다.</p>
+        <p>그러나 독자는 옥희의 순수한 묘사를 통해, 어머니가 사랑손님에게 마음이 끌리고 있음을 짐작하게 됩니다. 어린 서술자는 알지 못하지만, 그 묘사 속에 어른의 감정이 고스란히 담겨 있는 것입니다. 이것이 어린이 시점이 주는 묘미입니다.</p>
+        <p>이 대목은 어머니의 미묘한 감정 변화를 옥희가 관찰하는 전개의 단계입니다. 어린 서술자가 모르는 것을 독자가 짐작하게 되는 데서, 이 소설의 섬세한 아름다움이 살아납니다. 순수한 시선이 오히려 어른의 마음을 더 또렷이 비춥니다. 아는 만큼만 전하는 어린이 시점이, 도리어 독자의 상상을 자극해 감정을 깊게 만듭니다.</p>
+        <p>옥희는 어머니와 사랑손님 사이에 무언가 특별한 기류가 흐르고 있음을 어렴풋이 느꼈습니다. 그러나 그것이 무엇인지는 알지 못했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학06/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 매개</span>
+        <h2>옥희가 오가는 길</h2>
+        <p>어린 옥희는 어머니와 사랑손님 사이를 자연스럽게 오갔습니다. 옥희는 두 사람 사이에서 말을 전하고 물건을 나르는 다리 역할을 했습니다. 옥희 자신은 그것이 무슨 의미인지 알지 못했습니다.</p>
+        <p>옥희는 사랑손님에게 어머니의 이야기를 전하고, 어머니에게 사랑손님의 이야기를 전했습니다. 두 어른은 옥희를 통해 서로의 마음을 조심스레 헤아렸습니다. 옥희는 뜻하지 않게 두 사람 사이를 잇는 매개가 된 것입니다.</p>
+        <p>옥희가 두 사람 사이를 오갈 때마다, 어른들의 감정은 조금씩 깊어졌습니다. 그러나 그 감정은 결코 겉으로 드러나지 않았습니다. 두 사람은 마음을 안으로만 삭이며 조심스러운 태도를 지켰습니다.</p>
+        <p>이 대목은 옥희가 두 어른 사이의 매개 역할을 하는 전개의 단계입니다. 순수한 아이가 어른들의 감정을 이어 주는 통로가 되는 것이 흥미롭습니다. 옥희를 통해 오가는 마음이, 절제된 사랑의 분위기를 더욱 애틋하게 만듭니다.</p>
+        <p>옥희는 어머니와 사랑손님이 서로를 좋아하는 것 같다고 어렴풋이 느꼈습니다. 그러나 두 어른은 그 마음을 좀처럼 드러내지 않았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학06/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 상징</span>
+        <h2>꽃과 달걀</h2>
+        <p>어느 날 사랑손님은 옥희 편에 꽃을 보냈습니다. 옥희는 그 꽃을 어머니에게 전했습니다. 어머니는 그 꽃을 받고 얼굴을 붉히며 오래도록 바라보았습니다.</p>
+        <p>어머니 역시 사랑손님을 위해 마음을 담은 것들을 챙겼습니다. 사랑손님이 좋아하는 반찬을 정성껏 준비하기도 했습니다. 두 사람은 이렇게 작은 사물에 마음을 담아 조심스레 전했습니다.</p>
+        <p>꽃 한 송이, 정성 담긴 반찬 하나에 두 사람의 절제된 마음이 담겨 있었습니다. 직접적인 말은 한마디도 없었지만, 그 작은 사물들이 마음을 대신 전했습니다. 절제된 표현 속에 오히려 깊은 감정이 담기는 것입니다.</p>
+        <p>이 대목은 작은 사물을 통해 두 사람의 마음이 오가는 전개의 단계입니다. 꽃과 정성 어린 음식은 절제된 사랑을 상징합니다. 직접 드러내지 못하는 마음을 사물에 담아 전하는 데서, 이 소설의 서정적 아름다움이 빛납니다.</p>
+        <p>옥희는 그 꽃과 음식에 담긴 마음의 의미를 알지 못했습니다. 그러나 두 어른의 마음은 그 작은 것들을 통해 조용히 이어지고 있었습니다. 말없이 오가는 그 마음이 도리어 어떤 고백보다 애틋하게 다가옵니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학06/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 갈등</span>
+        <h2>세상의 눈</h2>
+        <p>그러나 두 사람의 마음이 깊어질수록, 그들 앞에는 넘기 어려운 벽이 놓여 있었습니다. 당시 사회에서는 남편을 여읜 여인이 다시 사랑을 하거나 재혼하는 것을 곱지 않게 보았습니다. 세상의 눈이 두 사람을 짓눌렀습니다.</p>
+        <p>어머니는 사랑손님에게 마음이 끌리면서도, 그 마음을 따를 수 없어 괴로워했습니다. 세상의 시선과 당대의 윤리가 어머니를 붙들었기 때문입니다. 어머니의 마음속에서는 사랑과 도리가 팽팽히 다투었습니다.</p>
+        <p>당시에는 여인의 재혼을 흠으로 여기는 봉건적인 윤리가 강했습니다. 어머니는 옥희를 위해서라도, 그리고 세상의 눈 때문에라도 자신의 감정을 억눌러야 한다고 생각했습니다. 그 절제가 어머니를 더욱 힘들게 했습니다.</p>
+        <p>이 대목은 두 사람의 사랑을 가로막는 벽이 드러나는 위기의 단계입니다. 당대의 봉건적 윤리가 개인의 감정을 억누르는 현실이 그려집니다. 마음을 따를 수 없는 어머니의 갈등이 애틋한 긴장을 자아냅니다. 개인의 순수한 감정과 사회의 완고한 규범이 부딪히는 데서 이 소설의 깊이가 드러납니다.</p>
+        <p>어머니는 밤마다 홀로 마음을 다스리며 괴로워했습니다. 사랑하는 마음과 지켜야 할 도리 사이에서, 어머니는 힘겨운 선택을 앞두고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학06/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>풍금 앞에서</h2>
+        <p>어느 날 어머니는 오랫동안 치지 않던 풍금을 꺼내 연주했습니다. 풍금 소리에는 어머니의 억눌린 마음이 고스란히 담겨 있었습니다. 옥희는 어머니의 그 모습이 왠지 슬퍼 보였습니다.</p>
+        <p>어머니는 풍금을 치다가 이내 손을 멈추고 눈물을 훔쳤습니다. 사랑하는 마음을 따를 수 없는 처지가 어머니를 울린 것입니다. 옥희는 어머니가 왜 우는지 알지 못한 채, 그저 곁에서 어머니를 바라보았습니다.</p>
+        <p>풍금 소리는 어머니의 말 못 할 마음을 대신 전하는 상징이었습니다. 직접 말하지 못하는 감정이 음악으로 흘러나온 것입니다. 절제된 슬픔이 풍금 소리에 담겨 애잔하게 울려 퍼졌습니다.</p>
+        <p>이 대목은 어머니의 억눌린 감정이 깊어지는 위기의 심화 단계입니다. 풍금이라는 상징을 통해, 말로 다 하지 못하는 어머니의 마음이 드러납니다. 절제 속에 감춰진 슬픔이 독자의 가슴을 아리게 합니다.</p>
+        <p>옥희는 어머니의 슬픔을 어렴풋이 느끼며 마음이 무거워졌습니다. 그러나 그 슬픔의 정체를 어린 옥희는 온전히 알 수 없었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학06/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 선택</span>
+        <h2>어머니의 결심</h2>
+        <p>오랜 고민 끝에, 어머니는 마침내 마음을 정했습니다. 사랑손님을 향한 마음을 접고, 그 마음을 따르지 않기로 한 것입니다. 어머니는 자신의 감정보다 옥희와 세상의 도리를 앞세웠습니다.</p>
+        <p>어머니는 사랑손님에게 자신의 뜻을 조심스럽게 전했습니다. 직접적인 말이 아니라, 절제된 태도와 몇 가지 행동을 통해서였습니다. 두 사람은 서로의 마음을 알면서도, 그 마음을 접기로 한 것입니다.</p>
+        <p>이 선택은 어머니에게 크나큰 아픔이었습니다. 그러나 어머니는 자신의 감정을 억누르고 도리를 지키는 길을 택했습니다. 그 절제가 이 소설의 가장 애틋한 대목을 이룹니다.</p>
+        <p>이 대목은 이야기의 절정으로, 어머니가 사랑을 접기로 결심하는 선택의 단계입니다. 감정보다 도리를 앞세운 어머니의 절제가 깊은 여운을 남깁니다. 이루지 못한 사랑이기에 오히려 더 애틋하게 다가옵니다. 어머니의 조용한 결단 속에는 옥희를 향한 깊은 사랑도 함께 담겨 있었습니다.</p>
+        <p>옥희는 어머니의 결심을 알지 못한 채, 그저 어머니 곁을 지켰습니다. 그러나 어른들의 세계에서는 조용한 이별이 준비되고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학06/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 이별</span>
+        <h2>떠나는 사랑손님</h2>
+        <p>마침내 사랑손님은 옥희네 집을 떠나기로 했습니다. 어머니의 뜻을 헤아린 사랑손님이, 조용히 물러나기로 한 것입니다. 두 사람은 끝내 자신들의 마음을 이루지 못했습니다.</p>
+        <p>사랑손님이 떠나는 날, 옥희는 아저씨와의 이별이 아쉬워 눈물을 흘렸습니다. 어린 옥희는 두 어른 사이에 무슨 일이 있었는지 알지 못했습니다. 그저 정든 아저씨가 떠나는 것이 슬프기만 했습니다.</p>
+        <p>어머니는 떠나는 사랑손님을 담담히 배웅했습니다. 겉으로는 태연했지만, 그 마음속은 이루 말할 수 없이 아팠을 것입니다. 절제된 이별 속에 두 사람의 깊은 마음이 감춰져 있었습니다.</p>
+        <p>이 대목은 두 사람의 사랑이 이별로 마무리되는 절정의 단계입니다. 마음을 이루지 못한 채 조용히 헤어지는 두 어른의 모습이 애잔합니다. 요란한 감정 표현 없이 담담하게 그려진 이별이 오히려 더 큰 여운을 남깁니다.</p>
+        <p>사랑손님이 떠난 뒤, 옥희네 집에는 다시 고요한 일상이 찾아왔습니다. 그러나 그 고요함 속에는 말 못 할 아쉬움이 배어 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학06/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 여운</span>
+        <h2>어머니의 마음</h2>
+        <p>사랑손님이 떠난 뒤, 어머니는 다시 예전의 어머니로 돌아갔습니다. 그러나 옥희는 어머니의 어딘가가 예전과 조금 다르다는 것을 어렴풋이 느꼈습니다. 어머니의 마음 한구석에는 지워지지 않는 무언가가 남아 있었습니다.</p>
+        <p>어머니는 사랑손님이 남기고 간 것들을 조용히 정리했습니다. 그리고 다시 옥희와 단둘이 살아가는 일상으로 돌아갔습니다. 어머니는 자신의 감정을 접고, 옥희를 위한 삶을 택한 것입니다.</p>
+        <p>이 소설은 어머니가 왜 그런 선택을 했는지를 길게 설명하지 않습니다. 옥희의 순수한 시선과 몇 가지 상징을 통해, 그 절제된 마음을 넌지시 전할 뿐입니다. 그 여운이 오히려 더 깊은 감동을 남깁니다.</p>
+        <p>이 대목은 이별 뒤 어머니의 마음을 그린 결말의 단계입니다. 감정을 접고 일상으로 돌아간 어머니의 절제가 잔잔한 여운을 남깁니다. 어린 옥희의 시선을 통해, 어른의 아픈 선택이 담담하게 전해집니다.</p>
+        <p>옥희는 어머니의 마음을 온전히 이해하지 못했습니다. 그러나 훗날 옥희가 자라면, 그 절제된 사랑의 의미를 헤아리게 될 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학06/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>어린 눈에 비친 사랑</h2>
+        <p>「사랑손님과 어머니」는 어린아이의 순수한 눈을 통해 어른들의 절제된 사랑을 그린 소설입니다. 여섯 살 옥희의 시선은 어른들의 미묘한 감정을 알지 못하지만, 오히려 그 순수한 묘사가 어른의 마음을 더 애틋하게 비춥니다. 어린이 관찰자 시점이 이 작품의 백미입니다.</p>
+        <p>이 작품이 지닌 매력은 여럿입니다. 첫째는 어린아이를 서술자로 삼은 독특한 시점이요, 둘째는 꽃과 풍금 같은 상징을 통해 절제된 감정을 전하는 섬세함입니다. 주요섭은 이를 통해 말로 다 하지 못하는 사랑을 아름답게 그려 냈습니다.</p>
+        <p>무엇보다 이 소설은, 절제된 사랑의 아름다움을 보여 줍니다. 당대의 윤리 앞에서 마음을 따를 수 없었던 두 사람은, 그 감정을 안으로 삭이며 조용히 헤어집니다. 이루지 못한 사랑이기에 그 여운은 더욱 깊고 애틋합니다. 요란하게 드러내는 사랑보다, 말없이 접어 두는 사랑이 더 큰 울림을 줄 수 있음을 이 작품은 보여 줍니다.</p>
+        <p>어린 옥희의 눈에 비친 어른들의 사랑은, 직접적인 말 한마디 없이도 잔잔한 감동을 전합니다. 순수한 시선과 절제된 감정이 어우러진 이 작품은, 우리 현대문학이 그려 낸 가장 섬세한 사랑 이야기 가운데 하나로 남아 있습니다. 옥희가 전한 꽃 한 송이처럼, 이 이야기는 오래도록 마음에 남습니다.</p>
+        <p><span class="highlight">어린아이의 순수한 눈에 비친, 말없이 절제된 어른들의 사랑이 깊은 여운을 남깁니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/modern06_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

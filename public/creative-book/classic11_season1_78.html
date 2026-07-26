@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🪞 두 명의 옹고집 — 가짜에게 자리를 빼앗긴 날</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/고전문학11/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🪞 두 명의 옹고집 — 가짜에게 자리를 빼앗긴 날</h1>
+        <p class="subtitle">
+          — 판소리계 소설의 진가쟁주와 인과응보로 읽는 자기 성찰 —<br>
+          교과기반 창작도서 · 고전문학 11
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 옹고집:</strong> 재물은 넘치나 인색하고 불효하며 남을 업신여기는 부자. 가짜에게 자리를 빼앗긴 뒤에야 자신을 돌아본다.</p>
+          <p><strong>★ 도승:</strong> 옹고집의 못된 행실을 벌하기 위해 가짜 옹고집을 만들어 보내는 인물. 인과응보의 이치를 일깨운다.</p>
+          <p><strong>★ 감상 길잡이:</strong> 「옹고집전」은 진짜와 가짜가 서로 주인을 다투는 진가쟁주 화소를 지닌 판소리계 소설로, 인색함과 불효를 벌하고 참회를 이끄는 인과응보의 주제를 담습니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학11/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>쇠고집 부자</h2>
+        <p>옛날 옹당촌이라는 마을에 옹고집이라는 부자가 살았습니다. 그는 곳간이 넘칠 만큼 재물이 많았으나, 그 성품은 재물과는 딴판으로 몹시 인색하고 고약하였습니다. 남에게는 쌀 한 톨 나누어 주기를 아까워하면서, 자기 배 불리는 일에만 마음을 쏟았습니다.</p>
+        <p>옹고집의 고집은 소도 못 말릴 만큼 세다 하여 사람들은 그를 쇠고집이라 부르기도 하였습니다. 한번 아니라고 하면 결코 뜻을 굽히지 않았고, 남의 말은 도무지 귀담아듣지 않았습니다. 그 완고함이 도를 넘어 마침내 사람의 도리마저 저버리는 지경에 이르렀습니다. 자신이 옳다는 생각에 갇혀, 남을 이해하려는 마음의 문을 굳게 닫아 버린 것입니다.</p>
+        <p>무엇보다 옹고집은 늙고 병든 어머니를 제대로 봉양하지 않는 불효한 자식이었습니다. 따뜻한 밥 한 끼, 다정한 말 한마디 건네는 법이 없었습니다. 재물은 산더미처럼 쌓아 두고도 어머니에게만은 한없이 인색하였습니다.</p>
+        <p>이야기의 첫머리는 옹고집의 잘못된 성품을 뚜렷이 보여 줍니다. 인색함과 불효, 그리고 남을 업신여기는 오만이 곧 그가 받게 될 벌의 씨앗이 됩니다. 지나친 재물에도 마음이 가난한 사람의 모습을 통해, 이야기는 참된 부유함이 무엇인지를 묻습니다. 곳간을 채우는 데만 골몰하던 옹고집이 정작 가장 소중한 것을 놓치고 있었음을, 독자는 조금씩 알아차리게 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학11/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>쫓겨난 스님</h2>
+        <p>어느 날, 한 스님이 옹고집의 집을 찾아와 시주를 청하였습니다. 자비를 베풀어 곡식을 조금 나누어 달라는 것이었습니다. 그러나 옹고집은 인색하기 짝이 없는 사람이었습니다.</p>
+        <p>옹고집은 곡식은커녕 스님에게 모진 매질과 욕설을 퍼부어 문밖으로 내쫓았습니다. 자비를 청하러 온 이에게 도리어 모욕을 안긴 것입니다. 그 잔인하고 오만한 행실은 보는 이의 눈살을 찌푸리게 하였습니다.</p>
+        <p>쫓겨난 스님은 절로 돌아가 도승에게 옹고집의 못된 행실을 낱낱이 아뢰었습니다. 인색하고 불효하며 스님마저 박대하는 그를 그냥 두어서는 안 되겠다는 것이었습니다. 이에 도승은 옹고집을 크게 뉘우치게 할 방도를 궁리하기 시작했습니다. 벌하되 끝내 사람으로 되돌리는 것, 그것이 도승이 마음에 품은 뜻이었습니다.</p>
+        <p>이 대목은 갈등이 시작되는 사건의 발단입니다. 옹고집의 오만한 행동이 마침내 그를 벌할 힘을 불러온 것입니다. 남에게 함부로 저지른 잘못이 결국 자신에게로 되돌아오는 인과응보의 이치가 여기서 작동하기 시작합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학11/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 준비</span>
+        <h2>특별한 거울을 빚다</h2>
+        <p>도승은 옹고집을 벌하기 위해 기이한 방도를 마련하였습니다. 짚으로 사람의 형상을 만들고 도술을 부려, 옹고집과 조금도 다르지 않은 가짜 옹고집을 빚어낸 것입니다. 얼굴도, 목소리도, 몸짓까지도 진짜와 똑같았습니다.</p>
+        <p>이 가짜 옹고집은 곧 옹고집의 집으로 보내질 참이었습니다. 진짜와 똑같이 생긴 또 하나의 자신이 나타난다면, 옹고집은 자신을 증명하느라 큰 곤욕을 치를 것이었습니다. 도승의 계책은 옹고집이 스스로를 돌아보게 만드는 데 그 뜻이 있었습니다.</p>
+        <p>똑같이 생긴 가짜가 진짜의 자리를 넘본다는 설정은 진가쟁주라 불리는 화소입니다. 진짜와 가짜가 서로 자신이 주인이라 다투는 이 구도는, 고전소설이 즐겨 쓰던 흥미로운 장치입니다. 이를 통해 이야기는 웃음과 긴장을 동시에 자아냅니다.</p>
+        <p>이 대목은 위기를 향해 나아가는 준비의 단계입니다. 옹고집을 비추는 또 하나의 거울과도 같은 가짜가 만들어졌기 때문입니다. 그 거울 앞에서 옹고집이 자신의 참모습을 보게 될 순간이 서서히 다가옵니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학11/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 침입</span>
+        <h2>먼저 도착한 옹고집</h2>
+        <p>가짜 옹고집은 태연히 옹고집의 집으로 걸어 들어갔습니다. 집안사람들은 진짜와 똑같이 생긴 그를 보고 조금도 의심하지 않았습니다. 가짜 옹고집은 마치 오래전부터 그 집 주인이었던 것처럼 자연스럽게 행세하였습니다.</p>
+        <p>얼마 뒤 볼일을 마치고 돌아온 진짜 옹고집은 기가 막혔습니다. 자신과 똑같이 생긴 자가 안방에 떡하니 앉아 주인 노릇을 하고 있었기 때문입니다. 옹고집은 당장 그를 내쫓으려 하였으나, 일은 그의 뜻대로 풀리지 않았습니다.</p>
+        <p>두 옹고집은 서로가 진짜라며 팽팽히 맞섰습니다. 얼굴도 목소리도 똑같으니, 곁에서 보는 사람들도 누가 진짜인지 도무지 가릴 수가 없었습니다. 진짜 옹고집은 난생처음 자신을 증명해야 하는 황당한 처지에 놓였습니다.</p>
+        <p>이 대목은 갈등이 위기로 치닫는 단계입니다. 늘 남을 업신여기며 큰소리치던 옹고집이, 이제는 자신이 진짜임조차 증명하지 못하는 신세가 된 것입니다. 오만하던 그가 겪는 이 곤욕은 곧 그가 뿌린 잘못의 대가이기도 합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학11/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 혼란</span>
+        <h2>누가 진짜인가</h2>
+        <p>집안사람들은 두 옹고집을 앞에 두고 어쩔 줄을 몰랐습니다. 아내도, 자식도, 하인도 누가 진짜 주인인지 가려내지 못하였습니다. 겉모습만으로는 도저히 참과 거짓을 나눌 수 없었기 때문입니다.</p>
+        <p>그런데 이상하게도 가짜 옹고집은 집안의 온갖 사정을 진짜보다 더 소상히 꿰고 있었습니다. 오히려 진짜 옹고집의 대답에서 허점이 드러나기도 하였습니다. 사람들은 점점 가짜 쪽을 진짜라 여기기 시작하였습니다.</p>
+        <p>이 대목은 참과 거짓이 뒤바뀌는 혼란의 절정입니다. 겉모습만 보고 사람을 판단하는 것이 얼마나 위태로운지를 이 장면은 날카롭게 보여 줍니다. 진짜가 도리어 가짜로 몰리는 역설 속에서, 이야기의 긴장은 최고조에 이릅니다.</p>
+        <p>판소리계 소설의 이러한 진가쟁주는 단순한 흥밋거리에 그치지 않습니다. 참된 주인이란 겉모습이 아니라 그 마음과 행실로 정해지는 것임을 넌지시 일깨우기 때문입니다. 옹고집은 그동안의 못된 행실 탓에 자기 자리마저 지키지 못하게 된 것입니다. 사람들이 진짜를 알아보지 못한 것은, 그가 평소 참된 주인다운 마음을 보여 준 적이 없었기 때문이기도 합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학11/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>대문 밖의 첫날 밤</h2>
+        <p>마침내 집안사람들은 가짜 옹고집을 진짜로 받아들이고, 진짜 옹고집을 도리어 가짜라며 문밖으로 내쫓고 말았습니다. 평생 쌓아 온 재물과 가족, 그리고 자기 이름마저 하루아침에 빼앗긴 것입니다. 옹고집은 차디찬 대문 밖에 홀로 나앉는 신세가 되었습니다.</p>
+        <p>그토록 인색하게 지켜 온 곳간도, 늘 큰소리치던 안방도 이제는 그의 것이 아니었습니다. 옹고집은 하룻밤 사이에 모든 것을 잃고 거리를 떠도는 처지로 굴러떨어졌습니다. 남을 박대하던 그가 이제는 남에게 문전박대를 당하는 신세가 된 것입니다.</p>
+        <p>이 대목은 옹고집이 밑바닥까지 추락하는 위기의 심화 단계입니다. 재물만 믿고 오만하던 그가 정작 그 재물로 인해 버림받는 역설이 뼈아프게 그려집니다. 남에게 베풀 줄 모르던 이에게 세상 또한 냉정하다는 이치를 이야기는 조용히 드러냅니다.</p>
+        <p>비로소 옹고집은 자신이 그동안 얼마나 많은 이를 매몰차게 대했는지 떠올리기 시작하였습니다. 스님을 내쫓고 어머니를 홀대하던 자신의 모습이 자꾸만 눈앞에 어른거렸습니다. 잃어버린 뒤에야 소중함을 아는 것이 사람의 어리석음임을 그는 뒤늦게 깨달아 갔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학11/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 대결</span>
+        <h2>관아로 간 두 옹고집</h2>
+        <p>거리로 내쫓긴 진짜 옹고집은 억울함을 견디다 못해 마침내 관아에 하소연하였습니다. 자신이야말로 진짜 옹고집이니 시비를 가려 달라는 것이었습니다. 관아에서는 두 옹고집을 함께 불러 진위를 가리기로 하였습니다.</p>
+        <p>그러나 사또 앞에서도 진짜와 가짜를 가려내기란 쉽지 않았습니다. 가짜 옹고집은 집안 내력과 재산 목록을 진짜보다 더 또렷이 읊어 대었습니다. 결국 관아마저 가짜의 손을 들어 주었고, 진짜 옹고집은 매를 맞고 다시 쫓겨나고 말았습니다.</p>
+        <p>이 대목은 갈등이 절정에 이르는 대결의 순간입니다. 관아의 판결조차 겉모습과 말솜씨에 속아 넘어가는 모습은, 참을 가려내는 일이 얼마나 어려운지를 보여 줍니다. 진짜 옹고집은 이제 세상 어디에도 기댈 곳이 없는 완전한 절망에 빠졌습니다.</p>
+        <p>모든 것을 잃고 벼랑 끝에 선 옹고집은 그제야 진심으로 자신의 잘못을 뉘우치기 시작하였습니다. 재물도 이름도 소용없이, 남은 것은 오직 참회하는 마음뿐이었습니다. 바로 이 뉘우침이야말로 도승이 그토록 이끌어 내고자 한 것이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학11/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>도승의 물음</h2>
+        <p>절망에 빠진 옹고집이 스스로 목숨을 끊으려 할 때, 그를 벌하였던 도승이 홀연히 나타났습니다. 도승은 옹고집에게 그동안의 행실을 낱낱이 되짚으며, 무엇이 잘못되었는지 조용히 물었습니다. 옹고집은 고개를 떨군 채 자신의 죄를 하나하나 인정하였습니다.</p>
+        <p>옹고집은 인색했던 것도, 스님을 박대한 것도, 무엇보다 어머니를 홀대한 것도 모두 자신의 큰 잘못이었음을 눈물로 뉘우쳤습니다. 재물만 알고 사람의 도리를 저버린 지난날이 사무치게 부끄러웠습니다. 그는 다시 사람답게 살 기회를 간절히 빌었습니다.</p>
+        <p>이 대목은 이야기의 정신적 절정입니다. 가짜에게 자리를 빼앗기는 고난을 통해, 옹고집은 비로소 자신의 참모습을 마주하게 된 것입니다. 진정한 벌이란 고통 그 자체가 아니라, 스스로를 돌아보게 하는 데 그 뜻이 있음을 이 장면은 일깨웁니다.</p>
+        <p>도승이 옹고집을 죽음으로 벌하지 않고 참회의 기회를 준 것은 뜻깊습니다. 잘못을 저지른 이라도 진심으로 뉘우친다면 다시 사람이 될 수 있다는 믿음이 담겨 있기 때문입니다. 인과응보의 이치는 벌을 넘어 참된 사람됨으로 나아가는 길을 열어 줍니다. 이처럼 벌 속에 용서를 담아낸 점에서, 이 이야기는 사람을 미워하기보다 바로 세우려 함을 알 수 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학11/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>되찾은 자리</h2>
+        <p>옹고집의 진심 어린 참회를 확인한 도승은 부적 한 장을 내주었습니다. 그 부적을 가지고 집으로 돌아가자, 안방에 앉아 있던 가짜 옹고집은 한낱 짚 인형으로 변해 스르르 쓰러지고 말았습니다. 진짜와 가짜를 다투던 소동이 마침내 끝난 것입니다.</p>
+        <p>옹고집은 잃어버렸던 집과 가족, 그리고 자기 이름을 온전히 되찾았습니다. 그러나 돌아온 그는 예전의 그 인색하고 오만한 옹고집이 결코 아니었습니다. 지난날의 잘못을 뼈저리게 깨달은, 완전히 새사람이 되어 있었습니다.</p>
+        <p>이후 옹고집은 어머니를 지극정성으로 봉양하고, 어려운 이웃에게 아낌없이 곡식을 나누어 주었습니다. 재물을 쌓아 두기만 하던 그가 이제는 베풀 줄 아는 사람으로 거듭난 것입니다. 참된 부유함이 곳간이 아니라 마음에 있음을 그는 마침내 배웠습니다.</p>
+        <p>이 대목은 고난을 딛고 새사람으로 거듭나는 돌파의 단계입니다. 가짜에게 자리를 빼앗기는 시련이 없었다면, 옹고집은 끝내 자신을 돌아보지 못했을 것입니다. 고통스러운 시련이 도리어 그를 참된 사람으로 이끈 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학11/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>거울이 된 이야기</h2>
+        <p>「옹고집전」은 진짜와 가짜가 주인을 다투는 진가쟁주 화소를 통해 깊은 교훈을 전하는 판소리계 소설입니다. 못된 부자를 벌하고 끝내 참회로 이끄는 이 이야기는, 인과응보와 자기 성찰의 주제를 흥미롭게 담아냅니다. 그래서 오랜 세월 백성들의 사랑을 받아 왔습니다.</p>
+        <p>이 작품이 우리에게 주는 가르침은 분명합니다. 재물이 아무리 많아도 인색하고 오만하면 참된 부자가 아니며, 남을 업신여기는 마음은 결국 자신에게로 되돌아온다는 것입니다. 나를 돌아보지 않는 사람은 끝내 나 자신마저 잃고 만다는 물음을 이 이야기는 던집니다.</p>
+        <p>가짜 옹고집은 사실 진짜 옹고집을 비추는 거울과 같은 존재였습니다. 우리는 남을 통해 비로소 자신의 못난 모습을 마주하게 되는 법입니다. 이 이야기는 독자에게도 스스로를 비추어 보라는 조용한 거울이 되어 줍니다. 오늘의 우리 또한 재물과 지위 앞에서 사람의 도리를 잊고 있지는 않은지 한 번쯤 돌아보게 됩니다.</p>
+        <p><span class="highlight">나를 돌아보지 않는 사람은 끝내 나를 잃습니다. 참된 부유함은 곳간이 아니라 마음에 있습니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'classic11_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

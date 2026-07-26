@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎓 팔리지 않는 기성품 — 레디메이드 인생</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/현대문학10/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🎓 팔리지 않는 기성품 — 레디메이드 인생</h1>
+        <p class="subtitle">
+          — 배움이 밥이 되지 못한 시대 —<br>
+          교과기반 창작도서 · 현대문학 10 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🎓 등장인물 소개</h3>
+          <p><strong>★ P (주인공):</strong> 일본 유학까지 다녀온 배운 사람이에요. 그러나 일자리가 없어 스스로를 '레디메이드 인생'이라 불러요.</p>
+          <p><strong>★ M:</strong> P의 옛 친구예요. 공부와는 거리가 멀었지만, 지금은 인력거를 끌며 제 힘으로 먹고살아요.</p>
+          <p><strong>★ 신사와 아들:</strong> 거리에서 마주친 부자예요. "공부 안 하면 저렇게 된다"는 말로 P의 가슴을 찔러요.</p>
+          <p><strong>★ 직업소개소:</strong> P가 날마다 찾아가지만 늘 거절만 돌려주는 곳이에요.</p>
+          <p><strong>★ 인력거:</strong> 대학 나온 P가 결국 붙잡게 된 손잡이예요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 배움의 갈등:</strong> 높은 학력 vs. 어디에도 없는 일자리</p>
+          <p><strong>② 자존심의 갈등:</strong> 배운 사람이라는 자부심 vs. 굶주린 배</p>
+          <p><strong>③ 사회의 갈등:</strong> 공장처럼 찍혀 나온 배운 사람들 vs. 그들을 쓰지 않는 세상</p>
+          <p><strong>④ 믿음의 갈등:</strong> 공부하면 성공한다는 약속 vs. 뒤집혀 버린 현실</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학10/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>공부가 전부였던 시절</h2>
+        <p>P는 남들이 부러워하는 배운 사람이었어요.<br>
+조선에서 학교를 마친 뒤, 바다 건너 일본으로 <span class="vocab-tip" data-meaning="공부를 하러 외국에 가서 머무는 것">유학</span>까지 다녀왔지요.<br>
+마을에서 유학생이 나온 것은 P가 처음이었어요.</p>
+        <p>학교 다닐 때 P는 굳게 믿었어요.<br>
+열심히 공부하면 반드시 성공할 수 있다고요.<br>
+어른들도, 선생님도, 책도 모두 그렇게 말했지요.<br>
+그래서 P는 남들이 잘 때 책을 읽고, 남들이 놀 때 펜을 잡았어요.</p>
+        <p>유학 시절, P는 이를 악물고 공부했어요.<br>
+어렵게 보내 주는 학비를 생각하면 게으를 수 없었지요.<br><br><span class="dialogue">'졸업만 하면, 돌아가서 반드시 보란 듯이 살리라.'</span></p>
+        <p>마침내 <span class="vocab-tip" data-meaning="학교를 마쳤다는 증서">졸업장</span>을 손에 쥐던 날, P의 가슴은 터질 듯 부풀었어요.<br>
+이 종이 한 장이 앞날을 열어 줄 열쇠라고 믿었지요.<br>
+P는 부푼 꿈을 안고 조선으로 돌아왔어요.</p>
+        <p>그러나 P를 기다리고 있던 것은 꿈꾸던 미래가 아니었어요.<br>
+나라를 빼앗긴 <span class="vocab-tip" data-meaning="힘센 나라에 나라를 빼앗긴 땅">식민지</span> 조선의 현실은 책 속 세상과 전혀 달랐지요.</p>
+        <p><span class="highlight">공부하면 성공한다는 약속을, P는 한 번도 의심해 본 적이 없었어요.</span> 그 약속이 부서지는 데는 오랜 시간이 걸리지 않았지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학10/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>닫힌 문들</h2>
+        <p>조선에 돌아온 P는 곧바로 일자리를 찾아 나섰어요.<br>
+그러나 일자리는 어디에도 없었지요.<br>
+양복을 다려 입고 구두를 닦아 신어도 마찬가지였어요.</p>
+        <p>신문사도, 학교도, 회사도 대답은 한결같았어요.<br><br><span class="dialogue">"자리가 없습니다. 다음에 다시 와 보시오."</span><br><br>그 '다음'은 아무리 기다려도 오지 않았지요.</p>
+        <p>P는 매일 아침 <span class="vocab-tip" data-meaning="일자리를 찾아 이어 주는 곳">직업소개소</span>를 찾아갔어요.<br>
+소개소 앞에는 일자리를 구하는 사람들이 길게 줄을 서 있었지요.<br>
+그 줄에는 P처럼 대학을 나온 사람도 한둘이 아니었어요.</p>
+        <p>소개소 직원은 P의 서류를 보고 고개를 저었어요.<br><br><span class="dialogue">"학력이 이렇게 높으신 분이 하실 만한 일은… 지금 조선에는 없습니다."</span><br><br>배움이 많은 것이 오히려 흠이 되는 이상한 시절이었지요.</p>
+        <p>돌아오는 것은 언제나 거절뿐이었어요.<br>
+아침의 기대는 저녁이면 빈손이 되어 돌아왔지요.<br>
+P의 어깨는 조금씩 내려앉았어요.<br>
+벽에 걸린 졸업장만 말없이 P를 내려다보았지요.</p>
+        <p><span class="highlight">졸업장은 열쇠가 아니었어요. 열어 줄 문이 애초에 없었기 때문이지요.</span> 조선의 문들은 배운 젊은이들 앞에서 굳게 닫혀 있었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학10/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 좌절</span>
+        <h2>무너지는 자부심</h2>
+        <p>배운 사람이라는 <span class="vocab-tip" data-meaning="자기 자신을 스스로 자랑스럽게 여기는 마음">자부심</span>은 P를 버티게 해 준 기둥이었어요.<br>
+그러나 거절이 쌓일 때마다 그 기둥에 금이 갔지요.<br>
+혼자가 되면 한숨이 절로 새어 나왔어요.</p>
+        <p>자부심이 빠져나간 자리에는 <span class="vocab-tip" data-meaning="뜻을 이루지 못해 힘이 꺾이는 것">좌절</span>이 들어찼어요.<br>
+나는 무엇을 위해 그 긴 세월을 책상 앞에서 보냈을까.<br>
+생각할수록 속에서 뜨거운 것이 치밀었지요.</p>
+        <p>배운 지식은 아무 쓸모가 없었어요.<br>
+머릿속의 철학과 외국어는 밥 한 그릇과도 바꿀 수 없었지요.<br>
+아끼던 책을 팔아 끼니를 잇는 지경이 되었어요.</p>
+        <p>하숙비는 밀린 지 오래였어요.<br>
+주머니에는 동전 몇 닢이 전부였지요.<br>
+한 끼마저 거르는 날이 생겼어요.<br><br><span class="dialogue">'배운 사람이 굶는다는 걸, 학교에서는 왜 가르쳐 주지 않았을까.'</span></p>
+        <p>거리에는 P 같은 사람이 넘쳐 났어요.<br>
+양복은 입었지만 갈 곳이 없는 젊은이들이 거리를 서성였지요.<br>
+배움은 넘치는데 쓸 자리가 없는, 앞뒤가 맞지 않는 세상이었어요.</p>
+        <p><span class="highlight">P의 좌절은 게으름 탓이 아니라, 성실했기에 더 쓰라렸어요.</span> 바로 그 무렵, P는 거리에서 뜻밖의 얼굴을 만나게 되지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학10/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>인력거꾼이 된 친구</h2>
+        <p>어느 날, P는 거리에서 우연히 옛 친구 M을 만났어요.<br>
+M은 학창 시절 공부와는 담을 쌓았던 친구였지요.<br>
+그때는 다들 M의 앞날을 걱정했었어요.</p>
+        <p>그런데 지금 M은 <span class="vocab-tip" data-meaning="사람을 태우고 사람이 직접 끄는 수레">인력거</span>를 끌며 먹고살고 있었어요.<br>
+팔뚝은 구릿빛으로 단단했지요.<br>
+얼굴에는 땀이 흘렀지만 그늘이 없었어요.</p>
+        <p>M은 P를 알아보고 반갑게 손을 흔들었어요.<br><br><span class="dialogue">"아니, 이게 누군가! 일본까지 다녀온 수재 아닌가. 그런데 자네, 얼굴이 왜 그 모양인가?"</span><br><br>M의 목소리는 학창 시절 그대로 우렁찼지요.</p>
+        <p>P는 대답할 말을 찾지 못했어요.<br>
+유학까지 다녀온 자신은 굶고 있는데,<br>
+공부와 담쌓았던 M은 제 힘으로 밥을 벌고 있었으니까요.<br>
+부끄러움과 부러움이 뒤섞여 얼굴이 화끈거렸지요.</p>
+        <p>M은 P를 훑어보더니 딱하다는 얼굴로 말했어요.<br><br><span class="dialogue">"자네, 아직도 취직 못 했나? 그러지 말고 인력거라도 끌어 보게. 이래 봬도 벌이가 쏠쏠하다네."</span><br><br>놀리는 기색 없는 진심 어린 권유였지요.</p>
+        <p><span class="highlight">공부를 많이 한 사람이 굶고, 공부를 못 한 사람이 밥을 버는 세상.</span> P가 배운 어떤 책에도 이런 세상은 나오지 않았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학10/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 갈등</span>
+        <h2>자존심과 배고픔 사이</h2>
+        <p>P는 처음에는 <span class="vocab-tip" data-meaning="남에게 굽히지 않으려는 마음">자존심</span>이 상해 거절했어요.<br>
+대학까지 나온 사람이 인력거를 끌다니요.<br><br><span class="dialogue">"말은 고맙네만… 나는 아직 할 일이 따로 있네."</span><br><br>돌아서는 발걸음이 무거웠지요.</p>
+        <p>그러나 하숙방에는 빈 쌀자루와 밀린 방세 걱정뿐이었어요.<br>
+할 일이 따로 있다고 큰소리는 쳤지만,<br>
+그 할 일이 무엇인지 P 자신도 몰랐지요.</p>
+        <p>밤이 되자 배 속에서 요란한 소리가 났어요.<br>
+굶은 배는 자존심 따위를 알아주지 않았지요.<br>
+P는 이불 속에서 M의 말을 곱씹었어요.</p>
+        <p>졸업장과 밥그릇이 저울 양쪽에 올라앉았어요.<br>
+<span class="vocab-tip" data-meaning="남을 대할 때 부끄럽지 않은 몸가짐">체면</span>을 지키자니 굶어야 했지요.<br>
+밥을 먹자니 체면을 내려놓아야 했어요.<br>
+저울은 밤새 기울었다 일어서기를 되풀이했지요.</p>
+        <p>날이 밝을 무렵, P는 마음을 정했어요.<br>
+P는 M을 찾아가 말했지요.<br><br><span class="dialogue">"그 인력거… 나도 한번 끌어 보겠네."</span><br><br>M은 씩 웃으며 P의 어깨를 두드렸어요.</p>
+        <p><span class="highlight">자존심은 밥을 이기지 못했어요.</span> 아니, 애초에 자존심과 밥을 저울질하게 만드는 세상이 문제였지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학10/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">전환 · 자조</span>
+        <h2>레디메이드 인생</h2>
+        <p>그렇게 P는 인력거를 끌기 시작했어요.<br>
+책장을 넘기던 손으로 인력거 손잡이를 쥐게 된 거예요.<br>
+만년필을 쥐던 손에는 어느새 굳은살이 생기기 시작했지요.</p>
+        <p>첫날, 인력거 손잡이는 생각보다 무거웠어요.<br>
+몇 걸음 달리지 않아 숨이 턱까지 찼지요.<br>
+그래도 저녁에 손에 쥔 동전 몇 닢은,<br>
+그 어떤 서류도 벌어다 주지 못한 돈이었어요.</p>
+        <p>인력거 채를 잡고 서서, P는 스스로를 비웃듯 중얼거렸어요.<br><br><span class="dialogue">"나야말로 레디메이드 인생이로군. 공장에서 미리 만들어졌지만, 아무도 사 가지 않는 기성품 말일세."</span></p>
+        <p>제 처지를 스스로 비웃는 것.<br>
+그것이 P가 할 수 있는 마지막 <span class="vocab-tip" data-meaning="자기 자신을 스스로 비웃는 것">자조</span>였어요.<br>
+화낼 상대도, 매달릴 곳도 없는 사람은 자기를 웃음거리로 삼게 되지요.</p>
+        <p>학교와 사회는 공장처럼 배운 사람을 찍어 냈어요.<br>
+그러나 그들이 일할 자리는 만들어 놓지 않았지요.<br>
+배운 젊은이들이 팔리지 않는 물건처럼 거리에 쌓여 갔어요.</p>
+        <p><span class="highlight">'레디메이드 인생'이라는 말에는, 한 사람이 아닌 한 시대의 슬픔이 담겨 있었어요.</span> 그리고 그 슬픔을 보여 주는 일이 곧 벌어지지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학10/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 사건</span>
+        <h2>신사와 아들</h2>
+        <p>어느 날 오후, P는 인력거를 세워 두고 손님을 기다리고 있었어요.<br>
+오가는 사람은 많았지만 손님은 드물었지요.<br>
+해는 기우는데 벌이는 신통치 않았어요.</p>
+        <p>그때 값비싼 양복을 입은 신사가 어린 아들의 손을 잡고 지나갔어요.<br>
+아이는 종알종알 떠들며 걷다가 문득 P 쪽을 가리켰지요.</p>
+        <p><span class="dialogue">"아버지, 저도 크면 저 인력거꾼처럼 되는 거예요?"</span><br><br>한 점 그늘 없이 해맑은 목소리였어요.<br>
+그저 궁금해서 던진 어린아이의 물음이었지요.<br>
+P의 심장이 덜컥 내려앉았어요.</p>
+        <p>신사는 아들의 손을 고쳐 잡으며 대답했어요.<br><br><span class="dialogue">"공부 안 하면 저렇게 된다."</span><br><br>그 말을 남기고 부자는 멀어져 갔지요.<br>
+누구도 뒤를 돌아보지 않았어요.</p>
+        <p>P는 그 자리에 못 박힌 듯 서 있었어요.<br>
+공부를 안 하면 저렇게 된다니요.<br>
+지금 인력거 채를 잡고 선 자신은, 누구보다 열심히 공부한 사람이었지요.<br>
+귓가에서 그 한마디가 종처럼 울렸어요.</p>
+        <p><span class="highlight">세상이 믿는 공식과 P가 살아 낸 현실이, 그 짧은 한마디 안에서 정면으로 부딪쳤어요.</span> P는 씁쓸하게 웃을 수밖에 없었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학10/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 성찰</span>
+        <h2>씁쓸한 웃음의 뜻</h2>
+        <p>부자가 사라진 거리에서 P는 오래 생각에 잠겼어요.<br>
+화를 내고 싶었지만, 화보다 먼저 웃음이 나왔지요.<br>
+세상에서 가장 씁쓸한 웃음이었어요.</p>
+        <p>열심히 공부하면 성공한다.<br>
+신사는 그렇게 믿고 아들을 가르치고 있었어요.<br>
+P도 한때 그렇게 믿고 자란 아이였지요.<br>
+그런데 그 아이가 자라서 지금 인력거 옆에 서 있는 거예요.</p>
+        <p>믿음과 현실이 정반대로 어긋나는 것.<br>
+이것을 <span class="vocab-tip" data-meaning="기대나 믿음과 현실이 정반대로 어긋나는 것">아이러니</span>라고 해요.<br>
+공부하라는 가르침이 공부한 사람 앞에서 무너지는데,<br>
+세상은 여전히 그 가르침을 되풀이하고 있었지요.</p>
+        <p>P는 생각했어요.<br>
+문제는 게으름이 아니라고요.<br>
+배운 사람을 쓸 자리를 만들지 않는 세상에 있다고요.</p>
+        <p>공장에서 물건을 찍어 내듯 학교는 배운 사람을 찍어 냈어요.<br>
+그렇게 만들어진 사람들은 <span class="vocab-tip" data-meaning="공장에서 미리 대량으로 만들어 놓은 물건">기성품</span>처럼 세상에 나왔지요.<br>
+그러나 사 가는 곳이 없어 그대로 버려졌어요.<br>
+P 자신이 바로 그 기성품이었지요.</p>
+        <p><span class="highlight">P의 웃음은 자신을 향한 것이 아니라, 뒤집힌 세상을 향한 것이었어요.</span> 웃음만큼 날카로운 비판도 없는 법이지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학10/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 인식</span>
+        <h2>버려진 기성품들</h2>
+        <p>그날 이후에도 P의 하루는 크게 달라지지 않았어요.<br>
+아침이면 인력거를 끌고 나가 손님을 기다렸지요.<br>
+그러나 세상을 보는 P의 눈은 전과 같지 않았어요.</p>
+        <p>거리 곳곳에 자신과 같은 사람들이 보였어요.<br>
+다방에 하루 종일 앉아 있는 양복쟁이들.<br>
+서류를 품고 헛걸음하는 젊은이들.<br>
+모두가 팔리지 않는 기성품들이었지요.</p>
+        <p>P는 이제 알았어요.<br>
+이것은 한 사람의 <span class="vocab-tip" data-meaning="운이 나쁜 것">불운</span>이 아니라 시대의 병이라는 것을요.<br>
+배움을 권하던 사회가, 정작 배운 사람들의 자리는 마련해 두지 않았던 거예요.</p>
+        <p>M은 그런 P에게 가끔 말했어요.<br><br><span class="dialogue">"세상 탓만 하면 뭘 하나. 그래도 오늘 하루 벌어 오늘 하루 먹고사는 게 사람 사는 일이지."</span><br><br>배움은 짧아도 M의 말에는 뼈가 있었지요.</p>
+        <p>P는 인력거 손잡이를 고쳐 잡으며 생각했어요.<br>
+언젠가 이 뒤집힌 세상이 바로 서는 날이 올까.<br>
+배운 만큼 일하고, 일한 만큼 사는 세상이 올까.<br>
+그 물음에 답해 줄 사람은 어디에도 없었지요.</p>
+        <p><span class="highlight">P의 이야기는 한 사람의 실패담이 아니라, 열심히 산 사람을 실패하게 만든 시대의 기록이었어요.</span> 그래서 더 아픈 이야기이지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학10/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>웃음으로 찌른 시대</h2>
+        <p>「레디메이드 인생」은 채만식이 쓴 단편 소설이에요.<br>
+일제강점기 조선에서, 배운 사람이 쓸모없는 존재가 되어 버린 현실을 그렸지요.<br>
+웃음 속에 비판을 담은 <span class="vocab-tip" data-meaning="웃음을 통해 잘못을 꼬집어 비판하는 것">풍자</span> 소설이에요.</p>
+        <p>제목의 레디메이드는 공장에서 미리 만들어 놓은 기성품을 뜻해요.<br>
+배운 사람들이 공장 제품처럼 찍혀 나오지만,<br>
+쓰일 곳이 없어 버려지는 현실을 빗댄 말이지요.<br>
+제목 하나에 작품의 주제가 통째로 담겨 있는 셈이에요.</p>
+        <p>가장 이름난 장면은 신사와 아들의 대화예요.<br>
+"공부 안 하면 저렇게 된다"는 말이,<br>
+누구보다 공부를 많이 한 사람 앞에서 던져지지요.</p>
+        <p>채만식은 눈물 대신 웃음으로 찌르는 작가였어요.<br>
+P의 웃음을 따라 웃다 보면,<br>
+어느새 그 웃음 뒤에 숨은 시대의 아픔과 마주하게 되지요.</p>
+        <p>노력한 만큼 대우받는 세상이 왜 소중한지 보여 주지요.</p>
+        <p><span class="highlight">사람은 기성품이 아니에요. 저마다의 배움과 노력이 제 자리를 찾을 수 있어야 해요.</span> P의 씁쓸한 웃음이 오늘 우리에게 건네는 말이지요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(90, 110, 140, 0.15); border-radius: 16px;">
+          <strong style="color: #5A6E8C; font-size: 20px;">🎓 「사람을 기성품처럼 찍어 내고 버리는 시대를, 작가는 울음 대신 웃음으로 고발했어요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'modern10_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

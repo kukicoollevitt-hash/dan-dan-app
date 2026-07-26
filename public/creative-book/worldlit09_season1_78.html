@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧚 네버랜드로 날아간 밤 — 피터 팬</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계문학09/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🧚 네버랜드로 날아간 밤 — 피터 팬</h1>
+        <p class="subtitle">
+          — 제임스 배리의 환상 문학으로 읽는 성장의 의미 —<br>
+          교과기반 창작도서 · 세계문학 09
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 피터 팬:</strong> 영원히 어른이 되지 않는 소년. 네버랜드에서 자유롭게 살아가지만, 그 대가도 함께 지닌다.</p>
+          <p><strong>★ 웬디:</strong> 피터 팬을 따라 네버랜드로 간 소녀. 아이들을 돌보며 성장의 의미를 깨달아 간다.</p>
+          <p><strong>★ 감상 길잡이:</strong> 「피터 팬」은 제임스 배리의 환상 문학으로, 영원한 아이 피터 팬을 통해 어른이 된다는 것과 아이로 남는다는 것의 의미를 되묻습니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학09/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 발단</span>
+        <h2>창문으로 온 손님</h2>
+        <p>어느 밤, 웬디의 방 창문으로 신비한 손님이 찾아왔습니다. 하늘을 나는 소년 피터 팬과, 반짝이는 요정 팅커벨이었습니다. 피터 팬은 잃어버린 자신의 그림자를 찾으러 온 것이었습니다.</p>
+        <p>웬디는 하늘을 나는 소년을 보고 눈이 휘둥그레졌습니다. 피터 팬은 웬디에게 자신이 사는 신비한 섬, 네버랜드에 대한 이야기를 들려주었습니다. 그곳은 어른이 없고 아이들만 사는 꿈같은 섬이었습니다.</p>
+        <p>피터 팬은 웬디와 두 동생에게 네버랜드로 함께 가자고 청했습니다. 그곳에서는 마음껏 놀고 모험할 수 있다는 것이었습니다. 웬디는 설레는 마음으로 그 제안을 받아들였습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 하늘을 나는 소년 피터 팬과의 신비한 만남입니다. 이 환상 문학은 어른이 되지 않는 소년과 네버랜드를 통해, 성장의 의미를 되묻는 여정을 그립니다. 창문으로 온 손님이 그 출발점이 됩니다.</p>
+        <p>어른이 된다는 것과 아이로 남는다는 것의 의미를, 웬디는 이 모험을 통해 생각하게 됩니다. 네버랜드로 날아간 밤의 이야기가 이렇게 시작됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학09/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 인물</span>
+        <h2>어른이 되지 않는 소년</h2>
+        <p>피터 팬은 영원히 어른이 되지 않는 신비한 소년이었습니다. 그는 나이를 먹지 않고, 언제까지나 아이로 남아 자유롭게 살아갔습니다. 피터 팬에게는 책임도 걱정도 없었습니다.</p>
+        <p>피터 팬은 어른이 되는 것을 몹시 싫어했습니다. 어른이 되면 자유로운 놀이와 모험을 잃게 된다고 여겼기 때문입니다. 그래서 그는 어른이 없는 네버랜드에서 영원한 아이로 살기를 택했습니다.</p>
+        <p>피터 팬의 이러한 모습은 자유롭고 즐거워 보였습니다. 그러나 어른이 되지 않는다는 것에는, 아직 드러나지 않은 또 다른 면도 함께 있었습니다. 영원한 아이로 남는 것이 마냥 좋기만 한 것은 아니었습니다.</p>
+        <p>이 대목은 영원한 아이 피터 팬의 모습을 보여 주는 도입의 단계입니다. 어른이 되지 않는 자유로움이, 이 작품의 흥미로운 설정으로 제시됩니다. 그러나 그 이면에 감춰진 의미가 앞으로 서서히 드러나게 됩니다.</p>
+        <p>웬디와 동생들은 피터 팬을 따라 네버랜드로 날아갈 준비를 했습니다. 그런데 하늘을 날려면 특별한 것이 필요했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학09/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 비행</span>
+        <h2>즐거운 생각을 하면</h2>
+        <p>피터 팬은 웬디와 동생들에게, 하늘을 날려면 즐거운 생각을 해야 한다고 알려 주었습니다. 마음속에 기쁘고 즐거운 생각을 가득 채우면, 몸이 저절로 떠오른다는 것이었습니다. 여기에 팅커벨의 요정 가루가 더해졌습니다.</p>
+        <p>웬디와 동생들은 즐거운 생각을 떠올렸습니다. 그러자 정말로 몸이 두둥실 떠오르기 시작했습니다. 아이들은 신이 나서 창문 밖 밤하늘로 날아올랐습니다.</p>
+        <p>즐거운 생각을 하면 날 수 있다는 것은, 순수한 마음과 상상력의 힘을 상징합니다. 아이들만이 지닌 티 없이 맑은 마음이, 하늘을 나는 기적을 만들어 낸 것입니다. 이 아름다운 설정은 이 작품의 순수한 매력을 잘 보여 줍니다.</p>
+        <p>이 대목은 아이들이 하늘을 나는 전개의 단계입니다. 즐거운 생각으로 날아오르는 설정이, 순수한 마음과 상상력의 힘을 보여 줍니다. 아이다운 맑은 마음이 지닌 아름다움이 빛나는 장면입니다. 근심 없는 마음만이 하늘을 날 수 있다는 설정에는 깊은 뜻이 담겨 있습니다.</p>
+        <p>웬디와 동생들은 피터 팬을 따라 밤하늘을 가로질러, 마침내 신비의 섬 네버랜드에 이르렀습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학09/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 모험</span>
+        <h2>신비의 섬 네버랜드</h2>
+        <p>네버랜드는 아이들의 꿈이 그대로 펼쳐진 신비한 섬이었습니다. 그곳에는 요정과 인어, 그리고 피터 팬을 따르는 아이들이 살고 있었습니다. 어른은 아무도 없고, 오직 즐거운 놀이와 모험만이 가득했습니다.</p>
+        <p>웬디와 동생들은 네버랜드에서 신나는 나날을 보냈습니다. 마음껏 놀고 모험하며, 어른들의 잔소리도 규칙도 없는 자유를 누렸습니다. 그곳은 아이라면 누구나 꿈꿀 법한 낙원이었습니다.</p>
+        <p>그러나 네버랜드에도 위험은 있었습니다. 피터 팬을 눈엣가시처럼 여기는 무서운 해적, 후크 선장이 있었기 때문입니다. 아름다운 섬에도 그림자가 드리워져 있었습니다.</p>
+        <p>이 대목은 아이들이 네버랜드에서 자유를 누리는 전개의 단계입니다. 어른도 규칙도 없는 낙원이, 아이들의 꿈을 상징적으로 보여 줍니다. 그러나 후크 선장이라는 위협이 그 낙원에 긴장을 더합니다.</p>
+        <p>네버랜드의 평화를 위협하는 후크 선장은, 피터 팬과 오랜 앙숙 사이였습니다. 두 사람의 대결이 점점 다가오고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학09/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 위협</span>
+        <h2>갈고리 손의 후크 선장</h2>
+        <p>후크 선장은 한 손에 갈고리를 단 무서운 해적이었습니다. 그는 예전에 피터 팬 때문에 한 손을 잃은 뒤로, 피터 팬에게 깊은 원한을 품고 있었습니다. 후크는 늘 피터 팬을 없앨 기회를 노렸습니다.</p>
+        <p>후크 선장은 교활하고 잔인한 어른의 모습을 하고 있었습니다. 그는 아이들의 순수한 즐거움과는 정반대의 존재였습니다. 네버랜드의 아이들에게 후크는 두려움의 대상이었습니다.</p>
+        <p>후크 선장은 피터 팬을 잡기 위해, 그가 아끼는 웬디와 아이들을 노렸습니다. 네버랜드의 평화가 위협받기 시작한 것입니다. 피터 팬은 아이들을 지키기 위해 후크에 맞서야 했습니다.</p>
+        <p>이 대목은 후크 선장의 위협이 네버랜드를 덮치는 위기의 단계입니다. 갈고리 손의 후크가, 순수한 낙원을 위협하는 어른의 그림자로 그려집니다. 피터 팬과 후크의 대결이 이야기의 긴장을 높입니다.</p>
+        <p>그러던 어느 날, 웬디는 아이들에게 엄마의 이야기를 들려주며 문득 집이 그리워졌습니다. 네버랜드의 즐거움 속에서도, 웬디의 마음 한구석에는 그리움이 자라나고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학09/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 그리움</span>
+        <h2>웬디 엄마의 이야기 시간</h2>
+        <p>웬디는 네버랜드의 아이들에게 엄마처럼 이야기를 들려주고 그들을 돌보아 주었습니다. 아이들은 웬디의 이야기 시간을 무척 좋아했습니다. 웬디는 어느새 네버랜드 아이들의 엄마 같은 존재가 되었습니다.</p>
+        <p>그런데 엄마 이야기를 하다 보니, 웬디는 문득 진짜 자신의 엄마가 그리워졌습니다. 아무리 즐거운 네버랜드라도, 자신을 기다리는 부모님이 있는 집이 떠올랐습니다. 웬디는 집으로 돌아가고 싶은 마음이 커졌습니다.</p>
+        <p>웬디는 영원히 아이로 남는 것이 마냥 좋은 것만은 아님을 느끼기 시작했습니다. 자신을 사랑하는 가족, 그리고 자라나며 겪는 소중한 것들이 있었기 때문입니다. 웬디의 마음속에서 성장에 대한 생각이 싹트기 시작했습니다.</p>
+        <p>이 대목은 웬디가 집과 가족을 그리워하는 위기의 심화 단계입니다. 네버랜드의 즐거움 속에서도 피어나는 그리움이, 성장의 의미를 일깨웁니다. 영원한 아이로 남는 것이 전부가 아님을 웬디는 느끼기 시작합니다. 자유로운 놀이만큼이나, 자신을 기다리는 사랑도 소중한 것이었습니다.</p>
+        <p>그러나 집으로 돌아가려는 웬디와 아이들을, 후크 선장이 가만두지 않았습니다. 후크는 마침내 아이들을 붙잡고 말았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학09/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 대결</span>
+        <h2>엄마가 보고 싶어</h2>
+        <p>웬디와 아이들이 집으로 돌아가려 하자, 후크 선장이 그들을 붙잡아 배에 가두었습니다. 후크는 이 기회에 피터 팬까지 없애려 했습니다. 네버랜드에 큰 위기가 닥친 것입니다.</p>
+        <p>붙잡힌 아이들은 엄마가 보고 싶다며 두려움에 떨었습니다. 자유롭던 네버랜드가, 이제는 벗어나고 싶은 위험한 곳이 되어 버렸습니다. 아이들은 자신들을 기다리는 집과 가족이 얼마나 소중한지를 절실히 느꼈습니다.</p>
+        <p>이 대목은 아이들이 위기에 빠지며 집을 그리워하는 절정의 단계입니다. 자유롭던 네버랜드가 위험한 곳이 되면서, 가족의 소중함이 더욱 절실해집니다. 그러나 바로 이 지점에서 피터 팬이 아이들을 구하러 나섭니다.</p>
+        <p>위기에 빠진 아이들을 구하기 위해, 피터 팬이 후크 선장의 배로 향했습니다. 피터 팬과 후크의 마지막 대결이 시작되려 하고 있었습니다.</p>
+        <p>피터 팬은 아이들을 지키기 위해 용감하게 후크에 맞섰습니다. 순수한 아이의 용기가, 교활한 어른의 위협과 부딪히는 순간이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학09/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 승리</span>
+        <h2>후크와의 마지막 대결</h2>
+        <p>피터 팬은 후크 선장과 치열하게 맞섰습니다. 후크는 교활하고 강했지만, 피터 팬의 용기와 재빠름을 당해 내지 못했습니다. 마침내 피터 팬은 후크를 물리치고 아이들을 구해 냈습니다.</p>
+        <p>붙잡혀 있던 웬디와 아이들은 무사히 풀려났습니다. 피터 팬의 용기 덕분에 네버랜드에 다시 평화가 찾아왔습니다. 아이들은 피터 팬에게 진심으로 고마워했습니다.</p>
+        <p>이 대결에서 피터 팬은 순수한 아이의 용기를 보여 주었습니다. 그러나 웬디는 이 위험한 모험을 겪으며, 이제 집으로 돌아가야 할 때가 왔음을 분명히 느꼈습니다. 아이들에게는 돌아갈 집과 자라나야 할 삶이 있었기 때문입니다.</p>
+        <p>이 대목은 이야기의 절정으로, 피터 팬이 후크를 물리치는 대결의 단계입니다. 순수한 용기가 승리하지만, 동시에 웬디는 돌아갈 결심을 굳힙니다. 모험의 끝에서 성장에 대한 물음이 더욱 또렷해집니다. 짜릿한 모험도 언젠가는 돌아갈 자리가 있어야 온전해진다는 것을 웬디는 느꼈습니다.</p>
+        <p>위기를 넘긴 웬디와 아이들은 마침내 집으로 돌아가기로 했습니다. 그러나 피터 팬은 그들과 함께 가지 않기로 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학09/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 이별</span>
+        <h2>돌아온 아이들, 남은 아이</h2>
+        <p>웬디와 아이들은 그리운 집으로 돌아갔습니다. 기다리던 부모님은 아이들을 따뜻하게 맞아 주었습니다. 아이들은 가족의 품에서 안도의 눈물을 흘렸습니다.</p>
+        <p>그러나 피터 팬은 네버랜드에 남기로 했습니다. 그는 여전히 어른이 되기를 거부하며, 영원한 아이로 남기를 택한 것입니다. 웬디는 피터 팬과 아쉬운 작별을 나누었습니다.</p>
+        <p>웬디는 자라나며 어른이 되기로 했고, 피터 팬은 영원한 아이로 남기로 했습니다. 두 사람의 선택은 서로 달랐지만, 어느 쪽이 옳고 그르다고 할 수는 없었습니다. 자라나는 것도, 순수한 아이로 남는 것도 저마다의 의미가 있었기 때문입니다.</p>
+        <p>이 대목은 웬디와 피터 팬이 서로 다른 길을 택하는 결말의 이별 단계입니다. 자라나는 웬디와 영원한 아이 피터 팬의 대비가, 성장의 의미를 깊이 되묻습니다. 어느 쪽도 틀리지 않은 두 선택이 잔잔한 여운을 남깁니다. 서로 다른 길을 존중하며 나누는 작별이기에, 그 이별은 더욱 아름다웠습니다.</p>
+        <p>피터 팬은 이따금 웬디를 찾아오겠다는 약속을 남기고 네버랜드로 돌아갔습니다. 웬디는 자라나면서도, 마음 한구석에 순수한 아이의 마음을 간직하기로 했습니다. 그 맑은 마음은 어른이 되어서도 웬디를 지켜 주는 소중한 보물이 될 것이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학09/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>영원한 아이의 이야기</h2>
+        <p>「피터 팬」은 영원히 어른이 되지 않는 소년을 통해, 어른이 된다는 것과 아이로 남는다는 것의 의미를 되묻는 환상 문학입니다. 웬디는 자라나기를 택했고, 피터 팬은 영원한 아이로 남기를 택했습니다. 이 작품은 그 두 선택을 나란히 놓고 성장의 의미를 생각하게 합니다.</p>
+        <p>이 작품이 지닌 매력은 여럿입니다. 첫째는 하늘을 나는 아이들과 네버랜드라는 아름다운 환상이요, 둘째는 성장에 대한 깊이 있는 물음입니다. 제임스 배리는 이를 통해, 어린이와 어른 모두에게 잔잔한 울림을 전합니다.</p>
+        <p>무엇보다 이 작품은, 자라나는 것의 의미를 일깨웁니다. 어른이 되면 순수한 아이의 마음을 잃을 수도 있지만, 대신 사랑하는 가족과 책임, 그리고 소중한 삶을 얻습니다. 자라남은 잃음이 아니라, 새로운 것을 얻어 가는 과정이기도 합니다. 그래서 성장은 두려워할 일이 아니라, 기꺼이 맞이할 일임을 이 작품은 넌지시 일러 줍니다.</p>
+        <p>영원한 아이 피터 팬의 이야기는, 우리에게 성장의 의미를 곱씹게 합니다. 자라나면서도 마음 한구석에 순수한 아이의 마음을 간직할 수 있다면, 그것이야말로 가장 아름다운 성장일 것입니다. 이 작품은 우리에게, 자라남과 순수함 모두를 소중히 여기라는 여운을 남깁니다.</p>
+        <p><span class="highlight">어른이 된다는 것과 아이로 남는다는 것, 그 두 가지 모두에 저마다의 소중한 의미가 있습니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'worldlit09_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌻 살아서 한 점, 죽어서 온 세상 — 반 고흐</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계인물13/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00897b 0%, #004d40 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 137, 123, 0.15);
+      color: #004d40;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00897b;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #004d40;
+      font-weight: 600;
+    }
+
+    .story-card .key-sentence {
+      display: block;
+      background: rgba(0, 137, 123, 0.1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-left: 4px solid #00897b;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #004d40;
+      font-size: 14px;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #4dd0e1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(0, 137, 123, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #80cbc4;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 137, 123, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 77, 64, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 137, 123, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌻 살아서 한 점, 죽어서 온 세상 — 반 고흐</h1>
+        <p class="subtitle">
+          — 아무도 사 주지 않는 그림을 십 년 동안 그린 사람 —<br>
+          교과기반 창작도서 · 세계인물 13 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🌻 등장인물 소개</h3>
+          <p><strong>★ 빈센트 반 고흐 (주인공):</strong> 1853년 네덜란드에서 목사의 아들로 태어났어요. 하는 일마다 실패하다 스물일곱에야 자기 길을 찾았고, 남은 십 년 동안 이천 점 가까운 그림을 남겼지요.</p>
+          <p><strong>★ 동생 테오:</strong> 형에게 매달 돈을 부친 사람이에요. 세상이 형의 그림을 비웃을 때 끝까지 그 그림을 믿은 단 한 사람이었지요.</p>
+          <p><strong>★ 광부들:</strong> 빈센트가 <span class="vocab-tip" data-meaning="종교의 가르침을 사람들에게 전하는 사람">전도사</span>로 지내며 만난 이웃들이에요. 그가 처음으로 그리고 싶다고 느낀 얼굴들이지요.</p>
+          <p><strong>★ 요한나 (테오의 아내):</strong> 형제가 모두 세상을 떠난 뒤, 남겨진 그림과 편지를 지켜 냈어요. 반 고흐의 이름을 세상에 알린 숨은 주인공이지요.</p>
+          <p><strong>★ 노란 집과 해바라기:</strong> 프랑스 남부 아를에서 그가 얻은 빛이에요. 가장 외로운 시절에 가장 밝은 그림이 태어났지요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 내면의 갈등:</strong> 어디에도 어울리지 못하는 사람 vs. 어딘가에는 쓸모가 있고 싶은 마음</p>
+          <p><strong>② 세상의 갈등:</strong> "거칠고 이상하다"는 평가 vs. 보이는 대로가 아니라 느낀 대로 그리려는 고집</p>
+          <p><strong>③ 생활의 갈등:</strong> 팔리지 않는 그림 vs. 동생이 부쳐 주는 돈으로 버티는 하루</p>
+          <p><strong>④ 시간의 갈등:</strong> 살아서 받지 못한 인정 vs. 죽은 뒤에야 알아본 세상</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물13/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>어디에도 맞지 않는 사람</h2>
+        <p>1853년 네덜란드의 작은 마을에서<br>
+목사의 아들로 태어난 빈센트 반 고흐는<br>
+어릴 때부터 남들과 조금 달랐어요.<br>
+말수가 적고 고집이 셌으며,<br>
+혼자 들판을 오래 걸어 다니는 아이였지요.</p>
+        <p>열여섯 살에 그는 <span class="vocab-tip" data-meaning="그림을 걸어 두고 사고파는 가게">화랑</span>에서<br>
+그림을 파는 일을 시작했어요.<br>
+그런데 손님이 그림을 고를 때마다<br>
+참지 못하고 끼어들었지요.<br><br><span class="dialogue">"그 그림은 좋지 않습니다. 저쪽 그림이 훨씬 진실합니다."</span><br><br>이런 일이 되풀이되자<br>
+결국 그는 쫓겨났어요.<br>
+다음으로 목사가 되려고<br>
+<span class="vocab-tip" data-meaning="종교의 가르침을 깊이 공부하는 학문">신학</span>교 시험에 매달렸지만<br>
+그마저 뜻을 이루지 못했지요.</p>
+        <p>스무 살이 넘도록 그는 어느 일에서도<br>
+자리를 잡지 못했어요.<br><br><span class="dialogue">"나는 무엇에도 쓸모가 없는 사람 같다. 그런데도 내 안에는 무언가가 있다. 그것이 무엇인지 아직 모를 뿐이다."</span></p>
+        <p><span class="highlight">스물다섯의 빈센트는 아직 붓을 잡아 본 적이 없었어요.</span><br>
+자기 안에 있는 것이 그림이라는 사실을<br>
+그는 아직 알지 못했지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물13/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>석탄 마을의 전도사</h2>
+        <p>마지막으로 그는 벨기에의<br>
+<span class="vocab-tip" data-meaning="석탄을 캐내는 굴과 그 시설">탄광</span> 마을로 갔어요.<br>
+전도사로 일할 기회를 얻은 것이지요.<br>
+빈센트는 그곳 사람들과<br>
+똑같이 살기로 마음먹었어요.<br>
+좋은 방을 마다하고 오두막에서 지냈고,<br>
+자기 침대와 옷을<br>
+아픈 사람에게 내주었지요.<br>
+얼굴은 늘 석탄 가루로 검었지만,<br>
+마을 사람들은 그런 그를 좋아했어요.</p>
+        <p>그런데 교회에서 나온 사람이<br>
+그 모습을 보고 크게 놀랐어요.<br><br><span class="dialogue">"당신은 지나칩니다. 전도사에게는 지켜야 할 품위라는 것이 있습니다."</span><br><br>결국 빈센트는 그 일에서도 쫓겨났어요.<br>
+진심을 다한 것이<br>
+오히려 이유가 된 셈이었지요.</p>
+        <p>그러던 어느 날, 그는 땅속에서 올라오는<br>
+<span class="vocab-tip" data-meaning="탄광에서 석탄을 캐는 일을 하는 사람">광부</span>들의 뒷모습을 오래 바라보았어요.<br>
+굽은 등과 검게 물든 손이<br>
+하나하나 눈에 들어왔지요.<br>
+그리고 자기도 모르게 종이를 꺼내<br>
+그 모습을 그리기 시작했어요.</p>
+        <p><span class="highlight">그림을 배운 적도 없고 잘 그리지도 못했어요.</span><br>
+그런데 그리는 동안 마음이<br>
+처음으로 조용해졌지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물13/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 발견</span>
+        <h2>스물일곱에 시작하다</h2>
+        <p>스물일곱 살이 되던 해,<br>
+빈센트는 마침내 마음을 정했어요.<br>
+화가가 되겠다는 것이었지요.<br>
+주변에서는 또 실패할 거라고 했지만,<br>
+이번만은 달랐어요.<br>
+아침에 눈을 뜨면 그렸고,<br>
+해가 지면 등불을 켜고 그렸지요.<br>
+종이가 떨어지면<br>
+편지지 뒷면에라도 그렸어요.</p>
+        <p>그가 처음 그린 것은 아름다운 풍경이나<br>
+귀족의 얼굴을 담은 <span class="vocab-tip" data-meaning="사람의 얼굴이나 모습을 그린 그림">초상</span>이 아니었어요.<br>
+어두운 방에서 감자를 먹는 농부들,<br>
+다 해진 낡은 신발 같은 것이었지요.<br>
+탄광 마을에서 본 얼굴들이<br>
+계속 그의 손끝으로 나왔어요.</p>
+        <p>그림 실력은 처음에 형편없었어요.<br>
+팔다리 비율이 맞지 않았고 선은 서툴렀지요.<br>
+그러면서도 멈추지 않고 같은 것을<br>
+몇 번이고 다시 그렸어요.<br><br><span class="dialogue">"나에게 그림 그리는 일은 숨 쉬는 것만큼 자연스럽다. 그러니 못 그린다고 그만둘 수는 없다."</span></p>
+        <p><span class="highlight">그에게 남은 시간은 딱 십 년이었어요.</span><br>
+물론 그때는 아무도<br>
+그 사실을 알지 못했지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물13/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 동생</span>
+        <h2>매달 오는 봉투</h2>
+        <p>화가가 된 빈센트에게는<br>
+큰 문제가 하나 있었어요.<br>
+그림이 도무지 팔리지 않는 것이었지요.<br>
+돈이 없으니 물감도, 그림 그리는 천인<br>
+<span class="vocab-tip" data-meaning="유화 그림을 그리는 데 쓰는 튼튼한 천">캔버스</span>도 살 수 없었어요.</p>
+        <p>그때 동생 테오가 나섰어요.<br>
+넉넉한 형편이 아닌데도 매달 형에게<br>
+생활비를 부쳐 주기 시작했지요.<br>
+그 돈은 십 년 동안<br>
+단 한 번도 끊긴 적이 없었어요.<br>
+빈센트는 그 돈으로 물감을 사고<br>
+밥을 먹고 방세를 냈지요.<br>
+형제가 주고받은 편지만<br>
+육백 통이 넘지요.<br><br><span class="dialogue">"테오, 나는 너에게 짐만 되는구나. 언젠가 그림이 팔리면 다 갚겠다."</span><br><br><span class="dialogue">"형, 갚을 생각 하지 말고 그리기만 해. 언젠가 사람들이 알아볼 거야. 내가 먼저 알아봤으니까."</span></p>
+        <p>세상 모든 사람이 그의 그림을 비웃을 때도<br>
+테오만은 조금도 흔들리지 않았어요.<br>
+번번이 거절당해도<br>
+다음 달이면 어김없이 봉투를 부쳤지요.</p>
+        <p><span class="highlight">빈센트가 십 년 동안 그릴 수 있었던 것은 재능 때문만이 아니었어요.</span><br>
+그를 믿은 사람이<br>
+한 명 있었기 때문이지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물13/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>거칠고 이상하다는 말</h2>
+        <p>빈센트는 동생이 있는 파리로 건너가<br>
+여러 화가들을 만났어요.<br>
+그곳에서 밝고 강한 색을<br>
+마음껏 쓰는 법을 보았지요.<br>
+그는 노란색과 파란색을 아낌없이 썼고,<br>
+물감을 튜브에서 짜낸 그대로<br>
+두껍게 얹어 발라 나갔어요.<br>
+가까이서 보면 <span class="vocab-tip" data-meaning="붓으로 칠할 때 남는 자국">붓 자국</span>과<br>
+물감 덩어리가 그대로 튀어나와 있었지요.</p>
+        <p>거기에는 분명한 이유가 있었어요.<br>
+그는 눈에 보이는 그대로가 아니라,<br>
+그 앞에 섰을 때 자기 <span class="vocab-tip" data-meaning="기쁨·슬픔처럼 마음에 이는 느낌">감정</span>이<br>
+어땠는지를 그리려 했지요.<br>
+밀밭 앞에서 가슴이 뛰었다면<br>
+밀밭은 뛰는 색으로 그려야 한다고 믿었어요.</p>
+        <p>그러나 그 시절 사람들이 좋아한 그림은<br>
+매끈하고 단정한 그림이었어요.<br><br><span class="dialogue">"이건 너무 거칠어. 아이가 그린 것 같군. 이런 걸 누가 집에 걸겠나."</span><br><br>그림은 여전히 팔리지 않았고,<br>
+동네 사람들은 그를<br>
+이상한 사람 취급했지요.</p>
+        <p><span class="highlight">인정받지 못하는 십 년은 몹시 긴 시간이에요.</span><br>
+그런데 빈센트는 그 십 년 동안<br>
+붓을 놓은 적이 거의 없었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물13/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">전개 · 빛</span>
+        <h2>아를의 노란 집</h2>
+        <p>서른다섯이 되던 해, 빈센트는<br>
+프랑스 남쪽의 작은 도시 아를로 내려갔어요.<br>
+강한 햇빛이 쏟아지는 곳에서<br>
+그리고 싶었기 때문이지요.<br>
+하늘은 눈이 시릴 만큼 파랬고,<br>
+밀밭은 온통 금빛으로 일렁였어요.<br>
+그는 그림판을 세우는 받침대인<br>
+<span class="vocab-tip" data-meaning="그림 그릴 때 캔버스를 세워 놓는 받침대">이젤</span>을 들고 들로 나가<br>
+하루에 한 점씩 그린 날도 많았지요.</p>
+        <p>그는 광장 옆 작은 집을 빌려<br>
+바깥벽을 온통 노랗게 칠했어요.<br>
+사람들은 그 집을 '노란 집'이라 불렀지요.<br>
+마음 맞는 화가들이 함께 모여 사는<br>
+집을 만드는 것이 그의 꿈이었어요.<br>
+함께 지낼 화가를 기다리며<br>
+손님방에 걸 그림을 직접 그렸는데,<br>
+그것이 바로 <span class="vocab-tip" data-meaning="같은 주제로 여러 점을 이어서 그린 작품들">연작</span>으로 남은<br>
+해바라기 그림들이에요.</p>
+        <p>그는 해바라기를 몇 번이고 다시 그렸어요.<br>
+해바라기를 그릴 때 그는 꽃이 아니라<br>
+기쁨을 그리는 것이라고 말했지요.<br>
+<span class="highlight">가장 외로운 시절에 그는 가장 환한 그림을 그렸지요.</span><br>
+노란 집에서 보낸 그 몇 달이<br>
+그의 인생에서 가장 행복한 때였어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물13/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>다시 혼자가 된 집</h2>
+        <p>오래 기다리던 화가가 마침내<br>
+노란 집에 도착했어요.<br>
+빈센트는 아이처럼 들떠 있었지요.<br>
+그러나 두 사람은 성격도 생각도<br>
+지나치게 달랐어요.<br>
+그림 이야기의 끝은 늘 말다툼이었지요.<br>
+결국 두 달 만에 그 화가는<br>
+짐을 싸서 떠나 버렸어요.<br>
+화가들이 모여 사는 집을 만들겠다던<br>
+오랜 꿈도 그 자리에서 끝나 버렸지요.</p>
+        <p>그 화가가 떠난 날 밤,<br>
+빈센트는 크게 무너졌어요.<br>
+십 년 동안 쌓인 외로움과<br>
+거듭된 실패가 한꺼번에 몰려왔지요.<br>
+이 무렵부터 그의 몸과 마음은<br>
+눈에 띄게 나빠졌어요.<br>
+동네 사람들도 그를 무서워하기 시작했지요.<br>
+그토록 밝게 칠했던 노란 집의 문은<br>
+그렇게 닫혔어요.</p>
+        <p>빈센트는 누가 시키기 전에 스스로<br>
+몸과 마음을 쉬며 치료하는 곳인<br>
+<span class="vocab-tip" data-meaning="몸과 마음을 쉬면서 치료하는 곳">요양원</span>에 들어가기로 했어요.<br>
+짐을 꾸리면서도 물감과 붓만은<br>
+빠짐없이 챙겨 넣었지요.</p>
+        <p><span class="highlight">그는 아픈 중에도 그리는 일만은 놓지 않았어요.</span><br>
+오히려 요양원에서 그의 가장 유명한 그림이<br>
+태어났지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물13/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 걸작</span>
+        <h2>창살 너머의 밤하늘</h2>
+        <p>요양원에서 빈센트가 지낸 방에는<br>
+쇠창살이 달린 작은 창이 하나 있었어요.<br>
+어느 새벽, 잠을 이루지 못한 그가<br>
+창밖을 내다보았지요.<br>
+별이 유난히 크고 밝게 빛나는 밤이었어요.<br>
+그의 눈에 별빛은 가만히 박힌 점이 아니라,<br>
+소용돌이치며 흘러가는 물결처럼 보였지요.</p>
+        <p>그는 곧바로 그 밤을 그리기 시작했어요.<br>
+하늘은 깊고 짙은 파랑으로 칠하고,<br>
+별은 커다란 노란 덩어리로 두껍게 얹었지요.<br>
+그것이 오늘날 누구나 아는<br>
+「별이 빛나는 밤」이에요.<br>
+창살 있는 방에서 그렸는데도<br>
+끝없이 넓은 느낌이 밀려오는 그림이지요.</p>
+        <p>요양원에서도 그는 놀라운 속도로 그렸어요.<br>
+십 년 동안 남긴 그림은 900점이 넘고,<br>
+밑그림인 <span class="vocab-tip" data-meaning="본격적으로 그리기 전에 간단히 그린 밑그림">스케치</span>까지 더하면<br>
+이천 점이 넘지요.<br>
+잠자는 시간 말고는<br>
+거의 붓을 들고 있었던 거예요.</p>
+        <p><span class="highlight">가장 아프던 시기에 가장 아름다운 것을 남긴 것이지요.</span><br>
+그림은 그에게 취미가 아니라<br>
+버티는 방법이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물13/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 이별</span>
+        <h2>팔린 그림 한 점</h2>
+        <p>1890년 여름, 빈센트 반 고흐는<br>
+서른일곱이라는 젊은 나이로<br>
+세상을 떠났어요.<br>
+살아 있는 동안 실제로 팔린 그림은<br>
+단 한 점이었다고 전해지지요.<br>
+장례식에 온 사람은 몇 되지 않았고,<br>
+관 주위에는 그가 평생 그린 그림들이<br>
+빙 둘러 세워졌어요.<br>
+그가 사랑하던 노란 해바라기가<br>
+관 위에 놓였지요.</p>
+        <p>더 슬픈 일은 그다음에 일어났어요.<br>
+형을 잃은 충격을 이기지 못한 동생 테오도<br>
+여섯 달 뒤에 형을 따라 세상을 떠났지요.<br>
+그 많은 그림을 지켜 줄 사람은<br>
+아무도 없어 보였어요.</p>
+        <p>그런데 뜻밖에 한 사람이 남아 있었어요.<br>
+테오의 아내 요한나였지요.<br>
+그녀는 형제가 십 년 동안 주고받은 편지를<br>
+처음부터 끝까지 전부 읽었고,<br>
+그 안에 담긴 것이 무엇인지<br>
+마침내 알아보았어요.</p>
+        <p><span class="highlight">요한나는 그 그림들을 헐값에 팔아 치우는 대신, 세상에 알리기로 마음먹었어요.</span><br>
+아직 젖먹이인 아들을 혼자 키우면서<br>
+시작한 일이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물13/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>시간이 걸리는 그림</h2>
+        <p>요한나는 그림을 모아 보여 주는<br>
+<span class="vocab-tip" data-meaning="작품을 모아 사람들에게 보여 주는 행사">전시회</span>를 여기저기 열었어요.<br>
+거절당하면 다시 찾아갔고,<br>
+형제의 편지를 모아 책으로도 펴냈지요.<br>
+사람들은 그림을 보고, 편지를 읽고,<br>
+그제야 알았어요.<br>
+거칠다고 여겼던 붓 자국이 사실은<br>
+마음을 그대로 옮긴 것이었다는 걸요.</p>
+        <p>평가는 서서히 뒤집혔어요.<br>
+반 고흐는 <span class="vocab-tip" data-meaning="이전에 없던 것을 새롭게 여는 일">혁신</span>을 이룬 화가로<br>
+불리기 시작했지요.<br>
+오늘날 「해바라기」와<br>
+「별이 빛나는 밤」 앞에는<br>
+해마다 수백만 명이 줄을 서고,<br>
+그의 <span class="vocab-tip" data-meaning="아주 뛰어나 오래 남는 작품">걸작</span> 한 점 값은<br>
+수천억 원에 이르러요.</p>
+        <p>그림이 달라진 것이 아니에요.<br>
+그림은 그대로인데, 그것을 알아보는 눈이<br>
+세상에 생기기까지 시간이 걸린 것뿐이지요.<br><br><span class="dialogue">"언젠가 내 그림이 물감값보다 더 값어치가 있다는 것을 사람들이 알게 될 날이 올 것이다."</span></p>
+        <p><span class="highlight">그는 그날을 보지 못했지만, 그날이 올 것을 믿고 십 년을 그렸어요.</span><br>
+지금 인정받지 못한다고 해서<br>
+값이 없는 것은 아니라는 사실을,<br>
+그의 그림들이 백 년 넘게 증명하고 있지요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(230, 170, 40, 0.15); border-radius: 16px;">
+          <strong style="color: #E6AA28; font-size: 20px;">🌻 「알아보는 눈이 생기기까지, 어떤 가치는 기다려야 한다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+      function goToQuiz() { window.location.href = '/creative-book/worldperson13_season1_quiz.html?season=season1'; }
+  </script>
+</body>
+</html>

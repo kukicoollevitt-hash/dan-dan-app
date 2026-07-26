@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏭 된장 공장의 비밀 장부 — 정직이라는 원료</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작정치경제12/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🏭 된장 공장의 비밀 장부 — 정직이라는 원료</h1>
+        <p class="subtitle">
+          — 기업은 이윤을 먹고 자라지만, 신뢰 위에서만 오래 산다 —<br>
+          교과기반 창작도서 · 정치경제 12
+        </p>
+        <div class="characters">
+          <h3>🏭 등장인물 소개</h3>
+          <p><strong>★ 노을 (주인공):</strong> 된장 공장집 손녀. "싸게 만들려면 버려야 하는 게 있다"는 할아버지의 알쏭한 말의 뜻을 찾아간다.</p>
+          <p><strong>★ 할아버지:</strong> 삼십 년 된 해맑은 된장 공장의 사장. 정직을 원료로 쓰는 기업가.</p>
+          <p><strong>★ 싸다장 공장:</strong> 반값 된장으로 시장을 휩쓰는 옆 도시의 큰 공장. 이윤만 좇는 기업의 얼굴.</p>
+          <p><strong>★ 공장 식구들:</strong> 콩을 고르고 장을 담그는 마을 아주머니 열두 명. 기업이 품고 있는 삶들.</p>
+          <p><strong>★ 마을 하천:</strong> 물고기가 살던 맑은 물. 사건의 무대이자 조용한 증인.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 값의 갈등:</strong> 반값 된장의 달콤한 유혹 vs. 제값을 하는 정직한 된장</p>
+          <p><strong>② 이윤의 갈등:</strong> 어떻게든 남기려는 길 vs. 지킬 것을 지키며 남기는 길</p>
+          <p><strong>③ 누명의 갈등:</strong> 하천을 더럽혔다는 의심 vs. 삼십 년 지켜 온 결백</p>
+          <p><strong>④ 선택의 갈등:</strong> 싼 것만 고르는 소비자 vs. 착한 기업을 알아보는 소비자</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제12/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>반값 된장의 습격</h2>
+        <p>노을이네 할아버지는 마을에서 삼십 년째 해맑은 된장 공장을 하십니다. 장독대 백 개가 줄지어 선 마당에는 사시사철 구수한 냄새가 흐르고, 마을 아주머니 열두 분이 그곳에서 콩을 고르고 장을 담급니다. 노을이는 그 마당에서 숨바꼭질을 하며 자랐습니다.</p>
+        <p>그런데 요즘 공장에 걱정이 드리웠습니다. 옆 도시에 싸다장이라는 큰 공장이 생기더니, 해맑은 된장의 반값에 된장을 쏟아 내기 시작한 것입니다. 마트 진열대에서 손님들의 손은 자꾸만 싼 쪽으로 향했고, 해맑은 된장의 주문은 눈에 띄게 줄었습니다.</p>
+        <p>노을이는 답답한 마음에 할아버지께 따지듯 물었습니다.<br><br><span class="dialogue">"할아버지, 우리도 그냥 싸게 만들면 되잖아요! 반값으로 팔면 손님들이 다시 올 거 아니에요."</span><br><br>할아버지는 장독을 닦던 손을 멈추고 노을이를 바라보았습니다.</p>
+        <p><span class="dialogue">"노을아, 값을 반으로 줄이려면 무언가를 버려야 한단다. 좋은 콩을 버리든, 기다림의 시간을 버리든, 아니면... 더 소중한 것을 버리든. 할아버지는 아직 버릴 것을 못 찾았어."</span><br><br>노을이는 그 말이 도무지 이해되지 않았습니다. 버리다니, 무엇을요?</p>
+        <p>그날 밤 노을이는 곰곰이 생각했습니다. 같은 된장인데 왜 값이 두 배나 차이 날까. 싸다장은 대체 무엇을 버려서 그렇게 싸게 만드는 걸까. 할아버지의 알쏭달쏭한 말은 수수께끼가 되어 노을이의 머릿속을 맴돌았습니다.</p>
+        <p><span class="highlight">"싸게 만들려면 무언가를 버려야 한다."</span> 그 수수께끼의 답을 찾는 것이, 노을이의 긴 여름 숙제가 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제12/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>우리 할아버지는 기업가</h2>
+        <p>마침 사회 시간의 주제가 기업이었습니다. 선생님이 칠판에 커다랗게 적었습니다.<br><br><span class="dialogue">"물건이나 서비스를 만들어 팔아서 이익을 얻는 조직을 <span class="vocab-tip" data-meaning="물건이나 서비스를 만들어 팔아 이윤을 얻는 조직">기업</span>이라고 해요. 그리고 기업이 벌어들이는 이익, 그러니까 판 돈에서 들어간 비용을 뺀 것을 <span class="vocab-tip" data-meaning="기업이 물건을 팔아 얻는 이익. 수입에서 비용을 뺀 금액">이윤</span>이라고 하지요."</span></p>
+        <p><span class="dialogue">"기업은 물건을 만들어 내는 <span class="vocab-tip" data-meaning="물건이나 서비스를 만들어 내는 활동">생산</span> 활동으로 우리에게 필요한 것들을 공급해요. 그리고 기업들은 서로 경쟁하기 때문에, 더 좋은 물건을 더 알맞은 값에 만들려고 끊임없이 노력한답니다. 여러분 주변에도 기업이 있을까요?"</span></p>
+        <p>노을이가 번쩍 손을 들었습니다.<br><br><span class="dialogue">"저희 할아버지가 기업가예요! 해맑은 된장 공장 사장님이거든요!"</span><br><br>그런데 뒷자리에서 킥킥 웃음이 새어 나왔습니다.<br><br><span class="dialogue">"그 비싼 된장? 우리 엄마는 싸다장만 사던데. 반값이잖아."</span></p>
+        <p>노을이는 얼굴이 화끈거렸습니다. 자랑스럽게 손을 들었는데, 할아버지의 된장이 비싸고 안 팔리는 된장 취급을 받은 것입니다. 선생님이 분위기를 바꾸려는 듯 제안했습니다.<br><br><span class="dialogue">"그럼 이번 기회에 우리 반이 노을이네 공장으로 견학을 가 볼까? 기업이 실제로 어떻게 움직이는지 두 눈으로 보는 거야."</span></p>
+        <p>아이들은 환호했지만 노을이는 마음이 복잡했습니다. 친구들이 낡은 공장을 보고 또 웃으면 어쩌나 걱정도 되었습니다. 하지만 한편으로는 보여 주고 싶었습니다. 할아버지의 된장이 왜 그 값인지, 노을이 자신도 그 답을 찾고 싶었기 때문입니다.</p>
+        <p><span class="highlight">할아버지는 기업가였지만, 그 기업은 지금 비싸다는 놀림을 받고 있었습니다.</span> 견학 날, 공장은 무엇을 보여 줄 수 있을까요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제12/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>공장이 품고 있는 것들</h2>
+        <p>견학 날, 아이들은 장독대 백 개가 늘어선 마당에서 탄성을 질렀습니다. 할아버지는 아이들에게 공장 구석구석을 보여 주었습니다. 국산 콩만 고르는 선별실, 삼 년을 기다리는 장독들, 그리고 웃으며 일하는 열두 분의 아주머니들.</p>
+        <p><span class="dialogue">"이 공장은 물건만 만드는 게 아니란다. 열두 식구의 일자리를 만들지. 저 아주머니들은 여기서 일한 <span class="vocab-tip" data-meaning="일을 해서 벌어들이는 돈. 근로의 대가">소득</span>으로 아이들을 키우고, 그 돈을 마을 가게에서 쓰신단다. 그렇게 돈이 돌고 돌아 마을 경제가 숨을 쉬는 거야."</span></p>
+        <p><span class="dialogue">"그리고 공장은 해마다 나라에 <span class="vocab-tip" data-meaning="국가나 지방에 내는 돈. 도로·학교 등 공공 서비스에 쓰임">세금</span>을 낸단다. 그 세금이 너희가 다니는 학교와 마을 도로가 되지. 학교 앞 장학금도 이 된장에서 나왔고. 기업이란 이렇게 마을과 한 몸으로 사는 거란다."</span><br><br>아이들의 눈이 달라졌습니다. 비싼 된장이라 놀리던 아이도 고개를 끄덕였습니다.</p>
+        <p>돌아가는 길에 선생님이 정리해 주었습니다. 기업은 생산으로 필요한 것을 공급하고, 일자리와 소득을 만들고, 세금으로 사회에 기여한다고요. 노을이는 어깨가 으쓱해졌습니다. 할아버지의 공장은 작아도, 하는 일은 결코 작지 않았습니다.</p>
+        <p>그러나 그날 저녁, 노을이는 사무실에서 한숨짓는 할아버지를 보았습니다. 책상 위 장부에는 빨간 숫자가 늘어 가고 있었습니다. 주문은 줄고, 싸다장의 반값 공세는 거세지고. 마을과 한 몸인 이 공장이, 조용히 흔들리고 있었습니다.</p>
+        <p><span class="highlight">공장은 된장만 만드는 곳이 아니라, 열두 식구의 삶과 마을의 살림을 품은 곳이었습니다.</span> 그래서 장부의 빨간 숫자가 더 무거웠습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제12/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>수수께끼 조사단</h2>
+        <p>노을이는 할아버지의 수수께끼를 풀기 위해 단짝 서진이와 조사단을 꾸렸습니다. 이름하여 된장 수수께끼 조사단. 첫 번째 조사는 맛 비교였습니다. 용돈을 모아 싸다장 된장을 사서, 해맑은 된장과 나란히 놓고 된장국을 끓여 본 것입니다.</p>
+        <p>차이는 분명했습니다. 해맑은 된장국은 구수한 냄새가 오래 남는데, 싸다장 된장국은 첫맛은 비슷해도 뒷맛이 밍밍하고 어딘가 인공적인 단맛이 났습니다. 상표 뒷면을 살펴보니 성분표부터 달랐습니다. 해맑은 된장은 콩, 소금, 물이 전부인데, 싸다장에는 처음 보는 이름들이 길게 적혀 있었습니다.</p>
+        <p><span class="dialogue">"수입 콩에, 빨리 익히는 재료를 넣나 봐. 삼 년 기다리는 대신 몇 달 만에 만드는 거지. 그러면 싸질 수밖에 없겠다."</span><br><br>서진이의 분석에 노을이는 고개를 끄덕였습니다. 버린 것의 정체가 조금씩 보였습니다. 좋은 재료와 기다림의 시간. 싸다장은 그것들을 버려서 반값을 만든 것입니다.</p>
+        <p>조사단은 더 확실한 답을 얻으려고 싸다장 공장에 견학을 신청했습니다. 그런데 돌아온 답은 뜻밖이었습니다. 공장 내부는 일절 공개하지 않는다는 차가운 거절이었습니다. 해맑은 공장은 언제든 놀러 오라는데, 싸다장은 문을 꽁꽁 걸어 잠그고 있었습니다.</p>
+        <p><span class="dialogue">"이상하지 않아? 떳떳하면 보여 줄 텐데."</span><br><br>노을이의 말에 서진이도 고개를 갸웃했습니다. 반값의 비밀에는 재료와 시간 말고도, 무언가가 더 있는 것 같았습니다. 조사단의 수첩에 물음표 하나가 더 추가되었습니다.</p>
+        <p><span class="highlight">싸다장이 버린 것은 좋은 재료와 기다림의 시간이었습니다.</span> 그런데 굳게 닫힌 공장 문 뒤에는, 또 다른 비밀이 숨어 있는 듯했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제12/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>하천의 물고기들</h2>
+        <p>그러던 어느 아침, 마을이 발칵 뒤집혔습니다. 마을 하천에 물고기들이 하얗게 배를 뒤집고 떠오른 것입니다. 물가에는 부옇게 이상한 거품이 둥둥 떠 있었고, 코를 찌르는 매캐한 냄새까지 났습니다. 아이들과 놀던 맑은 하천이 하룻밤 사이에 죽음의 물이 되어 있었습니다.</p>
+        <p>그런데 소문은 엉뚱한 방향으로 흘렀습니다.<br><br><span class="dialogue">"하천에서 제일 가까운 게 그 된장 공장이잖아. 장 담그고 남은 물을 버린 거 아니야?"</span><br><br>누군가 무심코 던진 한마디가 삽시간에 온 마을로 퍼졌습니다. 삼십 년 이웃이던 마을 사람들의 눈길이 하루아침에 서늘하게 변했습니다.</p>
+        <p>공장으로 항의 전화가 걸려 왔고, 남아 있던 주문마저 뚝뚝 끊겼습니다. 할아버지는 곧바로 검사 기관에 공장 물의 검사를 맡겼지만, 결과가 나오려면 몇 주가 걸린다고 했습니다. 그동안 누명은 사실처럼 굳어 갈 것이었습니다.</p>
+        <p>노을이는 학교에서도 고개를 들기 힘들었습니다. 견학 와서 감탄하던 친구들마저 수군거렸습니다.<br><br><span class="dialogue">"물고기 죽인 게 노을이네 공장이래."</span><br><br>서진이만이 곁을 지켜 주었습니다.<br><br><span class="dialogue">"난 안 믿어. 너희 할아버지가 그럴 리 없잖아."</span></p>
+        <p>저녁에 노을이는 하천가에 쪼그려 앉아 죽은 물고기들을 바라보았습니다. 대체 누가 이런 짓을 한 걸까요. 그리고 왜 하필 착한 우리 공장이 의심을 받아야 할까요. 억울함과 분함이 목까지 차올랐습니다.</p>
+        <p><span class="highlight">삼십 년의 신뢰가 소문 하나에 흔들리고 있었습니다.</span> 결백을 밝힐 시간은 느리게 흐르고, 누명은 빠르게 굳어 갔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제12/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>버릴 수 없는 것</h2>
+        <p>공장 사정은 나날이 어려워졌습니다. 어느 저녁, 거래처 아저씨가 찾아와 할아버지에게 은밀히 제안했습니다.<br><br><span class="dialogue">"사장님, 이 판국에 고집부릴 때가 아닙니다. 수입 콩으로 바꾸고 숙성 기간을 줄이면 값을 확 낮출 수 있어요. 상표는 그대로 두고요. 소비자들은 어차피 모릅니다."</span></p>
+        <p>노을이는 문틈으로 그 대화를 숨죽여 들었습니다. 할아버지는 한참 만에 고개를 저었습니다.<br><br><span class="dialogue">"모르니까 더 안 되는 거요. 아는 사람 속이는 건 사기고, 모르는 사람 속이는 건 배신이지. 정직하게 장사하고 법을 지키는 것, 그것을 <span class="vocab-tip" data-meaning="정직하고 법을 지키며 사회에 기여하는 경영 방식">윤리 경영</span>이라고 한답디다. 나는 그 길밖에 모르오."</span></p>
+        <p>거래처 아저씨가 돌아간 뒤, 노을이는 할아버지에게 물었습니다.<br><br><span class="dialogue">"할아버지, 정직이 밥 먹여 줘요? 이러다 공장 문 닫으면요? 아주머니들 월급은요?"</span><br><br>스스로도 놀랄 만큼 뾰족한 말이었습니다. 그만큼 답답했던 것입니다.</p>
+        <p>할아버지는 화내지 않고 노을이를 장독대로 데려갔습니다.<br><br><span class="dialogue">"노을아, 이 장독들 안에서 된장은 삼 년을 기다린단다. 기업의 신뢰도 똑같아. 쌓는 데는 삼십 년이 걸리지만 무너지는 건 한순간이지. 지금 재료를 속이면 당장은 살아도, 우리는 영영 다른 공장이 되는 거야."</span></p>
+        <p>노을이는 장독에 손을 얹어 보았습니다. 햇볕에 데워진 독이 따뜻했습니다. 머리로는 할아버지가 옳다는 것을 알겠는데, 마음은 여전히 조마조마했습니다. 정직이라는 원료는, 너무 비싼 원료 같았습니다.</p>
+        <p><span class="highlight">"싸게 만들려면 버려야 한다"던 수수께끼의 답이 보였습니다.</span> 싸다장이 버린 것, 그리고 할아버지가 끝내 버리지 못하는 것. 그것은 정직이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제12/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>멈춰 선 장독대</h2>
+        <p>공장은 결국 생산을 절반으로 줄였습니다. 주문이 없으니 만들 수가 없었던 것입니다. 열두 분의 아주머니는 번갈아 가며 쉬게 되었고, 급기야 막내 아주머니가 사표를 들고 왔습니다.<br><br><span class="dialogue">"사장님, 죄송해요. 애들 학원비 때문에... 옆 도시 공장에서 사람을 구한다고 해서요."</span></p>
+        <p>할아버지는 사표를 받으며 오히려 아주머니의 손을 잡아 주었습니다.<br><br><span class="dialogue">"미안한 건 나요. 식구들 월급 하나 못 지키는 사장이라... 잘 가서 자리 잡으시게. 언제든 돌아올 자리는 비워 두겠네."</span><br><br>그 뒷모습을 보며 노을이는 눈시울이 뜨거워졌습니다.</p>
+        <p>그날 밤, 노을이는 잠이 오지 않아 마당에 나왔다가 걸음을 멈췄습니다. 달빛 아래에서 할아버지가 홀로 장독을 닦고 있었습니다. 팔리지도 않는 된장이 든 독들을, 하나하나, 정성스럽게. 그 굽은 등이 오늘따라 유난히 작아 보였습니다.</p>
+        <p><span class="dialogue">"할아버지... 안 주무세요?"</span><br><br><span class="dialogue">"독은 죄가 없잖니. 장은 주인이 흔들려도 제 할 일을 한단다. 나도 내 할 일을 해야지."</span><br><br>노을이는 걸레를 하나 집어 들고 말없이 할아버지 옆 독을 닦았습니다. 두 사람의 그림자가 장독대 위에 나란히 드리웠습니다.</p>
+        <p>닦으면서 노을이는 이를 악물었습니다. 검사 결과만 기다리고 있을 수는 없었습니다. 물고기를 죽인 진짜 범인을 찾아야 했습니다. 그래야 누명도 벗고, 하천도 살리고, 이 장독대도 다시 숨을 쉴 수 있을 테니까요.</p>
+        <p><span class="highlight">달빛 아래 장독을 닦는 굽은 등이, 노을이의 마음에 불을 붙였습니다.</span> 기다리는 대신, 찾아 나서기로 한 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제12/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>상류에서 찾은 진실</h2>
+        <p>일요일 새벽, 노을이와 서진이는 수첩과 사진기를 들고 하천을 거슬러 올랐습니다. 물이 더러워졌다면 그 원인은 상류에 있을 것이었습니다. 거품이 어디서부터 시작되는지, 두 아이는 물가를 따라 한 발 한 발 짚어 갔습니다.</p>
+        <p>해맑은 공장 앞을 지날 때 물은 오히려 맑았습니다. 거품이 짙어진 것은 훨씬 상류, 야산 하나를 넘어선 곳부터였습니다. 그리고 그 산 너머에는, 놀랍게도 싸다장 공장의 뒷담이 있었습니다. 담 아래 풀숲에 숨겨진 배수관에서, 부연 물이 콸콸 하천으로 쏟아지고 있었습니다.</p>
+        <p><span class="dialogue">"이거야! 몰래 버리고 있었어!"</span><br><br>두 아이는 떨리는 손으로 사진과 영상을 찍었습니다. 배수관의 위치, 흘러나오는 물, 그 물이 하천 본류와 만나는 지점까지. 그리고 곧장 어른들에게 달려갔습니다. 할아버지와 부모님은 그 길로 구청 환경과에 신고했습니다.</p>
+        <p>조사는 빠르게 진행되었습니다. 결과는 아이들이 본 그대로였습니다. 싸다장이 폐수 처리 비용을 아끼려고 정화하지 않은 물을 밤마다 몰래 버려 온 것입니다. 반값의 마지막 비밀은 재료도 시간도 아닌, 모두의 하천에 떠넘긴 더러움이었습니다. 싸다장은 무거운 벌금과 함께 생산 중지 처분을 받았습니다.</p>
+        <p>선생님은 이 사건을 수업에서 다루며 말했습니다.<br><br><span class="dialogue">"기업이 이윤만 좇으면 이런 일이 생긴단다. 그래서 기업에게는 환경을 보호하고, 직원을 존중하고, 지역 사회에 도움이 되어야 할 <span class="vocab-tip" data-meaning="기업이 사회와 환경에 대해 마땅히 져야 할 의무">사회적 책임</span>이 있는 거야. 그 책임을 저버린 기업이 어떻게 되는지, 우리 모두 두 눈으로 보았지?"</span></p>
+        <p><span class="highlight">반값의 마지막 비밀은, 모두의 하천에 몰래 떠넘긴 더러움이었습니다.</span> 이윤만 좇던 기업은 그렇게, 제가 버린 것에 발목을 잡혔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제12/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>돌아온 손님들</h2>
+        <p>진실이 밝혀지자 바람의 방향이 바뀌었습니다. 마을 사람들이 하나둘 공장을 찾아와 미안하다고 고개를 숙였습니다. 지역 신문에는 '삼십 년 정직을 지킨 된장 공장'이라는 기사가 실렸습니다. 누명 속에서도 재료를 바꾸지 않은 이야기, 마을과 함께해 온 세월이 알려지자, 주문 전화가 다시 울리기 시작했습니다.</p>
+        <p>물건을 사서 쓰는 사람, 곧 <span class="vocab-tip" data-meaning="물건이나 서비스를 구매하여 사용하는 사람">소비자</span>들의 선택이 달라진 것입니다. 조금 비싸도 정직한 된장을 찾는 사람들이 늘었고, 멀리 도시에서까지 주문이 들어왔습니다.<br><br><span class="dialogue">"어느 공장 된장인지 알고 먹는 게 이렇게 중요한지 몰랐어요."</span><br><br>한 손님의 말이었습니다.</p>
+        <p>공장은 다시 활기를 찾았습니다. 옆 도시로 갔던 막내 아주머니도 돌아왔습니다. 싸다장이 문을 닫으면서 일자리를 잃었던 참이었습니다.<br><br><span class="dialogue">"사장님, 그 자리... 아직 비어 있나요?"</span><br><br><span class="dialogue">"비워 둔다고 하지 않았소. 어서 오시게."</span><br><br>장독대에 다시 열두 식구의 웃음소리가 돌아왔습니다.</p>
+        <p>할아버지는 늘어난 이윤으로 가격을 올리는 대신 두 가지 일을 했습니다. 하나는 하천 살리기 성금, 또 하나는 어린이 견학 프로그램을 만드는 것이었습니다. 장 담그기를 체험하러 온 아이들로 주말의 공장 마당이 북적였습니다. 기업이 마을에 진 빚을 갚는, 할아버지식 셈법이었습니다.</p>
+        <p>노을이와 서진이는 마을에서 작은 영웅이 되었습니다. 구청에서 감사장도 받았습니다. 그러나 노을이가 가장 기뻤던 것은 따로 있었습니다. 다시 맑아진 하천에서 물고기들이 헤엄치는 모습, 그리고 장독을 닦는 할아버지의 등이 다시 꼿꼿해진 것이었습니다.</p>
+        <p><span class="highlight">소비자의 달라진 선택이, 정직한 기업을 다시 일으켜 세웠습니다.</span> 착한 기업과 깨어 있는 소비자가 만나자, 마을 전체가 살아났습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제12/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>정직이라는 원료</h2>
+        <p>학기 말 사회 발표에서 노을이는 한 해의 이야기를 반 아이들에게 들려주었습니다. 반값 된장의 습격부터 하천의 진실, 그리고 돌아온 손님들까지. 화면 마지막 장에는 장독대 사진 위에 큼직한 글씨가 적혀 있었습니다. 우리 공장의 비밀 원료: 정직.</p>
+        <p><span class="dialogue">"기업은 물건을 만들어 이윤을 얻는 조직입니다. 하지만 좋은 기업은 그 이상입니다. 일자리와 소득을 만들고, 세금으로 마을을 떠받치고, 환경과 이웃을 지킵니다. 이윤만 좇던 싸다장은 문을 닫았고, 책임을 지킨 우리 공장은 살아남았습니다."</span></p>
+        <p><span class="dialogue">"그리고 소비자에게도 힘이 있다는 것을 배웠습니다. 우리가 어떤 기업의 물건을 고르느냐가, 어떤 기업이 살아남을지를 정합니다. 착한 기업을 고르는 소비자가 많아지면, 세상의 기업들도 착해질 수밖에 없습니다."</span><br><br>박수 소리 속에서, 예전에 비싼 된장이라 놀리던 친구가 가장 크게 손뼉을 쳤습니다.</p>
+        <p>겨울 장 담그는 날, 공장 마당에는 잔치가 벌어졌습니다. 열두 식구와 마을 사람들, 견학 온 아이들까지 메주를 빚으며 웃음꽃을 피웠습니다. 할아버지는 새 장독 하나에 이렇게 써 붙였습니다. 노을이의 독. 삼 년 뒤에 열릴, 노을이 몫의 된장이었습니다.</p>
+        <p>노을이는 이제 마트에 가면 상표 뒷면부터 봅니다. 어떤 재료로, 어떤 마음으로 만들었는지 살피는 버릇이 생긴 것입니다. 그리고 언젠가 어른이 되면, 할아버지처럼 무언가를 정직하게 만드는 사람이 되고 싶다는 꿈도 조용히 품게 되었습니다.</p>
+        <p><span class="highlight">기업은 이윤을 먹고 자라지만, 신뢰 위에서만 오래 삽니다.</span> 삼 년을 기다리는 장독처럼, 정직이라는 원료는 느리지만 가장 깊은 맛을 냅니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(150, 100, 50, 0.15); border-radius: 16px;">
+          <strong style="color: #8B5A2B; font-size: 20px;">🏭 「기업은 이윤을 먹고 자라지만, 신뢰 위에서만 오래 산다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'politics12_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏠 혼자 사는 사람들 — 옆집 할머니의 국 한 그릇</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작사회문화11/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🏠 혼자 사는 사람들 — 옆집 할머니의 국 한 그릇</h1>
+        <p class="subtitle">
+          — 다양한 가족 형태와 공동체의 돌봄 —<br>
+          교과기반 창작도서 · 사회문화 11
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 소라:</strong> 혼자 사는 이웃들에게 관심을 가지며, 공동체의 이어짐을 배우는 아이.</p>
+          <p><strong>★ 옆집 할머니:</strong> 혼자 사는 이웃 어른. 국 한 그릇으로 이웃과 마음을 나눈다.</p>
+          <p><strong>★ 핵심 개념:</strong> 1인 가구, 다양한 가족 형태, 이웃 공동체, 사회적 돌봄, 이어짐.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화11/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 관찰</span>
+        <h2>불 켜진 창문</h2>
+        <p>소라네 아파트에는 밤늦도록 불이 켜진 창문이 여럿 있었습니다. 소라는 그 창문들 안에 어떤 사람들이 살고 있을지 궁금했습니다. 그러던 어느 날, 소라는 그 집들 가운데 여럿이 혼자 사는 사람들의 집이라는 것을 알게 되었습니다.</p>
+        <p>옆집에는 나이 든 할머니가 혼자 살고 계셨습니다. 또 다른 집에는 젊은 삼촌이 혼자 살았습니다. 소라는 우리 주변에 생각보다 혼자 사는 사람이 많다는 것에 놀랐습니다.</p>
+        <p>소라는 혼자 사는 사람들은 외롭지 않을까 궁금했습니다. 가족과 함께 사는 자신과 달리, 그들은 홀로 지내야 했기 때문입니다. 소라는 혼자 사는 이웃들에게 관심을 갖게 되었습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 혼자 사는 이웃들에게 관심을 갖게 된 소라의 모습입니다. 이 이야기는 다양한 가족 형태와 이웃 공동체의 돌봄을 배우는 여정을 그립니다. 밤늦도록 불 켜진 창문이 그 출발점이 됩니다.</p>
+        <p>혼자 산다고 반드시 외로운 것은 아니며, 서로 이어져 있다면 괜찮다는 것을 소라는 이 일을 통해 배우게 됩니다. 옆집 할머니의 이야기가 이렇게 시작됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화11/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>문 앞의 국 냄비</h2>
+        <p>어느 날 소라네 집 문 앞에 따뜻한 국 냄비가 놓여 있었습니다. 옆집 할머니가 손수 끓여 나누어 주신 것이었습니다. 소라네 가족은 그 국을 맛있게 나누어 먹었습니다.</p>
+        <p>할머니는 혼자 살지만, 이렇게 종종 이웃들과 음식을 나누며 지냈습니다. 국 한 그릇에는 이웃을 향한 따뜻한 마음이 담겨 있었습니다. 소라는 그 마음이 참으로 정겹다고 느꼈습니다.</p>
+        <p>소라네 가족도 답례로 반찬을 만들어 할머니께 가져다드렸습니다. 이렇게 음식을 주고받으며, 이웃 사이에는 따뜻한 정이 오갔습니다. 혼자 사는 할머니도 이웃과 이어져 외롭지 않아 보였습니다.</p>
+        <p>이 대목은 이웃 사이의 나눔이 시작되는 도입의 단계입니다. 국 한 그릇을 주고받는 정겨운 모습이, 이웃 공동체의 따뜻함을 보여 줍니다. 혼자 살아도 이웃과 이어지면 외롭지 않다는 것이 드러나기 시작합니다.</p>
+        <p>소라는 혼자 사는 이웃들에 대해 더 알고 싶어졌습니다. 그들이 어떻게 살아가는지 관심을 갖게 된 것입니다. 국 한 그릇이 열어 준 따뜻한 마음이 소라를 이웃에게로 이끌었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화11/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>혼자 사는 삼촌</h2>
+        <p>소라는 아랫집에 혼자 사는 젊은 삼촌과도 이야기를 나누게 되었습니다. 삼촌은 직장 때문에 고향을 떠나 혼자 살고 있었습니다. 요즘은 이렇게 혼자 사는 사람이 무척 많다고 했습니다.</p>
+        <p>삼촌은 혼자 사는 사람을 가리켜 일인 가구라고 부른다고 알려 주었습니다. 그리고 우리 사회에는 일인 가구뿐 아니라, 여러 모습의 가족이 있다고 했습니다. 부모와 자녀가 함께 사는 집도 있고, 할머니와 손주가 함께 사는 집도 있었습니다.</p>
+        <p>소라는 가족의 모습이 이렇게 다양하다는 것을 처음 알았습니다. 예전에는 대가족이 함께 사는 경우가 많았지만, 요즘은 저마다 다른 형태로 살아간다는 것이었습니다. 가족의 모습에 정해진 하나의 틀이 있는 것은 아니었습니다.</p>
+        <p>이 대목은 소라가 다양한 가족 형태를 만나는 전개의 단계입니다. 일인 가구와 여러 모습의 가족이라는 개념을 통해, 가족의 형태가 다양함을 알게 된 것입니다. 정해진 하나의 가족 틀이 없다는 것을 소라는 배웠습니다.</p>
+        <p>소라는 혼자 사는 이웃들이 잘 지내는지 더욱 관심을 갖게 되었습니다. 특히 나이 든 옆집 할머니가 마음에 걸렸습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화11/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>할머니의 하루</h2>
+        <p>소라는 옆집 할머니의 하루가 어떤지 살펴보게 되었습니다. 할머니는 혼자서도 씩씩하게 하루를 보냈습니다. 아침이면 화분에 물을 주고, 이웃과 인사를 나누며 지냈습니다.</p>
+        <p>그러나 소라는 할머니가 가끔 쓸쓸해 보인다는 것도 느꼈습니다. 아무리 씩씩해도, 혼자 지내다 보면 외로운 순간이 있는 법이었습니다. 소라는 할머니에게 더 자주 인사를 건네고 말벗이 되어 드렸습니다.</p>
+        <p>할머니는 소라가 찾아올 때마다 무척 기뻐하셨습니다. 소라와 이야기를 나누는 시간이 할머니에게 큰 위로가 되었습니다. 소라는 작은 관심이 이웃에게 얼마나 큰 힘이 되는지를 알게 되었습니다.</p>
+        <p>이 대목은 소라가 이웃을 살피는 마음을 실천하는 전개의 시도 단계입니다. 할머니의 하루를 살피며, 관심과 돌봄의 소중함을 배운 것입니다. 작은 관심이 이웃에게 큰 위로가 됨을 소라는 깨달았습니다.</p>
+        <p>그러던 어느 날 밤, 옆집 할머니의 창문에 불이 켜지지 않았습니다. 소라는 왠지 모를 불안함을 느꼈습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화11/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 사건</span>
+        <h2>불이 안 켜진 밤</h2>
+        <p>여느 때 같으면 저녁이면 켜지던 할머니 집 창문에, 그날 밤은 불이 켜지지 않았습니다. 소라는 이상한 낌새를 느꼈습니다. 혹시 할머니에게 무슨 일이 생긴 것은 아닐까 걱정이 되었습니다.</p>
+        <p>소라는 부모님께 이 사실을 알렸습니다. 소라네 가족은 서둘러 할머니 집을 찾아가 문을 두드렸습니다. 알고 보니 할머니가 갑자기 몸이 편찮아 홀로 쓰러져 계셨던 것입니다.</p>
+        <p>다행히 소라가 일찍 알아챈 덕분에, 할머니는 제때 도움을 받을 수 있었습니다. 조금만 늦었더라면 큰일이 날 뻔했습니다. 소라는 이웃을 살피는 관심이 때로는 생명을 지킬 수도 있다는 것을 실감했습니다.</p>
+        <p>이 대목은 혼자 사는 이웃에게 위기가 닥치는 단계입니다. 불 꺼진 창문을 알아챈 소라 덕분에 할머니가 도움을 받는 모습이 그려집니다. 이웃을 살피는 관심이 얼마나 소중한지가 뚜렷하게 드러납니다.</p>
+        <p>소라는 만약 아무도 할머니를 살피지 않았다면 어땠을지 생각하니 아찔했습니다. 혼자 사는 사람들에게 이웃의 관심이 얼마나 중요한지를 깊이 느꼈습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화11/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>아무도 몰랐다면</h2>
+        <p>소라는 만약 아무도 할머니의 불 꺼진 창문을 알아채지 못했다면 어떻게 되었을지 곰곰이 생각했습니다. 혼자 사는 사람은 위급한 순간에 도움을 청하기 어려울 수 있었습니다. 이웃의 관심이 없다면, 홀로 위기를 맞을 수도 있었습니다.</p>
+        <p>소라는 혼자 사는 사람이 늘어날수록, 서로를 살피는 이웃의 돌봄이 더욱 중요해진다는 것을 깨달았습니다. 가족이 곁에 없는 이들에게는, 이웃이 곧 가족과 같은 존재가 될 수 있었습니다. 공동체가 서로를 돌보는 것이 그만큼 소중했습니다.</p>
+        <p>이렇게 이웃과 사회가 함께 서로를 살피고 돌보는 것을 사회적 돌봄이라고 합니다. 혼자 사는 사람이 많아진 오늘날, 사회적 돌봄은 더욱 필요한 것이었습니다. 소라는 그 소중함을 몸으로 느꼈습니다.</p>
+        <p>이 대목은 사회적 돌봄의 중요성을 깊이 이해하는 위기의 심화 단계입니다. 이웃의 관심이 없다면 홀로 위기를 맞을 수 있다는 것이, 돌봄의 필요성을 일깨웁니다. 서로를 살피는 공동체의 힘이 그만큼 소중함을 소라는 배웁니다. 이웃을 향한 작은 관심 하나가 때로는 무엇과도 바꿀 수 없는 큰 힘이 되었습니다.</p>
+        <p>소라는 이웃끼리 서로를 살피는 방법이 없을지 고민하기 시작했습니다. 혼자 사는 이웃들이 위기에 홀로 놓이지 않도록 하고 싶었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화11/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 결심</span>
+        <h2>서로를 살피는 약속</h2>
+        <p>소라는 이웃들과 함께 서로를 살피는 약속을 만들기로 했습니다. 저녁이면 서로의 창문에 불이 켜졌는지 살피고, 하루 한 번씩 안부를 나누자는 것이었습니다. 작은 약속이지만, 혼자 사는 이웃들에게는 큰 힘이 될 것이었습니다.</p>
+        <p>소라의 제안에 이웃들이 하나둘 마음을 모았습니다. 혼자 사는 사람도, 가족과 함께 사는 사람도 모두 서로를 살피기로 약속했습니다. 아파트 전체가 하나의 따뜻한 공동체로 이어지기 시작했습니다.</p>
+        <p>이웃들은 국 한 그릇을 나누던 정을, 이제 서로를 살피는 약속으로 넓혔습니다. 혼자 사는 사람도 이웃과 이어져 있으니, 더 이상 외롭거나 위험하지 않았습니다. 공동체의 돌봄이 든든한 울타리가 되어 준 것입니다.</p>
+        <p>이 대목은 이야기의 절정으로, 이웃들이 서로를 살피는 약속을 만드는 단계입니다. 작은 약속이 공동체를 하나로 잇는 모습이 그려집니다. 사회적 돌봄이 실제로 뿌리내리는 소중한 순간입니다. 거창한 제도가 아니라 이웃 사이의 작은 관심에서 돌봄이 시작됨을 이 장면은 보여 줍니다.</p>
+        <p>그 약속을 실천하면서, 소라는 공동체의 이어짐이 지닌 참된 힘을 깨닫게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화11/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>여러 모습의 가족</h2>
+        <p>서로를 살피는 약속을 실천하면서, 아파트 이웃들은 마치 하나의 큰 가족처럼 지내게 되었습니다. 혈연으로 맺어진 가족은 아니었지만, 서로를 아끼고 돌보는 마음은 가족과 다르지 않았습니다. 소라는 가족의 의미를 새롭게 생각하게 되었습니다.</p>
+        <p>소라는 가족이란 반드시 한집에 사는 혈연만을 뜻하는 것이 아님을 깨달았습니다. 서로를 아끼고 돌보는 마음으로 이어진 사람들도, 넓은 의미의 가족이 될 수 있었습니다. 여러 모습의 가족이 우리 곁에 있었습니다.</p>
+        <p>그 순간 소라는 중요한 깨달음을 얻었습니다. 혼자 산다고 반드시 외로운 것은 아니며, 이웃과 공동체로 이어져 있다면 결코 외롭지 않다는 사실을 말입니다. 이어짐이야말로 외로움을 이기는 힘이었습니다.</p>
+        <p>이 대목은 이야기의 정신적 절정, 곧 소라의 각성입니다. 혼자여도 이어져 있으면 외롭지 않다는 것을 온전히 깨달은 것입니다. 가족의 의미가 혈연을 넘어 서로 돌보는 마음으로 넓어짐을, 소라는 배웠습니다. 진정한 가족은 함께 사는 것보다 서로를 아끼는 마음으로 정해진다는 것을 소라는 알게 되었습니다.</p>
+        <p>소라는 이웃들과 이어진 이 따뜻한 공동체가 무엇보다 소중하게 느껴졌습니다. 혼자 사는 이웃들도 이제 든든한 울타리 안에 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화11/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>국 한 그릇을 돌려주다</h2>
+        <p>몸이 회복된 할머니는 다시 이웃들과 정을 나누게 되었습니다. 소라는 할머니께 손수 끓인 국 한 그릇을 가져다드렸습니다. 예전에 할머니가 소라네에 나누어 주었던 그 따뜻한 마음을, 이제 소라가 돌려드린 것입니다.</p>
+        <p>할머니는 소라의 국 한 그릇에 눈시울을 붉혔습니다. 혼자 살지만 이렇게 이웃들이 살펴 주니, 결코 외롭지 않다고 하셨습니다. 국 한 그릇에 담긴 정이, 이웃과 이웃을 따뜻하게 이어 주고 있었습니다.</p>
+        <p>이 대목은 이웃 사이의 정이 되돌아 흐르는 결말의 돌파입니다. 할머니가 나누던 국 한 그릇을 소라가 돌려드리는 모습이, 이어짐의 아름다움을 보여 줍니다. 서로 주고받는 돌봄이 공동체를 따뜻하게 만듦을 이 장면은 그려 냅니다.</p>
+        <p>소라네 아파트의 창문들은 저녁마다 서로를 살피는 따뜻한 눈길로 이어졌습니다. 불이 켜진 창문 하나하나가, 이웃을 향한 관심의 표시였습니다. 혼자 사는 사람도 그 안에서 든든하게 이어져 있었습니다.</p>
+        <p>소라는 이웃과 이어진 이 따뜻한 공동체를 앞으로도 소중히 지켜 가기로 했습니다. 국 한 그릇에서 시작된 정이, 온 아파트를 하나로 이어 준 것입니다. 작은 나눔 하나가 이토록 큰 이어짐을 만들 수 있다는 것이 소라에게는 놀라운 일이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화11/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>혼자여도 이어진 사람들</h2>
+        <p>「옆집 할머니의 국 한 그릇」은 다양한 가족 형태와 이웃 공동체의 돌봄을 배우는 이야기입니다. 소라는 혼자 사는 이웃들을 살피며, 서로를 돌보는 공동체의 소중함을 깨달았습니다. 그리고 혼자여도 이어져 있으면 외롭지 않다는 것을 배웠습니다.</p>
+        <p>이 이야기가 우리에게 주는 가르침은 분명합니다. 오늘날 우리 사회에는 혼자 사는 일인 가구를 비롯해 여러 모습의 가족이 있다는 것입니다. 가족이란 정해진 하나의 틀이 아니라, 서로를 아끼고 돌보는 마음으로 이어진 다양한 형태로 존재합니다.</p>
+        <p>무엇보다 이 이야기는, 서로를 살피는 공동체의 돌봄이 소중함을 일깨웁니다. 혼자 사는 사람이 많아진 오늘날, 이웃끼리 서로를 살피는 사회적 돌봄이 더욱 필요합니다. 그 이어짐이 외로움과 위기로부터 서로를 지켜 줍니다.</p>
+        <p>소라는 혼자 산다고 반드시 외로운 것은 아니라는 것을 배웠습니다. 이웃과 공동체로 따뜻하게 이어져 있다면, 혼자여도 결코 외롭지 않았습니다. 이 이야기는 우리에게, 서로를 살피고 돌보는 마음이 곧 공동체를 따뜻하게 만드는 힘임을 일러 줍니다.</p>
+        <p><span class="highlight">혼자 산다고 외로운 것은 아닙니다. 서로 이어져 있다면, 우리는 결코 혼자가 아닙니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'social11_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

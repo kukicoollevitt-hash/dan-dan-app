@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚲 두 바퀴로 읽는 나라 — 준이의 국토 종주</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지리09/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🚲 두 바퀴로 읽는 나라 — 준이의 국토 종주</h1>
+        <p class="subtitle">
+          — 국토는 지도가 아니라, 두 바퀴와 두 발로 읽는 책이에요 —<br>
+          교과기반 창작도서 · 지리 09 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🚲 등장인물 소개</h3>
+          <p><strong>★ 준 (주인공):</strong> 지도 속 우리나라가 좁고 시시하다고 여기던 아이예요. 페달을 밟으며 <span class="vocab-tip" data-meaning="한 나라의 땅 전체">국토</span>를 온몸으로 읽게 되지요.</p>
+          <p><strong>★ 아빠:</strong> 주말마다 강길을 달리는 자전거 마니아예요. 두 바퀴로 국토를 가르쳐 주지요.</p>
+          <p><strong>★ 한강:</strong> 태백의 산골에서 서울을 지나 서해까지. 여행의 앞길을 이끌어 주는 강.</p>
+          <p><strong>★ 낙동강:</strong> 고개 너머 남쪽 바다까지 흘러가는 강. 여행의 뒷길을 맡아 주는 강.</p>
+          <p><strong>★ 이화령 고개:</strong> 백두대간의 등줄기를 넘는 가장 높은 고개. 이 여행 최대의 시련.</p>
+          <p><strong>★ 바람이 (자전거):</strong> 준의 낡은 두 바퀴. 오르막에서는 무겁고 내리막에서는 새가 된다.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 마음의 갈등:</strong> 시시해 보이던 지도 속 나라 vs. 두 바퀴로 만나는 크고 깊은 국토</p>
+          <p><strong>② 지형의 갈등:</strong> 길을 가로막는 높은 고개 vs. 길을 이끌어 주는 낮은 물길</p>
+          <p><strong>③ 의지의 갈등:</strong> 여기서 포기하고 싶은 마음 vs. 절반을 넘어온 나에 대한 믿음</p>
+          <p><strong>④ 앎의 갈등:</strong> 책상에서 외우는 공부 vs. 몸으로 겪어서 아는 공부</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리09/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>시시한 지도</h2>
+        <p>사회 시간, 준은 지도책을 펴 놓고<br>
+턱을 괴고 있었어요.<br>
+세계 지도 속 우리나라는 손톱만 했지요.<br>
+준은 속으로 생각했어요.<br>
+우리나라는 참 좁고 시시하구나.</p>
+        <p>그날 저녁, 준은 밥상에서 그 말을 꺼냈어요.<br><br><span class="dialogue">"우리나라는 너무 작아서 볼 것도 없어. 지도 한 장이면 끝이잖아."</span><br><br>순간 아빠의 숟가락이 멈췄지요.<br>
+자전거 마니아 아빠의 눈이 반짝 빛났어요.<br><br><span class="dialogue">"그래? 그럼 이번 방학에 아빠랑 내기 하나 하자. 서울에서 부산까지, 자전거로 국토를 <span class="vocab-tip" data-meaning="처음부터 끝까지 다 달리는 것">종주</span>하는 거야. 다 달리고 나서도 시시하다면 네 소원 하나 들어주마."</span></p>
+        <p>준은 코웃음을 쳤어요.<br>
+지도에서 서울과 부산은<br>
+겨우 한 뼘이었기 때문이지요.<br>
+준은 자신만만하게 내기를 받아들였어요.</p>
+        <p>출발 전날 밤, 아빠는<br>
+기다란 지도 한 장을 내밀었어요.<br>
+한강과 낙동강, 두 개의 파란 물줄기가<br>
+나라를 가로질러 흐르고 있었지요.<br><br><span class="dialogue">"우리는 이 두 강을 따라 달릴 거야. 강이 왜 이렇게 흐르는지, 도착할 때쯤엔 네 다리가 먼저 알게 될 거다."</span><br><br><span class="highlight">지도 속 한 뼘이 정말 한 뼘인지, 준은 이제 두 바퀴로 확인하러 가요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리09/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>한강을 거슬러</h2>
+        <p>출발의 아침이 밝았어요.<br>
+두 사람은 서울의 한강 자전거길에<br>
+바퀴를 올렸지요.<br>
+강바람이 시원하게 뺨을 스쳤어요.<br>
+준은 콧노래까지 흥얼거렸지요.</p>
+        <p>달리면서 아빠가 강을 가리켰어요.<br><br><span class="dialogue">"이 <span class="vocab-tip" data-meaning="태백에서 시작해 서울을 지나 서해로 흐르는 강">한강</span>은 저 동쪽 강원도 태백의 산골짜기에서 시작된단다. 강물이 처음 시작되는 것을 <span class="vocab-tip" data-meaning="강물이 처음 시작되어 흘러나오는 것">발원</span>한다고 하지. 그 물이 굽이굽이 흘러 서울을 지나 서해로 들어가는 거야."</span></p>
+        <p>준은 고개를 갸웃했어요.<br><br><span class="dialogue">"그런데 아빠, 우리는 부산에 가는데 왜 강을 거슬러 동쪽으로 가요? 부산은 남쪽이잖아요."</span><br><br><span class="dialogue">"그건 우리나라 땅의 생김새 때문이야. 며칠 뒤에 네 다리가 답을 알려 줄 거다."</span></p>
+        <p>도시를 벗어나자 풍경이 달라졌어요.<br>
+상류로 갈수록 물은 맑아지고 물살은 빨라졌지요.<br>
+첫날 밤, 준은 다리를 주무르며 지도를 펼쳤어요.<br>
+하루 종일 달렸는데<br>
+지도 위에서는 겨우 손가락 한 마디였지요.<br>
+<span class="highlight">지도 위의 한 뼘은 두 바퀴로 꼬박 며칠의 거리였어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리09/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>동쪽은 높고 서쪽은 낮다</h2>
+        <p>이튿날부터 길은 동쪽으로 이어졌어요.<br>
+그런데 이상했지요.<br>
+달리면 달릴수록 산이 점점 높아지고,<br>
+길은 조금씩 오르막이 되어 갔어요.<br>
+준의 페달이 눈에 띄게 무거워졌지요.</p>
+        <p>쉼터에서 아빠가 지도를 펼쳐 보였어요.<br><br><span class="dialogue">"우리나라는 국토의 약 70%가 산이란다. 그런데 높은 산들은 주로 동쪽에 몰려 있어. 동쪽이 높고 서쪽이 낮은 이런 지형을 <span class="vocab-tip" data-meaning="동쪽이 높고 서쪽이 낮은 한반도의 지형 특성">동고서저</span>라고 하지. 네 페달이 무거워진 건, 우리가 낮은 서쪽에서 높은 동쪽으로 가고 있기 때문이야."</span></p>
+        <p>준은 그제야 어렴풋이 알 것 같았어요.<br>
+강물은 높은 곳에서 낮은 곳으로 흘러요.<br>
+동쪽이 높고 서쪽이 낮으니,<br>
+동쪽 산에서 태어난 강물이<br>
+서쪽 바다로 흘러가는 것이지요.<br>
+한강을 거슬러 동쪽으로 간다는 것은,<br>
+곧 오르막을 오른다는 뜻이었어요.</p>
+        <p>교과서에서 동고서저라는 말을 읽었을 때는<br>
+아무 느낌이 없었는데,<br>
+지금은 허벅지가 그 말을 외치고 있었지요.<br>
+<span class="highlight">동쪽은 높고 서쪽은 낮다. 그 한 줄이 준의 두 다리에 새겨지고 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리09/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>강이 만든 들판</h2>
+        <p>사흘째, 두 사람은 충주에 닿았어요.<br>
+준의 다리는 뻐근했지만<br>
+마음은 제법 단단해져 있었지요.<br>
+아침저녁으로 바람이의 바퀴를 점검하는 일도<br>
+어느새 준의 몫이 되었어요.<br>
+거울에 비친 얼굴은<br>
+며칠 새 까맣게 그을려 있었지요.</p>
+        <p>강가를 달리다 보니 강 옆으로<br>
+논이 넓게 펼쳐진 들판이 자주 나타났어요.<br><br><span class="dialogue">"강이 흐르면서 산에서 깎아 온 흙을 이런 곳에 내려놓는단다. 그 흙이 쌓여 만들어진 기름진 들판을 <span class="vocab-tip" data-meaning="강물이 운반한 흙이 쌓여 만들어진 평야">충적 평야</span>라고 하지. 사람들이 강가에 모여 살고, 그 마을이 자라 도시가 된 것도 다 물과 들판 덕분이야."</span></p>
+        <p>준은 달리며 만난 도시들을 떠올렸어요.<br>
+서울도, 여주도, 충주도<br>
+모두 강을 끼고 있었지요.<br>
+강을 따라 달려 보니 도시들이<br>
+왜 거기에 있는지 저절로 보였어요.</p>
+        <p>저녁에 준은 수첩에 적었어요.<br>
+강은 물을 주고, 흙을 날라 들판을 만들고,<br>
+사람을 모아 도시를 키운다.<br>
+<span class="highlight">강은 물길이면서, 들판과 도시를 길러 낸 어머니였지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리09/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>이화령 고개</h2>
+        <p>나흘째, 마침내 그 이름이 앞을 가로막았어요.<br>
+이화령.<br>
+<span class="vocab-tip" data-meaning="백두산에서 지리산까지 이어지는 큰 산줄기">백두대간</span>의 등줄기를 넘는 높은 고개였지요.<br>
+표지판을 올려다보는 순간,<br>
+준은 마른침을 삼켰어요.<br>
+길이 하늘로 이어진 것처럼 까마득했지요.</p>
+        <p>오르막이 시작되자<br>
+바람이가 천근만근 무거워졌어요.<br>
+페달을 한 바퀴 돌릴 때마다<br>
+허벅지가 터질 것 같았지요.<br>
+굽이를 하나 돌면 또 굽이가 나왔어요.<br>
+준은 결국 자전거에서 내려 버렸지요.<br><br><span class="dialogue">"못 가겠어요! 무슨 놈의 산이 이렇게 많아! 나 그냥 버스 타고 집에 갈래!"</span></p>
+        <p>아빠는 준을 일으키지 않았어요.<br>
+대신 옆에 나란히 앉아 물을 건넸지요.<br><br><span class="dialogue">"준아, 우리나라 땅의 칠 할이 산이라고 했지? 이 나라에서 어디든 가려면 누구나 고개를 넘어야 했다는 뜻이야. 옛날 사람들은 이 고개를 짚신 신고 걸어서 넘었단다."</span></p>
+        <p>하지만 그 말도 준의 귀에는 들어오지 않았어요.<br>
+지도에서는 보이지도 않던 작은 갈색 줄무늬가,<br>
+실제로는 이렇게나 거대한 벽이었지요.<br>
+<span class="highlight">지도에 안 보인다고 없는 것이 아니었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리09/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>절반의 지도</h2>
+        <p>그날 두 사람은 고개를 다 넘지 못하고<br>
+중턱의 쉼터에서 하루를 접었어요.<br>
+준은 저녁 내내 입을 꾹 다물었지요.<br>
+마음속에서는 여전히 버스를 타고<br>
+돌아가고 싶은 마음이 부글부글 끓고 있었어요.</p>
+        <p>씻고 나온 준에게<br>
+아빠는 말없이 지도를 내밀었어요.<br>
+나흘 동안 달려온 길에<br>
+형광펜이 칠해져 있었지요.<br>
+형광펜 줄은 전체 길의<br>
+딱 절반쯤에 와 있었어요.<br><br><span class="dialogue">"신기하지? 여기 이화령이 이 여행의 한가운데란다. 지금 돌아가도 절반, 끝까지 가도 절반이야. 어느 쪽이든 네가 정하렴."</span></p>
+        <p>준은 지도를 뚫어져라 내려다보았어요.<br>
+돌아가는 절반은 이미 아는 길,<br>
+나아가는 절반은 모르는 길이었지요.<br>
+그런데 이상하게도, 힘들게 올라온<br>
+형광펜 절반을 지워 버리는 것이 아까웠어요.<br>
+오르막마다 흘린 땀이<br>
+그 줄 속에 고스란히 들어 있었기 때문이지요.</p>
+        <p>그날 밤 준은 쉽게 잠들지 못했어요.<br>
+<span class="highlight">돌아가도 절반, 나아가도 절반.</span><br>
+여행의 한가운데에서, 준은 인생 처음으로<br>
+스스로 길을 골라야 했지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리09/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>가장 높은 곳에서</h2>
+        <p>새벽, 준은 아빠보다 먼저 일어나 있었어요.<br>
+그리고 퉁명스럽게, 그러나 또렷하게 말했지요.<br><br><span class="dialogue">"가요. 마저 넘어요. 대신 오늘은 아무 말도 시키지 마세요."</span><br><br>아빠는 웃음을 참으며 고개를 끄덕였어요.</p>
+        <p>남은 오르막은 어제보다 더 가팔랐어요.<br>
+준은 이를 악물고 페달을 밟았지요.<br>
+열 번을 쉬고, 스무 번을 쉬었어요.<br>
+남은 것은 그저 한 바퀴, 또 한 바퀴뿐이었지요.</p>
+        <p>다리에 감각이 없어질 때쯤,<br>
+갑자기 눈앞이 환해졌어요.<br>
+더 올라갈 길이 없었지요.<br>
+<span class="vocab-tip" data-meaning="바닷물 표면을 기준으로 잰 높이">해발</span> 548미터, 이화령 고개의 정상이었어요.<br>
+준은 그 자리에 벌렁 드러누웠지요.<br>
+파란 하늘이 빙글빙글 돌고,<br>
+심장이 북처럼 쿵쿵 울렸어요.</p>
+        <p>숨이 가라앉고 나서야<br>
+준은 일어나 사방을 둘러보았어요.<br>
+그리고 말을 잃었지요.<br>
+산 너머에 산, 그 너머에 또 산.<br>
+초록 산줄기가 파도처럼 겹겹이 밀려가고 있었어요.<br><br><span class="dialogue">"이게... 우리나라라고요?"</span><br><br><span class="highlight">가장 높은 곳에 올라서야, 준은 이 나라가 얼마나 크고 깊은지 처음 보았어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리09/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>물처럼 내려가는 길</h2>
+        <p>내리막이 시작되었어요.<br>
+페달을 밟지 않아도<br>
+바람이가 저절로 미끄러져 내려갔지요.<br>
+바람이 귓가에서 씽씽 노래를 불렀어요.<br>
+준은 저도 모르게 신나서 소리를 질렀지요.</p>
+        <p>한참을 내려가다 준은 문득 깨달았어요.<br><br><span class="dialogue">"아빠! 이제 알겠어요. 여기부터 부산까지는 계속 내려가는 거죠? 동쪽 높은 데서 남쪽 바다까지, 물이 흐르는 방향 그대로요!"</span><br><br>아빠가 뒤에서 크게 웃었어요.<br><br><span class="dialogue">"바로 그거야! 이 고개 남쪽에서 시작된 물은 <span class="vocab-tip" data-meaning="태백에서 시작해 부산을 지나 남해로 흐르는 강">낙동강</span>이 되어 남해로 흘러간단다. 우리는 이제 그 물길을 타고 부산까지 가는 거야."</span></p>
+        <p>강물은 높은 곳에서 낮은 곳으로 흘러요.<br>
+길도, 자전거도, 사람의 마을도<br>
+그 물길을 따라 낮은 곳으로 이어지지요.<br>
+가장 높은 곳을 한 번 넘고 나면,<br>
+나머지는 물이 데려다주는 것이었어요.</p>
+        <p>준은 수첩에 큼직하게 적었어요.<br>
+동고서저. 강은 동쪽 산에서 태어나<br>
+서쪽과 남쪽 바다로 간다.<br>
+<span class="highlight">오르막의 끝은 벽이 아니라, 물처럼 흘러 내려가는 새 길의 시작이었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리09/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>강 끝의 바다</h2>
+        <p>낙동강 길은 넉넉하고 시원했어요.<br>
+두 사람은 강을 따라 남쪽으로 달렸지요.<br>
+주위가 온통 산으로 둘러싸이고<br>
+가운데만 평평한 커다란 도시도 지났어요.<br>
+이런 지형을 <span class="vocab-tip" data-meaning="주위가 산으로 둘러싸이고 가운데가 평평한 지형">분지</span>라고 한대요.<br>
+산이 사방을 둘러서 더운 공기가 갇히기 때문에<br>
+분지의 여름은 푹푹 쪘지요.</p>
+        <p>부산이 가까워지자<br>
+강폭이 바다처럼 넓어졌어요.<br>
+강 끝에는 기름진 들판이 펼쳐져 있었지요.<br><br><span class="dialogue">"김해평야란다. 낙동강이 실어 온 흙으로 만들어진 <span class="vocab-tip" data-meaning="곡식이 많이 나는 넓은 농사 지역">곡창지대</span>지. 강의 마지막 선물인 셈이야."</span></p>
+        <p>그리고 마침내, 길 끝에 바다가 나타났어요.<br>
+낙동강이 남해와 만나는 곳이었지요.<br>
+태백의 산골에서 시작한 물이 여기까지 흘러왔고,<br>
+서울에서 출발한 준도 여기까지 굴러왔어요.<br>
+강과 준이 함께 완주한 거예요.</p>
+        <p>인증 도장을 받으며 아빠가 물었어요.<br><br><span class="dialogue">"그래서, 우리나라는 아직도 시시하냐?"</span><br><br>준은 새까맣게 탄 얼굴로<br>
+씩 웃으며 고개를 저었지요.<br>
+<span class="highlight">얕보던 마음에서 시작한 여행이 커다란 존경으로 끝났어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리09/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>백두산에서 한라산까지</h2>
+        <p>겨울 방학, 준이네 가족은<br>
+비행기를 타고 제주도로 갔어요.<br>
+국토 종주를 해낸 준에게 주는 선물이었지요.<br>
+제주도는 준이 달려온 땅과는<br>
+또 다른 얼굴이었어요.<br>
+제주도는 화산 활동으로 만들어진<br>
+<span class="vocab-tip" data-meaning="화산 활동으로 만들어진 섬. 제주도가 대표적">화산섬</span>이기 때문이래요.</p>
+        <p>가족은 한라산에 올랐어요.<br>
+꼭대기에는 분화구에 물이 고인 호수,<br>
+<span class="vocab-tip" data-meaning="한라산 정상의 분화구에 물이 고인 호수">백록담</span>이 겨울 하늘을 담고 있었지요.<br><br><span class="dialogue">"우리 국토는 북쪽 끝 백두산에서 여기 남쪽 끝 한라산까지, 약 1,100킬로미터란다. 너는 그중 한가운데 토막을 네 힘으로 건넜고."</span></p>
+        <p>준은 이제 지도책을 보는 눈이 완전히 달라졌어요.<br>
+갈색 줄무늬를 보면<br>
+이화령의 오르막이 떠올랐지요.</p>
+        <p>새 학기 사회 시간,<br>
+선생님이 우리나라 지형을 묻자<br>
+준의 손이 번쩍 올라갔어요.<br><br><span class="dialogue">"동고서저요! 동쪽이 높고 서쪽이 낮아서, 강이 서쪽하고 남쪽 바다로 흘러요. 제 다리로 확인했어요!"</span><br><br><span class="highlight">국토는 준에게 더 이상 시시한 지도 한 장이 아니었어요. 페이지마다 땀과 바람이 밴, 세상에서 가장 두꺼운 책이었지요.</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(46, 139, 87, 0.15); border-radius: 16px;">
+          <strong style="color: #2E8B57; font-size: 20px;">🚲 「국토는 지도가 아니라, 두 바퀴와 두 발로 읽는 책이에요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'geo09_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

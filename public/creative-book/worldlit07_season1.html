@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐰 토끼 굴 아래 이상한 나라 — 앨리스의 모험</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계문학07/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🐰 토끼 굴 아래 이상한 나라 — 앨리스의 모험</h1>
+        <p class="subtitle">
+          — 상상력에는 규칙이 없다 —<br>
+          교과기반 창작도서 · 세계문학 07
+        </p>
+        <div class="characters">
+          <h3>🐰 등장인물 소개</h3>
+          <p><strong>★ 앨리스 (주인공):</strong> 호기심 많은 소녀. 하얀 토끼를 쫓아 토끼 굴로 뛰어들었다가, 현실의 규칙이 통하지 않는 이상한 나라를 모험하게 된다.</p>
+          <p><strong>★ 하얀 토끼:</strong> 회중시계를 들고 "늦었어, 늦었어!"를 외치며 달려가는 토끼. 앨리스를 이상한 나라로 이끈 안내자.</p>
+          <p><strong>★ 체셔 고양이:</strong> 언제나 씩 웃고 있는 고양이. 몸은 사라져도 웃음만 남는 신기한 존재.</p>
+          <p><strong>★ 모자장수와 삼월 토끼:</strong> 영원히 끝나지 않는 티 파티를 여는 별난 친구들. 수수께끼 같은 말만 쏟아 낸다.</p>
+          <p><strong>★ 하트 여왕:</strong> 마음에 들지 않으면 "목을 베어라!"부터 외치는 무시무시한 여왕. 앨리스의 마지막 상대.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 호기심의 갈등:</strong> 얌전히 앉아 있는 나른한 오후 vs. 토끼를 쫓아 뛰어드는 호기심</p>
+          <p><strong>② 변화의 갈등:</strong> 커졌다 작아졌다 하는 몸 vs. 나는 누구인가 하는 물음</p>
+          <p><strong>③ 논리의 갈등:</strong> 앨리스가 알던 현실의 규칙 vs. 모든 것이 뒤죽박죽인 이상한 나라</p>
+          <p><strong>④ 용기의 갈등:</strong> 무시무시한 하트 여왕의 호령 vs. 당당하게 맞서는 소녀의 목소리</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>회중시계를 든 토끼</h2>
+        <p>햇살이 따뜻하게 내리쬐는 어느 나른한 오후였습니다. 소녀 앨리스는 강둑의 언니 옆에 앉아 꾸벅꾸벅 졸고 있었습니다. 언니가 읽는 책에는 그림도 대화도 없어서, 앨리스에게는 세상에서 가장 지루한 책으로 보였습니다. 그림도 없는 책이 대체 무슨 소용이람, 하고 생각하던 참이었습니다.</p>
+        <p>바로 그때였습니다. 앨리스의 눈앞으로 하얀 토끼 한 마리가 쪼르르 뛰어갔습니다. 그런데 그 토끼는 보통 토끼가 아니었습니다. 조끼 주머니에서 <span class="vocab-tip" data-meaning="주머니에 넣고 다니는 작고 둥근 시계">회중시계</span>를 꺼내 보며 소리치고 있었던 것입니다.</p>
+        <p><span class="dialogue">"늦었어, 늦었어! 큰일 났네, 이러다 정말 늦고 말겠어!"</span><br><br>시계를 보는 토끼라니요. 게다가 사람처럼 말까지 하다니요. 앨리스의 졸음이 싹 달아났습니다. 눈을 비비고 다시 보아도 분명 시계를 든 토끼였습니다.</p>
+        <p>호기심이 많은 앨리스는 가만히 있을 수가 없었습니다.<br><br><span class="dialogue">"토끼가 시계를 보고 말을 하다니! 대체 어디를 저렇게 급하게 가는 걸까? 따라가 봐야겠어!"</span></p>
+        <p>앨리스는 자리에서 벌떡 일어나 토끼를 부지런히 뒤쫓았습니다. 하얀 토끼는 풀 우거진 들판을 가로질러 부리나케 달리더니, 울타리 아래 커다란 토끼 굴 속으로 쏙 들어가 버렸습니다. 앨리스는 한 치의 망설임도 없이 그 굴 속으로 따라 뛰어들었습니다. 어떻게 다시 나올지는 조금도 생각하지 않은 채로 말입니다.</p>
+        <p><span class="highlight">호기심은 앨리스를 한순간에 낯선 세계의 문 앞으로 데려갔습니다.</span> 이 무모하고도 용감한 뛰어듦에서, 세계에서 가장 유명한 모험 하나가 시작됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">전개 · 추락</span>
+        <h2>끝없이 떨어지다</h2>
+        <p>뛰어든 토끼 굴은 처음에는 그저 굴다운 굴이었습니다. 그런데 얼마 가지 않아 길이 뚝 끊기더니, 앨리스는 깊고 깊은 우물 같은 구멍 속으로 떨어지기 시작했습니다. 아래로, 아래로, 끝도 없이 말입니다. 소리를 지를 새도 없이 순식간에 벌어진 일이었습니다.</p>
+        <p>그런데 이상하게도 떨어지는 속도는 아주 느긋했습니다. 그 덕분에 앨리스는 떨어지면서도 주위를 찬찬히 둘러볼 수 있었습니다. 구멍의 벽에는 찬장과 책꽂이가 붙어 있었고, 지도와 그림들이 못에 걸린 채 천천히 곁을 지나갔습니다. 떨어지는 굴속이라기엔 참으로 아늑한 풍경이었습니다.</p>
+        <p>지나가던 선반에는 병 하나가 놓여 있었습니다. 병에는 오렌지 <span class="vocab-tip" data-meaning="오렌지 같은 과일로 만든 서양식 잼">마멀레이드</span>라고 적혀 있었습니다. 앨리스는 떨어지면서 그 병을 집어 들었다가, 아래로 던지면 누가 다칠까 봐 지나가는 다른 선반에 고이 올려 두었습니다.</p>
+        <p>떨어지는 시간이 어찌나 길던지, 앨리스는 한가로운 생각까지 했습니다.<br><br><span class="dialogue">"이러다 지구를 뚫고 반대편까지 떨어지는 것 아닐까? 거기서는 사람들이 거꾸로 서서 걸어다니려나?"</span></p>
+        <p>쿵! 한참 만에야 마침내 앨리스는 바닥에 내려앉았습니다. 신기하게도 하나도 아프지 않았습니다. 벌떡 일어나 둘러보니, 그곳은 지금까지 단 한 번도 본 적 없는 이상한 나라였습니다. 저 멀리 하얀 토끼의 꽁무니가 사라지고 있었습니다.</p>
+        <p><span class="highlight">굴 하나를 지났을 뿐인데, 세상의 규칙이 통째로 달라져 있었습니다.</span> 앨리스의 이상한 나라 모험이 본격적으로 시작됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 변화</span>
+        <h2>커졌다 작아졌다</h2>
+        <p>이상한 나라에서 앨리스가 맨 처음 발견한 것은 신비로운 음료와 과자였습니다. 유리 탁자 위의 예쁜 병에는 '나를 마셔요'라고 적혀 있었고, 상자 속 과자에는 '나를 먹어요'라고 적혀 있었습니다. 마치 처음부터 앨리스를 기다리고 있었다는 듯한 글귀였습니다.</p>
+        <p>조심스레 용기를 내어 그 음료를 마시자 곧 놀라운 일이 벌어졌습니다. 앨리스의 몸이 눈 깜짝할 사이에 줄어들어 아주 조그맣게 작아진 것입니다. 탁자 다리가 커다란 기둥처럼 보이고, 풀잎 하나가 아름드리나무처럼 우뚝해 보였습니다. 세상이 갑자기 거인의 나라가 된 것 같았습니다.</p>
+        <p>이번에는 상자 속의 특별한 과자를 꺼내어 먹어 보았습니다. 그러자 몸이 반대로 엄청나게 커졌습니다. 머리가 천장에 쿵 닿고 팔다리가 온 방을 가득 채웠습니다. 문밖으로 나가기는커녕 몸을 돌리기도 어려웠습니다. 몇 번을 겪어도 앨리스는 어리둥절할 수밖에 없었습니다.</p>
+        <p><span class="dialogue">"아까는 개미만 했는데 지금은 집채만 하다니! 오늘 아침의 나는 분명 이렇지 않았는데. 그렇다면 지금의 나는... 대체 누구지?"</span></p>
+        <p>그렇게 커졌다 작아졌다를 몇 번이나 반복하는 사이, 앨리스는 몸의 크기가 바뀔 때마다 세상이 전혀 다르게 보인다는 것을 알게 되었습니다. 분명 같은 방인데도, 작을 때 보는 방과 클 때 보는 방은 완전히 다른 곳처럼 느껴졌습니다.</p>
+        <p><span class="highlight">이상한 나라는 첫걸음부터 앨리스가 알던 규칙을 뒤흔들어 놓았습니다.</span> 그리고 이 나라의 주민들은 한술 더 뜨는 이들이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>웃음만 남는 고양이</h2>
+        <p>이상한 나라를 이리저리 걷다가, 앨리스는 담배 피우는 애벌레를 만났습니다. 커다란 버섯 위에 점잖게 앉은 애벌레는 앨리스를 한참 물끄러미 내려다보더니 대뜸 물었습니다.<br><br><span class="dialogue">"너는 누구냐?"</span></p>
+        <p>그 물음에 앨리스는 선뜻 대답하지 못했습니다. 이곳에 온 뒤로 몸이 몇 번이나 커졌다 작아졌다 했으니, 스스로도 자기가 누구인지 헷갈렸기 때문입니다. 애벌레는 그런 앨리스에게 알쏭달쏭한 말만 잔뜩 남기고 유유히 사라졌습니다.</p>
+        <p>다음으로 앨리스가 만난 것은 나무 위의 체셔 고양이였습니다. 이 고양이는 언제나 입이 귀에 걸리도록 씩 웃고 있었습니다. 더 놀라운 것은, 몸이 스르르 사라져도 그 웃음만은 허공에 둥둥 떠서 남아 있다는 점이었습니다. 웃음 없는 고양이는 봤어도 고양이 없는 웃음이라니요.</p>
+        <p>앨리스가 여기서 어느 길로 가야 하느냐고 묻자, 고양이는 <span class="vocab-tip" data-meaning="뜻을 바로 알기 어렵게 빙 둘러 내는 알쏭달쏭한 문제">수수께끼</span> 같은 대답을 내놓았습니다.<br><br><span class="dialogue">"어디로 가고 싶은지에 달렸지. 어디든 가고 싶은 곳이 없다면, 어느 길로 가든 마찬가지 아니겠어?"</span></p>
+        <p>곰곰 생각하면 틀린 말은 아닌데 딱히 도움도 되지 않는, 참으로 이상한 나라다운 대답이었습니다. 앨리스는 연신 고개를 갸웃거리면서도, 어쩐지 그 말만은 오래오래 곱씹게 되었습니다. 이상한 나라의 말들은 하나같이 이상한데도, 자꾸만 곱씹어 생각하게 만드는 구석이 있었습니다.</p>
+        <p><span class="highlight">이상한 나라의 주민들은 저마다 알쏭달쏭한 물음을 앨리스에게 던졌습니다.</span> 그리고 앞에는 더 별난 모임이 기다리고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 사건</span>
+        <h2>끝나지 않는 티 파티</h2>
+        <p>숲길을 지나던 앨리스는 커다란 나무 아래에서 또 하나의 이상한 광경을 보았습니다. 나무 그늘 아래 기다란 탁자에 찻잔이 수십 개나 즐비하게 놓여 있고, 미친 미친 모자장수와 삼월 토끼가 마주 앉아 <span class="vocab-tip" data-meaning="차를 마시며 이야기를 나누는 모임">티 파티</span>를 열고 있었던 것입니다.</p>
+        <p>그런데 이 티 파티는 결코 보통 파티가 아니었습니다. 영원히 끝나지 않는 티 파티였습니다. 듣자 하니 이 나라의 시간이 여섯 시에 딱 멈춰 버려서, 두 사람은 언제나 차 마시는 시간 속에 갇혀 살고 있다는 것이었습니다. 세상에 그런 시계가 어디 있을까요.</p>
+        <p>미친 모자장수는 앨리스를 보자마자 인사도 없이 다짜고짜 수수께끼부터 냈습니다.<br><br><span class="dialogue">"까마귀와 책상은 왜 닮았게?"</span><br><br>앨리스가 한참을 끙끙 고민하다가 답을 묻자, 모자장수는 아주 태연하게 대답했습니다.<br><br><span class="dialogue">"나도 몰라!"</span></p>
+        <p>세상에, 답도 없는 수수께끼를 내다니요. 게다가 두 사람은 탁자 둘레를 빙빙 돌아가며 차를 마셨고, 찻잔이 더러워지면 씻는 대신 그냥 옆자리로 옮겨 앉는 것이었습니다. 예의도 규칙도 뒤죽박죽인, 처음부터 끝까지 엉망진창인 모임이었습니다.</p>
+        <p>앨리스는 기가 막히고 어이가 없으면서도 이상하게 자꾸 웃음이 났습니다. 말이 안 되는 이야기들이 요리조리 튀어 다니는 것이, 꼭 말로 하는 곡예 같았기 때문입니다. 그래도 끝내는 두 손을 들고 자리에서 일어났습니다.</p>
+        <p><span class="highlight">이상한 나라에서는 시간마저 제멋대로 흘렀습니다.</span> 모두가 수수께끼 같은 말을 하고 이상한 행동을 해서, 앨리스는 점점 혼란스러워졌습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 혼란</span>
+        <h2>규칙이 없는 나라</h2>
+        <p>이상한 나라를 헤매면 헤맬수록, 앨리스의 머릿속은 점점 더 뒤죽박죽이 되어 갔습니다. 이 나라에서는 앨리스가 학교에서 배운 것들이 단 하나도 통하지 않았기 때문입니다. 배운 대로 될수록 더 이상해지는 나라였습니다.</p>
+        <p>이곳에서는 구구단을 외우면 답이 이상하게 꼬였고, 잘 아는 노래를 부르면 가사가 제멋대로 우스꽝스럽게 바뀌어 나왔습니다. 아무리 예의 바르게 말을 걸어도 번번이 엉뚱한 대답이 돌아왔고, 길은 열심히 걸을수록 오히려 목적지에서 멀어지는 것만 같았습니다.</p>
+        <p>지친 앨리스는 길가에 앉아 혼잣말을 했습니다.<br><br><span class="dialogue">"여기서는 아무것도 내가 아는 대로 되지 않아. 어제까지의 나는 분명히 이런 세상에 살고 있지 않았는데. 정말이지 알수록 이상하고 또 이상한 나라야."</span></p>
+        <p>그러나 참으로 신기한 일이었습니다. 혼란스러워하면서도 앨리스는 이 나라를 떠나고 싶다고 생각하지 않았습니다. 다음 모퉁이를 돌면 또 무엇이 있을까, 이 길의 끝에는 누가 살고 있을까. 호기심이 두려움보다 언제나 한 발 앞섰습니다.</p>
+        <p>신기하게도, 어리둥절한 일을 겪으면 겪을수록 앨리스는 오히려 씩씩해졌습니다. 낯선 것 앞에서 울면서 주저앉는 대신, 부지런히 묻고 따지고 스스로 생각했습니다. 이상한 나라는 그렇게 앨리스를 조금씩 자라게 하고 있었습니다.</p>
+        <p><span class="highlight">규칙이 없는 나라에서 앨리스가 붙든 것은, 스스로 생각하는 힘이었습니다.</span> 그리고 마침내, 이 나라에서 가장 무서운 인물과 마주할 시간이 다가왔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 대면</span>
+        <h2>하트 여왕의 정원</h2>
+        <p>이리저리 헤매던 끝에, 마침내 앨리스는 하트 여왕의 정원에 도착했습니다. 한눈에 보기에도 그림처럼 아름다운 장미 정원이었습니다. 그런데 자세히 보니 카드 병사들이 하얀 장미에 붉은 칠을 하느라 진땀을 빼고 있는 것이 아니겠습니까.</p>
+        <p>붉은 장미를 심으라는 여왕의 명령을 어긴 사실이 행여 들통나면 큰일이 나기 때문이라고 했습니다. 그때 잠시 뒤, 요란한 나팔 소리와 함께 하트 여왕의 기다란 행렬이 나타났습니다. 수많은 카드 병사들이 양옆으로 줄지어 서고, 그 한가운데로 여왕이 위풍당당하게 걸어 나왔습니다.</p>
+        <p>직접 만난 하트 여왕은 과연 소문대로 무시무시한 인물이었습니다. 마음에 들지 않는 일이 있으면 앞뒤 가리지 않고 무조건 소리쳤습니다.<br><br><span class="dialogue">"저 자의 목을 베어라!"</span></p>
+        <p>정원사가 작은 실수를 해도, 병사가 대답을 조금 늦게 해도, 여왕의 입에서는 그 무서운 호령이 쏟아졌습니다. 온 정원의 사람들이 여왕의 눈치를 살피며 벌벌 떨었습니다. 이 나라에서 여왕의 말은 곧 법이었습니다. 아무도 감히 토를 달지 못했습니다.</p>
+        <p>그러나 정작 앨리스는 이상하게도 그다지 무섭지 않았습니다. 커졌다 작아졌다 하는 몸도, 답 없는 수수께끼도 다 겪어 본 뒤였으니까요. 게다가 가만히 곰곰이 살펴보니 여왕의 호령은 요란하기만 할 뿐, 이치에 맞는 구석이라고는 하나도 없었습니다.</p>
+        <p><span class="highlight">겁을 주는 것과 옳은 것은 다른 법입니다.</span> 앨리스는 그 차이를 알아보는 눈을 어느새 갖게 되었습니다. 그리고 곧 그 눈이 시험대에 오릅니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 대결</span>
+        <h2>엉터리 재판</h2>
+        <p>그러던 중 그러던 중에 이윽고 앨리스는 하트 여왕이 여는 <span class="vocab-tip" data-meaning="법에 따라 옳고 그름을 가리는 일">재판</span>에 참석하게 되었습니다. 그런데 그 재판은 앨리스가 상상도 하지 못한 엉터리 재판이었습니다. 파이를 훔친 범인을 가려낸다는 재판이었지만, 처음부터 끝까지 무엇 하나 제대로 되는 것이 없었습니다.</p>
+        <p>명색이 재판인데도 증거는 제대로 살피지 않았고, 증인이 하는 말은 그저 듣는 둥 마는 둥이었습니다. 그러더니 급기야 여왕은 이렇게 외치는 것이었습니다.<br><br><span class="dialogue">"판결이 먼저다! 증거 조사는 그다음에 하라!"</span><br><br>앞뒤 순서가 완전히 뒤집힌 엉터리 재판이었습니다.</p>
+        <p>그 광경을 참다못한 앨리스가 자리에서 벌떡 일어나 또박또박 말했습니다.<br><br><span class="dialogue">"판결을 먼저 내리고 증거를 나중에 본다니, 그건 말도 안 돼요! 세상에 그런 엉터리 재판이 어디 있어요!"</span></p>
+        <p>그 말에 온 법정이 크게 술렁였습니다. 여왕의 얼굴이 순식간에 시뻘겋게 달아올랐습니다. 그렇게 해서 앨리스는 하트 여왕과 정면으로 다투게 되었고, 여왕은 특기인 그 호령을 내질렀습니다.<br><br><span class="dialogue">"저 아이의 목을 베어라!"</span></p>
+        <p>여왕의 호령에 화가 난 카드 병사들이 일제히 앨리스에게 달려들었습니다. 수십 장의 카드가 일제히 공중으로 날아오르며 앨리스를 덮쳤습니다. 온 법정이 아수라장이 되었습니다. 앨리스는 두 팔을 마구 휘저으며 큰 소리로 외쳤습니다. 바로 그 순간이었습니다.</p>
+        <p><span class="highlight">옳지 않은 것 앞에서 앨리스는 끝내 입을 다물지 않았습니다.</span> 그리고 그 순간, 이상한 나라의 모든 것이 뒤흔들리기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 귀환</span>
+        <h2>깨어 보니 오후</h2>
+        <p>카드들이 눈앞을 새까맣게 뒤덮던 바로 그 순간, 앨리스는 눈을 번쩍 떴습니다. 그런데 이게 어찌 된 일일까요. 정신을 차려 보니 앨리스는 언니 곁의 포근한 풀밭에 그대로 누워 있었습니다.</p>
+        <p>그렇습니다. 모든 것이 꿈이었던 것입니다! 얼굴 위로 팔랑팔랑 떨어지던 것은 카드 병사가 아니라 나뭇잎이었고, 나른한 오후의 햇살은 처음 그대로 따스하게 풀밭을 비추고 있었습니다. 회중시계를 들고 달리던 토끼도, 무섭게 호령하던 여왕도 모두 꿈속에서의 일이었습니다.</p>
+        <p>잠에서 깬 앨리스는 언니에게 이상한 나라에서 겪은 신기한 모험을 하나도 남김없이 들려주었습니다.<br><br><span class="dialogue">"언니, 글쎄 토끼 굴로 떨어졌는데 내 몸이 커졌다 작아졌다 했어! 웃음만 남는 고양이도 있었고, 끝나지 않는 티 파티도 있었어!"</span></p>
+        <p>언니는 동생의 신기한 이야기에 가만히 귀를 기울이며 미소를 지었습니다. 말도 안 되는 이야기인데도, 가만히 듣고 있자니 눈앞에 그 신기한 나라가 그려지는 듯했습니다. 동생의 상상력이 빚어낸 나라는 그만큼이나 생생하고 눈부셨습니다.</p>
+        <p>꿈에서 깨어난 앨리스는 어제까지의 앨리스와 같으면서도 어딘가 조금 달라져 있었습니다. 낯선 것 앞에서 스스로 생각하는 법, 옳지 않은 것 앞에서 목소리를 내는 법을, 꿈속의 모험이 가르쳐 주었기 때문입니다. 좋은 모험은 꿈이라도 사람을 자라게 합니다.</p>
+        <p><span class="highlight">꿈은 끝났지만, 꿈이 남긴 것은 사라지지 않았습니다.</span> 이상한 나라는 앨리스의 마음속에 오래오래 살아 있을 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>상상력의 나라</h2>
+        <p>「이상한 나라의 앨리스」는 영국 작가 루이스 캐럴이 1865년에 발표한 <span class="vocab-tip" data-meaning="현실에 없는 신비한 세계를 그린 동화">환상 동화</span>입니다. 토끼 굴을 통해 들어간 신비로운 세계에서 펼쳐지는, 기상천외한 모험을 그린 작품입니다. 수학자이기도 했던 작가가 어린 소녀에게 들려준 이야기에서 시작되었다고 전해집니다.</p>
+        <p>이 작품 속에는 체셔 고양이와 미친 모자장수, 하트 여왕처럼 개성이 넘치는 인물들이 가득합니다. 책장을 넘길 때마다 재치 있는 말장난과, 앞뒤가 뒤집힌 듯한 <span class="vocab-tip" data-meaning="이치에 어긋나 보이지만 곱씹으면 뜻이 있는 표현">역설</span>의 논리도 곳곳에 숨어 있습니다.</p>
+        <p>말이 안 되는 것처럼 보이는 이야기들이 사실은 정교하게 짜인 말의 놀이라는 것, 바로 그것이 이 작품의 매력입니다. 그래서 이 책은 어린이 문학이라는 틀을 훌쩍 넘어, 문학사 전체에 큰 영향을 미쳤습니다.</p>
+        <p>현실의 규칙이 통하지 않는 이상한 나라는, 상상력과 창의력의 무한한 가능성을 보여 줍니다. 정답이 하나뿐인 답답한 세계에서 벗어나, 마음껏 뒤집어 생각해 보는 즐거움을, 이 작품은 읽는 우리 모두에게 선물해 줍니다.</p>
+        <p>「이상한 나라의 앨리스」는 지금까지 수많은 영화와 애니메이션, 뮤지컬로 거듭거듭 재탄생해 왔습니다. 그리고 160년이 넘도록 전 세계 독자들에게 사랑받는 <span class="vocab-tip" data-meaning="오랜 세월 동안 널리 읽히며 가치를 인정받은 작품">고전</span> 명작으로 남아 있습니다.</p>
+        <p><span class="highlight">이상한 나라는 꿈이었지만, 그 꿈을 지어낸 상상력은 꿈이 아닙니다.</span> 상상하는 사람에게 세계는 언제나 하나 더 있는 법입니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(150, 100, 160, 0.15); border-radius: 16px;">
+          <strong style="color: #9664A0; font-size: 20px;">🐰 「토끼 굴은 어디에나 있다. 상상력이라는 용기를 내어 뛰어드는 사람에게만 보일 뿐이다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'worldlit07_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

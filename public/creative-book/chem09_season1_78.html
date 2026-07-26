@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧪 색이 알려 주는 비밀 — 산과 염기의 화해</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작화학09/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(106, 17, 203, 0.15);
+      color: #6a11cb;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6a11cb;
+      font-weight: 600;
+    }
+
+    .vocab-tip {
+      position: relative;
+      color: #6a11cb;
+      border-bottom: 1px dotted #6a11cb;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+    .story-card .dialogue {
+      color: #2575fc;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #a78bfa;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(106, 17, 203, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(37, 117, 252, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 117, 252, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🧪 색이 알려 주는 비밀 — 산과 염기의 화해</h1>
+        <p class="subtitle">
+          — 산과 염기의 반응: 지시약, pH, 그리고 중화 반응 —<br>
+          교과기반 창작도서 · 화학 09
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 새롬:</strong> 주방에서 벌어지는 현상을 관찰하는 소녀. 지시약과 pH로 산과 염기의 세계를 탐구한다.</p>
+          <p><strong>★ 리트머스 할머니:</strong> 색으로 물질의 성질을 판별하는 데 밝은 어른. 지시약·pH·중화의 원리를 안내한다.</p>
+          <p><strong>★ 핵심 개념:</strong> 산성·염기성, 지시약, pH, 수소 이온(H⁺)과 수산화 이온(OH⁻), 중화 반응, 염(salt).</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학09/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">문제 제기</span>
+        <h2>신맛과 쓴맛의 정체</h2>
+        <p>새롬이는 주방에서 벌어지는 일이 늘 궁금한 소녀입니다. 어느 날 새롬이는 물질마다 성질이 다르다는 것을 알아챘습니다. 레몬과 식초는 입에 넣으면 시고 코를 톡 쏘았지만, 비누와 세제는 미끈미끈하고 쓴맛이 났습니다.</p>
+        <p>새롬이는 이 둘을 각각 산성과 염기성이라고 부른다는 것을 배웠습니다. 레몬·식초·탄산음료처럼 신맛을 내는 것은 산성, 비누·세제·baking soda처럼 미끈거리고 쓴맛을 내는 것은 염기성입니다.</p>
+        <p>그런데 문제가 있었습니다. 어떤 산이나 염기는 아주 강해서 함부로 맛보거나 만지면 피부를 상하게 할 만큼 위험했습니다. 새롬이는 맛보거나 만지지 않고도, 눈으로만 산성인지 염기성인지 안전하게 구별할 방법이 없을까 궁금해졌습니다.</p>
+        <p>산과 염기는 우리 생활 어디에나 있습니다. 요리와 청소, 소화와 세탁까지 산과 염기의 성질을 이용한 것이 아주 많습니다. 그래서 이 둘의 성질을 정확히 알고 안전하게 다루는 것은 생활 속 화학의 중요한 첫걸음입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학09/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">탐구 도구</span>
+        <h2>색으로 알려 주는 지시약</h2>
+        <p>며칠 뒤, 어머니가 보라색 양배추를 삶은 물이 유난히 고왔습니다. 새롬이는 그 물을 몇 컵 얻어 실험해 보기로 했습니다. 보라색 물에 레몬즙을 떨어뜨리자 순식간에 빨갛게 변했고, 비눗물을 넣자 이번에는 초록빛으로 변했습니다.</p>
+        <p>같은 물인데 넣는 것에 따라 색이 완전히 달라졌습니다. 여러 번 해 보니 규칙이 또렷했습니다. 산성인 것을 넣으면 붉은 쪽으로, 염기성인 것을 넣으면 푸른 쪽으로 색이 변한 것입니다.</p>
+        <p>이렇게 산성인지 염기성인지를 색깔로 알려 주는 물질을 지시약이라고 합니다. 양배추 물은 안토시아닌이라는 색소를 지녀 자연에서 얻은 천연 지시약이었습니다. 새롬이는 맛보지 않고도, 오직 색만으로 물질의 성질을 읽어 내는 방법을 마침내 찾아낸 것입니다.</p>
+        <p>지시약이 색을 바꾸는 까닭은, 산성이나 염기성 환경에서 지시약 분자의 구조가 조금씩 달라져 서로 다른 빛을 반사하기 때문입니다. 양배추 물뿐 아니라 포도 껍질, 붉은 장미, 나팔꽃 즙에도 같은 안토시아닌 색소가 들어 있어 천연 지시약으로 쓸 수 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학09/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">도구의 확장</span>
+        <h2>리트머스와 여러 지시약</h2>
+        <p>새롬이는 지시약을 더 알고 싶어 리트머스 할머니를 찾아갔습니다. 할머니는 붉은색과 푸른색 두 뭉치의 리트머스 종이를 보여 주었습니다. 푸른 리트머스 종이에 산성 용액을 묻히면 붉게 변하고, 붉은 리트머스 종이에 염기성 용액을 묻히면 푸르게 변했습니다.</p>
+        <p>할머니는 다른 지시약도 알려 주었습니다. 페놀프탈레인 용액은 산성과 중성에서는 색이 없지만 염기성에서는 붉게 변합니다. BTB 용액은 산성에서 노란색, 중성에서 초록색, 염기성에서 파란색을 띱니다.</p>
+        <p>지시약마다 변하는 색이 달랐지만, 원리는 하나였습니다. 색의 변화가 곧 산성과 염기성을 가르는 신호였던 것입니다. 새롬이는 위험한 물질도 손대지 않고 종이 한 조각의 색만 보고 안전하게 구별할 수 있게 되었습니다.</p>
+        <p>여러 지시약을 섞어 만든 만능 지시약을 쓰면, 산성에서 염기성까지 pH에 따라 빨강·주황·노랑·초록·파랑·보라로 무지개처럼 색이 이어져 변합니다. 이 만능 지시약을 종이에 적신 pH 시험지 한 장이면, 용액을 살짝 묻히는 것만으로 성질과 세기를 한눈에 읽을 수 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학09/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">세기의 척도</span>
+        <h2>0부터 14까지, pH</h2>
+        <p>새롬이는 산성에도 강하고 약한 정도가 있다는 것을 알게 되었습니다. 할머니는 산과 염기의 세기를 숫자로 나타낸 것이 pH라고 알려 주었습니다. pH는 0부터 14까지의 수로 표시합니다.</p>
+        <p>한가운데인 7은 산성도 염기성도 아닌 중성이며, 순수한 물이 여기에 해당합니다. pH가 7보다 작을수록 산성이 강하고, 7보다 클수록 염기성이 강합니다. 레몬은 pH 2 정도의 강한 산성이고, 비누는 pH 10 정도의 염기성입니다.</p>
+        <p>이 세기를 결정하는 것은 용액 속 수소 이온의 양입니다. 수소 이온이 많을수록 pH가 낮은 강한 산성이 됩니다. 새롬이는 이제 지시약의 색으로 산성인지 염기성인지 알고, pH라는 숫자로 그 세기까지 정확히 나타낼 수 있게 되었습니다.</p>
+        <p>pH는 1만큼 작아질 때마다 산성이 약 10배씩 강해집니다. 그래서 pH 2인 레몬은 pH 4인 물질보다 100배나 강한 산성인 셈입니다. 위산은 pH 1~2로 매우 강한 산성이고, 바닷물은 약 8, 표백제는 12~13에 이르는 강한 염기성입니다. 같은 산성·염기성이라도 pH에 따라 세기가 크게 다릅니다.</p>
+        <p>이렇게 pH를 정확히 아는 것은 실생활에서 매우 중요합니다. 수영장 물의 pH를 알맞게 맞추고, 농사지을 땅의 산성도를 확인하고, 식품이나 화장품이 피부에 자극이 없는지 살피는 데에도 모두 pH 측정이 쓰이기 때문입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학09/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">정체 규명</span>
+        <h2>산과 염기의 정체, 이온</h2>
+        <p>새롬이는 근본적인 의문을 품었습니다. 서로 다른 산들이 왜 모두 신맛을 내고, 서로 다른 염기들이 왜 모두 미끈거리며 쓴맛을 낼까요. 할머니는 그 답이 물에 녹았을 때 내놓는 알갱이, 곧 이온에 있다고 설명했습니다.</p>
+        <p>산은 물에 녹으면 수소 이온(H⁺)을 내놓습니다. 서로 다른 산이라도 공통으로 수소 이온을 내놓기 때문에, 모두 비슷한 산성의 성질을 보이는 것입니다. 반대로 염기는 물에 녹으면 수산화 이온(OH⁻)을 내놓아 염기성의 성질을 나타냅니다.</p>
+        <p>곧 산성의 정체는 수소 이온, 염기성의 정체는 수산화 이온이었습니다. 새롬이는 겉으로 다른 여러 물질이 사실은 같은 이온을 공통으로 지녀 같은 성질을 낸다는 사실이 무척 신기했습니다.</p>
+        <p>산과 염기가 물에 녹아 이온을 내놓으면, 그 용액에는 전류가 흐릅니다. 이온이 전기를 실어 나르기 때문입니다. 이렇게 물에 녹아 전류를 흐르게 하는 물질을 전해질이라고 합니다. 순수한 물은 이온이 거의 없어 전류가 잘 흐르지 않지만, 산이나 염기를 녹이면 전류가 잘 흐르게 됩니다.</p>
+        <p>이온의 성질은 산과 염기의 세기를 조절하는 데에도 쓰입니다. 진한 산에 물을 부어 묽게 만들면 같은 부피 속 수소 이온의 수가 줄어 산성이 약해집니다. 그래서 진한 산을 묽힐 때는 반드시 물에 산을 조금씩 부어야 하며, 반대로 산에 물을 부으면 갑자기 많은 열이 나면서 튈 수 있어 위험합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학09/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">반응의 발견</span>
+        <h2>섞으면 사라지는 성질, 중화</h2>
+        <p>새롬이는 그날 밤 신기한 꿈을 꾸었습니다. 톡 쏘고 급한 성격의 산이와, 쓰고 미끈미끈한 염이가 사람처럼 살아 만나기만 하면 다투었습니다. 정반대의 성질을 지녔기 때문입니다.</p>
+        <p>그때 리트머스 할머니가 나타나 뜻밖의 말을 했습니다. 두 성질을 딱 알맞은 양으로 섞으면, 신맛도 쓴맛도 모두 사라진다는 것이었습니다. 산이와 염이는 믿지 않았지만, 둘이 알맞게 만나자 정말로 톡 쏘던 신맛과 미끈거리던 쓴맛이 스르르 누그러졌습니다.</p>
+        <p>지시약을 대 보니 붉게도 푸르게도 변하지 않았습니다. 산성도 염기성도 아닌 중성이 된 것입니다. 산과 염기가 서로 만나 각자의 성질을 잃는 이 반응을 중화 반응이라고 합니다. 어느 한쪽의 승리가 아니라, 알맞은 만남이 답이었습니다.</p>
+        <p>산과 염기를 섞을 때, 산의 수소 이온과 염기의 수산화 이온의 수가 딱 맞아떨어지는 지점을 중화점이라고 합니다. 중화점에서는 용액이 완전히 중성이 되며, 이때 BTB 지시약을 넣어 두었다면 색이 초록색으로 나타납니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학09/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">원리 규명</span>
+        <h2>물과 염이 태어나다</h2>
+        <p>새롬이는 꿈에서 깬 뒤에도 궁금했습니다. 산과 염기가 만나면 왜 성질이 사라지고, 무엇이 새로 생길까요. 할머니가 그 비밀을 알려 주었습니다.</p>
+        <p>중화 반응의 핵심은 산이 내놓은 수소 이온(H⁺)과 염기가 내놓은 수산화 이온(OH⁻)이 서로 결합하여 물(H₂O)이 되는 것입니다. 산성의 원인인 수소 이온과 염기성의 원인인 수산화 이온이 만나 물로 바뀌면서, 두 성질이 함께 사라지는 것입니다.</p>
+        <p>물이 되지 않고 남은 이온들은 서로 결합하여 새로운 물질인 염을 만듭니다. 예를 들어 염산과 수산화나트륨을 알맞게 중화시키면, 맑은 물과 함께 우리가 매일 먹는 소금, 곧 염화나트륨이 생깁니다. 또한 중화가 일어날 때는 열이 함께 발생합니다. 정반대인 둘이 만나 물과 염, 그리고 온기까지 남긴 것입니다.</p>
+        <p>이를 화학 반응식으로 나타내면 이해가 한결 쉽습니다. 염산(HCl)과 수산화나트륨(NaOH)의 중화는 'HCl + NaOH → NaCl + H₂O'로 씁니다. 산의 수소 이온과 염기의 수산화 이온이 만나 물이 되고, 남은 나트륨 이온과 염화 이온이 결합해 염화나트륨, 곧 소금이 되는 것입니다.</p>
+        <p>산과 염기가 얼마나 반응했는지는 온도로도 알 수 있습니다. 중화 반응이 일어날 때는 열이 나기 때문에, 산에 염기를 조금씩 넣으며 온도를 재 보면 중화점 부근에서 온도가 가장 높이 올라갑니다. 이렇게 열의 변화로도 중화가 얼마나 진행되었는지 확인할 수 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학09/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">생활 응용</span>
+        <h2>중화가 쓰이는 곳</h2>
+        <p>새롬이는 중화 반응이 실제 생활 곳곳에서 쓰인다는 것을 알게 되었습니다. 우리 위 속에는 음식을 소화시키는 위산이 있는데, 이것이 지나치게 많이 나오면 속이 쓰립니다. 이때 먹는 제산제는 염기성이어서, 강해진 위산을 중화시켜 쓰림을 가라앉힙니다.</p>
+        <p>농사에서도 중화가 쓰입니다. 산성으로 변해 농작물이 잘 자라지 못하는 토양에 염기성인 석회 가루를 뿌려 산성을 중화시킵니다. 생선의 비린내를 없애려고 산성인 레몬즙을 뿌리는 것도, 벌레 물린 자리에 염기성 약을 바르는 것도 모두 중화를 이용한 것입니다.</p>
+        <p>한쪽으로 치우친 성질을, 반대되는 성질로 알맞게 맞추어 문제를 해결하는 것. 중화는 실험실만이 아니라 우리 곁에서 늘 일어나며 쓰이고 있는 반응이었습니다.</p>
+        <p>산성비로 상한 대리석 건축물을 보호하거나, 입안의 산이 치아를 상하게 하는 것을 막는 염기성 치약도 모두 중화의 원리를 이용합니다. 우리 주변에는 이렇게 지나친 산성이나 염기성을 알맞게 되돌리는 중화의 사례가 아주 많습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학09/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">확장</span>
+        <h2>균형이라는 지혜</h2>
+        <p>새롬이는 산과 염기를 배우며 한 가지 중요한 생각에 이르렀습니다. 산성이라고 무조건 나쁜 것도, 염기성이라고 무조건 좋은 것도 아니라는 것이었습니다. 산성인 위산은 소화에 꼭 필요하고, 염기성인 비누는 때를 씻어 주는 고마운 것입니다.</p>
+        <p>문제가 되는 것은 어느 한쪽으로 지나치게 치우쳤을 때였습니다. 위산이 너무 많아도, 토양이 너무 산성이 되어도 탈이 났습니다. 정말 중요한 것은 어느 한쪽의 승리가 아니라, 치우치지 않은 알맞은 균형이었습니다.</p>
+        <p>실제로 우리 몸은 혈액의 pH를 좁은 범위로 일정하게 유지하려고 스스로 조절합니다. 균형이 무너지면 생명이 위태로워지기 때문입니다. 새롬이는 세상을 움직이는 것이 정반대인 것들의 알맞은 균형임을 깨달았습니다.</p>
+        <p>우리가 마시는 물이나 어항의 물도 pH가 중요합니다. 물고기는 좁은 범위의 pH에서만 살 수 있어, 물이 너무 산성이거나 염기성으로 치우치면 병들고 맙니다. 공장 매연이나 자동차 배기가스가 만든 산성비가 강과 호수를 산성으로 바꾸어 생물을 위협하는 것도 바로 이런 까닭입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학09/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결론</span>
+        <h2>색과 숫자로 읽는 세상</h2>
+        <p>새롬이는 이제 세상을 예전과 다르게 봅니다. 눈에 보이지 않던 산성과 염기성이, 지시약의 색과 pH라는 숫자로 또렷하게 말을 걸어오기 때문입니다.</p>
+        <p>새롬이가 배운 것을 정리하면 이렇습니다. 신 것은 산성(수소 이온), 쓰고 미끈거리는 것은 염기성(수산화 이온)입니다. 함부로 맛보는 대신 지시약의 색으로 안전하게 구별하고, 세기는 0부터 14까지의 pH로 나타내며, 7이 중성입니다.</p>
+        <p>무엇보다 새롬이가 배운 핵심은 중화 반응이었습니다. 산의 수소 이온과 염기의 수산화 이온이 만나 물이 되고, 남은 이온이 염을 이루는 반응. 정반대인 둘이 서로를 이기려 다투는 대신 알맞게 만나, 물과 염이라는 새로운 것을 함께 만들어 내는 지혜였습니다.</p>
+        <p><span class="highlight">산이 내놓는 수소 이온과 염기가 내놓는 수산화 이온이 만나 물이 되는 반응 — 이것이 산과 염기의 중화 반응입니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/chem09_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

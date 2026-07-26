@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎼 모두의 음악을 만든 사람, 모차르트</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계인물07/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00897b 0%, #004d40 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 137, 123, 0.15);
+      color: #004d40;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00897b;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #004d40;
+      font-weight: 600;
+    }
+
+    .story-card .key-sentence {
+      display: block;
+      background: rgba(0, 137, 123, 0.1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-left: 4px solid #00897b;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #004d40;
+      font-size: 14px;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #4dd0e1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(0, 137, 123, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #80cbc4;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 137, 123, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 77, 64, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 137, 123, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🎼 모두의 음악을 만든 사람, 모차르트</h1>
+        <p class="subtitle">
+          — 구경거리였던 아이가, 누구나 부를 수 있는 노래를 남기기까지 —<br>
+          교과기반 창작도서 · 세계인물 07 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🎼 등장인물 소개</h3>
+          <p><strong>★ 볼프강 아마데우스 모차르트 (주인공):</strong> 1756년 오스트리아에서 태어난 <span class="vocab-tip" data-meaning="어린 나이에 아주 뛰어난 재주를 보이는 아이">신동</span>이에요. 네 살에 건반을 만지고 다섯 살에 곡을 지었으며, 평생 "누구나 즐길 수 있는 음악"을 고집했지요.</p>
+          <p><strong>★ 아버지 레오폴트:</strong> 궁정 악단의 연주자이자 아들의 첫 스승. 아들의 재능을 세상에 알린 사람이자, 그 재능을 값으로 매긴 사람이기도 하다.</p>
+          <p><strong>★ 누나 난네를:</strong> 모차르트보다 다섯 살 위. 동생 못지않은 연주 실력을 지녔지만, 여자라는 이유로 무대에서 먼저 내려와야 했다.</p>
+          <p><strong>★ 대주교:</strong> 잘츠부르크 <span class="vocab-tip" data-meaning="왕이나 귀족이 사는 궁궐. 그곳에 딸린 것을 궁정이라 함">궁정</span>의 주인. 모차르트를 음악가가 아니라 하인으로 여긴 인물.</p>
+          <p><strong>★ 빈의 관객들:</strong> 귀족이 아닌 보통 사람들. 극장 값싼 자리에서 처음으로 자기 말로 된 노래를 들은 이들.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 내면의 갈등:</strong> 사랑받는 신동으로 남기 vs. 내 음악을 하는 어른 되기</p>
+          <p><strong>② 신분의 갈등:</strong> 음악가를 하인으로 보는 궁정 vs. 예술가로 서려는 자존심</p>
+          <p><strong>③ 현실의 갈등:</strong> 안정된 자리와 봉급 vs. 가난하지만 자유로운 창작</p>
+          <p><strong>④ 시대의 갈등:</strong> 귀족의 언어로만 하던 <span class="vocab-tip" data-meaning="노래와 연기로 이야기를 풀어내는 무대 예술">오페라</span> vs. 모두가 알아듣는 노래</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물07/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>발끝으로 닿은 건반</h2>
+        <p>1756년, 오스트리아의 작은 도시<br>
+잘츠부르크에서 모차르트가 태어났어요.<br>
+아버지는 궁정 악단에서<br>
+바이올린을 켜는 연주자였고,<br>
+집 안에는 언제나 악기와<br>
+음을 적은 종이인 <span class="vocab-tip" data-meaning="음악의 가락을 기호로 적어 놓은 종이">악보</span>가 널려 있었지요.</p>
+        <p>아버지가 누나 난네를에게<br>
+건반을 가르칠 때였어요.<br>
+세 살배기 볼프강은 누나가 자리를 뜨자<br>
+의자로 기어 올라갔지요.<br>
+그리고 방금 누나가 틀렸던 자리를<br>
+정확히 짚어 소리를 냈어요.<br><br><span class="dialogue">"볼프강, 방금 그거 누가 가르쳐 주었니?"</span><br><br><span class="dialogue">"아까 소리가 아팠어요. 그래서 고쳤어요."</span></p>
+        <p>네 살이 되자 아이는<br>
+한 번 들은 곡을 그대로 쳤어요.<br>
+다섯 살에는 자기가 만든 곡을<br>
+아버지에게 받아 적게 했지요.<br>
+아직 글씨도 제대로 쓰지 못하던 나이였어요.<br><br><span class="dialogue">"이 아이는 하늘이 준 선물이오. 세상에 보여 주어야 하오."</span><br><br>다만 그 말에는 아무도 묻지 않은<br>
+물음 하나가 빠져 있었지요.<br>
+보여 준 다음에 이 아이는 무엇이 되는가.</p>
+        <p><span class="highlight">볼프강에게는 재능이 있었지만, 그 재능을 자기 것으로 쓸 자리는 아직 어디에도 없었어요.</span><br>
+아이는 그저 놀라운 것을<br>
+보여 주는 아이였지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물07/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>여섯 살의 여행 가방</h2>
+        <p>여섯 살이 되던 해,<br>
+모차르트 가족은 마차에 올랐어요.<br>
+유럽 여러 나라를 도는<br>
+긴 연주 여행이었지요.<br>
+마차는 종일 덜컹거렸고,<br>
+남매는 여러 번 크게 앓았지요.<br>
+그래도 도시에 닿으면 옷을 갈아입고<br>
+곧장 무대에 서야 했어요.</p>
+        <p>귀족들은 어린 연주자를 보고 놀랐어요.<br>
+그러나 그들이 놀란 것은<br>
+음악 자체가 아니었지요.<br>
+그들은 자꾸만 새로운 재주를 요구했어요.<br>
+건반을 천으로 덮고 치게 하고,<br>
+처음 보는 악보를 그 자리에서 연주하게 했지요.<br><br><span class="dialogue">"놀랍군! 여섯 살짜리가 저런 일을 해내다니!"</span><br><br>사람들이 감탄한 것은 '여섯 살짜리'였어요.<br>
+음악이 아니라 나이였지요.</p>
+        <p>어느 날 밤 마차 안에서<br>
+볼프강이 누나에게 물었어요.<br><br><span class="dialogue">"누나, 저 사람들은 내 음악이 좋은 걸까, 내가 어린 게 좋은 걸까?"</span><br><br>난네를은 답하지 못했지요.<br>
+얼마 뒤 누나는 무대에서 내려와야 했어요.<br>
+여자아이가 어른이 되어서까지 연주하는 일은<br>
+그 시절에는 허락되지 않았기 때문이에요.</p>
+        <p>볼프강은 누나가 짐을 싸는 것을<br>
+지켜보았어요.<br>
+<span class="highlight">그때 처음으로, 박수는 언젠가 그친다는 것을 알았지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물07/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>왕 앞에서, 그리고 왕이 떠난 뒤</h2>
+        <p>연주 여행은 여러 해에 걸쳐 이어졌어요.<br>
+모차르트는 소년 시절의 절반을<br>
+마차 위에서 보냈지요.<br>
+여왕 앞에서 연주했고,<br>
+그 자리에서 바로 지어 연주하는<br>
+<span class="vocab-tip" data-meaning="준비 없이 그 자리에서 바로 지어 연주하는 곡">즉흥곡</span>을 만들었으며,<br>
+교황에게 공을 기리는<br>
+<span class="vocab-tip" data-meaning="큰 공을 세운 사람에게 주는 표시">훈장</span>을 받기도 했어요.</p>
+        <p>그런데 연주가 끝나면 귀족들은<br>
+박수를 치고 곧 다른 이야기로 넘어갔어요.<br>
+그들에게 음악은 저녁 식사와<br>
+다음 이야기 사이에 놓인<br>
+잠깐의 즐길 거리였지요.<br><br><span class="dialogue">"얘야, 이제 나가 있거라. 어른들 이야기가 남았다."</span><br><br>방금까지 그의 음악에 감탄하던<br>
+입에서 나온 말이었어요.</p>
+        <p>모차르트는 그때 알았어요.<br>
+자신은 초대받은 것이 아니라<br>
+불려 온 것이었지요.<br>
+재능은 인정받아도 사람은<br>
+인정받지 못하는 일이 세상에 있다는 것을,<br>
+그는 열 살 무렵에 이미 배웠어요.</p>
+        <p>그날 밤 그는 촛불 아래에서 악보를 폈어요.<br>
+누가 시켜서가 아니라<br>
+쓰고 싶어서 쓴 첫 곡이었지요.<br><br><span class="dialogue">"누구를 위한 곡이냐? 다음 궁전에서 쓸 것이냐?"</span><br><br><span class="dialogue">"아니요. 그냥 제가 듣고 싶어서요."</span><br><br><span class="highlight">그것이 모차르트가 처음으로 자기 자신에게 들려준 음악이었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물07/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>신동이 자라면</h2>
+        <p>세월이 흘러 모차르트는 청년이 되었어요.<br>
+그리고 이상한 일이 벌어졌지요.<br>
+초대장이 줄어들기 시작한 거예요.<br>
+실력은 예전과 비교할 수 없이 좋아졌고,<br>
+이제는 자기 생각으로<br>
+음악을 짓는 <span class="vocab-tip" data-meaning="음악을 새로 지어 만드는 일">작곡</span>을 했어요.<br>
+그런데도 사람들의 관심은 식었지요.<br>
+그가 더 이상 여섯 살이 아니었기 때문이에요.</p>
+        <p><span class="dialogue">"어릴 적엔 신기했는데, 이제는 그냥 잘하는 젊은이 아닌가."</span><br><br>모차르트는 그 말을 전해 듣고<br>
+오래 웃지 못했어요.<br>
+사람들이 좋아한 것은 그의 음악이 아니라<br>
+그의 나이였던 것이지요.</p>
+        <p>그는 일자리를 찾아 여러 도시를 돌았어요.<br>
+문을 두드릴 때마다 어릴 적 이름값은<br>
+조금씩 닳아 없어졌지요.<br>
+여행길에서 어머니를 잃기도 했어요.<br>
+낯선 도시에서 혼자 어머니의 장례를 치른,<br>
+스물두 살의 겨울이었지요.</p>
+        <p>고향으로 돌아오는 마차 안에서<br>
+그는 자기가 가진 것을 헤아려 보았어요.<br>
+유명했던 아이라는 지난 이름,<br>
+그리고 머릿속에 가득 찬<br>
+아직 쓰지 않은 곡들.<br>
+<span class="highlight">신동이라는 이름은 그를 여기까지 데려왔지만, 여기서부터는 아무 소용이 없었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물07/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>하인 식탁의 자리</h2>
+        <p>오랜 방황 끝에 모차르트는<br>
+고향으로 돌아와 궁정 음악가가 되었어요.<br>
+높은 성직자인 <span class="vocab-tip" data-meaning="교회에서 높은 자리에 있는 성직자">대주교</span> 밑에서<br>
+곡을 쓰고 연주하는 자리였지요.<br>
+다달이 받는 돈인 <span class="vocab-tip" data-meaning="일한 대가로 다달이 받는 돈">봉급</span>이 나오는<br>
+가장 안정된 자리였어요.</p>
+        <p>그러나 궁정에는 촘촘한 규칙이 있었어요.<br>
+무엇을 언제 어떤 길이로 쓸지까지<br>
+모두 주인이 정했지요.<br>
+공들여 쓴 부분도 길다는 이유 하나로<br>
+가위질당했어요.<br>
+더 견디기 힘든 것은 식사 시간이었지요.<br>
+궁정에서 음악가의 자리는<br>
+하인들 식탁이었어요.<br>
+그는 요리사와 마부 사이에 앉아 밥을 먹었지요.</p>
+        <p><span class="dialogue">"나는 이곳에서 음악가가 아니라 하인이라네. 내 음악은 주인의 식탁을 장식하는 그릇일세."</span><br><br><span class="dialogue">"내가 명하는 대로만 쓰면 된다. 자네에게 필요한 것은 재주지 생각이 아니야."</span><br><br>모차르트는 아무 말도 하지 않았어요.<br>
+그날 밤 그는 잠을 이루지 못하고<br>
+창가에 앉아 있었지요.</p>
+        <p>그의 앞에는 두 갈래 길이 놓였어요.<br>
+이대로 있으면 평생 먹고살 걱정은 없고,<br>
+나가면 아무것도 보장되지 않았지요.<br>
+<span class="highlight">안정과 자유 중 하나를 골라야 하는 밤이었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물07/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>문밖으로 쫓겨나다</h2>
+        <p>모차르트는 대주교에게<br>
+그만두겠다는 뜻을 밝혔어요.<br>
+대주교는 번번이 거절했지요.<br>
+말다툼은 오갈수록 거칠어졌고,<br>
+십 년 넘게 참아 온 말들이<br>
+한꺼번에 터져 나왔어요.<br>
+마침내 스물다섯 살이 되던 해,<br>
+그는 궁정에서 쫓겨났지요.</p>
+        <p>계단 아래에 주저앉은 채<br>
+그는 천천히 옷에 묻은 먼지를 털었어요.<br>
+그러나 이상하게도 부끄럽지 않았지요.<br>
+오히려 오랫동안 목에 걸려 있던 것이<br>
+쑥 내려간 기분이었어요.<br>
+숨이 처음으로 끝까지 쉬어졌지요.</p>
+        <p>그는 곧바로 짐을 꾸려<br>
+수도 빈으로 향했어요.<br>
+아버지가 편지로 거듭<br>
+말리는 <span class="vocab-tip" data-meaning="하려는 일을 하지 못하게 말리는 것">만류</span>를 했지요.<br><br><span class="dialogue">"돌아와서 용서를 빌어라. 자유로는 밥을 먹을 수 없다."</span><br><br><span class="dialogue">"아버지, 저는 하인 식탁에서 먹는 따뜻한 밥보다 제 음악을 쓰고 굶는 쪽을 택하겠습니다."</span></p>
+        <p>빈에 도착한 그에게는 봉급도,<br>
+후원자도, 돌아갈 곳도 없었어요.<br>
+<span class="highlight">그는 유럽에서 거의 처음으로, 궁정에 매이지 않고 홀로 서 보려는 음악가가 되었지요.</span><br>
+앞에 무엇이 있는지는 아무도 몰랐어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물07/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>자유의 값</h2>
+        <p>빈에서의 삶은 더없이 자유로웠고,<br>
+딱 그만큼 불안했어요.<br>
+주문이 들어오면 벌었고<br>
+들어오지 않으면 그대로 굶었지요.</p>
+        <p>모차르트는 닥치는 대로 일했어요.<br>
+아침에는 아이들에게 피아노를 가르쳤고,<br>
+낮에는 곡을 썼으며,<br>
+저녁에는 연주회에 나가<br>
+직접 건반 앞에 앉았지요.<br>
+하루가 세 사람 몫이었어요.</p>
+        <p>그래도 돈은 늘 모자랐어요.<br>
+집세가 밀려 여러 번 이사를 다녔고,<br>
+겨울에는 땔감이 없어 아내와 손을 잡고<br>
+방 안을 빙빙 돌며 몸을 데웠다는<br>
+이야기도 전해지지요.<br><br><span class="dialogue">"내가 잘못 고른 것일까."</span><br><br>그런 밤이면 하인 식탁의<br>
+따뜻한 밥이 떠올랐어요.</p>
+        <p>그러나 그 물음의 답은<br>
+언제나 책상 위에 놓여 있었어요.<br>
+여기서는 무엇이든,<br>
+잘려 나갈 걱정 없이 끝까지 쓸 수 있었지요.<br>
+배가 고픈 만큼 책상 위의 악보는 두꺼워졌고,<br>
+빈에서 보낸 십 년 동안 그는<br>
+생애에서 가장 많은 곡을 썼어요.<br>
+<span class="highlight">자유에는 값이 있었고, 그는 그 값을 매달 치르고 있었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물07/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>알아들을 수 있는 노래</h2>
+        <p>어느 날 모차르트는 노래로 하는 연극,<br>
+<span class="vocab-tip" data-meaning="배우가 노래로 이야기를 이어 가는 연극">오페라</span> 공연장 뒤편에 서서<br>
+객석을 내려다보고 있었어요.<br>
+그런데 아래층 값싼 자리에 선<br>
+사람들의 얼굴이 눈에 들어왔지요.<br>
+아름다운 <span class="vocab-tip" data-meaning="음의 높낮이가 이어져 만들어진 가락">선율</span>이 흐르는데도<br>
+그들은 웃지도 울지도 않았어요.<br>
+알아들을 수 없었기 때문이지요.</p>
+        <p>그 시절 오페라는 반드시<br>
+이탈리아어로 만드는 것이<br>
+<span class="vocab-tip" data-meaning="오래전부터 그렇게 해 와서 당연하게 여겨지는 방식">관례</span>였어요.<br>
+이탈리아어는 귀족들이 배우는 말이었고,<br>
+값싼 자리 사람들에게는<br>
+그저 예쁜 소리였지요.<br><br><span class="dialogue">'음악이 사람을 가려서야 되겠는가.'</span></p>
+        <p>그는 결심했어요.<br>
+빈의 보통 사람들이 쓰는 말,<br>
+독일어로 오페라를 쓰기로 한 거예요.<br><br><span class="dialogue">"그건 격이 떨어지는 일일세. 진지한 음악은 이탈리아어로 해야 하네."</span><br><br><span class="dialogue">"저는 누구나 즐길 수 있는 음악을 만들고 싶습니다."</span></p>
+        <p>그때 그는 알았어요.<br>
+궁정을 뛰쳐나온 이유가 이것이었지요.<br>
+<span class="highlight">자유는 자기 마음대로 쓰기 위한 것이 아니라, 아무나 들을 수 있게 쓰기 위한 것이었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물07/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>값싼 자리에서 터진 웃음</h2>
+        <p>「마술피리」가 무대에 오르던 날,<br>
+극장 안 풍경은 여느 때와 달랐어요.<br>
+귀족뿐 아니라 장사꾼과 하녀,<br>
+마부까지 표를 사서 들어왔지요.</p>
+        <p>막이 오르고 얼마 지나지 않아<br>
+값싼 자리 쪽에서 왁자한 웃음이 터졌어요.<br>
+새를 잡는 사내가 늘어놓는 우스운 소리를,<br>
+이번에는 사람들이 알아들었기 때문이지요.<br>
+두 사람이 어둠 속을 함께 지나가는 장면에서는<br>
+극장 전체가 조용해졌어요.<br>
+신분이 다른 사람들이 같은 순간에<br>
+마음이 움직인 거예요.</p>
+        <p>공연이 끝나자 박수가 오래도록 이어졌어요.<br>
+여섯 살에 받던 박수와는 다른 소리였지요.<br>
+그때는 나이에 대한 박수였고,<br>
+지금은 음악에 대한 박수였어요.</p>
+        <p>집으로 돌아가는 길에 그는<br>
+앞서 걷던 한 아주머니가<br>
+흥얼거리는 소리를 들었어요.<br>
+조금 전 무대에서 나온 바로 그 가락이었지요.<br>
+악보를 볼 줄도 모르는 사람이,<br>
+그의 노래를 부르며 집으로 가고 있었어요.<br>
+<span class="highlight">그가 평생 바라던 일이 그 흥얼거림 속에 있었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물07/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>다 쓰지 못한 마지막 곡</h2>
+        <p>「마술피리」가 성공을 거둔 바로 그해,<br>
+모차르트의 몸은 이미 크게 상해 있었어요.<br>
+그 무렵 그는 죽은 사람을 위로하는 곡,<br>
+<span class="vocab-tip" data-meaning="죽은 사람을 위로하려고 만든 음악">진혼곡</span>을 쓰고 있었지요.<br>
+병상에 누워 손이 떨리는 중에도<br>
+그는 악보를 놓지 않았어요.</p>
+        <p>그러나 그 곡은<br>
+끝내 완성되지 못했어요.<br>
+서른다섯 살의 겨울,<br>
+모차르트는 악보를 절반쯤 남겨 둔 채<br>
+세상을 떠났지요.<br>
+장례는 몹시 조촐했어요.</p>
+        <p>남긴 것은 악보였어요.<br>
+아이들이 배우는 짧은 노래부터<br>
+웅장한 <span class="vocab-tip" data-meaning="여러 악기가 함께 연주하는 큰 곡">교향곡</span>,<br>
+피아노 <span class="vocab-tip" data-meaning="한 악기가 중심이 되어 여러 악기와 함께 연주하는 곡">협주곡</span>까지 600곡이 넘었지요.<br>
+오늘날 그의 음악은 200년이 넘도록<br>
+세계 곳곳에서 끊임없이 연주돼요.<br>
+그가 바란 대로 사람을 가리지 않지요.</p>
+        <p>모차르트는 하늘이 준 재능으로 유명해졌지만,<br>
+그를 오래 남게 한 것은<br>
+재능이 아니었어요.<br>
+<span class="highlight">따뜻한 하인 식탁을 걷어차고 나온 선택, 알아듣지 못하는 사람들을 위해 말을 바꾼 선택이었지요.</span><br>
+재능은 그에게 주어졌지만,<br>
+그 재능을 누구에게 줄지는 그가 정했어요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(90, 100, 170, 0.15); border-radius: 16px;">
+          <strong style="color: #5A64AA; font-size: 20px;">🎼 「재능은 하늘이 주지만, 그 재능을 누구에게 줄지는 사람이 정한다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+      function goToQuiz() { window.location.href = '/creative-book/worldperson07_season1_quiz.html?season=season1'; }
+  </script>
+</body>
+</html>

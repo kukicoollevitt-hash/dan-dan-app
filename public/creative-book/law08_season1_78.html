@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚖️ 깨진 유리창의 진실 — 우리 반 작은 법정</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작법08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⚖️ 깨진 유리창의 진실 — 우리 반 작은 법정</h1>
+        <p class="subtitle">
+          — 무죄 추정의 원칙과 증거재판주의로 배우는 재판 —<br>
+          교과기반 창작도서 · 법 08
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 우리 반 아이들:</strong> 깨진 유리창 사건을 두고 직접 작은 법정을 열어 진실을 가리는 아이들.</p>
+          <p><strong>★ 판사·검사·변호인:</strong> 재판의 역할을 나누어 맡은 아이들. 공정한 판단이 무엇인지 배워 간다.</p>
+          <p><strong>★ 핵심 개념:</strong> 무죄 추정의 원칙, 증거재판주의, 재판의 절차, 삼심제, 공정한 판단.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>쨍그랑, 그리고 손가락들</h2>
+        <p>어느 날 쉬는 시간, 교실 유리창이 쨍그랑 깨지는 소리가 났습니다. 아이들이 놀라 돌아보니 유리창 하나가 산산이 부서져 있었습니다. 그리고 곧 여러 아이의 손가락이 한 아이를 가리켰습니다.</p>
+        <p>아이들은 마침 창가에 서 있던 민수가 유리창을 깼다고 입을 모았습니다. 민수는 자신이 그러지 않았다고 억울해했지만, 아무도 그 말을 믿어 주지 않았습니다. 창가에 있었으니 당연히 민수가 깬 것이라고 여긴 것입니다.</p>
+        <p>민수는 눈물을 글썽이며 결백을 주장했습니다. 그러나 이미 많은 아이가 민수를 범인으로 단정 짓고 있었습니다. 확실한 증거도 없이, 그저 가까이 있었다는 이유만으로 민수는 죄인이 되어 가고 있었습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 증거 없이 한 사람을 범인으로 몰아가는 성급한 판단입니다. 의심만으로 누군가를 죄인 취급하는 이 상황이, 재판과 정의를 배우는 출발점이 됩니다. 진실을 가리는 일이 얼마나 신중해야 하는지를 이야기는 묻기 시작합니다.</p>
+        <p>판결이 내려지기 전까지 누구도 죄인이 아니라는 것을, 아이들은 이 사건을 통해 배우게 됩니다. 깨진 유리창에서 시작된 이야기가 이렇게 펼쳐집니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>그럼 재판을 하자</h2>
+        <p>선생님은 소란스러운 교실을 진정시키며 뜻밖의 제안을 했습니다. 함부로 민수를 범인으로 단정 짓지 말고, 우리 반이 직접 작은 법정을 열어 진실을 가려 보자는 것이었습니다. 아이들은 그 제안에 눈이 휘둥그레졌습니다.</p>
+        <p>선생님은 어떤 나라에서도 증거 없이 사람을 죄인으로 만들지 않는다고 말했습니다. 진짜 법정에서는 정해진 절차에 따라 신중하게 진실을 가린다는 것이었습니다. 아이들은 그러한 재판을 자신들의 손으로 직접 해 보기로 했습니다.</p>
+        <p>아이들은 판사와 검사, 변호인 등 재판에 필요한 역할을 나누어 맡았습니다. 판사는 판단을 내리고, 검사는 죄를 밝히려 하고, 변호인은 억울함을 풀어 주는 역할이었습니다. 우리 반 작은 법정이 이렇게 문을 열었습니다.</p>
+        <p>이 대목은 아이들이 재판이라는 방법으로 진실을 가리기로 하는 사건의 시작입니다. 성급한 단정 대신 공정한 절차를 택한 것입니다. 진실은 함부로가 아니라 신중하게 가려야 한다는 생각이 여기서 싹텄습니다.</p>
+        <p>아이들은 진짜 재판이 어떻게 이루어지는지부터 배우기로 했습니다. 그러기 위해 진짜 법정을 직접 찾아가 보기로 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>진짜 법정에 가다</h2>
+        <p>아이들은 선생님과 함께 진짜 법정을 견학하러 갔습니다. 엄숙한 법정의 모습에 아이들은 절로 마음이 가라앉았습니다. 그곳에서는 한 사람의 잘잘못을 가리는 진지한 재판이 이루어지고 있었습니다.</p>
+        <p>아이들은 그곳에서 중요한 원칙 하나를 배웠습니다. 바로 무죄 추정의 원칙이었습니다. 이는 판결이 확정되기 전까지는 누구도 죄인으로 여겨서는 안 된다는 원칙이었습니다.</p>
+        <p>아이들은 이 원칙에 깊은 인상을 받았습니다. 의심을 받는다고 해서 곧바로 죄인이 되는 것이 아니라, 정당한 재판을 통해 죄가 증명되어야만 죄인이 된다는 것이었습니다. 민수를 함부로 범인으로 몰았던 자신들의 모습이 부끄러워졌습니다. 이 원칙이 없다면 죄 없는 사람도 의심만으로 억울하게 벌을 받을 수 있다는 것을, 아이들은 비로소 이해했습니다.</p>
+        <p>이 대목은 아이들이 재판의 핵심 원칙을 만나는 전개의 단계입니다. 무죄 추정의 원칙을 통해, 함부로 사람을 죄인으로 단정해서는 안 된다는 것을 배운 것입니다. 이 원칙은 억울한 사람을 지키는 소중한 방패였습니다.</p>
+        <p>법정 견학을 마친 아이들은 자신들의 작은 법정을 더욱 진지하게 준비했습니다. 이제 공정한 재판을 열 차례였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>책상 세 개와 나무 망치</h2>
+        <p>아이들은 교실에 책상 세 개를 놓아 판사석과 검사석, 변호인석을 만들었습니다. 그리고 판사가 쓸 나무 망치도 정성껏 준비했습니다. 소박하지만 진지한 작은 법정이 갖추어졌습니다.</p>
+        <p>재판이 시작되자, 검사 역할을 맡은 아이는 민수가 유리창을 깼다는 주장을 펼쳤습니다. 반면 변호인 역할을 맡은 아이는 민수의 억울함을 대신 이야기했습니다. 판사 역할을 맡은 아이는 양쪽의 말을 신중하게 들었습니다.</p>
+        <p>아이들은 재판에서 가장 중요한 것이 바로 증거라는 것을 알게 되었습니다. 누군가를 범인이라고 하려면, 그 사람이 정말 그랬다는 증거가 있어야 했습니다. 이렇게 증거를 바탕으로 판단하는 것을 증거재판주의라고 합니다.</p>
+        <p>이 대목은 아이들이 재판의 절차를 직접 실천해 보는 전개의 시도 단계입니다. 검사와 변호인, 판사가 각자의 역할을 하며 공정한 재판을 진행한 것입니다. 무엇보다 증거의 중요성을 아이들은 몸으로 배워 갔습니다.</p>
+        <p>그러나 첫 재판은 아이들이 생각한 대로 흘러가지 않았습니다. 증거 없이 내려진 판단은 뜻밖의 문제를 낳았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>첫 번째 판결</h2>
+        <p>첫 번째 재판에서, 판사 역할을 맡은 아이는 그만 성급한 판결을 내리고 말았습니다. 여러 아이가 민수를 지목했다는 이유만으로 민수가 범인이라고 결론지은 것입니다. 확실한 증거는 없었습니다.</p>
+        <p>민수는 다시 한번 억울함을 호소했습니다. 자신은 정말 유리창을 깨지 않았는데, 증거도 없이 범인으로 몰렸기 때문입니다. 지켜보던 아이들 사이에서도 무언가 잘못되었다는 느낌이 퍼졌습니다.</p>
+        <p>선생님은 이 판결이 무죄 추정의 원칙과 증거재판주의에 어긋난다고 짚어 주었습니다. 사람들의 지목만으로는 죄를 증명할 수 없으며, 확실한 증거가 있어야 한다는 것이었습니다. 아이들은 자신들의 재판이 공정하지 못했음을 깨달았습니다.</p>
+        <p>이 대목은 아이들의 재판이 잘못된 방향으로 흘러 좌절하는 위기의 단계입니다. 증거 없이 여론만으로 내린 판결이 얼마나 위험한지를 겪은 것입니다. 이 실패는 공정한 재판이 무엇인지를 더 깊이 배우는 계기가 되었습니다.</p>
+        <p>아이들은 재판을 다시 하기로 했습니다. 이번에는 증거를 제대로 찾아, 진실을 올바르게 가려 보기로 한 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>세 번의 기회</h2>
+        <p>선생님은 아이들에게, 진짜 재판에서는 한 번의 판결로 모든 것이 끝나지 않는다고 알려 주었습니다. 판결에 억울함이 있으면 다시 재판을 받을 수 있다는 것이었습니다. 우리나라에서는 이렇게 세 번까지 재판을 받을 수 있는데, 이를 삼심제라고 합니다.</p>
+        <p>삼심제는 억울한 사람이 생기지 않도록 하기 위한 제도였습니다. 한 번의 판단이 틀릴 수도 있으므로, 여러 번 신중하게 살펴 잘못된 판결을 바로잡을 기회를 주는 것이었습니다. 아이들은 이 제도가 공정함을 지키기 위한 지혜임을 알게 되었습니다. 사람이 내리는 판단인 만큼 실수가 있을 수 있음을 인정하고, 그 실수를 바로잡을 길을 열어 둔 것이었습니다.</p>
+        <p>아이들은 자신들도 다시 한번 진실을 가릴 기회가 있다는 사실에 안도했습니다. 첫 재판이 잘못되었더라도, 바로잡을 수 있다는 것이 다행스러웠습니다. 아이들은 이번에는 반드시 증거를 찾아내기로 다짐했습니다.</p>
+        <p>이 대목은 아이들이 재판을 바로잡을 기회를 얻는 위기의 심화 단계입니다. 삼심제라는 제도를 통해, 잘못된 판단을 고칠 수 있음을 배운 것입니다. 신중함과 바로잡을 기회야말로 공정한 재판의 핵심이었습니다.</p>
+        <p>아이들은 진실을 밝혀 줄 증거를 찾아 나섰습니다. 그러나 결정적인 증거는 좀처럼 나타나지 않았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>증거가 없는 밤</h2>
+        <p>아이들은 유리창이 깨진 경위를 다시 꼼꼼히 살폈습니다. 그러나 민수가 범인이라는 증거도, 아니라는 증거도 좀처럼 찾을 수 없었습니다. 진실은 여전히 안개 속에 가려져 있었습니다.</p>
+        <p>아이들은 막막해졌습니다. 증거가 없다면 진실을 밝힐 수 없고, 그렇다고 증거 없이 판결을 내릴 수도 없었습니다. 재판이 벽에 부딪힌 것 같았습니다.</p>
+        <p>이 대목은 아이들이 진실의 문턱에서 가장 크게 막막해하는 절정의 바닥입니다. 그러나 바로 이 지점에서 아이들은 무죄 추정의 원칙을 다시 떠올립니다. 증거가 없다면, 함부로 민수를 죄인으로 몰아서는 안 된다는 것이었습니다.</p>
+        <p>아이들은 증거를 찾기 위해 끝까지 포기하지 않기로 했습니다. 사건이 일어난 순간의 상황을 하나하나 되짚어 보았습니다. 그러던 중, 한 아이가 중요한 사실을 떠올렸습니다.</p>
+        <p>그날 교실에는 마침 수업을 촬영하던 작은 카메라가 있었던 것입니다. 아이들의 눈이 번쩍 뜨였습니다. 어쩌면 그 영상 속에 진실이 담겨 있을지도 모른다는 희망이 솟았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>화면 구석의 진실</h2>
+        <p>아이들은 그날 촬영된 영상을 함께 살펴보았습니다. 화면 구석에 유리창이 깨지는 순간이 희미하게 담겨 있었습니다. 아이들은 숨을 죽이고 그 장면을 지켜보았습니다.</p>
+        <p>놀랍게도 영상 속에서 유리창을 깬 것은 민수가 아니었습니다. 바람에 날아온 공이 유리창에 부딪혀 깨진 것이었습니다. 민수는 그저 그 옆에 서 있었을 뿐, 아무 잘못도 없었습니다.</p>
+        <p>그 순간 아이들은 중요한 깨달음을 얻었습니다. 눈에 보이는 것만으로, 혹은 여럿이 지목한다고 해서 진실이 정해지는 것이 아니라는 사실을 말입니다. 오직 확실한 증거만이 진실을 밝힐 수 있었습니다.</p>
+        <p>이 대목은 이야기의 정신적 절정, 곧 아이들의 각성입니다. 증거를 통해 진실이 밝혀지면서, 증거재판주의와 무죄 추정의 원칙이 왜 소중한지를 깨달은 것입니다. 하마터면 죄 없는 친구를 죄인으로 만들 뻔했음을 아이들은 뼈저리게 느꼈습니다.</p>
+        <p>아이들은 이제 진실을 바탕으로 올바른 판결을 내릴 수 있게 되었습니다. 잘못된 첫 판결을 바로잡을 시간이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>뒤집힌 판결</h2>
+        <p>아이들은 다시 재판을 열어, 새로 찾은 증거를 바탕으로 판결을 내렸습니다. 판사 역할을 맡은 아이는 민수가 무죄임을 선언했습니다. 증거가 민수의 결백을 분명히 증명했기 때문입니다.</p>
+        <p>첫 번째 재판의 잘못된 판결이 마침내 바로잡혔습니다. 증거 없이 내려졌던 성급한 판단이, 확실한 증거 앞에서 뒤집힌 것입니다. 삼심제처럼 다시 살필 기회가 있었기에 가능한 일이었습니다.</p>
+        <p>민수는 마침내 억울함을 벗고 환하게 웃었습니다. 민수를 함부로 지목했던 아이들은 진심으로 사과했습니다. 증거 없이 사람을 몰아세우는 것이 얼마나 위험한 일인지를 모두가 깨달았습니다. 만약 그 영상이 없었다면 민수는 영영 억울한 누명을 벗지 못했을지도 모릅니다.</p>
+        <p>이 대목은 아이들이 진실을 바탕으로 정의를 실현하는 결말의 돌파입니다. 증거와 공정한 절차를 통해 억울한 친구의 결백이 밝혀진 것입니다. 무죄 추정의 원칙과 증거재판주의가 한 사람을 지켜 낸 순간이었습니다.</p>
+        <p>아이들의 작은 법정은 이렇게 진실을 밝히며 막을 내렸습니다. 그러나 이 재판이 아이들에게 남긴 것은 결코 작지 않았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>작은 법정이 남긴 것</h2>
+        <p>우리 반 작은 법정은 아이들에게 소중한 배움을 남겼습니다. 증거 없이 사람을 죄인으로 몰아서는 안 되며, 진실은 오직 공정한 절차와 확실한 증거를 통해 가려야 한다는 것이었습니다. 하마터면 죄 없는 친구를 잃을 뻔한 경험이 그 배움을 더욱 깊게 했습니다.</p>
+        <p>이 이야기가 우리에게 남기는 것은 분명합니다. 판결이 내려지기 전까지 누구도 죄인이 아니라는 무죄 추정의 원칙, 그리고 오직 증거로 판단해야 한다는 증거재판주의의 소중함입니다. 이 원칙들은 억울한 사람을 지키는 든든한 방패입니다.</p>
+        <p>무엇보다 이 이야기는, 성급한 판단이 얼마나 위험한지를 일깨웁니다. 여럿이 지목한다고 해서, 눈에 보인다고 해서 그것이 곧 진실은 아닙니다. 진실을 가리는 일에는 언제나 신중함과 공정함이 필요합니다.</p>
+        <p>아이들은 이제 누군가를 함부로 의심하거나 단정 짓지 않기로 했습니다. 그리고 억울한 사람이 생기지 않도록, 늘 증거와 절차를 소중히 여기기로 했습니다. 작은 법정은 아이들을 한층 공정한 사람으로 자라게 했습니다.</p>
+        <p><span class="highlight">판결이 내려지기 전까지, 누구도 죄인이 아닙니다. 진실은 오직 증거로만 가려집니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'law08_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

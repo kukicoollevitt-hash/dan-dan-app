@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✨ 구름을 타고 온 선비 — 전우치, 백성의 편에 서다</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/고전문학07/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>✨ 구름을 타고 온 선비 — 전우치, 백성의 편에 서다</h1>
+        <p class="subtitle">
+          — 재주는 하늘이 주지만, 누구를 위해 쓸지는 사람이 정해요 —<br>
+          교과기반 창작도서 · 고전문학 07 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>✨ 등장인물 소개</h3>
+          <p><strong>★ 전우치 (주인공):</strong> <span class="vocab-tip" data-meaning="초자연적인 힘을 다루는 신비한 기술">도술</span>을 숨기고 사는 선비예요. 백성의 눈물 앞에서 감춰 둔 재주를 꺼내 들지요.</p>
+          <p><strong>★ 왕과 조정:</strong> 백성의 고통을 못 본 척하다, 하늘의 선관으로 꾸민 전우치에게 감쪽같이 속아요.</p>
+          <p><strong>★ 간신들:</strong> 전우치를 시기하여 거짓 음모를 꾸미는 무리예요.</p>
+          <p><strong>★ 서화담:</strong> 이름 높은 도인이에요. 전우치의 재주를 넘어서는 큰 그릇이지요.</p>
+          <p><strong>★ 신비한 족자:</strong> 펼치면 미인이 나와 잔치를 차리는 요술 그림이에요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 재주의 갈등:</strong> 숨기고 조용히 살까, 백성을 위해 꺼내 들까</p>
+          <p><strong>② 정의의 갈등:</strong> 나라 법을 어긴 속임수일까, 굶는 백성을 살린 의로움일까</p>
+          <p><strong>③ 시기의 갈등:</strong> 공을 세운 전우치와 그를 끌어내리려는 간신들</p>
+          <p><strong>④ 도의 갈등:</strong> 세상을 놀라게 하는 재주와 마음을 닦는 더 큰 도</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학07/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>재주를 숨긴 선비</h2>
+        <p>조선 시대, 한 마을에 전우치라는 선비가 살았어요.<br>
+여느 선비와 다를 것 없어 보였지만,<br>
+사실 그에게는 놀라운 비밀이 있었지요.<br>
+바람을 부르고 모습을 바꾸는<br>
+신비한 <span class="vocab-tip" data-meaning="초자연적인 힘을 다루는 신비한 기술">도술</span>을 지니고 있었던 거예요.<br>
+하지만 전우치는 재주를 철저히 숨기고 살았어요.</p>
+        <p>그 무렵 나라의 형편은 말이 아니었어요.<br>
+바닷가에는 해적이 날뛰고,<br>
+<span class="vocab-tip" data-meaning="농사가 잘되지 않아 곡식이 부족한 해">흉년</span>까지 들었지요.<br>
+굶주린 백성들은 풀뿌리로 끼니를 이었어요.<br>
+그런데도 관리들은 창고에 곡식을 쌓아 두고<br>
+나누지 않았지요.</p>
+        <p>전우치는 그 모습을 보며 주먹을 부르르 떨었어요.<br><br><span class="dialogue">"하늘이 내게 재주를 주신 것이 어찌 나 하나 편히 살라는 뜻이겠는가. 백성이 굶어 죽어 가는데 책만 읽고 앉아 있는 것이 과연 선비란 말인가."</span></p>
+        <p>그날 밤, 전우치는 오랫동안 닫아 두었던<br>
+마음의 문을 열었어요.<br>
+<span class="highlight">숨겨 둔 재주가 마침내 세상을 향해 눈을 떴지요.</span><br>
+백성의 눈물이 조용한 선비를 움직인 거예요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학07/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>하늘에서 내려온 선관</h2>
+        <p>며칠 뒤 이른 아침,<br>
+궁궐 하늘에 믿을 수 없는 일이 벌어졌어요.<br>
+오색구름을 타고 눈부신 옷차림의 인물이<br>
+천천히 내려온 거예요.<br>
+영락없는 하늘의 관리, 선관이었지요.</p>
+        <p>궁궐이 발칵 뒤집혔어요.<br>
+왕과 <span class="vocab-tip" data-meaning="임금을 돕는 벼슬아치">신하</span>들이 황급히 뜰에 엎드렸지요.<br><br><span class="dialogue">"옥황상제께서 하늘에 새 궁전을 지으려 하신다. 대들보를 황금으로 만들 것이니, 부유한 관리들은 저마다 황금을 바치도록 하라!"</span><br><br>이 선관이 바로 도술로 모습을 꾸민 전우치였어요.<br>
+하늘의 명이라는 말에<br>
+왕도 신하도 감히 의심하지 못했지요.</p>
+        <p>부유한 관리들은 앞다투어 황금을 내놓았어요.<br>
+백성들에게서 빼앗은 재물로<br>
+제 곳간을 채워 온 자들이었지요.<br>
+전우치는 산더미 같은 황금을 구름에 싣고<br>
+유유히 하늘로 사라졌어요.<br><br><span class="dialogue">"백성의 것을 빼앗아 쌓은 재물이니, 이제 주인에게 돌려주러 가는 길이다."</span></p>
+        <p><span class="highlight">하늘의 선관은 사실 백성의 선비였어요.</span><br>
+세상을 속인 이 대담한 속임수는,<br>
+과연 죄일까요, 의로움일까요?</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학07/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 나눔</span>
+        <h2>황금이 쌀이 되어</h2>
+        <p>남쪽 고을에 이상한 소문이 돌기 시작했어요.<br>
+밤사이 굶주린 집 마당에<br>
+쌀가마가 놓여 있더라는 거예요.<br>
+병든 어머니를 모시는 나무꾼의 집에도,<br>
+아비를 잃은 남매의 오두막에도,<br>
+하얀 쌀이 소복하게 쌓여 있었지요.</p>
+        <p>전우치가 황금을 팔아 쌀을 사서<br>
+밤마다 도술로 날라다 놓은 것이었어요.<br>
+하늘을 날며 내려다보면,<br>
+굴뚝에 연기가 오르지 않는 집이<br>
+한눈에 보였기 때문이지요.</p>
+        <p>죽어 가던 마을들이 살아나기 시작했어요.<br>
+굶어 누워 있던 아이가 밥을 먹고 뛰어놀았지요.<br>
+백성들은 <span class="vocab-tip" data-meaning="큰 도움을 준 고마운 사람">은인</span>이 누구인지 몰라<br>
+그저 하늘에 절을 올렸어요.<br><br><span class="dialogue">"하늘님이 우리를 굽어살피셨나 보오!"</span></p>
+        <p>전우치는 멀리서 지켜보며 조용히 웃었어요.<br>
+이름을 알릴 생각은 없었지요.<br>
+이 재물은 백성들의 땀에서 나온 것이니<br>
+제자리로 돌아간 것뿐이었어요.<br><br><span class="dialogue">"벌을 받게 되더라도, 굶는 백성을 두고 보는 죄보다는 가벼울 것이다."</span><br><br><span class="highlight">부자의 곳간에서 나온 황금이, 굶는 백성의 밥이 되었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학07/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 추격</span>
+        <h2>잡을 수 없는 사람</h2>
+        <p>진실은 오래 숨지 못했어요.<br>
+마침내 선관의 정체가 전우치라는 것이 드러났지요.<br>
+속은 것을 안 왕은 크게 화를 냈어요.<br><br><span class="dialogue">"한낱 선비가 감히 하늘을 사칭해 나라를 속이다니! 당장 잡아들여라!"</span><br><br>전우치를 잡으라는 명령이 온 나라에 내려졌어요.</p>
+        <p>하지만 전우치를 잡는 일은<br>
+바람을 그물로 잡는 일과 같았지요.<br>
+병사들이 대문을 부수고 들어가면<br>
+파리가 되어 창틈으로 날아갔고,<br>
+길목을 막아서면 백발노인으로 변신해<br>
+태연히 지나갔어요.<br>
+어느 날은 그림 족자 속으로 쑥 들어가<br>
+나귀를 타고 사라져 버렸지요.</p>
+        <p>소문은 온 나라로 퍼졌어요.<br>
+잡을 수 없는 도술 선비가 있는데,<br>
+훔친 재물이 굶는 백성에게 갔다더라.<br>
+백성들에게 전우치라는 이름은<br>
+두려움이 아니라 통쾌함이 되었지요.</p>
+        <p>그러나 전우치의 마음 한구석은 무거웠어요.<br><br><span class="dialogue">"숨는 것만이 능사가 아니다. 이 매듭은 내 발로 걸어가 풀어야겠구나."</span><br><br><span class="highlight">바람을 그물로 잡을 수는 없었지만, 그 바람은 스스로 궁궐을 향해 불어가기로 마음먹었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학07/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 담판</span>
+        <h2>병 속의 선비</h2>
+        <p>어느 아침, 궁궐 문 앞에<br>
+작은 병 하나가 놓여 있었어요.<br>
+병 속에서 또랑또랑한 목소리가 흘러나왔지요.<br><br><span class="dialogue">"전하, 전우치가 여기 있사옵니다. 스스로 왔으니 마음대로 하시옵소서."</span><br><br>그토록 잡으려던 자가 제 발로 나타난 거예요.</p>
+        <p>왕은 병을 펄펄 끓는 기름 솥에 넣으라 명했어요.<br>
+그러자 병 속에서 태평한 목소리가 들렸지요.<br><br><span class="dialogue">"아이고 시원하다. 가난한 백성은 겨울에 추운 방에서 떠는데, 이 몸은 따뜻하니 황공하옵니다."</span><br><br>병을 깨뜨리라 명하자<br>
+조각 하나하나에서 목소리가 울렸어요.<br>
+벌을 내리려 할수록<br>
+우스워지는 것은 오히려 궁궐 쪽이었지요.</p>
+        <p>마침내 왕이 한숨을 쉬며 말했어요.<br><br><span class="dialogue">"참으로 신묘한 재주로다. 네 죄를 용서할 터이니 그 재주를 나라를 위해 쓰지 않겠느냐."</span><br><br>그러자 뜰 한가운데에 전우치가<br>
+홀연히 나타나 넙죽 절을 올렸지요.</p>
+        <p>왕은 약속대로 <span class="vocab-tip" data-meaning="임금의 명령을 전하던 무관 벼슬">선전관</span> 벼슬을 내렸어요.<br>
+쫓기던 죄인이 하루아침에 나라의 관리가 된 거예요.<br>
+<span class="highlight">도망자 전우치는 그렇게 선전관 전우치가 되었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학07/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>시기하는 무리들</h2>
+        <p>선전관이 된 전우치는 물 만난 고기 같았어요.<br>
+바다를 어지럽히던 해적들을 도술로 사로잡고,<br>
+백성을 괴롭히는 도적 떼를 물리쳤지요.<br>
+그의 이름은 온 나라에 울려 퍼졌어요.</p>
+        <p>백성들은 전우치를 반겼지만,<br>
+궁궐 안의 공기는 달랐어요.<br>
+임금의 눈을 가리는 <span class="vocab-tip" data-meaning="사사로운 이익을 위해 권력자를 속이는 신하">간신</span>들에게<br>
+전우치는 눈엣가시였기 때문이지요.<br>
+간신들은 머리를 맞대고 음모를 꾸몄어요.<br><br><span class="dialogue">"저 요망한 자를 그냥 두었다가는 우리가 먼저 화를 입을 것이오. 나라를 빼앗으려 한다고 모함합시다."</span></p>
+        <p>거짓 문서가 만들어지고, 거짓 증인이 세워졌어요.<br>
+간신들은 왕 앞에 엎드려 눈물까지 흘리며 아뢰었지요.<br>
+하늘을 속인 자가 임금인들 못 속이겠느냐고요.<br>
+지난날 속았던 기억이 있는 왕의 마음에<br>
+의심의 싹이 자라났어요.</p>
+        <p>결국 전우치는 짓지도 않은 죄를 뒤집어쓰고 말았어요.<br>
+바로 <span class="vocab-tip" data-meaning="사실이 아닌 죄를 뒤집어쓴 억울한 상황">누명</span>이었지요.<br>
+<span class="highlight">백성을 도운 공이 클수록, 간신들의 시기도 깊어졌어요.</span><br>
+전우치는 또다시 쫓기는 몸이 되었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학07/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 방랑</span>
+        <h2>족자 속의 잔치</h2>
+        <p>다시 떠도는 몸이 된 전우치의 봇짐에는<br>
+신비한 족자 하나가 들어 있었어요.<br>
+펼치면 그림 속에서 미인이 걸어 나와<br>
+술과 음식을 차려 내는 요술 그림이었지요.<br>
+전우치는 지친 나그네들에게 족자를 펼쳐<br>
+따뜻한 밥과 웃음을 대접하곤 했어요.</p>
+        <p>소문을 들은 욕심 많은 부자가<br>
+큰돈을 싸 들고 와 족자를 사겠다고 졸랐어요.<br>
+전우치는 그 속을 떠보려 짐짓 족자를 넘겨주었지요.<br>
+부자가 손님들 앞에서 으스대며 족자를 펼치자,<br>
+미인은 술상 대신 부자의 지난 잘못들을<br>
+낱낱이 큰 소리로 읊기 시작했어요.<br>
+가난한 이웃의 논을 빼앗은 일,<br>
+품삯을 떼어먹은 일까지.<br>
+부자는 큰 <span class="vocab-tip" data-meaning="뜻하지 않게 당하는 불행한 사건이나 망신">봉변</span>을 당하고 말았지요.</p>
+        <p>사람들은 통쾌해했지만,<br>
+전우치의 마음은 갈수록 쓸쓸해졌어요.<br>
+재주로 부자를 골탕 먹여도<br>
+세상은 크게 달라지지 않았거든요.<br><br><span class="dialogue">"내 재주로 사람을 웃기고 울릴 수는 있으나, 어찌하여 세상은 바로 세우지 못하는가."</span><br><br><span class="highlight">전우치의 마음에 처음으로 깊은 물음이 고였어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학07/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>서화담 앞에 무릎 꿇다</h2>
+        <p>그 무렵 전우치의 귀에 한 이름이 들려왔어요.<br>
+서화담. 도가 깊기로 이름 높은 선비였지요.<br>
+전우치는 호기심이 일었어요.<br>
+과연 그 도가 자신의 도술보다 깊을까?<br>
+그는 화담을 찾아가 재주를 겨루어 보기로 했지요.</p>
+        <p>전우치는 자신 있는 도술을 하나씩 펼쳤어요.<br>
+그러나 이상한 일이었지요.<br>
+몸을 숨기면 화담의 눈이 정확히 그를 향했고,<br>
+변신을 하면 화담은 빙그레 웃으며 본모습을 불렀어요.<br>
+마지막으로 날아오르려는 순간,<br>
+화담이 조용히 소매를 들자<br>
+몸이 그 자리에 붙박인 듯 움직이지 않았지요.</p>
+        <p>전우치는 그 자리에 무릎을 꿇었어요.<br><br><span class="dialogue">"제가 우물 안 개구리였습니다. 선생의 도는 어찌 이리 깊습니까."</span><br><br>화담이 그를 일으키며 말했지요.<br><br><span class="dialogue">"재주는 밖으로 뻗는 것이나, 도는 안으로 깊어지는 것이라네. 자네의 재주는 이미 넘치니, 이제 안을 채울 차례가 아니겠는가."</span></p>
+        <p>그 한마디가 오랜 물음에 답이 되었어요.<br>
+전우치는 그날로 큰절을 올리고 <span class="vocab-tip" data-meaning="스승에게 가르침을 받는 사람">제자</span>가 되었지요.<br>
+<span class="highlight">재주는 밖으로 뻗고, 도는 안으로 깊어져요.</span><br>
+천하의 전우치가 처음으로 무릎을 꿇은 날이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학07/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 입산</span>
+        <h2>태백산으로 가는 길</h2>
+        <p>전우치는 스승을 따라<br>
+깊고 깊은 태백산으로 향했어요.<br>
+벼슬도, 누명도, 쫓고 쫓기던 소란도<br>
+산문 밖에 내려놓았지요.<br>
+산에 들기 전, 전우치는 마지막으로<br>
+남쪽 고을들을 한 바퀴 돌아보았어요.<br>
+굴뚝마다 저녁연기가 오르는 모습을 보며<br>
+조용히 미소 지었지요.</p>
+        <p>사람들 사이에서 전우치는 <span class="vocab-tip" data-meaning="옛날부터 전해 내려오는 이야기">전설</span>이 되었어요.<br>
+흉년이 든 해에 어느 집 마당에<br>
+쌀가마가 놓여 있으면 사람들은 속삭였지요.<br><br><span class="dialogue">"태백산 그 어른이 또 다녀가신 게지."</span><br><br>사실인지 아닌지 아무도 몰랐지만,<br>
+그 믿음만으로도 힘든 시절을 버티는 힘이 되었어요.</p>
+        <p>탐욕스러운 벼슬아치들은<br>
+그 이름만 들어도 가슴이 뜨끔했어요.<br>
+하늘 어딘가에서 전우치가<br>
+내려다보고 있을 것만 같았거든요.<br>
+곡식을 나누는 관리가 조금씩 늘어난 것도<br>
+어쩌면 그 뜨끔함 덕분이었는지 모르지요.<br><br><span class="highlight">전우치는 산으로 들어갔지만, 그의 이야기는 백성들 곁에 남았어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학07/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>백성이 사랑한 이야기</h2>
+        <p>전우치의 이야기는 입에서 입으로 전해지며<br>
+조선 시대에 널리 읽히는 소설이 되었어요.<br>
+사람들은 등잔불 아래 모여 앉아<br>
+이 이야기를 읽으며 웃고, 손뼉 치고,<br>
+남몰래 눈물지었지요.</p>
+        <p>그 웃음과 눈물에는 까닭이 있었어요.<br>
+이야기 속 굶주리는 백성은 바로 자신들의 모습이었고,<br>
+황금을 쌓아 둔 관리들은<br>
+바로 저 고을의 사또였기 때문이지요.<br>
+현실에서 아무 말도 할 수 없던 사람들이<br>
+이야기 속에서만은 마음껏 통쾌할 수 있었어요.</p>
+        <p>나쁜 관리의 재물을 빼앗아<br>
+가난한 이에게 나누어 주는 주인공을<br>
+<span class="vocab-tip" data-meaning="탐욕스러운 관리의 재물을 빼앗아 가난한 사람을 돕는 의로운 도적">의적</span>이라고 불러요.<br>
+전우치전은 홍길동전과 함께<br>
+조선 시대 의적 소설의 대표작이지요.</p>
+        <p>수백 년이 지난 오늘날에도 전우치는<br>
+영화와 드라마로 다시 태어나요.<br>
+그리고 여전히 같은 질문을 던지지요.<br>
+너에게 남다른 재주가 있다면,<br>
+너는 그것을 누구를 위해 쓰겠는가.<br>
+<span class="highlight">재주는 하늘이 주지만, 그 재주를 누구를 위해 쓸지는 사람이 정해요.</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(110, 80, 180, 0.15); border-radius: 16px;">
+          <strong style="color: #6E50B4; font-size: 20px;">✨ 「재주는 하늘이 주지만, 누구를 위해 쓸지는 사람이 정해요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'classic07_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍜 두 나라 사이의 아이 — 이름을 되찾은 날</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작사회문화10/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🍜 두 나라 사이의 아이 — 이름을 되찾은 날</h1>
+        <p class="subtitle">
+          — 다른 것은 틀린 것이 아니에요 —<br>
+          교과기반 창작도서 · 사회문화 10 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🍜 등장인물 소개</h3>
+          <p><strong>★ 링링 (주인공):</strong> 어머니는 베트남, 아버지는 한국 사람이에요. 둘 사이에서 자기가 누구인지 헷갈리다, 두 가지를 모두 가진 사람이라는 것을 알게 되지요.</p>
+          <p><strong>★ 어머니 흐엉:</strong> 베트남에서 한국으로 온 <span class="vocab-tip" data-meaning="다른 나라에서 옮겨 와 사는 사람">이주민</span>. 딸에게 부끄러움이 될까 봐 고향말을 숨겼던 사람.</p>
+          <p><strong>★ 준호 (같은 반 친구):</strong> 처음엔 링링을 놀리다, 쌀국수 가게에서 마주친 뒤 생각이 바뀌는 아이.</p>
+          <p><strong>★ 박 선생님:</strong> 학급에 '고향 소개하기' 시간을 만든 담임. 다름을 숨기는 대신 나누게 한 사람.</p>
+          <p><strong>★ 쌀국수 한 그릇:</strong> 링링이 부끄러워하던 것이자, 반 아이들을 이어 준 것. 문화가 섞이는 자리.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 내면의 갈등:</strong> 한국 사람이고 싶은 마음 vs. 몸에 밴 베트남의 것들</p>
+          <p><strong>② 관계의 갈등:</strong> 다르다고 놀리는 아이들 vs. 있는 그대로 보이고 싶은 마음</p>
+          <p><strong>③ 가족의 갈등:</strong> 고향을 숨기려는 어머니 vs. 어머니를 부끄러워한 딸의 뉘우침</p>
+          <p><strong>④ 사회의 갈등:</strong> "우리"와 "그들"로 나누는 시선 vs. 같은 <span class="vocab-tip" data-meaning="한 사회를 함께 이루는 사람">구성원</span>이라는 사실</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화10/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>링링이라는 이름</h2>
+        <p>링링이에게는 두 개의 이름이 있어요.<br>
+학교에서는 아버지가 지어 준<br>
+한국 이름 '이서연'으로 불리고,<br>
+집에서는 어머니가 부르는<br>
+'링링'으로 불리지요.<br>
+어머니는 베트남에서 한국으로 왔어요.<br>
+그래서 링링이의 집에는<br>
+두 나라가 섞여 있지요.<br>
+냉장고에는 김치와 <span class="vocab-tip" data-meaning="베트남에서 만든, 생선으로 담근 소스">느억맘</span>이<br>
+나란히 들어 있어요.</p>
+        <p>링링이는 그 섞임이<br>
+아주 오랫동안 불편했어요.<br>
+어머니의 한국말에는 베트남식<br>
+<span class="vocab-tip" data-meaning="말할 때 나는 말투와 높낮이">억양</span>이 남아 있었고,<br>
+아이들이 그것을 알아챌까 봐<br>
+조마조마했기 때문이지요.</p>
+        <p>한번은 어머니가<br>
+교문 앞에서 링링이를 불렀어요.<br><br><span class="dialogue">"링링아!"</span><br><br>지나가던 아이들이 돌아보자<br>
+링링이는 얼굴이 화끈거렸지요.<br><br><span class="dialogue">"엄마, 학교 앞에서는 그 이름으로 부르지 마."</span><br><br>어머니는 잠깐 아무 말도 하지 않다가<br>
+알겠다고 했어요.</p>
+        <p><span class="highlight">링링이는 그때 자기가 편해졌다고 생각했어요.</span><br>
+그러나 편해진 것이 아니라,<br>
+자기 절반을 숨기기 시작한 것이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화10/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>도시락 속의 냄새</h2>
+        <p>어느 날 학교에서 도시락을 싸 오는<br>
+체험 학습이 있었어요.<br>
+어머니는 새벽부터 정성껏<br>
+도시락을 쌌지요.<br>
+링링이가 좋아하는<br>
+<span class="vocab-tip" data-meaning="채소와 고기를 얇은 피에 싸서 튀긴 베트남 음식">짜조</span>였어요.</p>
+        <p>점심시간에 도시락 뚜껑을 열자<br>
+튀김의 고소한 냄새가 퍼졌어요.<br>
+그런데 옆에 앉아 있던 준호가<br>
+대뜸 코를 막으며 인상을 썼지요.<br><br><span class="dialogue">"어우, 이게 무슨 냄새야? 이상한 거 먹네."</span><br><br>몇몇 아이들이 따라 웃었어요.<br>
+링링이는 얼른 뚜껑을 도로 닫고,<br>
+그날 점심을 한 입도 먹지 않았지요.</p>
+        <p>그날 링링이는 단단히 결심했어요.<br>
+앞으로 남들과 다른 것은<br>
+무엇이든 감추기로 한 거예요.<br>
+도시락도, 이름도, 어머니의 고향도요.<br><br><span class="dialogue">"엄마, 이제 그런 거 싸 주지 마. 그냥 김밥 싸 줘."</span><br><br>어머니는 알겠다고 했어요.<br>
+이번에도 대답하기 전에<br>
+잠깐 말이 없었지요.</p>
+        <p><span class="highlight">링링이는 다른 것을 감추면 편해질 줄 알았어요.</span><br>
+그런데 감출수록<br>
+오히려 더 조마조마해졌지요.<br>
+언제 들킬지 몰랐기 때문이에요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화10/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 계기</span>
+        <h2>고향 소개하기 시간</h2>
+        <p>새 학기가 되어 담임이 바뀌었어요.<br>
+박 선생님이었지요.<br>
+어느 날 선생님이 특별한 시간을 만들었어요.<br>
+'우리 집 고향 소개하기'였지요.<br><br><span class="dialogue">"우리 반 스물다섯 명은 모두 다른 곳에서 왔어요. 강원도에서 온 집도 있고, 전라도에서 온 집도 있고, 더 먼 곳에서 온 집도 있지요."</span></p>
+        <p>링링이는 그 말을 듣는 순간<br>
+가슴이 철렁했어요.<br>
+자기 차례가 오면 어쩔 수 없이<br>
+베트남 이야기를 꺼내야 했기 때문이지요.<br>
+링링이는 아프다는 <span class="vocab-tip" data-meaning="일을 피하려고 둘러대는 이유">핑계</span>로<br>
+그 시간을 넘길 궁리만 했어요.</p>
+        <p>발표 순서가 하나씩 지나갔어요.<br>
+부산에서 온 아이는 돼지국밥 이야기를,<br>
+제주에서 온 아이는 감귤밭 이야기를 했지요.<br>
+그런데 이상한 일이 있었어요.<br>
+다른 고장에서 온 이야기를<br>
+아이들이 아무도 놀리지 않았지요.<br>
+오히려 눈을 반짝이며 재미있어했어요.</p>
+        <p>링링이는 마음이 헷갈렸어요.<br>
+강원도도 부산도 제주도도 서로 다 다른데<br>
+왜 그런 이야기는 괜찮고,<br>
+베트남 이야기만 이상하게 여겨지는 걸까요.<br>
+<span class="highlight">다르다는 것이 정말 부끄러운 일일까.</span><br>
+링링이는 처음으로<br>
+그 물음을 품었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화10/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 우연</span>
+        <h2>쌀국수 가게에서</h2>
+        <p>발표를 며칠 앞둔 주말,<br>
+링링이는 어머니를 도우려고<br>
+가게에 따라 나갔어요.<br>
+어머니가 저녁마다 일하는 곳은<br>
+작은 <span class="vocab-tip" data-meaning="쌀로 만든 국수를 넣어 끓인 베트남 음식">쌀국수</span> 가게였지요.</p>
+        <p>링링이가 그릇을 나르고 있을 때,<br>
+문이 열리며 손님이 들어왔어요.<br>
+하필 준호와 준호네 가족이었지요.<br>
+링링이는 어디로든 숨고 싶었어요.<br>
+그런데 준호는 놀리지 않고<br>
+오히려 눈이 동그래져서 물었지요.<br><br><span class="dialogue">"여기 너희 가게야? 나 이 집 쌀국수 진짜 좋아하는데!"</span></p>
+        <p>알고 보니 준호네 가족은 그 가게를<br>
+자주 찾는 오랜 <span class="vocab-tip" data-meaning="한 가게를 자주 찾는 손님">단골</span>이었어요.<br><br><span class="dialogue">"이거 어떻게 이렇게 맛있게 만들어? 우리 엄마도 여기 국물 못 따라 한다던데."</span><br><br>어머니가 환하게 웃으며 대답했어요.<br>
+이 국물을 우리는 데 꼬박 하루가 걸린다는 것,<br>
+고향 베트남에서 배운 방법이라는 것을요.</p>
+        <p>링링이는 그 광경을 멍하니 바라보았어요.<br>
+학교에서 놀림받던 어머니의 그 손맛이,<br>
+이 가게에서는 준호가 진심으로<br>
+감탄하는 대상이었지요.<br>
+<span class="highlight">문제는 어머니의 음식이 아니라, 그것을 보는 사람의 눈이었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화10/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 갈등</span>
+        <h2>숨기려던 것을 들키다</h2>
+        <p>월요일 아침, 학교에서 준호가<br>
+아이들에게 대뜸 말했어요.<br><br><span class="dialogue">"야, 링링이네 쌀국수 가게 진짜 맛있어. 나 거기 단골이야."</span><br><br>링링이는 그 자리에서 얼어붙었어요.<br>
+그토록 꽁꽁 감추려던 것이<br>
+하필 준호의 입에서 나온 거예요.</p>
+        <p>링링이는 도망치고 싶었어요.<br>
+그런데 준호의 다음 말이 뜻밖이었지요.<br><br><span class="dialogue">"응, 링링이 엄마가 베트남 분이야. 그래서 국물이 그렇게 맛있는 거였어. 부럽지 않냐?"</span><br><br>부럽다는 말이 나오자<br>
+아이들의 반응이 순식간에 달라졌어요.<br>
+짜조가 무슨 음식이냐고 묻는 아이도,<br>
+베트남말을 할 줄 아느냐고<br>
+묻는 아이도 있었지요.</p>
+        <p>링링이는 어리둥절했어요.<br>
+그토록 무서워하며 피하려던 순간이 닥쳤는데,<br>
+세상이 무너지지 않았지요.<br>
+오히려 아이들은 링링이를<br>
+신기하고 부러운 눈으로 바라보고 있었어요.</p>
+        <p><span class="highlight">감추려 애쓴 것은 남이 아니라 자기 자신이었어요.</span><br>
+그 사실을 깨닫자 자꾸만<br>
+떠오르는 얼굴이 하나 있었지요.<br>
+바로 어머니의 얼굴이었어요.<br>
+자기가 도시락을 감출 때,<br>
+어머니는 어떤 마음이었을까<br>
+생각하니 가슴이 먹먹했지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화10/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>어머니가 숨긴 것</h2>
+        <p>그날 집에 온 링링이는<br>
+저녁을 짓는 어머니를 오래 바라보았어요.<br>
+그러다 문득 마음에 걸리는 것이 있었지요.<br>
+어머니는 그동안 링링이 앞에서<br>
+단 한 번도 베트남 노래를<br>
+부른 적이 없었어요.</p>
+        <p>한참 망설이던 링링이가<br>
+조심스럽게 물었어요.<br><br><span class="dialogue">"엄마, 엄마는 왜 베트남 이야기 안 해?"</span><br><br><span class="dialogue">"네가 부끄러워할까 봐. 엄마 때문에 놀림받을까 봐."</span><br><br>그 말에 링링이는<br>
+가슴이 철렁 내려앉았어요.</p>
+        <p>어머니가 고향을 숨긴 것은<br>
+자기가 부끄러워서가 아니었어요.<br>
+오직 딸을 지키려고 자기 절반을<br>
+소리 없이 접어 둔 것이었지요.<br>
+"그 이름으로 부르지 마" 하고 말할 때마다<br>
+어머니가 잠깐씩 말이 없던 까닭을,<br>
+링링이는 이제야 알 것 같았어요.</p>
+        <p><span class="highlight">링링이가 절반을 감출 때, 어머니는 자기 전부를 감추고 있었어요.</span><br>
+링링이는 그날 밤 이불 속에서<br>
+어머니 몰래 오래도록 울었지요.<br>
+어머니의 침묵이 사실은<br>
+가장 깊은 사랑이었다는 것을<br>
+그제야 알았기 때문이에요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화10/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 결심</span>
+        <h2>발표를 하기로 하다</h2>
+        <p>발표 전날 밤, 링링이는<br>
+어머니에게 갔어요.<br><br><span class="dialogue">"엄마, 베트남 이야기 좀 해 줘. 나 내일 발표해야 해. 우리 집 고향 이야기."</span><br><br>그 말에 어머니의 눈이 동그래졌어요.<br>
+링링이가 스스로 베트남 이야기를 하겠다고 한 것은<br>
+태어나 처음이었기 때문이지요.<br>
+어머니는 아주 오랜만에 환하게 웃었어요.</p>
+        <p>그날 밤 두 사람은 늦게까지<br>
+도란도란 이야기를 나눴어요.<br>
+고향 마을 이야기, 강가에서 배를 타던 이야기,<br>
+<span class="vocab-tip" data-meaning="설날이나 추석처럼 해마다 지키는 특별한 날">명절</span>이면 온 가족이 모여<br>
+함께 만들던 음식 이야기까지 이어졌지요.</p>
+        <p>이야기 끝에 어머니는 베트남말로 된<br>
+짧은 <span class="vocab-tip" data-meaning="아기를 재울 때 불러 주는 노래">자장가</span>를 나직이 불러 주었어요.<br>
+링링이가 아기였을 때<br>
+밤마다 듣던 노래라고 했지요.<br>
+신기하게도 그 가락이<br>
+어쩐지 낯익게 느껴졌어요.</p>
+        <p>링링이는 그 밤에 발표 자료를 만들었어요.<br>
+베트남 지도를 그리고,<br>
+짜조와 쌀국수 사진을 오려 붙이고,<br>
+자장가 가사를 한국어로 옮겨 적었지요.<br>
+<span class="highlight">그동안 감추기만 하던 아이가, 이번에는 스스로 드러내기로 한 거예요.</span><br>
+무섭지 않은 것은 아니었지만,<br>
+이번에는 도망치지 않기로 했어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화10/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 발표</span>
+        <h2>두 개의 이름</h2>
+        <p>드디어 링링이의 차례가 되었어요.<br>
+링링이는 칠판 앞에 서서<br>
+밤새 준비한 첫마디를 천천히 꺼냈지요.<br><br><span class="dialogue">"제 이름은 이서연입니다. 그리고 링링이기도 합니다. 이서연은 아버지가, 링링은 어머니가 지어 준 이름이에요."</span><br><br>순간 교실이 물을 끼얹은 듯 조용해졌어요.</p>
+        <p>링링이는 떨리는 목소리를 가다듬으며<br>
+이야기를 이어 갔어요.<br>
+어머니가 먼 베트남에서 왔다는 것,<br>
+그래서 자기 집에는 두 나라의 것이<br>
+나란히 함께 있다는 것을요.<br>
+그리고 짜조 이야기를 꺼냈지요.<br>
+놀림받았던 그 음식이 사실은<br>
+명절마다 먹는 귀한 음식이라는 것을요.</p>
+        <p>마지막으로 링링이는 어머니에게 배운<br>
+자장가를 나직이 불렀어요.<br>
+무슨 뜻인지는 몰라도 아이들은<br>
+숨을 죽이고 조용히 들었지요.<br>
+노래가 끝나자<br>
+여기저기서 박수가 터져 나왔어요.<br><br><span class="dialogue">"서연이는 두 나라의 이야기를 가진 사람이네요. 그건 부족한 게 아니라 더 가진 거예요."</span></p>
+        <p><span class="highlight">두 개의 이름은 반쪽짜리 두 개가 아니라, 온전한 하나가 두 배가 된 것이었어요.</span><br>
+링링이는 그날 처음으로<br>
+자기 두 이름이 모두 좋았지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화10/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 변화</span>
+        <h2>섞이면 넓어진다</h2>
+        <p>발표 뒤로 반에 작은 변화가 생겼어요.<br>
+아이들이 링링이에게 베트남말을<br>
+가르쳐 달라고 하기 시작한 거예요.<br>
+안녕은 뭐라고 해,<br>
+고마워는 뭐라고 해, 하고 물었지요.<br><br><span class="dialogue">"저번에 냄새 이상하다고 해서 미안해. 사실 그거 진짜 맛있는 거였는데."</span><br><br>준호의 사과에 링링이는 웃으며<br>
+다음에 짜조를 만들면<br>
+꼭 나눠 주겠다고 했어요.</p>
+        <p>얼마 뒤 학급에서 '세계 음식의 날'이라는<br>
+<span class="vocab-tip" data-meaning="여러 나라의 문화를 함께 즐기는 모임">행사</span>를 열었어요.<br>
+부산 아이는 어묵을,<br>
+제주 아이는 과일을 조려 만든<br>
+감귤 <span class="vocab-tip" data-meaning="과일을 꿀이나 설탕에 조려 만든 간식">정과</span>를,<br>
+링링이는 어머니와 함께 만든<br>
+짜조를 가져왔지요.</p>
+        <p>링링이의 짜조는 그날<br>
+가장 먼저 동이 났어요.<br>
+아이들이 서로 한 개라도 더 먹겠다고<br>
+손을 내밀었지요.<br><br><span class="dialogue">"서로 다른 게 한자리에 모이니까 훨씬 풍성하지요? 하나만 있으면 이렇게 못 차려요. 다른 것이 섞이면 세상은 좁아지는 게 아니라 넓어진답니다."</span></p>
+        <p><span class="highlight">우리 반은 스물다섯 개의 다른 고향이 모인 곳이었어요.</span><br>
+그것이 약점이 아니라<br>
+우리 반이 가진 가장 큰 힘이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화10/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>링링이라고 불러 줘</h2>
+        <p>어느 날 하교 시간,<br>
+교문 앞에 어머니가 서 있었어요.<br>
+어머니가 무심코 입을 다물자,<br>
+링링이가 먼저 큰 소리로 불렀지요.<br><br><span class="dialogue">"엄마! 여기야!"</span><br><br>그리고 곁에 있던 친구에게<br>
+자연스럽게 말했어요.<br><br><span class="dialogue">"우리 엄마야. 엄마는 나를 링링이라고 불러."</span><br><br>그 말에 어머니의 눈에<br>
+잠깐 물기가 어렸지요.</p>
+        <p>집으로 돌아오는 길에<br>
+어머니가 조용히 물었어요.<br><br><span class="dialogue">"이제 안 부끄러워?"</span><br><br><span class="dialogue">"응. 나는 이서연이면서 링링이야. 둘 다 나야."</span></p>
+        <p>오늘날 우리나라에는<br>
+링링이네처럼 서로 다른 나라의 문화가<br>
+한 가족 안에 함께 있는<br>
+<span class="vocab-tip" data-meaning="서로 다른 나라의 문화가 함께 어울려 있는 것">다문화</span> 가족이 아주 많아요.<br>
+다른 나라에서 옮겨 와 사는 이웃이<br>
+이백오십만 명을 넘어섰지요.</p>
+        <p>그 많은 사람들을 '우리'와 '그들'로<br>
+갈라서 보면 세상은 자꾸만 좁아져요.<br>
+그러나 모두를 같은<br>
+<span class="vocab-tip" data-meaning="한 모임이나 사회를 함께 이루는 사람">구성원</span>으로 보면,<br>
+세상은 오히려 더 넓고 풍성해지지요.<br>
+<span class="highlight">다른 것은 결코 틀린 것이 아니에요.</span><br>
+서로 다른 우리가 한자리에 함께 있을 때<br>
+우리 모두는 더 넓은 세상을 갖게 되지요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(200, 120, 60, 0.15); border-radius: 16px;">
+          <strong style="color: #C8783C; font-size: 20px;">🍜 「다른 것은 틀린 것이 아니라, 세상을 넓히는 것이에요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'social10_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

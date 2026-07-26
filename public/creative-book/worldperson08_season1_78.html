@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💧 이름을 알게 된 아이, 헬렌 켈러</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계인물08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00897b 0%, #004d40 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 137, 123, 0.15);
+      color: #004d40;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00897b;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #004d40;
+      font-weight: 600;
+    }
+
+    .story-card .key-sentence {
+      display: block;
+      background: rgba(0, 137, 123, 0.1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-left: 4px solid #00897b;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #004d40;
+      font-size: 14px;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #4dd0e1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(0, 137, 123, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #80cbc4;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 137, 123, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 77, 64, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 137, 123, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>💧 이름을 알게 된 아이, 헬렌 켈러</h1>
+        <p class="subtitle">
+          — 어둠과 침묵을 이겨 낸 불굴의 의지 —<br>
+          교과기반 창작도서 · 세계인물 08
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 헬렌 켈러(1880~1968):</strong> 어릴 때 보지도 듣지도 말하지도 못하게 되었으나, 이를 극복하고 세계적인 인물이 된 여성.</p>
+          <p><strong>★ 설리번 선생님:</strong> 헬렌에게 세상의 이름을 하나하나 가르쳐 준 스승. 헬렌의 삶을 바꾼 은인이다.</p>
+          <p><strong>★ 핵심 개념:</strong> 장애의 극복, 배움의 힘, 스승과 제자, 불굴의 의지, 세상과의 소통.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 시련</span>
+        <h2>열아홉 달 만에 닫힌 문</h2>
+        <p>헬렌 켈러는 1880년, 미국에서 건강한 아이로 태어났습니다. 그러나 열아홉 달 무렵, 큰 병을 앓은 뒤로 볼 수도, 들을 수도 없게 되었습니다. 세상을 향한 문이 어린 헬렌에게 닫혀 버린 것입니다.</p>
+        <p>보이지도 들리지도 않으니, 헬렌은 말을 배울 수도 없었습니다. 세상과 소통할 길이 모두 막혀 버린 것입니다. 어린 헬렌은 어둠과 침묵 속에 홀로 갇히게 되었습니다.</p>
+        <p>헬렌은 자신을 둘러싼 세상을 이해할 수 없어 답답하고 두려웠습니다. 무엇을 원하는지 표현할 방법도 없었습니다. 어둠과 침묵 속에서 헬렌의 마음은 점점 거칠어져 갔습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 어린 헬렌에게 닥친 크나큰 시련입니다. 이 전기는 어둠과 침묵 속에 갇힌 아이가 어떻게 세상과 다시 이어졌는지를 그립니다. 열아홉 달 만에 닫힌 문이 그 출발점이 됩니다.</p>
+        <p>어둠과 침묵 속에서 세상의 이름을 하나씩 되찾는 헬렌의 여정이, 이렇게 시작됩니다. 그 여정은 인간의 의지가 얼마나 위대한지를 보여 주는 감동적인 이야기입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 혼란</span>
+        <h2>던지고 부수는 아이</h2>
+        <p>보지도 듣지도 못하는 헬렌은, 자신의 마음을 표현할 길이 없어 몹시 답답해했습니다. 원하는 것을 얻지 못하면 물건을 던지고 부수며 떼를 썼습니다. 세상과 소통하지 못하는 답답함이 거친 행동으로 터져 나온 것입니다.</p>
+        <p>가족들은 그런 헬렌을 어찌할 줄 몰라 안타까워했습니다. 헬렌을 가엾게 여겨 무엇이든 들어주다 보니, 헬렌의 거친 행동은 더욱 심해졌습니다. 헬렌은 점점 다스리기 어려운 아이가 되어 갔습니다.</p>
+        <p>그러나 헬렌의 거친 행동은 나쁜 마음에서 나온 것이 아니었습니다. 세상을 이해하고 소통하고 싶지만 그럴 수 없는, 깊은 답답함에서 비롯된 것이었습니다. 헬렌에게는 세상과 이어질 다리가 필요했습니다.</p>
+        <p>이 대목은 소통하지 못하는 헬렌의 답답함이 거친 행동으로 드러나는 도입의 단계입니다. 세상과 이어지지 못한 아이의 혼란이 안타깝게 그려집니다. 헬렌에게 세상을 열어 줄 누군가가 절실했습니다.</p>
+        <p>그러던 어느 날, 헬렌의 삶을 완전히 바꾸어 놓을 한 사람이 찾아왔습니다. 바로 설리번 선생님이었습니다. 그 만남은 헬렌에게 어둠을 밝히는 한 줄기 빛과도 같았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>스무 살의 선생님</h2>
+        <p>헬렌이 일곱 살이 되던 무렵, 설리번 선생님이 헬렌을 가르치기 위해 찾아왔습니다. 설리번 선생님은 스무 살의 젊은 나이였지만, 굳은 의지를 지닌 사람이었습니다. 그녀는 헬렌에게 세상을 열어 주기로 결심했습니다.</p>
+        <p>설리번 선생님은 헬렌의 손바닥에 글자를 하나하나 써 주며 소통을 시도했습니다. 손끝으로 낱말을 전하려 한 것입니다. 그러나 세상을 이해하지 못하는 헬렌에게, 그것은 그저 알 수 없는 손짓일 뿐이었습니다.</p>
+        <p>헬렌은 처음에 설리번 선생님을 거부하며 거칠게 굴었습니다. 그러나 설리번 선생님은 포기하지 않았습니다. 헬렌을 향한 그녀의 인내와 사랑은 참으로 깊었습니다.</p>
+        <p>이 대목은 헬렌이 스승 설리번 선생님을 만나는 전개의 단계입니다. 손바닥에 글자를 써 주며 소통을 시도하는 스승의 헌신이 그려집니다. 헬렌에게 세상을 열어 줄 소중한 만남이 시작됩니다.</p>
+        <p>설리번 선생님과 헬렌 사이에는 힘겨운 싸움이 이어졌습니다. 그러나 그 싸움은 헬렌을 세상으로 이끄는 과정이기도 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 인내</span>
+        <h2>작은 집에서의 싸움</h2>
+        <p>설리번 선생님은 헬렌을 다른 집으로 데려가, 단둘이 지내며 가르치기로 했습니다. 헬렌의 거친 습관을 바로잡고, 제대로 소통하는 법을 가르치기 위해서였습니다. 작은 집에서 두 사람의 힘겨운 싸움이 시작되었습니다.</p>
+        <p>헬렌은 낯선 환경과 엄격한 가르침에 거세게 반항했습니다. 설리번 선생님은 그런 헬렌을 인내심 있게 다독이며, 조금씩 규칙과 습관을 가르쳤습니다. 사랑과 엄격함이 함께 담긴 가르침이었습니다.</p>
+        <p>설리번 선생님의 끈질긴 인내 덕분에, 헬렌은 차츰 거친 행동을 버리고 배움에 마음을 열기 시작했습니다. 손바닥에 쓰이는 글자에도 조금씩 관심을 갖게 되었습니다. 스승의 사랑이 헬렌의 굳게 닫힌 마음을 열어 간 것입니다.</p>
+        <p>이 대목은 설리번 선생님이 인내로 헬렌을 가르치는 전개의 단계입니다. 사랑과 엄격함이 담긴 가르침이, 헬렌의 마음을 조금씩 여는 모습이 그려집니다. 스승의 끈질긴 헌신이 헬렌을 변화시킵니다. 포기하지 않는 스승이 있었기에, 헬렌도 마음의 문을 열 수 있었습니다.</p>
+        <p>그러던 어느 날, 헬렌의 삶을 송두리째 바꾸는 놀라운 순간이 찾아왔습니다. 그것은 물이 흐르는 우물가에서였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>컵과 물, 두 개의 이름</h2>
+        <p>어느 날 설리번 선생님은 헬렌을 우물가로 데려갔습니다. 그리고 헬렌의 한 손에 시원한 물을 흘려보내며, 다른 손바닥에 물이라는 글자를 반복해서 써 주었습니다. 손끝에 흐르는 물과 손바닥의 글자를 동시에 느끼게 한 것입니다.</p>
+        <p>그 순간, 헬렌의 머릿속에 번개처럼 무언가가 스쳤습니다. 손끝에 흐르는 이 시원한 것이 바로 물이라는 이름을 가졌다는 것을 깨달은 것입니다. 세상 모든 것에 이름이 있다는 사실을, 헬렌은 처음으로 이해했습니다.</p>
+        <p>이 깨달음은 헬렌에게 세상을 향한 문이 활짝 열리는 순간이었습니다. 어둠과 침묵 속에 갇혀 있던 헬렌이, 마침내 세상과 이어지는 다리를 찾은 것입니다. 물이라는 낱말 하나가 헬렌의 세계를 완전히 바꾸어 놓았습니다.</p>
+        <p>이 대목은 이야기의 정신적 절정, 곧 헬렌의 각성입니다. 물이라는 낱말을 깨닫는 순간이, 세상과 이어지는 문을 열어 줍니다. 모든 것에 이름이 있다는 깨달음이 헬렌의 세계를 완전히 바꿉니다. 이름을 안다는 것은 곧 그 대상을 이해하고 세상과 소통할 수 있게 된다는 뜻이었습니다.</p>
+        <p>이 놀라운 깨달음 뒤로, 헬렌은 세상 모든 것의 이름을 알고 싶어 견딜 수 없었습니다. 굳게 닫혀 있던 세상의 문이 마침내 활짝 열린 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">전개 · 열정</span>
+        <h2>세상 모든 것의 이름</h2>
+        <p>물이라는 낱말을 깨달은 뒤, 헬렌은 세상 모든 것의 이름을 미친 듯이 배우기 시작했습니다. 손에 닿는 것마다 이름을 물었고, 설리번 선생님은 그때마다 손바닥에 글자를 써 주었습니다. 헬렌은 하루에도 수십 개의 낱말을 익혔습니다.</p>
+        <p>어둠과 침묵 속에서 아무 이름도 없던 세상이, 이제 하나하나 이름을 되찾기 시작했습니다. 흙과 나무, 꽃과 새, 그리고 사랑하는 가족의 이름까지 헬렌은 알아 갔습니다. 세상이 헬렌에게 활짝 열린 것입니다.</p>
+        <p>헬렌의 배움을 향한 열정은 그 무엇도 막을 수 없었습니다. 보지도 듣지도 못하는 몸이었지만, 배우려는 그 뜨거운 마음이 모든 어려움을 이겨 냈습니다. 헬렌은 세상을 향해 힘차게 나아갔습니다.</p>
+        <p>이 대목은 헬렌이 세상의 이름을 열정적으로 배우는 전개의 단계입니다. 어둠 속 세상이 이름을 되찾아 가는 모습이 감동적으로 그려집니다. 배움을 향한 헬렌의 뜨거운 열정이 빛을 발합니다. 오랫동안 갇혀 있던 만큼, 세상을 알아 가는 기쁨은 그 무엇보다 컸습니다.</p>
+        <p>이름을 배우는 데 그치지 않고, 헬렌은 마침내 읽고 쓰는 법까지 익히게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 성취</span>
+        <h2>읽고 쓰는 사람</h2>
+        <p>헬렌은 손끝으로 읽는 점자를 배워, 마침내 책을 읽는 사람이 되었습니다. 보지 못해도 손끝으로 세상의 지식을 읽어 들일 수 있게 된 것입니다. 헬렌은 책을 통해 넓은 세상을 만났습니다.</p>
+        <p>헬렌은 읽는 것을 넘어 글을 쓰는 법까지 익혔습니다. 나아가 오랜 노력 끝에, 목소리를 내어 말하는 법까지 배웠습니다. 보지도 듣지도 못하던 헬렌이, 읽고 쓰고 말하는 사람이 된 것입니다.</p>
+        <p>헬렌의 이러한 성취는 실로 놀라운 것이었습니다. 그것은 헬렌의 불굴의 의지와 설리번 선생님의 헌신이 함께 이루어 낸 기적이었습니다. 헬렌은 자신에게 닥친 시련을 배움으로 이겨 낸 것입니다.</p>
+        <p>이 대목은 헬렌이 읽고 쓰고 말하는 사람이 되는 절정의 성취 단계입니다. 장애를 극복하고 배움을 이루어 낸 기적 같은 성취가 그려집니다. 불굴의 의지와 스승의 헌신이 맺은 값진 결실입니다. 남들에게는 당연한 일이 헬렌에게는 피나는 노력의 결과였기에 더욱 값졌습니다.</p>
+        <p>헬렌의 배움은 여기서 멈추지 않았습니다. 그녀는 대학에 진학하여 학문을 이어 갔고, 마침내 세상을 향해 나아갔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 확장</span>
+        <h2>35개국을 건너간 목소리</h2>
+        <p>헬렌은 대학을 졸업하고, 자신처럼 어려움에 처한 사람들을 돕는 일에 나섰습니다. 그녀는 장애를 지닌 사람들도 얼마든지 배우고 성취할 수 있다는 것을 몸소 보여 주었습니다. 헬렌은 희망의 상징이 되었습니다.</p>
+        <p>헬렌은 세계 여러 나라를 돌며 강연을 하고, 장애인의 권리를 위해 목소리를 냈습니다. 그녀의 목소리는 무려 서른다섯 개가 넘는 나라에 전해졌습니다. 어둠과 침묵 속에 갇혀 있던 아이가, 온 세상에 희망을 전하는 사람이 된 것입니다.</p>
+        <p>헬렌의 삶은 수많은 사람에게 용기와 희망을 주었습니다. 어떤 어려움도 굳은 의지와 노력 앞에서는 극복할 수 있다는 것을, 그녀는 자신의 삶으로 증명했습니다. 헬렌은 인류의 위대한 본보기가 되었습니다.</p>
+        <p>이 대목은 헬렌이 세상을 향해 희망을 전하는 절정의 확장 단계입니다. 서른다섯 개국을 건너간 그녀의 목소리가, 수많은 사람에게 용기를 줍니다. 시련을 이겨 낸 헬렌이 이제 남을 돕는 사람이 됩니다. 자신이 받은 사랑과 배움을 이제는 세상에 되돌려 주게 된 것입니다.</p>
+        <p>어둠과 침묵을 이겨 낸 헬렌의 삶은, 모든 것이 물이라는 낱말 하나에서 시작되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 근원</span>
+        <h2>물이라는 낱말 하나</h2>
+        <p>헬렌의 위대한 삶은, 우물가에서 깨달은 물이라는 낱말 하나에서 시작되었습니다. 그 작은 깨달음이 어둠과 침묵의 문을 열고, 헬렌을 세상으로 이끌었습니다. 낱말 하나가 한 사람의 삶을 송두리째 바꾸어 놓은 것입니다.</p>
+        <p>헬렌은 세상의 이름을 하나하나 되찾으며, 어둠 속에서도 빛을 향해 나아갔습니다. 그 여정에는 헬렌의 불굴의 의지와 설리번 선생님의 헌신적인 사랑이 함께 있었습니다. 배움과 사랑이 기적을 만들어 낸 것입니다.</p>
+        <p>헬렌의 삶은 배움의 힘이 얼마나 위대한지를 보여 줍니다. 어둠과 침묵조차, 배우려는 의지 앞에서는 극복할 수 있는 것이었습니다. 이름을 알게 된 아이는, 세상에 희망을 전하는 사람으로 자라났습니다.</p>
+        <p>이 대목은 헬렌의 삶이 물이라는 낱말에서 비롯되었음을 되새기는 결말의 단계입니다. 작은 깨달음 하나가 위대한 삶의 씨앗이 되었음을 보여 줍니다. 배움과 사랑이 이루어 낸 기적이 잔잔한 감동을 남깁니다.</p>
+        <p>헬렌 켈러의 이야기는 오늘날까지도 수많은 사람에게 용기와 희망을 전하고 있습니다. 절망의 끝에서도 포기하지 않은 그녀의 삶은, 시대를 넘어 사람들의 마음을 밝혀 주고 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>어둠을 이긴 빛</h2>
+        <p>헬렌 켈러는 보지도 듣지도 말하지도 못하는 크나큰 시련을 안고 태어났지만, 굳은 의지와 배움으로 그 어둠을 이겨 냈습니다. 어둠과 침묵 속에 갇혀 있던 아이가, 온 세상에 희망을 전하는 위대한 인물이 된 것입니다. 그녀의 삶은 인간 의지의 위대한 승리입니다.</p>
+        <p>이 인물이 우리에게 남기는 가르침은 분명합니다. 아무리 큰 시련이 닥쳐도, 배우려는 의지와 포기하지 않는 노력이 있다면 극복할 수 있다는 것입니다. 헬렌은 어둠과 침묵조차 배움으로 이겨 냈습니다.</p>
+        <p>무엇보다 헬렌의 삶은, 좋은 스승과 배움의 힘이 얼마나 소중한지를 일깨웁니다. 설리번 선생님의 헌신적인 사랑이 없었다면, 헬렌은 세상과 이어지지 못했을 것입니다. 배움과 사랑은 함께할 때 기적을 만들어 냅니다.</p>
+        <p>헬렌 켈러의 이야기는 오늘의 우리에게도 깊은 울림을 줍니다. 어떤 어려움 앞에서도 희망을 잃지 않고 배우려 한다면, 우리도 우리만의 어둠을 이겨 낼 수 있다는 것입니다. 물이라는 낱말 하나에서 시작된 그녀의 빛은, 오늘도 우리를 비추고 있습니다.</p>
+        <p><span class="highlight">아무리 큰 어둠도, 배우려는 의지 앞에서는 물러갑니다. 낱말 하나가 온 세상을 열어 주었습니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+      function goToQuiz() { window.location.href = '/creative-book/worldperson08_season1_quiz.html?season=season3'; }
+  </script>
+</body>
+</html>

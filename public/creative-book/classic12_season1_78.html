@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌸 허물을 벗은 박씨 부인 — 나라를 구한 여인</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/고전문학12/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌸 허물을 벗은 박씨 부인 — 나라를 구한 여인</h1>
+        <p class="subtitle">
+          — 여성 영웅소설과 병자호란의 역사로 읽는 참된 값어치 —<br>
+          교과기반 창작도서 · 고전문학 12
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 박씨 부인:</strong> 비범한 재주와 지혜를 지녔으나 추한 외모로 천대받는 여인. 허물을 벗고 뛰어난 능력으로 나라를 구한다.</p>
+          <p><strong>★ 이시백:</strong> 박씨의 남편. 처음에는 아내의 외모만 보고 멀리하나, 뒤에 그 참된 값어치를 깨닫는다.</p>
+          <p><strong>★ 감상 길잡이:</strong> 「박씨전」은 병자호란을 배경으로 한 여성 영웅소설로, 외모가 아니라 능력과 마음이 사람의 참된 값어치임을 일깨우는 작품입니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학12/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>금강산의 딸</h2>
+        <p>옛날 한양에 이득춘이라는 재상이 있었습니다. 그에게는 이시백이라는 총명한 아들이 있었는데, 어느 날 금강산에 사는 박 처사가 찾아와 자신의 딸과 혼인을 맺자고 청하였습니다. 이득춘은 박 처사의 비범함을 알아보고 흔쾌히 그 청을 받아들였습니다.</p>
+        <p>그리하여 이시백은 박 처사의 딸과 혼인을 하게 되었습니다. 그런데 혼인날 신부의 얼굴을 본 사람들은 모두 깜짝 놀라고 말았습니다. 박씨의 얼굴이 몹시 추하여 차마 마주 보기 어려울 지경이었기 때문입니다.</p>
+        <p>박씨는 비록 외모는 추하였으나, 그 속에는 남다른 지혜와 비범한 재주를 감추고 있었습니다. 그러나 사람들은 오직 겉모습만을 보고 그녀를 업신여겼습니다. 참된 값어치를 알아보는 눈을 가진 이는 아무도 없었습니다. 빛나는 보석도 흙 속에 묻혀 있으면 알아보기 어려운 법이니, 박씨의 재주 또한 그러하였습니다.</p>
+        <p>이야기의 첫머리는 외모로 사람을 판단하는 세상의 어리석음을 뚜렷이 드러냅니다. 박씨가 지닌 뛰어난 능력이 추한 겉모습에 가려지는 이 설정은, 앞으로 그 능력이 어떻게 빛을 발하게 될지 궁금증을 자아냅니다. 겉과 속의 어긋남이라는 문제가 이야기의 출발점이 됩니다. 독자는 박씨의 감춰진 재주가 언젠가 세상을 놀라게 하리라는 기대를 안고 이야기를 따라가게 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학12/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>슬픈 혼인날</h2>
+        <p>남편 이시백은 아내 박씨의 추한 외모를 보고 크게 실망하였습니다. 그는 박씨를 가까이하기는커녕 얼굴조차 마주하려 하지 않았습니다. 새신부를 홀로 별채에 머물게 한 채 발길을 끊어 버린 것입니다.</p>
+        <p>집안사람들 역시 박씨를 업신여기고 함부로 대하였습니다. 오직 시아버지 이득춘만이 박씨의 남다름을 어렴풋이 알아보고 그녀를 따뜻이 감싸 주었습니다. 그러나 박씨의 외로운 처지는 좀처럼 나아지지 않았습니다.</p>
+        <p>이 대목은 박씨가 겪는 시련의 시작을 보여 줍니다. 뛰어난 재주를 지녔음에도 오직 외모 때문에 천대받는 그녀의 처지는 안타깝기 그지없습니다. 사람을 겉모습으로만 판단하는 세태가 얼마나 부당한지를 이야기는 조용히 고발합니다.</p>
+        <p>그러나 박씨는 자신을 멀리하는 남편을 원망하지 않았습니다. 도리어 묵묵히 자신의 자리를 지키며, 남다른 재주로 집안에 여러 도움을 주었습니다. 이러한 인내와 어짊이야말로 그녀의 참된 값어치를 이루는 바탕이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학12/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 인내</span>
+        <h2>별채의 나날</h2>
+        <p>홀로 별채에 머무는 동안에도 박씨는 결코 재주를 놀리지 않았습니다. 하룻밤 사이에 훌륭한 옷을 지어 내고, 앞일을 내다보아 집안의 큰일을 미리 대비하기도 하였습니다. 그 신묘한 재주는 보는 이를 놀라게 하기에 충분하였습니다.</p>
+        <p>한번은 박씨가 남편의 과거 시험을 위해 신비한 연적을 마련해 주었습니다. 그 연적 덕분에 이시백은 훌륭한 글을 지어 마침내 과거에 급제할 수 있었습니다. 남편의 앞길을 열어 준 것이 다름 아닌 자신이 멀리하던 아내였던 것입니다.</p>
+        <p>이 대목은 박씨의 비범한 능력이 조금씩 드러나는 전개의 단계입니다. 추한 외모 뒤에 감춰진 놀라운 재주가 하나씩 모습을 드러냅니다. 겉모습만 보던 이들이 미처 알지 못한 그녀의 참된 값어치가 서서히 빛나기 시작합니다.</p>
+        <p>그럼에도 이시백은 여전히 아내의 외모만을 마음에 두고 있었습니다. 눈앞에 드러난 재주조차 그의 닫힌 마음을 열지 못하였습니다. 사람이 겉모습에 사로잡히면 참된 것을 보지 못한다는 이치를 이 대목은 일깨웁니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학12/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 발견</span>
+        <h2>시어머니의 눈</h2>
+        <p>세월이 흐르는 동안, 시아버지 이득춘은 며느리 박씨의 비범함을 더욱 또렷이 알아보게 되었습니다. 그는 집안사람들에게 박씨를 함부로 대하지 말라 이르며, 그녀를 귀히 여겼습니다. 오직 그만이 박씨의 참된 값어치를 알아보는 밝은 눈을 지니고 있었습니다.</p>
+        <p>박씨는 자신을 알아주는 시아버지에게 깊이 감사하며, 더욱 정성을 다해 집안을 도왔습니다. 그녀의 지혜로운 살림과 앞일을 내다보는 재주 덕분에 이씨 집안은 나날이 번성하였습니다. 박씨의 존재가 집안의 든든한 기둥이 되어 갔습니다.</p>
+        <p>이 대목은 박씨의 값어치가 조금씩 인정받기 시작하는 전개의 단계입니다. 사람을 알아보는 눈을 가진 이가 있어, 마침내 그 재주가 헛되이 묻히지 않게 된 것입니다. 참된 것을 알아보는 안목이 얼마나 소중한지를 이 장면은 보여 줍니다.</p>
+        <p>그러나 세상은 아직 박씨의 진가를 온전히 알지 못하였습니다. 그녀의 능력이 참으로 크게 빛나는 것은, 나라가 큰 위기에 처하는 바로 그 순간이었습니다. 이야기는 이제 개인의 시련을 넘어 나라의 운명으로 나아갑니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학12/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 전란</span>
+        <h2>전쟁의 먹구름</h2>
+        <p>그 무렵 나라에는 전쟁의 먹구름이 짙게 드리우고 있었습니다. 북쪽의 오랑캐가 대군을 이끌고 조선을 침략해 오려 한 것입니다. 이것이 바로 우리 역사에 깊은 상처로 남은 병자호란이었습니다.</p>
+        <p>박씨는 남다른 지혜로 다가올 전란을 미리 내다보았습니다. 그녀는 남편 이시백에게 나라를 지킬 방책을 여러 차례 일러 주었습니다. 그러나 조정은 그 경고를 가벼이 여겨 제대로 대비하지 못하였습니다.</p>
+        <p>이 대목은 개인의 이야기가 나라의 역사와 맞닿는 위기의 단계입니다. 실제 있었던 병자호란을 배경으로 삼음으로써, 이야기는 한층 무게를 더합니다. 나라가 미처 대비하지 못한 사이, 전란의 위기는 점점 다가오고 있었습니다.</p>
+        <p>박씨는 자신의 집 뜰에 피화당이라는 특별한 공간을 마련해 두었습니다. 갖가지 나무를 심어 신비한 기운으로 감싼 그곳은, 훗날 적을 막아 내는 든든한 방패가 될 참이었습니다. 앞일을 내다보는 박씨의 지혜가 나라를 구할 준비를 갖추어 가고 있었습니다. 재앙을 피하는 집이라는 뜻의 피화당은, 이름 그대로 위기의 순간 큰 힘을 발휘하게 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학12/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">전환 · 변신</span>
+        <h2>허물을 벗다</h2>
+        <p>그러던 어느 날, 박씨에게 놀라운 변화가 찾아왔습니다. 정해진 시간이 다하여, 그녀를 감싸고 있던 추한 허물이 마침내 벗겨진 것입니다. 허물 아래에서 드러난 박씨의 참모습은 눈부시게 아름다웠습니다.</p>
+        <p>사실 박씨의 추한 외모는 하늘이 정한 까닭으로 잠시 쓰고 있던 허물일 뿐이었습니다. 그 허물을 벗자, 그녀의 빼어난 아름다움과 비범함이 온전히 세상에 드러났습니다. 그동안 그녀를 업신여기던 이들은 모두 크게 놀라고 부끄러워하였습니다.</p>
+        <p>이 대목은 이야기의 큰 전환점입니다. 그러나 이 장면에서 정작 눈여겨보아야 할 것은 겉모습의 변화가 아닙니다. 박씨의 참된 값어치는 허물을 벗기 전이나 후나 조금도 달라지지 않았다는 점입니다.</p>
+        <p>허물을 벗은 뒤에야 그녀를 귀히 여긴 사람들의 모습은, 도리어 겉모습만 보는 세상의 어리석음을 되비춥니다. 진작 그 마음과 재주를 알아보았어야 했던 것입니다. 이 변신은 사람들에게 참된 것을 보는 눈을 뒤늦게 일깨우는 거울이 됩니다. 바뀐 것은 박씨가 아니라, 그녀를 바라보는 사람들의 눈이었을 뿐입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학12/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 반격</span>
+        <h2>용서, 그리고 출전</h2>
+        <p>남편 이시백은 그제야 자신의 어리석음을 깊이 뉘우쳤습니다. 오직 외모만 보고 아내의 참된 값어치를 몰라본 지난날을 부끄러워하며 용서를 빌었습니다. 박씨는 너그러운 마음으로 남편을 받아들였습니다.</p>
+        <p>그러나 부부가 화목을 되찾은 기쁨도 잠시, 마침내 오랑캐의 대군이 나라를 침략해 왔습니다. 도성이 위태롭고 백성들이 고통받는 절체절명의 위기가 닥친 것입니다. 이제 박씨의 비범한 능력이 나라를 위해 쓰일 때가 온 것입니다. 한 집안의 며느리로만 여겨지던 그녀가, 온 나라의 운명을 짊어질 순간이 다가온 것입니다.</p>
+        <p>이 대목은 갈등이 절정으로 치닫는 순간입니다. 개인의 화해를 넘어, 박씨가 나라를 구할 영웅으로 나서는 전환이 이루어집니다. 천대받던 한 여인이 이제 나라의 운명을 짊어지게 된 것입니다.</p>
+        <p>여성이 나라를 구하는 영웅으로 그려진다는 점에서 이 작품은 매우 뜻깊습니다. 여성의 활약이 크게 제약받던 시절, 뛰어난 여성 영웅을 내세운 것은 그 자체로 새로운 상상이었습니다. 박씨는 그런 소망이 빚어낸 당당한 주인공입니다. 집 안에만 머물러야 했던 여인이 나라의 운명을 짊어지고 나서는 모습은, 당시로서는 참으로 대담한 이야기였습니다. 그만큼 이 작품은 여성의 능력에 대한 새로운 눈길을 담고 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학12/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 대결</span>
+        <h2>용골대를 꺾다</h2>
+        <p>오랑캐의 장수 용골대가 군사를 이끌고 박씨의 집 피화당으로 쳐들어왔습니다. 그러나 박씨가 미리 마련해 둔 피화당의 신비한 기운 앞에서 적들은 힘을 쓰지 못하였습니다. 박씨는 도술과 지혜로 오랑캐의 대군을 차례로 물리쳤습니다.</p>
+        <p>용골대의 아우가 먼저 박씨의 손에 크게 혼이 났고, 뒤이어 용골대마저 무릎을 꿇을 지경에 이르렀습니다. 한낱 여인이라 얕보던 적장은 박씨의 위엄 앞에서 벌벌 떨었습니다. 박씨는 오랑캐에게 다시는 조선을 넘보지 말라 크게 꾸짖었습니다.</p>
+        <p>이 대목은 이야기의 절정으로, 박씨의 영웅적 활약이 가장 빛나는 순간입니다. 나라의 벼슬아치들도 막지 못한 적을 한 여인이 물리쳤다는 설정은 통쾌하기 그지없습니다. 이는 전란의 아픔을 겪은 백성들이 품었던 간절한 소망을 담아낸 것이기도 합니다.</p>
+        <p>실제 역사에서 조선은 병자호란에서 크나큰 굴욕을 겪었습니다. 이야기 속에서나마 오랑캐를 통쾌하게 무찌르는 박씨의 활약은, 그 아픈 역사를 위로하려는 마음에서 비롯되었습니다. 그래서 이 승리는 더욱 깊은 울림을 지닙니다. 현실에서 이루지 못한 승리를 이야기로나마 되살려, 상처받은 백성의 마음을 어루만진 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학12/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 보상</span>
+        <h2>정렬부인 박씨</h2>
+        <p>박씨의 눈부신 공을 전해 들은 임금은 크게 감탄하였습니다. 임금은 박씨에게 정렬부인이라는 높은 칭호를 내려 그 공을 기렸습니다. 천대받던 한 여인이 마침내 온 나라의 존경을 한 몸에 받게 된 것입니다.</p>
+        <p>남편 이시백 또한 박씨를 지극히 아끼고 존중하였습니다. 부부는 서로를 귀히 여기며 오래도록 화목하게 살았습니다. 겉모습이 아니라 참된 값어치로 맺어진 그들의 사랑은 더없이 굳건하였습니다.</p>
+        <p>이 대목은 오랜 시련 끝에 정당한 보상이 주어지는 결말의 단계입니다. 박씨가 받은 영예는 단순한 행운이 아니라, 온갖 천대 속에서도 마음과 재주를 잃지 않은 데 대한 마땅한 대가였습니다. 참된 값어치는 언젠가 반드시 빛을 본다는 이치가 여기서 실현됩니다.</p>
+        <p>박씨의 이야기는 여성도 나라를 구하는 큰 인물이 될 수 있음을 당당히 보여 줍니다. 이는 여성의 능력을 낮추어 보던 시절에 던지는 조용하면서도 힘 있는 물음이었습니다. 사람의 값어치에는 남녀의 구별이 없음을 이야기는 일깨웁니다. 능력을 펼칠 기회만 주어진다면 누구든 큰일을 해낼 수 있다는 믿음이 박씨의 활약에 담겨 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학12/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>여인이 구한 나라</h2>
+        <p>「박씨전」은 병자호란이라는 아픈 역사를 배경으로, 천대받던 여인이 나라를 구하는 영웅으로 우뚝 서는 여성 영웅소설입니다. 외모로 사람을 판단하는 세태를 꼬집고, 참된 값어치가 무엇인지를 일깨우는 이 이야기는 오랜 세월 사랑받아 왔습니다. 그 울림은 오늘날까지도 조금도 낡지 않았습니다.</p>
+        <p>이 작품이 우리에게 주는 가르침은 분명합니다. 사람의 값어치는 결코 겉모습에 있지 않고, 그 마음과 능력에 있다는 것입니다. 박씨의 참된 값어치는 허물을 벗기 전이나 후나 한결같았음을 우리는 기억해야 합니다.</p>
+        <p>또한 이 이야기는, 참된 것을 알아보는 눈을 가지라는 물음을 던집니다. 겉모습에 사로잡혀 소중한 것을 놓치는 어리석음을 범하지 말아야 하기 때문입니다. 박씨를 뒤늦게 알아본 이시백의 뉘우침은, 우리 모두를 향한 조용한 일깨움이기도 합니다. 사람을 겉으로만 재단하는 버릇은 예나 지금이나 우리가 경계해야 할 어리석음입니다.</p>
+        <p><span class="highlight">사람의 값어치는 얼굴이 아니라 마음과 능력에 있습니다. 참된 것을 알아보는 눈을 가진 이만이 그 값어치를 발견합니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'classic12_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💧 이름을 알게 된 아이, 헬렌 켈러</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계인물08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00897b 0%, #004d40 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 137, 123, 0.15);
+      color: #004d40;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00897b;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #004d40;
+      font-weight: 600;
+    }
+
+    .story-card .key-sentence {
+      display: block;
+      background: rgba(0, 137, 123, 0.1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-left: 4px solid #00897b;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #004d40;
+      font-size: 14px;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #4dd0e1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(0, 137, 123, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #80cbc4;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 137, 123, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 77, 64, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 137, 123, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>💧 이름을 알게 된 아이, 헬렌 켈러</h1>
+        <p class="subtitle">
+          — 어둠과 침묵 속에서 세상의 이름을 하나씩 되찾다 —<br>
+          교과기반 창작도서 · 세계인물 08
+        </p>
+        <div class="characters">
+          <h3>💧 등장인물 소개</h3>
+          <p><strong>★ 헬렌 켈러 (주인공):</strong> 1880년 미국 앨라배마에서 태어났다. 생후 19개월에 열병으로 <span class="vocab-tip" data-meaning="눈으로 보는 능력">시력</span>과 <span class="vocab-tip" data-meaning="귀로 듣는 능력">청력</span>을 모두 잃었다. 말할 방법이 없어 화를 내던 아이가, 세상 모든 것의 이름을 묻는 사람이 된다.</p>
+          <p><strong>★ 앤 설리번 (선생님):</strong> 스무 살에 헬렌의 집에 온 가정교사. 자신도 어릴 적 심한 눈병으로 앞이 잘 보이지 않았기에, 헬렌의 어둠을 짐작이 아니라 기억으로 안다.</p>
+          <p><strong>★ 헬렌의 어머니 케이트:</strong> 딸을 사랑하지만 어떻게 도와야 할지 몰라 모든 것을 받아 주기만 한 사람. 그 사랑이 때로는 헬렌을 가두었다.</p>
+          <p><strong>★ 헬렌의 아버지 아서:</strong> 딸이 평생 아무것도 배우지 못할 것이라는 말을 여러 의사에게 들은 사람. 마지막 희망으로 선생님을 부른다.</p>
+          <p><strong>★ 우물가의 펌프:</strong> 이야기가 뒤집히는 자리. 손등을 타고 흐른 차가운 물 하나가 헬렌의 세계를 열어젖힌다.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 내면의 갈등:</strong> 전하고 싶은 마음 vs. 전할 방법이 없는 몸</p>
+          <p><strong>② 관계의 갈등:</strong> 무엇이든 받아 주는 사랑 vs. 끝내 가르치려는 사랑</p>
+          <p><strong>③ 세상의 갈등:</strong> "저 아이는 배울 수 없다"는 단정 vs. 배울 수 있다는 단 한 사람의 믿음</p>
+          <p><strong>④ 뜻의 갈등:</strong> 손바닥의 움직임은 놀이일 뿐 vs. 그 움직임에 뜻이 있다는 발견</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>열아홉 달 만에 닫힌 문</h2>
+        <p>1880년, 미국 앨라배마의 작은 마을에서 여자아이가 태어났습니다. 이름은 헬렌 켈러. 아이는 건강했고, 옹알이를 시작했으며, 어머니의 얼굴을 알아보고 웃었습니다. 부모는 이 아이가 자라는 모습을 하나도 놓치지 않으려 했습니다.</p>
+        <p>그러나 태어난 지 열아홉 달째 되던 무렵, 헬렌은 심한 <span class="vocab-tip" data-meaning="몸에 높은 열이 나는 병">열병</span>을 앓았습니다. 며칠 밤낮으로 온몸이 불덩이 같았고, 의사도 원인을 알지 못했습니다. 며칠 뒤 열이 내렸을 때 가족은 이제 살았다며 안도했습니다. 그러나 얼마 지나지 않아 이상한 일을 하나둘 알아차리기 시작했습니다.</p>
+        <p>어머니가 아이의 눈앞에서 손을 흔들어도 눈동자가 따라오지 않았습니다. 뒤에서 이름을 크게 불러도 아이는 돌아보지 않았습니다. 그릇을 떨어뜨려 요란한 소리를 내 보아도 아무 반응이 없었습니다. 열병이 아이에게서 보는 힘과 듣는 힘을 한꺼번에 가져가 버린 것입니다.</p>
+        <p>그날부터 헬렌의 세상에는 빛도 소리도 없었습니다. 남은 것은 손끝에 닿는 감촉과 코끝의 냄새뿐이었습니다. 아이는 벽을 짚어 가며 집 안을 돌아다녔고, 사람을 만나면 얼굴을 더듬어 누구인지 알아내려 했습니다. 어머니의 앞치마 자락과 아버지의 수염이 헬렌에게는 이름 대신이었습니다.</p>
+        <p>더 큰 문제는 따로 있었습니다. 헬렌에게는 원하는 것을 전할 방법이 없었습니다. 목이 마르다고, 무섭다고, 저것을 달라고 말할 길이 어디에도 없었습니다. 마음속에는 하고 싶은 말이 가득 차 있는데 밖으로 나오는 것은 아무것도 없었습니다. 물이 가득한 병에 입구가 없는 것과 같았습니다.</p>
+        <p><span class="highlight">닫힌 것은 눈과 귀였지만, 정말로 갇힌 것은 아이의 마음이었습니다.</span> 그 마음은 나갈 길을 찾지 못한 채 안에서 점점 커져만 갔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>던지고 부수는 아이</h2>
+        <p>말할 수 없는 마음은 결국 다른 모습으로 터져 나왔습니다. 헬렌은 뜻대로 되지 않으면 소리를 지르며 바닥을 굴렀고, 손에 잡히는 것을 집어던졌습니다. 식탁에서는 자기 자리를 지키지 않고 돌아다니며 남의 접시에 손을 넣어 음식을 집어 먹었습니다.</p>
+        <p>부모는 그런 딸을 말리지 못했습니다. 아니, 말리지 않았습니다. 보이지도 들리지도 않는 아이에게 무엇을 어떻게 가르쳐야 할지 몰랐기 때문입니다. 어머니 케이트는 딸이 울면 그저 안아 주었고, 무엇을 원하는지 표정과 몸짓으로 짐작해 얼른 손에 쥐여 주었습니다.</p>
+        <p>사랑에서 나온 행동이었습니다. 그러나 그 사랑에는 한 가지가 빠져 있었습니다. 헬렌은 원하는 것을 늘 얻었기 때문에, 무엇을 어떻게 전해야 하는지 배울 필요가 없었습니다. 온 가족이 아이의 짐작 통역사가 되어 준 셈이었습니다.</p>
+        <p>여러 의사가 다녀갔습니다. 그들의 말은 대개 비슷했습니다.<br><br><span class="dialogue">"안타깝지만 이 아이는 평생 아무것도 배우지 못할 겁니다. 마음 편히 먹고 지내게 해 주십시오."</span><br><br>아버지 아서는 그 말을 들을 때마다 고개를 끄덕이고 조용히 밖으로 나갔습니다.</p>
+        <p>어느 날 헬렌이 갓난 여동생이 누운 요람을 넘어뜨린 일이 있었습니다. 아이는 미워서 그런 것이 아니라, 그 자리에 무엇이 있는지 몰랐을 뿐이었습니다. 그러나 하마터면 큰일이 날 뻔한 일이라 집안이 발칵 뒤집혔습니다. 어머니는 그날 밤 오래 울었습니다.</p>
+        <p>그날 밤 아버지는 마지막 희망을 걸어 보기로 했습니다. <span class="highlight">먼 도시의 학교에 편지를 써서, 딸을 가르쳐 줄 선생님을 보내 달라고 청한 것입니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>스무 살의 선생님</h2>
+        <p>1887년 봄, 한 젊은 여자가 여행 가방을 들고 켈러의 집 문을 두드렸습니다. 이름은 앤 설리번, 스무 살이었습니다. 그 앞에 선 헬렌은 일곱 살이었습니다.</p>
+        <p>앤 자신도 어릴 적 심한 눈병을 앓아 오랫동안 앞이 잘 보이지 않았습니다. 부모를 일찍 여의고 가난한 사람들을 거두는 시설에서 어린 시절을 보낸 사람이기도 했습니다. 그래서 그는 헬렌이 갇힌 어둠을 짐작으로 이해한 것이 아니라, 자기가 겪은 기억으로 알고 있었습니다. 그 차이는 컸습니다.</p>
+        <p>첫 만남에서 헬렌은 낯선 손을 더듬다가 앤을 밀쳐 냈습니다. 가방을 빼앗아 뒤졌고, 그 안에서 나온 인형을 움켜쥐었습니다. 앤은 화내지 않고 인형을 쥔 헬렌의 다른 손을 펴서, 그 손바닥 위에 손가락으로 글자를 하나씩 그렸습니다.<br><br><span class="dialogue">'D-O-L-L.'</span></p>
+        <p>헬렌은 그 움직임을 놀랍도록 정확하게 따라 했습니다. 앤이 웃으며 다시 썼고, 헬렌도 다시 따라 했습니다. 손가락 모양 하나 틀리지 않았습니다. 그 모습만 보면 무언가 통한 것 같았습니다. 그러나 아니었습니다. 헬렌에게 그것은 그저 재미있는 손가락 놀이였습니다.</p>
+        <p>며칠이 지나지 않아 앤은 그 사실을 알아차렸습니다. 헬렌은 흉내는 완벽하게 냈지만, 그 움직임이 손에 쥔 인형을 가리킨다는 것은 조금도 알지 못했습니다.<br><br><span class="dialogue">'이 아이는 글자를 못 배우는 게 아니야. 세상의 모든 것에 이름이 있다는 걸 아직 모르는 거야.'</span></p>
+        <p><span class="highlight">가르쳐야 할 것은 단어가 아니라, 단어라는 것이 존재한다는 사실이었습니다.</span> 앤은 그것을 어떻게 알려 줘야 할지 아직 몰랐습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>작은 집에서의 싸움</h2>
+        <p>얼마 뒤 앤은 부모에게 어려운 부탁을 하나 했습니다. 얼마 동안 헬렌과 단둘이서만 지내게 해 달라는 것이었습니다. 집에서 조금 떨어진 작은 별채에서 두 사람만 생활하게 해 달라고 청했습니다.</p>
+        <p>어머니는 강하게 반대했습니다. 앞도 못 보고 듣지도 못하는 아이를 잠시라도 떼어 놓는다는 것을 견딜 수 없었습니다. 그러나 앤은 물러서지 않았습니다.<br><br><span class="dialogue">"어머니가 곁에 계시는 한, 헬렌은 배우지 않아도 원하는 걸 얻습니다. 배우려면 먼저 아쉬워야 합니다."</span></p>
+        <p>별채에서의 하루하루는 그야말로 싸움이었습니다. 첫 식사부터 앤은 헬렌이 남의 접시에 손 넣는 것을 막아섰습니다. 헬렌은 소리를 지르고 의자를 넘어뜨렸습니다. 밥그릇이 몇 번이나 바닥에 떨어졌습니다.</p>
+        <p>앤은 물러서지 않고 떨어진 숟가락을 주워 다시 쥐여 주었습니다. 두 사람은 아침 식사 한 끼에 몇 시간씩 그 자리에서 버티곤 했습니다. 헬렌이 지쳐 숟가락을 들면, 앤은 그 손바닥에 글자를 썼습니다. 밥을 먹을 때마다, 물을 마실 때마다, 옷을 입을 때마다, 문을 열 때마다 썼습니다. 하루에 수백 번이었습니다.</p>
+        <p>그렇게 몇 주가 지나자 헬렌은 손가락 모양을 서른 개 넘게 정확히 따라 하게 되었습니다. 겉으로 보면 놀라운 진전이었습니다. 그러나 앤은 알고 있었습니다. 헬렌은 여전히 그것을 놀이로 여기고 있었습니다.</p>
+        <p>앤은 하루를 마치고 밤마다 편지에 이렇게 적곤 했습니다.<br><br><span class="dialogue">"헬렌의 손은 배웠습니다. 하지만 마음은 아직 문 앞에 서 있습니다."</span><br><br><span class="highlight">문고리는 잡았는데, 그 문이 문인 줄을 모르는 상태였습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>컵과 물, 두 개의 이름</h2>
+        <p>어느 날 앤은 헬렌에게 컵과 물을 구분해 가르쳐 보기로 했습니다. 먼저 컵을 만지게 하고 손바닥에 글자를 썼습니다. 그다음 컵 안의 물을 만지게 하고 다른 글자를 썼습니다.</p>
+        <p>헬렌은 몹시 혼란스러워했습니다. 방금 이것을 그렇게 부르라더니, 왜 또 다른 모양을 그리는 것인지 알 수 없었습니다. 헬렌에게 컵과 물은 그저 하나였습니다. 손에 잡히는 딱딱한 것과 그 안에서 흘러내리는 차가운 것이 왜 서로 다른 이름을 가져야 하는지, 아이로서는 알 도리가 없었습니다.</p>
+        <p>앤이 몇 번이나 같은 것을 되풀이하자 헬렌은 결국 참지 못하고 폭발했습니다. 아이는 손에 든 컵을 바닥에 힘껏 내동댕이쳤습니다. 컵이 깨지고 물이 사방으로 튀었습니다. 그러고는 두 손으로 앤을 밀쳐 냈습니다.</p>
+        <p>앤은 깨진 조각을 하나하나 치우며 그 자리에 오래 앉아 있었습니다. 두 달 가까이 온 힘을 다해 매달렸는데 제자리였습니다. 문득 의사들이 하던 말이 떠올랐습니다. 이 아이는 평생 아무것도 배우지 못할 것이라던 말이었습니다.<br><br><span class="dialogue">'정말 그런 걸까. 내가 헛된 일을 하고 있는 걸까.'</span></p>
+        <p>그러나 앤은 이내 고개를 저었습니다. 자기도 한때 그 어둠 속에 있어 봤기 때문입니다. 그때 자신에게 필요했던 것은 안됐다는 눈길이 아니라, 끝까지 손을 놓지 않는 단 한 사람이었습니다.</p>
+        <p>앤은 천천히 자리에서 일어나 헬렌의 손을 다시 잡았습니다. 그리고 아직 화가 덜 풀린 아이를 달래며 마당으로 데리고 나갔습니다. <span class="highlight">그날따라 마당 한쪽 우물가에서 누군가 펌프질을 하며 물을 긷고 있었습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>손등을 타고 흐른 것</h2>
+        <p>앤은 아무 말 없이 헬렌의 한쪽 손을 펌프 주둥이 아래로 가져갔습니다. 그리고 손잡이를 두 손으로 힘껏 눌러 물을 콸콸 흘려보냈습니다. 차가운 물이 헬렌의 손등을 적시고 손가락 사이를 타고 줄줄 흘러내렸습니다.</p>
+        <p>물이 손을 적시고 있는 바로 그 순간, 앤은 헬렌의 다른 쪽 손바닥에 아주 천천히 글자를 써 내려갔습니다.<br><br><span class="dialogue">'W-A-T-E-R.'</span><br><br>한 번 쓰고, 물이 계속 흐르는 동안 같은 자리에 다시 한 번 천천히 썼습니다.</p>
+        <p>그 순간 헬렌의 몸이 갑자기 굳었습니다. 아이는 손을 빼지도 않고 움직이지도 않은 채 그대로 멈춰 섰습니다. 숨소리마저 멎어 버린 것 같았습니다. 한 손에는 여전히 흐르는 물이 있었고, 다른 손에는 방금 그려진 글자의 감촉이 남아 있었습니다.</p>
+        <p>일곱 해 동안 아무 상관 없이 따로 놀던 두 가지가, 헬렌의 머릿속에서 처음으로 하나로 이어졌습니다. 이 차갑고 흘러내리는 것에 이름이 있다. 손바닥 위의 이 움직임이 바로 그 이름이다. 지금까지 몇 주 동안 해 온 것이 놀이가 아니었습니다. 그것은 처음부터 끝까지 뜻이었습니다.</p>
+        <p>헬렌은 먼 훗날 그 순간을 이렇게 적었습니다.<br><br><span class="dialogue">"그 낱말이 내 영혼을 깨웠고, 빛과 희망과 기쁨을 주었으며, 나를 자유롭게 했다."</span></p>
+        <p>한참을 그렇게 서 있던 아이가 땅바닥에 털썩 주저앉았습니다. 그리고 흙을 한 줌 만지더니 앤의 손을 급하게 끌어당겼습니다. 이것은 무엇이냐고 묻는 몸짓이었습니다. 태어나 처음으로 던지는 물음이었습니다. <span class="highlight">일곱 해 동안 갇혀 있던 마음이 마침내 문을 밀고 나온 것입니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>세상 모든 것의 이름</h2>
+        <p>그날 헬렌은 해가 기울도록 우물가를 떠나지 않았습니다. 흙을 만지고 이름을 물었고, 펌프를 만지고 이름을 물었고, 나무 기둥과 울타리와 풀을 차례로 만지며 이름을 물었습니다.</p>
+        <p>앤은 손목이 아플 때까지 쉴 새 없이 손바닥에 글자를 써 주었습니다. 그날 하루에만 헬렌은 서른 개가 넘는 낱말을 배웠습니다. 몇 주 동안 놀이로만 여기던 손가락 움직임이 하루 만에 전부 이름으로 바뀐 것입니다. 세상이 통째로 다시 태어난 셈이었습니다.</p>
+        <p>해가 지고 집으로 돌아가는 길이었습니다. 헬렌은 문득 걸음을 멈추더니 앤의 손을 끌어다 자기 얼굴에 가만히 댔습니다. 그리고 앤의 손바닥에 뭔가를 쓰려고 애를 썼습니다. 앤이 대신 써 주었습니다.<br><br><span class="dialogue">'T-E-A-C-H-E-R.'</span><br><br>선생님이라는 이름이었습니다.</p>
+        <p>그러나 이름을 아는 것과 자기 입으로 말을 하는 것은 또 다른 일이었습니다. 헬렌은 손바닥이 아니라 자기 목소리로 말하고 싶어 했습니다. 소리를 들어 본 적이 없는 아이가 말을 배우겠다는 것이었습니다.</p>
+        <p>방법은 하나뿐이었습니다. 말하는 사람의 입술과 목에 손을 대고 <span class="vocab-tip" data-meaning="떨리며 흔들리는 움직임">진동</span>을 느끼는 것이었습니다. 헬렌은 앤의 목에 손가락을 얹고 같은 소리를 몇 시간이고 되풀이했습니다. 상대의 입 모양을 더듬고, 혀가 어디에 닿는지 만져 보고, 그런 다음 자기도 같은 소리를 내 보았습니다.</p>
+        <p>수백 번을 되풀이해도 끝내 제대로 나오지 않는 소리가 있었습니다. 헬렌은 분해서 울면서도 그만두지 않았습니다. <span class="highlight">들리지 않는 소리를 향해, 아이는 몇 해를 매달렸습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>읽고 쓰는 사람</h2>
+        <p>헬렌은 <span class="vocab-tip" data-meaning="손끝으로 만져 읽도록 도드라지게 만든 글자">점자</span>를 배웠습니다. 종이 위에 도드라지게 찍힌 점을 손끝으로 더듬어 읽는 방법이었습니다. 한 번 읽는 법을 익히자 아이는 책에 빠져들었습니다.</p>
+        <p>그러나 읽을 수 있는 책이 많지 않았습니다. 그 시절에는 점자로 찍어 낸 책 자체가 몹시 드물었기 때문입니다. 그래서 앤은 헬렌이 배워야 할 책들을 하나하나 손바닥에 옮겨 적어 주었습니다. 두꺼운 교과서 한 권을 통째로 손바닥에 써 준 날도 있었습니다.</p>
+        <p>책을 읽게 되자 헬렌은 학교에 가고 싶어 했습니다. 그것도 보통 학생들과 똑같은 대학에 들어가겠다고 나섰습니다. 주위에서는 하나같이 무리라고 말렸습니다. 시험을 무슨 수로 치를 것이며, 교수의 강의를 어떻게 들을 것이냐는 이야기였습니다.</p>
+        <p>결국 앤이 헬렌과 나란히 강의실에 앉기로 했습니다. 교수가 말하는 것을 귀로 들으며 그것을 곧바로 헬렌의 손바닥에 옮겨 적었습니다. 헬렌은 그렇게 받은 손바닥 위의 강의를 곧바로 점자로 받아 적었습니다. 두 사람이 한 사람처럼 움직여야 가능한 일이었습니다.</p>
+        <p>오랜 준비 끝에 헬렌은 래드클리프 대학에 입학했고, 마침내 <span class="vocab-tip" data-meaning="성적이 뛰어나 상을 받으며 졸업하는 것">우등</span>으로 졸업했습니다. 보지도 듣지도 못하는 사람이 대학을 우등으로 마친 것은 그때까지 세상 어디에도 없던 일이었습니다.</p>
+        <p>대학을 마칠 무렵 헬렌은 한 가지를 분명히 깨달았습니다. 자기를 가로막은 것은 보이지 않고 들리지 않는 몸이 아니었습니다. <span class="highlight">"저 아이는 배울 수 없다"는 세상의 단정이 진짜 벽이었습니다.</span> 몸은 어쩔 수 없었지만, 그 벽은 부술 수 있는 것이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>35개국을 건너간 목소리</h2>
+        <p>대학을 마친 헬렌은 그저 조용히 살 수도 있었습니다. 이미 사람들은 그를 기적 같은 사람이라 불렀고, 그것만으로도 충분히 대단한 삶이라고 여겼습니다.</p>
+        <p>그러나 헬렌은 굳이 다른 길을 골랐습니다. 자기처럼 보이지 않고 들리지 않는 사람들, 그리고 아무것도 못 할 거라는 말을 들으며 사는 사람들을 위해 직접 목소리를 내기로 한 것입니다. 자기가 받은 것을 돌려주는 방식이었습니다.</p>
+        <p>헬렌은 배와 기차를 여러 번 갈아타며 세계 35개국을 돌았습니다. 비행기가 흔하지 않던 시절이라 한 나라를 가는 데만 몇 주가 걸리기도 했습니다. <span class="vocab-tip" data-meaning="사람들 앞에서 이야기를 들려주는 자리">강연</span>장에 서면 앤이 늘 곁을 지키며 통역했습니다. 헬렌이 온 힘을 다해 낸 소리를 앤이 알아듣고 사람들에게 다시 전달하는 방식이었습니다. 또렷하지 않은 발음이었지만 사람들은 하나같이 숨을 죽이고 귀를 기울였습니다.</p>
+        <p>헬렌은 <span class="vocab-tip" data-meaning="몸이나 감각의 일부가 제 기능을 하지 못하는 상태">장애</span>가 있는 아이도 마땅히 학교에 다녀야 한다고 말했고, 앞을 보지 못하는 사람을 위한 점자책이 훨씬 더 많이 만들어져야 한다고 요구했습니다. 도움을 베풀라는 것이 아니라 <span class="vocab-tip" data-meaning="사람이라면 누구나 누려야 할 마땅한 몫">권리</span>를 달라는 말이었습니다. 누군가 안됐다는 표정으로 다가오면 헬렌은 이렇게 말했습니다.<br><br><span class="dialogue">"저를 불쌍히 여기지 마세요. 저에게 필요한 것은 동정이 아니라 기회입니다."</span></p>
+        <p>그가 평생 남긴 말 가운데 이런 것이 있습니다.<br><br><span class="dialogue">"세상에서 가장 아름다운 것은 눈으로 볼 수도 없고 손으로 만질 수도 없습니다. 오직 마음으로만 느낄 수 있습니다."</span></p>
+        <p>평생 한 번도 무엇을 본 적 없는 사람이 아름다움에 대해 한 말이었습니다. <span class="highlight">그는 자기가 잃은 것으로 자기가 아는 것을 증명했습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물08/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>물이라는 낱말 하나</h2>
+        <p>헬렌 켈러는 여든여덟 해를 살았습니다. 그동안 자기 삶을 담은 책을 여러 권 썼고, 수많은 나라를 다니며 강연했으며, 장애가 있는 사람들의 삶을 바꾸는 법과 제도를 만드는 데 힘을 보탰습니다.</p>
+        <p>앤 설리번은 오십 년 가까운 세월을 한결같이 헬렌 곁에서 보냈습니다. 강의실에서도, 강연장에서도, 흔들리는 배 위에서도 그의 손은 늘 헬렌의 손바닥 위에 있었습니다. 앤이 세상을 떠난 뒤 헬렌은 이렇게 말했습니다.<br><br><span class="dialogue">"선생님은 제 눈이었고, 제 귀였습니다."</span></p>
+        <p>사람들은 헬렌의 삶을 흔히 기적이라고 부릅니다. 그러나 그 기적이 시작된 자리는 조금도 대단한 곳이 아니었습니다. 집 마당의 낡은 펌프 아래에서, 손등을 타고 흘러내린 차가운 물 한 줄기였습니다.</p>
+        <p>그 순간 일어난 일은 사실 아주 단순한 것이었습니다. 세상 모든 것에는 저마다 이름이 있다는 것을 아이가 알아차린 것입니다. 이름을 알면 물을 수 있고, 물을 수 있으면 배울 수 있고, 배울 수 있으면 세상 누구에게든 말을 걸 수 있습니다.</p>
+        <p>그날 우물가에는 두 사람이 있었습니다. 이름을 알고 싶어 애타던 아이와, 세상 누구도 믿지 않을 때 혼자서 믿어 준 선생님. <span class="highlight">기적은 한 사람의 재능이 아니라 두 사람의 버팀에서 나왔습니다.</span></p>
+        <p>지금도 세상 어딘가에는 "저 아이는 안 된다"는 말을 들으며 자라는 아이들이 있습니다. 헬렌의 이야기가 백 년이 넘도록 남아 있는 것은 그가 특별한 사람이어서가 아니라, 그 말이 틀릴 수 있다는 것을 몸으로 보여 주었기 때문입니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(60, 130, 160, 0.15); border-radius: 16px;">
+          <strong style="color: #3C82A0; font-size: 20px;">💧 「이름을 아는 순간, 세계가 열린다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+      function goToQuiz() { window.location.href = '/creative-book/worldperson08_season1_quiz.html?season=season2'; }
+  </script>
+</body>
+</html>

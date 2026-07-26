@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚖️ 방울토마토 나누는 법 — 우리 반 정의 대소동</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작사회문화12/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⚖️ 방울토마토 나누는 법 — 우리 반 정의 대소동</h1>
+        <p class="subtitle">
+          — 각자에게 그의 몫을, 가장 아픈 자리에 먼저 눈길을 주어요 —<br>
+          교과기반 창작도서 · 사회문화 12 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>⚖️ 등장인물 소개</h3>
+          <p><strong>★ 하람 (주인공):</strong> 학급 텃밭의 나눔 담당이에요. 방울토마토 한 바구니 앞에서 '공정하게 나눈다'는 것이 얼마나 어려운 일인지 온몸으로 배우지요.</p>
+          <p><strong>★ 김 선생님:</strong> 담임 선생님이에요. 2천 년 묵은 철학자들의 고민을 제비뽑기 게임 하나로 교실에 데려오지요.</p>
+          <p><strong>★ 준서:</strong> "일한 만큼 받아야 공정하다"고 믿는 아이. 능력주의의 목소리.</p>
+          <p><strong>★ 소민:</strong> "모두의 텃밭이니 똑같이 나눠야 한다"고 맞서는 아이. 평등의 목소리.</p>
+          <p><strong>★ 유나:</strong> 봄에 모종 심기를 도맡았지만 다리를 다쳐 여름 내내 텃밭에 못 나온 친구. 규칙이 놓친 자리에 서 있다.</p>
+          <p><strong>★ 다온:</strong> 수확 전날 토마토 한 바구니를 몰래 가져간 아이. 잘못을 바로잡는 길을 보여 준다.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 분배의 갈등:</strong> 똑같이 나누자는 마음 vs. 일한 만큼 받자는 마음</p>
+          <p><strong>② 규칙의 갈등:</strong> 규칙대로 했다는 떳떳함 vs. 어딘가 남는 불편한 마음</p>
+          <p><strong>③ 처벌의 갈등:</strong> 잘못을 벌주고 싶은 마음 vs. 잘못을 되돌리고 용서하는 길</p>
+          <p><strong>④ 자리의 갈등:</strong> 지금 서 있는 나의 자리 vs. 언젠가 내가 서게 될지 모르는 다른 자리</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화12/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>나눔 담당이 되던 날</h2>
+        <p>하람이네 반 뒤뜰에는 자그마한<br>
+학급 <span class="vocab-tip" data-meaning="채소를 심어 가꾸는 작은 밭">텃밭</span>이 있어요.<br>
+봄에 다 함께 방울토마토<br>
+<span class="vocab-tip" data-meaning="옮겨 심으려고 기른 어린 식물">모종</span>을 심고, 여름 내내 물을 주며<br>
+가꾸어 온 밭이지요.<br>
+열매들은 하루가 다르게<br>
+발갛게 익어 가고 있었어요.</p>
+        <p>익은 열매를 거두는<br>
+<span class="vocab-tip" data-meaning="다 익은 곡식이나 열매를 거두어들이는 것">수확</span>의 날이 다가오자<br>
+학급 회의에서 '나눔 담당'을 뽑았어요.<br>
+아이들의 손가락이 하람이를 가리켰고,<br>
+하람이는 얼떨결에 수락하고 말았지요.<br>
+처음에는 어깨가 으쓱했지만,<br>
+슬슬 걱정이 밀려왔어요.</p>
+        <p>사실 하람이네 반은 유난히<br>
+"불공평해!"라는 말이<br>
+자주 터져 나오는 반이었어요.<br>
+모두가 <span class="vocab-tip" data-meaning="어느 한쪽으로 치우치지 않고 올바른 것">공정</span>을 바랐지만,<br>
+무엇이 공정인지는<br>
+저마다 생각이 달랐지요.</p>
+        <p>마침 그날 저녁, 하람이는 동생과<br>
+귤 한 봉지를 나누다가 크게 다투었어요.<br>
+겨우 귤 몇 개도 이런데,<br>
+서른 명이 함께 기른 토마토라니요.<br>
+<span class="highlight">나눈다는 것은 생각보다 훨씬 어려운 일이었어요.</span><br>
+하람이는 토마토가 익어 갈수록<br>
+마음 한구석이 무거워졌지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화12/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>토마토 대풍년</h2>
+        <p>드디어 수확의 날이 밝았어요.<br>
+발갛게 익은 방울토마토가<br>
+줄기마다 주렁주렁했지요.<br>
+톡, 톡, 열매 따는 소리와 웃음소리가<br>
+뒤뜰에 가득했어요.<br>
+커다란 바구니 두 개가<br>
+금세 소복하게 찼지요.</p>
+        <p>그런데 누군가 "이제 이거 어떻게 나눠?"<br>
+라고 묻는 순간,<br>
+교실이 갑자기 조용해졌어요.<br>
+서른 개의 눈동자가 일제히<br>
+나눔 담당 하람이에게 쏠렸지요.<br><br><span class="dialogue">"당연히 물 준 사람들이 많이 가져가야지. 나는 아침마다 나와서 물 줬어."</span><br><br><span class="dialogue">"무슨 소리야. 학급 텃밭이니까 우리 반 모두의 거야. 서른 명이 똑같이 나눠야 공평하지."</span></p>
+        <p>그 말을 신호로 교실은<br>
+아수라장이 되었어요.<br>
+모종을 자기가 골랐다는 아이,<br>
+방학 때 물을 줬다는 아이까지<br>
+저마다 자기 몫을 소리 높여 주장했지요.<br><br><span class="dialogue">"나눔 회의는 내일! 오늘은 토마토에 손대기 없기!"</span></p>
+        <p><span class="highlight">달콤해야 할 토마토가 하루아침에 싸움거리가 되어 버렸어요.</span><br>
+발간 토마토 두 바구니를 사이에 두고,<br>
+서른 명의 '공정'이<br>
+서른 가지로 갈라져 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화12/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>각자에게 그의 몫을</h2>
+        <p>방과 후, 하람이는 어깨가 축 처진 채<br>
+교실에 남아 있었어요.<br><br><span class="dialogue">"나눔 담당, 오늘 고생 많았지? 그런데 하람아, 네가 오늘 한 고민은 사실 2천 년도 넘게 이어져 온 고민이란다."</span><br><br>선생님은 칠판에 낯선 이름을 적었어요.<br>
+아리스토텔레스.<br>
+아주 먼 옛날 그리스의, 세상 이치를 깊이 생각하는<br>
+<span class="vocab-tip" data-meaning="세상의 이치를 깊이 생각하고 연구하는 사람">철학자</span>라고 했지요.<br><br><span class="dialogue">"이 철학자는 <span class="vocab-tip" data-meaning="옳고 바른 도리. 공정하고 올바른 것">정의</span>란 '각자에게 그의 몫을 주는 것'이라고 말했단다."</span></p>
+        <p>하람이는 고개를 갸웃했어요.<br>
+그건 그냥 똑같이 나누라는 말이 아닐까요?<br><br><span class="dialogue">"똑같이 나누는 것이 언제나 공정한 것은 아니란다. 각자의 노력이나 처지에 맞게 나누는 것, 그것을 <span class="vocab-tip" data-meaning="각자의 노력과 처지에 맞게 몫을 나누는 정의">분배적 정의</span>라고 하지."</span></p>
+        <p>준서의 말에도, 소민이의 말에도<br>
+저마다 일리가 있었어요.<br>
+문제는 '그의 몫'이라는 것을<br>
+대체 어떻게 정하느냐였지요.<br><br><span class="dialogue">"바로 그게 어려운 부분이야. 철학자들도 답이 서로 달랐거든. 그러니 이번에는 너희 서른 명이 직접 답을 만들어 보렴."</span></p>
+        <p><span class="highlight">정의란 각자에게 그의 몫을 주는 것.</span><br>
+하람이는 그 말을<br>
+공책에 꾹꾹 눌러 적었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화12/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>점수로 정하자</h2>
+        <p>다음 날, 하람이는 칠판 앞에 서서<br>
+나눔 회의를 시작했어요.<br>
+손을 들고 차례로 말하기.<br>
+규칙 하나만으로도<br>
+교실은 한결 차분해졌지요.<br><br><span class="dialogue">"텃밭 활동 기록장을 보면 누가 몇 번 물을 줬는지 다 나와 있어. 일한 횟수대로 점수를 매겨서, 점수만큼 토마토를 가져가는 거야. 그게 노력한 사람에 대한 예의야."</span></p>
+        <p>선생님이 설명을 보탰어요.<br>
+노력과 능력에 따라 보상이 달라져야 한다는 생각을<br>
+<span class="vocab-tip" data-meaning="능력과 노력에 따라 보상이 정해져야 한다는 생각">능력주의</span>라고 부른대요.<br><br><span class="dialogue">"물 주기 당번은 원하면 누구나 신청할 수 있었어. <span class="vocab-tip" data-meaning="모든 사람에게 똑같은 기회가 주어지는 것">기회의 평등</span>은 있었다고. 신청 안 한 건 자기 선택이잖아."</span><br><br>소민이가 반박했어요.<br>
+학원 때문에 아침에 올 수 없었던 아이들은<br>
+어떻게 하느냐고요.</p>
+        <p>교실이 다시 술렁였지만,<br>
+손을 들어 정하는 <span class="vocab-tip" data-meaning="손을 들거나 표를 던져 다수의 뜻으로 정하는 것">표결</span> 끝에<br>
+준서의 점수제가 뽑혔어요.</p>
+        <p>하람이는 조금 마음이 놓였어요.<br>
+규칙은 기록장이라는<br>
+분명한 근거 위에 서 있었으니까요.<br>
+<span class="highlight">일한 만큼 가져간다. 듣기에 그럴듯한 규칙이 완성되었어요.</span><br>
+그러나 이 규칙이 미처 보지 못한 자리가<br>
+하나 있다는 것을,<br>
+그때의 하람이는 아직 알지 못했지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화12/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>유나의 자리</h2>
+        <p>이튿날 하람이는 기록장을 놓고<br>
+꼼꼼히 점수를 계산해<br>
+커다란 점수표를 만들었어요.<br>
+그런데 표를 붙이려던 하람이의 손이<br>
+한 이름 앞에서 뚝 멈췄지요.<br>
+유나. 점수가 거의 없었어요.</p>
+        <p>유나는 봄에 누구보다 열심이었던 아이예요.<br>
+모종 심던 날, 흙투성이가 되어 가며<br>
+서른 개의 모종을 도맡다시피 심었지요.<br>
+그런데 다리를 크게 다쳐<br>
+여름 내내 텃밭에 나올 수가 없었어요.<br>
+기록장은 여름의 물 주기만<br>
+기록하고 있었지요.</p>
+        <p>점수표가 붙자 교실이 조용해졌어요.<br><br><span class="dialogue">"괜찮아. 규칙이 그렇다면 어쩔 수 없지, 뭐."</span><br><br>그러나 고개를 숙이는 유나의 눈시울이<br>
+붉어지는 것을, 하람이는 분명히 보았지요.<br><br><span class="dialogue">"이게 무슨 공정이야! 유나가 게을러서 점수가 없는 게 아니잖아. 아파서 못 나온 거잖아!"</span><br><br>준서도 이번에는<br>
+아무 대꾸를 하지 못했어요.</p>
+        <p>규칙은 분명 다 함께 정했고,<br>
+계산은 한 치도 틀리지 않았어요.<br>
+그런데 왜 이렇게 마음이 불편한 걸까요.<br>
+숫자는 정확했지만, 그 숫자가<br>
+유나의 봄을 하나도 담지 못하고 있었지요.<br>
+<span class="highlight">규칙을 지키는 것과 정의로운 것은 같은 말이 아닐 수도 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화12/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>사라진 한 바구니</h2>
+        <p>다음 날 아침, 교실이 발칵 뒤집혔어요.<br>
+토마토 바구니 하나가<br>
+반쯤 비어 있었던 거예요.<br>
+나누는 법도 아직 정하지 못했는데,<br>
+누군가 먼저 손을 댄 것이었지요.</p>
+        <p>범인은 오래지 않아 밝혀졌어요.<br>
+어제 저녁 늦게 교실에서 나오는 다온이를<br>
+옆 반 아이가 보았다고 했지요.<br>
+다온이의 가방에서<br>
+토마토가 담긴 봉지가 나왔어요.<br>
+손대지 않기로 다 함께 정한 약속이<br>
+깨졌다는 사실에 아이들은 화가 났지요.<br><br><span class="dialogue">"도둑질이잖아! 다온이는 점수 0점으로 해!"</span><br><br><span class="dialogue">"0점이 뭐야, 앞으로 텃밭 활동 금지야!"</span></p>
+        <p>정작 다온이는 입을 꾹 다문 채<br>
+아무 말도 하지 않았어요.<br>
+그 침묵이 아이들의 화를 더 키웠지요.<br>
+그러나 하람이는 어쩐지 이상했어요.<br>
+평소의 다온이는 조용하고 성실한 아이였으니까요.<br>
+무언가 말 못 할 사정이<br>
+있는 것처럼 보였지요.</p>
+        <p>하람이는 눈앞이 캄캄했어요.<br>
+유나의 점수 문제도 아직 풀지 못했는데,<br>
+이제는 잘못을 어떻게 벌해야 하는지까지<br>
+정해야 했지요.<br>
+<span class="highlight">몫을 나누는 일도 어려운데, 잘못을 다루는 일은 더 어려웠어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화12/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>나눔 담당을 그만두고 싶어</h2>
+        <p>그날의 회의는 결국 아무것도<br>
+정하지 못한 채 끝났어요.<br>
+교실은 여러 갈래로 쪼개져서,<br>
+쉬는 시간에도 서로 말을 섞지 않는<br>
+아이들까지 생겼지요.</p>
+        <p>집에 돌아온 하람이는<br>
+이불을 뒤집어썼어요.<br>
+나눔 담당이 된 것이 후회스러웠지요.<br>
+준서의 말도, 소민이의 말도,<br>
+유나를 걱정하는 말도<br>
+하나하나 들으면 다 옳게 들렸어요.<br>
+그런데 그 옳은 말들이 한 교실에 모이면<br>
+왜 싸움이 되는 걸까요.</p>
+        <p>문득 무서운 생각이 스쳤어요.<br>
+어쩌면 다들 '공정'이라는 말을,<br>
+자기에게 유리한 쪽으로만<br>
+쓰고 있는 것은 아닐까.<br>
+물을 많이 준 아이는 점수제가 공정하다 하고,<br>
+그러지 못한 아이는<br>
+똑같이 나누는 것이 공정하다 하고요.</p>
+        <p>하람이는 공책에 적어 둔<br>
+'정의란 각자에게 그의 몫을 주는 것'을<br>
+한참 내려다보았어요.<br>
+그 문장이 오늘따라 텅 비어 보였지요.<br>
+<span class="highlight">정의라는 것이 정말 있기는 한 걸까.</span><br>
+하람이의 마음은<br>
+가장 낮은 바닥까지 내려갔어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화12/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>이름 없는 제비뽑기</h2>
+        <p>다음 날 아침, 교실에 들어온<br>
+김 선생님의 손에는<br>
+자그마한 상자가 들려 있었어요.<br><br><span class="dialogue">"오늘은 회의 전에 게임을 하나 하자. 이 상자에는 우리 반 서른 명의 이름이 전부 들어 있어. 먼저 규칙을 다 함께 정하고, 그다음에 제비를 뽑는 거야. 뽑은 이름이 누구든 그 사람의 처지가 되어 그 규칙을 그대로 따라야 한단다. 너희는 준서가 될 수도, 유나가 될 수도, 다온이가 될 수도 있어."</span></p>
+        <p>교실의 공기가 달라졌어요.<br>
+점수제를 밀던 아이들이<br>
+머뭇거리기 시작했지요.<br>
+아이들은 가장 운이 나쁜 자리를<br>
+먼저 떠올리며 규칙을 다듬기 시작했어요.</p>
+        <p>선생님이 칠판에 새 이름을 적었어요.<br>
+존 롤스.<br><br><span class="dialogue">"이 철학자는 이런 상상을 <span class="vocab-tip" data-meaning="자기 처지를 모르는 채로 규칙을 정해 보는 상상 방법">무지의 베일</span>이라고 불렀단다. 자기 자리를 모른 채 규칙을 정하면, 사람들은 가장 불리한 처지의 <span class="vocab-tip" data-meaning="몸이나 형편이 불리한 자리에 있는 사람">사회적 약자</span>를 배려하는 공정한 규칙을 만들게 된다는 거야."</span></p>
+        <p>하람이는 가슴이 트이는 것 같았어요.<br>
+어제까지 싸웠던 것은 모두가<br>
+'지금 나의 자리'에서만<br>
+저울질을 했기 때문이었지요.<br>
+<span class="highlight">내 자리를 잠시 잊을 때, 비로소 모두의 자리가 보였어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화12/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>우리 반의 나눔 법</h2>
+        <p>그날 오후, 마침내<br>
+'우리 반 나눔 법'이 완성되었어요.<br>
+첫째, 기본 몫은 서른 명 모두 똑같이 받는다.<br>
+둘째, 애쓴 친구들에게는<br>
+수고한 만큼 몫을 더한다.<br>
+셋째, 아프거나 피치 못할 사정으로<br>
+참여하지 못한 친구의 몫은 그대로 지켜 준다.</p>
+        <p>이제 다온이의 차례였어요.<br><br><span class="dialogue">"할머니가 편찮으셔서 병원에 계셔. 토마토를 꼭 드리고 싶어서... 정말 잘못했어."</span><br><br>교실이 숙연해졌어요.<br><br><span class="dialogue">"잘못은 잘못이란다. 하지만 벌은 화풀이가 아니라, 잘못을 바로잡고 피해를 되돌리는 것이어야 해. 그것을 <span class="vocab-tip" data-meaning="잘못을 바로잡고 피해를 되돌리게 하는 정의">교정적 정의</span>라고 한단다."</span></p>
+        <p>아이들은 다온이의 책임을 정했어요.<br>
+가져간 만큼 자기 몫에서 돌려놓고,<br>
+가을 텃밭 정리를 도맡아 하기로 했지요.<br>
+그리고 다온이 할머니께 드릴 토마토 한 봉지를<br>
+모두의 몫에서 조금씩 덜어 담았어요.<br>
+다온이의 눈에서 눈물이 뚝 떨어졌지요.</p>
+        <p>다음 날 조촐한 수확 잔치가 열렸어요.<br>
+가장 예쁜 접시는<br>
+유나의 책상 위에 놓였지요.<br>
+<span class="highlight">몫을 나누는 법과 잘못을 되돌리는 법을, 서른 명이 제 손으로 만들어 냈지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화12/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>교실에서 시작되는 정의</h2>
+        <p>토마토 소동이 지나간 뒤,<br>
+하람이네 반은 눈에 띄게 달라졌어요.<br>
+"불공평해!" 하고 소리부터 지르는 대신,<br>
+"이 문제, 회의에서 정하자"라고<br>
+말하는 아이들이 많아진 거예요.</p>
+        <p>규칙을 정할 때마다 아이들은<br>
+그 제비뽑기 상자를 떠올렸어요.<br>
+내가 가장 불리한 자리에 서게 된다면<br>
+이 규칙이 여전히 공정하다고 말할 수 있을까.<br>
+선생님은 그런 마음가짐을<br>
+<span class="vocab-tip" data-meaning="사회의 구성원으로서 가져야 할 책임감과 자세">시민 의식</span>이라고 부른다고 알려 주었지요.</p>
+        <p>사회 시간에 아이들은<br>
+교실 밖의 더 큰 저울들도 배웠어요.<br>
+세상에는 훨씬 크고 무거운<br>
+<span class="vocab-tip" data-meaning="사회 구성원 사이의 공정하지 않은 차이">사회 불평등</span>이 있다는 것을 배웠지요.</p>
+        <p>하람이는 나눔 담당을 그만두지 않았어요.<br>
+하람이의 공책 첫 장에는<br>
+두 문장이 나란히 적혀 있지요.<br>
+정의란 각자에게 그의 몫을 주는 것.<br>
+그리고 그 몫을 정할 때는, 가장 불리한<br>
+자리에 선 사람을 먼저 생각할 것.<br>
+<span class="highlight">정의는 멀리 있는 거창한 것이 아니었어요.</span><br>
+토마토 한 알을 나누는 법을 고민하는<br>
+바로 그 자리에서 이미 시작되고 있었지요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(184, 134, 11, 0.15); border-radius: 16px;">
+          <strong style="color: #B8860B; font-size: 20px;">⚖️ 「정의는 각자에게 그의 몫을 주는 것, 가장 아픈 자리를 먼저 살피는 것이에요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'social12_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

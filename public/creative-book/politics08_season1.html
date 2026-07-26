@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📜 펜은 칼보다 무겁다 — 우리 반 소식통 사건</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작정치경제08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>📜 펜은 칼보다 무겁다 — 우리 반 소식통 사건</h1>
+        <p class="subtitle">
+          — 권리와 책임은 동전의 양면, 한 면만 가진 동전은 없다 —<br>
+          교과기반 창작도서 · 정치경제 08
+        </p>
+        <div class="characters">
+          <h3>📜 등장인물 소개</h3>
+          <p><strong>★ 겨레 (주인공):</strong> 거침없는 글솜씨의 학급 신문 기자. 펜의 자유와 함께, 펜의 무게를 배우게 된다.</p>
+          <p><strong>★ 하진:</strong> 겨레의 기사 한 줄에 상처 입은 친구. 권리의 뒷면이 무엇인지 가르쳐 준 아이.</p>
+          <p><strong>★ 신문기자 삼촌 (조력자):</strong> "펜은 칼보다 강하다, 그래서 더 조심해야 한다"고 말하는 사람.</p>
+          <p><strong>★ 성 선생님:</strong> 기본권과 의무를 가르치며, 검열 대신 자율이라는 어려운 길을 택한 담임 선생님.</p>
+          <p><strong>★ 우리 반 소식통:</strong> 겨레네 학급 신문. 자유의 연습장이자, 책임의 연습장.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 자유의 갈등:</strong> 쓰고 싶은 대로 쓸 나의 권리 vs. 상처받지 않을 다른 사람의 권리</p>
+          <p><strong>② 사실의 갈등:</strong> "사실이니까 괜찮다"는 생각 vs. 사실도 흉기가 될 수 있다는 진실</p>
+          <p><strong>③ 해결의 갈등:</strong> 자유를 줄여서 막는 길 vs. 책임을 키워서 지키는 길</p>
+          <p><strong>④ 동전의 갈등:</strong> 권리라는 앞면 vs. 책임이라는 뒷면 — 떼어 낼 수 없는 한 몸</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제08/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>기자가 된 겨레</h2>
+        <p>겨레는 말과 글이 거침없는 아이입니다. 일기장에는 늘 하고 싶은 말이 흘러넘쳤고, 학급 회의에서는 손이 제일 먼저 올라갔습니다. 그런 겨레에게 딱 맞는 자리가 생겼습니다. 새로 만들어진 학급 신문, '우리 반 소식통'의 기자로 뽑힌 것입니다.</p>
+        <p>성 선생님은 신문을 만들며 딱 한 가지 원칙을 세웠습니다.<br><br><span class="dialogue">"선생님은 기사 내용에 간섭하지 않을 거야. 무엇을 쓸지는 기자인 너희가 자유롭게 정하렴. 대신 그 자유를 어떻게 쓸지도 너희 몫이란다."</span><br><br>겨레는 뒷말은 흘려듣고, 앞말에만 신이 났습니다.</p>
+        <p>사실 겨레에게는 오래된 불만이 하나 있었습니다. 어린이의 말은 어른들이 잘 들어 주지 않는다는 것이었습니다. 급식이 맛없다고 말해도, 화장실 문이 고장 났다고 말해도 "알았다"는 대답뿐 바뀌는 것이 없었습니다. 겨레의 말들은 늘 허공에서 흩어졌습니다.</p>
+        <p>그런데 신문은 다를 것 같았습니다. 말은 흩어지지만 글은 남으니까요. 게다가 신문은 반 아이들 모두가, 어쩌면 선생님들과 부모님들까지 읽게 될 것이었습니다. 겨레는 처음으로 자기 목소리에 확성기가 달린 기분이었습니다.</p>
+        <p>첫 편집 회의 날, 겨레는 공책 가득 기삿거리를 적어 갔습니다. 급식 문제, 고장 난 화장실 문, 운동장 사용 순서 다툼까지. 함께 기자가 된 친구들이 눈을 동그랗게 떴습니다.<br><br><span class="dialogue">"겨레야, 너 진짜 쓰고 싶은 게 많았구나."</span><br><br><span class="dialogue">"응! 이제 다 쓸 거야. 우리에겐 쓸 자유가 있으니까!"</span></p>
+        <p><span class="highlight">말은 흩어지지만 글은 남습니다.</span> 확성기를 손에 쥔 겨레의 첫 기사가, 이제 막 시작되려 하고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제08/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>기사 한 편의 힘</h2>
+        <p>우리 반 소식통 첫 호의 머리기사는 겨레가 쓴 '식어 버린 급식, 아이들의 마음도 식는다'였습니다. 겨레는 일주일 동안 급식 온도를 재고, 아이들의 이야기를 모으고, 영양사 선생님의 사정까지 취재해 꼼꼼히 담았습니다. 불평이 아니라 근거가 있는 기사였습니다.</p>
+        <p>신문이 나가자 놀라운 일이 벌어졌습니다. 교장 선생님이 기사를 읽고 급식실을 직접 살펴본 것입니다. 알고 보니 배식 순서 문제로 저학년 급식이 늘 식은 채 나가고 있었고, 학교는 곧바로 배식 방법을 바꾸었습니다. 따뜻해진 국을 받아 든 일 학년 동생들이 소식통 기자단에게 고맙다는 쪽지까지 보내왔습니다.</p>
+        <p>겨레는 하늘을 나는 기분이었습니다. 허공에 흩어지기만 하던 말이, 글이 되니 세상을 진짜로 바꾼 것입니다. 복도에서 만나는 아이들이 겨레를 알아보았습니다.<br><br><span class="dialogue">"네가 그 기사 쓴 겨레지? 우리 반도 취재해 줘!"</span></p>
+        <p>성 선생님도 흐뭇하게 웃었습니다.<br><br><span class="dialogue">"이게 바로 표현의 자유가 가진 힘이란다. 자유롭게 말하고 쓸 수 있어야, 불편한 것이 드러나고 세상이 나아지지. 그래서 이 자유는 아주 소중한 권리야."</span><br><br>겨레는 그 말을 가슴에 새겼습니다. 절반만요.</p>
+        <p>그날부터 겨레의 수첩은 특종 후보로 빼곡해졌습니다. 다음 호는 더 재미있게, 더 화제가 되게 쓰고 싶었습니다. 사람들이 더 많이 읽어 줄수록 확성기는 더 커질 테니까요. 겨레의 마음속에서 무언가가 조금씩 방향을 틀고 있었지만, 그때는 아무도 눈치채지 못했습니다.</p>
+        <p><span class="highlight">글의 힘을 맛본 겨레는 더 큰 화제를 원하게 되었습니다.</span> 자유라는 날개는 달았는데, 책임이라는 바닥은 아직 배우기 전이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제08/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>태어날 때부터 가진 것</h2>
+        <p>때마침 사회 시간의 주제는 시민의 권리였습니다. 성 선생님은 헌법 책을 들어 보이며 말했습니다.<br><br><span class="dialogue">"우리나라 헌법은 모든 국민이 태어날 때부터 가지는 권리를 보장한단다. 이것을 <span class="vocab-tip" data-meaning="헌법이 보장하는 국민의 기본적인 권리">기본권</span>이라고 해. 누가 상으로 주는 게 아니라, 태어나면서 이미 가지고 나오는 권리야."</span></p>
+        <p><span class="dialogue">"기본권에는 여러 가지가 있어. 국가의 간섭 없이 자유롭게 생활할 <span class="vocab-tip" data-meaning="국가의 간섭 없이 자유롭게 생활할 권리">자유권</span>, 차별 없이 동등하게 대우받을 <span class="vocab-tip" data-meaning="차별 없이 동등하게 대우받을 권리">평등권</span>, 교육받고 인간답게 살 권리인 <span class="vocab-tip" data-meaning="교육·노동 등 인간다운 생활을 보장받을 권리">사회권</span>도 있지."</span></p>
+        <p><span class="dialogue">"그리고 정치에 참여할 권리인 참정권, 권리를 침해당했을 때 나라에 도움을 청할 청구권까지. 겨레가 신문에 급식 기사를 쓴 것도 자유권 중에서 표현의 자유를 쓴 거란다."</span><br><br>겨레는 어깨가 으쓱했습니다. 자기가 한 일에 이렇게 어엿한 이름이 붙어 있었다니요. 헌법이라는 가장 높은 법이 자기 편이 되어 준 기분이었습니다.</p>
+        <p>수업이 끝나고 겨레는 공책 맨 앞장에 적었습니다. 나에게는 표현의 자유가 있다. 그 문장은 마치 기자증처럼 든든했습니다. 무엇을 쓰든, 어떤 기사든 이 권리가 방패처럼 지켜 줄 것만 같았습니다.</p>
+        <p>그런데 그날 선생님이 마지막에 덧붙인 말이 하나 있었습니다.<br><br><span class="dialogue">"다음 시간에는 이 권리들의 짝꿍을 배울 거야. 권리에게는 평생 떨어질 수 없는 짝꿍이 있거든."</span><br><br>겨레는 그 말을 흘려들었습니다. 머릿속은 이미 다음 특종 생각뿐이었기 때문입니다.</p>
+        <p><span class="highlight">태어날 때부터 가진 권리, 기본권.</span> 겨레는 동전의 앞면만 주머니에 넣은 채, 신나게 달리기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제08/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>특종을 향해</h2>
+        <p>둘째 호 마감이 다가오자 겨레는 조바심이 났습니다. 첫 호만큼, 아니 그보다 더 화제가 될 기사가 필요했습니다. 그때 겨레의 눈에 들어온 것이 지난주 체육대회의 한 장면이었습니다.</p>
+        <p>결승전 마지막 순간, 하진이가 다 잡은 공을 놓치는 바람에 반이 역전패를 당한 일이었습니다. 아이들 사이에서 두고두고 이야기되는 장면이었으니, 기사로 쓰면 모두가 읽을 것이 분명했습니다. 겨레는 제목부터 지었습니다. '다 이긴 경기를 놓친 그 손 — 하진의 결정적 실수 다시 보기'.</p>
+        <p>기사에는 그날의 장면이 우스꽝스러울 만큼 생생하게 묘사되었습니다. 공이 손에서 미끄러지는 순간, 하진이의 울상, 무너지는 아이들. 겨레는 재미를 위해 '나비처럼 날아온 공을 두부처럼 놓쳤다' 같은 표현까지 보탰습니다. 쓰면서 겨레는 낄낄 웃었습니다.</p>
+        <p>초고를 본 동료 기자 세아가 조심스럽게 말했습니다.<br><br><span class="dialogue">"겨레야, 이거... 하진이가 읽으면 속상하지 않을까? 실수는 사실이지만, 좀 심한 것 같아."</span><br><br><span class="dialogue">"사실을 쓰는 게 기자야. 그리고 우리한텐 표현의 자유가 있다고 배웠잖아."</span></p>
+        <p>겨레는 세아의 걱정을 자신감으로 눌러 버렸습니다. 급식 기사도 처음엔 다들 걱정했지만 결국 세상을 바꾸지 않았던가요. 겨레는 기사를 그대로 실었습니다. 인쇄된 신문이 반마다 돌기 시작했을 때, 겨레는 그것이 어떤 파도가 되어 돌아올지 조금도 알지 못했습니다.</p>
+        <p><span class="highlight">사실이니까, 자유니까 괜찮다고 겨레는 생각했습니다.</span> 동전의 뒷면을 보지 않은 채, 기사는 세상으로 나가 버렸습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제08/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>웃음소리와 눈물</h2>
+        <p>신문이 돌자마자 학교 곳곳에서 웃음이 터졌습니다. 그러나 그 웃음은 겨레가 상상한 것과 전혀 다른 색이었습니다. 아이들은 기사를 읽고 하진이를 향해 웃고 있었습니다. 복도에서 하진이가 지나가면 여기저기서 "두부손!"이라는 놀림이 화살처럼 날아들었습니다.</p>
+        <p>다른 반, 다른 학년 아이들까지 하진이의 실수를 알게 되었습니다. 얼굴도 모르는 아이들이 하진이를 손가락질하며 낄낄거렸습니다. 하진이는 점점 고개를 들지 못했고, 급식 시간에는 식판을 든 채 혼자 구석 자리로 향했습니다.</p>
+        <p>참다못한 하진이가 겨레를 찾아온 것은 신문이 나간 지 사흘째 되던 날이었습니다. 하진이의 눈은 빨갛게 부어 있었습니다.<br><br><span class="dialogue">"겨레야... 그 기사, 꼭 그렇게까지 써야 했어? 나 그날 밤에 한숨도 못 잤어. 지금은 학교 오는 게 무서워."</span></p>
+        <p>겨레는 당황해서 배운 대로 대답했습니다.<br><br><span class="dialogue">"나, 나는 사실을 쓴 것뿐이야. 그리고 기자한테는 표현의 자유가 있어."</span><br><br>하진이는 한참 겨레를 바라보다가, 조용히 말했습니다.<br><br><span class="dialogue">"그럼 나한테는... 아무 권리도 없는 거야?"</span></p>
+        <p>그 한마디가 겨레의 가슴에 화살처럼 박혔습니다. 하진이가 돌아간 뒤에도 겨레는 그 자리에 오래 서 있었습니다. 반 아이들의 눈길도 어느새 차가워져 있었습니다. 급식 기사 때의 영웅은 사흘 만에, 친구를 울린 기자가 되어 있었습니다.</p>
+        <p><span class="highlight">"그럼 나한테는 아무 권리도 없는 거야?"</span> 하진이의 그 물음에, 겨레의 든든하던 기자증이 처음으로 흔들렸습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제08/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>동전의 뒷면</h2>
+        <p>다음 사회 시간, 성 선생님은 약속했던 권리의 짝꿍 수업을 시작했습니다. 선생님은 동전 하나를 들어 보였습니다.<br><br><span class="dialogue">"권리와 책임은 이 동전의 양면과 같단다. 앞면만 있는 동전이 없듯이, 책임 없는 권리도 없어. 표현의 자유를 누리려면 다른 사람의 명예를 지켜 줄 책임이 함께 따라오지."</span></p>
+        <p><span class="dialogue">"헌법은 권리만 정해 놓지 않았어. 국민이 반드시 해야 할 <span class="vocab-tip" data-meaning="국민으로서 반드시 해야 하는 일">의무</span>도 함께 정해 두었단다. 법에 따라 세금을 내는 <span class="vocab-tip" data-meaning="법에 따라 세금을 내야 하는 의무">납세의 의무</span>, 나라를 지키는 국방의 의무, 자녀를 교육받게 할 교육의 의무, 능력에 따라 일할 근로의 의무. 이 네 가지를 4대 의무라고 해."</span></p>
+        <p><span class="dialogue">"우리가 공부하는 이 학교도, 지나온 도로도, 우리를 지키는 소방서도 모두 국민이 낸 세금으로 움직여. 누군가 의무를 다해 주기에, 누군가 권리를 누리는 거란다. 권리와 책임, 권리와 의무는 그렇게 서로를 떠받치고 있어."</span></p>
+        <p>겨레는 수업 내내 고개를 들 수 없었습니다. 선생님의 말이 전부 자기 이야기 같았기 때문입니다. 표현의 자유라는 앞면만 쥐고 신나게 달렸는데, 그 동전의 뒷면에는 하진이의 명예를 지킬 책임이 새겨져 있었던 것입니다.</p>
+        <p>수업이 끝나고 겨레는 처음으로 자기 기사를 하진이의 눈으로 다시 읽어 보았습니다. 나비처럼 날아온 공을 두부처럼 놓쳤다는 문장이, 이제는 웃기지 않았습니다. 그것은 기사가 아니라, 활자로 찍어 낸 놀림이었습니다.</p>
+        <p><span class="highlight">앞면만 있는 동전은 세상에 없었습니다.</span> 겨레는 자신이 쥐고 있던 동전을, 이제야 뒤집어 보게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제08/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>폐간 회의</h2>
+        <p>일은 신문 자체로 번졌습니다. 하진이의 부모님이 학교에 정식으로 문제를 제기한 것입니다. 교무실에서는 학급 신문을 계속 내도 되는지 회의가 열렸다고 했습니다. 어떤 선생님은 아이들 기사를 어른이 미리 검사하자고 했고, 어떤 선생님은 아예 신문을 없애자고 했다는 소문이 돌았습니다.</p>
+        <p>기자단 아이들의 얼굴이 어두워졌습니다.<br><br><span class="dialogue">"우리 신문, 없어지는 거야? 급식도 바꾼 신문인데..."</span><br><br>세아는 아무 말 없이 겨레를 바라보았습니다. 그 눈빛이 원망보다 아파서, 겨레는 차라리 혼나는 편이 나았겠다고 생각했습니다.</p>
+        <p>겨레는 성 선생님을 찾아가 고개를 숙였습니다.<br><br><span class="dialogue">"선생님, 다 제 잘못이에요. 벌은 제가 받을게요. 신문은... 신문은 없애지 말아 주세요."</span><br><br>선생님은 한참 겨레를 바라보다가 되물었습니다.<br><br><span class="dialogue">"겨레야, 신문이 왜 위기에 빠졌다고 생각하니? 자유가 많아서였을까?"</span></p>
+        <p>겨레는 대답하지 못했습니다. 선생님이 말을 이었습니다.<br><br><span class="dialogue">"자유가 많아서가 아니라, 책임이 모자라서란다. 그러니 답도 자유를 줄이는 게 아니라 책임을 채우는 데 있을 거야. 그런데 그건 선생님이 해 줄 수 없어. 기자단 스스로 해내야 하는 일이지."</span></p>
+        <p>그날 밤 겨레는 잠들지 못했습니다. 하진이에게 갚아야 할 것, 기자단에 갚아야 할 것, 신문에 갚아야 할 것. 자기가 어질러 놓은 것들이 산더미 같았습니다. 어디서부터 시작해야 할까. 겨레는 어둠 속에서 오래도록 생각했습니다.</p>
+        <p><span class="highlight">자유가 많아서가 아니라, 책임이 모자라서 생긴 위기였습니다.</span> 그렇다면 채워야 할 것도 분명해진 셈이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제08/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>진짜 기자의 무게</h2>
+        <p>주말, 겨레는 신문사에 다니는 삼촌을 찾아갔습니다. 진짜 기자에게 묻고 싶었습니다. 이야기를 다 들은 삼촌은 자기 책상 위의 낡은 액자 하나를 보여 주었습니다. 액자에는 이렇게 적혀 있었습니다. 펜은 칼보다 강하다.</p>
+        <p><span class="dialogue">"기자들이 좋아하는 말이지. 그런데 겨레야, 이 말의 진짜 뜻을 아니? 펜이 칼보다 강하다면, 펜은 칼보다 더 조심스럽게 다뤄야 한다는 뜻이야. 칼은 눈앞의 한 사람을 베지만, 글은 수백 명 앞에서 한 사람을 벨 수도 있거든."</span></p>
+        <p><span class="dialogue">"그래서 진짜 기자에게는 지켜야 할 것들이 있단다. 사실이라도 그것을 알릴 만한 가치가 있는지 따져 보기. 기사로 다치는 사람이 없는지 살피기. 그리고 틀렸거나 지나쳤을 때는 반드시 바로잡고 사과하기. 이걸 정정 보도라고 해. 자유를 지키는 건 바로 이 책임들이야."</span></p>
+        <p>겨레는 물었습니다. 급식 기사와 하진이 기사는 무엇이 달랐던 걸까요.<br><br><span class="dialogue">"급식 기사는 문제를 고치려고 썼고, 하진이 기사는 웃음거리를 만들려고 썼지. 같은 펜인데 하나는 세상을 고치는 도구였고, 하나는 친구를 찌르는 흉기가 된 거야. 펜의 방향을 정하는 건 언제나 쓰는 사람의 마음이란다."</span></p>
+        <p>돌아오는 길, 겨레는 해야 할 일들이 또렷해졌습니다. 하진이에게 진심으로 사과할 것. 정정 기사를 쓸 것. 그리고 기자단과 함께, 이런 일이 다시 없도록 스스로 지킬 약속을 만들 것. 겨레는 수첩을 꺼내 첫 줄을 적었습니다. 소식통 기자의 약속.</p>
+        <p><span class="highlight">펜이 칼보다 강하기에, 펜은 칼보다 무겁게 다뤄야 했습니다.</span> 자유의 날개 밑에 책임의 바닥을 까는 일이, 이제 시작되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제08/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>정정 보도와 약속문</h2>
+        <p>겨레는 먼저 하진이를 찾아갔습니다. 변명은 한마디도 하지 않았습니다.<br><br><span class="dialogue">"하진아, 미안해. 사실이니까 괜찮은 게 아니었어. 네 마음을 다치게 했으면 그건 이미 잘못된 기사야. 정정 기사를 쓰고 싶은데, 네 생각을 먼저 묻고 싶어."</span><br><br>하진이는 한참 만에 고개를 끄덕였습니다.</p>
+        <p>소식통 셋째 호 첫 면에는 정정 보도가 실렸습니다. 지난 기사가 친구의 명예를 다치게 했음을 인정하고 사과하는 글이었습니다. 그 옆에는 하진이의 동의를 받아 쓴 새 기사가 나란히 실렸습니다. 결승골을 놓친 그날, 사실 하진이가 경기 내내 두 골을 막아 낸 수비의 주역이었다는 이야기였습니다. 한 장면이 아니라 경기 전체를 담자, 전혀 다른 진실이 보였습니다.</p>
+        <p>기자단은 머리를 맞대고 '소식통 기자의 약속'을 만들었습니다. 하나, 고치기 위해 쓰고 웃음거리로 만들기 위해 쓰지 않는다. 둘, 기사에 나오는 사람의 마음을 먼저 생각한다. 셋, 틀리면 반드시 바로잡고 사과한다. 약속문은 신문 첫 면 귀퉁이에 매호 싣기로 했습니다.</p>
+        <p>기자단은 약속문을 들고 교무실을 찾아갔습니다. 검사도 폐간도 아닌, 스스로 책임지는 세 번째 길을 보여 드린 것입니다. 선생님들은 약속문을 돌려 읽고는 고개를 끄덕였습니다. 우리 반 소식통은 그렇게 검열 없이 살아남았습니다. 자유는 책임이 지켜 낸 것입니다.</p>
+        <p>며칠 뒤 복도에서 하진이가 겨레의 옆구리를 쿡 찌르며 말했습니다.<br><br><span class="dialogue">"다음 체육대회 기사는 네가 써 줘. 이번엔 내가 결승골 넣을 거니까, 아주 크게."</span><br><br>두 아이는 마주 보고 웃었습니다. 겨울이 지나간 자리처럼, 서먹함이 녹아내렸습니다.</p>
+        <p><span class="highlight">자유를 살린 것은 검열이 아니라, 스스로 세운 책임이었습니다.</span> 정정 보도 한 편이 신문도, 우정도 함께 살려 냈습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제08/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>양면을 가진 아이</h2>
+        <p>우리 반 소식통은 이제 열 번째 호를 준비하고 있습니다. 급식 기사 같은 날카로운 기사도, 전학 온 친구를 소개하는 따뜻한 기사도 실립니다. 달라진 것이 있다면, 기자단이 기사를 쓰기 전에 꼭 서로에게 묻는 습관입니다. 이 기사, 누군가를 다치게 하지는 않을까?</p>
+        <p>학기 말 발표 시간, 겨레는 이 모든 이야기를 반 아이들 앞에서 솔직하게 털어놓았습니다.<br><br><span class="dialogue">"저는 표현의 자유만 알고 그 뒷면을 몰랐습니다. 권리와 책임은 동전의 양면이라, 책임을 버리는 순간 권리도 함께 떨어뜨리게 됩니다. 하마터면 우리 신문이 그렇게 사라질 뻔했습니다."</span></p>
+        <p><span class="dialogue">"그리고 배웠습니다. 어른이 되어 투표할 권리, 곧 <span class="vocab-tip" data-meaning="선거와 투표 등 정치에 참여할 수 있는 권리">참정권</span>을 쓸 때도 후보를 꼼꼼히 살필 책임이 따르고, 억울할 때 나라에 도움을 청하는 <span class="vocab-tip" data-meaning="권리를 침해당했을 때 국가에 구제를 요청할 수 있는 권리">청구권</span>을 쓸 때도 정직하게 쓸 책임이 따른다는 것을요. 모든 권리에는 제 몫의 책임이 붙어 있습니다."</span></p>
+        <p>성 선생님이 마무리하며 말했습니다.<br><br><span class="dialogue">"성숙한 시민이란 자기 권리를 알고 당당히 주장하면서도, 그에 따르는 책임을 기꺼이 지는 사람이란다. 의견을 말하면서 친구의 말에도 귀 기울이는 것, 공공장소에서 규칙을 지키는 것. 그 작은 실천들이 너희를 시민으로 길러 주지."</span></p>
+        <p>겨레의 필통에는 요즘 동전 하나가 들어 있습니다. 기사를 쓰다 막힐 때마다 꺼내어 앞뒤로 뒤집어 보는, 겨레만의 부적입니다. 앞면을 보면 쓸 용기가 나고, 뒷면을 보면 지울 용기가 납니다. 겨레는 이제 두 용기를 모두 가진 기자입니다.</p>
+        <p><span class="highlight">권리를 알고 당당히 쓰되, 책임을 기꺼이 지는 것.</span> 열두 살 기자 겨레는 그렇게, 성숙한 시민으로 자라는 중입니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(150, 110, 60, 0.15); border-radius: 16px;">
+          <strong style="color: #966E3C; font-size: 20px;">📜 「권리와 책임은 동전의 양면이다. 한 면만 가진 동전은 세상에 없다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'politics08_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

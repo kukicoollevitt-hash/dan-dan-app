@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌍 아빠의 배는 지금 어디쯤 — 지구본을 돌리는 아이</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지리07/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌍 아빠의 배는 지금 어디쯤 — 지구본을 돌리는 아이</h1>
+        <p class="subtitle">
+          — 대륙과 해양, 그리고 위도와 경도로 읽는 지구 —<br>
+          교과기반 창작도서 · 지리 07
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 파랑:</strong> 원양 선원인 아빠의 항로를 지구본으로 좇으며 세계의 대륙과 해양을 익혀 가는 아이.</p>
+          <p><strong>★ 아빠:</strong> 여섯 달 동안 대양을 건너는 원양선의 선원. 편지로 바닷길과 지리의 원리를 들려준다.</p>
+          <p><strong>★ 핵심 개념:</strong> 6대륙과 5대양, 위도와 경도, 바다를 통한 교류, 지구본과 세계 지도.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리07/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>여섯 달의 항해</h2>
+        <p>파랑의 아빠는 커다란 배를 타고 먼바다를 오가는 원양 선원입니다. 한번 항해를 떠나면 여섯 달이 넘도록 집에 돌아오지 못합니다. 파랑은 아빠가 지금 지구 어디쯤을 지나고 있을지 늘 궁금했습니다.</p>
+        <p>어느 날 아빠는 파랑에게 커다란 지구본 하나를 선물로 보내 주었습니다. 그리고 항구에 닿을 때마다 자신이 지나온 바닷길을 편지로 적어 보내겠다고 약속했습니다. 파랑은 그 편지를 따라 지구본 위에 아빠의 항로를 그려 보기로 했습니다.</p>
+        <p>그러나 파랑은 지구본을 아무리 돌려 보아도 아빠의 배가 어디 있는지 도무지 짐작할 수 없었습니다. 넓고 푸른 바다는 어디가 어디인지 구별조차 되지 않았기 때문입니다. 세상이 이렇게 넓다는 것을 파랑은 처음으로 실감했습니다.</p>
+        <p>이야기의 첫머리에서 파랑이 느낀 막막함은, 지구라는 넓은 세계를 이해하기 위한 출발점이 됩니다. 대륙과 해양이 어떻게 나뉘고, 어떻게 위치를 나타내는지를 알지 못하면 지구는 그저 뒤죽박죽인 공에 지나지 않습니다. 파랑의 궁금증은 곧 지리를 배우고 싶다는 마음으로 이어집니다.</p>
+        <p>아빠의 배를 찾으려는 이 작은 소망이, 파랑을 대륙과 해양의 세계로 이끄는 열쇠가 됩니다. 우리 또한 파랑과 함께 지구본을 돌리며 세상의 짜임새를 하나씩 알아 가게 될 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리07/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>지구의 칠 할은 바다</h2>
+        <p>얼마 뒤 아빠의 첫 편지가 도착했습니다. 편지에는 지구 표면의 약 칠 할, 곧 열에 일곱은 바다이고 나머지 셋만이 육지라는 이야기가 적혀 있었습니다. 파랑은 지구본을 다시 보며, 정말로 푸른 바다가 대부분을 차지하고 있음을 확인했습니다.</p>
+        <p>그래서 지구를 멀리 우주에서 바라보면 온통 푸르게 보여 물의 행성이라 불린다고 아빠는 적었습니다. 육지는 그 넓은 바다 사이에 드문드문 떠 있는 셈이었습니다. 파랑은 자신이 사는 땅이 지구 전체로 보면 아주 작은 조각임을 깨달았습니다.</p>
+        <p>이 대목은 지구가 육지보다 바다가 훨씬 넓은 세계임을 알려 주는 사건의 시작입니다. 바다가 이렇게 넓기에, 먼 대륙과 대륙을 잇는 길 또한 바로 그 바다 위에 놓이게 됩니다. 아빠의 배가 여섯 달이나 항해하는 까닭도 여기에 있었습니다.</p>
+        <p>바다를 단순히 육지를 가로막는 장벽으로만 여기기 쉽지만, 실제로는 그렇지 않습니다. 오히려 넓은 바다는 서로 멀리 떨어진 세계를 하나로 이어 주는 거대한 길이 됩니다. 이 점이 앞으로 이야기가 밝혀 갈 중요한 주제입니다.</p>
+        <p>파랑은 지구본 위 푸른 부분을 손끝으로 쓸어 보며, 그 위 어딘가를 아빠의 배가 지나고 있으리라 상상했습니다. 넓은 바다가 조금씩 친근하게 느껴지기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리07/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>여섯 개의 땅, 다섯 개의 바다</h2>
+        <p>다음 편지에서 아빠는 지구의 육지가 크게 여섯 개의 대륙으로 나뉜다고 알려 주었습니다. 아시아, 아프리카, 유럽, 북아메리카, 남아메리카, 그리고 오세아니아가 바로 그것입니다. 파랑은 지구본에서 대륙 하나하나를 손가락으로 짚어 가며 이름을 외웠습니다.</p>
+        <p>가장 넓은 대륙은 우리가 사는 아시아이고, 사람이 거의 살지 않는 얼음의 대륙 남극도 있다고 아빠는 덧붙였습니다. 대륙마다 크기와 모양, 그리고 사는 사람들의 모습이 저마다 다르다는 것도 알게 되었습니다. 파랑은 세상이 이렇게 여러 땅으로 이루어져 있다는 사실이 신기했습니다.</p>
+        <p>바다 또한 크게 다섯 개의 대양으로 나뉜다고 아빠는 적었습니다. 가장 넓은 태평양을 비롯해 대서양, 인도양, 북극해, 남극해가 지구를 감싸고 있었습니다. 아빠의 배는 지금 그 가운데 가장 넓은 태평양을 건너는 중이라고 했습니다.</p>
+        <p>이 대목은 파랑이 대륙과 해양의 이름을 처음으로 익히는 만남의 단계입니다. 여섯 대륙과 다섯 대양이라는 큰 틀을 알게 되자, 막막하던 지구본이 조금씩 읽히기 시작했습니다. 이름을 안다는 것은 곧 그 세계와 친해지는 첫걸음입니다.</p>
+        <p>파랑은 아빠의 배가 지나는 태평양에 작은 표시를 해 두었습니다. 이제 지구본은 더 이상 낯선 공이 아니라, 아빠의 여정을 담은 지도가 되어 가고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리07/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>벽에 붙인 세계 지도</h2>
+        <p>파랑은 둥근 지구본만으로는 아빠의 긴 항로를 한눈에 보기 어렵다는 것을 느꼈습니다. 그래서 이번에는 평평한 세계 지도를 한 장 구해 방 벽에 붙였습니다. 지구본과 지도를 나란히 놓고 견주어 보기로 한 것입니다.</p>
+        <p>그런데 둥근 지구를 평평한 종이에 펼치다 보니, 지도에서는 대륙의 크기와 모양이 조금씩 달라져 있었습니다. 특히 북극과 남극에 가까운 땅일수록 실제보다 크게 부풀려져 보였습니다. 파랑은 둥근 지구를 평면에 옮기는 일이 그리 간단치 않음을 알게 되었습니다.</p>
+        <p>아빠는 편지에서, 그래서 지구본은 실제 모습에 가깝고 세계 지도는 넓은 지역을 한눈에 보기에 좋다고 설명해 주었습니다. 두 가지를 함께 쓰면 서로의 부족한 점을 채울 수 있다는 것이었습니다. 파랑은 상황에 따라 지구본과 지도를 알맞게 골라 써야 함을 배웠습니다.</p>
+        <p>이 대목은 지구를 나타내는 두 가지 도구의 차이를 시도해 보는 전개의 단계입니다. 어느 하나가 옳고 그른 것이 아니라, 쓰임새가 서로 다를 뿐임을 파랑은 깨달았습니다. 세상을 이해하는 데에는 여러 도구가 저마다 필요한 법입니다.</p>
+        <p>파랑은 벽에 붙인 지도 위에 아빠의 항로를 긴 선으로 이어 그리기 시작했습니다. 대륙에서 대륙으로 이어지는 그 선은, 바다가 곧 길임을 눈으로 보여 주고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리07/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>태풍이 오는 바다</h2>
+        <p>그러던 어느 날, 한동안 아빠의 편지가 오지 않았습니다. 파랑은 걱정스러운 마음에 날마다 우편함을 살폈습니다. 뒤늦게 도착한 편지에는 커다란 태풍을 만나 항로를 크게 돌아가야 했다는 소식이 담겨 있었습니다.</p>
+        <p>아빠는 바다가 늘 잔잔한 것만은 아니며, 때로는 무섭게 성을 내기도 한다고 적었습니다. 태풍이 몰아치면 배는 정해진 길을 벗어나 먼 길로 돌아가야 한다는 것이었습니다. 파랑은 바닷길이 결코 만만한 길이 아님을 실감했습니다.</p>
+        <p>이 대목은 바다가 사람에게 시련을 안기기도 하는 위기의 단계입니다. 넓은 바다는 세상을 이어 주는 길이지만, 동시에 사람의 힘으로는 어쩌지 못하는 거친 자연이기도 합니다. 파랑은 아빠가 그런 바다와 맞서고 있다는 사실에 가슴이 먹먹해졌습니다.</p>
+        <p>지구본을 돌리던 파랑은 문득 바다가 두려워지기 시작했습니다. 바다가 없었다면 아빠가 이런 위험을 겪지 않아도 될 텐데, 하는 원망마저 들었습니다. 넓은 바다가 이번에는 야속하게만 느껴졌습니다.</p>
+        <p>파랑은 지도 위 아빠의 항로에서 눈을 떼지 못한 채, 어서 이 위기가 지나가기만을 바랐습니다. 바다가 잇는 길이라는 아빠의 말이, 이 순간만큼은 잘 와닿지 않았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리07/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>왜 바다로 가야만 해</h2>
+        <p>파랑은 다음 편지에서 아빠에게 물었습니다. 위험한 바다 대신 다른 길로 갈 수는 없느냐고 말입니다. 대륙과 대륙 사이가 이렇게 먼데, 왜 꼭 바다를 건너야 하는지 이해가 되지 않았습니다.</p>
+        <p>아빠는 답장에서, 대륙과 대륙은 넓은 바다로 나뉘어 있어 육지로는 이어지지 않는 곳이 많다고 설명했습니다. 게다가 무거운 짐을 한꺼번에 실어 먼 나라까지 나르려면 배만 한 수단이 없다고도 했습니다. 우리가 쓰는 많은 물건이 바로 그 바닷길을 건너온 것이라는 이야기였습니다.</p>
+        <p>이 대목은 바다가 왜 중요한 길인지를 더 깊이 파고드는 위기의 심화 단계입니다. 두려운 바다이지만, 그 바다가 없었다면 멀리 떨어진 세계는 서로 만날 수조차 없었을 것입니다. 파랑은 원망하던 마음 한구석에서 새로운 생각이 싹트기 시작했습니다.</p>
+        <p>바다를 건너는 위험을 무릅쓰면서까지 사람들이 항해를 멈추지 않는 데에는 그만한 까닭이 있었습니다. 서로 다른 대륙의 사람들이 물건과 생각을 주고받으며 살아가기 위해서였습니다. 바다는 그 모든 만남이 오가는 통로였습니다.</p>
+        <p>파랑은 아직 두려움을 완전히 떨치지는 못했지만, 바다를 조금 다르게 바라보기 시작했습니다. 아빠가 왜 그토록 오래 바다 위에 머무는지를 어렴풋이 이해하게 된 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리07/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>닷새째의 지도</h2>
+        <p>태풍의 소식 뒤로 다시 며칠 동안 편지가 끊겼습니다. 파랑은 벽에 붙인 지도 앞에 앉아, 아빠의 항로가 끊긴 지점만 하염없이 바라보았습니다. 닷새째 되던 날에는 지도 위에 더 이상 선을 이을 수 없어 마음이 무너질 것 같았습니다.</p>
+        <p>파랑은 그동안 자신이 그려 온 항로를 처음부터 다시 짚어 보았습니다. 아빠는 그 수많은 위험한 바다를 건너면서도 늘 무사히 다음 항구에 닿아 편지를 보내 왔습니다. 그 사실이 파랑에게 작은 용기를 주었습니다.</p>
+        <p>이 대목은 파랑이 가장 큰 불안에 빠지는 절정의 바닥입니다. 그러나 바로 이 바닥에서 파랑은 그동안 배운 것을 곰곰이 되새기게 됩니다. 넓은 바다가 무섭기만 한 것이 아니라, 언제나 아빠를 다음 항구로 이어 주었다는 사실을 떠올린 것입니다.</p>
+        <p>파랑은 지도 위에 흩어진 항구들을 하나의 선으로 다시 이어 보았습니다. 끊긴 듯 보였던 길은 사실 잠시 쉬어 가는 지점일 뿐, 결국 어딘가로 이어지고 있었습니다. 바다는 끊긴 적이 없었던 것입니다.</p>
+        <p>불안 속에서도 파랑은 아빠의 다음 편지를 믿고 기다리기로 마음먹었습니다. 지도 위의 빈 곳은 아직 이어지지 않은 길일 뿐임을, 파랑은 스스로에게 되뇌었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리07/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>바다는 길이었다</h2>
+        <p>마침내 파랑의 기다림에 답하듯, 아빠의 편지가 다시 도착했습니다. 태풍을 무사히 지나 먼 대륙의 항구에 안전하게 닿았다는 반가운 소식이었습니다. 파랑은 편지를 손에 쥔 채 한참 동안 기쁨의 눈물을 흘렸습니다.</p>
+        <p>편지에는 이런 말이 적혀 있었습니다. 바다는 대륙을 갈라놓는 벽이 아니라, 오히려 세상을 하나로 잇는 길이라는 것이었습니다. 파랑은 그동안 자신이 그려 온 항로를 보며, 그 말의 뜻을 비로소 온전히 깨달았습니다.</p>
+        <p>이 대목은 이야기의 정신적 절정, 곧 파랑의 각성입니다. 두려움의 대상이던 바다가 사실은 아빠를 세상 곳곳으로 데려다주는 넓은 길이었음을 깨달은 것입니다. 대륙과 대륙, 사람과 사람을 잇는 것은 다름 아닌 그 푸른 바다였습니다.</p>
+        <p>파랑은 지구본을 다시 천천히 돌려 보았습니다. 이제 그 푸른 바다는 막막한 빈 공간이 아니라, 온 세상을 연결하는 촘촘한 길들의 그물처럼 보였습니다. 세상을 바라보는 파랑의 눈이 한 뼘 자란 순간이었습니다.</p>
+        <p>바다를 길로 바라보게 되자, 지구본 위 모든 대륙이 서로 이어진 하나의 세계로 다가왔습니다. 파랑은 지리가 곧 세상이 어떻게 연결되어 있는지를 읽는 공부임을 어렴풋이 느꼈습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리07/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>교실로 온 다섯 바다</h2>
+        <p>파랑은 자신이 배운 것을 혼자만 알고 있기가 아까웠습니다. 그래서 학교에서 아빠의 항해 이야기를 친구들에게 들려주기로 했습니다. 커다란 세계 지도를 펼쳐 놓고, 여섯 대륙과 다섯 대양의 이름을 하나하나 짚어 가며 설명했습니다.</p>
+        <p>친구들은 파랑의 이야기에 눈을 반짝였습니다. 아빠의 배가 태평양을 건너고 태풍을 넘어 먼 항구에 닿기까지의 여정은, 지루한 지리 시간을 살아 있는 모험담으로 바꾸어 놓았습니다. 지도 위의 바다가 친구들에게도 하나의 길로 보이기 시작했습니다.</p>
+        <p>이 대목은 파랑이 배운 것을 남과 나누며 한 단계 더 나아가는 결말의 돌파입니다. 앎이란 혼자 쌓아 두는 것이 아니라 함께 나눌 때 더욱 빛나는 법입니다. 파랑의 이야기는 교실 전체를 넓은 바다로 데려갔습니다.</p>
+        <p>친구들은 저마다 가 보고 싶은 대륙과 건너 보고 싶은 바다를 이야기했습니다. 지도 한 장이 여러 아이의 마음속에 세계를 향한 꿈을 심어 준 것입니다. 지리 공부가 이렇게 설레는 일이 될 수 있음을 모두가 느꼈습니다.</p>
+        <p>파랑은 아빠에게 이 이야기를 편지로 적어 보냈습니다. 아빠가 건너온 바닷길이 이제 교실의 친구들에게까지 이어졌다는 소식이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리07/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>돌아온 파랑호</h2>
+        <p>여섯 달이 지나, 마침내 아빠가 긴 항해를 마치고 집으로 돌아왔습니다. 파랑은 그동안 지도 위에 그려 온 아빠의 항로를 자랑스럽게 펼쳐 보였습니다. 여섯 대륙과 다섯 대양을 가로지른 그 긴 선은, 파랑이 여름내 쌓아 온 배움의 기록이었습니다.</p>
+        <p>아빠는 파랑이 그린 항로를 보며 크게 감탄했습니다. 그리고 파랑이 이제 지구를 읽을 줄 아는 어엿한 항해사가 되었다며 대견해했습니다. 넓은 세상을 향한 파랑의 눈은 그 여름을 지나며 부쩍 자라 있었습니다.</p>
+        <p>이 이야기가 우리에게 남기는 것은 분명합니다. 대륙과 해양이 어떻게 나뉘어 있고 서로 어떻게 이어지는지를 아는 것이, 세상을 이해하는 첫걸음이라는 사실입니다. 그리고 바다는 세상을 가르는 벽이 아니라 잇는 길이라는 깨달음입니다.</p>
+        <p>파랑은 앞으로도 지구본을 돌리며 세상의 곳곳을 마음에 담기로 했습니다. 넓은 바다 너머에도 사람들이 살아가고 있고, 그 모두가 하나의 지구 위에서 이어져 있다는 것을 파랑은 잊지 않을 것입니다.</p>
+        <p><span class="highlight">바다는 대륙을 가르는 벽이 아니라, 세상을 하나로 잇는 길입니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'geo07_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

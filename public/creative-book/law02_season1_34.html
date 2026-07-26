@@ -1,647 +1,700 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>⚖️ 열 개의 문을 여는 아이들</title>
- <style>
- * {
- margin: 0;
- padding: 0;
- box-sizing: border-box;
- }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚖️ 열 개의 문을 여는 아이들</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
- body {
- font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
- overflow-x: hidden;
- background: #1a1a1a;
- }
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
 
- /* 고정 지도 캔버스 */
- #map-container {
- position: fixed;
- top: 0;
- left: 0;
- width: 100%;
- height: 100vh;
- background: url('/images/창작도서/창작법02/00.jpg');
- background-size: cover;
- background-position: center;
- background-repeat: no-repeat;
- transition: background-image 1s ease-in-out;
- z-index: 1;
- }
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작법02/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
 
- #map-canvas {
- display: none;
- }
+    #map-canvas {
+      display: none;
+    }
 
- /* 스크롤 가능한 콘텐츠 */
- #content {
- position: relative;
- z-index: 2;
- pointer-events: none;
- }
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
 
- .story-section {
- min-height: 100vh;
- display: flex;
- align-items: center;
- justify-content: flex-start;
- padding: 60px 120px;
- pointer-events: none;
- }
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
 
- /* 홀수 섹션은 왼쪽 */
- .story-section:nth-child(odd) {
- justify-content: flex-start;
- }
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
 
- /* 짝수 섹션은 오른쪽 */
- .story-section:nth-child(even) {
- justify-content: flex-end;
- }
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
 
- .story-card {
- background: rgba(255, 255, 255, 0.85);
- backdrop-filter: blur(15px);
- padding: 40px;
- border-radius: 24px;
- max-width: 600px;
- box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
- transform: translateX(100px);
- opacity: 0;
- transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
- pointer-events: auto;
- }
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
 
- /* 왼쪽에서 나오는 카드 */
- .story-section:nth-child(odd) .story-card {
- transform: translateX(-100px);
- }
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
 
- /* 오른쪽에서 나오는 카드 */
- .story-section:nth-child(even) .story-card {
- transform: translateX(100px);
- }
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
 
- .story-card.active {
- transform: translateX(0);
- opacity: 1;
- }
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
 
- .story-card .chapter {
- display: inline-block;
- padding: 8px 20px;
- background: linear-gradient(135deg, #7E57C2 0%, #5E35B1 100%);
- color: white;
- border-radius: 20px;
- font-size: 14px;
- font-weight: 600;
- margin-bottom: 15px;
- box-shadow: 0 4px 15px rgba(126, 87, 194, 0.3);
- }
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #7E57C2 0%, #5E35B1 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(126, 87, 194, 0.3);
+    }
 
- .story-card .theme {
- display: inline-block;
- padding: 4px 12px;
- background: rgba(126, 87, 194, 0.15);
- color: #5E35B1;
- border-radius: 12px;
- font-size: 12px;
- font-weight: 600;
- margin-left: 8px;
- }
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(126, 87, 194, 0.15);
+      color: #5E35B1;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
 
- .story-card h2 {
- font-size: 26px;
- color: #2c3e50;
- margin-bottom: 20px;
- line-height: 1.4;
- }
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
 
- .story-card p {
- font-size: 15px;
- line-height: 1.9;
- color: #34495e;
- margin-bottom: 14px;
- text-align: justify;
- }
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
 
- .story-card p:last-child {
- margin-bottom: 0;
- }
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
 
- .story-card .highlight {
- color: #7E57C2;
- font-weight: 600;
- }
+    .story-card .highlight {
+      color: #7E57C2;
+      font-weight: 600;
+    }
 
- .story-card .dialogue {
- color: #5E35B1;
- font-weight: 600;
- }
+    .story-card .dialogue {
+      color: #5E35B1;
+      font-weight: 600;
+    }
 
- .vocab-tip {
- position: relative;
- color: #7E57C2;
- border-bottom: 1px dotted #7E57C2;
- cursor: help;
- font-weight: 600;
- }
- .vocab-tip::after {
- content: attr(data-meaning);
- position: absolute;
- bottom: 100%;
- left: 50%;
- transform: translateX(-50%);
- background: #333;
- color: #fff;
- padding: 8px 12px;
- border-radius: 8px;
- font-size: 13px;
- white-space: nowrap;
- opacity: 0;
- pointer-events: none;
- transition: opacity 0.2s;
- z-index: 100;
- }
- .vocab-tip:hover::after {
- opacity: 1;
- }
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
 
- /* 인트로 섹션 */
- .intro-section {
- min-height: 100vh;
- display: flex;
- flex-direction: column;
- align-items: center;
- justify-content: center;
- text-align: center;
- padding: 60px;
- }
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
 
- .intro-content {
- background: rgba(0, 0, 0, 0.5);
- backdrop-filter: blur(10px);
- padding: 60px 80px;
- border-radius: 30px;
- max-width: 850px;
- animation: fadeInUp 1s ease-out;
- }
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
 
- .intro-content h1 {
- font-size: 44px;
- font-weight: 700;
- color: #ffffff;
- margin-bottom: 20px;
- text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
- }
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
 
- .intro-content .subtitle {
- font-size: 20px;
- line-height: 1.8;
- color: #e0e0e0;
- margin-bottom: 30px;
- font-weight: 400;
- }
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
 
- .intro-content .characters {
- text-align: left;
- background: rgba(255, 255, 255, 0.1);
- padding: 25px;
- border-radius: 16px;
- margin-bottom: 30px;
- }
+    .intro-content .characters h3 {
+      color: #D1C4E9;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
 
- .intro-content .characters h3 {
- color: #D1C4E9;
- font-size: 16px;
- margin-bottom: 15px;
- }
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
 
- .intro-content .characters p {
- color: #d0d0d0;
- font-size: 14px;
- line-height: 1.7;
- margin-bottom: 8px;
- }
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(126, 87, 194, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
 
- .intro-content .conflict {
- text-align: left;
- background: rgba(126, 87, 194, 0.2);
- padding: 25px;
- border-radius: 16px;
- margin-bottom: 30px;
- }
+    .intro-content .conflict h3 {
+      color: #D1C4E9;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
 
- .intro-content .conflict h3 {
- color: #D1C4E9;
- font-size: 16px;
- margin-bottom: 15px;
- }
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
 
- .intro-content .conflict p {
- color: #d0d0d0;
- font-size: 14px;
- line-height: 1.7;
- margin-bottom: 8px;
- }
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
 
- .intro-content .scroll-hint {
- font-size: 16px;
- color: #ffffff;
- font-weight: 600;
- animation: pulse 2s infinite;
- text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
- }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
- @keyframes fadeInUp {
- from {
- opacity: 0;
- transform: translateY(30px);
- }
- to {
- opacity: 1;
- transform: translateY(0);
- }
- }
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
 
- @keyframes pulse {
- 0%, 100% {
- opacity: 1;
- }
- 50% {
- opacity: 0.5;
- }
- }
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
 
- /* 스크롤 인디케이터 */
- .scroll-indicator {
- position: fixed;
- bottom: 40px;
- left: 50%;
- transform: translateX(-50%);
- z-index: 1000;
- animation: bounce 2s infinite;
- pointer-events: none;
- }
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
 
- .scroll-indicator svg {
- width: 40px;
- height: 40px;
- opacity: 0.7;
- }
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
 
- @keyframes bounce {
- 0%, 20%, 50%, 80%, 100% {
- transform: translateX(-50%) translateY(0);
- }
- 40% {
- transform: translateX(-50%) translateY(-20px);
- }
- 60% {
- transform: translateX(-50%) translateY(-10px);
- }
- }
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
 
- /* 반응형 디자인 */
- @media (max-width: 768px) {
- .story-section {
- padding: 40px 20px;
- }
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
 
- .story-card {
- max-width: 100%;
- padding: 30px;
- }
+      .story-card h2 {
+        font-size: 22px;
+      }
 
- .story-card h2 {
- font-size: 22px;
- }
+      .story-card p {
+        font-size: 14px;
+      }
 
- .story-card p {
- font-size: 14px;
- }
+      .intro-content {
+        padding: 40px 30px;
+      }
 
- .intro-content {
- padding: 40px 30px;
- }
+      .intro-content h1 {
+        font-size: 28px;
+      }
 
- .intro-content h1 {
- font-size: 28px;
- }
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
 
- .intro-content .subtitle {
- font-size: 15px;
- }
- }
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
 
- /* 네비게이션 버튼 */
- .nav-buttons {
- position: fixed;
- bottom: 40px;
- left: 50%; transform: translateX(-50%);
- z-index: 1000;
- display: flex;
- gap: 15px;
- pointer-events: auto;
- }
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(126, 87, 194, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(126, 87, 194, 0.3);
+    }
 
- .nav-btn {
- padding: 15px 30px;
- background: rgba(126, 87, 194, 0.9);
- backdrop-filter: blur(10px);
- color: white;
- border: none;
- border-radius: 12px;
- font-size: 16px;
- font-weight: 600;
- cursor: pointer;
- transition: all 0.3s ease;
- box-shadow: 0 4px 15px rgba(126, 87, 194, 0.3);
- }
+    .nav-btn:hover {
+      background: rgba(94, 53, 177, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(126, 87, 194, 0.4);
+    }
 
- .nav-btn:hover {
- background: rgba(94, 53, 177, 0.9);
- transform: translateY(-2px);
- box-shadow: 0 6px 20px rgba(126, 87, 194, 0.4);
- }
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
 
- @media (max-width: 768px) {
- .nav-buttons {
- bottom: 20px;
- right: 20px;
- flex-direction: column;
- }
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
 
- .nav-btn {
- padding: 12px 24px;
- font-size: 14px;
- }
- }
- </style>
+  </style>
 </head>
 <body>
- <!-- 고정된 배경 컨테이너 -->
- <div id="map-container">
- <canvas id="map-canvas"></canvas>
- </div>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
 
- <!-- 스크롤 가능한 스토리 콘텐츠 -->
- <div id="content">
- <!-- 인트로 -->
- <section class="intro-section">
- <div class="intro-content">
- <h1>⚖️ 열 개의 문을 여는 아이들</h1>
- <p class="subtitle">
- 차별의 벽을 허문 긴 싸움의 동화<br>
- — 평등의 나라를 찾아 떠난 리나와 친구들의 대모험 —<br>
- 교과기반 창작도서 · 창작법 02 · 초3-4
- </p>
- <div class="characters">
- <h3>🎭 등장인물 소개</h3>
- <p><strong>🌸 리나:</strong> 낮은 신분의 가난한 소녀. 불공평한 세상에 의문을 품고, 평등의 나라를 찾아 모험을 떠나는 용감한 주인공.</p>
- <p><strong>🧒 하늘 할아버지:</strong> 시간의 도서관을 지키는 신비로운 현자. 리나에게 <span class="vocab-tip" data-meaning="옛날부터 지금까지 이어온 일">역사</span>의 문을 열어주며 교훈을 전하는 안내자.</p>
- <p><strong>🤴 에밀:</strong> 귀족의 아들이지만 신분 차별이 잘못되었다고 느끼는 소년. 리나와 함께 평등의 <span class="vocab-tip" data-meaning="뜻">의미</span>를 깨달아 가는 인물.</p>
- <p><strong>🗡️ 철벽 대신:</strong> 차별과 불평등을 유지하려는 강력한 적. '<span class="vocab-tip" data-meaning="차례와 규칙">질서</span>'라는 이름으로 약한 사람을 억누르는 나쁜 어른.</p>
- <p><strong>🎵 소리:</strong> 다리가 불편하지만 아름다운 노래를 가진 소녀. 장애가 있어도 똑같이 존중받아야 한다고 외치는 <span class="vocab-tip" data-meaning="두려움을 이기는 마음">용기</span> 있는 친구.</p>
- <p><strong>🔥 마리:</strong> 여성의 투표권을 위해 싸우는 열정적인 여전사. '여자도 사람이다'라는 외침으로 세상을 바꾸려는 용감한 여성.</p>
- </div>
- <div class="conflict">
- <h3>⚔️ <span class="vocab-tip" data-meaning="서로 다투는 상태">갈등</span> <span class="vocab-tip" data-meaning="부분들이 짜여진 모습">구조</span></h3>
- <p>🔸 리나 vs 신분제 <span class="vocab-tip" data-meaning="사람들이 모여 사는 집단">사회</span>: 태어나면서 정해진 신분에 맞서는 소녀의 갈등</p>
- <p>🔸 시민 vs 철벽 대신: 평범한 사람들과 혼자 모든 힘을 가지려는 자의 싸움</p>
- <p>🔸 말로만 하는 평등 vs 진짜 평등: 법이 있어도 현실이 다른 <span class="vocab-tip" data-meaning="풀어야 할 어려운 일">문제</span></p>
- <p>🔸 편견 vs 이해: 잘못된 생각을 바꾸는 것이 가장 어려운 싸움</p>
- </div>
- <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
- </div>
- </section>
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⚖️ 열 개의 문을 여는 아이들</h1>
+        <p class="subtitle">
+          차별의 벽을 허문 긴 싸움의 동화<br>
+          — <span class="vocab-tip" data-meaning="차별 없이 같게 대우받는 것">평등</span>의 나라를 찾아 떠난 리나와 친구들의 대모험 —<br>
+          교과기반 창작도서 · 창작법 02 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>🌸 리나:</strong> 낮은 신분의 가난한 소녀예요. 불공평한 세상에 의문을 품고 모험을 떠나요.</p>
+          <p><strong>🧒 하늘 할아버지:</strong> 시간의 도서관을 지키는 신비로운 할아버지예요. 리나에게 역사의 문을 열어주지요.</p>
+          <p><strong>🤴 에밀:</strong> 귀족의 아들이지만 신분 차별이 이상하다고 생각하는 소년이에요.</p>
+          <p><strong>🗡️ 철벽 대신:</strong> 차별을 지키려는 나쁜 신하예요. '질서'라는 이름으로 약한 사람들을 억눌러요.</p>
+          <p><strong>🎵 소리:</strong> 다리가 불편하지만 아름다운 노래를 가진 소녀예요. 용기 있게 목소리를 높이지요.</p>
+          <p><strong>🔥 마리:</strong> 여성도 투표할 수 있어야 한다고 외치는 용감한 아주머니예요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p>🔸 리나 vs 신분제 사회: 태어날 때 정해진 운명에 맞서요</p>
+          <p>🔸 시민 vs 철벽 대신: 평등을 원하는 사람들과 차별을 지키려는 세력이 부딪혀요</p>
+          <p>🔸 편견 vs 이해: 마음속 보이지 않는 벽을 허무는 것이 가장 어려운 싸움이에요</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
 
- <!-- 제1장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법02/01.jpg">
- <div class="story-card">
- <span class="chapter">제1장</span>
- <span class="theme">🏰 <span class="vocab-tip" data-meaning="원래 이름은 '신분제'. 태어날 때부터 정해진 높고 낮은 계급 제도">'계급 나누기 제도'</span> 사회</span>
- <h2>높은 벽 안의 세상</h2>
- <p><strong>【중심 문장】</strong> 태어나면서 정해진 <span class="vocab-tip" data-meaning="사회에서의 지위나 계급">신분</span>이 삶을 결정하는 세계, 리나는 그 <span class="vocab-tip" data-meaning="도리에 어긋나고 옳지 않음">부당함</span>에 눈을 뜬다.</p>
- <p>'벽의 나라'에는 사람들을 왕족, 귀족, 평민, <span class="vocab-tip" data-meaning="옛날에 가장 낮은 신분의 사람">천민</span>으로 나누는 벽이 있었습니다. 신분은 태어날 때 정해지고 바꿀 수 없었습니다.</p>
- <p>리나는 가난한 집안의 열두 살 소녀였습니다.</p>
- <p>귀족 아이 에밀이 마차를 타고 학교에 갈 때, 리나는 생각했습니다.<br><br><span class="dialogue">"왜 나는 이렇게 살아야 하지?"</span></p>
- <p>어느 밤, 리나는 빛나는 문을 발견했습니다. <span class="highlight">그것은 '시간의 도서관'으로 통하는 문이었습니다.</span></p>
- </div>
- </section>
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법02/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">🏰 신분제 사회</span>
+        <h2>높은 벽 안의 세상 — 신분이 모든 것을 결정하던 시대</h2>
+        <p><strong>【중심 문장】</strong> 태어날 때 정해진 신분이 모든 것을 결정하던 시대였어요.</p>
+        <p>아주 먼 옛날, '벽의 나라'라는 왕국이 있었어요.<br>
+이 나라에는 보이지 않는 거대한 벽이 있었지요.<br>
+그 벽은 사람들을 왕족, 귀족, 평민,<br>
+그리고 가장 아래인 <span class="vocab-tip" data-meaning="옛날에 가장 낮은 신분으로 여겨졌던 사람">천민</span>으로 나누었어요.<br>
+리나는 벽의 가장 아래쪽 골목에서 태어난 열두 살 소녀였지요.</p>
+        <p>아버지는 새벽부터 밤까지 귀족의 밭에서 일했어요.<br>
+하지만 돌아오는 것은 겨우 한 줌의 곡식뿐이었지요.<br>
+리나는 이해할 수 없었어요.<br>
+왜 어떤 아이는 학교에 가고, 어떤 아이는 못 가는 걸까요?<br>
+귀족의 아이 에밀은 마차를 타고 학교에 갔지요.</p>
+        <p><span class="dialogue">"왜 나는 태어날 때부터 이렇게 살아야 하는 걸까?"</span><br><br>리나는 매일 밤 별을 보며 중얼거렸어요.<br>
+어른들은 "원래 그런 거야"라며 고개를 저었지요.<br>
+하지만 리나의 가슴속 불씨는 꺼지지 않았어요.<br>
+어느 보름달 밤, 리나는 뒷산 떡갈나무 아래에서<br>
+신비한 빛을 발견했지요.<br>
+<span class="highlight">그것은 '시간의 도서관'으로 통하는 문이었고, 리나의 긴 모험이 시작되었어요.</span></p>
+      </div>
+    </section>
 
- <!-- 제2장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법02/02.jpg">
- <div class="story-card">
- <span class="chapter">제2장</span>
- <span class="theme">😢 <span class="vocab-tip" data-meaning="특정 조건을 이유로 불공평하게 대우하는 것">차별</span>의 상처</span>
- <h2>차별이 만든 상처들</h2>
- <p><strong>【중심 문장】</strong> 시간의 도서관에서 리나는 역사 속 차별의 현실을 <span class="vocab-tip" data-meaning="직접 눈으로 보다">목격</span>하며 분노한다.</p>
- <p>도서관에서 하늘 할아버지가 나타났습니다.<br><br><span class="dialogue">"이곳은 인류의 역사가 담긴 시간의 도서관이란다."</span></p>
- <p>리나가 책을 펼치자, 책 속 세계로 들어갔습니다. 피부색이 다르다는 <span class="vocab-tip" data-meaning="그렇게 된 까닭">이유</span>로 식당에 못 들어가는 사람, 장애가 있어서 쫓겨나는 아이를 보았습니다.<br><br><span class="dialogue">"너무 잔인해요."</span></p>
- <p>하늘 할아버지가 말했습니다.<br><br><span class="dialogue">"이 눈물이 세상을 바꾸는 힘의 시작이란다."</span></p>
- <p><span class="highlight">차별이란 한 사람의 꿈을 빼앗고 소중함을 부정하는 것이었습니다.</span></p>
- </div>
- </section>
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법02/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">😢 차별의 상처</span>
+        <h2>보이지 않는 사슬 — 차별이 만든 상처들</h2>
+        <p><strong>【중심 문장】</strong> 리나는 시간의 도서관에서 차별의 아픈 현실을 보았어요.</p>
+        <p>빛나는 문을 열고 들어가자 거대한 도서관이 나타났어요.<br>
+수만 권의 책들이 천장까지 쌓여 있었지요.<br>
+그때 은빛 수염의 노인이 나타났어요.<br><br><span class="dialogue">"나는 하늘 할아버지란다. 이곳은 모든 역사가 담긴 시간의 도서관이지. 이 책을 펼치면 네가 알고 싶었던 진실을 보게 될 거야."</span></p>
+        <p>책을 펼치자 리나는 책 속 세계로 빨려 들어갔어요.<br>
+피부색이 다르다는 이유로<br>
+식당에 들어가지 못하는 사람들을 보았지요.<br>
+여자라는 이유로 의견을 말할 수 없는 어머니들,<br>
+<span class="vocab-tip" data-meaning="몸이나 마음이 불편한 것">장애</span>가 있다고 학교에서 쫓겨나는 아이도 보았어요.<br><br><span class="dialogue">"이건... 너무 잔인해요."</span><br><br>리나의 눈에서 뜨거운 눈물이 흘러내렸어요.</p>
+        <p>할아버지가 리나의 어깨를 다독였어요.<br><br><span class="dialogue">"슬프지? 하지만 이 눈물을 기억하거라. 이 눈물이 세상을 바꾸는 힘의 시작이란다."</span><br><br><span class="highlight">차별이란 한 사람의 꿈을 빼앗고 마음에 깊은 상처를 내는 것이었어요.</span><br><br>리나는 맞서 싸우겠다고 결심했지요.</p>
+      </div>
+    </section>
 
- <!-- 제3장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법02/03.jpg">
- <div class="story-card">
- <span class="chapter">제3장</span>
- <span class="theme">💡 <span class="vocab-tip" data-meaning="모두가 똑같이 대우받아야 한다는 생각">평등 사상</span></span>
- <h2>모든 인간은 <span class="vocab-tip" data-meaning="차이나 차별 없이 똑같음">평등</span>하다</h2>
- <p><strong>【중심 문장】</strong> 리나는 '평등'이라는 <span class="vocab-tip" data-meaning="어떤 것에 대한 생각이나 뜻">개념</span>이 세상에 퍼져나간 <span class="vocab-tip" data-meaning="아주 짧은 시간">순간</span>을 경험한다.</p>
- <p>강당에서 학자가 외쳤습니다.<br><br><span class="dialogue">"모든 인간은 자유롭고 평등합니다!"</span><br><br>리나의 심장이 두근거렸습니다.</p>
- <p>하늘 할아버지가 말했습니다.<br><br><span class="dialogue">"저 사람들은 평등의 생각을 퍼뜨린 학자들이란다."</span></p>
- <p>학자의 말은 책이 되어 퍼졌습니다. <span class="highlight">평등의 생각이 온 세상에 퍼졌습니다.</span></p>
- </div>
- </section>
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법02/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">💡 평등 사상</span>
+        <h2>깨어나는 생각 — 모든 인간은 평등하다는 외침</h2>
+        <p><strong>【중심 문장】</strong> 모든 사람은 평등하다는 생각이 세상에 퍼지기 시작했어요.</p>
+        <p>두 번째 문을 열자, 리나는 수백 년 전<br>
+어느 대학 강당에 서 있었어요.<br>
+단상 위에서 한 남자가 외치고 있었지요.<br><br><span class="dialogue">"모든 인간은 태어나면서부터 자유롭고 평등합니다! 왕이든 농부든, 모든 사람은 같은 권리를 가져야 합니다!"</span><br><br>리나의 심장이 두근거렸어요.<br>
+그토록 듣고 싶었던 말이었기 때문이지요.</p>
+        <p>하늘 할아버지가 속삭였어요.<br><br><span class="dialogue">"저 사람은 <span class="vocab-tip" data-meaning="낡은 생각을 깨고 새로운 지식을 알리려 한 사람">계몽사상가</span>란다. '모든 인간은 똑같다'는 새로운 생각을 처음 퍼뜨린 사람이지."</span><br><br>강당 밖에서는 철벽 대신의 부하들이 소리쳤어요.<br><br><span class="dialogue">"저런 위험한 생각을 퍼뜨리는 자를 잡아라!"</span><br><br>차별로 이득을 보는 자들은 평등이라는 말을 두려워했지요.</p>
+        <p>하지만 생각의 씨앗은 한번 뿌려지면 거둘 수 없어요.<br>
+학자의 말은 책이 되고,<br>
+책은 사람들의 손에서 손으로 전해졌지요.<br><br><span class="dialogue">"생각은 감옥에 가둘 수 없단다, 리나."</span><br><br><span class="highlight">리나의 마음속에도 평등의 씨앗이 단단히 뿌리를 내리고 있었어요.</span></p>
+      </div>
+    </section>
 
- <!-- 제4장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법02/04.jpg">
- <div class="story-card">
- <span class="chapter">제4장</span>
- <span class="theme">🔥 <span class="vocab-tip" data-meaning="원래 이름은 '시민 혁명'. 시민들이 정치를 바꾸기 위해 일으킨 큰 변화">'시민들의 큰 변화'</span></span>
- <h2>시민 혁명의 함성</h2>
- <p><strong>【중심 문장】</strong> 평등 사상이 <span class="vocab-tip" data-meaning="사회를 크게 바꾸는 움직임">혁명</span>으로 폭발하고, 리나는 시민들의 <span class="vocab-tip" data-meaning="권리를 얻기 위해 싸우는 것">투쟁</span> 속에 서게 된다.</p>
- <p>광장에서 사람들이 외쳤습니다.<br><br><span class="dialogue">"<span class="vocab-tip" data-meaning="스스로 할 수 있는 것">자유</span>! 평등! 우애!"</span><br><br>평민들이 들고 일어선 것입니다.</p>
- <p>귀족의 아들 에밀이 시민들 편에 섰습니다.<br><br><span class="dialogue">"이건 옳지 않아."</span></p>
- <p>"모든 인간은 평등하다"는 선언이 발표되었습니다. <span class="highlight">"이것은 시작일 뿐이란다."</span></p>
- </div>
- </section>
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법02/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">🔥 시민 혁명</span>
+        <h2>거리로 쏟아진 분노 — 시민 혁명의 함성</h2>
+        <p><strong>【중심 문장】</strong> 평등을 원하는 사람들이 마침내 들고 일어났어요.</p>
+        <p>세 번째 문 너머에는 함성이 가득한 세상이 있었어요.<br>
+거대한 광장에서 수많은 사람들이 횃불을 들고 외쳤지요.<br><br><span class="dialogue">"<span class="vocab-tip" data-meaning="스스로 결정하고 행동할 수 있는 것">자유</span>! 평등!"</span><br><br>이것은 시민 <span class="vocab-tip" data-meaning="잘못된 세상을 바꾸려는 큰 움직임">혁명</span>의 현장이었어요.<br>
+왕과 귀족에게 억눌리던 사람들이<br>
+마침내 들고 일어난 것이지요.</p>
+        <p>성벽 위에서 철벽 대신이 내려다보았어요.<br><br><span class="dialogue">"어리석은 것들! 너희가 질서를 무너뜨릴 수 있을 것 같으냐?"</span><br><br>하지만 시민들은 물러서지 않았어요.<br>
+평범한 사람들이 손을 잡고 나아갔지요.<br>
+그때 에밀이 나타났어요.<br><br><span class="dialogue">"리나, 나는 태어날 때부터 가진 특권이 부끄러워. 이건 옳지 않아."</span></p>
+        <p>혁명은 쉽지 않았어요.<br>
+많은 사람이 다치고 목숨을 잃었지요.<br>
+하지만 아이들이 평등하게 살기를 바랐기에 포기하지 않았어요.<br>
+마침내 성벽이 무너지며 '인간의 권리 선언'이 발표되었지요.<br><br><span class="dialogue">"모든 인간은 자유롭게 태어나 같은 권리를 가진다!"</span><br><br>하늘 할아버지가 말했어요. <span class="highlight">"하지만 리나, 이것은 시작일 뿐이란다. 평등의 길은 아직 멀지."</span></p>
+      </div>
+    </section>
 
- <!-- 제5장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법02/05.jpg">
- <div class="story-card">
- <span class="chapter">제5장</span>
- <span class="theme">✊ 여성 <span class="vocab-tip" data-meaning="원래 이름은 '참정권'. 선거에 참여해 투표할 수 있는 권리">'정치에 참여할 권리'</span></span>
- <h2>여자도 투표할 <span class="vocab-tip" data-meaning="마땅히 누려야 할 것">권리</span>가 있다</h2>
- <p><strong>【중심 문장】</strong> 여성의 <span class="vocab-tip" data-meaning="원래 이름은 '투표권'. 선거에서 후보를 뽑을 수 있는 권리">'투표할 권리'</span>을 위해 싸운 마리를 만나며 성별 차별을 깨닫는다.</p>
- <p>여성들이 팻말을 들고 외쳤습니다. 마리가 소리쳤습니다.<br><br><span class="dialogue">"여자는 사람이 아닌가요?"</span></p>
- <p><span class="dialogue">"두렵지. 하지만 내 딸이 무시당하는 것이 더 두려워."</span></p>
- <p>마침내 여성에게도 투표권이 주어졌습니다. <span class="highlight">권리란 스스로 얻어내야 하는 보물입니다.</span></p>
- </div>
- </section>
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법02/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">✊ 여성 참정권</span>
+        <h2>마리의 외침 — 여자도 투표할 권리가 있다</h2>
+        <p><strong>【중심 문장】</strong> 여성들은 투표할 권리를 얻기 위해 오래 싸웠어요.</p>
+        <p>네 번째 문을 열자 리나는 <span class="vocab-tip" data-meaning="법을 만드는 기관">국회</span>의사당 앞에 서 있었어요.<br>
+수백 명의 여성들이 팻말을 들고 있었지요.<br>
+팻말에는 "우리도 투표하게 하라!"라고 적혀 있었어요.<br>
+그때 붉은 머리의 여성, 마리가 계단 위로 올라섰지요.<br><br><span class="dialogue">"모든 인간은 평등하다면서요? 그런데 왜 여자는 <span class="vocab-tip" data-meaning="의견을 표시하는 것">투표</span>도 못 하나요? 여자는 인간이 아닌가요?"</span></p>
+        <p>하지만 사람들 속에서 야유가 날아왔어요.<br><br><span class="dialogue">"여자가 정치를 알기나 해?"</span><br><br>마리는 한 발자국도 물러서지 않았어요.<br>
+감옥에 갇히면서도 싸움을 멈추지 않았지요.<br>
+리나가 감옥 창살 앞에서 물었어요.<br><br><span class="dialogue">"두렵지 않으세요?"</span><br><br><span class="dialogue">"두렵지. 하지만 내 딸이 나와 같은 세상에서 사는 것이 더 두려워."</span></p>
+        <p>수십 년의 싸움 끝에 여성에게도 투표할 권리가 주어졌어요.<br>
+마리가 처음 투표하는 순간, 손이 떨렸지요.<br>
+그것은 두려움이 아니라 감격의 떨림이었어요.<br><br>하늘 할아버지가 말했어요.<br>
+<span class="highlight">"권리란 누가 나눠주는 선물이 아니란다. 스스로 싸워서 얻어야 하는 보물이지."</span></p>
+      </div>
+    </section>
 
- <!-- 제6장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법02/06.jpg">
- <div class="story-card">
- <span class="chapter">제6장</span>
- <span class="theme">🌈 <span class="vocab-tip" data-meaning="원래 이름은 '인종 차별'. 피부색이나 민족을 이유로 불공평하게 대우하는 것">'피부색으로 차별'</span></span>
- <h2>인종 차별과의 전쟁</h2>
- <p><strong>【중심 문장】</strong> 피부색으로 사람을 나누는 차별을 목격하고 <span class="vocab-tip" data-meaning="폭력 없이 잘못된 것에 맞서는 것">평화적 저항</span>으로 <span class="vocab-tip" data-meaning="달라지는 것">변화</span>를 이끈다.</p>
- <p>피부색에 따라 버스 좌석이 달랐습니다.<br><br><span class="dialogue">"피부색으로 나누는 것은 또 다른 신분제야."</span></p>
- <p>한 남자가 연설했습니다.<br><br><span class="dialogue">"나에게는 꿈이 있습니다—모든 아이들이 함께 걷는 꿈이!"</span></p>
- <p>차별하는 법들이 없어지기 시작했습니다. <span class="highlight">법이 바뀌어도 마음이 바뀌어야 진정한 평등입니다.</span></p>
- </div>
- </section>
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법02/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">🌈 인종 차별</span>
+        <h2>피부색은 다르지만 마음은 같다 — 인종 차별과의 전쟁</h2>
+        <p><strong>【중심 문장】</strong> 피부색으로 사람을 차별하면 안 돼요.</p>
+        <p>다섯 번째 문 너머에는 놀라운 세상이 있었어요.<br>
+피부색에 따라 앉는 버스 좌석이 달랐지요.<br>
+식당도, 학교도, 물 마시는 곳까지 나뉘어 있었어요.<br><br><span class="dialogue">"어떻게 이런 일이... 피부색이 뭐가 다르다고..."</span><br><br>리나의 목소리가 떨렸어요.</p>
+        <p>그때 한 남자가 교회 앞에서 연설을 시작했어요.<br><br><span class="dialogue">"우리는 폭력으로 맞서지 않겠습니다. 하지만 절대로 물러서지도 않겠습니다. 사랑과 평화의 힘으로 이 벽을 허물 것입니다."</span><br><br>사람들은 손을 잡고 거리를 걸었어요.<br>
+물대포를 맞으면서도 노래를 불렀지요.<br>
+리나는 그 행진 속에서 걸으며 울었어요.</p>
+        <p>오랜 싸움 끝에 인종을 차별하는 법들이 사라지기 시작했어요.<br>
+아이들이 함께 공부하고, 함께 뛰어놀 수 있게 되었지요.<br>
+하지만 할아버지는 말했어요.<br><br><span class="dialogue">"법은 바뀌었지만, 마음속 <span class="vocab-tip" data-meaning="공정하지 못하고 한쪽으로 치우친 생각">편견</span>의 벽은 쉽게 무너지지 않는단다."</span><br><br><span class="highlight">법이 바뀌어도 마음이 바뀌지 않으면 진정한 평등은 아직 멀었어요.</span></p>
+      </div>
+    </section>
 
- <!-- 제7장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법02/07.jpg">
- <div class="story-card">
- <span class="chapter">제7장</span>
- <span class="theme">🎵 <span class="vocab-tip" data-meaning="장애가 있는 사람도 똑같이 대우받을 수 있는 권리">장애인 권리</span></span>
- <h2>다름이 틀림이 아닌 세상</h2>
- <p><strong>【중심 문장】</strong> 장애를 가진 소리가 <span class="vocab-tip" data-meaning="한쪽으로 치우친 잘못된 생각">편견</span>에 맞서 모든 사람이 <span class="vocab-tip" data-meaning="소중하게 여기고 대우받는 것">존중</span>받을 권리가 있음을 보여준다.</p>
- <p>학교 앞에서 소리가 울고 있었습니다. 다리에 보조기를 찬 소녀였습니다.<br><br><span class="dialogue">"소리도 배울 권리가 있어!"</span><br><br>리나가 소리의 손을 잡았습니다.</p>
- <p>소리가 노래를 부르기 시작했습니다. 아름다운 재능이 있었습니다.</p>
- <p>장애인을 보호하는 법이 만들어졌습니다. <span class="highlight">세상은 모든 사람을 받아들이는 쪽으로 변하기 시작했습니다.</span></p>
- </div>
- </section>
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법02/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">🎵 장애인 권리</span>
+        <h2>소리의 노래 — 다름이 틀림이 아닌 세상을 위하여</h2>
+        <p><strong>【중심 문장】</strong> 다름은 틀림이 아니에요. 모든 사람은 존중받을 권리가 있어요.</p>
+        <p>여섯 번째 문을 열자, 리나는 학교 앞에 서 있었어요.<br>
+정문 앞에서 한 소녀가 울고 있었지요.<br>
+목발을 짚은 소녀, 바로 소리였어요.<br><br><span class="dialogue">"미안하지만, 우리 학교는 네가 다니기에 맞지 않아. 계단도 많고, 체육 수업도 따라갈 수 없잖니."</span><br><br>리나가 외쳤어요.<br><br><span class="dialogue">"소리도 배울 권리가 있어!"</span></p>
+        <p><span class="dialogue">"나는 다리가 불편할 뿐이에요. 노래도 잘 부르는데..."</span><br><br>소리가 노래를 부르기 시작했지요.<br>
+너무나 아름다워서 새들이 날갯짓을 멈추었어요.<br>
+소리에게는 특별한 재능이 있었던 거예요.</p>
+        <p>하늘 할아버지가 말했어요.<br><br><span class="dialogue">"장애란 그 사람의 수많은 모습 중 하나일 뿐이란다. 세상이 할 일은 소리를 내보내는 것이 아니라, 소리가 들어올 수 있게 문턱을 낮추는 거란다."</span><br><br>이후 장애인의 권리를 지키는 법들이 만들어졌어요.<br>
+휠체어 경사로, 점자 안내판이 생겼지요.<br><br><span class="dialogue">"세상이 나를 받아들이기 시작했어."</span><br><br><span class="highlight">리나는 소리와 손을 잡고 활짝 웃었어요.</span></p>
+      </div>
+    </section>
 
- <!-- 제8장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법02/08.jpg">
- <div class="story-card">
- <span class="chapter">제8장</span>
- <span class="theme">💔 선택의 순간</span>
- <h2>차별을 막는 법</h2>
- <p><strong>【중심 문장】</strong> 차별을 <span class="vocab-tip" data-meaning="하지 못하게 막는 것">금지</span>하는 법이 만들어지고 리나는 법적 평등의 의미를 깨닫는다.</p>
- <p>차별금지법이 통과되자, 귀족들이 분노했습니다. 에밀의 아버지가 칼을 들고 나타났습니다.</p>
-<p><span class="dialogue">"에밀! 저 천한 것들과 어울린다면, 넌 더 이상 내 아들이 아니다!"</span></p>
-<p>에밀의 손이 떨렸습니다. 한쪽에는 화려한 저택과 귀족의 삶이, 다른 쪽에는 가난하지만 진실된 친구들이 있었습니다.</p>
- <p><span class="dialogue">"에밀, 돌아가도 괜찮아..."</span></p>
-<p>리나가 말했습니다. 하지만 에밀은 고개를 저었습니다. 그리고 아버지 앞에 섰습니다.</p>
- <p><span class="dialogue">"아버지, 전 더 이상 귀족의 아들이 아닙니다."</span><br><br><span class="highlight">법은 끝이 아니라 시작입니다.</span></p>
- </div>
- </section>
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법02/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">📜 차별금지법</span>
+        <h2>법이라는 방패 — 차별을 막는 규칙을 세우다</h2>
+        <p><strong>【중심 문장】</strong> 차별을 막는 <span class="vocab-tip" data-meaning="국회에서 만든 규칙">법률</span>은 약한 사람을 지키는 방패예요.</p>
+        <p>일곱 번째 문을 열자, 리나는 거대한 <span class="vocab-tip" data-meaning="재판을 하는 곳">법정</span> 안에 서 있었어요.<br>
+오늘은 역사적인 날이었지요.<br>
+신분, 성별, 인종, 장애를 이유로<br>
+사람을 차별하는 것을 금지하는 법이 선언되는 날이었어요.</p>
+        <p>철벽 대신이 이를 갈았어요.<br><br><span class="dialogue">"이런 법이 통과되면 세상의 질서가 무너진다!"</span><br><br>하지만 재판관은 단호하게 말했지요.<br><br><span class="dialogue">"차별은 질서가 아닙니다. 이제부터 어떤 이유로든 사람을 차별할 수 없습니다."</span><br><br>환호성이 터져 나왔어요.<br>
+에밀이 속삭였지요.<br><br><span class="dialogue">"드디어 법이라는 방패가 생긴 거야."</span></p>
+        <p>하지만 하늘 할아버지는 조용히 말했어요.<br><br><span class="dialogue">"법이 만들어진 것은 위대한 일이란다. 하지만 법이 있어도 차별은 몰래 숨어서 계속될 수 있어. 법만으로는 없앨 수 없단다."</span><br><br>리나는 곰곰이 생각했어요.<br>
+법을 만든 다음에도 계속 지켜보고 실천해야 해요.<br>
+<span class="highlight">법의 평등은 끝이 아니라 새로운 시작이었지요.</span></p>
+      </div>
+    </section>
 
- <!-- 제9장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법02/09.jpg">
- <div class="story-card">
- <span class="chapter">제9장</span>
- <span class="theme">✨ 에밀의 선택</span>
- <h2>진짜 평등의 의미</h2>
- <p><strong>【중심 문장】</strong> 법이 있어도 존재하는 <span class="vocab-tip" data-meaning="평등하지 않고 차이가 나는 것">불평등</span> 앞에서 진정한 평등이 무엇인지 고민한다.</p>
- <p>에밀이 가문의 반지를 벗어 땅에 내려놓았습니다. 아버지의 얼굴이 붉으락푸르락했습니다.</p>
-<p><span class="dialogue">"그 반지를 버리면 넌 거지가 된다!"</span></p>
-<p>에밀이 고개를 들었습니다. 눈에는 눈물이 맺혔지만, 목소리는 단단했습니다.</p>
- <p><span class="dialogue">"저는 리나와 같은 하늘 아래 살겠습니다. 귀족의 지붕 아래가 아니라요."</span></p>
-<p>아버지가 등을 돌렸습니다. 하인들이 에밀의 짐을 내던졌습니다. 에밀은 이제 화려한 옷 대신 평민의 낡은 옷을 입었습니다.</p>
-<p>리나가 달려와 에밀의 손을 잡았습니다.<br><br><span class="dialogue">"에밀... 넌 모든 걸 잃었어..."</span></p>
-<p>에밀이 웃으며 말했습니다.<br><br><span class="dialogue">"아니, 진짜 친구를 얻었어."</span></p>
- <p><span class="highlight">똑같이 대하는 것만으로는 부족합니다. 함께 서는 것이 진정한 평등입니다.</span></p>
- </div>
- </section>
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법02/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">🌱 실질적 평등</span>
+        <h2>형식이 아닌 진짜 평등을 — 실질적 평등의 의미</h2>
+        <p><strong>【중심 문장】</strong> 진짜 평등은 출발선이 다른 사람을 배려하는 거예요.</p>
+        <p>여덟 번째 문을 지나자, 리나는 오늘날의 도시에 도착했어요.<br>
+언뜻 보면 모두가 평등하게 사는 것 같았지요.<br>
+하지만 자세히 보니 보이지 않는 불평등이 숨어 있었어요.<br>
+같은 일을 하는데 여성이 더 적은 월급을 받았지요.</p>
+        <p><span class="dialogue">"이건 어떻게 된 거예요? 법이 만들어졌잖아요!"</span><br><br>할아버지는 두 그루의 나무를 가리켰어요.<br>
+하나는 햇빛 아래에, 하나는 그늘에 서 있었지요.<br><br><span class="dialogue">"두 나무에게 똑같은 물을 주면 공평한 걸까?"</span><br><br><span class="dialogue">"아니요... 그늘진 나무에게는 더 많은 물과 햇빛이 필요해요."</span><br><br><span class="dialogue">"그것이 바로 진짜 평등이란다. 오래 차별받아 온 사람들에게는 특별한 도움이 필요하지."</span></p>
+        <p>리나는 드디어 이해했어요.<br>
+출발선이 다른 사람들을 배려해야 한다는 것을요.<br>
+에밀이 말했지요.<br><br><span class="dialogue">"나는 귀족의 아들로 태어나 모든 것이 준비되어 있었어. 리나 너는 아무것도 없이 시작했지. 같은 출발선에 서려면 누군가 먼저 손을 잡아줘야 해."</span><br><br><span class="highlight">리나는 감동하며 마지막 문을 바라보았어요.</span></p>
+      </div>
+    </section>
 
- <!-- 제10장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법02/10.jpg">
- <div class="story-card">
- <span class="chapter">제10장</span>
- <span class="theme">💝 새로운 시작</span>
- <h2>열 번째 문을 열다</h2>
- <p><strong>【중심 문장】</strong> 리나는 평등이 매일 노력해야 하는 과정임을 깨닫고 자기만의 싸움을 시작한다.</p>
- <p>몇 달이 지났습니다. 에밀은 이제 리나의 마을에서 빵집 심부름을 하며 살았습니다. 손은 굳은살이 박이고, 화려한 말투도 사라졌습니다.</p>
-<p><span class="dialogue">"에밀, 힘들지 않아?"</span></p>
-<p>리나가 물었습니다. 에밀이 빵 반죽을 치대며 웃었습니다.</p>
-<p><span class="dialogue">"힘들지. 하지만 이상하게 마음이 편해."</span></p>
-<p>어느 날, 에밀의 아버지가 찾아왔습니다. 예전의 위엄은 사라지고, 눈가에 주름이 깊어져 있었습니다.</p>
-<p><span class="dialogue">"에밀... 돌아와라. 네가 없으니 집이 너무 조용하구나."</span></p>
-<p>에밀이 아버지를 바라보았습니다. 그리고 리나의 손을 잡았습니다.</p>
-<p><span class="dialogue">"아버지, 저는 돌아가지 않겠습니다. 하지만... 아버지가 이 마을에 오신다면, 환영할게요."</span></p>
- <p>아버지의 눈에서 눈물이 흘렀습니다. 처음으로 아들과 같은 눈높이에 서서, 처음으로 평민의 땅을 밟았습니다.</p>
- <p><span class="highlight">평등은 매일의 작은 노력들이 모여 이루어집니다. 시작은 바로 '나'입니다.</span></p>
- <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(126, 87, 194, 0.15); border-radius: 16px;">
- <strong style="color: #5E35B1; font-size: 20px;">🌱 「평등은 노력으로 지켜집니다. 시작은 바로 '나'입니다.」</strong>
- </p>
- </div>
- </section>
- </div>
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법02/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌍 함께 만드는 평등</span>
+        <h2>우리가 함께 만드는 평등의 세상 — 열 번째 문을 열다</h2>
+        <p><strong>【중심 문장】</strong> 평등은 매일매일 함께 만들어가는 거예요.</p>
+        <p>마지막 문 앞에서 리나는 잠시 멈춰 섰어요.<br>
+지금까지의 긴 여행이 떠올랐지요.<br>
+리나는 더 이상 골목에서 울던 소녀가 아니었어요.<br>
+희망을 가지게 되었지요.</p>
+        <p>열 번째 문을 열자, 그곳은 리나의 마을이었어요.<br>
+달라진 것은 마을이 아니라 리나 자신이었지요.<br>
+하늘 할아버지가 마지막으로 말했어요.<br><br><span class="dialogue">"평등은 저절로 얻어지는 것이 아니란다. 네가 서 있는 자리에서 매일매일 만들어가는 것이지. 차별을 보면 목소리를 높이고, 다른 사람의 아픔에 <span class="vocab-tip" data-meaning="다른 사람의 마음을 함께 느끼는 것">공감</span>하는 것. 그 작은 행동들이 세상을 바꾸는 거란다."</span></p>
+        <p>리나는 친구들에게 달려가 말했어요.<br><br><span class="dialogue">"우리, 함께 바꿔보자! 우리도 할 수 있어!"</span><br><br>에밀은 마을에 학교를 열고,<br>
+소리는 광장에서 노래를 불렀지요.<br>
+<span class="highlight">평등은 한 번에 끝나는 것이 아니라, 매일의 작은 노력들이 모여 이루어져요. 그 시작은 바로 '나'예요.</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(126, 87, 194, 0.15); border-radius: 16px;">
+          <strong style="color: #5E35B1; font-size: 20px;">🌱 「평등은 노력으로 지켜져요. 그 노력은 바로 '나'에서 시작돼요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
 
- <!-- 네비게이션 버튼 -->
- <div class="nav-buttons">
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
     <button class="nav-btn" onclick="location.href='law02_season1_quiz.html?season=season1'" style="background: linear-gradient(135deg, #7E57C2, #5E35B1);">📝 관문평가</button>
- </div>
+  </div>
 
- <!-- 스크롤 인디케이터 -->
- <div class="scroll-indicator" id="scrollIndicator">
- <svg viewBox="0 0 24 24" fill="white">
- <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
- </svg>
- </div>
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
 
- <script>
- const mapContainer = document.getElementById('map-container');
- const sections = document.querySelectorAll('.story-section');
- const scrollIndicator = document.getElementById('scrollIndicator');
- let currentBg = '';
- let ticking = false;
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
 
- function updateBackground() {
- const scrollPos = window.scrollY + window.innerHeight / 2;
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
 
- // 스크롤 인디케이터 숨기기/보이기
- if (window.scrollY > 100) {
- scrollIndicator.style.opacity = '0';
- } else {
- scrollIndicator.style.opacity = '1';
- }
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
 
- sections.forEach(section => {
- const rect = section.getBoundingClientRect();
- const sectionTop = window.scrollY + rect.top;
- const sectionBottom = sectionTop + rect.height;
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
 
- if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
- // 배경 업데이트
- const bgImage = section.dataset.bg;
- if (bgImage && bgImage !== currentBg) {
- currentBg = bgImage;
- mapContainer.style.backgroundImage = `url(${bgImage})`;
- }
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
 
- // 카드 활성화
- const card = section.querySelector('.story-card');
- if (card && !card.classList.contains('active')) {
- card.classList.add('active');
- }
- }
- });
- }
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
 
- window.addEventListener('scroll', () => {
- if (!ticking) {
- window.requestAnimationFrame(() => {
- updateBackground();
- ticking = false;
- });
- ticking = true;
- }
- });
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
 
- // 초기 실행
- updateBackground();
+    // 초기 실행
+    updateBackground();
 
- function goBack() {
- // 부모 창이 있으면 부모에게 메시지 전송
- if (window.parent !== window) {
- window.parent.postMessage({ action: 'closeStory' }, '*');
- } else {
- window.history.back();
- }
- }
- </script>
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
 </body>
 </html>

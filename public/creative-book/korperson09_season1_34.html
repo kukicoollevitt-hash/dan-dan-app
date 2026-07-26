@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📖 마음을 공부한 선비 — 퇴계 이황</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작한국인물09/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>📖 마음을 공부한 선비 — 퇴계 이황</h1>
+        <p class="subtitle">
+          — 배움의 끝은 사람다움이다 —<br>
+          교과기반 창작도서 · 한국인물 09 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>📖 등장인물 소개</h3>
+          <p><strong>★ 이황 (주인공):</strong> 조선 최고의 유학자예요. 퇴계라는 이름으로 널리 알려져 있고, 평생 사람의 마음을 공부했어요.</p>
+          <p><strong>★ 어머니:</strong> 일찍 남편을 잃고도 아들들을 바르게 키워 낸 사람이에요.</p>
+          <p><strong>★ 기대승:</strong> 이황에게 당돌한 편지를 보낸 젊은 학자예요. 두 사람의 편지 토론은 유명해요.</p>
+          <p><strong>★ 제자들:</strong> 도산서원에서 이황의 가르침을 받은 사람들이에요.</p>
+          <p><strong>★ 도산서원:</strong> 이황이 제자를 기르려고 안동에 세운 배움터예요. 지금도 남아 있지요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 환경의 갈등:</strong> 아버지 없이 자란 어린 시절 vs. 학문으로 일어서려는 의지</p>
+          <p><strong>② 길의 갈등:</strong> 높은 벼슬의 길 vs. 공부하고 제자를 기르는 길</p>
+          <p><strong>③ 학문의 갈등:</strong> 마음이란 무엇인가라는 물음 vs. 끝까지 파고드는 공부</p>
+          <p><strong>④ 토론의 갈등:</strong> 젊은 학자의 당돌한 반론 vs. 기쁘게 받아들인 큰 학자의 넓은 마음</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물09/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>안동의 늦둥이</h2>
+        <p>1501년, 경상북도 안동의 선비 집안에서 사내아이가 태어났어요.<br>
+훗날 조선 최고의 <span class="vocab-tip" data-meaning="유학을 깊이 공부한 학자">유학자</span>가 될 이황이지요.<br>
+사람들에게는 퇴계라는 <span class="vocab-tip" data-meaning="본이름 외에 편하게 부르도록 지은 또 하나의 이름">호</span>로 더 널리 알려지게 돼요.</p>
+        <p>그러나 이황의 어린 시절은 순탄하지 않았어요.<br>
+태어난 지 얼마 되지 않아 아버지를 여의고 만 거예요.<br>
+이황은 홀어머니 밑에서 어렵게 자라야 했지요.<br>
+어린 형제들만 여덟이나 되는 집안이었어요.</p>
+        <p>살림은 넉넉할 리 없었어요.<br>
+그러나 어머니는 누구보다 강하고 지혜로운 분이었지요.<br>
+밭을 일구며 많은 아들들을 홀로 키워 냈어요.<br>
+고단한 몸으로도 자식 교육만은 놓지 않았지요.</p>
+        <p><span class="dialogue">"아버지 없이 자란 아이라는 말을 듣지 않으려면, 남들보다 몸가짐을 백 배 더 바르게 해야 한다."</span><br><br>어머니의 가르침은 이황의 마음에 평생 새겨졌어요.</p>
+        <p>어머니의 가르침과 형들의 도움 덕분에,<br>
+이황은 어려운 형편 속에서도 공부할 수 있었어요.<br>
+가난이 배움의 뜻을 꺾지는 못했던 거지요.</p>
+        <p><span class="highlight">아버지의 빈자리를 채운 것은 어머니의 가르침과 책이었어요.</span> 그 속에서 조선의 큰 학자가 조용히 자라나고 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물09/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 배움</span>
+        <h2>열두 살의 논어</h2>
+        <p>어린 시절부터 이황은 책 읽기를 좋아하는 아이였어요.<br>
+또래들이 냇가에서 물장구를 칠 때,<br>
+이황은 방에 앉아 책장을 넘기는 쪽이 더 즐거웠지요.<br>
+책은 이 아이에게 장난감이자 스승이었어요.</p>
+        <p>어린 이황이 파고든 것은 논어와 맹자 같은 유학의 <span class="vocab-tip" data-meaning="한 학문에서 가장 중요하게 여기는 근본이 되는 책">경전</span>들이었어요.<br>
+어른들도 어려워하는 깊은 책이었지요.<br>
+소년은 그 깊은 물에 겁 없이 뛰어들었어요.</p>
+        <p>놀랍게도 이황은 겨우 열두 살에 논어를 다 읽었다고 전해져요.<br>
+글자만 읽은 것이 아니에요.<br>
+구절 하나하나의 뜻을 캐물었지요.<br><br><span class="dialogue">"이 말씀은 어째서 이러한가. 사람이 어질다는 것은 대체 무엇인가."</span></p>
+        <p>모르는 것이 나오면 그냥 넘어가는 법이 없었어요.<br>
+어른들을 찾아가 묻고,<br>
+답을 들으면 제 것이 될 때까지 곱씹었지요.<br>
+그 <span class="vocab-tip" data-meaning="오랫동안 되풀이해 몸에 밴 행동">습관</span>이 훗날 큰 학자를 만드는 씨앗이 되었어요.</p>
+        <p>책 속에서 이황이 만난 것은 지식만이 아니었어요.<br>
+어떻게 살아야 사람다운가 하는 물음이었지요.<br>
+그 물음은 평생 이황의 길잡이 별이 되었어요.</p>
+        <p><span class="highlight">이황에게 책 읽기는 재주 자랑이 아니라, 사람이 되는 공부였어요.</span> 소년의 배움은 이제 더 큰 세상을 향하게 되지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물09/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 정진</span>
+        <h2>성균관에 오르다</h2>
+        <p>배움을 차곡차곡 쌓은 이황은 스물세 살에 <span class="vocab-tip" data-meaning="조선 시대 나라에서 세운 가장 높은 교육 기관">성균관</span>에 입학했어요.<br>
+조선에서 가장 뛰어난 인재들이 모여 공부하는 최고 학교였지요.<br>
+시골 소년의 꾸준한 공부가 큰 무대에 닿은 거예요.</p>
+        <p>성균관에는 팔도에서 모여든 수재들이 가득했어요.<br>
+그러나 이황은 주눅 들지 않았지요.<br>
+남과 견주기보다 어제의 저 자신과 견주었어요.</p>
+        <p>이황의 공부는 남달랐어요.<br>
+남들이 시험에 나올 대목만 외울 때,<br>
+이황은 글의 근본 뜻을 파고들었지요.<br><br><span class="dialogue">"시험을 위한 공부는 시험과 함께 끝나지만, 뜻을 위한 공부는 평생을 간다."</span></p>
+        <p>모두 잠든 깊은 밤에도 이황의 방에는 등불이 켜져 있었어요.<br>
+여러 책을 나란히 펴 놓고 견주어 읽었지요.<br>
+의문이 풀릴 때까지 며칠이고 같은 대목을 붙들었어요.<br>
+느려 보여도 누구보다 깊은 공부였지요.</p>
+        <p>그렇게 쌓은 학문은 단단했어요.<br>
+뿌리를 향한 공부는 세월이 갈수록 굵어지는 나무 같았지요.<br>
+이황의 이름이 학자들 사이에 알려지기 시작했어요.</p>
+        <p><span class="highlight">이황은 시험에 이기는 공부가 아니라, 자기 자신을 이기는 공부를 했어요.</span> 그 공부가 곧 인생의 갈림길 앞에 서게 되지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물09/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 선택</span>
+        <h2>벼슬보다 배움</h2>
+        <p>실력으로 보면 이황 앞에는 높은 벼슬길이 활짝 열려 있었어요.<br>
+실제로 나라의 부름을 받아 여러 <span class="vocab-tip" data-meaning="나라의 일을 맡아보는 자리">관직</span>을 지내기도 했지요.<br>
+그러나 이황의 마음은 언제나 다른 곳을 향해 있었어요.</p>
+        <p>이황은 출세보다 학문을 깊이 연구하고<br>
+<span class="vocab-tip" data-meaning="뒤에 배우는 사람들. 후배 학자와 제자들">후학</span>을 가르치는 것을 더 중요하게 여겼어요.<br>
+벼슬은 한 시대의 일이지만,<br>
+학문과 가르침은 여러 시대를 살리는 일이라 믿었거든요.</p>
+        <p>주위 사람들은 그 선택을 이해하지 못했어요.<br><br><span class="dialogue">"그만한 실력으로 어찌 높은 자리를 마다하신단 말이오? 남들은 못 올라 안달인 자리인데."</span></p>
+        <p>이황의 생각은 달랐어요.<br>
+자리가 높아지는 것과 사람이 깊어지는 것은 다른 일이었지요.<br>
+이황이 평생을 걸고 싶은 쪽은 뒤의 것이었어요.<br>
+화려한 한양보다 고요한 고향의 서재가 더 큰 세상이었지요.</p>
+        <p>이황은 몇 번이고 벼슬을 <span class="vocab-tip" data-meaning="겸손하게 받지 않고 물리는 것">사양</span>하고 고향 안동으로 돌아갔어요.<br>
+물러날 퇴 자를 쓴 퇴계라는 호에는<br>
+물러나 학문에 잠기고자 했던 뜻이 담겨 있지요.</p>
+        <p><span class="highlight">남들이 오르려 애쓰는 길에서, 이황은 스스로 내려와 제 길을 걸었어요.</span> 그 길 위에서 조선 학문의 큰 봉우리가 솟아오르게 되지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물09/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">전개 · 탐구</span>
+        <h2>마음속의 이와 기</h2>
+        <p>이황이 평생 연구한 학문은 <span class="vocab-tip" data-meaning="인간의 마음과 도덕의 이치를 연구하는 유학의 한 갈래">성리학</span>이었어요.<br>
+사람의 마음은 어떻게 움직이며,<br>
+어떻게 해야 바르게 사는가를 묻는 공부였지요.</p>
+        <p>이황은 오랜 연구 끝에 자신만의 생각의 집을 지어 올렸어요.<br>
+남의 학설을 그대로 옮겨 적는 데서 멈추지 않고,<br>
+스스로 묻고 답한 거지요.<br>
+아무나 하지 못하는 일이었어요.</p>
+        <p>이황은 사람의 마음속에 '이'와 '기'라는 두 가지가 함께 있다고 보았어요.<br>
+이는 올바름의 원리.<br>
+기는 마음을 이리저리 움직이는 힘.<br>
+그리고 이가 기를 이끌어야 올바른 사람이 된다고 했지요.</p>
+        <p>이렇게 생각해 볼 수 있어요.<br>
+옳은 길을 아는 <span class="vocab-tip" data-meaning="방향을 알려 주는 도구">나침반</span>이 이라면,<br>
+출렁이는 감정의 물결은 기와 같아요.<br>
+나침반이 물결을 이끌어야 배가 바로 가듯, 사람도 그래야 한다는 거지요.</p>
+        <p>이황은 이 물음과 평생 씨름했어요.<br><br><span class="dialogue">"사람이 사람다워지는 길을 밝히는 것, 그보다 큰 공부가 어디 있겠는가."</span></p>
+        <p><span class="highlight">이황의 학문은 지식의 학문이 아니라, 사람다움의 학문이었어요.</span> 그 학문은 한 통의 편지로 더욱 깊어지게 되지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물09/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">절정 · 논쟁</span>
+        <h2>편지로 벌인 논쟁</h2>
+        <p>그러던 어느 날, 이황에게 뜻밖의 편지 한 통이 도착했어요.<br>
+보낸 사람은 기대승이라는 젊은 학자였지요.<br>
+편지에는 이황의 학설에 대한<br>
+날카로운 <span class="vocab-tip" data-meaning="상대의 주장이 틀렸다고 따져 말하는 것">반론</span>이 조목조목 담겨 있었어요.</p>
+        <p>기대승은 이황보다 무려 스물여섯 살이나 아래였어요.<br>
+곁의 사람들은 젊은 것이 무례하다며 혀를 찼지요.<br>
+그러나 이황의 반응은 뜻밖이었어요.<br>
+노여워하기는커녕 얼굴이 환해진 거예요.</p>
+        <p><span class="dialogue">"참으로 훌륭한 물음이다. 학문 앞에서는 나이도 이름도 없는 법. 내 생각의 부족한 곳을 짚어 주니 오히려 고마운 일이 아닌가."</span></p>
+        <p>이황은 젊은 학자를 학문의 벗으로 대하며 정성껏 답장을 썼어요.<br>
+그렇게 시작된 두 사람의 편지 <span class="vocab-tip" data-meaning="서로 다른 생각을 두고 옳고 그름을 따지는 것">논쟁</span>은<br>
+여러 해에 걸쳐 이어졌지요.<br>
+편지가 오갈 때마다 두 사람의 생각은 함께 자랐어요.</p>
+        <p>이 논쟁을 통해 이황의 이론은 더욱 단단해졌어요.<br>
+허술한 곳은 고치고 옳은 곳은 더 다듬은 거지요.</p>
+        <p><span class="highlight">큰 학자는 반론을 두려워하지 않고, 반론 속에서 더 크게 자라요.</span> 이황과 기대승의 편지가 그것을 보여 주었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물09/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 교육</span>
+        <h2>도산에 세운 배움터</h2>
+        <p>고향으로 물러난 이황은 안동의 도산 기슭에 배움터를 마련했어요.<br>
+맑은 물이 흐르고 산이 병풍처럼 둘러선 곳.<br>
+훗날 도산서원으로 이어지는 곳이지요.<br>
+<span class="vocab-tip" data-meaning="조선 시대에 선비들이 학문을 닦고 제자를 기르던 곳">서원</span>은 선비들이 공부하고 제자를 기르던 곳이에요.</p>
+        <p>이황이 학당을 열었다는 소식이 퍼지자,<br>
+배움에 뜻을 둔 젊은이들이 팔도에서 구름처럼 모여들었어요.<br>
+먼 남쪽 끝에서 몇 달을 걸어온 젊은이도 있었지요.</p>
+        <p>이황의 가르침은 엄하면서도 따뜻했어요.<br>
+아무리 어린 제자의 질문에도 정성껏 답했지요.<br><br><span class="dialogue">"묻는 것을 부끄러워 말라. 묻지 않는 것이야말로 부끄러운 일이다."</span></p>
+        <p>무엇보다 이황은 지식보다 사람됨을 먼저 가르쳤어요.<br>
+배운 것을 삶으로 실천하는 것.<br>
+그것이 도산 배움터의 첫 번째 가르침이었지요.<br>
+제자들은 머리가 아니라 마음으로 따랐어요.</p>
+        <p>도산에서 배운 제자들은 조선 곳곳으로 흩어져 학문의 씨앗을 뿌렸어요.<br>
+한 사람의 스승이 수백 명의 제자를 길러 낸 거지요.</p>
+        <p><span class="highlight">이황은 건물을 세운 것이 아니라, 배움의 강줄기를 낸 것이었어요.</span> 그 물줄기는 조선을 넘어 흘러가게 되지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물09/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 저술</span>
+        <h2>일흔 권의 책</h2>
+        <p>도산에서 이황은 가르치는 틈틈이 부지런히 책을 지었어요.<br>
+평생 <span class="vocab-tip" data-meaning="책이나 글을 지어 쓰는 것">저술</span>한 책이 무려 70권이 넘지요.<br>
+배우고, 가르치고, 쓰는 일이 이황의 평생이었어요.</p>
+        <p>그 가운데서도 성학십도는 으뜸가는 책으로 손꼽혀요.<br>
+임금이 지켜야 할 도리를<br>
+열 폭의 그림과 글로 알기 쉽게 정리한 책이지요.<br>
+나라를 다스리는 사람일수록 먼저 제 마음부터 다스려야 한다는 뜻이에요.</p>
+        <p>어려운 가르침을 열 장의 그림으로 간추린 데에는 깊은 배려가 숨어 있어요.<br>
+바쁜 임금이 틈틈이 들여다볼 수 있도록<br>
+가장 중요한 알맹이만 추려 낸 거지요.</p>
+        <p>이황은 일흔이 가까운 나이에도 배움을 멈추지 않았어요.<br><br><span class="dialogue">"아직도 모르는 것이 산과 같은데, 어찌 배움을 놓겠는가."</span><br><br>죽는 날까지 스스로를 학생이라 여긴 사람이었지요.</p>
+        <p>그리고 1570년, 이황은 일흔 살의 나이로 고향에서 조용히 세상을 떠났어요.<br>
+화려한 유언 대신,<br>
+일흔 권의 책과 정성으로 길러 낸 제자들이 남았지요.</p>
+        <p><span class="highlight">일흔 권의 책은 일흔 해 삶의 기록이자, 후대에 남긴 배움의 <span class="vocab-tip" data-meaning="앞 세대가 물려준 소중한 것">유산</span>이었어요.</span> 그 유산은 바다 건너까지 전해지지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물09/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 확산</span>
+        <h2>동방의 주자</h2>
+        <p>놀랍게도 이황의 학문은 바다 건너 일본에까지 큰 영향을 미쳤어요.<br>
+이황의 책들이 일본에 전해지자,<br>
+일본의 학자들이 그 깊이에 놀라 앞다투어 연구하기 시작한 거예요.</p>
+        <p>마침내 일본 학자들은 이황을 '동방의 주자'라고 높여 불렀어요.<br>
+주자는 중국의 위대한 유학자예요.<br>
+이황을 그 주자에 비유할 만큼 높이 평가한 것이지요.<br>
+학자로서 더없이 큰 <span class="vocab-tip" data-meaning="빛나고 자랑스러운 이름">영예</span>였어요.</p>
+        <p>다른 나라의 학자를 이토록 우러르는 일은 흔치 않아요.<br>
+일본 학자들은 대를 이어 가며 그 학문을 배웠지요.<br>
+도산의 서재에서 익은 학문이 바다 건너의 스승이 된 셈이에요.</p>
+        <p>이황이 살아서 바란 것은 명성이 아니었어요.<br>
+그러나 명성이란 바라지 않는 사람을 오히려 따라오는 법이지요.<br>
+조용히 공부하던 선비의 이름이 나라 밖에서까지 빛나게 된 거예요.</p>
+        <p>학문에는 국경이 없다는 말이 있어요.<br>
+사람다움을 묻는 공부는 어느 나라에서나 소중했던 것이지요.</p>
+        <p><span class="highlight">깊이 판 우물일수록 멀리서도 물을 길으러 와요.</span> 이황의 학문이 바로 그런 우물이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물09/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>천 원권 속의 스승</h2>
+        <p>이황이 세상을 떠난 지 사백여 년이 지났어요.<br>
+그러나 그 자취는 오늘도 우리 곁에 남아 있지요.<br>
+이황이 세운 도산서원은 많은 사람이 찾는 <span class="vocab-tip" data-meaning="역사적인 자취가 남아 있는 곳">유적지</span>가 되었어요.</p>
+        <p>안동의 도산서원에 가면<br>
+이황이 제자들을 가르치던 배움터를 그대로 만날 수 있어요.</p>
+        <p>그리고 우리는 날마다 지갑 속에서도 이황을 만나요.<br>
+천 원권 지폐에 이황의 초상이 실려 있거든요.<br>
+조선의 큰 스승은 오늘도 우리 곁에 있는 셈이지요.</p>
+        <p>이황의 삶은 우리에게 조용히 물어요.<br>
+공부란 무엇을 위해 하는 것인가.<br>
+이황의 대답은 한결같았어요.<br>
+공부의 끝은 시험도 출세도 아닌, 사람다움이라는 것이지요.</p>
+        <p>벼슬을 거듭 사양하고 배움의 자리로 물러난 사람.<br>
+어린 학자의 반론을 기쁘게 받아들인 사람.<br>
+죽는 날까지 스스로를 학생이라 부른 사람.<br>
+이황이 남긴 것은 배우는 사람의 자세 그 자체였어요.</p>
+        <p><span class="highlight">이황은 평생 마음을 공부했고, 그 공부로 조선의 마음을 길렀어요.</span> 그래서 사람들은 지금도 그를 스승이라 부르지요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(100, 110, 150, 0.15); border-radius: 16px;">
+          <strong style="color: #646E96; font-size: 20px;">📖 「배움의 끝은 벼슬이 아니라 사람다움이에요. 이황은 그것을 삶 전체로 보여 주었지요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'korperson09_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚖️ 깨진 유리창의 진실 — 우리 반 작은 법정</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작법08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⚖️ 깨진 유리창의 진실 — 우리 반 작은 법정</h1>
+        <p class="subtitle">
+          — 판결이 내려지기 전까지, 누구도 죄인이 아니에요 —<br>
+          교과기반 창작도서 · 법 08 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>⚖️ 등장인물 소개</h3>
+          <p><strong>★ 노아 (주인공):</strong> 깨진 유리창의 범인으로 몰린 아이예요. 그 자리에 서 보고서야 재판이 왜 있는지 알게 되지요.</p>
+          <p><strong>★ 다인 (변호인):</strong> 노아의 짝꿍이에요. "그래서 증거는?"을 입에 달고 사는 꼬마 변호인이지요.</p>
+          <p><strong>★ 서 선생님:</strong> 소문으로 들끓는 교실에 법정을 차린 담임 선생님이에요.</p>
+          <p><strong>★ 학급 법정:</strong> 교실 뒤에 차려진 작은 법원. 책상 세 개와 나무 망치 하나가 전부지만, 원칙만은 진짜다.</p>
+          <p><strong>★ 깨진 유리창:</strong> 모든 소동의 시작. 그리고 끝내 진실을 말해 주는 조용한 증인.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 누명의 갈등:</strong> 범인으로 지목된 노아 vs. 아니라고 말해도 믿어 주지 않는 교실</p>
+          <p><strong>② 판단의 갈등:</strong> 심증과 소문으로 정해 버리기 vs. 증거와 절차로 밝혀내기</p>
+          <p><strong>③ 원칙의 갈등:</strong> 의심스러우면 벌부터 주자는 마음 vs. 판결 전까지는 무죄라는 원칙</p>
+          <p><strong>④ 기회의 갈등:</strong> 한 번의 판결로 끝내 버리기 vs. 다시 다툴 기회를 보장하는 3심 제도</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>쨍그랑, 그리고 손가락들</h2>
+        <p>점심시간, 노아는 친구들과 공을 차다가<br>
+물을 마시러 가던 참이었어요.<br>
+그때였지요. 쨍그랑!<br>
+유리 깨지는 소리가 운동장을 갈랐어요.<br>
+과학실 창문에 커다란 구멍이 나 있었지요.</p>
+        <p>아이들의 눈길이 일제히 쏠렸어요.<br>
+하필 과학실 가까이에서<br>
+공을 끼고 서 있던 노아였지요.<br><br><span class="dialogue">"노아가 찼나 봐! 아까 그쪽으로 뻥 차는 거 봤어!"</span><br><br><span class="dialogue">"나 아니야! 나는 물 마시러 가던 중이었어!"</span></p>
+        <p>하지만 소용없었어요.<br>
+소문은 오후가 되기도 전에 온 학교에 퍼졌지요.<br>
+노아가 유리창을 깨고도<br>
+<span class="vocab-tip" data-meaning="자기가 한 일을 아니라고 잡아떼는 것">발뺌</span>한다는 이야기였어요.<br>
+아니라고 말할수록<br>
+아이들은 더 의심했지요.</p>
+        <p>내가 안 했다는 것은 나만 알고 있었어요.<br>
+그런데 그것을 어떻게 보여 줄 수 있을까요.<br>
+본 사람들의 말은 저렇게 힘이 센데,<br>
+안 한 사람의 말은 왜 이렇게 힘이 없을까요.<br>
+<span class="highlight">쨍그랑 소리 한 번에, 노아는 하루아침에 범인이 되어 있었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>그럼 재판을 하자</h2>
+        <p>다음 날 아침, 교실은 어수선했어요.<br>
+망가뜨린 것을 물어 주는<br>
+<span class="vocab-tip" data-meaning="남에게 끼친 손해를 물어 주는 것">변상</span>을 해야 한다는 아이들과<br>
+증거도 없지 않느냐는 아이들이<br>
+편을 갈라 웅성거렸지요.<br><br><span class="dialogue">"얘들아, 지금 우리 반은 노아를 소문과 짐작만으로 벌주려 하고 있어. 정말 그래도 될까? 어른들의 세상에서는 이럴 때 <span class="vocab-tip" data-meaning="법에 따라 재판을 하여 다툼을 해결하는 국가 기관">법원</span>이라는 곳에 가서 옳고 그름을 가린단다."</span></p>
+        <p><span class="dialogue">"그러니 우리도 제대로 해 보자. 우리 반에 작은 법정을 열어서, 소문이 아니라 증거로 이 일을 밝혀 보는 거야. 노아에게도 자기 이야기를 할 기회를 주고. 어때?"</span><br><br>교실이 술렁였어요.<br>
+재판이라니, 텔레비전에서나 보던 것을<br>
+우리가 한다니요.</p>
+        <p>노아는 가슴이 두근거렸어요.<br>
+처음으로 제 이야기를 끝까지<br>
+들어 준다는 말이 고마웠지요.<br>
+억울함을 밝힐 다른 길이 생긴 거예요.<br><br><span class="dialogue">"마침 다음 주에 사회 체험 학습이 있지? 우리 반은 법원으로 간다. 진짜 재판을 두 눈으로 보고 오자."</span></p>
+        <p><span class="highlight">소문의 법정 대신, 증거의 법정이 열리게 되었어요.</span><br>
+노아의 억울함은 이제 소리치는 대신,<br>
+절차라는 길을 걷게 되지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>진짜 법정에 가다</h2>
+        <p>법원은 생각보다 조용하고 엄숙한 곳이었어요.<br>
+아이들은 <span class="vocab-tip" data-meaning="재판을 구경하는 사람들이 앉는 자리">방청석</span>에 줄지어 앉아<br>
+진짜 <span class="vocab-tip" data-meaning="법에 따라 옳고 그름을 가리는 절차">재판</span>을 지켜보았지요.<br>
+높은 자리에는 검은 옷을 입은<br>
+<span class="vocab-tip" data-meaning="재판을 진행하고 판결을 내리는 사람">판사</span>가 앉아 있었어요.<br><br><span class="dialogue">"오늘 보는 건 빌린 돈 문제를 다투는 <span class="vocab-tip" data-meaning="사람 사이의 재산이나 권리 다툼을 가리는 재판">민사 재판</span>이야. 죄를 지은 사람을 벌하는 <span class="vocab-tip" data-meaning="죄를 지은 사람을 벌주기 위한 재판">형사 재판</span>도 있단다."</span></p>
+        <p>노아의 눈을 사로잡은 것은<br>
+판사의 태도였어요.<br>
+판사는 어느 쪽 이야기에도<br>
+고개를 끄덕이거나 찡그리지 않았지요.<br>
+두 사람의 말을 똑같은 길이만큼 듣고,<br>
+증거 서류를 몇 번이고 다시 살폈어요.<br>
+목소리가 큰 쪽이 아니라,<br>
+증거가 있는 쪽의 손을 들어 주는 것이<br>
+판사의 일이라고 했지요.</p>
+        <p>노아는 문득 자기네 교실을 떠올렸어요.<br>
+그 교실에는 판사가 없었지요.<br>
+목소리 큰 아이들의 말이 판결이 되었어요.<br><br><span class="dialogue">"판사님이 아무 편도 안 드는 거요. 우리 반 재판에도 그런 판사가 꼭 있어야 해요."</span><br><br><span class="highlight">법정에서는 목소리가 아니라 증거가 말하고 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>책상 세 개와 나무 망치</h2>
+        <p>교실 뒤편에 작은 법정이 차려졌어요.<br>
+책상 세 개를 붙인 판사석,<br>
+그리고 자그마한 나무 망치.<br>
+초라해 보여도 아이들에게는<br>
+어엿한 법원이었지요.</p>
+        <p>공정하기로 소문난 아이 셋이 판사를 맡았어요.<br>
+노아를 돕는 <span class="vocab-tip" data-meaning="재판에서 한쪽 편을 도와 대신 말해 주는 사람">변호인</span>은<br>
+짝꿍 다인이가 자원했지요.<br><br><span class="dialogue">"내가 미덥지 못한 소문이라면 딱 질색이거든. 노아야, 있는 그대로만 말해 줘."</span></p>
+        <p>재판에 앞서 선생님은 규칙을 적었어요.<br>
+오직 증거와 사실만 말할 것.<br>
+상대의 말을 끊지 말 것.<br>
+그리고 셋째가 가장 중요했지요.<br><br><span class="dialogue">"판결이 나기 전까지 노아를 범인이라고 부르지 않는다. 이것을 <span class="vocab-tip" data-meaning="유죄 판결을 받기 전까지는 누구나 죄가 없다고 여겨야 한다는 원칙">무죄 추정의 원칙</span>이라고 한단다. 진짜 법원의 가장 중요한 약속이야."</span></p>
+        <p>그 말에 몇몇 아이들의 얼굴이 발개졌어요.<br>
+지난 며칠 동안 노아를<br>
+어떻게 불렀는지 떠올랐기 때문이지요.<br>
+노아는 그 원칙 하나만으로도<br>
+숨통이 트이는 것 같았어요.<br>
+<span class="highlight">책상 세 개짜리 법정에도 진짜 법원의 원칙이 세워졌지요.</span><br>
+판결 전까지는 누구도 죄인이 아니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>첫 번째 판결</h2>
+        <p>드디어 첫 재판이 열렸어요.<br>
+사건을 직접 본 <span class="vocab-tip" data-meaning="어떤 일이 벌어지는 것을 직접 본 사람">목격자</span> 아이들의<br>
+<span class="vocab-tip" data-meaning="자기가 보고 들은 것을 사실대로 말하는 것">증언</span>은 또렷했지요.<br>
+노아가 과학실 방향으로<br>
+공을 세게 차는 것을 보았다는 거예요.<br><br><span class="dialogue">"노아가 공을 찬 것은 유리가 깨지기 한참 전입니다. 노아가 들고 있던 공은 그때 골대 옆에 있었다는 친구도 있습니다."</span><br><br>그러나 그 친구는 확실하지 않다며<br>
+말을 머뭇거렸어요.</p>
+        <p>판사를 맡은 세 아이는<br>
+오래 머리를 맞댔어요.<br><br><span class="dialogue">"증언에 따르면 노아가 유리창을 깼을 가능성이 높다고 보입니다. 노아는 사과하고, 유리값의 일부를 책임지는 것으로 판결합니다."</span><br><br>탕, 탕, 탕.<br>
+나무 망치 소리가 유난히 크게 울렸지요.</p>
+        <p>노아는 눈앞이 캄캄했어요.<br>
+증거로 밝히면 당연히<br>
+진실이 이길 줄 알았지요.<br>
+그런데 절차를 다 지킨 재판에서도<br>
+노아는 졌어요.<br>
+목격자의 기억이 증거보다 힘이 셌던 거예요.</p>
+        <p>그날 밤 노아는 생각했어요.<br>
+재판까지 했는데 이렇게 끝이라면,<br>
+억울한 사람은 어디로 가야 하는 걸까요.<br>
+<span class="highlight">절차를 지킨 재판에서도 판결이 진실과 다를 수 있었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>세 번의 기회</h2>
+        <p>다음 날, 노아는 유리값을<br>
+물어 드리겠다고 말하려 했어요.<br>
+그런데 다인이가 노아의 팔을 붙잡았지요.<br><br><span class="dialogue">"포기하긴 일러. 판결에 불만이 있으면 다시 재판을 요청할 수 있댔잖아."</span><br><br><span class="dialogue">"그걸 <span class="vocab-tip" data-meaning="판결을 받아들이지 않고 다시 재판해 달라고 요청하는 것">항소</span>라고 한단다. 우리나라는 <span class="vocab-tip" data-meaning="최대 세 번까지 재판받을 기회를 주는 제도">3심 제도</span>라서, 한 사건을 최대 세 번까지 재판받을 수 있어. 판사도 사람이라 틀릴 수 있으니, 억울함을 바로잡을 기회를 여러 번 주는 거지."</span></p>
+        <p>노아는 그 말에 가슴이 뛰었어요.<br>
+한 번의 판결이 끝이 아니라는 것.<br>
+법은 틀릴 수 있음을 스스로 인정하고,<br>
+고칠 길을 미리 만들어 두었다는 것.<br>
+노아는 또박또박 항소장을 적어<br>
+판사석 책상 위에 올려놓았지요.</p>
+        <p>두 번째 재판이 열리려면<br>
+새로운 증거가 필요했어요.<br><br><span class="dialogue">"유리가 깨진 시각이 열두 시 사십 분쯤이래. 그 시간에 네가 어디서 뭘 했는지, 그걸 증명해 줄 무언가를 찾자."</span><br><br>두 아이는 그날부터 탐정이 되었어요.<br>
+하지만 판결을 뒤집을 결정적인 한 조각은<br>
+좀처럼 나타나지 않았지요.<br>
+<span class="highlight">법은 스스로 틀릴 수 있음을 알기에, 세 번의 기회를 마련해 두었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>증거가 없는 밤</h2>
+        <p>두 번째 재판을 사흘 앞둔 날까지도,<br>
+결정적인 증거는 나오지 않았어요.<br>
+아이들의 기억은 저마다 조금씩 달랐지요.<br>
+어떤 아이는 노아를 급식실에서 봤다 했고,<br>
+어떤 아이는 운동장에서 봤다고 했어요.</p>
+        <p>기억이라는 것이 이렇게 흐린 것인 줄<br>
+노아는 처음 알았어요.<br>
+첫 재판의 목격자들도 어쩌면<br>
+흐린 기억을 또렷하다고<br>
+믿었을 뿐인지도 몰라요.<br><br><span class="dialogue">"미안해, 노아야. 내가 변호인인데... 아직 아무것도 못 찾았어."</span><br><br><span class="dialogue">"아니야. 너라도 내 말을 믿어 준 게 어딘데."</span></p>
+        <p>노아는 깨진 유리창 자리를 올려다보았어요.<br>
+새 유리가 끼워져 사건의 흔적은<br>
+이미 사라지고 없었지요.<br>
+진실은 분명히 있었는데,<br>
+그것을 보여 줄 방법이 없었어요.<br>
+증거가 없으면 진실도 힘을 잃는다는 것이<br>
+세상에서 제일 무서운 일 같았지요.</p>
+        <p><span class="highlight">진실은 있는데 증거가 없는 밤이, 세상에서 가장 길고 캄캄했어요.</span><br>
+그러나 증거는 뜻밖의 곳에서<br>
+두 아이를 기다리고 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>화면 구석의 진실</h2>
+        <p>구원의 손길은 방송반에서 왔어요.<br><br><span class="dialogue">"우리가 그날 점심시간에 축제 홍보 영상을 찍었거든. 운동장이 배경으로 나오는데, 혹시 도움이 될까 해서."</span><br><br>두 아이는 방송실로 뛰어갔지요.</p>
+        <p>영상 속 시계는<br>
+열두 시 삼십팔 분을 가리키고 있었어요.<br>
+화면 한구석, 급식실 앞에 늘어선 줄.<br><br><span class="dialogue">"저기! 저 파란 가방! 노아 너잖아!"</span><br><br>유리가 깨진 바로 그 시각,<br>
+노아는 운동장 반대편<br>
+급식실 앞에 있었던 거예요.</p>
+        <p>그런데 영상은 더 놀라운 것을 담고 있었어요.<br>
+과학실 옆의 커다란 은행나무가<br>
+세차게 부는 <span class="vocab-tip" data-meaning="세차게 부는 강한 바람">강풍</span>에 크게 출렁이더니,<br>
+쨍그랑 소리와 함께 부러진 가지 하나가<br>
+창문 쪽으로 떨어지는 모습이<br>
+흐릿하게 찍혀 있었지요.<br>
+범인은 사람이 아니라 바람이었던 거예요.</p>
+        <p>노아는 한참 동안 말을 잇지 못했어요.<br>
+진실은 처음부터 그 자리에 있었지요.<br>
+다만 아무도 찾아보려 하지 않았을 뿐이에요.<br><br><span class="dialogue">"이래서 재판이 필요한 거구나. 소문은 빠르고 증거는 느리니까. 느린 진실이 이길 수 있게, 법정이 시간을 벌어 주는 거야."</span><br><br><span class="highlight">유리가 깨지던 순간, 진실은 화면 구석에 고스란히 찍혀 있었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>뒤집힌 판결</h2>
+        <p>두 번째 재판 날,<br>
+방청석은 발 디딜 틈이 없었어요.<br>
+소문을 들은 옆 반 아이들까지 몰려온 거예요.</p>
+        <p>다인이가 앞으로 나가 영상을 재생했어요.<br>
+열두 시 삼십팔 분의 시계,<br>
+급식실 줄에 서 있는 노아,<br>
+그리고 바람에 부러져 떨어지는 나뭇가지.<br>
+영상이 끝나자 교실은<br>
+물을 끼얹은 듯 조용해졌지요.<br><br><span class="dialogue">"새로운 증거에 따라 첫 번째 판결을 뒤집습니다. 유리창은 강풍에 부러진 나뭇가지가 깬 것으로, 노아는 무죄입니다."</span><br><br>탕, 탕, 탕.<br>
+이번의 망치 소리는 노아의 가슴에 얹힌<br>
+커다란 돌을 부수는 소리였어요.</p>
+        <p>목격자였던 아이들이<br>
+쭈뼛쭈뼛 다가와 사과했어요.<br>
+일부러 그런 것이 아니라,<br>
+정말 그렇게 본 줄 알았다고요.<br><br><span class="dialogue">"판사는 오직 법과 증거만 보고, 어떤 눈치도 보지 않고 판결해야 해. 우리 세 판사가 친구들 눈치 안 보고 판결을 뒤집은 것, 정말 훌륭했어."</span></p>
+        <p><span class="highlight">두 번째 망치 소리와 함께, 느린 진실이 마침내 빠른 소문을 이겼어요.</span><br>
+항소라는 두 번째 기회가 없었다면<br>
+닿지 못했을 진실이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법08/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>작은 법정이 남긴 것</h2>
+        <p>유리창 사건이 끝난 뒤에도,<br>
+교실 뒤의 작은 법정은 치워지지 않았어요.<br>
+다툼이 생기면 소리 지르는 대신<br>
+"법정 열자"라고 말하는 것이<br>
+어느새 반의 문화가 되었지요.</p>
+        <p>노아는 사회 시간에 발표했어요.<br><br><span class="dialogue">"법원이 재판으로 옳고 그름을 가리는 힘을 <span class="vocab-tip" data-meaning="법원이 재판을 통해 옳고 그름을 가리는 권한">사법권</span>이라고 합니다. 소문은 저를 하루 만에 범인으로 만들었지만, 재판은 저를 천천히, 그러나 확실하게 지켜 주었습니다."</span></p>
+        <p>노아는 세 가지 원칙을 칠판에 적었어요.<br>
+판결 전까지는 무죄로 여길 것.<br>
+재판은 누구나 볼 수 있게 열어 둘 것.<br>
+판사는 누구의 눈치도 보지 않을 것.<br><br><span class="dialogue">"만약 두 번째 재판에서도 졌으면 어떻게 했어?"</span><br><br><span class="dialogue">"3심 제도니까 한 번 더 했겠지. 정말 억울한 일을 당하면, 이제는 알아. 법원에 도움을 요청하면 된다는 걸."</span></p>
+        <p>집으로 가는 길, 노아는 새로 끼워진<br>
+과학실 유리창을 올려다보았어요.<br>
+함부로 손가락질하지 않는 법을 배웠으니까요.<br>
+<span class="highlight">작은 법정이 남긴 것은 판결문이 아니라, 서로를 대하는 태도였어요.</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(120, 90, 170, 0.15); border-radius: 16px;">
+          <strong style="color: #785AAA; font-size: 20px;">⚖️ 「판결이 내려지기 전까지 누구도 죄인이 아니에요. 정의는 증거와 절차 위에 서지요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'law08_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

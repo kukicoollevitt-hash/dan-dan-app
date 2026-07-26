@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌏 우물 밖으로 떠난 스님 — 혜초와 왕오천축국전</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작한국인물11/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌏 우물 밖으로 떠난 스님 — 혜초와 왕오천축국전</h1>
+        <p class="subtitle">
+          — 넓은 세상은 떠나는 사람의 것이다 —<br>
+          교과기반 창작도서 · 한국인물 11 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🌏 등장인물 소개</h3>
+          <p><strong>★ 혜초 (주인공):</strong> 신라의 승려예요. 만 리 길을 걸어 인도를 여행하고, 위대한 여행 기록을 남겨요.</p>
+          <p><strong>★ 어미 멧돼지:</strong> 어린 혜초의 마음을 뒤흔든 숲속의 스승이에요. 생명의 무게를 처음 가르쳐 주지요.</p>
+          <p><strong>★ 인도 출신 고승:</strong> 당나라에서 혜초를 가르친 스승이에요. 부처가 태어난 땅의 이야기를 들려줘요.</p>
+          <p><strong>★ 상단 사람들:</strong> 물건을 싣고 서쪽으로 떠나는 장사꾼 무리예요. 인도로 가는 길을 열어 줘요.</p>
+          <p><strong>★ 왕오천축국전:</strong> 혜초가 4년의 여행을 담아 쓴 기록이에요. 오늘까지 전해지는 귀중한 보물이지요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 마음의 갈등:</strong> 생명을 가볍게 여겼던 부끄러움 vs. 마음을 닦는 수행의 길</p>
+          <p><strong>② 길의 갈등:</strong> 목숨을 위협하는 사막과 산맥 vs. 진리를 향한 열망</p>
+          <p><strong>③ 세상의 갈등:</strong> 우물 안 개구리의 편안함 vs. 낯설고 넓은 바깥세상</p>
+          <p><strong>④ 기록의 갈등:</strong> 사라질 뻔한 4년의 경험 vs. 책 한 권으로 남긴 기록</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물11/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>산골 소년과 멧돼지</h2>
+        <p>옛날 신라의 깊은 산골 마을에 호기심 많은 소년이 살았어요.<br>
+소년은 산과 들을 제집처럼 뛰어다녔지요.<br>
+궁금한 것이 생기면 알아낼 때까지 못 견디는 아이였어요.</p>
+        <p>그러던 어느 날, 소년은 산에서 커다란 멧돼지 한 마리를 잡았어요.<br>
+<span class="vocab-tip" data-meaning="뽐내고 싶을 만큼 자랑스러운 모양">의기양양</span>하게 집으로 돌아왔지요.<br>
+가족들과 함께 멧돼지를 맛있게 구워 먹었어요.<br>
+산골에서는 좀처럼 맛보기 어려운 푸짐한 저녁이었지요.</p>
+        <p>식구들은 오랜만의 고기 맛에 웃음꽃을 피웠어요.<br><br><span class="dialogue">"우리 아들 덕분에 온 식구가 배불리 먹는구나. 장하다, 장해!"</span><br><br>소년도 어깨가 으쓱해져 기분 좋게 잠이 들었지요.</p>
+        <p>남은 뼈는 마당 한쪽에 두었어요.<br>
+소년에게 그 뼈는 그저 먹고 남은 찌꺼기일 뿐이었지요.<br>
+사냥한 짐승이 어떤 목숨이었는지 생각해 보지 않았어요.</p>
+        <p>그런데 다음 날 아침, 이상한 일이 벌어졌어요.<br>
+마당에 두었던 뼈가 감쪽같이 사라진 거예요.<br>
+소년은 뼈의 흔적을 따라 숲으로 향했지요.</p>
+        <p><span class="highlight">아무것도 아닌 듯한 그 발걸음이, 한 사람의 인생을 통째로 바꾸어 놓게 돼요.</span> 숲속에서 소년을 기다리고 있던 것은 믿기 힘든 광경이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물11/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 각성</span>
+        <h2>숲속에서 마주친 것</h2>
+        <p>뼈의 흔적을 따라 숲으로 들어간 소년은 그 자리에 얼어붙고 말았어요.<br>
+믿기 힘든 광경이 눈앞에 펼쳐져 있었거든요.<br>
+죽은 줄 알았던 그 멧돼지가 살아 돌아와,<br>
+제 새끼들에게 젖을 먹이고 있었던 거예요.</p>
+        <p>어미 곁에는 새끼 멧돼지들이 옹기종기 모여 젖을 빨고 있었어요.<br>
+소년의 심장이 쿵 하고 내려앉았지요.<br>
+자기가 잡았던 멧돼지에게도<br>
+어미를 기다리는 새끼들이 있었을지 모른다는 생각이 스쳤거든요.</p>
+        <p>다리에 힘이 풀린 소년은 털썩 주저앉았어요.<br><br><span class="dialogue">"내가… 내가 무슨 짓을 한 것일까. 저 목숨에게도 지켜야 할 새끼들이 있었을 텐데."</span><br><br>뜨거운 것이 목구멍까지 차올랐지요.</p>
+        <p>소년은 생명을 가볍게 여겼다는 사실을 깊이 <span class="vocab-tip" data-meaning="잘못을 돌아보고 뉘우치는 것">반성</span>했어요.<br>
+어제까지 자랑스럽던 사냥이 오늘은 깊은 부끄러움이 되었지요.</p>
+        <p>그날 이후 소년은 달라졌어요.<br>
+마침내 마음을 닦는 <span class="vocab-tip" data-meaning="깨달음을 얻기 위해 몸과 마음을 갈고닦는 사람">수행자</span>의 길을 걷기로 결심했지요.<br>
+생명을 아끼는 삶을 살겠다고 다짐한 거예요.</p>
+        <p><span class="highlight">훗날 이 소년이 바로 신라의 유명한 승려, 혜초가 돼요.</span> 숲속의 어미 멧돼지가 첫 스승이었던 셈이지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물11/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 수행</span>
+        <h2>당나라로 건너간 승려</h2>
+        <p>수행자의 길에 들어선 혜초는 자라서 어엿한 <span class="vocab-tip" data-meaning="절에서 수행하며 부처의 가르침을 따르는 사람. 스님">승려</span>가 되었어요.<br>
+그리고 더 깊은 배움을 찾아<br>
+바다를 건너 당나라로 <span class="vocab-tip" data-meaning="공부하러 외국에 가서 머무는 것">유학</span>을 떠났지요.</p>
+        <p>그 시절 당나라는 세계에서 손꼽히게 크고 번화한 나라였어요.<br>
+거리에는 온갖 나라 사람들이 오갔지요.<br>
+젊은 승려에게는 보이는 모든 것이 새로운 배움터였어요.</p>
+        <p>혜초는 그곳에서 불교를 더욱 깊이 공부했어요.<br>
+두꺼운 경전을 읽고 또 읽었지요.<br>
+고향을 떠난 외로움도 배움의 기쁨 앞에서는 견딜 만했어요.</p>
+        <p>밤 깊도록 공부하는 혜초를 보고 승려들이 혀를 내둘렀어요.<br><br><span class="dialogue">"신라에서 온 저 젊은 스님은 잠도 없는가. 배움을 향한 열심이 참으로 대단하구나."</span></p>
+        <p>그러나 혜초의 마음 한구석에는 갈증이 남아 있었어요.<br>
+책 속의 글자만으로는 채워지지 않는 목마름이었지요.<br>
+부처의 가르침이 태어난 그 땅은 과연 어떤 곳일까.<br>
+두 눈으로 확인하고 싶은 마음이 자라났어요.</p>
+        <p><span class="highlight">배움이 깊어질수록, 혜초의 눈길은 자꾸만 서쪽 하늘을 향했어요.</span> 그 서쪽 끝에 부처의 나라, 인도가 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물11/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>스승이 들려준 서쪽 나라</h2>
+        <p>당나라에서 혜초는 인도에서 건너온 <span class="vocab-tip" data-meaning="수행과 학식이 깊은 훌륭한 스님">고승</span>을 만나게 되었어요.<br>
+부처가 태어난 바로 그 땅에서 온 스승이었지요.<br>
+스승의 말에는 먼 나라의 바람 냄새가 실려 있는 듯했어요.</p>
+        <p>스승은 틈이 날 때마다 고향 인도의 이야기를 들려주었어요.<br>
+부처가 깨달음을 얻었다는 나무 그늘.<br>
+오래된 사원들과 갠지스강의 아침 풍경.<br>
+혜초는 그 이야기를 들을 때마다 가슴이 뛰었지요.</p>
+        <p><span class="dialogue">"경전을 백 번 읽는 것도 소중하지만, 그 가르침이 태어난 땅을 두 발로 밟아 보는 것은 또 다른 공부라네."</span><br><br>이 한마디는 혜초의 가슴에 뜨거운 불씨처럼 떨어졌어요.</p>
+        <p>그 땅이 어떤 곳인지 알고 싶다는 마음이 커져 갔어요.<br>
+경전을 펼쳐도 글자 너머로 인도의 풍경이 어른거렸지요.<br>
+가 보지 않고는 견딜 수 없는 마음이 되어 갔어요.</p>
+        <p>그러나 인도는 아득히 먼 나라였어요.<br>
+가는 길에 목숨을 잃은 사람이 수없이 많다고 했지요.<br>
+그러나 꿈은 쉽게 사그라들지 않았어요.</p>
+        <p><span class="highlight">마음속 불씨는 이미 타오르기 시작했지만, 길은 아직 보이지 않았어요.</span> 그런데 어느 날, 그 길이 문득 혜초 앞에 나타났지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물11/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">전환 · 결단</span>
+        <h2>상단을 따라서</h2>
+        <p>그러던 어느 날, 혜초에게 뜻밖의 기회가 찾아왔어요.<br>
+여러 나라를 오가며 장사하는 <span class="vocab-tip" data-meaning="물건을 싣고 먼 길을 오가며 장사하는 상인의 무리">상단</span>이<br>
+인도를 향해 떠난다는 소식이었지요.<br>
+상단을 따라가면 험한 길도 함께 헤쳐 갈 수 있었어요.</p>
+        <p>혜초의 가슴이 세차게 뛰었어요.<br>
+그토록 꿈꿔 왔던 길이 눈앞에 열린 거예요.<br>
+그러나 망설임도 밀려왔지요.<br>
+살아 돌아온다는 보장이 없는 길이었으니까요.</p>
+        <p>곁의 사람들은 손사래를 치며 말렸어요.<br><br><span class="dialogue">"그 험한 길을 어찌 가려 하시오. 사막에서 목숨을 잃은 사람이 수없이 많다 하지 않소."</span></p>
+        <p>혜초는 밤을 새워 고민한 끝에 마음을 정했어요.<br><br><span class="dialogue">"두려움 때문에 꿈을 접는다면, 나는 평생 그 꿈의 언저리만 맴돌다 끝나고 말 것이다. 그러니 나는 가겠다."</span></p>
+        <p>인도로 가는 길은 험난하기로 유명했어요.<br>
+그러나 혜초는 진리를 향한 열망 하나로 길에 올랐지요.<br>
+바랑 하나 둘러메고 나선 만 리 길이었어요.<br>
+혜초는 앞만 보고 걸었지요.</p>
+        <p><span class="highlight">떠나는 사람만이 만날 수 있는 세상이 있어요.</span> 혜초의 길고도 위대한 여행이 그렇게 시작되었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물11/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 여정</span>
+        <h2>사막과 산맥을 넘어</h2>
+        <p>막상 나서 보니 길은 소문보다 훨씬 험했어요.<br>
+낮에는 불볕더위, 밤에는 뼛속까지 얼어붙는 사막을<br>
+며칠씩이나 걸어야 했지요.<br>
+물 한 모금이 금보다 귀한 날들이 이어졌어요.</p>
+        <p>사막이 끝나면 이번에는 높은 <span class="vocab-tip" data-meaning="여러 산이 길게 이어진 줄기">산맥</span>이 앞을 가로막았어요.<br>
+눈보라 치는 고개를 넘다 보면<br>
+발가락이 꽁꽁 얼어 감각이 사라지곤 했지요.</p>
+        <p>쓰러질 것 같은 밤이면,<br>
+혜초는 부처의 나라를 밟게 될 자신을 떠올리며 견뎠어요.<br><br><span class="dialogue">"이 한 걸음이 그 땅에 가까워지는 한 걸음이다. 멈추지만 않으면 언젠가 닿는다."</span></p>
+        <p>성스러운 곳을 하나하나 찾아다니는 여행,<br>
+곧 <span class="vocab-tip" data-meaning="종교적으로 성스러운 곳을 찾아다니는 여행">순례</span>의 길이었어요.<br>
+몸은 고되어도 마음은 나날이 맑아지는 여정이었지요.</p>
+        <p>고향 신라를 떠올리면 사무치게 그리웠어요.<br>
+그러나 혜초는 걸음을 되돌리지 않았지요.<br>
+그렇게 몇 달을 걸어서,<br>
+마침내 꿈에 그리던 인도 땅을 밟았어요.</p>
+        <p><span class="highlight">험한 길이 여행을 막지는 못했어요. 열망이 두려움보다 컸기 때문이지요.</span> 이제 혜초 앞에 놀라운 세계가 펼쳐져요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물11/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 발견</span>
+        <h2>네 해 동안의 놀라움</h2>
+        <p>혜초는 약 4년 동안 인도와 여러 나라를 두루 여행했어요.<br>
+그 길에서 보이는 모든 것에 놀라움을 느꼈지요.<br>
+신라에서도 당나라에서도 본 적 없는 세계가 펼쳐졌거든요.</p>
+        <p>사막에서 만난 사람들의 <span class="vocab-tip" data-meaning="한 지역 사람들이 오래도록 지켜 온 생활 방식">풍습</span>은 신기하기만 했어요.<br>
+옷차림도, 인사하는 법도, 음식도 나라마다 달랐지요.<br>
+말이 통하지 않아도 웃음과 손짓으로 마음이 오갔어요.</p>
+        <p>곳곳의 신비로운 사원들도 발길을 붙들었어요.<br>
+부처의 자취가 남은 곳에 설 때마다 가슴이 벅차올랐지요.<br><br><span class="dialogue">"책 속에서만 그리던 곳에 내 두 발로 서 있다니. 오기를 참으로 잘하였구나."</span></p>
+        <p>나라마다 종교와 생활 모습도 저마다 달랐어요.<br>
+사람들은 서로 다르게 믿고, 다르게 입고, 다르게 살고 있었지요.<br>
+다름은 두려운 것이 아니라 배울 것이 가득한 보물 창고였어요.</p>
+        <p>혜초는 가는 곳마다 눈을 크게 뜨고 귀를 열어 두었어요.<br>
+낯선 것을 만날 때마다 묻고, 보고, 마음에 새겼지요.</p>
+        <p><span class="highlight">세상은 혜초가 알던 것보다 훨씬 넓고, 훨씬 다채로웠어요.</span> 그 깨달음이 마음속에서 하나의 문장으로 여물어 가고 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물11/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>우물 안 개구리</h2>
+        <p>여행이 깊어질수록 혜초는 지난날의 자신을 돌아보게 되었어요.<br>
+신라와 당나라가 세상의 전부인 줄 알았던 자신을요.<br>
+세상의 끝인 줄 알았던 곳이<br>
+사실은 세상의 문턱에 지나지 않았던 거예요.</p>
+        <p>혜초는 마침내 자신이 '우물 안 개구리'였음을 깨달았어요.<br>
+우물 안에서 올려다보는 하늘은<br>
+겨우 동그란 우물 입구만 한 크기일 뿐이지요.<br>
+개구리는 그 작은 조각이 하늘의 전부라고 믿고 살아요.<br>
+우물 밖으로 나와 보기 전까지는요.</p>
+        <p><span class="dialogue">"내가 알던 세상은 참으로 작은 우물이었구나. 우물 밖에 이토록 크고 넓은 하늘이 있는 줄을 나는 몰랐다."</span></p>
+        <p>그 깨달음은 부끄러움이 아니라 기쁨이었어요.<br>
+세상이 넓다는 것을 아는 순간부터<br>
+배울 것도 그만큼 많아지니까요.<br>
+아는 만큼 <span class="vocab-tip" data-meaning="자기를 낮추고 남을 존중하는 마음">겸손</span>해지는 법이지요.</p>
+        <p>혜초의 마음속에는 새로운 마음이 자라났어요.<br>
+이 놀라운 세상을 혼자만 보고 말 수는 없다는 마음이었지요.<br>
+우물 안에 남은 사람들에게도 이 이야기를 전하고 싶어진 거예요.</p>
+        <p><span class="highlight">혼자 본 세상은 추억이 되지만, 나누어 전한 세상은 유산이 돼요.</span> 혜초는 붓을 들기로 마음먹었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물11/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 기록</span>
+        <h2>왕오천축국전</h2>
+        <p>여행을 마친 혜초는 겪은 경험을 빠짐없이 정리하기 시작했어요.<br>
+어느 나라에서 무엇을 보고 들었는지.<br>
+그곳 사람들은 어떻게 살아가는지.<br>
+기억이 흐려지기 전에 하나하나 글로 옮겼지요.</p>
+        <p>4년의 여행을 정리해 한 권의 <span class="vocab-tip" data-meaning="보고 겪은 일을 사실대로 적어 남긴 글">기록문</span>으로 묶었어요.<br>
+그렇게 완성된 책이 바로 왕오천축국전이에요.<br>
+다섯 천축국, 곧 인도의 여러 나라를 다녀온 기록이라는 뜻이지요.</p>
+        <p>이 책은 동아시아 최초의 본격 해외 여행기로 평가받아요.<br>
+바다 건너와 사막 너머의 세상이 어떤 곳인지<br>
+책으로 알려 준 첫 길잡이였던 셈이지요.</p>
+        <p>왕오천축국전의 가치는 세월이 흐를수록 더욱 빛났어요.<br>
+천삼백 년 전 그 먼 땅의 모습을<br>
+이토록 생생히 전해 주는 기록은 세계적으로도 드물거든요.</p>
+        <p>한 승려가 두 발로 걷고, 두 눈으로 보고,<br>
+한 손으로 적어 내려간 기록이 인류의 기억을 지켜 낸 거예요.</p>
+        <p><span class="highlight">여행은 4년으로 끝났지만, 기록은 천삼백 년을 살아남았어요.</span> 적어 두는 일의 힘이란 이토록 큰 것이지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물11/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>우물 밖의 하늘</h2>
+        <p>신라 산골에서 태어난 소년이 당나라를 거쳐 인도까지,<br>
+혜초는 상상하기 어려운 넓이의 삶을 살다 갔어요.</p>
+        <p>혜초의 삶을 이끈 것은 두 가지였어요.<br>
+어린 날 숲에서 생명 앞에 부끄러움을 알았던 마음.<br>
+그리고 모르는 세계를 향한 <span class="vocab-tip" data-meaning="깊이 파고들어 알아내려는 정신">탐구</span>의 정신이지요.</p>
+        <p>왕오천축국전은 오늘날 소중한 <span class="vocab-tip" data-meaning="조상들이 남긴, 함께 지키고 물려줄 값진 것">문화유산</span>으로 평가받아요.<br>
+천삼백 년 전 한 신라 사람의 용기가<br>
+인류 모두의 보물이 된 거지요.</p>
+        <p>혜초의 이야기가 전해 주는 교훈은 분명해요.<br>
+우물 안 개구리에서 벗어나 넓은 세상을 경험하라는 것이지요.<br>
+하늘의 진짜 크기는 언제나 우물 밖에 있으니까요.</p>
+        <p>지금의 우리에게도 저마다의 우물이 있어요.<br>
+익숙한 동네와 익숙한 생각.<br>
+그 바깥으로 한 발을 내딛는 작은 용기가 있다면,<br>
+누구나 자기만의 왕오천축국전을 쓸 수 있을 거예요.</p>
+        <p><span class="highlight">혜초는 우물 안 개구리로 남기를 거부한 사람이었어요.</span> 그 거부가 만든 넓은 세계가 지금도 우리를 우물 밖으로 부르고 있지요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(180, 140, 80, 0.15); border-radius: 16px;">
+          <strong style="color: #B48C50; font-size: 20px;">🌏 「만 리 길을 걸어간 발끝에서 한 권의 책이 태어났어요. 넓은 세상은 떠나는 사람의 것이지요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'korperson11_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

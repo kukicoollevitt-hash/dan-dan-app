@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🕯️ 등불을 든 여인, 그리고 숫자를 든 여인 — 나이팅게일</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계인물09/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00897b 0%, #004d40 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 137, 123, 0.15);
+      color: #004d40;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00897b;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #004d40;
+      font-weight: 600;
+    }
+
+    .story-card .key-sentence {
+      display: block;
+      background: rgba(0, 137, 123, 0.1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-left: 4px solid #00897b;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #004d40;
+      font-size: 14px;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #4dd0e1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(0, 137, 123, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #80cbc4;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 137, 123, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 77, 64, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 137, 123, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🕯️ 등불을 든 여인, 그리고 숫자를 든 여인 — 나이팅게일</h1>
+        <p class="subtitle">
+          — 헌신과 과학으로 간호를 바꾼 선구자 —<br>
+          교과기반 창작도서 · 세계인물 09
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 나이팅게일(1820~1910):</strong> 크림 전쟁에서 부상병을 헌신적으로 돌보고, 통계로 위생을 개선한 근대 간호의 선구자.</p>
+          <p><strong>★ 시대 배경:</strong> 여성이 직업을 갖기 어려웠던 19세기. 병원의 위생 개념도 지금과 크게 달랐던 시절이다.</p>
+          <p><strong>★ 핵심 개념:</strong> 헌신적인 간호, 위생과 과학, 통계와 자료, 여성의 사회 진출, 근대 간호학.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>피렌체에서 온 이름</h2>
+        <p>나이팅게일은 1820년, 부유한 영국 가문에서 태어났습니다. 그녀는 넉넉한 환경에서 좋은 교육을 받으며 자랐습니다. 부모님은 그녀가 편안한 삶을 살기를 바랐습니다.</p>
+        <p>그러나 나이팅게일은 편안한 삶에 만족하지 못했습니다. 그녀는 아픈 사람을 돌보고 세상에 도움이 되는 일을 하고 싶어 했습니다. 특히 병들고 고통받는 사람들에게 마음이 끌렸습니다.</p>
+        <p>나이팅게일이 살던 시대에는 여성이 직업을 갖는 것이 어려운 일이었습니다. 특히 간호는 신분이 낮은 일로 여겨져, 부유한 가문의 여성이 할 일이 아니라고 여겨졌습니다. 나이팅게일의 꿈 앞에는 시대의 벽이 놓여 있었습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 아픈 사람을 돕고 싶어 하는 나이팅게일의 마음과 그것을 가로막는 시대의 벽입니다. 이 전기는 헌신과 과학으로 간호를 바꾼 선구자의 삶을 그립니다. 부유한 가문의 딸이 그 출발점이 됩니다.</p>
+        <p>밤을 밝힌 것은 등불이었지만 세상을 바꾼 것은 숫자였다는 나이팅게일의 삶이, 이렇게 시작됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 갈등</span>
+        <h2>집안의 수치</h2>
+        <p>나이팅게일이 간호사가 되고 싶다고 하자, 가족들은 크게 반대했습니다. 부유한 가문의 딸이 간호 일을 하는 것은 집안의 수치라고 여겼기 때문입니다. 나이팅게일의 꿈은 가족에게 이해받지 못했습니다.</p>
+        <p>당시 간호는 제대로 교육받지 못한 사람들이 하는 천한 일로 취급받았습니다. 병원의 환경도 열악하기 그지없었습니다. 부모님이 딸의 꿈을 반대한 데에는 그런 까닭이 있었습니다.</p>
+        <p>그러나 나이팅게일은 자신의 꿈을 포기하지 않았습니다. 그녀는 아픈 사람을 돌보는 일이야말로 진정 가치 있는 일이라 믿었습니다. 시대의 편견과 가족의 반대에도, 그녀의 뜻은 조금도 꺾이지 않았습니다.</p>
+        <p>이 대목은 나이팅게일이 가족의 반대에 부딪히는 도입의 갈등 단계입니다. 간호를 천하게 여기던 시대의 편견이, 그녀의 꿈을 가로막습니다. 그러나 그 벽에도 굴하지 않는 나이팅게일의 굳은 의지가 드러납니다.</p>
+        <p>나이팅게일은 오랜 설득 끝에, 마침내 간호를 공부할 기회를 얻게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 배움</span>
+        <h2>서른 살의 학생</h2>
+        <p>나이팅게일은 서른 살 무렵, 마침내 간호를 배울 기회를 얻었습니다. 그녀는 다른 나라의 간호 교육 기관을 찾아가 간호를 체계적으로 공부했습니다. 늦은 나이였지만, 배움을 향한 그녀의 열정은 누구보다 뜨거웠습니다.</p>
+        <p>나이팅게일은 간호가 단순히 아픈 사람을 돌보는 일을 넘어, 깊은 지식과 정성이 필요한 일임을 배웠습니다. 그녀는 병자를 어떻게 돌보아야 하는지, 병원을 어떻게 관리해야 하는지를 진지하게 익혔습니다. 간호에 대한 그녀의 이해는 점점 깊어졌습니다.</p>
+        <p>나이팅게일은 배운 것을 바탕으로 병원에서 일하며 실력을 쌓았습니다. 그녀는 헌신적으로 환자를 돌보아 곧 뛰어난 간호사로 인정받게 되었습니다. 편견의 벽을 실력으로 넘어서기 시작한 것입니다.</p>
+        <p>이 대목은 나이팅게일이 간호를 체계적으로 배우는 전개의 단계입니다. 늦은 나이에도 열정을 다해 배우는 모습이 그려집니다. 간호가 지식과 정성이 필요한 일임을 그녀는 깨달아 갑니다.</p>
+        <p>그러던 어느 날, 먼 전쟁터에서 부상병들이 제대로 치료받지 못한다는 소식이 전해졌습니다. 나이팅게일은 그곳으로 향하기로 결심했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 결단</span>
+        <h2>전쟁터로 가는 배</h2>
+        <p>그 무렵 크림 전쟁이라는 큰 전쟁이 벌어지고 있었습니다. 전쟁터에서는 수많은 병사가 부상을 입었지만, 제대로 치료받지 못한 채 고통받고 있었습니다. 나이팅게일은 그 소식을 듣고 가만히 있을 수 없었습니다.</p>
+        <p>나이팅게일은 여러 간호사와 함께 위험한 전쟁터로 향하는 배에 올랐습니다. 편안한 삶을 버리고, 위험을 무릅쓰고 부상병을 돌보러 나선 것입니다. 그녀의 용기 있는 결단이었습니다.</p>
+        <p>전쟁터로 향하는 길은 험난하고 위험했습니다. 그러나 나이팅게일은 고통받는 병사들을 생각하며 조금도 망설이지 않았습니다. 아픈 사람을 돕겠다는 그녀의 마음이 두려움을 이긴 것입니다.</p>
+        <p>이 대목은 나이팅게일이 전쟁터로 향하는 전개의 결단 단계입니다. 위험을 무릅쓰고 부상병을 돌보러 나서는 용기가 그려집니다. 편안한 삶보다 헌신을 택한 그녀의 마음이 빛납니다.</p>
+        <p>그러나 전쟁터의 병원에 도착한 나이팅게일을 기다린 것은, 상상 이상으로 참혹한 광경이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 참상</span>
+        <h2>총알보다 무서운 것</h2>
+        <p>전쟁터의 병원은 상상 이상으로 끔찍했습니다. 부상병들은 더럽고 비좁은 곳에 방치되어 있었고, 위생이라고는 찾아볼 수 없었습니다. 나이팅게일은 그 참혹한 광경에 큰 충격을 받았습니다.</p>
+        <p>놀랍게도 많은 병사가 전투에서 입은 총상보다, 병원의 더러운 환경 때문에 생긴 병으로 목숨을 잃고 있었습니다. 총알보다 더 무서운 것은 바로 불결한 위생이었던 것입니다. 나이팅게일은 그 사실에 주목했습니다.</p>
+        <p>나이팅게일은 병원을 깨끗이 하는 것이 무엇보다 시급하다는 것을 깨달았습니다. 그녀는 병실을 청소하고, 환자들을 정성껏 돌보며 위생을 개선하기 시작했습니다. 그러나 처음에는 그녀의 노력을 이해하지 못하는 사람들도 많았습니다.</p>
+        <p>이 대목은 나이팅게일이 전쟁터 병원의 참상을 마주하는 위기의 단계입니다. 총알보다 무서운 불결한 위생이, 병사들을 죽음으로 몰아가고 있었습니다. 위생의 중요성을 깨달은 그녀의 눈이 문제의 핵심을 꿰뚫습니다.</p>
+        <p>나이팅게일은 위생을 개선하려 했지만, 그녀의 뜻을 가로막는 벽에 부딪혔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 헌신</span>
+        <h2>등불을 든 밤</h2>
+        <p>나이팅게일은 밤낮없이 부상병들을 돌보았습니다. 특히 깊은 밤에도 등불을 들고 병실을 돌며, 아픈 병사들을 하나하나 살폈습니다. 병사들은 밤마다 등불을 들고 자신들을 보살피는 그녀를 등불을 든 여인이라 불렀습니다.</p>
+        <p>나이팅게일의 헌신적인 보살핌 덕분에, 고통받던 병사들은 큰 위로를 받았습니다. 그녀의 등불은 어두운 병실을 밝히는 빛이자, 병사들에게 희망을 주는 빛이었습니다. 나이팅게일의 헌신은 많은 이의 마음을 울렸습니다.</p>
+        <p>그러나 나이팅게일은 헌신만으로는 근본적인 문제를 해결할 수 없다는 것을 알았습니다. 병원의 위생을 제대로 바꾸려면, 사람들을 설득할 확실한 근거가 필요했습니다. 그녀는 헌신을 넘어선 또 다른 방법을 찾기 시작했습니다.</p>
+        <p>이 대목은 나이팅게일의 헌신적인 보살핌이 빛나는 위기의 심화 단계입니다. 등불을 든 여인으로 불리며 병사들에게 희망을 준 모습이 그려집니다. 그러나 그녀는 헌신을 넘어선 근본적인 해결책을 고민하기 시작합니다.</p>
+        <p>나이팅게일은 위생을 개선해야 한다는 것을 사람들에게 증명하기 위해, 뜻밖의 방법을 떠올렸습니다. 바로 숫자였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 과학</span>
+        <h2>죽음을 세기 시작하다</h2>
+        <p>나이팅게일은 병사들이 어떤 까닭으로 목숨을 잃는지를 하나하나 숫자로 기록하기 시작했습니다. 전투로 죽은 병사와, 병원의 더러운 환경 때문에 죽은 병사의 수를 꼼꼼히 세어 나간 것입니다. 그녀는 죽음의 원인을 자료로 모으기 시작했습니다.</p>
+        <p>그 숫자들은 놀라운 사실을 보여 주었습니다. 전투가 아니라 불결한 위생 때문에 목숨을 잃은 병사가 훨씬 많았던 것입니다. 나이팅게일은 이 숫자야말로 위생 개선이 시급하다는 것을 증명하는 확실한 근거임을 알았습니다.</p>
+        <p>나이팅게일은 헌신적인 간호사일 뿐 아니라, 자료를 통해 문제를 밝혀내는 뛰어난 통계학자이기도 했습니다. 그녀는 감정에 호소하는 대신, 정확한 숫자로 사람들을 설득하려 한 것입니다. 이것이 그녀가 세상을 바꾼 방법이었습니다.</p>
+        <p>이 대목은 나이팅게일이 통계를 활용하는 절정의 단계입니다. 죽음의 원인을 숫자로 기록하는 과학적인 접근이, 문제 해결의 열쇠가 됩니다. 헌신을 넘어 자료로 세상을 설득하려는 그녀의 지혜가 빛납니다. 감정에 호소하기보다 사실로 증명하는 것이 훨씬 큰 힘을 지녔던 것입니다.</p>
+        <p>나이팅게일은 자신이 모은 숫자를 누구나 한눈에 알아볼 수 있도록, 그림으로 만들었습니다. 아무리 정확한 자료라도 알아보기 쉬워야 사람들을 움직일 수 있다고 여겼기 때문입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>그림이 된 숫자</h2>
+        <p>나이팅게일은 자신이 모은 숫자를 알아보기 쉬운 그림, 곧 그래프로 만들었습니다. 복잡한 숫자를 그림으로 나타내니, 위생 문제의 심각함이 한눈에 드러났습니다. 사람들은 그 그림을 보고 비로소 문제의 심각성을 깨달았습니다.</p>
+        <p>나이팅게일의 그래프는 정부와 사람들을 움직였습니다. 그녀의 자료 덕분에 병원의 위생이 크게 개선되었고, 수많은 병사의 목숨을 구할 수 있었습니다. 숫자와 그림이 실제로 세상을 바꾼 것입니다.</p>
+        <p>그 순간 나이팅게일은 중요한 것을 보여 주었습니다. 밤을 밝힌 것은 등불이었지만, 세상을 진정 바꾼 것은 숫자였다는 사실을 말입니다. 헌신적인 보살핌도 소중했지만, 문제를 근본적으로 해결한 것은 과학적인 자료였습니다.</p>
+        <p>이 대목은 이야기의 정신적 절정, 곧 나이팅게일의 각성입니다. 숫자를 그림으로 만들어 세상을 움직인 그녀의 지혜가 빛납니다. 헌신과 과학이 함께할 때 진정한 변화가 일어남을, 그녀는 보여 주었습니다. 따뜻한 마음만으로도, 냉철한 자료만으로도 이루지 못할 일을 그녀는 둘을 합쳐 이루어 냈습니다.</p>
+        <p>나이팅게일의 노력 덕분에, 간호는 천한 일이 아니라 과학과 정성이 필요한 소중한 전문 분야로 인정받게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 유산</span>
+        <h2>5월 12일</h2>
+        <p>전쟁이 끝난 뒤, 나이팅게일은 간호를 체계적으로 가르치는 학교를 세웠습니다. 그녀는 간호가 제대로 교육받아야 하는 전문 분야임을 알렸습니다. 이로써 근대 간호학의 기틀이 마련된 것입니다.</p>
+        <p>나이팅게일의 노력 덕분에, 천하게 여겨지던 간호는 존경받는 전문 직업으로 거듭났습니다. 그녀는 헌신적인 보살핌과 과학적인 방법으로 간호의 역사를 완전히 바꾸어 놓았습니다. 나이팅게일은 근대 간호의 어머니로 불리게 되었습니다.</p>
+        <p>오늘날 나이팅게일이 태어난 5월 12일은 세계 간호사의 날로 기념되고 있습니다. 그녀의 헌신과 업적을 온 세계가 기리는 것입니다. 한 여성의 용기와 지혜가, 인류의 소중한 유산이 된 것입니다.</p>
+        <p>이 대목은 나이팅게일의 업적이 후세에 이어지는 결말의 유산 단계입니다. 간호 학교를 세우고 근대 간호의 기틀을 마련한 그녀의 성취가 그려집니다. 5월 12일이라는 기념일이 그녀의 위대함을 증언합니다.</p>
+        <p>나이팅게일이 남긴 헌신과 과학의 정신은, 오늘날에도 수많은 간호사와 사람들에게 이어지고 있습니다. 그녀가 밝힌 등불은 시대를 넘어 여전히 사람들의 곁을 지키고 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>등불과 숫자를 함께 든 여인</h2>
+        <p>나이팅게일은 헌신적인 보살핌으로 병사들에게 희망을 주고, 과학적인 자료로 세상을 바꾼 위대한 인물입니다. 그녀는 등불을 든 여인이자, 동시에 숫자를 든 여인이었습니다. 따뜻한 마음과 냉철한 지혜를 함께 갖춘 것입니다.</p>
+        <p>이 인물이 우리에게 남기는 가르침은 분명합니다. 세상을 바꾸는 데에는 헌신적인 마음도 필요하지만, 그것을 뒷받침하는 정확한 근거와 지혜도 함께 있어야 한다는 것입니다. 나이팅게일은 마음과 과학을 함께 갖춘 선구자였습니다.</p>
+        <p>무엇보다 나이팅게일의 삶은, 편견과 어려움에 굴하지 않는 용기의 소중함을 일깨웁니다. 그녀는 간호를 천하게 여기던 시대의 편견에 맞서, 자신의 꿈을 끝까지 지켰습니다. 그 용기가 간호의 역사를 바꾸어 놓았습니다.</p>
+        <p>나이팅게일의 이야기는 오늘의 우리에게도 깊은 울림을 줍니다. 따뜻한 마음과 정확한 지혜를 함께 지닐 때, 우리도 세상을 더 나은 곳으로 바꿀 수 있다는 것입니다. 등불과 숫자를 함께 든 그녀의 모습은, 참된 변화가 무엇인지를 일러 줍니다.</p>
+        <p><span class="highlight">밤을 밝힌 것은 등불이었지만, 세상을 바꾼 것은 숫자였습니다. 헌신과 과학이 함께 세상을 바꿉니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+      function goToQuiz() { window.location.href = '/creative-book/worldperson09_season1_quiz.html?season=season3'; }
+  </script>
+</body>
+</html>

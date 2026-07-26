@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👟 개울에 남긴 꽃신 한 짝 — 하늘이 도운 콩쥐</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/고전문학09/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>👟 개울에 남긴 꽃신 한 짝 — 하늘이 도운 콩쥐</h1>
+        <p class="subtitle">
+          — 착한 마음은 하늘이 먼저 알아봐요 —<br>
+          교과기반 창작도서 · 고전문학 09 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>👟 등장인물 소개</h3>
+          <p><strong>★ 콩쥐 (주인공):</strong> 어머니를 여의고도 착한 마음을 잃지 않은 소녀예요. 하늘이 먼저 알아본 아이지요.</p>
+          <p><strong>★ 계모와 팥쥐:</strong> 콩쥐를 구박하는 새어머니와 의붓동생이에요.</p>
+          <p><strong>★ 하늘의 조력자들:</strong> 두꺼비와 참새 떼, 그리고 선녀예요. 착한 이의 곁에 내려온 도움들이지요.</p>
+          <p><strong>★ 원님:</strong> 꽃신 한 짝을 들고 주인을 찾아 나서는 사람이에요.</p>
+          <p><strong>★ 꽃신 한 짝:</strong> 개울가에 남겨진 인연의 증표예요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 가정의 갈등:</strong> 놀기만 하는 팥쥐 vs. 궂은일을 도맡는 콩쥐</p>
+          <p><strong>② 마음의 갈등:</strong> 원망하고 싶은 처지 vs. 끝내 착함을 지키는 콩쥐의 선택</p>
+          <p><strong>③ 과제의 갈등:</strong> 도저히 끝낼 수 없는 일들 vs. 하늘에서 내려온 도움</p>
+          <p><strong>④ 하늘의 갈등:</strong> 잠시 이기는 듯 보이는 악 vs. 끝내 착한 사람에게 돌아가는 복</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학09/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>콩쥐의 봄날</h2>
+        <p>옛날 어느 마을에 콩쥐라는 소녀가 살았어요.<br>
+콩쥐의 어린 시절은 봄날처럼 따뜻했지요.<br>
+어머니는 콩쥐의 머리를 곱게 땋아 주며<br>
+노래를 불러 주곤 했어요.</p>
+        <p>그러나 그 봄날은 너무 짧았어요.<br>
+어머니가 그만 병을 얻어 세상을 떠나고 만 거예요.<br>
+어머니는 마지막으로 콩쥐의 손을 잡고 말했지요.<br><br><span class="dialogue">"콩쥐야, 어떤 일이 있어도... 착한 마음을 잃지 말거라. 착하게 살면, 하늘이 너를 지켜 줄 거야."</span><br><br>콩쥐는 어머니 말씀대로<br>
+착하게 살겠다고 약속했어요.</p>
+        <p>몇 해 뒤, 아버지는 새 부인을 맞이했어요.<br>
+새어머니는 팥쥐라는 제 딸을 데리고 들어왔지요.<br>
+처음 얼마 동안 새어머니는 콩쥐에게 상냥했어요.<br>
+그러나 그 상냥함은<br>
+아버지가 보는 앞에서만 피는 꽃이었지요.<br>
+아버지가 집을 비우는 날이 많아지자<br>
+집안의 <span class="vocab-tip" data-meaning="어떤 자리에서 느껴지는 기운">공기</span>가 서늘하게 바뀌기 시작했어요.</p>
+        <p><span class="highlight">"착한 마음을 잃지 말거라." 어머니의 마지막 <span class="vocab-tip" data-meaning="단단히 부탁하는 말">당부</span>가 콩쥐의 전 재산이었어요.</span><br>
+그 재산이 시험대에 오를 날이 다가오고 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학09/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>달라진 집안</h2>
+        <p>아버지의 발길이 뜸해지자<br>
+<span class="vocab-tip" data-meaning="아버지가 새로 맞이한 아내. 새어머니">계모</span>의 본모습이 드러났어요.<br>
+팥쥐에게는 고운 비단옷을 입히고<br>
+맛난 것을 골라 먹이면서,<br>
+콩쥐에게는 해진 옷과 식은 밥덩이만<br>
+던지듯 주었지요.</p>
+        <p>집안의 힘든 <span class="vocab-tip" data-meaning="힘들고 험하며 궂은 집안일">궂은일</span>은<br>
+모조리 콩쥐 차지가 되었어요.<br>
+새벽에 일어나 <span class="vocab-tip" data-meaning="물을 퍼서 담아 오는 것">우물물을 긷고</span>,<br>
+산에 올라 나무를 해 오고,<br>
+뙤약볕 아래에서 밭의 김을 맸지요.<br>
+손등이 트고 발뒤꿈치가 갈라져도<br>
+누구 하나 약을 발라 주지 않았어요.</p>
+        <p>그동안 팥쥐는 놀기만 하면서<br>
+트집은 도맡아 잡았어요.<br><br><span class="dialogue">"어머니, 콩쥐가 일을 게을리해요! 밭에서 낮잠 자는 걸 내가 봤다니까요."</span><br><br>마을 사람들은 혀를 찼지요.<br><br><span class="dialogue">"쯧쯧, 저 어린것이 무슨 죄라고... 손이 다 트고 갈라졌구먼."</span></p>
+        <p>그러나 콩쥐는 누구를 원망하지 않았어요.<br>
+힘들 때면 어머니의 무덤가에 찾아가<br>
+가만히 앉아 있다 오곤 했지요.<br>
+<span class="highlight">집은 같았지만, 콩쥐의 자리는 하루아침에 달라졌어요.</span><br>
+그래도 콩쥐는 어머니와의 약속을 놓지 않았지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학09/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 인내</span>
+        <h2>원망 대신 웃음</h2>
+        <p>콩쥐의 하루는 고되었지만,<br>
+얼굴에서 웃음이 사라지지 않았어요.<br>
+이웃을 만나면 먼저 허리 숙여 인사하고,<br>
+무거운 짐을 진 노인을 보면<br>
+달려가 도왔지요.</p>
+        <p>팥쥐는 그런 콩쥐가 미워 심술을 부렸어요.<br>
+힘겹게 길어 온 물동이를 슬쩍 엎어 버리고,<br>
+나물 바구니를 발로 차 뒤엎기도 했지요.<br>
+그러면 콩쥐는 말없이<br>
+처음부터 다시 시작할 뿐이었어요.</p>
+        <p>하루는 팥쥐가 약이 올라 쏘아붙였어요.<br><br><span class="dialogue">"언니는 바보야? 어머니가 그렇게 구박하는데 왜 화도 안 내?"</span><br><br>콩쥐는 하늘을 올려다보고 조용히 대답했지요.<br><br><span class="dialogue">"화를 내면 내 마음까지 미워지는걸. 나는 그게 더 무서워."</span></p>
+        <p>마을 사람들의 칭찬이 들려올수록<br>
+계모의 심술은 더 사나워졌어요.<br>
+힘에 부치는 날이면 콩쥐는 무덤가에 들꽃을 놓고 속삭였지요.<br><br><span class="dialogue">"어머니, 저 잘 견디고 있지요? 약속 지키고 있지요?"</span><br><br><span class="highlight">착함은 약해서 지키는 것이 아니라, 지키기로 정했기에 지켜지는 것이었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학09/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">위기 · 사건</span>
+        <h2>잔칫날 아침의 명령</h2>
+        <p>어느 봄날, 마을이 온통 들썩였어요.<br>
+이웃 마을에서 큰 <span class="vocab-tip" data-meaning="기쁜 일을 축하하며 여러 사람이 모여 벌이는 큰 모임">잔치</span>가 열린다는 소식이었지요.<br>
+콩쥐네 식구도 모두 초대를 받았어요.<br>
+계모와 팥쥐는 새 옷을 짓고 몸단장에 바빴고,<br>
+콩쥐도 어머니가 남긴 낡은 옷을<br>
+곱게 빨아 다려 두었지요.</p>
+        <p>그러나 잔칫날 아침,<br>
+계모는 문 앞에서 차갑게 말했어요.<br><br><span class="dialogue">"너는 일을 다 끝내거든 오너라. 밑 빠진 독에 물을 가득 채우고, 베 한 필을 다 짜 놓고, 마당의 벼도 다 찧어 놓아라. 하나라도 남기면 잔치에 올 생각은 하지도 마라."</span></p>
+        <p>콩쥐는 눈앞이 캄캄해졌어요.<br>
+밑 빠진 독은 아무리 물을 부어도 채워질 리 없고,<br>
+베 한 필과 산더미 같은 벼는<br>
+며칠은 걸릴 일이었지요.<br>
+애초에 콩쥐를 잔치에 못 오게 하려는 심술이었던 거예요.</p>
+        <p>계모는 팥쥐의 손을 잡고 콧노래를 부르며 나섰어요.<br>
+텅 빈 마당에 콩쥐 혼자 덩그러니 남았지요.<br>
+<span class="highlight">끝낼 수 없는 일을 시키는 것은, 오지 말라는 말보다 더 모진 말이었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학09/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 절망</span>
+        <h2>밑 빠진 독 앞에서</h2>
+        <p>콩쥐는 물동이를 들고 우물로 달려갔어요.<br>
+첨벙, 독에 물을 부었지요.<br>
+그러나 물은 밑 빠진 독의 구멍으로<br>
+순식간에 모조리 새어 나가 버렸어요.</p>
+        <p>콩쥐는 포기하지 않고<br>
+우물과 독 사이를 수십 번도 넘게 오갔어요.<br>
+어깨가 벗겨지고 손바닥이 부르텄지요.<br>
+그러나 독 안의 물은 언제나 바닥에 한 뼘,<br>
+붓는 것보다 새는 것이 더 빨랐어요.</p>
+        <p>해는 벌써 하늘 한가운데를 지나고 있었어요.<br>
+<span class="vocab-tip" data-meaning="베라는 천을 짜는 기계">베틀</span>도, 벼 멍석도 그대로 쌓여 있었지요.<br>
+콩쥐는 그제야 독 옆에 주저앉아<br>
+참았던 울음을 터뜨렸어요.<br><br><span class="dialogue">"어머니, 저는 잔치에 가면 안 되는 아이인가요? 아무리 애를 써도... 이 독은 채워지지 않아요."</span></p>
+        <p>그때였어요.<br>
+어디선가 낮고 우렁우렁한 목소리가 들려왔지요.<br><br><span class="dialogue">"콩쥐 아가씨, 울지 마시오."</span><br><br>콩쥐는 깜짝 놀라 주위를 두리번거렸어요.<br>
+그러나 마당에는 아무도 보이지 않았지요.<br>
+<span class="highlight">가장 캄캄한 순간, 하늘은 이미 콩쥐를 내려다보고 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학09/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">전환 · 원조</span>
+        <h2>하늘이 보낸 손님들</h2>
+        <p>목소리는 발밑에서 들려왔어요.<br>
+등이 바위처럼 넓적한 커다란 두꺼비가<br>
+엉금엉금 기어 나와 말했지요.<br><br><span class="dialogue">"착한 아가씨의 울음소리를 듣고 왔소. 내가 독 밑의 구멍을 등으로 막을 테니, 어서 물을 부으시오."</span><br><br>두꺼비가 구멍을 막자 신기한 일이 벌어졌어요.<br>
+물이 차곡차곡 차오르더니<br>
+독 가장자리까지 찰랑찰랑 가득 찬 거예요.</p>
+        <p>이번에는 참새 떼가<br>
+구름처럼 마당에 내려앉았어요.<br>
+조그만 부리로 벼 껍질을 콕콕 벗겨 내니,<br>
+산더미 같던 벼가 눈 깜짝할 사이에<br>
+뽀얀 쌀로 변했지요.</p>
+        <p>마지막으로 하늘에서 고운 빛과 함께<br>
+<span class="vocab-tip" data-meaning="하늘나라에 산다고 전해지는 아름다운 여인">선녀</span>가 내려왔어요.<br>
+선녀가 베틀에 앉아 손을 놀리자<br>
+베 한 필이 금세 완성되었지요.<br>
+선녀는 떠나기 전에 고운 비단옷과<br>
+<span class="vocab-tip" data-meaning="꽃무늬를 수놓아 만든 고운 신발">꽃신</span> 한 켤레를 내밀었어요.<br><br><span class="dialogue">"네 착한 마음을 하늘이 오래 지켜보았단다. 이 옷을 입고 어서 잔치에 가거라."</span></p>
+        <p><span class="highlight">콩쥐가 흘린 땀과 참아 낸 눈물을, 하늘은 하나도 빠짐없이 세고 있었어요.</span><br>
+콩쥐는 몇 번이고 하늘에 절을 올렸지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학09/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 사건</span>
+        <h2>개울에 남긴 꽃신 한 짝</h2>
+        <p>고운 옷을 입고 꽃신을 신은 콩쥐는<br>
+나는 듯이 잔치 마을로 향했어요.<br>
+마음이 급해 개울 위 징검다리를<br>
+서둘러 건너던 참이었지요.</p>
+        <p>그때 뒤에서 요란한 외침이 들려왔어요.<br><br><span class="dialogue">"물렀거라! 원님 행차시다!"</span><br><br>고을을 다스리는 <span class="vocab-tip" data-meaning="옛날에 한 고을을 다스리던 벼슬아치">원님</span>의 행렬이<br>
+개울 쪽으로 다가오고 있었던 거예요.<br>
+콩쥐는 깜짝 놀라 길을 비키려다<br>
+그만 발을 헛디뎠어요.<br>
+꽃신 한 짝이 벗겨져<br>
+개울물에 퐁당 빠지고 말았지요.</p>
+        <p>콩쥐는 하는 수 없이 한 짝만 신은 채<br>
+잔치 마을로 달려갔어요.<br>
+개울에 이른 원님은 물속에서 반짝이는 것을 보고<br>
+행렬을 멈추게 했지요.<br>
+건져 올려 보니 곱게 수놓은 꽃신 한 짝이었어요.<br><br><span class="dialogue">"이토록 고운 신을 잃고도 줍지 못하고 간 사람은 대체 누구일까. 이 신의 주인을 반드시 찾아오너라."</span></p>
+        <p><span class="highlight">개울에 남은 꽃신 한 짝이, 콩쥐의 운명을 바꿀 열쇠가 되었어요.</span><br>
+물론 그때의 콩쥐는 아무것도 모른 채<br>
+잔치 마당에 막 들어서고 있었지만요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학09/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 반전</span>
+        <h2>신은 주인을 안다</h2>
+        <p>이튿날부터 신하들은 꽃신을 들고<br>
+집집마다 다니며 주인을 찾았어요.<br>
+마을 처녀들이 서로 신어 보았지만,<br>
+신은 그 누구의 발에도 맞지 않았지요.</p>
+        <p>드디어 신하들이 콩쥐네 집에 이르렀어요.<br>
+팥쥐가 제일 먼저 달려 나와 발을 들이밀었지요.<br>
+발가락을 오므리고 안간힘을 썼지만,<br>
+신은 반도 들어가지 않았어요.<br>
+계모가 얼른 끼어들어 둘러댔지요.<br><br><span class="dialogue">"우리 집에 처녀는 이 아이 하나뿐입니다. 다른 집으로 가 보시지요."</span></p>
+        <p>바로 그때, 부엌에서 물동이를 인 콩쥐가<br>
+마당으로 나왔어요.<br>
+콩쥐가 가만히 발을 넣자<br>
+꽃신은 마치 제집을 찾은 듯 발에 꼭 맞았지요.<br>
+콩쥐가 품에서 나머지 한 짝을 꺼내<br>
+나란히 신어 보이자,<br>
+사람들 사이에서 낮은 탄성이 터져 나왔어요.</p>
+        <p>신하들은 콩쥐를 원님 앞으로 모셔 갔어요.<br>
+원님은 콩쥐의 갸륵한 마음씨와<br>
+그동안의 딱한 사정을 전해 듣고<br>
+마음이 더욱 깊어졌지요.<br>
+<span class="highlight">아무리 감추어도 신은 제 주인을 알았고, 하늘은 제 사람을 알았어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학09/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>꽃신이 찾아온 복</h2>
+        <p>얼마 뒤 고을에 큰 경사가 났어요.<br>
+원님과 콩쥐의 <span class="vocab-tip" data-meaning="남자와 여자가 부부가 되는 것. 결혼">혼인</span> 잔치가 열린 거예요.<br>
+마을 사람들은 제 일처럼 기뻐하며<br>
+잔치 마당을 가득 메웠지요.<br><br><span class="dialogue">"그 착한 콩쥐가 드디어 복을 받았구나! 하늘도 무심하지 않지."</span></p>
+        <p>콩쥐를 모질게 구박하던 계모와 팥쥐가<br>
+저지른 일들도 낱낱이 드러났어요.<br>
+두 사람은 따가운 손가락질 속에<br>
+마을에서 쫓겨나고 말았지요.<br>
+남을 괴롭힌 죄는 그렇게<br>
+제 발등으로 고스란히 돌아왔어요.</p>
+        <p>혼인날 아침, 콩쥐는 가장 먼저<br>
+어머니의 무덤을 찾았어요.<br>
+무덤가에 들꽃을 놓고 조용히 말했지요.<br><br><span class="dialogue">"어머니, 약속 지켰어요. 착한 마음, 끝까지 잃지 않았어요."</span></p>
+        <p>원님의 아내가 된 뒤에도<br>
+콩쥐는 조금도 달라지지 않았어요.<br>
+배고픈 이웃에게 쌀을 나누어 주고,<br>
+억울한 사람의 이야기에 귀를 기울였지요.<br>
+<span class="highlight">꽃신이 가져다준 것은 혼인만이 아니라, 착하게 살아온 세월에 대한 하늘의 대답이었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학09/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>착한 마음은 하늘이 안다</h2>
+        <p>콩쥐팥쥐 이야기는 조선 시대부터<br>
+입에서 입으로 전해 내려온 우리 옛이야기예요.<br>
+글로 적히기 전에도 할머니가 손주에게,<br>
+어머니가 아이에게 들려주며 이어져 왔지요.</p>
+        <p>재미있는 사실도 있어요.<br>
+서양의 신데렐라 이야기와<br>
+콩쥐 이야기가 놀랍도록 닮았다는 거예요.<br>
+구박받는 착한 소녀, 신비한 도움,<br>
+잃어버린 신발 한 짝, 그리고 행복한 결말까지.<br>
+멀리 떨어진 나라의 사람들이<br>
+서로 닮은 꿈을 꾸었던 셈이지요.</p>
+        <p>착한 사람은 복을 받고<br>
+악한 사람은 벌을 받는다는 주제를<br>
+<span class="vocab-tip" data-meaning="착한 일을 권하고 악한 일을 벌한다는 뜻">권선징악</span>이라고 해요.<br>
+옛사람들은 이야기 속에 그 믿음을 담아<br>
+힘든 세월을 견디는 힘으로 삼았지요.</p>
+        <p>콩쥐 이야기는 오늘날에도<br>
+동화책과 만화 영화로 다시 태어나요.<br>
+착한 마음이 끝내 이긴다는 이야기가<br>
+지금도 우리를 위로해 주기 때문이지요.<br>
+<span class="highlight">개울에 남긴 꽃신 한 짝은 우연이 아니었어요. 착하게 견딘 모든 날들이 그 신을 콩쥐의 발에 다시 신겨 준 거예요.</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(200, 120, 140, 0.15); border-radius: 16px;">
+          <strong style="color: #C8788C; font-size: 20px;">👟 「착한 마음은 하늘이 먼저 알아봐요. 꽃신은 그 마음을 찾아온 증표였어요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'classic09_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

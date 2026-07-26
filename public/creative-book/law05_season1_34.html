@@ -1,630 +1,739 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>⚖️ 세 번의 종소리</title>
- <style>
- * {
- margin: 0;
- padding: 0;
- box-sizing: border-box;
- }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚖️ 세 번의 종소리</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
- body {
- font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
- overflow-x: hidden;
- background: #1a1a1a;
- }
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
 
- /* 고정 지도 캔버스 */
- #map-container {
- position: fixed;
- top: 0;
- left: 0;
- width: 100%;
- height: 100vh;
- background: url('/images/창작도서/창작법05/00.jpg');
- background-size: cover;
- background-position: center;
- background-repeat: no-repeat;
- transition: background-image 1s ease-in-out;
- z-index: 1;
- }
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작법05/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
 
- #map-canvas {
- display: none;
- }
+    #map-canvas {
+      display: none;
+    }
 
- /* 스크롤 가능한 콘텐츠 */
- #content {
- position: relative;
- z-index: 2;
- pointer-events: none;
- }
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
 
- .story-section {
- min-height: 100vh;
- display: flex;
- align-items: center;
- justify-content: flex-start;
- padding: 60px 120px;
- pointer-events: none;
- }
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
 
- /* 홀수 섹션은 왼쪽 */
- .story-section:nth-child(odd) {
- justify-content: flex-start;
- }
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
 
- /* 짝수 섹션은 오른쪽 */
- .story-section:nth-child(even) {
- justify-content: flex-end;
- }
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
 
- .story-card {
- background: rgba(255, 255, 255, 0.85);
- backdrop-filter: blur(15px);
- padding: 40px;
- border-radius: 24px;
- max-width: 600px;
- box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
- transform: translateX(100px);
- opacity: 0;
- transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
- pointer-events: auto;
- }
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
 
- /* 왼쪽에서 나오는 카드 */
- .story-section:nth-child(odd) .story-card {
- transform: translateX(-100px);
- }
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
 
- /* 오른쪽에서 나오는 카드 */
- .story-section:nth-child(even) .story-card {
- transform: translateX(100px);
- }
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
 
- .story-card.active {
- transform: translateX(0);
- opacity: 1;
- }
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
 
- .story-card .chapter {
- display: inline-block;
- padding: 8px 20px;
- background: linear-gradient(135deg, #00838F 0%, #006064 100%);
- color: white;
- border-radius: 20px;
- font-size: 14px;
- font-weight: 600;
- margin-bottom: 15px;
- box-shadow: 0 4px 15px rgba(0, 131, 143, 0.3);
- }
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00838F 0%, #006064 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 131, 143, 0.3);
+    }
 
- .story-card .theme {
- display: inline-block;
- padding: 4px 12px;
- background: rgba(0, 131, 143, 0.15);
- color: #006064;
- border-radius: 12px;
- font-size: 12px;
- font-weight: 600;
- margin-left: 8px;
- }
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 131, 143, 0.15);
+      color: #006064;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
 
- .story-card h2 {
- font-size: 26px;
- color: #2c3e50;
- margin-bottom: 20px;
- line-height: 1.4;
- }
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
 
- .story-card p {
- font-size: 15px;
- line-height: 1.9;
- color: #34495e;
- margin-bottom: 14px;
- text-align: justify;
- }
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
 
- .story-card p:last-child {
- margin-bottom: 0;
- }
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
 
- .story-card .highlight {
- color: #00838F;
- font-weight: 600;
- }
+    .story-card .highlight {
+      color: #00838F;
+      font-weight: 600;
+    }
 
- .story-card .dialogue {
- color: #006064;
- font-weight: 600;
- }
+    .story-card .dialogue {
+      color: #006064;
+      font-weight: 600;
+    }
 
- .vocab-tip {
- position: relative;
- color: #00838F;
- border-bottom: 1px dotted #00838F;
- cursor: help;
- font-weight: 600;
- }
- .vocab-tip::after {
- content: attr(data-meaning);
- position: absolute;
- bottom: 100%;
- left: 50%;
- transform: translateX(-50%);
- background: #333;
- color: #fff;
- padding: 8px 12px;
- border-radius: 8px;
- font-size: 13px;
- white-space: nowrap;
- opacity: 0;
- pointer-events: none;
- transition: opacity 0.2s;
- z-index: 100;
- }
- .vocab-tip:hover::after {
- opacity: 1;
- }
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
 
- /* 인트로 섹션 */
- .intro-section {
- min-height: 100vh;
- display: flex;
- flex-direction: column;
- align-items: center;
- justify-content: center;
- text-align: center;
- padding: 60px;
- }
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
 
- .intro-content {
- background: rgba(0, 0, 0, 0.5);
- backdrop-filter: blur(10px);
- padding: 60px 80px;
- border-radius: 30px;
- max-width: 850px;
- animation: fadeInUp 1s ease-out;
- }
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
 
- .intro-content h1 {
- font-size: 44px;
- font-weight: 700;
- color: #ffffff;
- margin-bottom: 20px;
- text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
- }
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
 
- .intro-content .subtitle {
- font-size: 20px;
- line-height: 1.8;
- color: #e0e0e0;
- margin-bottom: 30px;
- font-weight: 400;
- }
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
 
- .intro-content .characters {
- text-align: left;
- background: rgba(255, 255, 255, 0.1);
- padding: 25px;
- border-radius: 16px;
- margin-bottom: 20px;
- }
+    .intro-content .characters h3 {
+      color: #80DEEA;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
 
- .intro-content .characters h3 {
- color: #80DEEA;
- font-size: 16px;
- margin-bottom: 15px;
- }
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
 
- .intro-content .characters p {
- color: #d0d0d0;
- font-size: 14px;
- line-height: 1.7;
- margin-bottom: 8px;
- }
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
 
- .intro-content .conflict {
- text-align: left;
- background: rgba(255, 255, 255, 0.1);
- padding: 25px;
- border-radius: 16px;
- margin-bottom: 30px;
- }
+    .intro-content .conflict h3 {
+      color: #FFAB91;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
 
- .intro-content .conflict h3 {
- color: #FFAB91;
- font-size: 16px;
- margin-bottom: 15px;
- }
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
 
- .intro-content .conflict p {
- color: #d0d0d0;
- font-size: 14px;
- line-height: 1.7;
- margin-bottom: 8px;
- }
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
 
- .intro-content .scroll-hint {
- font-size: 16px;
- color: #ffffff;
- font-weight: 600;
- animation: pulse 2s infinite;
- text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
- }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
- @keyframes fadeInUp {
- from {
- opacity: 0;
- transform: translateY(30px);
- }
- to {
- opacity: 1;
- transform: translateY(0);
- }
- }
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
 
- @keyframes pulse {
- 0%, 100% {
- opacity: 1;
- }
- 50% {
- opacity: 0.5;
- }
- }
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
 
- /* 스크롤 인디케이터 */
- .scroll-indicator {
- position: fixed;
- bottom: 40px;
- left: 50%;
- transform: translateX(-50%);
- z-index: 1000;
- animation: bounce 2s infinite;
- pointer-events: none;
- }
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
 
- .scroll-indicator svg {
- width: 40px;
- height: 40px;
- opacity: 0.7;
- }
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
 
- @keyframes bounce {
- 0%, 20%, 50%, 80%, 100% {
- transform: translateX(-50%) translateY(0);
- }
- 40% {
- transform: translateX(-50%) translateY(-20px);
- }
- 60% {
- transform: translateX(-50%) translateY(-10px);
- }
- }
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
 
- /* 반응형 디자인 */
- @media (max-width: 768px) {
- .story-section {
- padding: 40px 20px;
- }
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
 
- .story-card {
- max-width: 100%;
- padding: 30px;
- }
+      .story-card h2 {
+        font-size: 22px;
+      }
 
- .story-card h2 {
- font-size: 22px;
- }
+      .story-card p {
+        font-size: 14px;
+      }
 
- .story-card p {
- font-size: 14px;
- }
+      .intro-content {
+        padding: 40px 30px;
+      }
 
- .intro-content {
- padding: 40px 30px;
- }
+      .intro-content h1 {
+        font-size: 28px;
+      }
 
- .intro-content h1 {
- font-size: 28px;
- }
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
 
- .intro-content .subtitle {
- font-size: 15px;
- }
- }
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
 
- /* 네비게이션 버튼 */
- .nav-buttons {
- position: fixed;
- bottom: 40px;
- left: 50%; transform: translateX(-50%);
- z-index: 1000;
- display: flex;
- gap: 15px;
- pointer-events: auto;
- }
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 131, 143, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 131, 143, 0.3);
+    }
 
- .nav-btn {
- padding: 15px 30px;
- background: rgba(0, 131, 143, 0.9);
- backdrop-filter: blur(10px);
- color: white;
- border: none;
- border-radius: 12px;
- font-size: 16px;
- font-weight: 600;
- cursor: pointer;
- transition: all 0.3s ease;
- box-shadow: 0 4px 15px rgba(0, 131, 143, 0.3);
- }
+    .nav-btn:hover {
+      background: rgba(0, 96, 100, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 131, 143, 0.4);
+    }
 
- .nav-btn:hover {
- background: rgba(0, 96, 100, 0.9);
- transform: translateY(-2px);
- box-shadow: 0 6px 20px rgba(0, 131, 143, 0.4);
- }
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
 
- @media (max-width: 768px) {
- .nav-buttons {
- bottom: 20px;
- right: 20px;
- flex-direction: column;
- }
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
 
- .nav-btn {
- padding: 12px 24px;
- font-size: 14px;
- }
- }
- </style>
+  </style>
 </head>
 <body>
- <!-- 고정된 배경 컨테이너 -->
- <div id="map-container">
- <canvas id="map-canvas"></canvas>
- </div>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
 
- <!-- 스크롤 가능한 스토리 콘텐츠 -->
- <div id="content">
- <!-- 인트로 -->
- <section class="intro-section">
- <div class="intro-content">
- <h1>⚖️ 세 번의 종소리</h1>
- <p class="subtitle">
- — 억울한 소년 도윤과 삼복 <span class="vocab-tip" data-meaning="정해진 규칙이나 방법">제도</span>의 비밀 —<br>
- <span class="vocab-tip" data-meaning="옳고 바른 것">정의</span>는 신중함에서 시작된다<br><br>
- 교과기반 창작도서 · 창작법 05 · 초3-4
- </p>
- <div class="characters">
- <h3>📌 등장인물 소개</h3>
- <p><strong>▸ 도윤 (15세):</strong> 시골 마을의 가난하지만 정직한 소년. 아버지를 여의고 홀어머니를 모시며 살아간다. 거짓 고발로 억울한 누명을 쓰게 되는 이야기의 중심 인물이다.</p>
- <p><strong>▸ 어머니 (박씨 부인):</strong> 도윤의 어머니. 몸이 약하지만 아들을 향한 믿음이 흔들리지 않는 강인한 여성.</p>
- <p><strong>▸ 현감 이택수:</strong> 마을을 다스리는 관리. 성급한 성격으로 증거보다 소문을 먼저 믿는 인물. 첫 번째 재판을 담당한다.</p>
- <p><strong>▸ 장 부자:</strong> 마을의 부유한 양반. 자신의 나쁜 일을 감추기 위해 거짓말과 가짜 증거로 도윤에게 도둑 누명을 씌운 진짜 악인이다.</p>
- <p><strong>▸ 관찰사 서경호:</strong> 두 번째 재판을 맡는 상급 관리. 냉철하고 공정하며 이상한 점을 발견하고 사건을 다시 살펴보는 인물.</p>
- <p><strong>▸ 임금:</strong> 백성의 억울함에 귀 기울이는 조선의 왕. 삼복 제도의 마지막 심판자이자 정의를 지키는 최고의 수호자.</p>
- <p><strong>▸ 순이:</strong> 도윤의 소꿉친구. 진실을 밝히기 위해 <span class="vocab-tip" data-meaning="두려움을 이기는 마음">용기</span>를 내어 증인으로 나서는 소녀.</p>
- </div>
- <div class="conflict">
- <h3>📌 <span class="vocab-tip" data-meaning="서로 다투는 상태">갈등</span> <span class="vocab-tip" data-meaning="부분들이 짜여진 모습">구조</span></h3>
- <p><strong>[외적 갈등]</strong> 도윤 vs 장 부자 — 거짓 고발과 악한 음모로 인해 도윤은 도둑 누명을 쓴다.</p>
- <p><strong>[제도적 갈등]</strong> 성급한 재판 vs 올바른 절차 — 첫 번째 재판에서 유죄 판결을 받지만, 다시 재판을 받을 수 있는 제도가 희망을 남긴다.</p>
- <p><strong>[내적 갈등]</strong> 도윤의 절망 vs 믿음 — 억울함 속에서도 정의로운 법을 믿고 끝까지 포기하지 않으려는 내면의 싸움.</p>
- <p><strong>[사회적 갈등]</strong> 권력과 진실 — 돈과 권력 앞에서 진실이 묻힐 위기에 처하지만, 공정한 재판의 힘이 이를 바로잡는다.</p>
- </div>
- <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
- </div>
- </section>
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⚖️ 세 번의 종소리</h1>
+        <p class="subtitle">
+          — 억울한 소년 도윤과 삼복 제도의 비밀 —<br>
+          정의는 신중함에서 시작된다<br><br>
+          교과기반 창작도서 · 법 05 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>📌 등장인물 소개</h3>
+          <p><strong>▸ 도윤 (15세):</strong> 가난하지만 정직한 소년이에요. 아픈 어머니를 모시고 살다가 억울한 누명을 쓰게 돼요.</p>
+          <p><strong>▸ 어머니 (박씨 부인):</strong> 도윤의 어머니예요. 몸은 약하지만 아들을 향한 믿음은 흔들리지 않아요.</p>
+          <p><strong>▸ 현감 이택수:</strong> 마을을 다스리는 관리예요. 성격이 급해서 소문을 먼저 믿어 버려요.</p>
+          <p><strong>▸ 장 부자:</strong> 마을의 부유한 양반이에요. 자기 잘못을 감추려고 도윤에게 도둑 누명을 씌워요.</p>
+          <p><strong>▸ 관찰사 서경호:</strong> 두 번째 <span class="vocab-tip" data-meaning="옳고 그름을 가리는 것">재판</span>을 맡은 관리예요. 증거를 꼼꼼히 살피는 신중한 사람이지요.</p>
+          <p><strong>▸ 임금:</strong> 백성의 억울함에 귀 기울이는 조선의 왕이에요. 마지막 재판을 맡아요.</p>
+          <p><strong>▸ 순이:</strong> 도윤의 소꿉친구예요. 용기를 내어 진실을 말하는 용감한 소녀지요.</p>
+        </div>
+        <div class="conflict">
+          <h3>📌 갈등 구조</h3>
+          <p><strong>[외적 갈등]</strong> 장 부자의 거짓 고발로 도윤이 도둑 누명을 써요.</p>
+          <p><strong>[제도적 갈등]</strong> 첫 재판에서 유죄 <span class="vocab-tip" data-meaning="재판의 결론">판결</span>을 받지만, 삼복 제도가 있어 희망이 남아요.</p>
+          <p><strong>[내적 갈등]</strong> 도윤은 억울함 속에서도 법을 믿고 포기하지 않으려 해요.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
 
- <!-- Part 1 -->
- <section class="story-section" data-bg="/images/창작도서/창작법05/01.jpg">
- <div class="story-card">
- <span class="chapter">제1장</span>
- <span class="theme">조선의 법, 그 무거운 무게</span>
- <h2>📝 중심 문장: 조선은 사람의 목숨이 달린 <span class="vocab-tip" data-meaning="잘못한 사람에게 내리는 벌">형벌</span>만큼은 절대 가볍게 다루지 않았다.</h2>
- <p>조선은 사람을 <span class="vocab-tip" data-meaning="잘못한 일에 대해 벌을 주는 것">처벌</span>하는 법이 매우 <span class="vocab-tip" data-meaning="조심스럽고 깊이 생각하는 것">신중</span>했습니다. 솔밭골 마을에 열다섯 살 소년 도윤이 살고 있었습니다. 아버지를 여의고 병약한 어머니를 모시며 성실하게 살아가는 착한 아이였습니다.</p>
-<p>어느 날 장 부자의 창고에서 곡식이 사라졌습니다. 장 부자는 자기가 빼돌린 것을 감추려고 가난한 도윤에게 죄를 뒤집어씌웠습니다. 가짜 증거가 만들어졌고, 도윤의 운명은 하루아침에 뒤바뀌었습니다.</p>
- </div>
- </section>
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법05/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">조선의 법, 그 무거운 무게</span>
+        <h2>📝 중심 문장: 조선은 사람의 목숨이 달린 <span class="vocab-tip" data-meaning="죄를 지은 사람에게 주는 벌">형벌</span>만큼은 가볍게 다루지 않았어요.</h2>
+        <p>조선은 단순히 왕이 다스리는 나라가 아니었어요.<br>
+법과 예의, 백성을 향한 책임이 나라의 뿌리였지요.<br>
+특히 형벌에 관한 법은 매우 신중했어요.<br>
+한 사람의 목숨이 달린 문제를 가볍게 다루면<br>
+나라 전체의 정의가 무너지기 때문이에요.</p>
+        <p>작은 마을 솔밭골에 열다섯 살 소년 도윤이 살았어요.<br>
+아버지를 일찍 여의고 아픈 어머니를 모시며<br>
+남의 집 일을 도우며 살았지요.<br>
+가난하지만 마음만은 누구보다 곧은 아이였어요.</p>
+        <p>마을 사람들은 모두 도윤을 칭찬했어요.<br>
+그러나 이 평화로운 마을에<br>
+<span class="highlight">거짓의 그림자</span>가 드리워지기 시작했지요.</p>
+        <p>장 부자의 창고에서 곡식이 사라지는 사건이 벌어졌어요.<br>
+장 부자는 자기 잘못을 감추려고<br>
+가난한 도윤에게 죄를 뒤집어씌웠지요.<br>
+교묘한 거짓 <span class="vocab-tip" data-meaning="사실을 밝혀 주는 자료">증거</span>가 만들어졌고,<br>
+도윤의 운명은 하루아침에 뒤바뀌었어요.</p>
+      </div>
+    </section>
 
- <!-- Part 2 -->
- <section class="story-section" data-bg="/images/창작도서/창작법05/02.jpg">
- <div class="story-card">
- <span class="chapter">제2장</span>
- <span class="theme"><span class="vocab-tip" data-meaning="원래 이름은 '삼복 제도'. 조선시대에 큰 벌을 내리기 전 세 번 재판하는 제도">'세 번 살펴보기 제도'</span>란 무엇인가</span>
- <h2>📝 중심 문장: 삼복 제도는 한 번의 <span class="vocab-tip" data-meaning="재판에서 옳고 그름을 결정하는 것">판결</span>로 사람의 운명을 결정짓지 않겠다는 조선의 <span class="vocab-tip" data-meaning="서로 정한 것">약속</span>이었다.</h2>
- <p>삼복 제도란 세 번 살펴본다는 뜻입니다. 조선은 큰 벌을 내릴 때 반드시 세 번의 <span class="vocab-tip" data-meaning="법에 따라 옳고 그름을 가리는 것">재판</span>을 거쳤습니다. 첫 재판은 <span class="vocab-tip" data-meaning="원래 이름은 '현감'. 조선시대 고을을 다스리던 관리">'고을 대장'(현감)</span>, 둘째는 <span class="vocab-tip" data-meaning="원래 이름은 '관찰사'. 조선시대 여러 고을을 관리하던 높은 관리">'큰 지역 대장'(관찰사)</span>, 셋째는 <span class="vocab-tip" data-meaning="나라를 다스리는 왕">임금</span>이 직접 판단했습니다.</p>
-<p><span class="dialogue">"모든 백성의 목숨은 소중하다."</span> 삼복 제도는 억울한 사람을 구하는 안전그물이었습니다.</p>
- </div>
- </section>
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법05/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">삼복 제도란 무엇인가</span>
+        <h2>📝 중심 문장: 삼복 제도는 한 번의 판결로 운명을 정하지 않겠다는 조선의 약속이었어요.</h2>
+        <p>삼복 <span class="vocab-tip" data-meaning="사회를 위해 만들어진 규칙과 장치">제도</span>가 무엇일까요?<br>
+'삼복'이란 <span class="highlight">세 번 되풀이하여 살핀다</span>는 뜻이에요.<br>
+조선에서는 무거운 형벌을 내릴 때<br>
+반드시 세 번의 재판을 거치도록 법으로 정했지요.</p>
+        <p>첫 재판에서 유죄가 나와도 바로 벌하지 않았어요.<br>
+두 번째, 세 번째 재판을 반드시 거쳐야 했지요.<br>
+매번 다른 관리가 사건을 다시 살펴보았어요.<br>
+한 사람의 실수나 <span class="vocab-tip" data-meaning="공정하지 못하고 한쪽으로 치우친 생각">편견</span> 때문에<br>
+억울한 백성이 생기는 일을 막기 위해서였지요.</p>
+        <p>첫 번째 재판은 마을의 현감이 맡았어요.<br>
+두 번째는 관찰사라는 높은 관리가 맡았지요.<br>
+그리고 마지막 세 번째는<br>
+임금이 직접 보고를 받아 판단을 내렸어요.</p>
+        <p>이 제도는 단순한 절차가 아니었어요.<br>
+"모든 백성의 목숨은 소중하다"는 조선의 마음이었지요.<br>
+억울한 누명을 쓴 도윤에게<br>
+삼복 제도는 어둠 속의 마지막 등불이 되어요.</p>
+      </div>
+    </section>
 
- <!-- Part 3 -->
- <section class="story-section" data-bg="/images/창작도서/창작법05/03.jpg">
- <div class="story-card">
- <span class="chapter">제3장</span>
- <span class="theme">첫 번째 재판 — 성급한 판결의 그림자</span>
- <h2>📝 중심 문장: <span class="vocab-tip" data-meaning="원래 이름은 '재심'. 재판을 다시 하는 것">'다시 재판'(재심)</span>이 없었다면, 도윤의 억울함은 영원히 묻혀 버렸을 것이다.</h2>
- <p><span class="vocab-tip" data-meaning="급하게 서두르는">성급한</span> 현감 이택수는 부자인 장 부자의 말만 믿었습니다. 도윤은 <span class="dialogue">"저는 어머니 약을 사러 갔을 뿐입니다!"</span>라고 말했지만, 장 부자가 준비한 거짓 <span class="vocab-tip" data-meaning="본 것을 말해주는 사람">증인</span>들의 말이 더 힘이 셌습니다.</p>
-<p>도윤은 <span class="vocab-tip" data-meaning="원래 이름은 '유죄'. 죄가 있다고 인정됨">'죄 있음'(유죄)</span> 판결을 받고 감옥에 갇혔습니다. 하지만 삼복 제도 덕분에 아직 두 번의 재판이 남아 있었습니다.</p>
- </div>
- </section>
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법05/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">첫 번째 재판 — 성급한 판결의 그림자</span>
+        <h2>📝 중심 문장: 다시 재판하는 제도가 없었다면 도윤의 억울함은 묻혀 버렸을 거예요.</h2>
+        <p>장 부자가 고발하자,<br>
+현감 이택수는 도윤을 관아로 불러들였어요.<br>
+이택수는 성격이 급하고 소문을 쉽게 믿는 관리였지요.<br>
+게다가 장 부자는 가장 부유한 양반이었기에<br>
+그의 말을 의심 없이 받아들였어요.</p>
+        <p>도윤은 떨리는 목소리로 호소했어요.<br><br><span class="dialogue">"저는 정말 곡식을 훔치지 않았습니다. 그날 밤 어머니 약을 구하러 이웃 마을에 다녀왔을 뿐입니다!"</span></p>
+        <p>그러나 장 부자가 준비한 거짓 <span class="vocab-tip" data-meaning="자기가 본 것을 말해 주는 사람">증인</span>들이<br>
+줄줄이 나와 거짓말을 했어요.<br>
+현감은 서둘러 유죄를 선고했지요.<br><br><span class="dialogue">"증거가 명백하니, 이 아이에게 무거운 벌을 내리겠노라!"</span></p>
+        <p>어머니는 관아 밖에서 울며 외쳤지만<br>
+아무도 귀 기울이지 않았어요.<br>
+도윤은 차가운 감옥에서 눈물을 흘렸지요.<br>
+그러나 이 순간, 삼복 제도가 한 줄기 빛이 되어요.<br>
+<span class="highlight">무거운 판결은 반드시 다시 재판을 받아야 했기 때문이지요.</span><br><br>아직 두 번의 기회가 남아 있었어요.</p>
+      </div>
+    </section>
 
- <!-- Part 4 -->
- <section class="story-section" data-bg="/images/창작도서/창작법05/04.jpg">
- <div class="story-card">
- <span class="chapter">제4장</span>
- <span class="theme">두 번째 재판 — 의심의 씨앗</span>
- <h2>📝 중심 문장: 신중한 눈은 거짓 속에서 진실의 실마리를 찾아낸다.</h2>
- <p>두 번째 재판의 관찰사 서경호는 꼼꼼한 사람이었습니다. 증인들의 말이 너무 똑같다는 점을 이상하게 여겼습니다.<br><br><span class="dialogue">"사람의 기억이 이렇게 똑같을 수 있을까?"</span></p>
-<p>도윤의 친구 순이가 용기를 내어 말했습니다. <span class="dialogue">"그날 밤 도윤이 약 사러 가는 걸 봤어요."</span> 서경호는 사건을 임금께 올리기로 했습니다.</p>
- </div>
- </section>
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법05/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">두 번째 재판 — 의심의 씨앗</span>
+        <h2>📝 중심 문장: 신중한 눈은 거짓 속에서 진실의 실마리를 찾아내요.</h2>
+        <p>사건은 관찰사 서경호에게 넘겨졌어요.<br>
+서경호는 현감과는 전혀 다른 사람이었지요.<br>
+증거를 직접 확인하지 않고는<br>
+결론을 내리지 않는 꼼꼼한 관리였어요.</p>
+        <p>서경호는 사건 기록을 꼼꼼히 읽었어요.<br>
+그러다 이상한 점을 발견했지요.<br>
+증인들의 말이 <span class="highlight">너무 완벽하게 똑같았던</span> 거예요.<br>
+마치 누군가 미리 대본을 써 준 것처럼요.</p>
+        <p><span class="dialogue">"사람의 기억이란 저마다 다른 법인데, 이렇게 똑같을 수가 있을까?"</span><br><br>서경호는 직접 솔밭골로 찾아가<br>
+마을 사람들을 하나하나 만나 보았어요.</p>
+        <p>그때, 도윤의 친구 순이가 떨리는 다리로 나섰어요.<br><br><span class="dialogue">"저는 그날 밤 도윤이 약을 사러 가는 것을 직접 보았습니다. 장 부자 어른이 무서워서 지금까지 말하지 못했습니다."</span></p>
+        <p>순이의 <span class="vocab-tip" data-meaning="자기가 보고 들은 것을 사실대로 말하는 것">증언</span>은 사건에 새로운 물음표를 던졌어요.<br>
+하지만 그것만으로는 뒤집기 어려웠지요.<br>
+서경호는 사건을 임금에게 올리기로 했어요.<br>
+두 번째 종소리는 의심과 희망이 뒤섞인 소리였지요.</p>
+      </div>
+    </section>
 
- <!-- Part 5 -->
- <section class="story-section" data-bg="/images/창작도서/창작법05/05.jpg">
- <div class="story-card">
- <span class="chapter">제5장</span>
- <span class="theme">임금 앞에 선 소년 — 세 번째 재판</span>
- <h2>📝 중심 문장: 왕은 백성의 마지막 울타리이자, 정의의 최종 수호자였다.</h2>
- <p>세 번째 재판에서 임금이 직접 도윤을 만났습니다. <span class="dialogue">"네가 곡식을 훔쳤느냐?"</span><br><br><span class="dialogue">"전하, 저는 어머니 약을 사러 갔을 뿐입니다."</span></p>
-<p>임금이 증인들을 따로 물어보자 이야기가 달라졌습니다. <span class="dialogue">"장 부자가 시켜서 거짓말했습니다."</span> 진실이 밝혀졌습니다. 도윤은 무죄가 되고, 장 부자는 벌을 받았습니다.</p>
- </div>
- </section>
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법05/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">임금 앞에 선 소년 — 세 번째 재판</span>
+        <h2>📝 중심 문장: 임금은 백성의 마지막 울타리이자 정의의 수호자였어요.</h2>
+        <p>사건이 임금에게 올라갔다는 소식에 마을이 술렁였어요.<br>
+장 부자의 얼굴에 처음으로 불안이 드리워졌지요.<br>
+도윤의 어머니는 밤마다 기도했어요.</p>
+        <p>임금은 보고서를 읽고 깊은 생각에 잠겼어요.<br>
+그리고 도윤을 직접 만나 보겠다고 했지요.<br>
+누더기 옷을 입은 열다섯 살 소년이<br>
+나라에서 가장 높은 사람 앞에 무릎을 꿇었어요.</p>
+        <p>임금이 부드럽게 물었어요.<br><br><span class="dialogue">"네가 정녕 곡식을 훔쳤느냐?"</span><br><br>도윤은 임금의 눈을 바라보며 말했지요.<br><br><span class="dialogue">"전하, 저는 훔치지 않았습니다. 그날 밤 어머니의 약을 구하러 갔을 뿐입니다."</span></p>
+        <p>임금은 도윤의 눈에서 거짓을 찾을 수 없었어요.<br>
+이어 증인들을 한 명씩 따로 불러 물었지요.<br>
+그러자 이야기가 제각각 달라지기 시작했어요.<br>
+한 증인이 고백했지요.<br><br><span class="dialogue">"사실 장 부자 어른이 시켜서 거짓말을 했습니다."</span><br><br><span class="highlight">진실이 마침내 햇빛 아래 드러난 거예요.</span></p>
+        <p>임금은 도윤에게 <span class="vocab-tip" data-meaning="죄가 없다는 판결">무죄</span>를 선언했어요.<br>
+장 부자는 엄한 벌을 받았지요.<br>
+세 번째 종소리는 정의가 승리하는 소리였어요.</p>
+      </div>
+    </section>
 
- <!-- Part 6 -->
- <section class="story-section" data-bg="/images/창작도서/창작법05/06.jpg">
- <div class="story-card">
- <span class="chapter">제6장</span>
- <span class="theme">백성을 지키는 울타리</span>
- <h2>📝 중심 문장: 삼복 제도는 힘없는 백성을 위한 법의 울타리였다.</h2>
- <p>도윤이 풀려난 날, 마을 사람들이 눈물로 맞이했습니다. 순이가 말했습니다. <span class="dialogue">"네가 억울한 걸 알면서 가만있을 수 없었어."</span></p>
-<p>삼복 제도가 없었다면 도윤은 억울한 누명을 벗지 못했을 것입니다. 법은 칼이 아니라 백성을 지키는 방패여야 합니다.</p>
- </div>
- </section>
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법05/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">백성을 지키는 울타리</span>
+        <h2>📝 중심 문장: 삼복 제도는 힘없는 백성을 위한 법의 울타리였어요.</h2>
+        <p>도윤이 풀려난 날, 솔밭골에는 촉촉한 봄비가 내렸어요.<br>
+마을 사람들은 눈물을 흘리며 도윤을 맞이했지요.<br>
+어머니는 아들을 꼭 안고 한참 동안 울었어요.<br>
+순이도 달려와 손을 잡고 활짝 웃었지요.<br><br><span class="dialogue">"내가 용기를 냈어, 도윤아. 네가 억울한 걸 알면서 가만히 있을 수 없었어."</span></p>
+        <p>이 사건은 마을을 넘어 조선 전국에 알려졌어요.<br>
+사람들은 삼복 제도의 소중함을 다시 한번 깨달았지요.<br>
+만약 삼복 제도가 없었다면 어떻게 되었을까요?<br>
+성급한 첫 판결이 그대로 집행되었을 거예요.<br>
+도윤은 영원히 누명을 벗지 못했겠지요.</p>
+        <p>삼복 제도는 이런 비극을 막기 위해 있었어요.<br>
+힘없는 백성도 목소리를 낼 수 있도록,<br>
+여러 겹의 안전망을 만들어 둔 것이지요.<br>
+<span class="highlight">법이란 칼이 아니라 방패가 되어야 해요.</span><br><br>그것이 삼복 제도가 전하는 메시지였어요.</p>
+      </div>
+    </section>
 
- <!-- Part 7 -->
- <section class="story-section" data-bg="/images/창작도서/창작법05/07.jpg">
- <div class="story-card">
- <span class="chapter">제7장</span>
- <span class="theme">형벌은 왜 신중해야 하는가</span>
- <h2>📝 중심 문장: 잘못된 형벌은 한 사람의 인생뿐 아니라, 법에 대한 모든 사람의 믿음을 무너뜨린다.</h2>
- <p>임금이 말했습니다. <span class="dialogue">"첫 번째 판결만으로 벌을 주었다면 죄 없는 백성의 피를 흘렸을 것이다. 재판하는 자는 칼을 든 자와 같으니 함부로 휘둘러선 안 된다."</span></p>
-<p>한번 내린 벌은 되돌릴 수 없습니다. 잘못된 판결은 한 사람뿐 아니라 법에 대한 믿음도 무너뜨립니다. 신중함은 느림이 아니라 지혜입니다.</p>
- </div>
- </section>
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법05/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">형벌은 왜 신중해야 하는가</span>
+        <h2>📝 중심 문장: 잘못된 형벌은 법에 대한 모든 사람의 믿음을 무너뜨려요.</h2>
+        <p>도윤의 사건 이후, 임금은 신하들을 모아 말했어요.</p>
+        <p><span class="dialogue">"도윤이라는 아이를 보아라. 만약 첫 번째 판결만으로 벌을 내렸다면, 나는 죄 없는 백성을 해친 왕이 되었을 것이다. 법을 집행하는 자는 칼을 든 자와 같으니, 함부로 휘둘러서는 안 된다."</span></p>
+        <p>이 말은 신하들의 마음에 깊이 새겨졌어요.<br>
+형벌이 신중해야 하는 이유는 분명했지요.<br>
+<span class="highlight">한번 내려진 형벌은 되돌릴 수 없기 때문이에요.</span></p>
+        <p>잘못된 판결로 죄 없는 사람이 벌을 받으면,<br>
+그 사람의 인생만 무너지는 것이 아니에요.<br>
+법에 대한 백성들의 믿음도 함께 무너지지요.<br>
+백성이 법을 믿지 못하면 나라의 질서가 흔들려요.</p>
+        <p>그래서 조선은 형벌을 내리기 전에<br>
+충분한 시간을 들여 증거를 살피고,<br>
+여러 사람의 눈으로 사건을 살펴보게 했어요.<br>
+신중함은 느림이 아니라 지혜였지요.<br>
+도윤의 사건은 그 지혜가 한 소년의 삶을 구한<br>
+살아 있는 증거가 되었어요.</p>
+      </div>
+    </section>
 
- <!-- Part 8 -->
- <section class="story-section" data-bg="/images/창작도서/창작법05/08.jpg">
- <div class="story-card">
- <span class="chapter">제8장</span>
- <span class="theme">💔 잃어버린 목소리</span>
- <h2>📝 중심 문장: 오판은 법의 가장 큰 적이며, 삼복 제도는 그 적을 막기 위한 최후의 방패였다.</h2>
- <p>재판정에서 순이는 진실을 말하고 있었습니다. 하지만 거짓 증인들이 순이를 비웃었습니다.</p>
-<p><span class="dialogue">"저 아이 말은 믿을 수 없습니다!"</span></p>
-<p>순이는 더 크게 외쳤습니다. 목이 터져라 진실을 말했습니다. 하루, 이틀, 사흘... 순이는 쉬지 않고 목소리를 높였습니다.</p>
-<p>나흘째 아침, 순이가 입을 열었습니다. 하지만 소리가 나오지 않았습니다.</p>
-<p><span class="dialogue">"...!"</span></p>
-<p>순이의 눈이 커졌습니다. 목을 움켜쥐었지만 소리가 나지 않았습니다. 목소리가 사라진 것입니다.</p>
-<p><span class="dialogue">"순이야!"</span></p>
-<p>도윤이 달려왔습니다. 순이의 눈에서 눈물이 흘렀습니다. 사람은 실수할 수 있습니다. 그래서 삼복 제도가 필요했습니다.</p>
- </div>
- </section>
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법05/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">오판의 위험 — 만약 삼복이 없었다면</span>
+        <h2>📝 중심 문장: 잘못된 판결은 법의 가장 큰 적이에요.</h2>
+        <p>도윤의 이야기를 들은 마을 아이들이 물었어요.<br><br><span class="dialogue">"만약 삼복 제도가 없었으면 어떻게 되었을까요?"</span></p>
+        <p>도윤은 잠시 눈을 감았다가 조용히 대답했지요.<br><br><span class="dialogue">"나는 아마 이 세상에 없었을 거야. 어머니는 평생 우셨을 거야. 진짜 나쁜 사람인 장 부자는 아무 벌도 받지 않고 편하게 살았겠지."</span></p>
+        <p>잘못된 판결의 위험은 생각보다 훨씬 커요.<br>
+사람은 누구나 실수할 수 있지요.<br>
+아무리 뛰어난 관리라도 편견에 빠질 수 있고,<br>
+거짓 증거에 속을 수도 있어요.<br>
+현감 이택수가 바로 그런 경우였지요.<br>
+나쁜 사람은 아니었지만 성급함 때문에<br>
+죄 없는 소년에게 유죄를 내리고 말았어요.</p>
+        <p><span class="highlight">삼복 제도는 사람이 완벽하지 않다는 것을 인정하는 데서 출발해요.</span><br><br>다리를 지을 때 기둥을 여러 개 세우는 것과 같지요.<br>
+하나가 흔들려도 다른 기둥들이 다리를 받쳐 줘요.<br>
+도윤은 그 기둥 덕분에 무사히 다리를 건널 수 있었지요.</p>
+      </div>
+    </section>
 
- <!-- Part 9 -->
- <section class="story-section" data-bg="/images/창작도서/창작법05/09.jpg">
- <div class="story-card">
- <span class="chapter">제9장</span>
- <span class="theme">✨ 다른 <span class="vocab-tip" data-meaning="일을 하는 수단">방법</span></span>
- <h2>📝 중심 문장: 삼복 제도의 정신은 사라지지 않고, 오늘날 <span class="vocab-tip" data-meaning="원래 이름은 '삼심 제도'. 오늘날 세 번까지 재판받을 수 있는 제도">'세 번 재판받는 제도'</span>로 이어지고 있다.</h2>
- <p>순이는 목소리가 나오지 않았지만 포기하지 않았습니다.</p>
-<p>글을 쓰기 시작했습니다. 진실을 적은 종이를 사람들에게 나눠주었습니다. 손짓으로, 눈빛으로 말했습니다.</p>
-<p><span class="dialogue">"순이가 뭔가 말하려고 해!"</span></p>
-<p>사람들이 순이의 글을 읽기 시작했습니다. 진실이 하나씩 밝혀졌습니다.</p>
-<p>도윤이 순이 곁에 섰습니다.<br><br><span class="dialogue">"내가 순이 대신 읽어줄게."</span></p>
-<p>도윤이 순이의 글을 큰 소리로 읽었습니다. 순이의 진실이 도윤의 목소리를 타고 재판정에 울려 퍼졌습니다.</p>
-<p>한 달이 지나자, 순이의 목소리가 조금씩 돌아오기 시작했습니다. 처음에는 속삭임처럼, 나중에는 또렷하게.</p>
- </div>
- </section>
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법05/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">오늘날의 재판과 삼복의 정신</span>
+        <h2>📝 중심 문장: 삼복 제도의 정신은 오늘날 삼심 제도로 이어지고 있어요.</h2>
+        <p>세월이 흘러 조선은 역사 속으로 사라졌어요.<br>
+하지만 삼복 제도의 정신은 사라지지 않았지요.<br>
+오늘날 우리나라 <span class="vocab-tip" data-meaning="재판을 하는 기관">법원</span>은 <span class="highlight">삼심 제도</span>를 운영해요.<br>
+첫 재판 결과에 따르지 않으면 두 번째 재판을,<br>
+그다음에는 대법원에서 마지막 재판을 받을 수 있지요.</p>
+        <p>이것은 조선의 삼복 제도와 놀랍도록 닮았어요.<br>
+세 번의 기회로 억울한 사람을 구하고,<br>
+잘못된 판결을 바로잡겠다는 마음이 같기 때문이지요.</p>
+        <p>도윤이 오늘날 태어났다면 어땠을까요?<br>
+변호사의 도움을 받을 수 있었을 거예요.<br>
+CCTV 같은 증거로 더 빨리 결백을 밝혔겠지요.<br>
+기술은 발전했지만 뿌리의 가치는 변하지 않았어요.</p>
+        <p>도윤이 세 번의 종소리 끝에 <span class="vocab-tip" data-meaning="스스로 결정하고 행동할 수 있는 것">자유</span>를 되찾은 것처럼,<br>
+오늘날에도 모든 사람은<br>
+공정한 재판을 받을 <span class="vocab-tip" data-meaning="마땅히 누려야 할 것">권리</span>가 있어요.<br>
+과거의 지혜가 현재의 법을 만들었지요.</p>
+      </div>
+    </section>
 
- <!-- Part 10 -->
- <section class="story-section" data-bg="/images/창작도서/창작법05/10.jpg">
- <div class="story-card">
- <span class="chapter">제10장</span>
- <span class="theme">💝 돌아온 목소리</span>
- <h2>📝 중심 문장: 정의란 한 번에 이루어지는 것이 아니라, 끊임없는 확인과 신중함 속에서 완성된다.</h2>
- <p>두 달이 지났습니다. 순이의 목소리가 완전히 돌아왔습니다. 예전보다 조금 쉰 목소리였지만, 순이는 개의치 않았습니다.</p>
-<p><span class="dialogue">"이 목소리로 다시 진실을 말할 수 있으니까."</span></p>
-<p>마지막 재판이 열렸습니다. 순이가 증언대에 섰습니다. 떨리는 손을 꼭 쥐고 입을 열었습니다.</p>
-<p><span class="dialogue">"저는... 진실을 말하겠습니다."</span></p>
-<p>쉰 목소리였지만, 그 어떤 목소리보다 또렷했습니다. 재판관이 고개를 끄덕였습니다.</p>
-<p><span class="dialogue">"세 번째 재판에서 드디어 진실이 밝혀졌습니다."</span></p>
-<p>도윤이 순이의 손을 잡았습니다.<br><br><span class="dialogue">"네 목소리가 사라졌을 때도 진실은 사라지지 않았어."</span></p>
-<p>순이가 웃었습니다.<br><br><span class="dialogue">"목소리가 없어도 진실을 전할 방법은 있어. 포기하지 않으면 돼."</span></p>
-<p>정의는 신중함에서 시작됩니다. 한 번 더 살피고, 한 번 더 들어주는 것이 올바른 재판의 본질입니다.</p>
- <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(0, 131, 143, 0.15); border-radius: 16px;">
- <strong style="color: #006064; font-size: 18px;">🌱 교훈: 정의는 신중함에서 시작된다.</strong><br><br>
- <span style="color: #00838F; font-size: 15px;">세 번의 종소리가 도윤을 구했듯이, 성급한 판단 대신 한 번 더 살피고, 한 번 더 듣고, 한 번 더 생각하는 것이야말로 진정한 정의의 시작입니다. 조선의 삼복 제도는 우리에게 묻고 있습니다. "당신은 오늘, 충분히 신중했습니까?"</span>
- </p>
- </div>
- </section>
- </div>
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법05/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">정의의 가치 — 세 번의 종소리가 남긴 것</span>
+        <h2>📝 중심 문장: 정의는 끊임없는 확인과 신중함 속에서 완성돼요.</h2>
+        <p>도윤은 어른이 되어서도 그날을 떠올렸어요.<br>
+차가운 감옥에서 보낸 밤들,<br>
+임금 앞에서 진실을 말할 때의 떨림.<br>
+무엇보다 마음에 깊이 남은 것은<br>
+<span class="highlight">법이 자신을 끝까지 포기하지 않았다는 사실</span>이었지요.</p>
+        <p>첫 재판에서 졌을 때 모든 것이 끝난 줄 알았어요.<br>
+그러나 삼복 제도가 도윤을 지켜 주었지요.<br>
+관찰사의 신중한 눈이 거짓의 틈을 발견했고,<br>
+임금의 지혜가 진실을 세상 밖으로 끌어냈어요.</p>
+        <p>도윤은 마을 아이들에게 이야기해 주었어요.<br><br><span class="dialogue">"정의란 아주 큰 것이 아니란다. 억울한 사람의 말에 한 번 더 귀 기울이는 것, 판단하기 전에 한 번 더 생각하는 것, 그것이 정의의 시작이야."</span></p>
+        <p>순이도 고개를 끄덕이며 말했지요.<br><br><span class="dialogue">"진실을 알면서 침묵하지 않는 용기도 정의의 한 조각이야."</span></p>
+        <p>세 번의 종소리가 울린 그날,<br>
+마을은 정의가 무엇인지 온몸으로 배웠어요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(0, 131, 143, 0.15); border-radius: 16px;">
+          <strong style="color: #006064; font-size: 18px;">🌱 교훈: 정의는 신중함에서 시작돼요.</strong><br><br>
+          <span style="color: #00838F; font-size: 15px;">세 번의 종소리가 도윤을 구했듯이, 한 번 더 살피고 한 번 더 생각하는 것이 진정한 정의의 시작이에요.</span>
+        </p>
+      </div>
+    </section>
+  </div>
 
- <!-- 네비게이션 버튼 -->
- <div class="nav-buttons">
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
     <button class="nav-btn" onclick="location.href='law05_season1_quiz.html?season=season1'" style="background: linear-gradient(135deg, #00838F, #006064);">📝 관문평가</button>
- </div>
+  </div>
 
- <!-- 스크롤 인디케이터 -->
- <div class="scroll-indicator" id="scrollIndicator">
- <svg viewBox="0 0 24 24" fill="white">
- <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
- </svg>
- </div>
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
 
- <script>
- const mapContainer = document.getElementById('map-container');
- const sections = document.querySelectorAll('.story-section');
- const scrollIndicator = document.getElementById('scrollIndicator');
- let currentBg = '';
- let ticking = false;
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
 
- function updateBackground() {
- const scrollPos = window.scrollY + window.innerHeight / 2;
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
 
- // 스크롤 인디케이터 숨기기/보이기
- if (window.scrollY > 100) {
- scrollIndicator.style.opacity = '0';
- } else {
- scrollIndicator.style.opacity = '1';
- }
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
 
- sections.forEach(section => {
- const rect = section.getBoundingClientRect();
- const sectionTop = window.scrollY + rect.top;
- const sectionBottom = sectionTop + rect.height;
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
 
- if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
- // 배경 업데이트
- const bgImage = section.dataset.bg;
- if (bgImage && bgImage !== currentBg) {
- currentBg = bgImage;
- mapContainer.style.backgroundImage = `url(${bgImage})`;
- }
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
 
- // 카드 활성화
- const card = section.querySelector('.story-card');
- if (card && !card.classList.contains('active')) {
- card.classList.add('active');
- }
- }
- });
- }
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
 
- window.addEventListener('scroll', () => {
- if (!ticking) {
- window.requestAnimationFrame(() => {
- updateBackground();
- ticking = false;
- });
- ticking = true;
- }
- });
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
 
- // 초기 실행
- updateBackground();
+    // 초기 실행
+    updateBackground();
 
- function goBack() {
- // 부모 창이 있으면 부모에게 메시지 전송
- if (window.parent !== window) {
- window.parent.postMessage({ action: 'closeStory' }, '*');
- } else {
- window.history.back();
- }
- }
- </script>
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
 </body>
 </html>

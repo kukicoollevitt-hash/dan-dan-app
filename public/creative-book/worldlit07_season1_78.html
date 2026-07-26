@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐰 토끼 굴 아래 이상한 나라 — 앨리스의 모험</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계문학07/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🐰 토끼 굴 아래 이상한 나라 — 앨리스의 모험</h1>
+        <p class="subtitle">
+          — 루이스 캐럴의 환상 문학으로 읽는 상상력의 세계 —<br>
+          교과기반 창작도서 · 세계문학 07
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 앨리스:</strong> 호기심 많은 소녀. 토끼를 따라간 이상한 나라에서 온갖 기이한 모험을 겪는다.</p>
+          <p><strong>★ 이상한 나라의 인물들:</strong> 회중시계를 든 토끼, 웃음만 남기는 고양이, 하트 여왕 등 상식을 뒤엎는 존재들.</p>
+          <p><strong>★ 감상 길잡이:</strong> 「이상한 나라의 앨리스」는 루이스 캐럴이 1865년에 발표한 환상 문학으로, 상식과 규칙을 뒤엎는 기발한 상상력으로 오래도록 사랑받아 왔습니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 발단</span>
+        <h2>회중시계를 든 토끼</h2>
+        <p>어느 나른한 오후, 앨리스는 강가에서 언니 곁에 앉아 지루해하고 있었습니다. 그때 조끼를 입고 회중시계를 든 하얀 토끼가 앨리스의 눈앞을 지나갔습니다. 시계를 보며 늦었다고 중얼거리는 토끼의 모습은 참으로 기이했습니다.</p>
+        <p>앨리스는 말하는 토끼가 신기하여, 호기심을 이기지 못하고 토끼를 뒤쫓았습니다. 토끼는 큰 굴속으로 쏙 들어가 버렸습니다. 앨리스도 망설임 없이 그 굴속으로 뛰어들었습니다.</p>
+        <p>그 순간, 앨리스의 상식적인 세계는 저 뒤로 사라지고 이상한 나라로 향하는 문이 열렸습니다. 회중시계를 든 토끼는 그 환상의 세계로 앨리스를 이끄는 안내자였습니다. 앨리스의 기이한 모험이 시작되려 하고 있었습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 앨리스를 환상의 세계로 이끄는 호기심입니다. 이 환상 문학은 상식이 통하지 않는 이상한 나라를 통해, 규칙에 얽매이지 않는 자유로운 상상력의 세계를 펼쳐 보입니다. 회중시계를 든 토끼가 그 출발점이 됩니다.</p>
+        <p>「이상한 나라의 앨리스」는 이렇게 토끼 굴 앞에서 시작됩니다. 루이스 캐럴의 기발한 상상력이, 우리를 상식 너머의 세계로 데려갑니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">전개 · 낙하</span>
+        <h2>끝없이 떨어지다</h2>
+        <p>토끼 굴로 뛰어든 앨리스는 끝도 없이 아래로 떨어졌습니다. 보통이라면 순식간에 바닥에 닿았겠지만, 이 굴에서는 시간이 멈춘 듯 천천히 떨어졌습니다. 앨리스는 떨어지는 동안 벽에 늘어선 온갖 신기한 것들을 구경할 수 있었습니다.</p>
+        <p>앨리스는 떨어지면서도 조금도 무서워하지 않고, 오히려 이런저런 생각을 하며 여유를 부렸습니다. 상식으로는 도무지 있을 수 없는 일이 아무렇지 않게 벌어지고 있었습니다. 이상한 나라의 첫 규칙은, 바로 규칙이 없다는 것이었습니다.</p>
+        <p>마침내 앨리스는 부드럽게 바닥에 내려섰습니다. 그곳은 앨리스가 알던 세계와는 전혀 다른, 기이한 이상한 나라였습니다. 앨리스의 진짜 모험은 이제부터 시작이었습니다.</p>
+        <p>이 대목은 앨리스가 상식의 세계에서 환상의 세계로 넘어가는 전개의 단계입니다. 끝없이 천천히 떨어지는 기이한 낙하가, 이곳이 상식이 통하지 않는 세계임을 알려 줍니다. 규칙에 얽매이지 않는 상상력의 세계가 펼쳐지기 시작합니다.</p>
+        <p>앨리스는 낯설고 기이한 이상한 나라를 조금씩 탐험하기 시작했습니다. 그곳에서는 상식으로는 상상할 수 없는 일들이 기다리고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 변신</span>
+        <h2>커졌다 작아졌다</h2>
+        <p>이상한 나라에서 앨리스는 신비한 음식과 음료를 만나게 되었습니다. 어떤 것을 마시면 몸이 순식간에 작아지고, 어떤 것을 먹으면 거인처럼 커졌습니다. 앨리스의 몸은 커졌다 작아졌다 하며 정신없이 변했습니다.</p>
+        <p>앨리스는 자꾸만 변하는 자신의 몸에 어리둥절했습니다. 몸이 커지면 방에 갇혀 옴짝달싹 못 하고, 작아지면 문고리에도 손이 닿지 않았습니다. 상식으로는 도무지 이해할 수 없는 일들의 연속이었습니다.</p>
+        <p>이렇게 몸이 마음대로 변하는 것은, 이상한 나라의 기발한 상상력을 잘 보여 줍니다. 우리가 사는 세계의 법칙이 이곳에서는 조금도 통하지 않았습니다. 무엇이든 가능한 자유로운 상상의 세계였습니다.</p>
+        <p>이 대목은 이상한 나라의 기이한 규칙을 보여 주는 전개의 단계입니다. 몸이 커졌다 작아졌다 하는 상상이, 상식을 뒤엎는 환상 문학의 매력을 드러냅니다. 어떤 것도 가능한 자유로운 상상력이 이 작품의 힘입니다.</p>
+        <p>앨리스는 변하는 몸에 익숙해지며 이상한 나라를 계속 나아갔습니다. 그곳에서 앨리스는 더욱 기이한 존재들을 만나게 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>웃음만 남는 고양이</h2>
+        <p>앨리스는 나뭇가지 위에 앉은 신비한 고양이를 만났습니다. 체셔 고양이라 불리는 이 고양이는 앨리스에게 알쏭달쏭한 말을 건넸습니다. 그러고는 몸을 스르르 지우며 사라졌는데, 놀랍게도 웃음만은 허공에 남아 있었습니다.</p>
+        <p>몸은 사라지고 웃음만 남는다는 것은 참으로 기이한 일이었습니다. 앨리스는 이 신기한 광경에 눈이 휘둥그레졌습니다. 이상한 나라에서는 이런 일조차 아무렇지 않게 벌어졌습니다.</p>
+        <p>체셔 고양이의 알쏭달쏭한 말과 기이한 모습은, 이 작품 특유의 넌센스, 곧 말이 안 되는 재미를 잘 보여 줍니다. 논리로는 설명할 수 없지만, 바로 그 점이 웃음과 즐거움을 자아냅니다. 상식을 벗어난 자유로움이 이 작품의 매력이었습니다.</p>
+        <p>이 대목은 앨리스가 이상한 나라의 기이한 존재를 만나는 전개의 단계입니다. 웃음만 남기고 사라지는 고양이가, 논리를 뛰어넘는 상상력의 재미를 보여 줍니다. 말이 안 되기에 오히려 즐거운, 넌센스의 매력이 빛나는 대목입니다.</p>
+        <p>앨리스는 체셔 고양이가 알려 준 길을 따라, 더욱 기이한 모임으로 향했습니다. 그곳에서는 끝나지 않는 이상한 티 파티가 열리고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">전개 · 소동</span>
+        <h2>끝나지 않는 티 파티</h2>
+        <p>앨리스는 모자 장수와 삼월 토끼가 벌이는 이상한 티 파티에 이르렀습니다. 그 파티는 언제나 차 마시는 시간에 멈춰 있어, 끝없이 되풀이되었습니다. 시간이 멈춰 버린 기이한 파티였습니다.</p>
+        <p>파티에 모인 이들은 앞뒤가 맞지 않는 말을 주고받으며 소동을 벌였습니다. 앨리스가 상식적인 질문을 해도, 돌아오는 대답은 하나같이 엉뚱했습니다. 논리라고는 찾아볼 수 없는 자리였습니다.</p>
+        <p>이 끝나지 않는 티 파티는 이상한 나라의 기이함을 한껏 보여 줍니다. 시간마저 멈춰 버린 이곳에서는, 우리가 아는 어떤 규칙도 통하지 않았습니다. 상식을 벗어난 이 자유로움이 웃음과 함께 신선한 재미를 주었습니다.</p>
+        <p>이 대목은 이상한 나라의 넌센스가 절정을 이루는 전개의 단계입니다. 시간이 멈춘 티 파티와 엉뚱한 대화가, 상식을 뒤엎는 상상력의 즐거움을 보여 줍니다. 논리 대신 재미가 지배하는 세계의 매력이 드러납니다.</p>
+        <p>앨리스는 이상한 나라가 규칙도 논리도 없는 곳임을 점점 실감했습니다. 그리고 마침내, 이 나라를 다스리는 하트 여왕의 정원에 이르게 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 무질서</span>
+        <h2>규칙이 없는 나라</h2>
+        <p>앨리스는 이상한 나라를 돌아다니며, 이곳에는 도무지 정해진 규칙이 없다는 것을 깨달았습니다. 무엇이든 뒤죽박죽이었고, 앞뒤가 맞는 일이 하나도 없었습니다. 상식의 세계에서 온 앨리스에게는 모든 것이 낯설고 혼란스러웠습니다.</p>
+        <p>그러나 앨리스는 점차 이 무질서한 세계를 즐기기 시작했습니다. 규칙이 없기에 무엇이든 가능했고, 상상하는 대로 벌어졌기 때문입니다. 답답한 현실과 달리, 이상한 나라는 자유로운 상상의 놀이터였습니다.</p>
+        <p>규칙이 없다는 것은 혼란스럽기도 했지만, 동시에 무한한 자유를 뜻하기도 했습니다. 이 작품은 그러한 상상력의 자유를 마음껏 펼쳐 보입니다. 상상력에는 정해진 규칙이 없다는 것이, 이 이야기가 전하는 즐거움이었습니다.</p>
+        <p>이 대목은 이상한 나라의 무질서가 지닌 의미를 보여 주는 위기의 단계입니다. 규칙 없는 혼란이 곧 상상력의 자유임을, 앨리스는 알아 갑니다. 상식의 틀을 벗어난 자유로움이 이 작품의 핵심 매력입니다.</p>
+        <p>그러나 이상한 나라에는 제멋대로 구는 무서운 존재도 있었습니다. 바로 하트 여왕이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">위기 · 폭군</span>
+        <h2>하트 여왕의 정원</h2>
+        <p>앨리스는 마침내 이상한 나라를 다스리는 하트 여왕의 정원에 이르렀습니다. 그 정원에서는 카드 병정들이 하얀 장미에 붉은 물감을 칠하느라 분주했습니다. 여왕이 붉은 장미를 좋아한다는 이유 때문이었습니다.</p>
+        <p>하트 여왕은 무척 제멋대로이고 사나운 존재였습니다. 조금이라도 마음에 들지 않으면, 걸핏하면 목을 치라고 소리쳤습니다. 그 정원에서는 여왕의 변덕이 곧 법이었습니다.</p>
+        <p>하트 여왕의 제멋대로인 다스림은, 규칙 없는 이상한 나라의 또 다른 모습이었습니다. 무질서한 자유는 즐겁기도 했지만, 이렇게 폭군의 변덕 앞에서는 위험하기도 했습니다. 앨리스는 여왕의 횡포에 맞서야 하는 처지에 놓였습니다.</p>
+        <p>이 대목은 앨리스가 폭군 여왕과 마주하는 위기의 단계입니다. 제멋대로인 하트 여왕이, 규칙 없는 세계의 위험한 면을 보여 줍니다. 무질서한 자유 속에서도 앨리스는 자신의 상식과 용기를 잃지 않으려 합니다.</p>
+        <p>하트 여왕은 앨리스를 두고 엉터리 재판을 벌이려 했습니다. 이상한 나라의 기이함이 절정에 이르는 순간이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 대결</span>
+        <h2>엉터리 재판</h2>
+        <p>하트 여왕은 앨리스를 비롯한 이들을 두고 재판을 열었습니다. 그러나 그 재판은 앞뒤가 맞지 않는 엉터리 재판이었습니다. 증거도 없이 판결부터 내리려 하고, 논리라고는 조금도 없었습니다.</p>
+        <p>앨리스는 이 엉터리 재판의 부당함을 참을 수 없었습니다. 앨리스는 용기를 내어 여왕의 횡포에 맞서 목소리를 높였습니다. 상식과 정의를 아는 앨리스는, 이 무질서한 재판을 그냥 두고 볼 수 없었던 것입니다.</p>
+        <p>그 순간 앨리스의 몸이 다시 커지기 시작했고, 앨리스는 여왕과 카드 병정들이 한낱 종잇조각에 불과하다고 외쳤습니다. 엉터리 재판과 폭군의 위세가 앨리스의 당당함 앞에서 무너져 내렸습니다. 상식과 용기가 무질서한 횡포를 이긴 것입니다.</p>
+        <p>이 대목은 이야기의 절정으로, 앨리스가 엉터리 재판에 맞서는 대결의 단계입니다. 부당함에 당당히 맞서는 앨리스의 용기가 빛납니다. 자유로운 상상의 세계에서도 상식과 정의가 소중함을, 이 장면은 넌지시 보여 줍니다.</p>
+        <p>카드 병정들이 우수수 무너지며 앨리스에게 달려드는 순간, 앨리스는 눈을 번쩍 떴습니다. 이상한 나라의 모험이 끝을 향하고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 각성</span>
+        <h2>깨어 보니 오후</h2>
+        <p>앨리스가 눈을 떠 보니, 자신은 강가의 언니 곁에 그대로 앉아 있었습니다. 이상한 나라의 모든 모험은 나른한 오후에 꾼 한바탕 꿈이었던 것입니다. 앨리스는 방금 겪은 기이한 일들을 떠올리며 미소 지었습니다.</p>
+        <p>비록 꿈이었지만, 이상한 나라의 모험은 앨리스에게 잊지 못할 경험이었습니다. 상식이 통하지 않는 세계에서, 앨리스는 자유로운 상상의 즐거움을 마음껏 누렸습니다. 그 기발한 세계는 앨리스의 마음속에 오래도록 남았습니다.</p>
+        <p>이 작품이 꿈이라는 형식을 택한 것은 뜻깊습니다. 꿈속에서는 어떤 상상도 가능하기에, 상식을 뛰어넘는 자유로운 이야기를 마음껏 펼칠 수 있었기 때문입니다. 꿈은 상상력의 무한한 자유를 담는 그릇이었습니다.</p>
+        <p>이 대목은 모험이 꿈이었음이 드러나는 결말의 각성 단계입니다. 꿈이라는 형식이 상상력의 자유를 온전히 담아냈음을 보여 줍니다. 현실로 돌아온 앨리스의 마음에, 상상의 즐거움이 여운으로 남습니다.</p>
+        <p>앨리스는 언니에게 자신이 꾼 신기한 꿈 이야기를 들려주었습니다. 그 이야기 속에는 무한한 상상력의 세계가 담겨 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학07/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>상상력의 나라</h2>
+        <p>「이상한 나라의 앨리스」는 상식과 규칙을 뒤엎는 기발한 상상력으로 가득한 환상 문학입니다. 앨리스가 겪은 이상한 나라의 모험은, 논리로는 설명할 수 없지만 바로 그 점에서 무한한 즐거움을 줍니다. 상상력에는 정해진 규칙이 없음을 이 작품은 마음껏 보여 줍니다.</p>
+        <p>이 작품이 지닌 매력은 여럿입니다. 첫째는 상식을 뒤엎는 기발한 상상력이요, 둘째는 말이 안 되기에 오히려 재미있는 넌센스의 즐거움입니다. 루이스 캐럴은 이를 통해, 어린이와 어른 모두를 상상의 세계로 초대합니다.</p>
+        <p>무엇보다 이 작품은, 규칙에 얽매이지 않는 자유로운 상상력의 소중함을 일깨웁니다. 답답한 현실의 틀을 벗어나, 무엇이든 가능한 세계를 마음껏 그려 보는 즐거움 말입니다. 그 자유로움이 이 작품을 시대를 넘어 사랑받게 했습니다.</p>
+        <p>토끼 굴 아래 펼쳐진 이상한 나라는, 우리 마음속 상상력의 나라를 상징합니다. 앨리스처럼 호기심을 품고 그 세계로 뛰어들 때, 우리는 상식 너머의 새로운 즐거움을 만날 수 있습니다. 이 작품은 우리에게, 상상력의 문을 활짝 여는 즐거움을 선물합니다.</p>
+        <p><span class="highlight">상상력에는 정해진 규칙이 없습니다. 토끼 굴 아래에는 무엇이든 가능한 상상의 나라가 펼쳐집니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'worldlit07_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

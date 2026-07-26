@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧢 미시시피강가의 말썽꾸러기 — 톰 소여의 모험</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계문학12/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🧢 미시시피강가의 말썽꾸러기 — 톰 소여의 모험</h1>
+        <p class="subtitle">
+          — 마크 트웨인의 성장 문학으로 읽는 용기와 정직 —<br>
+          교과기반 창작도서 · 세계문학 12
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 톰 소여:</strong> 미시시피 강가 마을의 장난꾸러기 소년. 온갖 말썽을 부리지만, 진실 앞에서 용기 있는 영웅이 된다.</p>
+          <p><strong>★ 허클베리 핀:</strong> 톰의 단짝 친구. 톰과 함께 여러 모험을 겪는다.</p>
+          <p><strong>★ 감상 길잡이:</strong> 「톰 소여의 모험」은 마크 트웨인이 1876년에 발표한 성장 문학으로, 장난꾸러기 소년이 진실과 용기를 통해 성장해 가는 과정을 생생하게 그렸습니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학12/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 인물</span>
+        <h2>마을에서 제일가는 말썽꾸러기</h2>
+        <p>톰 소여는 미시시피 강가의 작은 마을에 사는 소년입니다. 톰은 마을에서 제일가는 장난꾸러기로 소문이 자자했습니다. 공부는 뒷전이고, 늘 새로운 장난과 모험을 궁리하며 지냈습니다.</p>
+        <p>톰은 이모의 손에서 자랐는데, 이모의 잔소리에도 아랑곳없이 말썽을 부렸습니다. 학교와 교회를 지루해하며, 자유로운 모험을 꿈꾸었습니다. 톰은 틀에 얽매이지 않는 자유로운 아이였습니다.</p>
+        <p>톰의 장난은 짓궂었지만, 그 속에는 순수하고 씩씩한 소년의 마음이 담겨 있었습니다. 톰은 호기심이 많고 용감했으며, 무엇이든 직접 부딪혀 보는 아이였습니다. 그런 톰에게 미시시피 강가는 신나는 모험의 무대였습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 미시시피 강가의 장난꾸러기 톰의 모습입니다. 이 성장 문학은 그런 톰이 진실과 용기를 통해 성장해 가는 과정을 생생하게 그립니다. 마을 제일의 말썽꾸러기가 그 출발점이 됩니다.</p>
+        <p>장난꾸러기 소년이 진실 앞에서 영웅이 되어 가는 이야기를, 톰은 여러 모험을 통해 보여 줍니다. 톰 소여의 모험이 이렇게 시작됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학12/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 재치</span>
+        <h2>울타리 페인트칠의 꾀</h2>
+        <p>어느 날 톰은 벌로 긴 울타리에 페인트를 칠하는 일을 하게 되었습니다. 톰은 그 지루한 일이 몹시 하기 싫었습니다. 그때 톰의 머릿속에 기발한 꾀가 떠올랐습니다.</p>
+        <p>톰은 지나가는 친구들 앞에서, 마치 페인트칠이 무척 재미있고 특별한 일인 양 행동했습니다. 그러자 친구들이 자기도 해 보고 싶다며 몰려들었습니다. 톰은 오히려 친구들에게서 물건까지 받고, 페인트칠을 하게 해 준 것입니다.</p>
+        <p>톰의 이 재치 있는 꾀는 이 작품에서 가장 유명한 장면 가운데 하나입니다. 하기 싫은 일도 어떻게 여기느냐에 따라 달라진다는 것을, 톰은 영리하게 보여 주었습니다. 톰의 기발함과 재치가 돋보이는 대목입니다.</p>
+        <p>이 대목은 톰의 재치가 빛나는 도입의 단계입니다. 울타리 페인트칠을 놀이로 바꾸어 버린 꾀가, 톰의 영리함과 자유로운 발상을 보여 줍니다. 장난꾸러기 톰의 개성이 유쾌하게 드러나는 장면입니다.</p>
+        <p>이렇게 유쾌한 나날을 보내던 톰에게, 어느 날 인생을 뒤바꿀 무서운 사건이 일어났습니다. 그 사건은 한밤중 묘지에서 벌어졌습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학12/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 사건</span>
+        <h2>한밤중 묘지에서 본 것</h2>
+        <p>어느 날 밤, 톰은 친구 허클베리 핀과 함께 몰래 묘지로 갔습니다. 담력을 시험해 보려는 장난스러운 모험이었습니다. 그런데 그곳에서 두 소년은 끔찍한 일을 목격하고 말았습니다.</p>
+        <p>묘지에서 세 사람이 다투다가, 그중 한 명이 다른 사람을 해치는 무서운 사건이 벌어진 것입니다. 톰과 허클베리는 그 광경을 숨어서 지켜보며 두려움에 떨었습니다. 그것은 실제로 벌어진 끔찍한 범죄였습니다.</p>
+        <p>장난삼아 간 묘지에서, 톰은 뜻하지 않게 무서운 진실을 목격하게 되었습니다. 두 소년은 겁에 질려 그곳을 빠져나왔습니다. 그러나 그날 밤 본 것은 톰의 마음에 무거운 짐이 되어 남았습니다.</p>
+        <p>이 대목은 톰이 뜻밖의 사건을 목격하는 전개의 단계입니다. 장난스러운 모험이 무서운 진실과 마주하는 순간으로 바뀝니다. 이 사건이 톰을 진실과 용기의 시험대로 이끄는 계기가 됩니다.</p>
+        <p>톰은 자신이 본 진실을 어떻게 해야 할지 몰라 깊은 고민에 빠졌습니다. 그것은 어린 톰에게 감당하기 어려운 무거운 비밀이었습니다. 장난만 치던 톰에게 처음으로 어른스러운 고민이 찾아온 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학12/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 갈등</span>
+        <h2>무거운 비밀</h2>
+        <p>톰과 허클베리는 자신들이 목격한 것을 아무에게도 말하지 못했습니다. 진실을 밝히면 자신들이 위험해질까 봐 두려웠기 때문입니다. 두 소년은 무거운 비밀을 가슴에 안고 괴로워했습니다.</p>
+        <p>그런데 묘지 사건의 죄를 엉뚱한 사람이 뒤집어쓰게 되었습니다. 아무 잘못도 없는 사람이 범인으로 몰린 것입니다. 톰은 진실을 아는 자신이 침묵하는 것이 옳은지 고민에 빠졌습니다.</p>
+        <p>톰은 두려움과 양심 사이에서 갈등했습니다. 진실을 말하면 위험했지만, 침묵하면 죄 없는 사람이 벌을 받게 되기 때문입니다. 어린 톰에게 그것은 참으로 힘든 선택이었습니다.</p>
+        <p>이 대목은 톰이 두려움과 양심 사이에서 갈등하는 전개의 단계입니다. 진실을 밝힐 것인가 침묵할 것인가라는 물음이, 톰을 시험합니다. 장난꾸러기 톰이 처음으로 무거운 도덕적 고민과 마주하는 순간입니다.</p>
+        <p>죄 없는 사람이 재판을 받게 되면서, 톰의 고민은 더욱 깊어졌습니다. 마침내 톰은 중요한 결심을 하게 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학12/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 결단</span>
+        <h2>법정에서 외친 진실</h2>
+        <p>죄 없는 사람이 재판을 받는 날, 톰은 마침내 용기를 냈습니다. 두려움을 무릅쓰고, 법정에서 자신이 목격한 진실을 밝히기로 한 것입니다. 톰은 떨리는 목소리로 그날 밤 묘지에서 본 것을 증언했습니다.</p>
+        <p>톰의 용기 있는 증언 덕분에, 죄 없는 사람은 누명을 벗을 수 있었습니다. 그리고 진짜 범인이 드러났습니다. 장난꾸러기로만 여겨지던 톰이, 진실을 밝혀 한 사람의 억울함을 풀어 준 것입니다.</p>
+        <p>톰의 이 용기 있는 행동은, 진실을 위해 두려움을 이겨 낸 값진 결단이었습니다. 위험을 무릅쓰고 옳은 일을 한 톰은, 더 이상 예전의 철없는 말썽꾸러기가 아니었습니다. 톰은 진실 앞에서 용기 있는 사람으로 성장한 것입니다.</p>
+        <p>이 대목은 톰이 두려움을 이기고 진실을 밝히는 위기의 단계입니다. 법정에서의 용기 있는 증언이, 톰의 성장을 뚜렷이 보여 줍니다. 장난꾸러기 소년이 정의를 위해 용기를 내는 모습이 깊은 감동을 자아냅니다. 옳은 일은 두려움을 이기고 나설 때 비로소 이루어진다는 것을 톰은 몸으로 보여 주었습니다.</p>
+        <p>그러나 진실을 밝힌 대가로, 진짜 범인이 톰을 노리게 되었습니다. 톰에게 새로운 위험이 다가온 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학12/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 도피</span>
+        <h2>자기 장례식을 본 소년들</h2>
+        <p>그 무렵 톰과 친구들은 잠시 마을을 떠나 강가의 섬으로 모험을 떠난 일이 있었습니다. 아이들이 사라지자, 마을 사람들은 아이들이 강에서 목숨을 잃은 줄로만 알았습니다. 온 마을이 슬픔에 잠겼습니다.</p>
+        <p>그런데 아이들은 몰래 마을로 돌아와, 자신들의 장례식을 지켜보게 되었습니다. 자신을 위해 슬퍼하는 사람들의 모습을 본 것입니다. 톰은 그 광경을 보며, 자신이 얼마나 많은 사랑을 받고 있었는지를 깨달았습니다.</p>
+        <p>자기 장례식을 지켜본 이 기이한 경험은, 톰에게 소중한 것을 일깨워 주었습니다. 늘 말썽만 부리던 자신을 그토록 아끼는 사람들이 있었다는 사실 말입니다. 톰은 가족과 이웃의 사랑을 새삼 느끼게 되었습니다.</p>
+        <p>이 대목은 톰이 자신을 향한 사랑을 깨닫는 위기의 심화 단계입니다. 자기 장례식을 지켜보는 기이한 경험이, 톰을 한층 성숙하게 만듭니다. 장난 뒤에 감춰진 사람들의 사랑을 톰이 알아 가는 과정이 그려집니다. 늘 곁에 있어 소중함을 몰랐던 것들의 가치를, 톰은 비로소 깨닫게 됩니다.</p>
+        <p>마을로 돌아온 톰에게, 이번에는 또 다른 모험이 기다리고 있었습니다. 그것은 톰의 용기를 다시 한번 시험하는 일이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학12/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 시련</span>
+        <h2>어둠 속에 갇히다</h2>
+        <p>어느 날 톰은 친구 베키와 함께 커다란 동굴을 탐험하다가 그만 길을 잃고 말았습니다. 두 아이는 깊은 동굴 속 어둠에 갇혀 버렸습니다. 빛도 없고 출구도 찾을 수 없는 절망적인 상황이었습니다.</p>
+        <p>게다가 그 동굴 속에는 톰이 법정에서 진실을 밝혀 쫓기는 신세가 된 진짜 범인이 숨어 있었습니다. 톰은 어둠과 배고픔, 그리고 위험한 범인까지 마주해야 했습니다. 톰의 용기가 다시 한번 크게 시험받는 순간이었습니다.</p>
+        <p>그러나 톰은 절망 속에서도 침착함을 잃지 않았습니다. 겁에 질린 베키를 다독이며, 어떻게든 출구를 찾으려 애썼습니다. 위기 속에서 톰은 진정한 용기와 책임감을 보여 주었습니다.</p>
+        <p>이 대목은 톰이 동굴에 갇히는 절정의 시련 단계입니다. 어둠과 위험 속에서도 침착함을 잃지 않는 톰의 모습이, 그의 성장을 보여 줍니다. 위기가 클수록 톰의 용기가 더욱 빛을 발합니다.</p>
+        <p>톰은 포기하지 않고 어둠 속에서 출구를 찾아 헤맸습니다. 마침내 톰의 용기와 끈기가 빛을 보게 되었습니다. 겁에 질리기보다 침착하게 길을 찾으려는 마음이 두 아이를 지켜 주었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학12/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>탈출, 그리고 보물</h2>
+        <p>톰은 포기하지 않고 동굴 속을 헤맨 끝에, 마침내 작은 빛줄기를 발견했습니다. 그 빛을 따라 톰과 베키는 무사히 동굴을 빠져나올 수 있었습니다. 톰의 용기와 끈기가 두 아이의 목숨을 구한 것입니다.</p>
+        <p>게다가 톰은 그 동굴에서 뜻밖의 보물까지 발견하게 되었습니다. 오랫동안 숨겨져 있던 보물이 톰의 손에 들어온 것입니다. 톰의 모험은 마침내 값진 결실을 맺었습니다.</p>
+        <p>그 순간 톰은 자신이 크게 달라졌음을 느꼈습니다. 진실을 밝힌 용기, 위기를 이겨 낸 끈기를 통해, 톰은 어느새 철없는 장난꾸러기에서 어엿한 소년으로 성장한 것입니다. 모험은 톰을 한층 성숙하게 만들었습니다.</p>
+        <p>이 대목은 이야기의 정신적 절정, 곧 톰의 각성입니다. 동굴에서 탈출하고 보물을 얻으며, 톰의 성장이 결실을 맺습니다. 진실과 용기를 통해 톰이 참된 영웅으로 자라났음이 드러납니다. 여러 시련을 이겨 낸 경험이 톰을 안팎으로 단단하게 만들어 주었습니다.</p>
+        <p>동굴을 무사히 빠져나온 톰은, 마을 사람들에게 영웅으로 환영받았습니다. 진실을 밝히고 위기를 이겨 낸 톰의 용기가 마침내 빛을 본 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학12/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 성장</span>
+        <h2>말썽꾸러기에서 영웅으로</h2>
+        <p>마을 사람들은 톰을 영웅으로 떠받들었습니다. 진실을 밝혀 죄 없는 사람을 구하고, 위기를 이겨 낸 톰의 용기를 모두가 칭찬했습니다. 늘 말썽만 부리던 톰이, 마을의 자랑스러운 소년이 된 것입니다.</p>
+        <p>그러나 톰이 얻은 가장 값진 것은 사람들의 칭찬이나 보물이 아니었습니다. 그것은 진실을 위해 용기를 내고, 위기를 이겨 내며 얻은 성장이었습니다. 톰은 이 모험들을 통해 한층 성숙한 사람이 되었습니다.</p>
+        <p>톰의 장난기와 자유로운 마음은 여전했지만, 그 안에는 이제 진실을 소중히 여기고 용기를 낼 줄 아는 마음이 자리 잡았습니다. 톰은 철없는 아이에서, 옳은 것을 위해 나설 줄 아는 소년으로 자라난 것입니다. 그것이 톰이 얻은 진정한 보물이었습니다.</p>
+        <p>이 대목은 톰이 영웅으로 성장하는 결말의 단계입니다. 진실과 용기를 통해 말썽꾸러기가 어엿한 소년으로 자라난 것입니다. 톰이 얻은 참된 보물이 곧 성장임을, 이 장면은 보여 줍니다.</p>
+        <p>미시시피 강가에는 오늘도 강물이 유유히 흘렀습니다. 그 강가에서 톰은 여러 모험을 거치며 한 뼘 자란 자신을 느꼈습니다. 강물이 흘러 넓은 바다로 나아가듯, 톰의 마음도 한층 넓고 깊어져 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학12/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>강가에서 태어난 성장 이야기</h2>
+        <p>「톰 소여의 모험」은 미시시피 강가의 장난꾸러기 소년이 진실과 용기를 통해 성장해 가는 성장 문학입니다. 톰은 무서운 사건을 목격하고, 두려움을 이기고 진실을 밝히며, 위기를 이겨 냈습니다. 그 과정에서 톰은 철없는 아이에서 어엿한 영웅으로 자라났습니다.</p>
+        <p>이 작품이 지닌 매력은 여럿입니다. 첫째는 미시시피 강가를 배경으로 한 생생하고 유쾌한 모험이요, 둘째는 장난꾸러기 소년의 성장을 그린 따뜻한 이야기입니다. 마크 트웨인은 이를 생동감 넘치는 문장으로 그려 냈습니다.</p>
+        <p>무엇보다 이 작품은, 진실 앞에서 용기를 내는 것의 소중함을 일깨웁니다. 두려움을 무릅쓰고 진실을 밝힌 톰의 용기는, 그를 참된 영웅으로 만들었습니다. 옳은 것을 위해 용기를 내는 것이 곧 성장임을, 톰은 보여 줍니다.</p>
+        <p>미시시피 강가에서 태어난 톰의 성장 이야기는, 오늘날에도 어린이와 어른 모두에게 사랑받고 있습니다. 장난꾸러기 소년이 진실과 용기를 통해 성장하는 모습은, 우리에게 잔잔한 감동과 용기를 전합니다. 이 작품은 우리에게, 옳은 것을 위해 용기를 내는 마음의 소중함을 일러 줍니다.</p>
+        <p><span class="highlight">장난꾸러기 소년도 진실 앞에서 용기를 낼 때, 어엿한 영웅으로 자라납니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'worldlit12_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

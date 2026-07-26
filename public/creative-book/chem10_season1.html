@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔥 산소를 주고받는 사이 — 녹슨 못과 붉은 구리</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작화학10/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(106, 17, 203, 0.15);
+      color: #6a11cb;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6a11cb;
+      font-weight: 600;
+    }
+
+    .vocab-tip {
+      position: relative;
+      color: #6a11cb;
+      border-bottom: 1px dotted #6a11cb;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+    .story-card .dialogue {
+      color: #2575fc;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #a78bfa;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(106, 17, 203, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(37, 117, 252, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 117, 252, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🔥 산소를 주고받는 사이 — 녹슨 못과 붉은 구리</h1>
+        <p class="subtitle">
+          — 하나가 얻으면 하나가 잃는다, 언제나 함께 —<br>
+          교과기반 창작도서 · 화학 10
+        </p>
+        <div class="characters">
+          <h3>🔥 등장인물 소개</h3>
+          <p><strong>★ 무쇠 (주인공):</strong> 대장간 집 소년. 쇠가 녹슬고 불이 타는 것을 눈여겨보다, 그 모든 일이 <span class="vocab-tip" data-meaning="공기 중에 있는, 물질이 타는 것을 돕는 기체">산소</span>를 주고받는 일임을 알게 된다.</p>
+          <p><strong>★ 대장장이 아버지:</strong> 쇠를 다루는 사람. 철광석에서 어떻게 쇠를 뽑아내는지, 조상 대대로 이어 온 지혜를 아들에게 전한다.</p>
+          <p><strong>★ 녹 (붉은 산화물):</strong> 못에 천천히 내려앉는 것. 철이 산소를 얻은 흔적. 나쁜 것처럼 보이지만 규칙을 알려 주는 열쇠.</p>
+          <p><strong>★ 촛불:</strong> 산소를 빠르게 얻으며 빛과 열을 내는 것. 녹과 같은 일을 아주 빠르게 하는 존재.</p>
+          <p><strong>★ 산소:</strong> 이 이야기의 주인공이자 조연. 이 손에서 저 손으로 끝없이 건네지며 세상을 바꾼다.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 궁금증의 갈등:</strong> 왜 쇠는 녹슬까 vs. 왜 불은 탈까 — 사실은 같은 일</p>
+          <p><strong>② 속도의 갈등:</strong> 천천히 녹스는 것 vs. 순식간에 타오르는 것</p>
+          <p><strong>③ 방향의 갈등:</strong> 산소를 얻는 일(산화) vs. 산소를 잃는 일(환원)</p>
+          <p><strong>④ 짝의 갈등:</strong> 혼자 일어나는 변화 vs. 언제나 짝을 이루어 일어나는 변화</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학10/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>붉게 변한 못</h2>
+        <p>무쇠는 대장간 집 소년입니다. 아버지가 쇠를 두드려 물건을 만드는 대장간에서 자랐기 때문에, 무쇠에게 쇠는 세상에서 가장 익숙한 것이었습니다. 무쇠는 반짝이는 새 못을 좋아했습니다. 갓 만든 못은 은빛으로 매끈하게 빛났고, 손에 쥐면 단단하고 차가웠습니다.</p>
+        <p>그런데 어느 날 무쇠는 마당 한구석에 며칠 놓아둔 못을 발견했습니다. 은빛으로 빛나던 그 못이, 어느새 붉고 거칠거칠하게 변해 있었습니다. 표면이 부슬부슬 일어나 손에 붉은 가루가 묻어났습니다. 누가 색을 칠한 것도 아닌데 말입니다.</p>
+        <p>무쇠는 이상했습니다. 새 못은 그렇게 매끈하고 단단했는데, 며칠 사이에 붉게 삭아 버렸습니다. 아버지에게 물으니 그것을 '녹'이라고 부른다고 했습니다. 쇠를 오래 두면 저절로 녹이 슨다는 것이었습니다.</p>
+        <p>무쇠는 그냥 넘어갈 수 없었습니다. 못이 저절로 색을 바꾸고 무르게 변한 데는 분명 까닭이 있을 것 같았습니다. 아무 일도 없이 물건이 스스로 변할 리는 없다고 무쇠는 생각했습니다.</p>
+        <p>무쇠는 새 못 몇 개를 골라 직접 실험을 해 보기로 했습니다. 하나는 바짝 마른 상자 안에 넣어 두고, 하나는 물기가 촉촉한 마당 흙 위에 두고, 또 하나는 기름을 골고루 발라 두었습니다. 그리고 며칠 뒤에 이 세 못이 어떻게 달라지는지 하나하나 지켜보기로 한 것입니다.</p>
+        <p><span class="highlight">무쇠는 못이 붉게 변한 그 까닭을 반드시 알아내고 싶었습니다.</span> 반짝이던 단단한 쇠가 대체 무엇을 만나 부슬부슬한 붉은 녹으로 변하는지, 그 눈에 보이지 않는 상대가 누구인지 몹시 궁금했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학10/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>물과 공기가 있어야</h2>
+        <p>며칠 뒤, 무쇠는 세 개의 못을 다시 살펴보았습니다. 결과는 뚜렷하게 달랐습니다. 물기 있는 마당에 둔 못은 온통 붉게 녹슬어 있었고, 기름을 발라 둔 못과 마른 상자 속의 못은 여전히 은빛으로 반짝였습니다.</p>
+        <p>무쇠는 그 차이를 곰곰이 따져 보았습니다. 세 못은 처음에 똑같은 새 못이었습니다. 다른 것이라고는 오직 놓인 자리, 곧 환경뿐이었습니다. 그런데 물기가 있고 공기가 잘 닿는 곳에 둔 못만 붉게 녹이 슬었습니다. 무언가 조건이 맞아야 녹이 스는 것이 분명했습니다.</p>
+        <p>무쇠는 아버지에게 이 결과를 보여 주며 물었습니다.<br><br><span class="dialogue">"아버지, 왜 물기 있는 데 둔 못만 녹슬었어요? 기름 바른 못은 멀쩡한데요."</span><br><br>아버지가 대장간 화로 앞에 앉으며 대답했습니다.<br><br><span class="dialogue">"쇠가 녹스는 건 공기 중의 산소와 만나기 때문이란다. 물기가 있으면 산소가 쇠에 더 잘 달라붙지. 기름은 산소가 못 닿게 막아 주는 거고."</span></p>
+        <p>무쇠는 눈이 번쩍 뜨였습니다. 그러니까 못이 붉게 변한 것은 쇠가 눈에 보이지 않는 산소를 만나 하나가 된 것이었습니다. 기름을 바른 못은 산소가 닿지 못해 녹슬지 않았던 것입니다.</p>
+        <p>아버지가 덧붙였습니다.<br><br><span class="dialogue">"쇠가 산소와 만나 하나가 되는 것을 <span class="vocab-tip" data-meaning="물질이 산소와 결합하는 반응">산화</span>라고 한단다. 붉은 녹은 쇠가 산소를 얻어서 된 <span class="vocab-tip" data-meaning="철이 산소와 결합해 생긴 붉은 물질">산화철</span>이라는 새로운 물질이야."</span></p>
+        <p><span class="highlight">못을 붉게 만든, 눈에 보이지 않던 그 상대는 바로 공기 중의 산소였습니다.</span> 무쇠는 쇠가 산소를 얻어 전혀 다른 물질로 변하는 그 일을 산화라고 부른다는 것을 이날 처음으로 알게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학10/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 발견</span>
+        <h2>촛불도 같은 일</h2>
+        <p>산화를 알게 된 무쇠는 세상이 조금 다르게 보이기 시작했습니다. 그러던 어느 저녁, 무쇠는 식탁 위에서 타고 있는 촛불을 물끄러미 바라보았습니다. 그리고 문득 한 가지 생각이 떠올랐습니다.</p>
+        <p>촛불도 사실은 무언가와 만나서 타는 것이 아닐까 하는 생각이었습니다. 무쇠는 예전에 배운 것을 떠올렸습니다. 뚜껑을 꼭 닫은 병 속에 촛불을 넣으면, 병 안의 산소를 다 쓰고 난 뒤에 불이 저절로 꺼진다는 것이었습니다. 그렇다면 촛불에도 산소가 필요하다는 뜻이었습니다.</p>
+        <p>무쇠는 아버지에게 달려가 물었습니다.<br><br><span class="dialogue">"아버지, 촛불이 타는 것도 산소랑 만나는 거예요? 쇠가 녹스는 것처럼요?"</span><br><br>아버지가 고개를 끄덕였습니다.<br><br><span class="dialogue">"맞다. 촛불이 타는 것도 초가 산소와 만나는 산화란다. 쇠가 녹스는 것과 똑같은 일이야. 다만 속도가 다르지."</span></p>
+        <p>무쇠는 처음에 어리둥절했습니다. 쇠가 녹스는 것은 며칠이나 걸리는 아주 느린 일이었고, 촛불이 타는 것은 순식간에 밝은 빛과 뜨거운 열을 내는 아주 빠른 일이었습니다. 겉으로 보기에 그렇게나 다른데 같은 일이라니, 얼른 이해가 되지 않았습니다.</p>
+        <p>아버지가 설명했습니다.<br><br><span class="dialogue">"둘 다 산소와 만나는 산화지만, 촛불은 아주 빠르게 산소와 만나면서 빛과 열까지 내는 거야. 이렇게 빠른 산화를 특별히 <span class="vocab-tip" data-meaning="물질이 빠르게 산화하며 빛과 열을 내는 것">연소</span>라고 한단다. 쇠가 녹스는 건 느린 산화, 불이 타는 건 빠른 산화인 셈이지."</span></p>
+        <p><span class="highlight">녹과 불은 전혀 달라 보였지만, 속에서 일어나는 일은 똑같았습니다.</span> 둘 다 산소와 만나는 똑같은 산화였고, 오직 그 만나는 속도만 서로 달랐던 것입니다. 무쇠는 그 사실이 참으로 신기했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학10/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 확장</span>
+        <h2>사과와 몸속의 불</h2>
+        <p>느린 산화와 빠른 산화가 있다는 것을 알게 된 무쇠는 주위를 한층 더 유심히 살펴보게 되었습니다. 그러자 산화라는 것이 정말로 우리 주위 여기저기에서 쉬지 않고 일어나고 있다는 것을 알게 되었습니다.</p>
+        <p>어느 날 무쇠는 어머니가 깎아 놓은 사과가 갈색으로 변하는 것을 보았습니다. 방금 깎았을 때는 하얗던 사과가, 잠깐 사이에 누렇게 변했습니다. 무쇠는 이것도 산화가 아닐까 생각했습니다.</p>
+        <p>아버지에게 물으니 정말 그랬습니다. 칼로 잘린 사과의 하얀 속살이 공기 중의 산소와 만나 누렇게 변하는 것도 느린 산화였습니다. 쇠가 붉게 녹스는 것과 똑같은 일이, 놀랍게도 사과에서도 조용히 일어나고 있었던 것입니다.</p>
+        <p>더 놀라운 이야기도 들었습니다. 아버지는 우리 몸속에서도 산화가 일어난다고 했습니다.<br><br><span class="dialogue">"우리가 먹은 음식이 몸속에서 산소와 만나 천천히 타면서 힘을 낸단다. 우리가 숨을 쉬는 것도 그 산소를 몸에 들여보내기 위해서야."</span></p>
+        <p>무쇠는 깜짝 놀랐습니다. 촛불이 타서 빛과 열을 내는 것처럼, 우리 몸도 음식을 천천히 태워 힘과 온기를 낸다는 것이었습니다. 그래서 우리 몸이 따뜻하고, 움직일 힘이 나는 것이었습니다.</p>
+        <p>무쇠는 이제 산화가 어쩌다 일어나는 특별한 일이 아니라는 것을 알았습니다. 못이 붉게 녹슬고, 잘린 사과가 누렇게 변하고, 촛불이 타오르고, 우리가 밥을 먹고 살아 움직이는 그 모든 것이 알고 보면 산소를 만나는 일이었습니다.</p>
+        <p><span class="highlight">산소를 얻는다는 하나의 규칙이 세상 곳곳에서 일어나고 있었습니다.</span> 무쇠는 눈에 보이지 않는 산소가 이렇게 많은 일을 하고 있는 줄은 미처 몰랐습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학10/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 의문</span>
+        <h2>쇠는 어디서 오는가</h2>
+        <p>산화를 두루 알게 된 무쇠에게 새로운 의문이 생겼습니다. 쇠는 공기 중에 두면 산소를 얻어 붉은 녹이 됩니다. 그렇다면 애초에 쇠는 어디서 온 것일까요. 대장간에서 두드리는 그 반짝이는 쇠는 처음에 무엇이었을까요.</p>
+        <p>무쇠는 그 궁금증을 안고 아버지에게 물었습니다. 아버지는 대장간 구석에서 검붉은 돌덩이 하나를 무겁게 들고 왔습니다. 그것은 반짝이는 쇠가 아니라 그냥 울퉁불퉁한 돌처럼 보였습니다.<br><br><span class="dialogue">"이게 <span class="vocab-tip" data-meaning="철이 들어 있는 돌. 여기서 철을 뽑아냄">철광석</span>이란다. 쇠는 원래 이 돌 속에 산소와 붙어 있는 상태로 들어 있어."</span></p>
+        <p>무쇠는 그 말이 이상했습니다. 쇠가 산소와 이미 붙어 있다니요. 그러면 이 돌 속의 쇠는 이미 녹슨 것과 같은 상태라는 뜻이었습니다. 산화철, 곧 붉은 녹과 다를 바 없는 상태 말입니다.</p>
+        <p>아버지가 천천히 고개를 끄덕였습니다.<br><br><span class="dialogue">"맞다. 땅속에 묻힌 쇠는 대부분 이렇게 산소와 붙어 있는 상태란다. 그러니 우리가 쓰는 반짝이는 쇠를 얻으려면, 이 붉은 돌에서 먼저 산소를 떼어내야만 하지."</span></p>
+        <p>무쇠는 머릿속이 복잡해졌습니다. 못은 산소를 얻어서 붉은 녹이 되는데, 반짝이는 쇠를 만들려면 반대로 돌에서 산소를 떼어내야 한다는 것이었습니다. 산소를 얻는 일이 있으면, 그 반대로 산소를 잃는 일도 어딘가에는 있어야 하는 셈이었습니다.</p>
+        <p><span class="highlight">세상에는 산소를 얻는 일만 있는 것이 아니었습니다.</span> 산소를 도로 떼어내는 반대 방향의 일도 반드시 있어야, 검붉은 돌덩이에서 무쇠가 그토록 좋아하던 반짝이는 은빛 쇠가 나올 수 있었던 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학10/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>산소를 떼어내다</h2>
+        <p>무쇠는 붉은 돌에서 대체 어떻게 산소를 떼어내는지 몹시 궁금해졌습니다. 아버지는 무쇠를 데리고 대장간의 커다란 화로 앞으로 갔습니다. 아주 옛날부터 사람들이 돌에서 쇠를 뽑아내던 방법을 아들에게 직접 보여 주기 위해서였습니다.</p>
+        <p>아버지는 철광석을 숯과 함께 화로에 넣고 아주 뜨겁게 달구었습니다. 숯은 나무를 구워 만든 것으로, 검은 <span class="vocab-tip" data-meaning="숯·연필심 등에 들어 있는 물질">탄소</span> 덩어리입니다. 화로 안에서 무언가 활발하게 일어나고 있었습니다.</p>
+        <p>아버지가 설명했습니다.<br><br><span class="dialogue">"뜨거운 화로 안에서 숯이 철광석의 산소를 빼앗아 간단다. 숯이 산소를 대신 얻어 가는 거지. 그러면 산소를 빼앗긴 철광석은 순수한 쇠만 남게 돼."</span></p>
+        <p>무쇠는 그 말을 곰곰이 새겼습니다. 숯이 철광석 대신 산소를 얻어 갔습니다. 그렇게 산소를 빼앗긴 철광석은 붉은 돌에서 반짝이는 쇠로 돌아왔습니다. 이렇게 산소를 잃는 것을 <span class="vocab-tip" data-meaning="산화물에서 산소가 빠져나가는 반응">환원</span>이라고 했습니다.</p>
+        <p>무쇠는 여기서 아주 중요한 것을 깨달았습니다. 철광석이 산소를 잃는 그 순간, 숯은 산소를 얻고 있었습니다. 한쪽이 잃으면 다른 한쪽이 얻었습니다. 산화와 환원이 화로 안에서 동시에 일어나고 있었던 것입니다.</p>
+        <p>이윽고 화로 속에서 붉던 돌이 녹아 은빛 쇳물로 주르륵 흘러나왔습니다. 조상 대대로 사람들이 이렇게 붉은 돌에서 반짝이는 쇠를 뽑아내 온 것입니다. 산소를 주고받는 그 원리를 어려운 이름은 몰라도, 손과 몸으로는 오래전부터 알고 있었던 셈입니다.</p>
+        <p><span class="highlight">산소를 얻는 일과 잃는 일은 언제나 짝을 이루어 일어났습니다.</span> 하나가 산소를 얻으면, 반드시 다른 하나가 그 산소를 잃고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학10/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 원리</span>
+        <h2>언제나 함께</h2>
+        <p>무쇠는 이제 하나의 큰 규칙을 알게 되었습니다. 산화와 환원은 따로 떨어져 일어나는 것이 아니라, 언제나 짝을 이루어 함께 일어난다는 것이었습니다.</p>
+        <p>무쇠는 그동안 본 것들을 하나하나 되짚어 보았습니다. 못이 녹슬 때는 쇠가 산소를 얻어 산화되었고, 그 산소를 내준 공기 쪽은 산소를 잃어 환원된 셈이었습니다. 무언가 산소를 얻으면, 반드시 어딘가는 산소를 내주고 있었습니다.</p>
+        <p>화로에서도 마찬가지였습니다. 철광석은 산소를 잃어 환원되었고, 숯은 그 산소를 얻어 산화되었습니다. 한 자리에서 두 가지 일이 동시에 벌어졌습니다. 어느 하나만 따로 일어날 수는 없었습니다.</p>
+        <p>무쇠는 이것을 저울에 빗대어 생각했습니다. 한쪽 접시가 내려가면 반드시 다른 쪽 접시가 올라갑니다. 어느 한쪽만 움직일 수는 없습니다. 산소를 주고받는 일도 꼭 그와 같았습니다.</p>
+        <p>아버지가 무쇠의 생각을 듣고 흐뭇하게 말했습니다.<br><br><span class="dialogue">"그래, 바로 그거다. 산소를 얻는 산화와 산소를 잃는 환원은 언제나 함께 일어나. 그래서 이 둘을 묶어 <span class="vocab-tip" data-meaning="산화와 환원이 짝을 이루어 함께 일어나는 반응">산화·환원 반응</span>이라고 부른단다."</span></p>
+        <p>무쇠는 세상의 그 수많은 변화가 사실은 이 산소를 주고받는 하나의 일이라는 것을 깨달았습니다. 산소를 주는 쪽이 있으면 반드시 받는 쪽이 있었고, 그 둘은 마치 한 몸처럼 결코 서로 떨어질 수 없었습니다.</p>
+        <p><span class="highlight">하나가 얻으면 하나가 잃습니다. 언제나 함께입니다.</span> 무쇠는 이 단순한 규칙 하나가 녹슨 못부터 대장간 화로까지 모두 꿰뚫고 있다는 것이 놀라웠습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학10/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 활용</span>
+        <h2>녹을 막는 지혜</h2>
+        <p>산화와 환원을 알게 된 무쇠는 이 규칙을 실제로 어떻게 쓸 수 있을지 생각해 보았습니다. 가장 먼저 떠오른 것은 쇠가 녹스는 것을 막는 일이었습니다.</p>
+        <p>쇠가 녹스는 것은 쇠가 산소를 얻기 때문이었습니다. 그렇다면 산소가 쇠에 닿지 못하게 하면 녹을 막을 수 있었습니다. 무쇠가 기름을 바른 못이 녹슬지 않았던 것도 바로 그 이치였습니다.</p>
+        <p>아버지는 대장간에서 만든 물건에 기름을 얇게 바르거나 페인트를 곱게 칠했습니다. 공기 중의 산소가 쇠에 직접 닿지 못하도록 막아 주는 것이었습니다. 강 위의 커다란 다리나 바다의 배처럼 큰 쇠붙이에 두껍게 페인트를 칠하는 것도 다 이와 같은 까닭이었습니다.</p>
+        <p>무쇠는 다른 방법도 배웠습니다. 쇠 위에 잘 녹슬지 않는 다른 금속을 얇게 입히는 방법이었습니다. 그러면 산소가 그 금속에 먼저 막혀 안쪽 쇠까지 닿지 못했습니다. 이것을 <span class="vocab-tip" data-meaning="금속 겉면에 다른 금속을 얇게 입히는 것">도금</span>이라고 했습니다.</p>
+        <p>반대로 산소를 주고받는 힘을 이용해 전기를 만들기도 했습니다. 아버지는 작은 <span class="vocab-tip" data-meaning="화학 반응으로 전기를 만들어 저장하는 장치">배터리</span>를 보여 주며, 그 안에서도 한쪽은 산소를 얻고 한쪽은 산소를 잃는 일이 벌어지면서 전기가 나온다고 알려 주었습니다.</p>
+        <p>무쇠는 크게 감탄했습니다. 자기 못을 붉게 만들어 성가시게 하던 그 녹의 원리가, 알고 보니 거꾸로 녹을 막는 데도 쓰이고 전기를 만드는 데도 쓰이고 있었습니다. 규칙을 제대로 알면 그것을 이롭게 이용할 수도, 반대로 막아 낼 수도 있었던 것입니다.</p>
+        <p><span class="highlight">산소를 주고받는 규칙은 성가신 녹의 원인이자, 그 녹을 다스리는 지혜이기도 했습니다.</span> 같은 규칙이 문제도 되고 해결책도 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학10/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 확장</span>
+        <h2>제철소와 우리 몸</h2>
+        <p>무쇠는 아버지의 대장간에서 배운 이 원리가 훨씬 더 큰 곳에서도 쓰인다는 것을 알게 되었습니다. 바로 커다란 제철소였습니다.</p>
+        <p>제철소에서는 아버지의 화로보다 수백 배 큰 용광로에서 철광석과 숯을 넣고 쇠를 뽑아냅니다. 원리는 대장간과 똑같았습니다. 숯이 철광석의 산소를 빼앗아 순수한 쇠를 만드는 환원이었습니다. 오늘날 우리가 쓰는 거의 모든 쇠가 이렇게 만들어졌습니다.</p>
+        <p>무쇠는 다리와 건물과 기차와 자동차를 떠올렸습니다. 그 단단한 쇠들이 모두 붉은 돌에서 산소를 떼어내 만든 것이었습니다. 산소를 주고받는 그 작은 규칙이 거대한 세상을 떠받치고 있었습니다.</p>
+        <p>그리고 무쇠는 문득 자기 몸을 내려다보았습니다. 바로 지금 이 순간에도 무쇠의 몸속에서는 아까 먹은 음식이 산소와 만나 천천히 타면서 힘을 내고 있었습니다. 무쇠가 코로 숨을 쉬어 들여보내는 그 산소가 몸속에서 쉬지 않고 그 일을 하고 있었던 것입니다.</p>
+        <p>음식 속 포도당이 산소와 만나 힘을 낼 때, 그 산소는 환원되어 물로 바뀝니다. 무쇠가 내쉬는 따뜻한 숨과 이마에 맺히는 땀 속에 바로 그 물이 들어 있었습니다. 뜨거운 대장간 화로에서 일어나는 일과 무쇠의 몸속에서 일어나는 일이, 놀랍게도 똑같은 규칙을 따르고 있었던 것입니다.</p>
+        <p>무쇠는 놀라웠습니다. 녹슨 못 하나에서 시작한 궁금증이 제철소로, 그리고 자기 몸속으로까지 이어졌습니다. 산소를 주고받는 하나의 규칙이 이 모든 것을 하나로 묶고 있었습니다.</p>
+        <p><span class="highlight">가장 큰 용광로에서도, 가장 작은 몸속 세포에서도 같은 일이 일어나고 있었습니다.</span> 산소를 주고받는 그 규칙은 어디에나 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학10/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>주고받는 세상</h2>
+        <p>무쇠는 처음의 그 붉은 못을 다시 손에 쥐어 보았습니다. 며칠 사이에 은빛에서 붉은빛으로 변해 무쇠를 그토록 궁금하게 만들었던 바로 그 못이었습니다. 이제 무쇠는 그 붉은빛이 무엇인지 분명히 압니다. 그것은 쇠가 공기 중의 산소를 얻어 하나가 된 흔적, 곧 산화의 흔적이었습니다. 그리고 무쇠는 그 반대의 일도 압니다. 붉은 돌에서 산소를 떼어내면 다시 반짝이는 쇠가 되는 환원 말입니다.</p>
+        <p>무쇠가 이 길고 긴 여정에서 배운 것을 한마디로 정리하면 이렇습니다. 세상의 수많은 변화는 결국 산소를 주고받는 일이며, 어느 하나가 산소를 얻으면 반드시 다른 하나가 그 산소를 잃는다는 것입니다.</p>
+        <p>녹슨 못도, 타는 촛불도, 갈색으로 변한 사과도, 화로 속 쇳물도, 그리고 지금 숨 쉬는 무쇠 자신까지, 모두 산소를 주고받는 그 하나의 규칙 위에 있었습니다. 얻는 쪽과 잃는 쪽은 언제나 짝을 이루었습니다.</p>
+        <p>무쇠는 이제 무언가 변하는 것을 보면, 여기서 누가 산소를 얻고 누가 산소를 잃는지를 먼저 생각합니다. 그러면 겉으로 달라 보이던 일들이 하나의 규칙으로 또렷하게 보였습니다.</p>
+        <p>붉게 녹슨 못은 이제 무쇠에게 더 이상 못 쓰게 된 성가신 쇠붙이가 아니었습니다. 그것은 산소를 주고받는 세상의 커다란 규칙을 처음으로 알려 준, 무쇠의 아주 특별한 첫 번째 선생님이었습니다.</p>
+        <p><span class="highlight">하나가 얻으면 하나가 잃습니다. 세상은 그렇게 주고받으며 끊임없이 변해 갑니다.</span> 무쇠는 이제 녹슨 못 하나에서도 그 커다란 규칙을 읽어 냅니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(160, 80, 60, 0.15); border-radius: 16px;">
+          <strong style="color: #A0503C; font-size: 20px;">🔥 「하나가 얻으면 하나가 잃는다. 변화는 언제나 주고받음이다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/chem10_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

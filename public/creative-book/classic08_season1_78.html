@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👻 연못에 가라앉지 않은 진실 — 장화와 홍련</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/고전문학08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>👻 연못에 가라앉지 않은 진실 — 장화와 홍련</h1>
+        <p class="subtitle">
+          — 계모형 가정소설과 신원(伸冤) 설화로 읽는 진실의 힘 —<br>
+          교과기반 창작도서 · 고전문학 08
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 장화·홍련:</strong> 일찍 어머니를 여읜 두 자매. 계모의 흉계로 억울하게 목숨을 잃지만, 죽어서도 진실을 밝혀 원한을 푼다.</p>
+          <p><strong>★ 계모 허 씨:</strong> 재물과 시기심에 눈이 멀어 두 자매를 모함하는 인물. 가정 내 갈등을 일으키는 악인의 전형.</p>
+          <p><strong>★ 감상 길잡이:</strong> 「장화홍련전」은 계모와 전처 자식의 갈등을 다룬 계모형 가정소설이자, 억울한 죽음을 원님이 풀어 주는 신원 설화의 성격을 지닙니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학08/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>어머니의 유언</h2>
+        <p>옛날 평안도 철산 땅에 배 좌수라는 이가 살았습니다. 그에게는 장화와 홍련이라는 두 딸이 있었는데, 자매는 우애가 깊고 마음씨가 고왔습니다.</p>
+        <p>그러나 두 딸이 아직 어릴 적, 어머니가 병으로 자리에 눕고 말았습니다. 어머니는 죽음을 앞두고 두 딸의 손을 꼭 잡으며, 서로 의지하며 살아가라는 애틋한 유언을 남겼습니다.</p>
+        <p>어머니를 여읜 자매의 슬픔은 이루 말할 수 없었습니다. 서로를 보듬으며 하루하루를 견뎠으나, 어머니의 빈자리는 무엇으로도 채울 수 없었습니다. 자매는 그 빈자리를 서로에 대한 더 깊은 사랑으로 메우며 힘겹게 버텨 나갔습니다.</p>
+        <p>이야기의 첫머리에서 어머니의 죽음은 앞으로 닥칠 비극의 씨앗이 됩니다. 보호자를 잃은 자매가 어떤 시련을 겪게 될지, 독자는 무거운 마음으로 이야기를 따라가게 됩니다.</p>
+        <p>이렇게 주인공이 처음부터 결핍의 처지에 놓이는 것은 고전소설의 흔한 출발 방식으로, 이후 전개될 갈등에 대한 긴장을 미리 심어 두는 장치이기도 합니다. 어머니라는 든든한 울타리가 사라진 자리에 곧 낯선 인물이 들어서리라는 것을, 독자는 어렵지 않게 짐작하게 됩니다. 그리고 그 예감은 안타깝게도 그대로 들어맞아, 두 자매를 돌이킬 수 없는 시련 속으로 몰아넣습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학08/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>새어머니 허 씨</h2>
+        <p>세월이 흘러, 배 좌수는 집안을 돌볼 사람이 필요하다는 이유로 새 부인 허 씨를 맞아들였습니다. 허 씨는 겉으로는 얌전한 척하였으나, 속으로는 재물을 탐하고 시기심이 많은 사람이었습니다.</p>
+        <p>허 씨는 곧 아들을 낳았습니다. 그러자 장화와 홍련이 물려받을 재산이 아깝고, 두 자매가 눈엣가시처럼 여겨지기 시작했습니다.</p>
+        <p>처음에는 남편의 눈치를 보며 겉으로만 자매를 돌보는 척하였으나, 시간이 갈수록 허 씨의 심술은 노골적으로 드러났습니다. 자매에게 궂은일을 시키고 걸핏하면 트집을 잡았습니다.</p>
+        <p>계모가 전처의 자식을 학대하는 이 구도는 계모형 가정소설의 전형적인 갈등입니다. 다만 이 작품은 계모라는 존재 자체보다, 재물을 둘러싼 욕심이 어떻게 한 가정을 무너뜨리는가에 초점을 맞춥니다.</p>
+        <p>아버지 배 좌수가 부인의 말에 휘둘려 딸들을 제대로 지켜 주지 못하는 모습 또한, 가장의 무능이 비극을 키우는 또 하나의 원인임을 보여 줍니다. 악인의 흉계만큼이나, 진실을 살피지 않고 한쪽 말만 믿어 버리는 어른의 어리석음이 비극의 큰 몫을 차지하는 것입니다. 이는 이 작품이 단순히 계모를 악으로 몰아세우는 데 그치지 않고, 가정을 지켜야 할 사람들의 책임을 함께 묻고 있음을 뜻합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학08/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 심화</span>
+        <h2>깊어지는 심술</h2>
+        <p>허 씨의 미움은 날이 갈수록 깊어졌습니다. 장화와 홍련이 아무리 공손하게 행동해도, 허 씨의 눈에는 그저 없어져야 할 존재로만 보였습니다.</p>
+        <p>자매는 억울한 일을 당해도 하소연할 곳이 없었습니다. 아버지는 계모의 말만 믿었고, 집안에서 두 자매의 편이 되어 줄 사람은 아무도 없었습니다.</p>
+        <p>장화와 홍련은 돌아가신 어머니를 그리워하며 서로를 위로할 뿐이었습니다. 어머니의 유언대로 서로 의지하는 것만이 그들이 기댈 수 있는 유일한 버팀목이었습니다.</p>
+        <p>이 대목은 갈등이 서서히 고조되는 전개 단계입니다. 억울함이 쌓여 가지만 풀 길이 없는 상황은, 앞으로 벌어질 비극이 결코 우연이 아님을 예고합니다.</p>
+        <p>힘없는 약자가 부당한 대우를 받으면서도 목소리를 내지 못하는 모습은, 당대 여성과 자식의 처지를 사실적으로 반영한 것이기도 합니다. 집안의 질서가 오직 어른의 뜻으로만 정해지던 시절, 어린 자매가 기댈 수 있는 것은 서로의 손뿐이었습니다. 이러한 무력한 상황이 쌓이고 쌓여 마침내 돌이킬 수 없는 파국으로 이어지는 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학08/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">위기 · 흉계</span>
+        <h2>쥐 가죽의 계략</h2>
+        <p>마침내 허 씨는 무서운 흉계를 꾸몄습니다. 그녀는 쥐의 가죽을 벗겨 피를 묻힌 뒤, 그것을 몰래 장화의 이불 속에 넣어 두었습니다.</p>
+        <p>이튿날 허 씨는 그것을 남편에게 보이며, 장화가 부정한 짓을 저질러 낙태한 흔적이라고 거짓으로 모함하였습니다. 어리석은 배 좌수는 진위를 가리지도 않고 그 말을 그대로 믿고 말았습니다.</p>
+        <p>허 씨의 계략은 치밀하고도 잔인했습니다. 증거를 조작하여 죄 없는 사람을 죄인으로 만드는 이 수법은, 악인이 얼마나 교묘하게 진실을 왜곡할 수 있는지를 서늘하게 보여 줍니다.</p>
+        <p>배 좌수가 딸의 말을 한 번도 들어 보지 않고 계모의 조작된 증거만 믿은 것은 뼈아픈 대목입니다. 진실을 확인하려는 최소한의 노력조차 없었던 아버지의 경솔함이 딸을 죽음으로 내몰았습니다.</p>
+        <p>이 장면에서 갈등은 돌이킬 수 없는 위기로 치닫습니다. 조작된 누명은 곧 장화의 목숨을 겨누는 칼이 되어 돌아옵니다. 거짓이 진실의 자리를 차지하는 순간, 죄 없는 이가 죄인이 되고 정작 죄지은 이는 뒤로 숨어 버립니다. 이 서늘한 역전이야말로 이 작품이 고발하고자 한 부조리의 핵심입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학08/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 비극</span>
+        <h2>언니를 따라간 홍련</h2>
+        <p>배 좌수는 아들을 시켜 장화를 외가에 데려다준다는 핑계로 집을 나서게 하였습니다. 그러나 그것은 장화를 깊은 연못에 빠뜨려 죽이려는 계략이었습니다.</p>
+        <p>한밤중 낯선 연못가에 이르러서야 장화는 모든 것을 깨달았습니다. 그녀는 하늘을 우러러 자신의 결백을 호소한 뒤, 차디찬 물속으로 몸을 던지고 말았습니다.</p>
+        <p>언니의 죽음을 알게 된 홍련은 슬픔을 이기지 못했습니다. 홀로 남은 세상을 견딜 수 없었던 홍련은, 언니가 빠진 바로 그 연못을 찾아가 스스로 목숨을 끊었습니다.</p>
+        <p>두 자매의 죽음은 이 작품에서 가장 비통한 대목입니다. 죄 없는 어린 생명이 어른들의 욕심과 어리석음 때문에 스러진 것은, 읽는 이의 가슴을 오래도록 아프게 합니다.</p>
+        <p>그러나 이야기는 여기서 끝나지 않습니다. 억울하게 죽은 자매의 원한이 그대로 묻히지 않으리라는 예감이, 서늘한 연못 위로 짙게 드리웁니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학08/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 괴변</span>
+        <h2>사또들이 사라지는 고을</h2>
+        <p>장화와 홍련이 죽은 뒤, 철산 고을에는 기이한 일이 벌어지기 시작했습니다. 새로 부임한 사또마다 첫날 밤을 넘기지 못하고 시름시름 앓거나 목숨을 잃는 것이었습니다.</p>
+        <p>고을 사람들은 원귀가 나타난다는 소문에 두려워하였고, 아무도 철산의 사또로 오려 하지 않았습니다. 억울하게 죽은 자매의 넋이 밤마다 관아에 나타났기 때문입니다.</p>
+        <p>그러나 정작 원귀가 하려던 것은 사람을 해치는 일이 아니었습니다. 자매의 넋은 자신들의 억울함을 들어 줄 사람을 애타게 기다리고 있었을 뿐이었습니다.</p>
+        <p>이 대목은 원한을 품고 죽은 이가 이승을 떠나지 못하고 진실을 호소한다는 신원 설화의 전형적인 화소입니다. 죽음조차 삼키지 못한 진실이 스스로 세상에 모습을 드러내려 한 것입니다.</p>
+        <p>귀신의 등장은 단순한 공포가 아니라, 살아 있는 자들이 외면한 진실을 대신 밝히려는 절박한 외침으로 읽어야 합니다. 산 사람들이 침묵할 때 죽은 이가 나서서 진실을 요구한다는 설정은, 어떤 억울함도 영원히 묻어 둘 수는 없다는 믿음을 담고 있습니다. 두려움의 대상이던 원귀가 실은 정의를 갈망하는 존재로 그려지는 점이 이 작품의 깊이입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학08/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 만남</span>
+        <h2>촛불을 켜고 기다린 사또</h2>
+        <p>그러던 어느 날, 담대하고 어진 정 동호라는 이가 스스로 철산 사또를 자청하고 나섰습니다. 그는 원귀가 무서워 도망치는 대신, 그 사연을 반드시 들어 주리라 마음먹었습니다.</p>
+        <p>부임한 첫날 밤, 사또는 관아에 홀로 촛불을 밝히고 단정히 앉아 밤을 지켰습니다. 이윽고 소복 차림의 두 처녀가 눈물을 흘리며 사또 앞에 나타났습니다.</p>
+        <p>사또는 놀라 달아나지 않고, 도리어 부드러운 목소리로 그들의 사연을 물었습니다. 두 자매는 비로소 자신들이 겪은 억울한 죽음의 전말을 낱낱이 고하였습니다.</p>
+        <p>다른 사또들이 두려움에 스러진 것과 달리, 정 동호가 침착하게 귀 기울인 이 장면은 큰 울림을 줍니다. 진실을 마주하는 데 필요한 것은 힘이 아니라, 약자의 목소리에 귀 기울이는 용기와 어짊임을 보여 줍니다.</p>
+        <p>억울한 자의 하소연을 들어 주는 목민관의 모습은, 백성이 바라던 이상적인 관리의 상을 그대로 담고 있습니다. 힘으로 다스리는 관리가 아니라 귀 기울여 진실을 가려내는 관리야말로, 당대 백성들이 간절히 바라던 참된 벼슬아치의 모습이었습니다. 정 동호의 용기와 어짊은 그 소망이 이야기 속에서 실현된 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학08/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 규명</span>
+        <h2>드러난 진실</h2>
+        <p>이튿날 사또는 관아에 배 좌수와 허 씨를 불러들여 사건을 낱낱이 조사하였습니다. 장화가 낙태했다는 증거로 내세운 것이 사실은 쥐의 가죽이었음이 마침내 밝혀졌습니다.</p>
+        <p>조작된 증거의 정체가 드러나자, 허 씨는 더 이상 죄를 감출 수 없었습니다. 오랫동안 감추어졌던 진실이 사또의 밝은 판결 앞에서 환히 드러난 것입니다.</p>
+        <p>억울하게 죽은 두 자매의 결백이 비로소 세상에 알려졌습니다. 진실은 물속에 가라앉아도 결코 사라지지 않고, 언젠가 반드시 떠오른다는 이 작품의 주제가 여기서 또렷이 실현됩니다.</p>
+        <p>악인은 마땅한 벌을 받고 억울함은 풀리는 이 권선징악의 결말은, 고전소설이 독자에게 주고자 한 도덕적 위안을 잘 보여 줍니다.</p>
+        <p>동시에 이 장면은, 진실을 밝히려는 이가 있을 때에야 비로소 정의가 실현된다는 사실도 일깨웁니다. 진실은 저절로 드러나는 것이 아니라, 그것을 들으려는 사람을 필요로 하는 것입니다. 아무리 명백한 사실도 그것을 마주할 용기를 가진 이가 없으면 어둠 속에 묻히고 맙니다. 그런 점에서 진실을 밝히는 일은 언제나 누군가의 용기에서 비롯되는 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학08/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 해원</span>
+        <h2>저승으로 가는 길</h2>
+        <p>억울함이 풀리자 두 자매의 넋은 비로소 편안히 눈을 감을 수 있었습니다. 그들은 사또에게 깊이 감사한 뒤, 원한을 벗고 저승으로 떠나갔습니다.</p>
+        <p>죽어서까지 이승을 떠돌게 했던 것은 재물도 복수도 아닌, 오직 결백을 인정받고 싶은 마음뿐이었습니다. 진실이 밝혀지자 그 마음의 응어리가 스르르 풀린 것입니다.</p>
+        <p>이렇게 억울한 원한을 풀어 준다는 뜻의 해원, 곧 신원은 우리 옛이야기가 즐겨 다룬 주제입니다. 산 자가 죽은 자의 억울함을 풀어 줌으로써, 어긋났던 세상의 질서가 다시 바로 세워집니다.</p>
+        <p>자매가 원한을 풀고 떠나는 이 장면은 슬프면서도 따뜻합니다. 비극으로 스러진 생명이 마침내 안식을 얻는 모습에서, 독자는 아픔 뒤에 찾아오는 위로를 함께 느끼게 됩니다. 억울함이 풀렸다 하여 잃어버린 목숨이 돌아오지는 않지만, 적어도 그 이름에 씌워졌던 누명만은 깨끗이 벗겨진 것입니다.</p>
+        <p>훗날 두 자매가 다시 좋은 집안에 태어나 복을 누렸다는 이야기가 덧붙기도 하는데, 이는 착한 이가 끝내 보상을 받기를 바라는 백성들의 소망이 담긴 결말입니다. 현실에서는 억울함이 늘 풀리지는 않았기에, 이야기 속에서나마 정의가 온전히 실현되기를 바란 마음이 이런 결말을 낳은 것입니다. 고전소설의 권선징악은 이렇듯 백성들의 간절한 바람이 빚어낸 약속이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학08/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>이야기가 남긴 것</h2>
+        <p>「장화홍련전」은 오랜 세월 백성들의 사랑을 받으며 전해 내려온 대표적인 가정소설입니다. 계모와 전처 자식의 갈등이라는 소재는, 많은 이들이 공감할 수 있는 현실의 아픔을 담고 있었습니다.</p>
+        <p>이 작품이 우리에게 남기는 가르침은 여럿입니다. 첫째는 진실은 아무리 감추어도 끝내 드러난다는 것이요, 둘째는 남의 말을 함부로 믿기 전에 스스로 진위를 살펴야 한다는 것입니다.</p>
+        <p>무엇보다 이 이야기는, 억울한 이의 목소리에 귀 기울이는 일이 얼마나 중요한지를 일깨웁니다. 정 동호 사또처럼 약자의 하소연을 들어 주는 이가 있을 때, 세상의 어긋난 일들이 비로소 바로잡히는 법입니다.</p>
+        <p>재물을 향한 욕심이 한 가정을 무너뜨리고 죄 없는 목숨을 앗아 간 이 비극은, 오늘의 우리에게도 욕심을 다스리고 진실을 존중하라는 묵직한 물음을 던집니다.</p>
+        <p><span class="highlight">진실은 물속에 가라앉아도 사라지지 않습니다. 그것을 들으려는 이가 있을 때, 진실은 반드시 다시 떠오릅니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'classic08_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

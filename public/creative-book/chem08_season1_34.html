@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚖️ 사라진 무게를 찾아서 — 촛불의 비밀</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작화학08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(106, 17, 203, 0.15);
+      color: #6a11cb;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6a11cb;
+      font-weight: 600;
+    }
+
+    .vocab-tip {
+      position: relative;
+      color: #6a11cb;
+      border-bottom: 1px dotted #6a11cb;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+    .story-card .dialogue {
+      color: #2575fc;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #a78bfa;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(106, 17, 203, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(37, 117, 252, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 117, 252, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⚖️ 사라진 무게를 찾아서 — 촛불의 비밀</h1>
+        <p class="subtitle">
+          — 아무것도 사라지지 않아요, 자리를 옮길 뿐이지요 —<br>
+          교과기반 창작도서 · 화학 08 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>⚖️ 등장인물 소개</h3>
+          <p><strong>★ 라온 (주인공):</strong> 무엇이든 무게를 재 보는 것을 좋아하는 소년이에요. 촛불이 타면 무게가 어디로 가는지가 궁금해 잠을 못 자지요.</p>
+          <p><strong>★ 저울 할아버지:</strong> 낡은 <span class="vocab-tip" data-meaning="무게를 재는 도구">저울</span> 가게 주인이에요. 눈에 보이지 않는 것까지 재는 법을 아는 분이지요.</p>
+          <p><strong>★ 산소 (등장 기체):</strong> 눈에 보이지 않아 늘 억울한 <span class="vocab-tip" data-meaning="공기 중에 있는, 물질이 타는 것을 돕는 기체">기체</span>. 사라진 무게의 비밀을 푸는 열쇠.</p>
+          <p><strong>★ 라부아지에 (역사 속 화학자):</strong> 밀폐된 병 속에서 실험해 처음으로 이 비밀을 밝힌 사람. 라온이 책에서 만난다.</p>
+          <p><strong>★ 촛불과 저울:</strong> 이야기의 두 축. 무언가 사라지는 것처럼 보이는 자리에서, 사실은 아무것도 사라지지 않는다.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 궁금증의 갈등:</strong> 촛불이 타면 초가 줄어든다 vs. 그 무게는 어디로 갔나</p>
+          <p><strong>② 눈의 갈등:</strong> 눈에 보이는 재와 연기 vs. 눈에 보이지 않는 <span class="vocab-tip" data-meaning="물질이 기체로 변해 날아가는 것">기체</span></p>
+          <p><strong>③ 방법의 갈등:</strong> 열린 접시 위의 실험 vs. 뚜껑을 닫은 병 속의 실험</p>
+          <p><strong>④ 생각의 갈등:</strong> 무게가 사라졌다는 착각 vs. 자리만 옮겼다는 진실</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학08/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>줄어드는 초</h2>
+        <p>라온이는 무엇이든 무게를 재 보는 것을<br>
+좋아하는 소년이에요.<br>
+가방도 재 보고, 강아지도 안고 재 보지요.<br>
+라온이의 방에는 크고 작은<br>
+<span class="vocab-tip" data-meaning="무게를 재는 도구">저울</span>이 여러 개 놓여 있어요.</p>
+        <p>어느 날 저녁, 라온이는<br>
+생일 케이크에 꽂았던 초를 보다가<br>
+문득 이상한 생각이 들었어요.<br>
+불을 켜 두었던 초가<br>
+아까보다 훨씬 짧아져 있었던 거예요.<br>
+초가 짧아졌다는 것은<br>
+무언가가 사라졌다는 뜻이지요.<br>
+그렇다면 사라진 초는<br>
+대체 어디로 간 것일까요.</p>
+        <p>다음 날 아침, 라온이는 초를 저울에 올려<br>
+무게를 정확히 잰 다음 불을 붙였어요.<br>
+초는 눈에 띄게 짧아졌고,<br>
+녹아내린 <span class="vocab-tip" data-meaning="초가 녹아서 흘러내린 것">촛농</span>이<br>
+접시에 방울방울 떨어졌지요.</p>
+        <p>불을 끄고 다시 무게를 재 보았어요.<br>
+접시에 떨어진 촛농까지 전부 합쳐서요.<br>
+그런데 결과가 놀라웠지요.<br>
+촛농까지 다 모았는데도<br>
+무게가 가벼워진 거예요.<br>
+<span class="highlight">무언가가 정말로 사라진 것 같았어요.</span><br>
+라온이는 이 수수께끼를<br>
+풀지 않고는 견딜 수 없었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학08/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>저울 할아버지의 가게</h2>
+        <p>라온이는 동네에서 가장 오래된<br>
+저울 가게를 찾아갔어요.<br>
+주인은 무게에 관한 것이라면<br>
+무엇이든 안다는 저울 할아버지였지요.<br>
+라온이는 촛불 이야기를 털어놓았어요.<br><br><span class="dialogue">"라온아, 초가 탈 때 무엇이 나오더냐?"</span><br><br><span class="dialogue">"불빛이 나오고... 아, 연기도 조금 났어요. 그리고 초가 뜨거워졌어요."</span></p>
+        <p><span class="dialogue">"연기를 보았구나. 그럼 그 연기는 저울 위에 남아 있더냐, 아니면 공기 중으로 날아가 버리더냐?"</span><br><br>라온이는 아차 싶었어요.<br>
+연기는 위로 스르르 피어올라<br>
+어디론가 사라져 버렸지요.<br>
+무게를 잴 방법이 없었던 거예요.</p>
+        <p><span class="dialogue">"네가 무게를 잰 것은 저울 위에 남은 것뿐이야. 하지만 초가 탈 때는 눈에 보이지 않는 것도 함께 날아간단다. 그것까지 재지 못하면 무게가 줄어든 것처럼 보이지."</span></p>
+        <p>라온이는 눈이 번쩍 뜨였어요.<br>
+사라진 것이 아니라,<br>
+저울이 미처 재지 못한 곳으로<br>
+옮겨 간 것일지도 모른다는 생각이<br>
+처음으로 들었지요.<br>
+<span class="highlight">문제는 눈에 보이지 않는 그것을 어떻게 붙잡아 무게를 재느냐였어요.</span><br>
+할아버지는 라온이에게<br>
+한 가지 방법을 알려 주겠다고 했지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학08/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>뚜껑을 닫은 병</h2>
+        <p>할아버지가 라온이에게<br>
+유리병 하나와 뚜껑을 건넸어요.<br><br><span class="dialogue">"이번에는 초를 병 속에 넣고 뚜껑을 꼭 닫은 다음, 병째로 무게를 재 보아라. 그러면 날아가려던 것도 병 안에 갇혀서 도망가지 못하지."</span></p>
+        <p>라온이는 집으로 돌아와<br>
+곧바로 실험을 했어요.<br>
+초에 불을 붙여 유리병 안에 세워 넣고,<br>
+공기가 새지 않도록<br>
+얼른 뚜껑을 꼭 닫았지요.<br>
+그리고 병째로 저울에 올려<br>
+무게를 정확히 적어 두었어요.</p>
+        <p>병 속의 촛불은 잠시 타오르다<br>
+얼마 안 가 곧 꺼졌어요.<br>
+라온이는 뜨거워진 병이 식을 때까지<br>
+차분히 기다렸다가,<br>
+병을 열지 않은 채<br>
+다시 무게를 재 보았지요.</p>
+        <p>저울의 바늘은 조금도 움직이지 않았어요.<br>
+초가 타서 짧아졌는데도,<br>
+병 전체의 무게는 처음과 완전히 똑같았지요.<br><br><span class="dialogue">"똑같아! 무게가 하나도 안 줄었어!"</span><br><br>날아가려던 것이 병 안에 갇혀 있으니<br>
+무게가 그대로였던 거예요.<br>
+<span class="highlight">무게는 처음부터 사라진 적이 없었어요.</span><br>
+작은 뚜껑 하나가 그 도망가던 진실을<br>
+병 안에 붙잡아 준 것이지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학08/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 발견</span>
+        <h2>보이지 않는 참가자</h2>
+        <p>라온이는 다시 저울 할아버지를 찾아가<br>
+결과를 자랑했어요.<br>
+할아버지는 흐뭇하게 웃으며<br>
+한 가지를 더 물었지요.<br><br><span class="dialogue">"그런데 라온아, 병 속의 촛불은 왜 꺼졌을까?"</span><br><br>초는 아직 많이 남아 있었는데도<br>
+불이 저절로 꺼졌어요.<br>
+정말 이상한 일이었지요.</p>
+        <p><span class="dialogue">"불이 타려면 <span class="vocab-tip" data-meaning="공기 중에 있는, 물질이 타는 것을 돕는 기체">산소</span>라는 것이 필요하단다. 산소는 공기 속에 들어 있는 눈에 보이지 않는 기체야. 병 속에 갇힌 산소를 다 쓰고 나면 불은 꺼진다."</span></p>
+        <p>라온이는 그제야 알았어요.<br>
+초가 탈 때는 초 혼자서<br>
+타는 것이 아니었지요.<br>
+눈에 보이지 않는 산소가<br>
+늘 함께 참가하고 있었던 거예요.<br>
+초의 물질과 산소가 서로 만나<br>
+새로운 <span class="vocab-tip" data-meaning="공기처럼 모양 없이 날아다니는 물질">기체</span>가 만들어졌고,<br>
+열린 곳에서는 그 기체가 도망가 버려서<br>
+무게가 줄어든 것처럼 보였던 것이지요.</p>
+        <p><span class="dialogue">"초가 준 무게만큼 산소가 더해졌고, 그렇게 만들어진 기체와 재의 무게를 다 합치면, 처음 초와 산소의 무게와 정확히 같단다."</span><br><br><span class="highlight">눈에 보이지 않는 참가자인 산소까지 헤아려야, 비로소 무게의 셈이 맞아떨어졌어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학08/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">전개 · 역사</span>
+        <h2>200년 전의 화학자</h2>
+        <p>라온이는 더 알고 싶어<br>
+도서관으로 갔어요.<br>
+그리고 한 권의 책에서 자기와 똑같은<br>
+궁금증을 품었던 사람을 만났지요.<br>
+200여 년 전 프랑스의<br>
+<span class="vocab-tip" data-meaning="물질이 변하는 이치를 연구하는 과학자">화학자</span> 라부아지에였어요.</p>
+        <p>그때 사람들은 물질이 타면<br>
+무언가가 빠져나가<br>
+무게가 줄어든다고 믿었어요.<br>
+뚜껑 없는 열린 접시에서만<br>
+실험했기 때문이지요.<br>
+그러나 라부아지에는 라온이처럼<br>
+공기가 드나들지 못하게 꼭 막은,<br>
+<span class="vocab-tip" data-meaning="공기가 드나들지 못하게 꼭 막은 것">밀폐</span>된 병 속에서 실험했어요.</p>
+        <p>결과는 몇 번을 해도 언제나 같았어요.<br>
+병 안에서 금속이 산소와 만나<br>
+다른 물질로 변했지만,<br>
+병 전체의 무게만은<br>
+조금도 달라지지 않았지요.</p>
+        <p>물질이 변할 때 무언가 새로 생기거나<br>
+사라지는 것이 아니라,<br>
+알갱이들이 자리만 바꾸는 거예요.<br>
+그래서 변하기 전의 무게와<br>
+변한 뒤의 무게는 언제나 같지요.<br>
+이것을 <span class="vocab-tip" data-meaning="물질이 변해도 전체 무게는 변하지 않는다는 법칙">질량 보존 법칙</span>이라고 불러요.<br>
+<span class="highlight">라온이의 궁금증을, 200년 전의 화학자가 이미 증명해 두었던 것이지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학08/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>철은 오히려 무거워진다</h2>
+        <p>그런데 라온이에게<br>
+새로운 궁금증이 생겼어요.<br>
+초는 타면 짧아지는데,<br>
+쇠는 녹슬면 어떻게 될까 하는 것이었지요.<br>
+라온이는 못 하나를 저울에 재 두고<br>
+며칠 동안 물기 있는 곳에 두었어요.</p>
+        <p>며칠 뒤 못은 붉게<br>
+<span class="vocab-tip" data-meaning="쇠가 공기와 물을 만나 붉게 변한 것">녹</span>이 슬어 있었어요.<br>
+무게를 다시 재 보니<br>
+뜻밖의 일이 벌어졌지요.<br>
+무게가 줄어든 것이 아니라<br>
+오히려 늘어나 있었던 거예요.<br>
+초는 타면 가벼워졌는데,<br>
+쇠는 녹슬면 오히려 무거워지다니요.</p>
+        <p><span class="dialogue">"라온아, 초가 탈 때 산소가 함께 참가했지? 쇠가 녹스는 것도 사실은 쇠가 산소와 천천히 만나는 일이란다. 그럼 쇠에 무엇이 더해지겠느냐?"</span><br><br>라온이는 무릎을 탁 쳤어요.<br>
+쇠가 산소와 만나 하나로<br>
+<span class="vocab-tip" data-meaning="둘 이상이 만나 하나로 붙는 것">결합</span>하면, 그 산소의 무게만큼<br>
+못이 더 무거워지는 것이었지요.</p>
+        <p>초와 쇠는 반대되는 일이 아니었어요.<br>
+둘 다 산소와 만난다는 점에서 똑같았지요.<br>
+다만 초는 만들어진 기체가 날아가 가벼워 보였고,<br>
+쇠는 산소가 그대로 달라붙어 무거워졌을 뿐이에요.<br>
+<span class="highlight">겉으로는 반대처럼 보여도, 속에서 일어난 일은 같은 규칙을 따르고 있었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학08/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 확인</span>
+        <h2>저울은 거짓말하지 않는다</h2>
+        <p>라온이는 이제 직접 확인해 보고 싶었어요.<br>
+뚜껑을 닫고 재면 정말로 언제나<br>
+무게가 똑같은지 말이에요.<br>
+먼저 식초와 <span class="vocab-tip" data-meaning="빵을 부풀릴 때 쓰는 하얀 가루">베이킹 소다</span>를 준비했지요.<br>
+이 둘을 섞으면 부글부글 거품이 나면서<br>
+기체가 생겨요.</p>
+        <p>라온이는 둘을 병에 넣고<br>
+병째로 무게를 먼저 쟀어요.<br>
+그다음 병 안에서 둘을 섞고<br>
+얼른 뚜껑을 닫았지요.<br>
+병 속에서는 거품이 부글부글 끓어올랐어요.<br>
+거품이 다 가라앉은 뒤 다시 재 보니,<br>
+저울의 바늘은 처음 그 자리에<br>
+조금도 움직이지 않고 그대로 있었지요.</p>
+        <p>이번에는 시험 삼아<br>
+병뚜껑을 살짝 열어 보았어요.<br>
+그러자 갇혀 있던 기체가<br>
+슬그머니 밖으로 빠져나갔고,<br>
+저울의 무게도 곧바로 줄어들었지요.<br>
+기체가 병을 떠난 만큼<br>
+가벼워진 것이었어요.</p>
+        <p>뚜껑을 닫으면 언제나 무게가 같았고,<br>
+열면 날아간 만큼만 줄었어요.<br>
+규칙에서 벗어나는 경우는 한 번도 없었지요.<br>
+<span class="highlight">저울은 처음부터 끝까지 한 번도 거짓말을 하지 않았어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학08/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 깨달음</span>
+        <h2>알갱이는 없어지지 않는다</h2>
+        <p>라온이는 이제 그 규칙이<br>
+왜 생기는지 궁금해졌어요.<br>
+저울 할아버지가<br>
+마지막 비밀을 알려 주었지요.<br>
+할아버지는 블록으로 집을 만들었다가<br>
+부수어 자동차를 만들었어요.<br><br><span class="dialogue">"집이 자동차로 변했지? 그런데 블록의 개수는 어떠냐?"</span><br><br><span class="dialogue">"개수는 똑같아요. 모양만 바뀌었어요."</span></p>
+        <p><span class="dialogue">"바로 그거란다. 모든 물질은 아주 작은 알갱이로 이루어져 있어. 물질이 변한다는 것은 그 알갱이들이 자리를 바꾸어 새로운 모양을 만드는 거야. 블록처럼 말이지."</span></p>
+        <p>라온이는 머릿속이 환해졌어요.<br>
+초가 탈 때도, 쇠가 녹슬 때도,<br>
+그 작은 알갱이들은<br>
+새로 생기거나 없어진 적이 없었지요.<br>
+그저 자리를 요리조리 바꾸어<br>
+다른 모양의 물질이 되었을 뿐이에요.<br>
+블록의 개수가 그대로이면<br>
+전체의 무게도 그대로이지요.</p>
+        <p>작은 촛불 하나에서 시작한<br>
+길고 긴 궁금증이, 마침내<br>
+이 짧은 한 문장으로 정리되었어요.<br><br><span class="dialogue">"아무것도 사라지지 않는다. 자리를 옮길 뿐이다."</span><br><br><span class="highlight">세상의 무게는 함부로 늘어나지도, 함부로 줄어들지도 않아요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학08/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 확장</span>
+        <h2>우리 몸도, 지구도</h2>
+        <p>이 규칙은 촛불에만<br>
+해당하는 것이 아니었어요.<br>
+세상 모든 변화가<br>
+이 규칙을 따르고 있었지요.<br>
+나무가 타서 재가 되어도,<br>
+밥이 몸속에서 <span class="vocab-tip" data-meaning="먹은 음식이 몸속에서 잘게 분해되는 것">소화</span>되어도,<br>
+물이 끓어 <span class="vocab-tip" data-meaning="물이 기체로 변한 것">수증기</span>가 되어 날아가도,<br>
+알갱이는 사라지지 않고 자리만 바꿔요.</p>
+        <p>라온이는 문득 나뭇잎을 떠올렸어요.<br>
+나무는 공기 중의<br>
+<span class="vocab-tip" data-meaning="숨 쉴 때 내뱉는, 물질이 탈 때 나오는 기체">이산화탄소</span>를 빨아들여<br>
+잎과 줄기를 만들지요.<br>
+촛불이 공기 중으로 내보낸 그 기체를,<br>
+나무가 다시 붙잡아<br>
+자기 몸으로 만드는 거예요.<br>
+세상의 물질은 이렇게 끝없이 돌고 돌 뿐,<br>
+어디로도 없어지지 않았지요.</p>
+        <p>사라지는 것이 없다는 것은,<br>
+우리가 함부로 버리는 것도<br>
+결코 사라지지 않는다는 뜻이기도 했어요.<br>
+쓰레기도, 자동차가 내뿜는<br>
+<span class="vocab-tip" data-meaning="무언가를 태울 때 나오는 해로운 연기">매연</span>도 어딘가에 그대로 남지요.<br>
+그래서 무엇을 만들고 무엇을 버리는지<br>
+잘 살펴야 지구를 지킬 수 있어요.</p>
+        <p><span class="highlight">작은 촛불 하나에서 시작한 궁금증이 마침내 지구 전체의 이야기로 이어졌지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학08/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>사라진 것은 없었다</h2>
+        <p>라온이는 이 긴 여정의 처음에 있었던<br>
+그 촛불을 다시 떠올렸어요.<br>
+이제 라온이는 그 답을 분명히 알지요.<br>
+사라진 초의 무게는<br>
+어디로도 없어지지 않았어요.<br>
+초의 알갱이가 산소와 만나<br>
+새로운 기체가 되어,<br>
+눈에 보이지 않게 날아갔을 뿐이지요.</p>
+        <p>날아간 그 기체를 병 속에 붙잡아<br>
+함께 재기만 하면,<br>
+무게의 셈은 언제나<br>
+정확히 맞아떨어졌어요.</p>
+        <p>라온이가 배운 것은<br>
+저울로 재는 법만이 아니었어요.<br>
+눈에 보이는 것이 전부가 아니라는 사실,<br>
+사라진 것처럼 보이는 것도<br>
+사실은 어딘가에 있다는 사실이었지요.<br>
+정말로 없어진 것이 아니라<br>
+혹시 내 눈이 놓친 것은 아닐까 하고<br>
+한 번 더 되묻는 것.<br>
+그 되묻는 태도야말로 과학이었어요.</p>
+        <p><span class="highlight">아무것도 사라지지 않아요. 다만 자리를 옮길 뿐이지요.</span><br>
+라온이는 이제 촛불이 타는 것을 볼 때마다,<br>
+공기 중으로 날아가는 그 무게까지<br>
+마음속으로 조용히 함께 세어 본답니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(120, 90, 160, 0.15); border-radius: 16px;">
+          <strong style="color: #785AA0; font-size: 20px;">⚖️ 「아무것도 사라지지 않아요. 다만 자리를 옮길 뿐이지요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/chem08_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

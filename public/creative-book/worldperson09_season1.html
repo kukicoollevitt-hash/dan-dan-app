@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🕯️ 등불을 든 여인, 그리고 숫자를 든 여인 — 나이팅게일</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계인물09/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00897b 0%, #004d40 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 137, 123, 0.15);
+      color: #004d40;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00897b;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #004d40;
+      font-weight: 600;
+    }
+
+    .story-card .key-sentence {
+      display: block;
+      background: rgba(0, 137, 123, 0.1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-left: 4px solid #00897b;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #004d40;
+      font-size: 14px;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #4dd0e1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(0, 137, 123, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #80cbc4;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 137, 123, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 77, 64, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 137, 123, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🕯️ 등불을 든 여인, 그리고 숫자를 든 여인 — 나이팅게일</h1>
+        <p class="subtitle">
+          — 밤을 밝힌 것은 등불이었지만, 세상을 바꾼 것은 숫자였다 —<br>
+          교과기반 창작도서 · 세계인물 09
+        </p>
+        <div class="characters">
+          <h3>🕯️ 등장인물 소개</h3>
+          <p><strong>★ 플로렌스 나이팅게일 (주인공):</strong> 1820년 이탈리아 피렌체에서 태어나 영국에서 자랐다. 부유한 집안의 딸이었지만, 아픈 사람을 돌보는 일을 자신의 <span class="vocab-tip" data-meaning="하늘이 준, 반드시 해야 할 일">소명</span>이라 믿었다.</p>
+          <p><strong>★ 어머니 패니:</strong> 딸이 좋은 집안에 시집가기를 바란 사람. 간호사가 되겠다는 말을 집안의 수치로 여겼다.</p>
+          <p><strong>★ 38명의 간호사들:</strong> 크림 전쟁터로 함께 떠난 동료들. 아무도 가려 하지 않던 곳으로 나이팅게일과 함께 배를 탔다.</p>
+          <p><strong>★ 군의관 홀 박사:</strong> 야전병원의 책임자. 전쟁터에 여자가 왔다며 그녀를 병동에 들이지 않으려 한 인물.</p>
+          <p><strong>★ 장부와 등불:</strong> 그녀가 밤마다 들고 다닌 두 가지. 하나는 병사를 비추었고, 하나는 세상을 바꾸었다.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 내면의 갈등:</strong> 편안한 삶이 주어진 딸 vs. 돌보는 일을 놓지 못하는 마음</p>
+          <p><strong>② 집안의 갈등:</strong> 좋은 혼처를 바라는 부모 vs. 천한 일이라 불리던 직업을 택한 딸</p>
+          <p><strong>③ 현장의 갈등:</strong> "전쟁터에서 무슨 청소냐"는 군의관 vs. 병으로 죽는 병사를 본 눈</p>
+          <p><strong>④ 방법의 갈등:</strong> 밤새 돌보는 헌신 vs. 원인을 밝혀 제도를 바꾸는 <span class="vocab-tip" data-meaning="숫자를 모으고 정리해 사실을 밝히는 방법">통계</span></p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>피렌체에서 온 이름</h2>
+        <p>1820년, 영국의 부유한 가정에 여자아이가 태어났습니다. 태어난 곳이 이탈리아의 도시 피렌체였기에, 부모는 그 도시의 영어 이름을 그대로 아이에게 붙여 주었습니다. 플로렌스. 그것이 나이팅게일의 이름이 된 사연입니다.</p>
+        <p>플로렌스가 자란 집은 넓은 정원이 딸린 대저택이었습니다. 하인이 있었고, 가정교사가 드나들었으며, 딸들은 프랑스어와 피아노와 자수를 배웠습니다. 부족한 것이라고는 하나도 없어 보이는 어린 시절이었습니다.</p>
+        <p>그러나 플로렌스는 응접실보다 다른 곳에 마음이 갔습니다. 정원에서 다리를 다친 개를 발견하면 치마가 더러워지는 것도 잊고 붕대를 감아 주었고, 마을에 아픈 사람이 있다는 말을 들으면 음식을 싸 들고 찾아갔습니다. 언니는 그런 동생을 이해하지 못했습니다.</p>
+        <p>어느 날 언니가 물었습니다.<br><br><span class="dialogue">"플로렌스, 그런 일은 하인들이 하는 거야. 너는 왜 굳이 그 냄새나는 방에 들어가니?"</span><br><br>플로렌스는 잠시 생각하다 대답했습니다.<br><br><span class="dialogue">"누군가는 들어가야 하잖아. 그리고 나는 그 방에서만 내가 쓸모 있다고 느껴져."</span></p>
+        <p>그 시절 영국에서 부유한 집 딸에게 주어진 길은 하나뿐이었습니다. 좋은 집안의 남자와 결혼해 안주인이 되는 것이었습니다. 직업을 갖는다는 것은 생각조차 하지 않았고, 더구나 병자를 돌보는 일은 그중에서도 가장 낮은 일로 여겨졌습니다.</p>
+        <p><span class="highlight">플로렌스에게는 모든 것이 있었지만, 정작 하고 싶은 일을 할 자리만 없었습니다.</span> 열일곱 살 무렵부터 그녀는 일기에 같은 물음을 되풀이해 적었습니다. 나는 무엇을 위해 태어났는가.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>집안의 수치</h2>
+        <p>스물넷이 되던 해, 플로렌스는 마침내 부모 앞에서 자기 뜻을 밝혔습니다. 결혼해 안주인이 되는 대신 간호사가 되어 병원에서 일하겠다는 것이었습니다. 그 말이 끝나기도 전에 어머니 패니가 자리에서 일어났습니다.</p>
+        <p>그 시절 간호사는 오늘날과 전혀 다른 직업이었습니다. 제대로 배운 사람이 하는 일이 아니었고, 병원에는 술에 취한 채 환자를 다루는 사람도 있었습니다. 사람들은 간호를 배워야 하는 기술이 아니라 누구나 할 수 있는 잔심부름쯤으로 여겼습니다. 부유한 집 딸이 할 만한 일은 더더욱 아니었습니다.</p>
+        <p>어머니의 반대는 격렬했습니다.<br><br><span class="dialogue">"우리 집안에서 그런 소리가 나오다니. 너는 우리를 웃음거리로 만들 셈이냐? 차라리 아무것도 하지 말고 조용히 있어라."</span><br><br>아버지도 이번만큼은 딸의 편을 들어 주지 않았습니다. 온 집안이 한편이 되어 그녀를 말렸습니다.</p>
+        <p>여러 곳에서 청혼이 들어왔습니다. 그중에는 오랫동안 그녀를 기다려 준 좋은 사람도 있었습니다. 플로렌스는 그 사람을 아끼면서도 결국 거절했습니다. 결혼하면 자기 시간이 사라진다는 것을 알았기 때문입니다.</p>
+        <p>그 뒤로 몇 해 동안 그녀는 집 안에 갇힌 것처럼 지냈습니다. 낮에는 어머니가 정해 준 손님을 맞으며 웃었고, 밤에는 방문을 걸어 잠그고 병원 보고서와 <span class="vocab-tip" data-meaning="병을 막기 위해 깨끗하게 관리하는 일">위생</span>에 관한 책을 읽었습니다. 촛불 아래에서 숫자와 표를 옮겨 적으며 혼자 공부했습니다.</p>
+        <p><span class="highlight">스물넷에 시작된 이 싸움은 서른이 되도록 끝나지 않았습니다.</span> 그러나 그 몇 해 동안 그녀는 남몰래 유럽 여러 병원의 실태를 누구보다 잘 아는 사람이 되어 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>서른 살의 학생</h2>
+        <p>서른 살이 되던 해, 플로렌스는 마침내 집을 나섰습니다. 독일에 있는 한 시설에서 간호를 정식으로 가르친다는 소식을 듣고 곧장 그곳으로 향한 것입니다. 부모의 허락은 끝내 받지 못했습니다.</p>
+        <p>그곳에서의 생활은 그녀가 자란 대저택과 정반대였습니다. 새벽 다섯 시에 일어나 환자의 몸을 씻기고, 붕대를 갈고, 침구를 삶고, 무릎을 꿇고 바닥을 닦았습니다. 하루가 어떻게 가는지 모를 만큼 바빴습니다. 하인들이 하던 일이라 불리던 그 모든 일을 그녀가 직접 했습니다.</p>
+        <p>손은 갈라지고 허리는 늘 아팠지만, 플로렌스는 훗날 그 시절을 두고 태어나서 가장 행복했던 몇 달이었다고 적었습니다. 처음으로 자기가 있어야 할 자리에 있다고 느꼈기 때문입니다.</p>
+        <p>그리고 그곳에서 그녀는 중요한 것을 배웠습니다. 같은 병을 앓아도 어떤 병실의 환자는 낫고 어떤 병실의 환자는 죽는다는 사실이었습니다. 차이를 만드는 것은 값비싼 약이 아니라 공기와 물과 이불이었습니다.<br><br><span class="dialogue">'돌보는 일은 마음만으로 되는 게 아니구나. 배워야 하는 일이구나.'</span></p>
+        <p>몇 달 뒤 영국으로 돌아온 그녀는 런던의 한 병원을 맡게 되었습니다. 부임하자마자 그녀는 창문을 열고, 이불을 삶고, 더운물이 나오도록 관을 고치고, 환자에게 나가는 음식을 바꾸었습니다. 특별한 약을 쓴 것도 아닌데, 몇 달 만에 그 병원 환자들의 상태가 눈에 띄게 좋아졌습니다.</p>
+        <p><span class="highlight">사람들은 그제야 간호가 잔심부름이 아니라는 것을 알아차리기 시작했습니다.</span> 플로렌스 나이팅게일이라는 이름이 런던에 조금씩 알려졌습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>전쟁터로 가는 배</h2>
+        <p>1854년, 크림 전쟁이 일어났습니다. 영국군은 고향에서 멀리 떨어진 흑해 연안에서 싸웠고, 다친 병사들은 배에 실려 와 <span class="vocab-tip" data-meaning="전쟁터 가까이에 임시로 만든 병원">야전병원</span>에 눕혀졌습니다.</p>
+        <p>얼마 지나지 않아 신문에 충격적인 기사가 실렸습니다. 병사들이 전쟁터에서 총에 맞아 죽는 것보다, 병원에 실려 온 뒤에 죽는 경우가 훨씬 많다는 내용이었습니다. 아들을 보낸 부모들이 들고일어났습니다.</p>
+        <p>결국 정부는 나이팅게일에게 도움을 청했습니다. 여자가 전쟁터에 간다는 것은 그때까지 누구도 생각해 본 적 없는 일이었지만, 달리 방법이 없었습니다. 그녀는 소식을 듣자마자 함께 갈 간호사 38명을 모았습니다. 위험한 곳인 줄 알면서도 따라나선 사람들이었습니다.</p>
+        <p>떠나기 전날 밤, 짐을 꾸리던 한 간호사가 걱정스러운 얼굴로 물었습니다.<br><br><span class="dialogue">"우리가 가면 정말 뭔가 달라질까요? 그곳엔 의사도 많다는데요."</span><br><br>나이팅게일이 답했습니다.<br><br><span class="dialogue">"의사는 상처를 봅니다. 우리는 그 사람이 누워 있는 자리를 봅니다. 그것도 누군가는 봐야 합니다."</span></p>
+        <p>배는 거친 바다를 몇 주 동안 항해했습니다. 마침내 도착한 야전병원의 문을 열었을 때, 함께 온 간호사 몇 명은 그 자리에 굳어 숨을 멈추었습니다. 복도까지 병사들이 누워 있었고, 이불은 피와 흙으로 굳어 있었으며, 바닥에는 쥐가 지나다녔습니다.</p>
+        <p>창문은 모두 굳게 닫혀 있었고, 공기는 문을 열자마자 숨이 막힐 만큼 탁했습니다. 상처를 씻을 깨끗한 물조차 넉넉하지 않았습니다. <span class="highlight">치료를 받으러 온 곳이 아니라 죽으러 온 곳처럼 보였습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>들어오지 말라는 병동</h2>
+        <p>그러나 정작 그녀 앞을 가로막은 첫 번째 벽은 병원의 더러움이 아니었습니다. 사람이었습니다. 야전병원의 책임을 맡은 군의관들은 나이팅게일 일행을 병동에 들이려 하지 않았습니다.</p>
+        <p>그들의 말은 처음부터 분명했습니다. 전쟁터는 여자가 있을 자리가 아니라는 것이었습니다. 게다가 런던에서 온 귀족 집안 여자가 무엇을 알겠느냐는 눈길도 있었습니다.<br><br><span class="dialogue">"여기는 부인들이 자선을 베푸는 응접실이 아닙니다. 돌아가시지요."</span></p>
+        <p>나이팅게일은 소리를 높여 다투지 않았습니다. 대신 그녀는 병동 밖 복도 한쪽에 자리를 잡고 조용히 기다렸습니다. 부르지 않으면 한 걸음도 들어가지 않겠다고 말한 뒤, 그 복도에 앉아 붕대를 빨고 해진 이불을 꿰맸습니다. 하루가 가고 이틀이 갔습니다.</p>
+        <p>그러는 사이에도 다친 병사들은 쉬지 않고 실려 왔습니다. 그리고 실려 온 만큼 계속 죽어 나갔습니다. 일손이 모자라자 군의관들은 결국 그녀를 부를 수밖에 없었습니다. 며칠 만이었습니다.</p>
+        <p>며칠을 기다린 끝에 병동에 들어선 나이팅게일이 가장 먼저 한 말은 누구도 예상하지 못한 것이었습니다.<br><br><span class="dialogue">"창문을 여세요. 그리고 이불을 삶아야 합니다."</span><br><br>군의관이 어이없다는 듯 되물었습니다.<br><br><span class="dialogue">"지금 사람이 죽어 나가는데 걸레질을 하자는 겁니까?"</span></p>
+        <p>그녀는 물러서지 않았습니다. 독일과 런던에서 이미 본 것이 있었기 때문입니다. <span class="highlight">그러나 그때까지도 그녀에게는 자기 말이 옳다는 것을 남에게 증명해 보일 방법이 없었습니다. 확신만으로는 아무도 움직이지 않았습니다.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>총알보다 무서운 것</h2>
+        <p>병동에 들어선 나이팅게일과 간호사들은 우선 자기들 손으로 할 수 있는 일부터 시작했습니다. 복도를 쓸고, 창을 열어 <span class="vocab-tip" data-meaning="탁한 공기를 내보내고 맑은 공기를 들이는 일">환기</span>를 하고, 굳은 이불을 걷어 내 삶고, 더운물로 병사들의 몸을 닦았습니다.</p>
+        <p>부엌도 손을 봤습니다. 그때까지 병사들에게 나가던 것이라고는 멀건 국물 한 그릇이 전부였습니다. 다친 몸이 회복될 리 없었습니다. 그녀는 고기와 채소를 넣은 제대로 된 음식을 만들게 했고, 스스로 먹지 못하는 병사에게는 곁에 앉아 한 숟갈씩 떠먹였습니다.</p>
+        <p>그렇게 여러 가지를 손봤는데도 병사들은 여전히 하루가 멀다 하고 죽어 나갔습니다. 그리고 지켜보면 볼수록 이상한 점이 하나 있었습니다. 팔다리에 총상을 입고 실려 온 병사보다, 처음 왔을 때는 멀쩡해 보이던 병사가 며칠 뒤 갑자기 열이 오르며 죽는 경우가 훨씬 많았습니다.</p>
+        <p>병사들을 데려가는 것은 적의 총알이 아니었습니다. 콜레라와 장티푸스 같은 <span class="vocab-tip" data-meaning="병을 옮기는 것이 몸에 들어와 퍼지는 병">감염병</span>이었습니다. 좁은 곳에 사람이 빽빽하게 몰려 있고 물과 공기가 더러우면, 상처가 아니라 병이 먼저 사람을 데려갔습니다. 상처는 나았는데 병으로 죽는 일이 날마다 벌어졌습니다.</p>
+        <p>나이팅게일은 그 사실을 날마다 눈으로 보고 있었지만, 아무리 말해도 받아들여지지 않았습니다. 군의관들은 전쟁터에서 사람이 죽는 것은 어쩔 수 없는 일이라고 여겼습니다.<br><br><span class="dialogue">"여기는 전쟁터입니다. 원래 이렇습니다."</span></p>
+        <p><span class="highlight">"원래 그렇다"는 말 앞에서는 어떤 정성도 소용이 없었습니다.</span> 밤새 병사를 돌보아도, 다음 날이면 그 자리에 다른 병사가 누웠습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>등불을 든 밤</h2>
+        <p>그 무렵부터 나이팅게일은 밤마다 등불을 들고 병동을 돌기 시작했습니다. 낮에는 처리해야 할 일이 너무 많아 병사 한 사람 한 사람을 찬찬히 들여다볼 겨를이 없었기 때문입니다.</p>
+        <p>불을 끈 병동에는 수백 명의 병사가 어둠 속에 누워 있었습니다. 그녀는 등불을 들고 침대 사이를 천천히 걸으며 이름을 부르고, 이마를 짚고, 글을 모르는 병사를 위해 고향에 보낼 편지를 대신 써 주었습니다. 어떤 밤에는 병동 사이를 오가며 6킬로미터가 넘게 걸었습니다. 새벽이 되어서야 겨우 앉을 수 있었습니다.</p>
+        <p>병사들은 밤이 되면 그 불빛이 오기를 기다렸습니다. 고향에 보내는 편지에 이렇게 적은 병사도 있었습니다.<br><br><span class="dialogue">"어머니, 밤이면 등불을 든 여인이 지나갑니다. 그 불빛이 제 침대를 지나갈 때 저는 아직 살아 있다고 느낍니다."</span></p>
+        <p>병사들 사이에서 사람들은 그녀를 '등불을 든 여인'이라 부르기 시작했습니다. 그 이름은 곧 영국 신문에까지 실려 온 나라에 알려졌습니다. 그러나 정작 나이팅게일 자신에게 그 밤은 조금도 아름답지 않았습니다.</p>
+        <p>아무리 밤새 병동을 돌아도, 아침이면 어김없이 빈 침대가 생겨 있었기 때문입니다. 그녀는 자기가 지금 하는 일이 사람을 살리는 것이 아니라, 죽어 가는 사람 곁을 잠시 지켜 주는 일일 뿐이라는 것을 누구보다 잘 알고 있었습니다.<br><br><span class="dialogue">'이대로는 안 된다. 나 혼자 밤을 새운다고 될 일이 아니다.'</span></p>
+        <p><span class="highlight">그녀에게 필요한 것은 더 많은 정성이 아니라, 사람들을 움직일 수 있는 다른 무기였습니다.</span> 그 밤 그녀는 등불을 내려놓고 다른 것을 집어 들었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>죽음을 세기 시작하다</h2>
+        <p>나이팅게일이 새로 집어 든 것은 두꺼운 장부와 펜이었습니다. 그날부터 그녀는 이 병원에서 죽은 병사를 한 사람도 빠뜨리지 않고 기록하기 시작했습니다.</p>
+        <p>이름과 날짜만 적은 것이 아닙니다. 그 병사가 무엇 때문에 죽었는지를 하나하나 나누어 적었습니다. 총상으로 죽었는가, 아니면 병으로 죽었는가. 병이라면 어떤 병인가. 그가 어느 병동의 몇 번째 침대에 누워 있었는가까지 빠짐없이 적었습니다.</p>
+        <p>그렇게 몇 달이 지나자 장부 위에 답이 저절로 드러났습니다. 숫자는 누구도 부정할 수 없을 만큼 분명했습니다. 전쟁터에서 입은 상처로 죽은 병사보다, 병원 안에 누워 있다가 감염병으로 죽은 병사가 몇 곱절이나 많았습니다. 짐작이나 느낌이 아니라 기록이 말하는 사실이었습니다.</p>
+        <p>그 기록을 손에 쥐고 나서야 그녀는 청소와 환기와 깨끗한 물을 강하게 밀어붙일 수 있었습니다. 하수구를 뚫고, 썩은 물이 고인 자리를 파냈으며, 병동 사이의 간격을 넓혔습니다. 그러면서도 그 뒤로 하루도 거르지 않고 계속 숫자를 적어 나갔습니다.</p>
+        <p>결과는 놀라웠습니다. 처음에는 실려 온 100명 가운데 42명이 죽던 병원이었는데, 얼마 지나지 않아 100명 중 2명만 죽는 병원이 되었습니다. <span class="vocab-tip" data-meaning="일정한 사람 수 가운데 죽는 사람의 비율">사망률</span>이 42퍼센트에서 2퍼센트로 떨어진 것입니다.</p>
+        <p>그때 나이팅게일은 깨달았습니다. 자신이 밤새 걸어 다니며 지킨 것은 몇 사람이었지만, <span class="highlight">이 장부가 지킬 수 있는 것은 앞으로 태어날 수많은 사람이었습니다.</span> 정성은 한 사람을 살리고, 기록은 제도를 바꿉니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>그림이 된 숫자</h2>
+        <p>전쟁이 끝나고 영국으로 돌아온 나이팅게일 앞에는 더 큰 싸움이 남아 있었습니다. 야전병원 하나가 아니라 나라 전체를 바꾸려면 정부와 군대를 설득해야 했습니다.</p>
+        <p>그런데 문제가 하나 있었습니다. 그녀가 가진 장부는 숫자로 빼곡하게 채워져 있었는데, 정작 그것을 끝까지 읽고 이해하려는 사람이 거의 없었다는 점입니다. 표를 내밀면 사람들은 이내 지루해했고, 어렵다는 말과 함께 덮어 버렸습니다. 사실이 있어도 전해지지 않으면 아무 힘이 없었습니다.</p>
+        <p>그래서 나이팅게일은 방법 자체를 바꾸기로 했습니다. 숫자를 그대로 보여 주는 대신 그림으로 옮긴 것입니다. 달마다 죽은 사람의 수를 부챗살처럼 둥글게 펼쳐 그린 도표를 손수 만들었습니다. 병으로 죽은 사람은 넓은 파란 부분으로, 적의 총에 맞아 죽은 사람은 좁은 붉은 부분으로 칠했습니다.</p>
+        <p>회의 자리에서 그 도표를 펼쳐 보인 순간, 방 안이 조용해졌습니다. 긴 설명이 필요 없었습니다. 파란 부분이 붉은 부분을 압도적으로 뒤덮고 있었기 때문입니다. 한눈에 보였습니다. 병사들은 적의 총이 아니라 더러운 병원에서 죽고 있었습니다.</p>
+        <p>그 그림 한 장이 몇 해를 끌어온 논쟁을 단번에 끝냈습니다. 군 병원의 위생 규칙이 새로 만들어졌고, 병원 건물을 지을 때 환기와 채광을 따지게 되었으며, 상하수도를 정비하는 일이 나라의 일이 되었습니다.</p>
+        <p><span class="highlight">나이팅게일은 사람의 마음을 움직이는 데 눈물이 아니라 도표를 썼습니다.</span> 그는 간호사이면서, 숫자로 사실을 밝히는 통계학의 <span class="vocab-tip" data-meaning="어떤 분야를 남보다 앞서 처음 열어 나간 사람">선구자</span>이기도 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물09/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>5월 12일</h2>
+        <p>전쟁이 끝나고 몇 해 뒤인 1860년, 나이팅게일은 런던에 간호학교를 세웠습니다. 세계에서 처음으로 간호를 정식 과목으로 가르치는 학교였습니다. 오늘날 간호 교육의 시작이 여기였습니다.</p>
+        <p>그 학교를 거쳐 나온 사람들은 더 이상 잔심부름꾼이 아니었습니다. 그들은 환자의 상태를 살피고 기록할 줄 알았고, 위생과 영양을 제대로 다룰 줄 알았으며, 자기가 하는 일에 이름을 걸 줄 알았습니다. 간호가 마침내 하나의 전문 직업이 된 것입니다.</p>
+        <p>나이팅게일은 그 뒤로도 병원을 어떻게 지어야 하는지, 도시의 물과 하수를 어떻게 관리해야 하는지에 관한 글을 쉬지 않고 써서 세상에 내놓았습니다. 크림 전쟁에서 얻은 병으로 몸이 크게 나빠져 오랫동안 방 안에서만 지내면서도, 그는 끝까지 펜을 놓지 않았습니다.</p>
+        <p>오늘날 그녀가 태어난 5월 12일은 국제 간호사의 날로 지켜지고 있습니다. 해마다 이날이면 전 세계의 간호사들이 그 이름을 함께 기억합니다.</p>
+        <p>사람들은 나이팅게일을 흔히 '등불을 든 여인'으로만 기억합니다. 어두운 병동을 밤새 걷던 그 모습은 분명 아름답습니다. 그러나 등불만으로는 42퍼센트가 2퍼센트로 내려가지 않았습니다.</p>
+        <p><span class="highlight">밤을 밝힌 것은 등불이었지만, 세상을 바꾼 것은 그가 한 줄 한 줄 적어 내려간 숫자였습니다.</span> 따뜻한 마음을 가진 사람은 세상에 많지만, 그 마음이 옳다는 것을 증명할 방법까지 찾아낸 사람은 드뭅니다. 나이팅게일은 그 드문 사람이었습니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(190, 140, 60, 0.15); border-radius: 16px;">
+          <strong style="color: #BE8C3C; font-size: 20px;">🕯️ 「정성은 한 사람을 살리고, 기록은 제도를 바꾼다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+      function goToQuiz() { window.location.href = '/creative-book/worldperson09_season1_quiz.html?season=season2'; }
+  </script>
+</body>
+</html>

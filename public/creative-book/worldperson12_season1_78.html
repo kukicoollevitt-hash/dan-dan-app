@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧂 소금 한 줌으로 제국을 흔든 사람, 간디</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계인물12/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00897b 0%, #004d40 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 137, 123, 0.15);
+      color: #004d40;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00897b;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #004d40;
+      font-weight: 600;
+    }
+
+    .story-card .key-sentence {
+      display: block;
+      background: rgba(0, 137, 123, 0.1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-left: 4px solid #00897b;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #004d40;
+      font-size: 14px;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #4dd0e1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(0, 137, 123, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #80cbc4;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 137, 123, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 77, 64, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 137, 123, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🧂 소금 한 줌으로 제국을 흔든 사람, 간디</h1>
+        <p class="subtitle">
+          — 비폭력으로 거대한 힘에 맞선 지도자 —<br>
+          교과기반 창작도서 · 세계인물 12
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 간디(1869~1948):</strong> 폭력을 쓰지 않는 비폭력 저항으로 인도의 독립을 이끈 지도자.</p>
+          <p><strong>★ 시대 배경:</strong> 인도가 영국의 지배를 받던 시기. 강한 제국에 맞서 자유를 되찾으려는 열망이 컸다.</p>
+          <p><strong>★ 핵심 개념:</strong> 비폭력 저항, 자립, 불의에 맞서는 용기, 평화의 힘.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물12/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>법정에서 도망친 변호사</h2>
+        <p>간디는 1869년, 인도에서 태어났습니다. 그는 영국에 가서 법을 공부하고 변호사가 되었습니다. 그러나 처음에 간디는 몹시 수줍음이 많은 사람이었습니다.</p>
+        <p>변호사가 된 간디는 첫 재판에서 너무 긴장한 나머지, 한마디도 제대로 하지 못하고 법정에서 도망치듯 나오고 말았습니다. 자신감 없고 소심한 청년이었던 것입니다. 간디가 훗날 위대한 지도자가 되리라고는 아무도 짐작하지 못했습니다.</p>
+        <p>그러던 간디는 일자리를 찾아 남아프리카로 가게 되었습니다. 그곳에서 간디는 자신의 삶을 완전히 바꾸어 놓는 경험을 하게 됩니다. 수줍던 청년이 큰 뜻을 품게 되는 계기였습니다. 낯선 땅에서 겪은 부당한 일이 그의 마음에 불을 지핀 것입니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 수줍고 소심했던 젊은 시절의 간디입니다. 이 전기는 그런 그가 어떻게 비폭력으로 거대한 제국에 맞선 지도자가 되었는지를 그립니다. 법정에서 도망친 변호사가 그 출발점이 됩니다.</p>
+        <p>가장 약해 보이는 방법으로 가장 강한 것에 맞선 간디의 삶이, 이렇게 시작됩니다. 그 삶은 힘이란 무엇인가에 대한 우리의 생각을 완전히 바꾸어 놓게 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물12/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>한밤중의 기차역</h2>
+        <p>남아프리카에서 간디는 잊지 못할 일을 겪었습니다. 기차의 일등칸 표를 샀는데도, 피부색이 다르다는 이유로 짐칸으로 가라는 요구를 받은 것입니다. 간디가 이를 거부하자, 그는 한밤중에 기차역에 내던져지고 말았습니다.</p>
+        <p>차디찬 기차역에서 밤을 지새우며, 간디는 깊은 생각에 잠겼습니다. 부당한 차별과 불의 앞에서, 자신이 무엇을 해야 하는지 고민한 것입니다. 그 밤은 간디의 삶을 바꾸는 결정적인 순간이었습니다.</p>
+        <p>간디는 이 부당한 차별에 맞서 싸우기로 결심했습니다. 그러나 폭력으로 맞서는 것이 아니라, 다른 방법을 찾기로 했습니다. 수줍던 청년의 마음속에 정의를 향한 용기가 싹튼 것입니다.</p>
+        <p>이 대목은 간디가 불의를 마주하고 각성하는 도입의 단계입니다. 한밤중 기차역에서의 경험이, 그의 삶을 바꾸는 계기가 됩니다. 부당함에 맞서 싸우기로 한 간디의 결심이 드러납니다.</p>
+        <p>간디는 부당함에 맞서되, 폭력을 쓰지 않는 새로운 방법을 고민하기 시작했습니다. 그 고민이 훗날 온 세계를 감동시킨 비폭력 저항으로 이어지게 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물12/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 원칙</span>
+        <h2>되갚지 않는 싸움</h2>
+        <p>간디는 불의에 맞서 싸우되, 결코 폭력을 쓰지 않기로 했습니다. 상대가 아무리 부당하게 굴어도, 폭력으로 되갚지 않는 것입니다. 간디는 이러한 방법을 비폭력 저항이라 불렀습니다.</p>
+        <p>비폭력 저항은 얼핏 약해 보이는 방법이었습니다. 그러나 간디는 폭력을 쓰지 않는 것이야말로 진정 강한 것이라 믿었습니다. 폭력은 또 다른 폭력을 부를 뿐이지만, 비폭력은 상대의 양심을 움직일 수 있기 때문입니다.</p>
+        <p>간디는 부당한 법에 따르지 않되, 그 대가로 받는 벌은 기꺼이 감수했습니다. 폭력 대신 묵묵히 저항하며, 자신의 뜻을 굽히지 않은 것입니다. 이 새로운 저항 방식은 많은 사람의 마음을 움직였습니다.</p>
+        <p>이 대목은 간디가 비폭력 저항이라는 원칙을 세우는 전개의 단계입니다. 폭력으로 되갚지 않는 것이 오히려 강한 힘임을 그는 믿습니다. 약해 보이지만 강한 비폭력의 원리가 드러납니다. 미움을 미움으로 갚으면 미움만 커질 뿐이라는 것을, 간디는 깊이 헤아렸습니다.</p>
+        <p>간디의 비폭력 저항은 남아프리카에서 큰 힘을 발휘했습니다. 그리고 간디는 고국 인도로 돌아와, 더 큰 싸움에 나서게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물12/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 헌신</span>
+        <h2>맞으면서 걸어 나가다</h2>
+        <p>고국으로 돌아온 간디는, 영국의 지배를 받던 인도의 독립을 위해 나섰습니다. 그는 이곳에서도 비폭력 저항의 원칙을 지켰습니다. 폭력을 쓰지 않고, 부당한 지배에 맞선 것입니다.</p>
+        <p>간디를 따르는 사람들은, 영국 경찰이 매질을 해도 맞서 싸우지 않았습니다. 그저 묵묵히 맞으면서도, 폭력으로 되갚지 않고 저항을 이어 간 것입니다. 그 모습은 보는 이들의 마음을 크게 움직였습니다.</p>
+        <p>폭력에 폭력으로 맞서지 않는 그들의 모습은, 오히려 부당하게 폭력을 쓰는 쪽을 부끄럽게 만들었습니다. 비폭력의 힘이 얼마나 강한지를 보여 준 것입니다. 간디의 방법은 점점 더 많은 사람의 지지를 얻었습니다.</p>
+        <p>이 대목은 간디의 비폭력 저항이 힘을 발휘하는 전개의 단계입니다. 매를 맞으면서도 폭력으로 되갚지 않는 모습이, 사람들의 마음을 움직입니다. 약해 보이는 방법이 강한 제국을 흔들기 시작합니다. 무기를 든 쪽이 아니라 묵묵히 견디는 쪽이 도리어 사람들의 마음을 얻은 것입니다.</p>
+        <p>간디는 또한 인도 사람들이 스스로 자립할 것을 강조했습니다. 그가 물레를 돌린 데에는 깊은 뜻이 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물12/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">전개 · 자립</span>
+        <h2>물레를 돌리는 지도자</h2>
+        <p>간디는 사람들 앞에서 직접 물레를 돌려 실을 잣곤 했습니다. 위대한 지도자가 소박하게 물레를 돌리는 모습은 뜻밖이었습니다. 그러나 그 안에는 깊은 뜻이 담겨 있었습니다.</p>
+        <p>당시 인도 사람들은 영국에서 만든 옷감을 사서 입어야 했습니다. 간디는 인도 사람들이 스스로 실을 잣고 옷을 지어 입어야, 진정한 자립을 이룰 수 있다고 여겼습니다. 물레는 곧 자립의 상징이었습니다.</p>
+        <p>간디는 거창한 무기가 아니라, 소박한 물레로 저항을 이끌었습니다. 스스로의 힘으로 살아가는 것이야말로, 지배에서 벗어나는 참된 길이라 믿었기 때문입니다. 가장 소박한 것이 가장 강한 저항이 된 것입니다.</p>
+        <p>이 대목은 간디가 자립을 강조하는 전개의 단계입니다. 물레를 돌리는 소박한 모습이, 스스로 서는 것의 소중함을 보여 줍니다. 소박함 속에 담긴 저항의 지혜가 빛납니다.</p>
+        <p>그러던 어느 날, 영국은 인도 사람들에게 소금에까지 세금을 매겼습니다. 간디는 이 부당한 세금에 맞서기로 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물12/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 부당</span>
+        <h2>소금에 매긴 세금</h2>
+        <p>영국은 인도 사람들이 반드시 필요로 하는 소금에까지 무거운 세금을 매겼습니다. 게다가 인도 사람들이 직접 소금을 만드는 것조차 금지했습니다. 가난한 사람들에게 소금세는 큰 부담이었습니다.</p>
+        <p>간디는 이 부당한 소금세에 맞서기로 했습니다. 누구에게나 꼭 필요한 소금마저 마음대로 만들지 못하게 하는 것은, 참으로 부당한 일이라 여긴 것입니다. 간디는 이 작은 소금 문제로 거대한 제국에 맞서기로 했습니다.</p>
+        <p>간디는 직접 바닷가로 걸어가, 바닷물로 소금을 만들기로 했습니다. 법을 어기더라도, 부당한 소금세에 맞서 저항의 뜻을 보이기로 한 것입니다. 소금 한 줌이 거대한 제국에 맞서는 무기가 된 것입니다.</p>
+        <p>이 대목은 간디가 부당한 소금세에 맞서기로 하는 위기의 단계입니다. 누구에게나 필요한 소금마저 억압하는 부당함이 드러납니다. 소금 한 줌으로 제국에 맞서려는 간디의 결단이 시작됩니다. 가장 작고 흔한 것을 통해 가장 큰 부당함을 드러내려 한 그의 지혜가 엿보입니다.</p>
+        <p>간디는 소금을 만들기 위해, 바닷가를 향한 긴 행진에 나섰습니다. 그것은 무려 380킬로미터에 이르는 대장정이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물12/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 행진</span>
+        <h2>380킬로미터를 걷다</h2>
+        <p>간디는 소금을 만들기 위해, 바닷가까지 걸어가는 긴 행진을 시작했습니다. 그 거리는 무려 380킬로미터가 넘었습니다. 예순이 넘은 나이의 간디가, 지팡이 하나에 의지해 그 먼 길을 걷기 시작한 것입니다.</p>
+        <p>처음에는 소수의 사람만이 간디를 따랐습니다. 그러나 간디가 걸어갈수록, 그 뜻에 공감한 사람들이 하나둘 함께하기 시작했습니다. 행진의 대열은 점점 길어졌습니다.</p>
+        <p>간디의 소금 행진은 온 세계의 주목을 받았습니다. 무기도 폭력도 없이, 오직 걸어서 부당함에 맞서는 그의 모습은 큰 감동을 주었습니다. 가장 약해 보이는 방법이, 가장 큰 울림을 만들어 낸 것입니다.</p>
+        <p>이 대목은 간디의 소금 행진이 펼쳐지는 절정의 단계입니다. 380킬로미터를 걷는 그의 모습이, 비폭력 저항의 힘을 온 세계에 보여 줍니다. 함께 걷는 사람들의 대열이 점점 길어지며 감동을 자아냅니다. 한 걸음 한 걸음이 모여 거대한 물결이 되는 모습은 그 자체로 큰 울림이었습니다.</p>
+        <p>긴 행진 끝에, 간디는 마침내 바닷가에 이르렀습니다. 그리고 그곳에서 역사적인 순간을 맞이했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물12/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>바닷가에서 집어 든 한 줌</h2>
+        <p>마침내 바닷가에 이른 간디는, 손을 뻗어 바닷물이 마르며 생긴 소금 한 줌을 집어 들었습니다. 부당한 법을 어기고, 자신의 손으로 소금을 만든 것입니다. 그 작은 소금 한 줌이, 거대한 제국의 부당한 법에 맞서는 상징이 되었습니다.</p>
+        <p>간디가 집어 든 소금 한 줌은 온 인도 사람들에게 큰 용기를 주었습니다. 수많은 사람이 간디를 따라 직접 소금을 만들며 저항에 동참했습니다. 소금 한 줌이 온 나라를 움직이는 힘이 된 것입니다.</p>
+        <p>그 순간 간디는 중요한 것을 보여 주었습니다. 가장 약해 보이는 방법, 곧 폭력 없이 소금 한 줌을 집어 드는 것이, 가장 강한 제국을 흔들 수 있다는 사실을 말입니다. 비폭력의 힘이 무력보다 강할 수 있음을 증명한 것입니다.</p>
+        <p>이 대목은 이야기의 정신적 절정, 곧 간디의 각성입니다. 소금 한 줌을 집어 드는 순간이, 비폭력 저항의 위대한 힘을 보여 줍니다. 가장 약해 보이는 방법이 가장 강한 것에 맞서는 감동적인 장면입니다. 총칼보다 소금 한 줌이 더 큰 힘을 지닐 수 있음을, 간디는 온몸으로 증명했습니다.</p>
+        <p>간디의 소금 행진은 온 세계에 비폭력의 힘을 알렸습니다. 그리고 인도의 독립을 향한 열망은 더욱 뜨겁게 타올랐습니다. 작은 소금 한 줌에서 시작된 저항이 온 나라를 하나로 묶은 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물12/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 성취</span>
+        <h2>1947년 8월</h2>
+        <p>간디와 인도 사람들의 오랜 비폭력 저항 끝에, 마침내 1947년 인도는 영국의 지배에서 벗어나 독립을 이루었습니다. 폭력이 아닌 비폭력으로, 거대한 제국의 지배를 끝낸 것입니다. 그것은 인류 역사에 길이 남을 위대한 승리였습니다.</p>
+        <p>간디의 비폭력 저항은, 총과 칼이 아니라 정의와 용기로도 세상을 바꿀 수 있음을 증명했습니다. 가장 약해 보이는 방법이, 가장 강한 힘에 맞서 이긴 것입니다. 간디는 평화의 힘이 얼마나 위대한지를 온 세계에 보여 주었습니다.</p>
+        <p>간디의 삶은 폭력 없이도 불의에 맞설 수 있다는 것을 일깨웠습니다. 그의 비폭력 정신은 인도를 넘어 온 세계의 수많은 사람에게 영향을 주었습니다. 평화로운 저항의 위대한 본보기가 된 것입니다.</p>
+        <p>이 대목은 인도가 독립을 이루는 결말의 성취 단계입니다. 비폭력 저항으로 거대한 제국의 지배를 끝낸 위대한 승리가 그려집니다. 평화의 힘이 무력을 이긴 감동적인 순간입니다. 미움이 아니라 정의로, 폭력이 아니라 인내로 이루어 낸 승리이기에 더욱 값졌습니다.</p>
+        <p>간디가 걸어서 남긴 길은, 오늘날에도 평화와 정의를 향한 소중한 발자취로 남아 있습니다. 그 발자취는 어려움에 처한 수많은 사람에게 희망의 길잡이가 되고 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물12/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>걸어서 남긴 길</h2>
+        <p>간디는 수줍고 소심한 청년에서, 비폭력으로 거대한 제국에 맞선 위대한 지도자가 되었습니다. 그는 소금 한 줌으로 제국을 흔들고, 마침내 인도의 독립을 이끌어 냈습니다. 그의 삶은 평화와 정의의 위대한 승리입니다.</p>
+        <p>이 인물이 우리에게 남기는 가르침은 분명합니다. 불의에 맞서는 데 반드시 폭력이 필요한 것은 아니며, 오히려 폭력을 쓰지 않는 것이 더 강한 힘일 수 있다는 것입니다. 간디는 비폭력이 무력보다 강할 수 있음을 증명했습니다.</p>
+        <p>무엇보다 간디의 삶은, 가장 약해 보이는 방법으로 가장 강한 것에 맞설 수 있음을 일깨웁니다. 소금 한 줌을 집어 드는 소박한 행동이, 거대한 제국을 흔들었습니다. 정의와 용기가 있다면, 약해 보이는 것도 위대한 힘이 될 수 있습니다.</p>
+        <p>간디의 이야기는 오늘의 우리에게도 깊은 울림을 줍니다. 부당함에 맞설 때, 미움과 폭력이 아니라 정의와 평화의 방법을 택하는 것이 진정 강한 것임을 그는 보여 주었습니다. 걸어서 남긴 그의 길은, 우리에게 평화의 힘을 일러 주고 있습니다.</p>
+        <p><span class="highlight">가장 약해 보이는 방법이, 가장 강한 것에 맞서 이길 수 있습니다. 비폭력은 무력보다 강합니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+      function goToQuiz() { window.location.href = '/creative-book/worldperson12_season1_quiz.html?season=season3'; }
+  </script>
+</body>
+</html>

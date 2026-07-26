@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>☀️ 눈 오는 서울, 꽃 피는 제주 — 할머니의 귤밭과 기후의 비밀</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지리10/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>☀️ 눈 오는 서울, 꽃 피는 제주 — 할머니의 귤밭과 기후의 비밀</h1>
+        <p class="subtitle">
+          — 기후는 하루의 날씨가 아니라, 삶의 무늬다 —<br>
+          교과기반 창작도서 · 지리 10
+        </p>
+        <div class="characters">
+          <h3>☀️ 등장인물 소개</h3>
+          <p><strong>★ 누리 (주인공):</strong> 서울 아이. 눈 오는 날 영상통화 속 노란 유채꽃을 보고 고개를 갸웃하다, 기후의 세 가지 열쇠를 찾아 나선다.</p>
+          <p><strong>★ 할머니:</strong> 제주에서 평생 감귤 농사를 지어 온 사람. 따뜻해지는 겨울 앞에서 깊은 고민에 빠진다.</p>
+          <p><strong>★ 초록 이모 (조력자):</strong> 기후를 연구하는 연구원. 손전등과 지구본 하나로 지구의 비밀을 보여 준다.</p>
+          <p><strong>★ 한라산:</strong> 산기슭에는 귤, 꼭대기에는 눈. 하루 만에 봄과 겨울을 오가게 해 주는 산.</p>
+          <p><strong>★ 늙은 감귤나무들:</strong> 돌아가신 할아버지와 할머니가 함께 심은 나무들. 이 이야기의 뿌리.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 앎의 갈등:</strong> 같은 날 눈이 오고 꽃이 피는 이상한 나라 vs. 위도·바다·고도로 풀리는 명쾌한 이치</p>
+          <p><strong>② 생업의 갈등:</strong> 평생 지어 온 감귤 농사 vs. 따뜻해지는 겨울이 몰고 온 낯선 선택</p>
+          <p><strong>③ 마음의 갈등:</strong> 할아버지와 심은 나무를 지키려는 마음 vs. 변화에 맞춰 바꿔야 한다는 마음</p>
+          <p><strong>④ 시간의 갈등:</strong> 오늘 하루의 날씨 vs. 오랜 세월이 쌓여 만드는 기후</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>같은 날, 다른 겨울</h2>
+        <p>함박눈이 펑펑 쏟아지는 십이월의 서울이었습니다. 누리는 창밖에 쌓이는 눈을 구경하다가 제주 할머니에게 영상통화를 걸었습니다. 서울에 첫눈이 왔다고 자랑하려던 참이었습니다. 그런데 화면이 켜지는 순간, 누리는 제 눈을 의심하고 말았습니다. 화면 저쪽은 완전히 다른 계절이었습니다.</p>
+        <p>화면 속 할머니 뒤로 샛노란 유채꽃이 흐드러지게 피어 있었던 것입니다.<br><br><span class="dialogue">"할머니! 지금 서울엔 눈이 오는데, 거기는 무슨 꽃이 피었어요?"</span><br><br><span class="dialogue">"제주 겨울이 원래 이렇지. 귤도 지금이 한창이란다. 방학에 내려와서 귤 따는 것 좀 도와주련?"</span></p>
+        <p>통화를 끊고 나서도 누리는 한참 동안 고개를 갸웃거렸습니다. 서울과 제주는 같은 나라입니다. 달력도 같은 십이월입니다. 그런데 한쪽에는 눈이 쌓이고, 한쪽에는 꽃이 핍니다. 이게 어떻게 가능한 걸까요.</p>
+        <p>누리는 그날의 날씨가 궁금해서가 아니었습니다. 해마다 겨울이면 서울은 춥고 제주는 포근합니다. 하루 이틀의 우연이 아니라 늘 되풀이되는 차이라면, 거기에는 분명 까닭이 있을 것이었습니다. 오랜 기간의 평균적인 날씨를 <span class="vocab-tip" data-meaning="오랜 기간에 걸친 평균적인 날씨 상태">기후</span>라고 부른다는 것을, 누리는 아직 잘 몰랐습니다.</p>
+        <p>마침 겨울 방학이 다가오고 있었습니다. 누리는 달력에 제주행 날짜를 동그라미 치며 다짐했습니다. 이번 방학에는 귤만 따고 오지 않겠다고, 눈의 나라와 꽃의 나라가 한 나라인 비밀을 꼭 풀고 오겠다고 말입니다.</p>
+        <p><span class="highlight">같은 날, 같은 나라에서 겨울은 왜 두 가지 얼굴을 할까.</span> 누리의 겨울 방학 숙제는 그렇게 스스로 정해졌습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>겨울 속의 봄</h2>
+        <p>방학이 시작되자마자 누리는 비행기에 올랐습니다. 서울의 공항에서는 두꺼운 패딩에 목도리까지 둘렀는데, 한 시간 뒤 제주 공항 문을 나서는 순간 훅 하고 포근한 바람이 뺨을 감쌌습니다. 길가에는 야자나무가 늘어서 있었습니다. 누리는 얼른 목도리를 풀었습니다.</p>
+        <p>할머니의 귤밭은 온통 주황빛이었습니다. 초록 잎사귀 사이마다 탐스러운 귤이 조롱조롱 매달려 있었습니다. 누리는 가위를 들고 귤을 따며 연신 두리번거렸습니다. 십이월의 밭에서 열매를 딴다는 것이 도무지 믿기지 않았습니다.</p>
+        <p><span class="dialogue">"할머니, 서울에서는 지금 손이 꽁꽁 얼어서 장갑 없이는 못 다녀요. 그런데 여기는 왜 이렇게 따뜻해요?"</span><br><br>할머니는 귤 하나를 까서 누리 입에 넣어 주며 웃었습니다.<br><br><span class="dialogue">"제주가 남쪽 바다 한가운데 있는 섬이라 그렇지. 자세한 건 네 초록 이모한테 물어보렴. 그게 이모 밥벌이니까."</span></p>
+        <p>초록 이모는 제주에서 기후를 연구하는 연구원입니다. 마침 주말에 할머니 댁에 들르기로 했다고 했습니다. 누리는 이모가 올 때까지 묻고 싶은 것들을 수첩에 차곡차곡 적어 두었습니다. 왜 제주는 겨울에도 따뜻한가. 왜 서울과 제주의 겨울은 다른가.</p>
+        <p>저녁상에는 갓 딴 귤이 소복이 올라왔습니다. 할머니는 이 귤이 따뜻한 제주 날씨가 길러 준 것이라고 했습니다. 추운 데서는 귤나무가 겨울을 나지 못한다는 것입니다. 누리는 손안의 귤을 새삼 들여다보았습니다. 날씨가 열매를 기른다니, 처음 해 보는 생각이었습니다.</p>
+        <p><span class="highlight">제주의 겨울은 서울의 겨울과 완전히 다른 계절 같았습니다.</span> 그 차이의 비밀을 아는 사람이, 이번 주말에 온다고 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>손전등과 지구본</h2>
+        <p>주말 저녁, 초록 이모가 왔습니다. 누리의 수첩을 본 이모는 눈을 반짝이더니, 가방에서 작은 지구본과 손전등을 꺼냈습니다.<br><br><span class="dialogue">"질문이 아주 좋은데? 답은 세 가지 열쇠에 있어. 오늘은 첫 번째 열쇠부터 보여 줄게."</span></p>
+        <p>이모는 방의 불을 끄고 지구본에 손전등을 비추었습니다. 지구본의 배꼽쯤, 그러니까 한가운데를 두르는 <span class="vocab-tip" data-meaning="지구의 중심을 가로지르는 위도 0도의 선">적도</span> 부분은 빛을 정면으로 받아 환했습니다. 그런데 위쪽 끝으로 갈수록 같은 빛이 비스듬히 스치며 흐릿해졌습니다. 같은 손전등인데도 자리에 따라 밝기가 전혀 달랐습니다. 누리는 저도 모르게 몸을 앞으로 기울였습니다.</p>
+        <p><span class="dialogue">"지구가 둥글기 때문에 <span class="vocab-tip" data-meaning="적도를 기준으로 남북의 위치를 나타내는 지표">위도</span>에 따라 받는 햇빛의 양이 달라져. 적도 근처는 일 년 내내 덥고, 북극이나 남극에 가까운 <span class="vocab-tip" data-meaning="북극이나 남극에 가까운, 위도가 높은 지역">고위도</span>는 춥지. 우리나라는 그 사이의 <span class="vocab-tip" data-meaning="적도와 극지방 사이, 사계절이 뚜렷한 지역">중위도</span>에 있어서 사계절이 뚜렷한 거야."</span></p>
+        <p>누리는 지구본에서 우리나라를 찾아보았습니다. 그리고 손가락으로 서울과 제주를 짚었습니다. 지도에서는 한 뼘도 안 되는 거리였지만, 제주가 서울보다 분명히 남쪽, 그러니까 적도 쪽에 더 가까웠습니다.<br><br><span class="dialogue">"그럼 제주가 더 남쪽이라서 햇빛을 더 잘 받고, 그래서 더 따뜻한 거예요?"</span></p>
+        <p>이모가 손뼉을 쳤습니다.<br><br><span class="dialogue">"정답! 그게 첫 번째 열쇠, 위도야. 같은 나라 안에서도 남쪽이 북쪽보다 따뜻한 이유지. 하지만 위도만으로는 다 설명이 안 돼. 나머지 두 열쇠는 내일 몸으로 직접 찾아보자."</span></p>
+        <p><span class="highlight">첫 번째 열쇠는 위도, 지구가 둥글어서 생기는 햇빛의 차이였습니다.</span> 누리는 수첩의 첫 물음표 하나에 시원하게 동그라미를 쳤습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>하루 만의 겨울 여행</h2>
+        <p>다음 날, 이모는 누리를 데리고 한라산으로 향했습니다. 산 아래 귤밭 마을은 봄처럼 포근했습니다. 그런데 차가 산허리를 감아 오를수록 창밖 풍경이 이상해지기 시작했습니다. 초록빛 숲이 점점 성글어지더니, 나뭇가지에 하얀 것이 얹혀 있었습니다. 눈이었습니다.</p>
+        <p>등산로 중턱에 내려서자 겨울이 기다리고 있었습니다. 발밑에서 뽀드득 눈 밟는 소리가 났습니다. 한 시간 전만 해도 귤밭에서 겉옷을 벗고 있었는데 말입니다.<br><br><span class="dialogue">"이모, 우리 방금 봄에서 겨울로 온 거예요? 산 하나에서요?"</span></p>
+        <p>이모가 웃으며 두 번째 열쇠를 꺼냈습니다.<br><br><span class="dialogue">"이게 바로 <span class="vocab-tip" data-meaning="해수면을 기준으로 측정한 높이">해발 고도</span>야. 높이 100미터를 올라갈 때마다 기온이 약 0.6도씩 낮아지거든. 한라산은 높이가 1,900미터가 넘으니, 꼭대기는 산 아래보다 10도도 넘게 추운 셈이지."</span></p>
+        <p>누리는 산 위에서 아래를 내려다보았습니다. 발치에는 눈 덮인 숲, 저 멀리 바닷가에는 주황빛 귤밭. 겨울과 봄이 한 화면에 담겨 있었습니다. 그래서 한여름에도 높은 산꼭대기는 서늘하고, 강원도의 높은 산간 마을은 여름에도 시원한 것이라고 이모는 덧붙였습니다.</p>
+        <p>내려오는 길에 누리는 수첩에 그림을 그렸습니다. 산 아래는 귤, 산 위에는 눈사람. 그리고 그 옆에 두 번째 열쇠를 적었습니다. 높이 올라갈수록 추워진다, 100미터에 약 0.6도. 수첩의 물음표가 하나 더 동그라미로 바뀌었습니다.</p>
+        <p><span class="highlight">두 번째 열쇠는 해발 고도, 높이가 만드는 기온의 차이였습니다.</span> 이제 남은 열쇠는 하나. 그 열쇠는 뜻밖에도 저녁 밥상에서 나타났습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>할머니의 한숨</h2>
+        <p>저녁 밥상에서 이모가 세 번째 열쇠인 바다 이야기를 꺼내려던 참이었습니다. 그런데 텔레비전 뉴스에서 올겨울 기온이 예년보다 높다는 소식이 나오자, 할머니가 낮게 한숨을 쉬었습니다.<br><br><span class="dialogue">"겨울이 자꾸 따뜻해지니, 귤 농사도 예전 같지 않구나."</span></p>
+        <p>누리는 어리둥절했습니다. 따뜻해서 귤이 잘 되는 것 아니었나요. 할머니는 고개를 저었습니다. 귤은 따뜻한 곳을 좋아하지만, 지나치게 더우면 병이 늘고 열매의 맛도 달라진다고 했습니다. 알맞은 온도라는 것이 있는데, 그 알맞음이 조금씩 어긋나고 있다는 것이었습니다.</p>
+        <p><span class="dialogue">"게다가 요즘은 뭍에서도 귤이 난단다. 남쪽 지방에서 감귤을 기르는 농가가 생겼어. 제주에서만 나던 귤이 말이다. 옆 마을 김 씨네는 아예 귤나무를 뽑고 애플망고 하우스를 지었지."</span><br><br>할머니의 목소리가 유난히 쓸쓸하게 들렸습니다.</p>
+        <p>이모가 조용히 설명을 보탰습니다. 지구가 점점 따뜻해지는 지구 온난화 때문에, 더운 지방의 기후가 조금씩 북쪽으로 올라오고 있다는 것입니다. 그래서 남부 지방에서 열대 과일을 기르는 농가가 늘고, 작물들의 고향 지도가 다시 그려지는 중이라고 했습니다.</p>
+        <p>누리는 수첩을 만지작거렸습니다. 위도와 고도의 열쇠를 찾을 때는 신나기만 했는데, 기후라는 것이 할머니의 밭과 살림을 뒤흔들 수도 있다는 생각은 미처 하지 못했습니다. 공부가 갑자기 무거워졌습니다.</p>
+        <p><span class="highlight">기후는 수첩 속 공부가 아니라, 할머니의 일 년 농사가 걸린 삶의 문제였습니다.</span> 그날 밤 할머니 방의 불은 늦도록 꺼지지 않았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>세 번째 열쇠, 바다</h2>
+        <p>다음 날 이모는 누리를 데리고 바닷가로 나갔습니다. 그리고 노트북을 열어 그래프 두 개를 나란히 보여 주었습니다. 서울과 제주의 일 년 기온을 그린 곡선이었습니다. 서울의 곡선은 여름에 높이 솟았다가 겨울에 뚝 떨어지는 롤러코스터 같았고, 제주의 곡선은 그보다 훨씬 완만한 언덕 같았습니다.</p>
+        <p><span class="dialogue">"이게 세 번째 열쇠, 바다야. 바다는 육지보다 데워지는 것도 식는 것도 느리거든. 그래서 바다 가까운 곳은 여름에 덜 덥고 겨울에 덜 추운 <span class="vocab-tip" data-meaning="바다의 영향으로 여름과 겨울의 기온 차이가 작은 기후">해양성 기후</span>를 보인단다."</span></p>
+        <p><span class="dialogue">"반대로 바다에서 먼 내륙은 여름에 더 덥고 겨울에 더 추운 <span class="vocab-tip" data-meaning="내륙에서 나타나며 여름과 겨울의 기온 차이가 큰 기후">대륙성 기후</span>를 보이지. 제주는 남쪽인 데다 사방이 바다라서, 겨울에도 따뜻하고 비가 고른 <span class="vocab-tip" data-meaning="연중 따뜻하고 비가 고르게 내리는 기후">온난 습윤 기후</span>가 되는 거야."</span></p>
+        <p>누리는 마침내 수첩의 첫 물음에 완전한 답을 적을 수 있었습니다. 제주가 서울보다 따뜻한 까닭은 세 가지. 더 남쪽이라서, 사방이 바다라서, 그리고 서울은 위도가 높고 내륙에 가까워 겨울이 더 춥기 때문. 세 개의 열쇠가 마침내 하나의 자물쇠를 철컥 여는 순간이었습니다.</p>
+        <p>그런데 이모는 노트북에 또 하나의 지도를 띄웠습니다. 남해안을 따라 붉은색이 해마다 조금씩 북쪽으로 번져 올라오는 지도였습니다.<br><br><span class="dialogue">"이건 더운 기후가 북쪽으로 올라오는 모습이야. 할머니의 고민은 엄살이 아니란다. 기후의 지도가 정말로 다시 그려지고 있거든."</span></p>
+        <p><span class="highlight">세 개의 열쇠로 자물쇠는 열렸지만, 그 문 뒤에는 더 큰 물음이 서 있었습니다.</span> 변해 가는 기후 앞에서, 할머니의 귤밭은 어떻게 되는 걸까요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>늙은 나무 앞에서</h2>
+        <p>그날 밤, 목이 말라 잠에서 깬 누리는 마루로 나오다가 걸음을 멈췄습니다. 달빛 아래, 할머니가 밭 한가운데 우두커니 서 있었던 것입니다. 밭에서 가장 늙고 굵은 귤나무 앞이었습니다. 잠옷 위에 외투만 걸친 채였습니다. 누리는 부르려던 소리를 삼키고 숨을 죽였습니다.</p>
+        <p>할머니는 나무의 거친 둥치를 가만가만 쓰다듬고 있었습니다. 그리고 혼잣말이 바람결에 실려 왔습니다.<br><br><span class="dialogue">"영감, 우리가 심은 나무들을 내 손으로 뽑게 생겼수. 세상이 이리 변할 줄 누가 알았겠소."</span></p>
+        <p>누리는 그 자리에 얼어붙었습니다. 이 밭의 나무들은 돌아가신 할아버지와 할머니가 젊은 시절 함께 심은 것들이었습니다. 나무마다 두 사람의 사십 년 세월이 나이테처럼 감겨 있었습니다. 애플망고 하우스로 바꾼다는 것은, 그 사십 년을 뿌리째 뽑아낸다는 뜻이었습니다.</p>
+        <p>누리는 방으로 돌아와 이불을 뒤집어썼지만 잠이 오지 않았습니다. 수첩을 펴 보아도 소용없었습니다. 위도, 고도, 바다. 세 개의 열쇠는 세상이 왜 이런지를 설명해 줄 뿐, 할머니가 어떻게 해야 하는지는 말해 주지 않았습니다.</p>
+        <p>아는 것과 도울 수 있는 것은 다른 일이었습니다. 누리는 처음으로 공부가 야속했습니다. 이렇게 열심히 알아냈는데, 정작 할머니의 한숨 하나 덜어 드릴 수 없다니요. 창밖에서는 겨울답지 않게 미지근한 바람이 불고 있었습니다.</p>
+        <p><span class="highlight">달빛 아래 늙은 나무와 할머니는 오래도록 마주 서 있었습니다.</span> 그 뒷모습 앞에서, 누리의 세 열쇠는 아무 문도 열지 못했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>기후에 맞추어 사는 법</h2>
+        <p>다음 날 아침, 누리는 이모를 붙잡고 간밤에 본 것을 털어놓았습니다. 그리고 떨리는 목소리로 물었습니다.<br><br><span class="dialogue">"이모, 기후가 변하면 할머니 밭은 정말 끝이에요? 공부는 왜 그런 건 못 구해요?"</span></p>
+        <p>이모는 누리를 데리고 마루에 앉았습니다.<br><br><span class="dialogue">"누리야, 농부들은 아주 옛날부터 기후에 맞추어 살아온 사람들이란다. 제주 사람들이 귤을 심은 것도, 강원도 높은 산간 마을 사람들이 서늘한 여름을 이용해 고랭지 배추를 기르는 것도, 다 자기 땅의 기후를 읽어 낸 지혜야."</span></p>
+        <p><span class="dialogue">"기후가 변한다는 건 무섭지만, 기후를 아는 사람은 길을 찾을 수 있어. 한꺼번에 다 바꿀 필요도 없단다. 밭의 일부는 귤을 지키고, 볕 좋은 한쪽에서 새 작물을 조금씩 시험해 보면 되지. 중요한 건 짐작이 아니라 우리 밭의 기온을 정확히 아는 거야."</span></p>
+        <p>누리의 머릿속에 반짝 불이 켜졌습니다. 우리 밭의 기온을 정확히 아는 것. 그것이라면 누리도 도울 수 있었습니다. 누리는 얼른 수첩을 새 쪽으로 넘겨 커다랗게 적었습니다. 우리 밭 기후 일지. 아침저녁 기온, 볕이 드는 시간, 바람의 방향을 적는 표를 만들었습니다.</p>
+        <p>이모도 팔을 걷어붙였습니다. 연구소의 자료로 마을의 기온 변화 그래프를 뽑아 오고, 밭 구석구석에 걸 수 있는 온도계를 구해 오기로 했습니다. 세 개의 열쇠는 문을 여는 데서 끝나는 것이 아니라, 문 너머의 길을 밝히는 데 쓰라고 있는 것이었습니다.</p>
+        <p><span class="highlight">기후는 이기고 지는 상대가 아니라, 읽고 맞추어 가는 조건이었습니다.</span> 누리는 이제 할 수 있는 일이 생겼습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>귤밭의 새 지도</h2>
+        <p>방학이 끝나 갈 무렵, 세 사람은 밥상에 둘러앉아 가족 회의를 열었습니다. 누리가 먼저 기후 일지를 펼쳐 보였고, 이모가 마을의 기온 그래프를 내놓았습니다. 할머니는 돋보기를 쓰고 그것들을 오래오래 들여다보았습니다. 방 안에는 시계 초침 소리만 째깍째깍 흘렀습니다.</p>
+        <p>이윽고 할머니가 결정을 내렸습니다.<br><br><span class="dialogue">"귤밭은 지킨다. 너희 할아버지랑 심은 나무들은 내 눈이 감기기 전엔 안 뽑아. 다만 저 아래 볕 좋은 비탈에는 새 과일을 조금 심어 보자꾸나. 세상이 변하면, 변한 만큼만 나도 변하면 되지."</span></p>
+        <p>누리는 가슴이 뜨거워졌습니다. 전부 지키는 것도, 전부 바꾸는 것도 아닌 할머니의 답. 그것은 늙은 나무와 새로운 기후가 함께 사는 길이었습니다. 이모도 고개를 크게 끄덕이며, 시험 재배할 작물을 연구소에서 알아봐 주겠다고 약속했습니다.</p>
+        <p>서울로 돌아가기 전날, 누리는 밭의 나무마다 작은 온도계를 매달았습니다. 그리고 가장 늙은 귤나무 앞에서 한참을 서 있다가, 나무 둥치에 손을 얹고 속삭였습니다.<br><br><span class="dialogue">"할아버지, 밭은 걱정 마세요. 이제 우리가 기후를 읽을 줄 알거든요."</span></p>
+        <p>공항으로 가는 길, 할머니는 누리의 가방에 귤 한 봉지를 꼭꼭 눌러 담아 주었습니다.<br><br><span class="dialogue">"올여름에 또 오너라. 네가 만든 일지가 얼마나 쌓였는지 같이 보자."</span><br><br>누리는 힘차게 고개를 끄덕이며 할머니와 새끼손가락을 걸었습니다.</p>
+        <p><span class="highlight">변화 앞에서 할머니는 다 버리지도, 다 붙들지도 않는 길을 찾았습니다.</span> 그 길을 여는 데에 누리의 수첩 한 권이 보태졌습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>날씨가 아니라 기후</h2>
+        <p>새 학기, 사회 시간에 발표 주제가 정해졌습니다. 우리나라 지역의 특징. 누리는 손을 번쩍 들고 앞으로 나가, 칠판에 물음표 하나를 크게 그렸습니다.<br><br><span class="dialogue">"왜 같은 겨울에 서울에는 눈이 오고, 제주에는 꽃이 필까요?"</span></p>
+        <p>아이들이 웅성거리자 누리는 세 개의 열쇠를 하나씩 꺼냈습니다. 첫째, 위도. 지구가 둥글어서 남쪽일수록 햇빛을 더 받는다는 것. 둘째, 해발 고도. 100미터 오를 때마다 약 0.6도씩 추워져서 한라산 꼭대기엔 눈이 쌓인다는 것. 셋째, 바다. 바다에 둘러싸인 제주는 여름과 겨울의 차이가 작다는 것.</p>
+        <p><span class="dialogue">"기후는 오늘 하루의 날씨가 아니라, 오랜 세월의 평균이에요. 그리고 기후가 다르면 사는 모습도 달라져요. 제주에서는 귤이 자라고, 강원도 높은 곳에서는 고랭지 배추가 자라는 것처럼요."</span><br><br>선생님이 감탄한 얼굴로 고개를 끄덕였습니다.</p>
+        <p>누리는 마지막으로 할머니의 귤밭 이야기를 들려주었습니다. 따뜻해지는 겨울, 뭍으로 올라간 귤, 그리고 밭 절반에 심기로 한 새 과일까지. 기후가 변하면 사람의 살림도 함께 움직인다는 이야기에, 교실은 조용히 귀를 기울였습니다.</p>
+        <p>여름 방학이 되면 누리는 다시 제주에 갈 것입니다. 나무마다 매달아 둔 온도계가 어떤 숫자를 모았을지, 볕 좋은 비탈의 새 나무는 얼마나 자랐을지 벌써 궁금합니다. 누리의 수첩 표지에는 이렇게 적혀 있습니다. 우리 밭 기후 일지, 1권.</p>
+        <p><span class="highlight">눈의 나라와 꽃의 나라는 한 나라였고, 그 비밀은 위도와 고도와 바다에 있었습니다.</span> 그리고 그 비밀을 아는 사람은, 변해 가는 기후 앞에서도 길을 잃지 않습니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(230, 150, 30, 0.15); border-radius: 16px;">
+          <strong style="color: #D2691E; font-size: 20px;">☀️ 「기후는 하루의 날씨가 아니라 삶의 무늬다. 무늬가 변하면 삶도 함께 움직인다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'geo10_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👨‍👩‍👦 한 지붕 세 시대 — 삼대 이야기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/현대문학12/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>👨‍👩‍👦 한 지붕 세 시대 — 삼대 이야기</h1>
+        <p class="subtitle">
+          — 염상섭의 사실주의 소설로 읽는 세대의 갈등 —<br>
+          교과기반 창작도서 · 현대문학 12
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 조 의관:</strong> 가장 윗세대인 할아버지. 재산과 가문의 족보를 무엇보다 소중히 여기는 봉건적 인물.</p>
+          <p><strong>★ 조상훈·조덕기:</strong> 개화기의 아버지 세대 조상훈과, 그 아들인 손자 세대 조덕기. 서로 다른 시대의 가치를 대변한다.</p>
+          <p><strong>★ 감상 길잡이:</strong> 「삼대」는 염상섭이 1931년에 발표한 사실주의 소설로, 한 집안 삼대의 서로 다른 가치관을 통해 격변하는 시대의 세대 갈등을 폭넓게 그려 냈습니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학12/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 배경</span>
+        <h2>수하동 조씨 집안</h2>
+        <p>이야기의 무대는 서울 수하동의 한 부유한 조씨 집안입니다. 이 집안에는 할아버지와 아버지, 그리고 손자에 이르는 삼대가 한 지붕 아래 살고 있습니다. 세 세대는 저마다 다른 시대를 살아온 서로 다른 사람들이었습니다.</p>
+        <p>할아버지 세대는 봉건적인 옛 질서 속에서 자랐고, 아버지 세대는 개화기의 혼란 속에서 새로운 사상을 접했습니다. 그리고 손자 세대는 식민지 근대의 한복판에서 자라났습니다. 한 집안 안에 세 개의 서로 다른 시대가 공존하고 있었던 것입니다.</p>
+        <p>이렇게 서로 다른 세대가 한 지붕 아래 살다 보니, 갈등은 피할 수 없었습니다. 저마다 소중히 여기는 가치가 달랐기 때문입니다. 이 집안은 격변하는 시대를 압축해 보여 주는 하나의 축소판이었습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 삼대가 함께 사는 한 집안의 모습입니다. 이 사실주의 소설은 세 세대의 서로 다른 가치관을 통해, 격변하는 시대의 세대 갈등을 폭넓게 그려 냅니다. 한 가족이 곧 시대의 거울이 됩니다.</p>
+        <p>「삼대」는 이렇게 세 세대가 공존하는 조씨 집안에서 시작됩니다. 염상섭은 이 가족사를 통해, 한 시대가 다음 시대로 넘어가는 격변의 과정을 사실적으로 담아냅니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학12/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 할아버지</span>
+        <h2>할아버지의 세상</h2>
+        <p>할아버지 조 의관은 가장 윗세대를 대표하는 인물입니다. 그는 재산과 가문의 명예를 무엇보다 소중히 여겼습니다. 특히 족보를 사들여 가문을 그럴듯하게 꾸미는 데 많은 돈과 정성을 쏟았습니다.</p>
+        <p>조 의관에게 가장 중요한 것은 집안의 재산을 지키고 가문을 이어 가는 것이었습니다. 그는 봉건적인 옛 가치관 속에서 살아온 사람이었습니다. 새로운 시대의 사상이나 변화에는 관심이 없었습니다.</p>
+        <p>조 의관의 이러한 태도는 옛 질서에 대한 집착을 보여 줍니다. 재산과 족보에 대한 그의 집착은, 저물어 가는 봉건 시대의 가치관을 상징합니다. 그러나 시대는 이미 그를 두고 앞으로 나아가고 있었습니다.</p>
+        <p>이 대목은 할아버지 세대의 가치관을 보여 주는 도입의 단계입니다. 재산과 족보에 대한 집착을 통해, 봉건적 옛 질서의 모습이 그려집니다. 조 의관은 저물어 가는 한 시대를 대표하는 인물입니다.</p>
+        <p>그러나 할아버지의 세상은 아들 세대와 자주 부딪혔습니다. 아버지 조상훈은 할아버지와는 전혀 다른 시대를 살고 있었기 때문입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학12/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 아버지</span>
+        <h2>아버지의 세상</h2>
+        <p>아버지 조상훈은 개화기에 새로운 사상을 접한 지식인이었습니다. 그는 서양의 문물과 기독교를 받아들이고, 한때 나라를 위한 일에도 뜻을 두었습니다. 겉으로는 깨어 있는 신식 인물처럼 보였습니다.</p>
+        <p>그러나 조상훈은 시간이 지나면서 점점 타락해 갔습니다. 처음의 이상은 사라지고, 위선과 방탕에 빠져들었습니다. 겉으로는 점잖은 척했지만, 속으로는 온갖 문제를 안고 있었습니다.</p>
+        <p>조상훈의 이러한 모습은 개화기 지식인의 한계와 몰락을 보여 줍니다. 새로운 사상을 받아들였으나 그것을 끝까지 지켜 내지 못한 것입니다. 이상과 현실 사이에서 무너진 아버지 세대의 초상이었습니다.</p>
+        <p>이 대목은 아버지 세대의 가치관과 그 한계를 보여 주는 전개의 단계입니다. 개화기 지식인 조상훈의 타락을 통해, 이상을 잃은 한 세대의 모습이 그려집니다. 할아버지 세대와도, 손자 세대와도 다른 아버지 세대의 초상입니다.</p>
+        <p>타락한 아버지의 모습은 아들 세대에게 실망을 안겼습니다. 손자 조덕기는 이러한 아버지를 지켜보며 자신의 길을 고민했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학12/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 몰락</span>
+        <h2>날개 잃은 이상</h2>
+        <p>조상훈은 한때 품었던 이상을 완전히 잃어버렸습니다. 나라를 위해 무언가 하려던 젊은 날의 뜻은 사라지고, 그는 방탕한 생활에 빠져들었습니다. 날개를 잃은 새처럼, 그의 이상은 땅에 떨어져 버렸습니다.</p>
+        <p>조상훈은 집안의 돈을 함부로 쓰고, 여러 문제를 일으켰습니다. 아버지 조 의관은 그런 아들을 못마땅하게 여겼습니다. 재산을 지키려는 할아버지와 그것을 탕진하는 아버지 사이에 갈등이 깊어졌습니다.</p>
+        <p>조상훈의 몰락은 개인의 문제만이 아니었습니다. 그것은 이상을 좇았으나 끝내 지켜 내지 못한 한 세대의 좌절을 상징합니다. 격변하는 시대 속에서 방향을 잃은 지식인의 비애가 그의 모습에 담겨 있었습니다.</p>
+        <p>이 대목은 아버지 세대의 몰락을 보여 주는 전개의 단계입니다. 이상을 잃고 타락한 조상훈의 모습이, 한 세대의 좌절을 상징적으로 드러냅니다. 세대 간의 갈등이 이 몰락을 통해 더욱 깊어집니다.</p>
+        <p>이러한 아버지를 지켜보는 손자 조덕기의 마음은 복잡했습니다. 그는 할아버지와 아버지, 어느 쪽과도 다른 자신의 길을 찾아야 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학12/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">전개 · 손자</span>
+        <h2>손자의 세상</h2>
+        <p>손자 조덕기는 식민지 근대의 한복판에서 자란 젊은 세대입니다. 그는 할아버지의 봉건적 가치관도, 아버지의 타락한 모습도 온전히 따를 수 없었습니다. 두 세대 사이에서 자신의 길을 고민하는 인물이었습니다.</p>
+        <p>조덕기는 새로운 사상에 관심을 가지면서도, 어느 한쪽으로 치우치지 않는 신중한 태도를 지녔습니다. 그는 급진적인 사상에도, 낡은 옛 질서에도 거리를 두었습니다. 이러한 중도적인 태도가 그의 특징이었습니다.</p>
+        <p>조덕기는 이 이야기에서 주로 관찰자의 위치에 서 있습니다. 그는 할아버지와 아버지, 그리고 주변 인물들을 지켜보며 시대를 헤아립니다. 그의 시선을 통해 독자는 삼대의 갈등을 균형 있게 바라보게 됩니다.</p>
+        <p>이 대목은 손자 세대의 가치관을 보여 주는 전개의 단계입니다. 어느 쪽에도 치우치지 않는 조덕기의 중도적 태도가 그려집니다. 그의 신중한 시선이 삼대의 갈등을 조망하는 창이 됩니다.</p>
+        <p>조덕기는 할아버지와 아버지 사이의 갈등, 그리고 재산을 둘러싼 다툼을 지켜보며 시대의 모습을 읽어 갔습니다. 그 갈등은 점점 깊어지고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학12/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 갈등</span>
+        <h2>아는 것과 하는 것 사이</h2>
+        <p>조덕기는 새로운 사상을 알면서도, 그것을 실제 행동으로 옮기는 데에는 신중했습니다. 급진적인 친구들은 그를 우유부단하다고 여기기도 했습니다. 아는 것과 하는 것 사이에서 그는 갈등했습니다.</p>
+        <p>조덕기의 이러한 태도는 당대 젊은 지식인의 고민을 보여 줍니다. 새 시대의 사상을 받아들이면서도, 집안과 현실이라는 무게를 함부로 저버릴 수 없었기 때문입니다. 이상과 현실 사이에서 그는 조심스럽게 균형을 잡으려 했습니다.</p>
+        <p>이러한 조덕기의 모습은 할아버지의 집착이나 아버지의 타락과는 또 다른 것이었습니다. 그는 어느 쪽의 잘못도 되풀이하지 않으려 애썼습니다. 세 세대 가운데 가장 균형 잡힌 시선을 지닌 인물이었습니다.</p>
+        <p>이 대목은 손자 세대의 내적 갈등을 보여 주는 위기의 단계입니다. 아는 것과 하는 것 사이에서 고민하는 조덕기의 모습이 그려집니다. 이 신중함이 그의 한계이면서 동시에 그를 돋보이게 하는 특징이기도 합니다.</p>
+        <p>그러던 중, 집안에는 여러 인물이 얽히며 갈등이 한층 복잡해졌습니다. 그 가운데 홍경애라는 인물이 이야기에 파문을 일으켰습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학12/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">위기 · 인물</span>
+        <h2>홍경애라는 사람</h2>
+        <p>홍경애는 한때 아버지 조상훈과 관계가 있었던 여인입니다. 그러나 조상훈에게 버림받은 뒤, 힘겨운 삶을 살아가고 있었습니다. 그의 존재는 조상훈의 위선과 타락을 드러내는 인물이었습니다.</p>
+        <p>홍경애는 어려운 처지 속에서도 새로운 사상에 눈을 뜨며 자신의 삶을 개척해 나갔습니다. 그는 시대의 변화 속에서 등장한, 또 다른 유형의 인물이었습니다. 그의 삶은 격변하는 시대의 한 단면을 보여 줍니다.</p>
+        <p>홍경애를 둘러싼 이야기는 조씨 집안의 갈등과 얽히며 이야기를 더욱 복잡하게 만듭니다. 다양한 인물이 등장하여 저마다의 시대를 대변하는 것이, 이 사실주의 소설의 폭넓은 특징입니다. 여러 인물의 삶이 씨줄과 날줄처럼 엮입니다.</p>
+        <p>이 대목은 다양한 인물을 통해 시대를 폭넓게 그려 내는 위기의 단계입니다. 홍경애라는 인물이 조상훈의 위선을 드러내며 이야기에 파문을 일으킵니다. 여러 인물의 얽힘이 사실주의 소설의 넓은 시야를 보여 줍니다.</p>
+        <p>이렇게 여러 인물과 세대가 얽히면서, 조씨 집안의 갈등은 마침내 절정으로 치달았습니다. 그 중심에는 언제나 재산을 둘러싼 다툼이 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학12/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 대립</span>
+        <h2>한 밥상, 세 개의 세상</h2>
+        <p>조씨 집안의 갈등은 마침내 절정에 이르렀습니다. 재산을 둘러싼 다툼과 세대 간의 가치관 충돌이 한꺼번에 터져 나온 것입니다. 한 밥상에 둘러앉은 삼대는, 사실 서로 다른 세 개의 세상을 살고 있었습니다.</p>
+        <p>할아버지는 재산과 가문을 지키려 했고, 아버지는 그것을 탕진하려 했으며, 손자는 그 사이에서 시대를 헤아리려 했습니다. 같은 핏줄이면서도 세 사람은 도무지 서로를 이해하지 못했습니다. 세대 간의 골은 그만큼 깊었습니다.</p>
+        <p>이 대립은 단순한 가족 간의 다툼이 아니라, 시대와 시대의 충돌이었습니다. 봉건과 개화, 그리고 근대라는 세 시대가 한 집안에서 부딪힌 것입니다. 염상섭은 이 갈등을 통해 격변하는 시대의 모습을 압축해 보여 줍니다.</p>
+        <p>이 대목은 삼대의 갈등이 절정에 이르는 대립의 단계입니다. 한 밥상에 앉은 세 세대가 각자 다른 세상을 사는 모습이 강렬하게 그려집니다. 가족 간의 갈등이 곧 시대 간의 충돌임을 이 장면은 선명하게 드러냅니다.</p>
+        <p>재산을 둘러싼 다툼 끝에, 결국 집안의 어른인 할아버지 조 의관이 세상을 떠나게 됩니다. 그의 죽음은 한 시대의 저묾을 상징했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학12/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">절정 · 전환</span>
+        <h2>누가 옳았을까</h2>
+        <p>할아버지 조 의관이 세상을 떠나자, 집안의 재산과 권한은 새로운 세대로 넘어가게 되었습니다. 봉건적 옛 질서를 대표하던 할아버지의 죽음은, 한 시대가 저물었음을 뜻했습니다. 그러나 그 자리를 이어받을 아버지는 이미 타락해 있었습니다.</p>
+        <p>결국 집안의 중심은 손자 조덕기에게로 향했습니다. 어느 쪽에도 치우치지 않고 균형을 지키려던 그가, 새로운 시대의 중심에 서게 된 것입니다. 세 세대의 갈등 끝에, 시대는 다음 세대에게 그 몫을 넘긴 것입니다.</p>
+        <p>그러나 이 소설은 누가 옳고 누가 그른지를 분명히 판가름하지 않습니다. 할아버지의 집착도, 아버지의 타락도, 손자의 신중함도 모두 각자의 시대가 낳은 모습이었습니다. 작가는 이를 냉정하게 보여 줄 뿐, 섣불리 판단하지 않습니다.</p>
+        <p>이 대목은 세대의 갈등이 다음 세대로 넘어가는 전환의 단계입니다. 할아버지의 죽음과 함께 한 시대가 저물고, 새로운 세대가 그 자리를 잇습니다. 누구의 옳고 그름을 판단하기보다, 시대의 흐름을 냉정하게 보여 주는 것이 이 작품의 시선입니다.</p>
+        <p>조덕기는 무거운 책임을 안고 새로운 시대를 맞이했습니다. 삼대의 이야기는 이렇게 다음 세대에게로 이어지며 마무리를 향해 나아갔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학12/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>세대를 비추는 거울</h2>
+        <p>「삼대」는 한 집안 삼대의 서로 다른 가치관을 통해, 격변하는 시대의 세대 갈등을 폭넓게 그린 사실주의 소설입니다. 봉건적 할아버지, 타락한 아버지, 그리고 신중한 손자는 각각 저물어 가는 시대와 혼란한 시대, 그리고 새로운 시대를 대표합니다. 한 가족이 곧 시대의 거울이 됩니다.</p>
+        <p>이 작품이 지닌 특징은 여럿입니다. 첫째는 삼대의 인물을 통해 세대 간의 가치관 차이를 선명하게 대비한 점이요, 둘째는 여러 인물과 사건을 폭넓게 엮어 당대 사회를 사실적으로 담아낸 점입니다. 염상섭은 이를 냉정하고 객관적인 시선으로 형상화했습니다.</p>
+        <p>무엇보다 이 소설은, 어느 세대가 옳은지를 섣불리 판단하지 않습니다. 각 세대의 모습을 그 시대가 낳은 산물로 보고, 있는 그대로 냉정하게 그려 냅니다. 그 객관적인 시선이 이 작품을 뛰어난 사실주의 소설로 만들어 줍니다.</p>
+        <p>한 지붕 아래 살아가는 세 개의 세상은, 격변하는 시대의 모습을 고스란히 비춥니다. 이 작품은 서로 다른 세대가 어떻게 부딪히고 이어지는가를 보여 주며, 시대의 변화를 읽는 눈을 열어 줍니다. 삼대의 이야기는 오늘날의 세대 갈등을 되돌아보게 하는 거울로 오래도록 남아 있습니다.</p>
+        <p><span class="highlight">한 지붕 아래 세 세대는, 저마다 다른 시대를 살아가는 세 개의 세상입니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'modern12_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

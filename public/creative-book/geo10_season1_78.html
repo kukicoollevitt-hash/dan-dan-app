@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>☀️ 눈 오는 서울, 꽃 피는 제주 — 할머니의 귤밭과 기후의 비밀</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지리10/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>☀️ 눈 오는 서울, 꽃 피는 제주 — 할머니의 귤밭과 기후의 비밀</h1>
+        <p class="subtitle">
+          — 위도·지형·해양이 빚어내는 기후의 원리 —<br>
+          교과기반 창작도서 · 지리 10
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 하늘:</strong> 같은 날 서울과 제주의 겨울이 왜 다른지 궁금해하며 기후의 원리를 파고드는 아이.</p>
+          <p><strong>★ 할머니:</strong> 제주에서 귤 농사를 짓는 어른. 기후에 맞추어 살아온 삶의 지혜를 들려준다.</p>
+          <p><strong>★ 핵심 개념:</strong> 날씨와 기후의 차이, 기후를 결정하는 위도·지형·해양, 기후와 인간 생활.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>같은 날, 다른 겨울</h2>
+        <p>겨울 방학의 어느 날, 서울에 사는 하늘이는 창밖에 소복이 쌓인 눈을 바라보고 있었습니다. 그때 제주에 계신 할머니에게서 영상 통화가 걸려 왔습니다. 화면 속 할머니의 뒤로는 노랗게 익은 귤이 주렁주렁 매달려 있었습니다.</p>
+        <p>하늘이는 눈이 휘둥그레졌습니다. 자신이 사는 서울에는 눈이 펑펑 내리는데, 같은 날 제주에서는 꽃이 피고 귤이 익어 가고 있었기 때문입니다. 같은 나라, 같은 날인데 어떻게 이렇게 다를 수 있는지 도무지 이해가 되지 않았습니다.</p>
+        <p>하늘이는 할머니에게 물었습니다. 왜 제주는 겨울에도 이렇게 따뜻하냐고 말입니다. 할머니는 웃으며, 그것이 바로 기후의 비밀이라고 알쏭달쏭한 대답을 했습니다.</p>
+        <p>이야기의 첫머리에서 하늘이가 느낀 궁금증은, 기후의 원리를 알아 가는 출발점이 됩니다. 같은 날 두 지역의 겨울이 다르다는 사실 속에는, 기후를 결정하는 여러 요인이 숨어 있습니다. 하늘이의 물음은 곧 기후를 배우고 싶다는 마음으로 이어집니다.</p>
+        <p>하늘이는 방학 동안 이 수수께끼를 꼭 풀어 보기로 마음먹었습니다. 눈 오는 서울과 꽃 피는 제주의 비밀이 무엇인지, 하늘이는 몹시 궁금했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>겨울 속의 봄</h2>
+        <p>며칠 뒤, 하늘이는 부모님과 함께 제주의 할머니 댁을 찾았습니다. 비행기에서 내리자마자 하늘이는 깜짝 놀랐습니다. 두꺼운 겨울옷이 무색하게, 제주의 공기는 서울보다 훨씬 포근했습니다.</p>
+        <p>할머니의 귤밭에는 정말로 겨울인데도 초록 잎이 무성하고 노란 귤이 가득했습니다. 서울에서는 상상도 할 수 없는 풍경이었습니다. 하늘이는 마치 겨울 속에 봄이 숨어 있는 것 같다고 생각했습니다.</p>
+        <p>할머니는 제주가 우리나라에서 가장 따뜻한 지역이라고 알려 주었습니다. 그래서 서울에서는 자라기 어려운 귤이 제주에서는 잘 자란다는 것이었습니다. 하늘이는 지역에 따라 자라는 작물이 다르다는 사실이 신기했습니다.</p>
+        <p>이 대목은 하늘이가 기후의 차이를 몸으로 느끼는 사건의 시작입니다. 같은 나라 안에서도 지역에 따라 기후가 다르고, 그에 따라 사람들의 삶도 달라진다는 것을 실감한 것입니다. 제주의 따뜻함은 곧 기후를 배우는 살아 있는 교실이 되었습니다.</p>
+        <p>하늘이는 왜 제주만 이렇게 따뜻한지 그 까닭을 꼭 알고 싶어졌습니다. 할머니는 하나씩 그 열쇠를 알려 주겠다고 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>손전등과 지구본</h2>
+        <p>그날 저녁, 할머니는 지구본과 손전등을 가져와 하늘이 앞에 놓았습니다. 그리고 손전등을 지구본에 비추며 기후의 첫 번째 열쇠를 보여 주었습니다. 손전등 불빛이 지구본의 가운데를 곧게 비추자, 그곳은 환하고 밝았습니다.</p>
+        <p>그런데 지구본의 위아래 끝부분에는 같은 불빛이 비스듬히 닿아 훨씬 어둡고 희미했습니다. 할머니는 이것이 바로 위도에 따른 차이라고 설명했습니다. 적도에 가까운 낮은 위도는 햇빛을 곧게 받아 덥고, 극에 가까운 높은 위도는 비스듬히 받아 춥다는 것이었습니다.</p>
+        <p>하늘이는 우리나라 안에서도 남쪽인 제주가 북쪽인 서울보다 낮은 위도에 있음을 지구본에서 확인했습니다. 그래서 제주가 서울보다 햇빛을 더 곧게 받아 따뜻하다는 것이었습니다. 기후의 첫 번째 비밀이 풀리는 순간이었습니다.</p>
+        <p>이 대목은 하늘이가 기후를 결정하는 첫 번째 요인인 위도를 만나는 전개의 단계입니다. 손전등과 지구본이라는 간단한 도구로, 위도가 왜 기후를 좌우하는지가 또렷이 드러났습니다. 하늘이는 눈에 보이지 않던 원리를 눈앞에서 확인한 것입니다.</p>
+        <p>하늘이는 지구본을 손으로 돌려 보며, 위도가 낮을수록 따뜻해진다는 이치를 마음에 새겼습니다. 그러나 기후의 열쇠가 위도 하나만은 아니라고 할머니는 덧붙였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>하루 만의 겨울 여행</h2>
+        <p>다음 날 할머니는 하늘이를 데리고 한라산 중턱으로 나들이를 떠났습니다. 산 아래는 따뜻했는데, 차를 타고 위로 오를수록 공기가 점점 서늘해졌습니다. 산 중턱에 이르자 놀랍게도 하얀 눈이 쌓여 있었습니다.</p>
+        <p>하늘이는 어리둥절했습니다. 같은 제주인데 산 아래는 귤이 익고 산 위에는 눈이 쌓여 있었기 때문입니다. 할머니는 이것이 기후의 두 번째 열쇠, 곧 지형이라고 설명했습니다.</p>
+        <p>할머니는 높은 곳으로 올라갈수록 기온이 낮아진다고 알려 주었습니다. 그래서 같은 지역이라도 높은 산 위는 서늘하거나 춥고, 낮은 곳은 따뜻하다는 것이었습니다. 위도가 같아도 높이에 따라 기후가 달라진다는 사실을 하늘이는 배웠습니다.</p>
+        <p>이 대목은 하늘이가 기후의 두 번째 요인인 지형을 직접 시도해 확인하는 전개의 단계입니다. 하루 만에 여름과 겨울을 오가는 신기한 경험을 통해, 높이가 기후를 바꾼다는 것을 몸으로 느낀 것입니다. 기후의 비밀이 하나 더 풀린 셈이었습니다.</p>
+        <p>하늘이는 산 위의 눈을 만져 보며, 같은 섬 안에서도 이렇게 다른 세계가 있다는 것에 감탄했습니다. 위도와 지형이라는 두 열쇠가 하늘이의 머릿속에서 조금씩 맞춰지고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>할머니의 한숨</h2>
+        <p>그런데 즐겁던 나들이 끝에, 할머니가 귤밭을 바라보며 깊은 한숨을 내쉬었습니다. 요즘 들어 날씨가 예전 같지 않아 귤 농사가 점점 어려워진다는 것이었습니다. 어떤 해는 너무 따뜻하고, 어떤 해는 갑자기 추워져 귤이 상하곤 했습니다.</p>
+        <p>하늘이는 기후가 사람들의 삶에 이렇게 큰 영향을 준다는 것에 마음이 무거워졌습니다. 그저 신기하게만 여겼던 기후가, 할머니에게는 생계가 걸린 중요한 문제였습니다. 기후를 안다는 것이 단순한 지식이 아님을 하늘이는 깨달았습니다.</p>
+        <p>할머니는 예전에는 기후에 맞추어 농사 시기를 정하면 큰 걱정이 없었다고 했습니다. 그런데 요즘은 그 기후마저 조금씩 달라지는 것 같아 걱정이 크다고 했습니다. 하늘이는 할머니의 근심 어린 표정을 보며 함께 마음이 아팠습니다.</p>
+        <p>이 대목은 기후가 사람의 삶과 얼마나 깊이 얽혀 있는지를 알게 되는 위기의 단계입니다. 기후는 멀리 있는 지식이 아니라, 바로 우리 삶의 바탕임을 하늘이는 실감한 것입니다. 할머니의 한숨은 하늘이에게 기후의 무게를 일깨워 주었습니다.</p>
+        <p>하늘이는 기후를 더 잘 이해하고 싶어졌습니다. 할머니의 귤밭을 지키는 데 기후에 대한 앎이 도움이 될지도 모른다고 생각했기 때문입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>세 번째 열쇠, 바다</h2>
+        <p>하늘이는 여전히 풀리지 않는 의문이 있었습니다. 제주가 위도가 낮아 따뜻하다지만, 비슷한 위도의 다른 곳보다도 유난히 겨울이 포근한 까닭이 궁금했습니다. 할머니는 그것이 기후의 세 번째 열쇠, 곧 바다 때문이라고 설명했습니다.</p>
+        <p>할머니는 제주가 사방이 바다로 둘러싸인 섬이라는 점을 짚어 주었습니다. 바다는 땅보다 천천히 데워지고 천천히 식기 때문에, 겨울에도 주변을 포근하게 감싸 준다는 것이었습니다. 그래서 바다에 둘러싸인 제주는 겨울에도 크게 춥지 않다고 했습니다.</p>
+        <p>하늘이는 바다가 거대한 난로이자 냉장고 같은 역할을 한다는 것에 감탄했습니다. 바다 가까운 곳은 여름에는 시원하고 겨울에는 따뜻해, 기온의 변화가 완만하다는 것이었습니다. 위도와 지형에 이어, 바다까지 기후를 좌우하는 중요한 요인이었습니다.</p>
+        <p>이 대목은 하늘이가 기후의 세 번째 요인인 해양의 영향을 깊이 이해하는 위기의 심화 단계입니다. 여러 요인이 함께 작용해 하나의 기후를 만들어 낸다는 것을 알게 된 것입니다. 기후의 비밀이 마침내 온전한 모습을 드러내기 시작했습니다.</p>
+        <p>하늘이는 위도와 지형, 그리고 바다라는 세 열쇠가 어우러져 제주의 따뜻한 겨울을 만들어 냈음을 깨달았습니다. 흩어져 있던 조각들이 하나의 그림으로 맞춰지고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>늙은 나무 앞에서</h2>
+        <p>여행의 끝 무렵, 할머니는 하늘이를 귤밭 한가운데 서 있는 늙은 귤나무 앞으로 데려갔습니다. 오랜 세월 이 밭을 지켜 온 나무였습니다. 그러나 그 나무는 이상 기후 탓에 열매를 예전만큼 맺지 못하고 있었습니다.</p>
+        <p>할머니는 이 나무처럼 자신도 기후 앞에서 무력함을 느낄 때가 있다고 털어놓았습니다. 사람이 아무리 애를 써도 기후를 마음대로 바꿀 수는 없기 때문이었습니다. 하늘이는 그 말에 마음이 먹먹해졌습니다.</p>
+        <p>이 대목은 기후 앞에서 사람이 느끼는 한계를 마주하는 절정의 바닥입니다. 그러나 바로 이 지점에서 하늘이는 그동안 배운 것을 곰곰이 되새기게 됩니다. 기후를 바꿀 수는 없어도, 기후를 이해하고 그에 맞추어 살아갈 수는 있다는 생각이 떠올랐습니다.</p>
+        <p>하늘이는 늙은 나무를 바라보며, 할머니가 오랜 세월 어떻게 기후에 맞추어 농사를 지어 왔는지를 떠올렸습니다. 기후를 원망하기보다 그에 맞추어 지혜롭게 살아온 것이 할머니의 삶이었습니다. 그 사실이 하늘이에게 작은 희망을 주었습니다.</p>
+        <p>하늘이는 기후를 이겨 내는 것이 아니라 함께 살아가는 길을 찾아야 함을 어렴풋이 느꼈습니다. 할머니의 지혜 속에 그 답이 있을 것 같았습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>기후에 맞추어 사는 법</h2>
+        <p>할머니는 하늘이에게, 기후에 맞추어 사는 것이 곧 지혜라고 일러 주었습니다. 제주 사람들은 따뜻한 기후에 맞는 귤을 기르고, 바람 많은 날씨에 맞추어 돌담을 쌓아 왔다는 것이었습니다. 기후는 원망의 대상이 아니라, 삶의 방식을 정해 주는 스승이었습니다.</p>
+        <p>그 순간 하늘이는 할머니가 하려던 말의 뜻을 깨달았습니다. 기후란 그날그날의 날씨가 아니라, 오랜 세월 그 땅에 쌓여 온 삶의 무늬라는 것을 말입니다. 그 무늬에 맞추어 집을 짓고 농사를 지으며 사람들이 살아왔던 것입니다.</p>
+        <p>하늘이는 눈 오는 서울과 꽃 피는 제주의 차이가, 단순한 날씨의 차이가 아님을 깨달았습니다. 그것은 위도와 지형, 바다가 오랜 세월 빚어낸 저마다의 삶의 무늬였습니다. 지역마다 다른 기후가 곧 지역마다 다른 삶을 만들어 낸 것입니다.</p>
+        <p>이 대목은 이야기의 정신적 절정, 곧 하늘이의 각성입니다. 기후를 결정하는 원리를 넘어, 기후가 곧 사람의 삶을 빚어내는 바탕임을 온전히 이해한 것입니다. 하늘이의 궁금증은 이렇게 깊은 깨달음으로 열매를 맺었습니다.</p>
+        <p>하늘이는 할머니의 귤밭을 새로운 눈으로 바라보았습니다. 그 밭에는 제주의 기후와 할머니의 지혜가 함께 담겨 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>귤밭의 새 지도</h2>
+        <p>하늘이는 서울로 돌아가기 전, 할머니와 함께 귤밭의 지도를 새로 그려 보았습니다. 어느 자리가 햇빛을 잘 받고, 어느 곳이 바람을 덜 타는지를 꼼꼼히 살펴 표시했습니다. 기후의 원리를 알고 나니, 같은 밭도 완전히 다르게 보였습니다.</p>
+        <p>하늘이는 위도와 지형, 바다가 어떻게 이 작은 밭에까지 영향을 주는지를 하나하나 짚어 보았습니다. 밭의 위치와 높낮이, 바다와의 거리에 따라 귤이 자라는 정도가 달라진다는 것을 알게 된 것입니다. 기후에 대한 앎이 실제 농사에 도움이 될 수 있음을 확인했습니다.</p>
+        <p>이 대목은 하늘이가 배운 것을 실제 삶에 적용해 보는 결말의 돌파입니다. 지식이 책 속에만 머물지 않고, 할머니의 귤밭을 지키는 데 쓰일 수 있음을 보여 준 것입니다. 앎은 삶과 이어질 때 비로소 힘을 발휘합니다.</p>
+        <p>할머니는 하늘이가 그린 새 지도를 보며 대견해했습니다. 어린 손녀가 기후의 원리를 이렇게 깊이 이해했다는 사실에 마음이 흐뭇했습니다. 하늘이의 궁금증이 귤밭에 작은 희망을 더해 준 것입니다.</p>
+        <p>하늘이는 이 지도를 할머니께 선물로 남기고 서울로 향했습니다. 눈 오는 서울로 돌아가면서도, 하늘이의 마음속에는 제주의 따뜻한 기후가 담겨 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리10/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>날씨가 아니라 기후</h2>
+        <p>서울로 돌아온 하늘이는 창밖에 내리는 눈을 다시 바라보았습니다. 그러나 이제 그 눈은 그저 오늘의 날씨가 아니라, 서울이라는 땅에 오래 쌓여 온 기후의 한 모습으로 보였습니다. 하늘이의 눈이 그 겨울을 지나며 부쩍 자라 있었습니다.</p>
+        <p>이 이야기가 우리에게 남기는 것은 분명합니다. 날씨는 그날그날 변하는 대기의 상태이고, 기후는 오랜 세월에 걸쳐 나타나는 그 지역의 평균적인 대기 상태라는 사실입니다. 그리고 그 기후는 위도와 지형, 바다에 따라 지역마다 다르게 나타납니다.</p>
+        <p>무엇보다 이 이야기는, 기후가 곧 사람들의 삶을 빚어낸다는 것을 일깨웁니다. 기후에 맞추어 작물을 기르고 집을 지으며 살아온 것이 바로 각 지역의 삶의 무늬입니다. 기후를 이해하는 것은 곧 사람들의 삶을 이해하는 일입니다.</p>
+        <p>하늘이는 앞으로도 여러 지역의 기후와 그에 맞춘 삶의 모습을 눈여겨보기로 했습니다. 눈 오는 서울과 꽃 피는 제주가 모두 저마다의 소중한 삶의 무늬임을 하늘이는 이제 알았습니다. 기후는 하늘이에게 세상을 읽는 새로운 눈이 되어 주었습니다.</p>
+        <p><span class="highlight">기후는 하루의 날씨가 아니라, 오랜 세월 그 땅에 쌓여 온 삶의 무늬입니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'geo10_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

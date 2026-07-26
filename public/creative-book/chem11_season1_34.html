@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚡ 레몬에서 나온 전기 — 반디와 건전지의 비밀</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작화학11/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(106, 17, 203, 0.15);
+      color: #6a11cb;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6a11cb;
+      font-weight: 600;
+    }
+
+    .vocab-tip {
+      position: relative;
+      color: #6a11cb;
+      border-bottom: 1px dotted #6a11cb;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+    .story-card .dialogue {
+      color: #2575fc;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #a78bfa;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(106, 17, 203, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(37, 117, 252, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 117, 252, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⚡ 레몬에서 나온 전기 — 반디와 건전지의 비밀</h1>
+        <p class="subtitle">
+          — 에너지는 사라지지 않아요, 방향을 바꾸어 오갈 뿐이지요 —<br>
+          교과기반 창작도서 · 화학 11 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>⚡ 등장인물 소개</h3>
+          <p><strong>★ 반디 (주인공):</strong> 호기심 많은 소녀예요. 캠핑 전날 꺼져 버린 손전등에서 시작해, 건전지 속에 숨은 전기의 비밀을 끝까지 파고들지요.</p>
+          <p><strong>★ 전파상 할아버지:</strong> 골목 끝 오래된 전자제품 수리점 주인이에요. 레몬 한 알로 반디의 눈을 번쩍 뜨게 하지요.</p>
+          <p><strong>★ 아연판 (은빛 금속):</strong> 자기 몸을 조금씩 녹여 가며 작은 알갱이를 내보내는, 전지의 숨은 일꾼.</p>
+          <p><strong>★ 구리판 (붉은 금속):</strong> 아연이 보낸 알갱이를 받아 전기의 길을 완성하는 짝꿍.</p>
+          <p><strong>★ 물:</strong> 전기가 흘러들면 수소와 산소로 쪼개지는, 이야기의 마지막 열쇠.</p>
+          <p><strong>★ 다 쓴 건전지들:</strong> 서랍 속에 쌓여 있는 것들. 끝난 줄 알았던 이야기의 실마리.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 필요의 갈등:</strong> 새 건전지를 사면 그만 vs. 전기가 나오는 까닭을 알고 싶다</p>
+          <p><strong>② 방향의 갈등:</strong> 화학 에너지를 전기로 바꾸는 전지 vs. 전기로 물질을 쪼개는 전기 분해</p>
+          <p><strong>③ 수명의 갈등:</strong> 한 번 쓰면 끝나는 1차 전지 vs. 다시 채워 쓰는 2차 전지</p>
+          <p><strong>④ 운명의 갈등:</strong> 쓰레기로 쌓여 가는 건전지 vs. 세상을 움직이는 깨끗한 에너지</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학11/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>꺼진 손전등</h2>
+        <p>반디는 내일이 몹시 기다려졌어요.<br>
+온 가족이 캠핑을 떠나는 날이기 때문이지요.<br>
+그런데 잠들기 전, 손전등을 켜 보는 순간<br>
+반디의 얼굴이 굳어졌어요.<br>
+스위치를 아무리 눌러도<br>
+불이 들어오지 않았던 거예요.</p>
+        <p>뚜껑을 열자<br>
+굵은 건전지 두 개가 나왔어요.<br>
+겉모습은 멀쩡했지요.<br>
+어른들은 건전지가 다 닳았으니<br>
+새것으로 갈아 끼우라고 해요.<br>
+하지만 대체 무엇이 닳았다는 것인지,<br>
+반디는 알 수 없었지요.</p>
+        <p>반디는 책상 서랍을 열어 보았어요.<br>
+그 안에는 쓰고 버리지 못한<br>
+건전지가 수북했지요.<br><br><span class="dialogue">"내일 가게에서 새 건전지 사면 되잖아. 뭘 그렇게 심각하게 들여다봐?"</span><br><br>맞는 말이었지만, 반디는<br>
+쉽게 서랍을 닫지 못했어요.</p>
+        <p>이 작은 통 안에 무엇이 들어 있어서<br>
+전기가 나오는 걸까.<br>
+왜 시간이 지나면<br>
+그 전기는 더 나오지 않게 되는 걸까.<br>
+<span class="highlight">반디는 건전지 속에 숨은 전기의 비밀을 꼭 알아내고 싶었어요.</span><br>
+마침 골목 끝에는 전자제품을 고쳐 주는<br>
+<span class="vocab-tip" data-meaning="라디오나 텔레비전 같은 전자제품을 고쳐 주는 가게">전파상</span> 할아버지가 계셨지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학11/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>레몬에 불이 켜졌다</h2>
+        <p>캠핑에서 돌아온 다음 날 아침,<br>
+반디는 다 쓴 건전지를 주머니에 넣고<br>
+전파상으로 달려갔어요.<br><br><span class="dialogue">"할아버지, 이 안에 뭐가 들었길래 전기가 나와요? 그리고 왜 다 쓰고 나면 끝이에요?"</span></p>
+        <p>할아버지가 가져온 것은 뜻밖에도<br>
+노란 레몬 한 알이었어요.<br>
+할아버지는 레몬에 은빛 금속판과<br>
+붉은 금속판을 하나씩 푹 꽂았지요.<br>
+그리고 두 금속판을 가느다란 전선으로<br>
+꼬마전구에 이었어요.</p>
+        <p>그런데 그 순간, 꼬마전구에<br>
+희미한 주황빛 불이 들어왔어요.<br>
+건전지도 없고 콘센트도 없는데,<br>
+시큼한 레몬 한 알에서<br>
+전기가 나온 거예요.<br><br><span class="dialogue">"레몬이... 지금 건전지가 된 거예요?"</span><br><br><span class="dialogue">"그래. 전기는 발전소에서만 오는 게 아니란다. 서로 다른 두 금속과 시큼한 즙만 있으면 이렇게 전기를 만들 수 있어. 네 손전등 건전지 속에서 일어나는 일도 사실 이것과 똑같단다."</span></p>
+        <p><span class="highlight">시큼한 레몬 한 알이 반디의 눈앞에서 작은 건전지가 되었어요.</span><br>
+건전지의 비밀이 이 레몬 안에도<br>
+똑같이 들어 있다는 뜻이었지요.<br>
+반디의 가슴이 콩닥콩닥 뛰기 시작했어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학11/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>볼타 할아버지의 전지</h2>
+        <p>그날부터 반디는 학교가 끝나면<br>
+곧장 전파상으로 갔어요.<br>
+할아버지는 낡은 공책을 펼치더니,<br>
+아주 오래전 과학자의 이야기를 들려주었지요.<br><br><span class="dialogue">"이백 년쯤 전에 볼타라는 과학자가 살았단다. 볼타는 아연판과 구리판을 산성 액체에 담그고 두 판을 전기가 흐르는 줄, <span class="vocab-tip" data-meaning="전기가 흐르도록 잇는 금속 줄">도선</span>으로 이으면 전기가 흐른다는 사실을 알아냈지. 그렇게 만든 것이 세계 최초의 화학 전지, 바로 <span class="vocab-tip" data-meaning="아연과 구리로 만든 세계 최초의 화학 전지">볼타 전지</span>란다."</span></p>
+        <p>어떻게 금속에서 전기가 나올까요.<br>
+아연은 구리보다 성질이 활발한 금속이에요.<br>
+그래서 산성 액체 속에서 아연판은<br>
+눈에 보이지 않는 아주 작은 알갱이, 곧<br>
+<span class="vocab-tip" data-meaning="전기를 나르는, 눈에 보이지 않는 아주 작은 알갱이">전자</span>를 밖으로 내보내지요.<br>
+그 작은 알갱이들이 도선을 타고<br>
+구리판 쪽으로 우르르 몰려가는 것이<br>
+바로 전기의 흐름이에요.</p>
+        <p><span class="dialogue">"금속 속에 잠들어 있던 화학 에너지가 전기 에너지로 바뀌어 나오는 거야. 이런 장치를 <span class="vocab-tip" data-meaning="화학의 힘을 전기로 바꾸는 장치">화학 전지</span>라고 부른단다. 레몬 전지도, 네 손전등의 건전지도 모두 화학 전지의 식구들이지."</span></p>
+        <p><span class="highlight">전기는 두 금속 사이를 오가는 작은 알갱이들의 흐름이었어요.</span><br>
+반디는 놀라웠지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학11/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>소금물의 비밀</h2>
+        <p>그날 저녁 반디는 집에서<br>
+직접 전지를 만들어 보기로 했어요.<br>
+유리컵에 맹물을 받고,<br>
+아연판과 구리판을 담근 뒤<br>
+전선으로 꼬마전구에 이었지요.<br>
+그런데 아무리 기다려도<br>
+전구에는 불이 들어오지 않았어요.</p>
+        <p>레몬에서는 분명히 불이 켜졌는데,<br>
+맑은 물에서는 감감무소식이었지요.<br>
+다음 날 반디는 시무룩한 얼굴로<br>
+할아버지를 찾아갔어요.<br><br><span class="dialogue">"맹물은 전기를 거의 통하게 하지 못한단다. 하지만 물에 소금이나 산을 녹이면 달라져. 이렇게 물에 녹아 전기를 통하게 해 주는 물질을 <span class="vocab-tip" data-meaning="물에 녹아 전기를 통하게 하는 물질">전해질</span>이라고 하지. 레몬의 시큼한 즙이 바로 전해질 노릇을 한 거야."</span></p>
+        <p>반디는 한달음에 집으로 돌아와<br>
+물에 소금을 듬뿍 녹였어요.<br>
+소금물에 두 금속판을 담그고 전선을 잇자,<br>
+꼬마전구에 발그스름한 불이 들어왔지요.<br>
+반디는 너무 기뻐서<br>
+저도 모르게 소리를 질렀어요.</p>
+        <p>신이 난 반디는 감자와 레몬에도<br>
+금속판을 꽂아 전지를 여러 개 만들었어요.<br>
+반디의 책상은 어느새<br>
+작은 실험실이 되었지요.<br>
+<span class="highlight">전기가 흐르려면 두 금속 사이에 전해질이 있어야 했어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학11/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>하룻밤 만에</h2>
+        <p>다음 날 아침, 반디는 눈을 뜨자마자<br>
+책상으로 달려갔어요.<br>
+그런데 어제 그토록 잘 켜지던 꼬마전구가<br>
+하나도 켜지지 않았지요.<br>
+소금물 전지도, 레몬 전지도, 감자 전지도<br>
+모두 하룻밤 사이에 힘을 잃어버린 거예요.</p>
+        <p>금속판을 꺼내 보고 반디는 깜짝 놀랐어요.<br>
+은빛으로 반짝이던 아연판이<br>
+거뭇거뭇하게 삭아 있었던 거예요.<br>
+레몬은 쭈글쭈글해졌고,<br>
+소금물도 뿌옇게 흐려져 있었지요.<br><br><span class="dialogue">"전지는 공짜로 전기를 만드는 게 아니란다. 아연이 제 몸을 조금씩 녹여 없애는 만큼 전기가 나오는 거야. 재료를 다 쓰고 나면 전지의 일도 거기서 끝난단다."</span></p>
+        <p>반디는 서랍 속에 쌓여 있던<br>
+다 쓴 건전지들을 떠올렸어요.<br>
+겉은 멀쩡해 보여도, 안에서는<br>
+전기를 만들어 내던 재료가<br>
+이미 바닥나 있었던 것이지요.<br>
+손전등 하나를 밝히는 일이<br>
+새삼 대단하게 느껴졌어요.</p>
+        <p><span class="highlight">전지의 힘은 공짜가 아니라, 재료가 제 몸을 내어 주며 만든 것이었어요.</span><br>
+그렇다면 다 쓴 건전지는<br>
+정말 이대로 끝일까요.<br>
+반디의 마음속에<br>
+새로운 물음표가 떠올랐지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학11/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>한 번뿐인 전지, 다시 쓰는 전지</h2>
+        <p>며칠 뒤 반디는 스마트폰을 충전하는<br>
+할아버지를 보고 문득 물었어요.<br><br><span class="dialogue">"할아버지, 전지는 다 한 번 쓰면 끝인 거예요? 그런데 스마트폰은 왜 충전하면 다시 살아나요?"</span><br><br><span class="dialogue">"드디어 아주 좋은 질문이 나왔구나. 전지에도 두 갈래가 있단다. 시계나 리모컨에 넣는 건전지는 <span class="vocab-tip" data-meaning="한 번 쓰면 다시 충전할 수 없는 전지">1차 전지</span>야. 한 번 쓰고 나면 다시 채울 수가 없지."</span></p>
+        <p><span class="dialogue">"하지만 스마트폰 속에 든 <span class="vocab-tip" data-meaning="충전해서 다시 쓸 수 있는, 스마트폰에 쓰이는 전지">리튬 이온 전지</span>는 다르단다. 다 쓰고 나서도 충전하면 다시 쓸 수 있는 <span class="vocab-tip" data-meaning="충전해서 여러 번 쓸 수 있는 전지">2차 전지</span>거든. 전기를 다 쓰는 <span class="vocab-tip" data-meaning="전지의 전기를 다 써 버리는 것">방전</span>과 충전을 수백 번 넘게 되풀이할 수 있지."</span></p>
+        <p>반디는 고개를 갸웃했어요.<br>
+같은 전지인데 왜 어떤 것은<br>
+다시 채울 수 있고,<br>
+어떤 것은 그럴 수 없는 걸까요.<br><br><span class="dialogue">"그 답은 전지를 거꾸로 뒤집는 데 있단다. 전기를 만드는 게 아니라, 거꾸로 전기를 흘려 넣는 거야. 내일 오면 아주 재미있는 실험을 보여 주마."</span></p>
+        <p><span class="highlight">한 번 쓰면 끝나는 1차 전지, 다시 채워 쓰는 2차 전지.</span><br>
+그 차이의 비밀이 '거꾸로'라는<br>
+한마디에 숨어 있다니,<br>
+반디는 내일이 기다려져 견딜 수가 없었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학11/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>물을 쪼개는 전기</h2>
+        <p>다음 날 할아버지는 투명한 그릇에<br>
+물을 담고 전해질을 조금 녹였어요.<br>
+그리고 연필심처럼 생긴 막대 두 개를 꽂은 뒤,<br>
+굵직한 건전지에 전선으로 이었지요.<br>
+전기를 만드는 것이 아니라, 거꾸로<br>
+전기를 물속에 흘려 넣는 실험이었어요.</p>
+        <p>잠시 뒤 놀라운 일이 벌어졌어요.<br>
+두 막대에서 뽀글뽀글<br>
+거품이 피어오르기 시작한 거예요.<br><br><span class="dialogue">"전기가 물을 쪼개고 있는 거란다. 한쪽에서는 <span class="vocab-tip" data-meaning="가장 가벼운 기체. 물을 쪼개면 나옴">수소</span> 기체가, 다른 쪽에서는 산소 기체가 나오지. 잘 보렴, 수소 쪽 거품이 산소 쪽의 두 배란다. 이것이 바로 <span class="vocab-tip" data-meaning="전기를 흘려 넣어 물질을 쪼개는 것">전기 분해</span>야."</span></p>
+        <p>반디는 눈앞의 광경이 믿기지 않았어요.<br>
+그 흔하디흔한 물이 전기의 힘으로<br>
+두 가지 기체로 갈라지고 있었지요.<br>
+전지가 화학의 힘으로 전기를 만들었다면,<br>
+여기서는 반대로 전기의 힘으로<br>
+화학 변화를 일으키고 있는 것이었어요.</p>
+        <p>그런데 집으로 돌아온 반디의 머릿속은<br>
+오히려 뒤죽박죽이 되었어요.<br>
+서로 반대인 이 실험이 대체<br>
+충전과 무슨 상관이라는 걸까요.<br>
+<span class="highlight">알 듯 말 듯한 답이 자꾸만 손가락 사이로 빠져나갔지요.</span><br>
+반디는 끝내 공책을 덮고<br>
+이불 속으로 파고들었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학11/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>거꾸로 흐르는 강</h2>
+        <p>새벽녘, 이불 속에서 뒤척이던 반디는<br>
+벌떡 일어나 앉았어요.<br>
+머릿속에 흩어져 있던 조각들이<br>
+한순간에 착착 맞춰졌기 때문이지요.<br>
+화학 전지는 화학 에너지를<br>
+전기 에너지로 바꾸고,<br>
+전기 분해는 전기 에너지를<br>
+화학 에너지로 바꿔요.<br>
+둘은 서로 정반대 방향의 일이었지요.</p>
+        <p>아침이 밝자마자 반디는<br>
+전파상으로 달려갔어요.<br><br><span class="dialogue">"충전이란 게 바로 이거죠? 다 쓴 전지에 거꾸로 전기를 흘려 넣어서, 변해 버린 재료를 원래대로 되돌리는 거예요! 물을 쪼개는 전기 분해처럼요!"</span><br><br><span class="dialogue">"바로 그거란다. 2차 전지는 거꾸로 전기를 흘리면 재료가 처음 모습으로 되돌아가는 물질로 만들어졌어. 하지만 1차 전지의 재료는 한번 변하면 되돌아가지 못한단다. 그래서 한 번뿐인 거야."</span></p>
+        <p>반디는 가슴이 뻥 뚫리는 것 같았어요.<br>
+에너지는 쓰고 나면<br>
+그냥 사라져 버리는 것이 아니었지요.<br>
+강물이 방향을 바꾸어 흐르듯<br>
+오가고 있을 뿐이었어요.</p>
+        <p><span class="highlight">전지와 전기 분해는 서로 반대 방향으로 도는 하나의 바퀴였어요.</span><br>
+스스로 답을 찾아낸 이 새벽을,<br>
+반디는 오래 잊지 못할 것 같았지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학11/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>물만 남기는 자동차</h2>
+        <p>할아버지는 반디를 위해<br>
+잡지 한 권을 펼쳤어요.<br>
+사진 속에는 매끈한 자동차가<br>
+소리 없이 도로를 달리고 있었지요.<br><br><span class="dialogue">"이건 수소로 달리는 자동차란다. 이 차에는 <span class="vocab-tip" data-meaning="수소와 산소를 만나게 해 전기를 얻는 깨끗한 전지">연료 전지</span>라는 특별한 전지가 실려 있지."</span></p>
+        <p>물을 전기로 쪼개면<br>
+수소와 산소가 나오듯,<br>
+거꾸로 수소와 산소를 다시 만나게 하면<br>
+전기가 나와요.<br>
+그리고 그 뒤에 남는 것은<br>
+매캐한 연기가 아니라 깨끗한 물뿐이지요.</p>
+        <p>전기 분해가 하는 일은<br>
+그뿐만이 아니었어요.<br>
+숟가락이나 수도꼭지 겉에<br>
+반짝이는 금속을 얇게 입히는<br>
+<span class="vocab-tip" data-meaning="전기를 이용해 금속 겉면에 다른 금속을 얇게 입히는 것">전기 도금</span>도 전기 분해의 힘이지요.<br>
+전기 자동차에는 커다란<br>
+리튬 이온 전지가 실려 있어요.</p>
+        <p>반디는 마음을 정했어요.<br>
+모아 둔 용돈으로 충전해서 다시 쓰는<br>
+손전등을 마련하기로요.<br>
+그리고 다 쓴 건전지들을 몽땅 꺼내<br>
+동네 폐건전지 수거함에 넣었지요.<br>
+<span class="highlight">레몬 한 알에서 만난 그 작은 원리가 세상 곳곳에서 부지런히 일하고 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작화학11/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>반디의 불빛</h2>
+        <p>이듬해 캠핑을 떠나는 날 밤,<br>
+텐트 앞에 앉은 반디의 손에는<br>
+충전해서 쓰는 새 손전등이 들려 있었어요.<br>
+스위치를 누르자 하얀 빛줄기가<br>
+어둠을 시원하게 갈랐지요.</p>
+        <p>이제 반디는 이 빛의 정체를 알아요.<br>
+전지 속 재료에 잠들어 있던 화학 에너지가<br>
+작은 알갱이들의 흐름, 곧<br>
+전기로 바뀌어 나온 것이지요.<br>
+집에 돌아가 충전기를 꽂으면,<br>
+전기는 거꾸로 흘러들어<br>
+다시 화학 에너지로 조용히 잠들 거예요.</p>
+        <p>반디는 다 쓴 건전지를<br>
+함부로 버리지 않게 되었어요.<br>
+그 작은 통 하나가 제 몸을 녹여 가며<br>
+일해 온 것을 알기 때문이지요.<br>
+전기를 아껴 쓰는 버릇도 생겼어요.<br><br><span class="dialogue">"너 요즘 왜 이렇게 건전지 박사가 됐어?"</span><br><br><span class="dialogue">"이 안에서 에너지가 여행하고 있거든. 화학에서 전기로, 전기에서 다시 화학으로."</span></p>
+        <p><span class="highlight">꺼진 손전등 하나에서 시작된 궁금증이 반디를 여기까지 데려왔어요.</span><br>
+세상의 에너지는 사라지지 않고,<br>
+모습을 바꾸며 우리 곁을 오가고 있었지요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(37, 117, 252, 0.15); border-radius: 16px;">
+          <strong style="color: #2575fc; font-size: 20px;">⚡ 「에너지는 사라지지 않아요. 방향을 바꾸어 오갈 뿐이지요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/chem11_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

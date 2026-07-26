@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🕯️ 비녀 하나의 마음 — 빈처 이야기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/현대문학09/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🕯️ 비녀 하나의 마음 — 빈처 이야기</h1>
+        <p class="subtitle">
+          — 가난해도 변하지 않는 것이 있다 —<br>
+          교과기반 창작도서 · 현대문학 09 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🕯️ 등장인물 소개</h3>
+          <p><strong>★ 나 (주인공):</strong> 가난한 문학 청년이에요. 아내에게 미안하면서도 글 쓰는 꿈을 놓지 못해요.</p>
+          <p><strong>★ 아내:</strong> 불평 한마디 없이 남편을 돕는 사람이에요. 바느질로 살림을 꾸려요.</p>
+          <p><strong>★ 친구 T:</strong> 회사에 다니며 넉넉하게 사는 친구예요. "취직하라"는 뼈아픈 말을 해요.</p>
+          <p><strong>★ 비녀:</strong> 아내가 아끼던 단 하나의 보물이에요. 말없는 사랑을 담아 책상 위에 놓여요.</p>
+          <p><strong>★ 원고지와 펜:</strong> 돈은 안 되지만 포기할 수 없는 꿈의 도구예요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 살림의 갈등:</strong> 포기할 수 없는 꿈 vs. 밥조차 어려운 가난</p>
+          <p><strong>② 부부의 갈등:</strong> 미안한 남편 vs. 말없이 응원하는 아내</p>
+          <p><strong>③ 길의 갈등:</strong> 월급 받는 T의 길 vs. 가난해도 꿈을 좇는 나의 길</p>
+          <p><strong>④ 마음의 갈등:</strong> 글이 무슨 소용인가 vs. 그래도 다시 펜을 드는 마음</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>방 한 칸의 살림</h2>
+        <p>나는 가난한 문학 청년이에요.<br>
+아내와 나는 방 한 칸짜리 <span class="vocab-tip" data-meaning="남의 집 방을 빌려 세를 내고 사는 것">셋방</span>에서 살아요.<br>
+세간이라야 낡은 책상 하나와 이불 한 채, 책 몇 권이 전부이지요.</p>
+        <p>나는 날마다 책상 앞에 앉아 글을 써요.<br>
+신문사에 글을 보내 보지만 실리는 일은 드물어요.<br>
+<span class="vocab-tip" data-meaning="글을 쓴 값으로 받는 돈">원고료</span>도 고작 몇 푼뿐이지요.</p>
+        <p>우리 집 밥상에는 늘 시래기국과 보리밥뿐이에요.<br>
+그래도 아내는 정갈하게 상을 차려 내오지요.<br><br><span class="dialogue">"찬이 없어서 어쩌지요. 그래도 많이 드세요."</span><br><br>아내의 목소리에는 언제나 미안함이 먼저 배어 있어요.</p>
+        <p>미안한 쪽은 나인데, 아내가 먼저 미안하다고 말해요.<br>
+나는 그 말을 들을 때마다 목이 메어요.<br>
+당장 돈을 벌 방법이 내게는 없으니까요.</p>
+        <p>이 하얀 종이가 밥이 되는 날이 올까.<br>
+그런 생각이 들 때도 있어요.<br>
+그래도 나는 펜을 놓지 못해요.<br>
+글을 쓰는 것만이 내가 아는 전부이거든요.</p>
+        <p><span class="highlight">가난한 부부의 살림은 방 한 칸에 다 들어가고도 남았어요.</span> 그러나 그 방에는 눈에 보이지 않는 것이 하나 더 살고 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>바느질하는 밤</h2>
+        <p>아내는 그런 나를 묵묵히 도우며 살림을 꾸려요.<br>
+불평 한마디 하는 법이 없지요.<br>
+쌀이 떨어져 가도 아내는 어떻게든 상을 차려 내요.</p>
+        <p>살림에 보태려고 아내는 <span class="vocab-tip" data-meaning="돈을 받고 남의 바느질을 해 주는 일">바느질품</span>을 팔아요.<br>
+남의 옷을 받아다 밤늦도록 꿰매는 고단한 일이지요.<br>
+내가 원고지 앞에서 끙끙대는 동안,<br>
+아내는 등잔불 반대편에서 말없이 바늘을 놀려요.</p>
+        <p>밤이 깊으면 방 안에는 두 가지 소리만 남아요.<br>
+내 펜이 종이를 긁는 소리.<br>
+아내의 바늘이 천을 지나는 소리.<br>
+그 소리를 듣고 있으면 코끝이 시큰해지지요.</p>
+        <p>아내의 얼굴은 날로 <span class="vocab-tip" data-meaning="몸이 마르고 파리해지는 것">수척</span>해져 가요.<br>
+손끝은 바늘에 찔려 성한 곳이 없지요.<br>
+그런데도 아내는 나를 볼 때마다 웃어요.<br><br><span class="dialogue">"당신 글이 신문에 실리는 날, 제일 먼저 읽을 사람은 저예요."</span></p>
+        <p>그 말이 나에게는 상보다 무겁고 빚보다 무서워요.<br>
+세상 누구도 알아주지 않는 나를,<br>
+이 사람 하나만은 처음부터 지금까지 믿어 주고 있는 거예요.</p>
+        <p><span class="highlight">아내의 바느질 소리는, 말로 하지 않는 응원가였어요.</span> 나는 그 소리에 기대어 오늘도 펜을 들어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 회의</span>
+        <h2>글이 무슨 소용인가</h2>
+        <p>정성 들여 쓴 글을 신문사에 보내고 나면,<br>
+나는 며칠 동안 신문을 뒤적이며 내 이름을 찾아요.<br>
+그러나 내 글이 실리는 일은 좀처럼 없지요.<br>
+어쩌다 실려도 원고료는 쌀 한 말 값이 못 돼요.</p>
+        <p>그런 날이면 나는 깊은 <span class="vocab-tip" data-meaning="내가 하는 일이 옳은지 의심하며 흔들리는 마음">회의</span>에 빠져요.<br>
+글을 쓰는 것이 대체 무슨 소용일까.<br>
+밥도 안 되는 이 일에 나는 왜 매달리고 있을까.</p>
+        <p>장에 다녀오는 아내의 장바구니는 갈수록 가벼워져요.<br>
+나는 그 장바구니를 볼 때마다 죄인이 된 기분이에요.<br><br><span class="dialogue">'남들처럼 돈을 벌었다면, 아내가 저 고생은 하지 않을 텐데.'</span></p>
+        <p>그러다가도 책상 앞에 앉으면 이상한 일이 벌어져요.<br>
+원고지의 빈칸들이 나를 부르는 거예요.<br>
+쓰고 싶은 이야기가 가슴속에서 자꾸만 차올라요.<br>
+나는 그 부름을 외면할 수가 없어요.</p>
+        <p>글을 향한 마음과 아내를 향한 미안함.<br>
+두 마음은 하루에도 몇 번씩 부딪쳐요.<br>
+어느 쪽도 버릴 수 없어서, 밤마다 등잔불만 오래 바라보지요.</p>
+        <p><span class="highlight">꿈은 밥이 되지 못하고, 밥 걱정은 꿈을 흔들었어요.</span> 그 사이에서 나의 하루하루가 흘러가고 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 방문</span>
+        <h2>친구 T가 오다</h2>
+        <p>어느 날, 오랜 친구 T가 나를 찾아왔어요.<br>
+학창 시절을 함께 보낸 벗이었지요.<br>
+몇 해 만에 만난 T는 몰라보게 달라져 있었어요.<br>
+말쑥한 양복에 윤이 나는 구두 차림이었지요.</p>
+        <p>T는 회사에 다니며 다달이 월급을 받아 넉넉하게 산다고 했어요.<br>
+새로 장만한 세간 이야기가 자랑처럼 흘러나왔지요.<br>
+나는 그저 고개를 끄덕이며 들었어요.<br>
+듣고 있자니 마음 한구석이 저릿했지요.</p>
+        <p>방 안을 둘러보는 T의 눈길이 낡은 책상과 해진 이불에 머물렀어요.<br>
+그 눈길에 담긴 것이 무엇인지, 나는 애써 모르는 척했지요.</p>
+        <p>아내가 부엌에서 조촐한 상을 차려 내왔어요.<br>
+T는 아내의 거칠어진 손등을 힐끗 보더니 잠시 말이 없었지요.<br>
+방 안에 어색한 <span class="vocab-tip" data-meaning="아무 말 없이 조용한 것">침묵</span>이 고였어요.</p>
+        <p>나는 그 침묵이 무엇을 뜻하는지 알 것 같았어요.<br>
+내 살림살이가, 아내의 손등이 많은 것을 말해 주고 있었으니까요.<br>
+이윽고 T가 입을 열었어요.</p>
+        <p><span class="highlight">같은 자리에서 출발한 두 사람이, 십 년 뒤 전혀 다른 자리에 앉아 있었어요.</span> T의 입에서 나올 말을 나는 이미 짐작하고 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 충고</span>
+        <h2>뼈아픈 말</h2>
+        <p>T는 나를 똑바로 바라보며 말했어요.<br><br><span class="dialogue">"자네도 문학 같은 거 그만두고 <span class="vocab-tip" data-meaning="회사에 들어가 일자리를 얻는 것">취직</span>하게. 아내가 고생하는 걸 보면서 언제까지 글만 쓸 건가?"</span><br><br>방 안의 공기가 순간 팽팽해졌지요.</p>
+        <p>나는 아무 대꾸도 하지 못했어요.<br>
+화가 나서가 아니에요.<br>
+T의 말이 하나도 틀리지 않았기 때문이지요.<br>
+그 말은 내가 밤마다 스스로에게 던지던 물음이기도 했어요.</p>
+        <p>T의 말은 뼈아팠어요.<br>
+아내가 고생하는 걸 나도 잘 알아요.<br>
+그러나 문학을 포기할 수는 없었지요.<br>
+글은 내게 밥그릇이 아니라 숨구멍이었으니까요.</p>
+        <p>부엌 쪽에서 그릇 씻는 소리가 들려왔어요.<br>
+아내도 T의 말을 들었을 거예요.<br>
+그런데도 그릇 소리는 조금도 흐트러지지 않았지요.<br>
+그 담담함이 오히려 내 가슴을 더 아프게 찔렀어요.</p>
+        <p>T는 돌아가는 길에 내 어깨를 두드렸어요.<br><br><span class="dialogue">"모진 말 했다고 서운해 말게. 자네 재주가 아까워서 하는 말이니."</span><br><br>나는 끝내 대답을 찾지 못한 채 친구를 배웅했지요.</p>
+        <p><span class="highlight">틀린 말에는 화를 내면 그만이지만, 맞는 말에는 화조차 낼 수 없었어요.</span> 그날 밤, 나는 잠들지 못했지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 번민</span>
+        <h2>달빛 아래에서</h2>
+        <p>그날 밤, 나는 밤새 뒤척이며 고민했어요.<br>
+T의 말이 머릿속을 떠나지 않았지요.<br>
+취직을 하면 아내는 고생을 덜 거예요.<br>
+그러나 펜을 놓은 나는 과연 나일까요.</p>
+        <p>이불을 뒤집어써도 잠은 오지 않았어요.<br>
+문학이냐 밥이냐.<br>
+꿈이냐 아내냐.<br>
+어느 쪽을 골라도 무언가를 잃는 <span class="vocab-tip" data-meaning="어느 쪽으로 갈지 정해야 하는 길목">갈림길</span>이었지요.</p>
+        <p>곁에서는 아내가 곤히 잠들어 있었어요.<br>
+하루 종일 살림을 하고 밤늦도록 바느질을 했으니까요.<br>
+잠 속에서도 아내의 손은 바느질하던 모양 그대로였지요.</p>
+        <p>그때, 달빛이 창문으로 들어와 아내의 얼굴을 비추었어요.<br>
+하얗게 야윈 얼굴이었지요.<br>
+시집올 때의 발그레하던 뺨은 간데없었어요.</p>
+        <p>나는 그 얼굴을 오래 바라보았어요.<br>
+이 사람은 어쩌자고 나 같은 가난한 글쟁이에게 시집을 와서 이 고생일까.<br>
+미안함에 숨이 막힐 것 같았지요.<br>
+그런데도 아내는 단 한 번도 나를 원망하지 않았어요.</p>
+        <p><span class="highlight">달빛은 아무 말도 하지 않았지만, 그 밤 내게 가장 많은 것을 말해 주었어요.</span> 날이 밝을 때까지 나는 잠들지 못했지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 사건</span>
+        <h2>책상 위의 비녀</h2>
+        <p>다음 날 아침이었어요.<br>
+책상 앞에 앉으니 원고지 위에 낯선 것이 가지런히 놓여 있었지요.<br>
+아내가 아무 말 없이 올려놓고 간 것이었어요.</p>
+        <p>그것은 아내가 아끼던 <span class="vocab-tip" data-meaning="여자의 쪽 찐 머리를 고정하는 장신구">비녀</span>였어요.<br>
+시집올 때 친정에서 가져온, 단 하나뿐인 <span class="vocab-tip" data-meaning="몸을 꾸미는 귀한 물건">패물</span>이었지요.<br>
+아무리 살림이 어려워도 끝내 팔지 않던 물건이었어요.</p>
+        <p>내가 어리둥절해 있자, 아내가 담담하게 말했어요.<br><br><span class="dialogue">"이거 팔아서 원고지 사세요."</span><br><br>그 목소리는 낮았지만 조금도 떨리지 않았지요.</p>
+        <p>나는 가슴이 먹먹해졌어요.<br>
+취직하라던 T의 말을 아내도 분명히 들었을 거예요.<br>
+그런데 아내가 내민 것은 원고지를 사라는 비녀였지요.<br>
+남편의 꿈을 접게 하는 대신, 제 것을 내놓는 쪽을 택한 거예요.</p>
+        <p>세상이 다 나를 의심해도, 이 사람만은 나를 믿는다는 뜻이었어요.<br>
+그 믿음이 비녀 하나에 고스란히 담겨 있었지요.<br>
+나는 비녀를 두 손으로 감싸 쥔 채 한참을 앉아 있었어요.</p>
+        <p><span class="highlight">아내는 긴말 대신, 자기가 가진 가장 귀한 것을 내어놓았어요.</span> 말없는 사랑이란 이런 것이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 감동</span>
+        <h2>참아 낸 눈물</h2>
+        <p>나는 비녀를 쥔 채 한동안 아무 말도 하지 못했어요.<br>
+목이 메어 소리가 나오지 않았지요.<br>
+눈물이 핑 돌았지만 아내 앞에서 울 수는 없어 애써 참았어요.</p>
+        <p>고맙다는 말은 너무 가벼웠어요.<br>
+미안하다는 말은 너무 무거웠지요.<br>
+어떤 말로도 이 마음을 담을 수 없을 것 같았어요.<br>
+그래서 나는 끝내 아무 말도 하지 못했지요.</p>
+        <p>아내는 엷게 웃고는 아무 일 없었다는 듯 부엌으로 들어갔어요.<br>
+생색 한 번 내지 않는 그 뒷모습이 나를 더 울고 싶게 만들었지요.</p>
+        <p>돌이켜 보면 아내는 늘 그랬어요.<br>
+좋은 옷 한 벌 사 달라 조른 적이 없었지요.<br>
+제 것을 내어놓으면서도 그것을 <span class="vocab-tip" data-meaning="남을 위해 자기의 소중한 것을 내어놓는 것">희생</span>이라 여기지도 않았어요.</p>
+        <p>나는 책상 위의 비녀를 바라보며 생각했어요.<br>
+이 작은 비녀 하나가 세상 어떤 격려보다 크고 무겁다고.<br>
+이제 나는 두 사람의 꿈을 쓰는 것이라고.<br>
+그 무게가 이상하게도 힘이 되었지요.</p>
+        <p><span class="highlight">사랑은 때로 가장 조용한 방식으로 가장 큰 소리를 내요.</span> 그 아침의 비녀가 그랬어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 결심</span>
+        <h2>두 사람의 꿈</h2>
+        <p>그날 나는 <span class="vocab-tip" data-meaning="마음을 굳게 정하는 것">결심</span>했어요.<br>
+반드시 성공해서 아내에게 좋은 옷을 입히고, 좋은 밥을 먹이겠다고요.<br>
+비녀는 책상 서랍 깊숙이 도로 넣어 두었어요.<br>
+그것만은 끝내 팔지 않을 생각이었지요.</p>
+        <p>그것은 T가 권하던 취직과는 다른 길이었어요.<br>
+나는 내 길 위에서 성공하기로 했지요.<br>
+펜을 꺾는 대신 더 단단히 쥐기로 마음먹은 거예요.</p>
+        <p>책상 앞에 앉는 마음부터 달라졌어요.<br>
+예전에는 나를 위해 썼다면,<br>
+이제는 나를 믿어 주는 사람을 위해 써요.<br>
+원고지를 채우는 밤이 더는 외롭지 않았지요.</p>
+        <p>물론 살림이 하루아침에 나아지지는 않았어요.<br>
+밥상에는 여전히 시래기국이 올랐지요.<br>
+아내의 바느질도 그치지 않았어요.<br>
+그래도 우리는 예전처럼 한숨으로 밤을 채우지 않았지요.</p>
+        <p>이제 우리는 알아요.<br>
+가난이 아무리 짓눌러도 아내의 사랑만큼은 변함이 없다는 것을요.<br>
+그 사랑이 있는 한, 방 한 칸의 살림도 초라하지 않다는 것을요.</p>
+        <p><span class="highlight">가난은 많은 것을 가져갔지만, 가장 소중한 것만은 가져가지 못했어요.</span> 등잔불 곁의 두 사람은 오늘 밤도 내일을 짓고 있지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학09/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>가난한 아내의 초상</h2>
+        <p>「빈처」는 현진건이 쓴 단편 소설이에요.<br>
+빈처란 '가난한 아내'라는 뜻이지요.<br>
+가난한 문학 청년과 그를 묵묵히 돕는 아내의 이야기를 담고 있어요.<br>
+제목부터가 진짜 주인공이 누구인지 말해 주는 셈이지요.</p>
+        <p>이 작품은 작가 자신의 경험을 바탕으로 쓴 <span class="vocab-tip" data-meaning="작가 자신의 삶을 바탕으로 쓴 것">자전적</span> 소설로 알려져 있어요.<br>
+그래서 청년의 고민 하나하나가 살아 있는 듯 생생하지요.<br>
+솔직한 일기처럼 읽히기도 해요.</p>
+        <p>또 하나의 특징은 주인공 '나'가 직접 이야기하는 <span class="vocab-tip" data-meaning="주인공 '나'가 자기 이야기를 직접 들려주는 방식">1인칭 시점</span>이라는 점이에요.<br>
+덕분에 청년의 흔들리는 속마음을 가까이에서 느끼게 되지요.</p>
+        <p>가장 빛나는 장면은 아내가 비녀를 내어놓는 대목이에요.<br>
+긴 설명도 화려한 말도 없지만,<br>
+말없는 사랑과 희생이 무엇인지 보여 주지요.</p>
+        <p>「빈처」는 가난한 부부의 순수한 사랑을 그린 작품으로 평가받아요.</p>
+        <p><span class="highlight">가난은 밥상을 초라하게 할 수는 있어도, 마음까지 초라하게 하지는 못해요.</span> 비녀 하나에 담긴 사랑이 그 증거이지요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(140, 110, 160, 0.15); border-radius: 16px;">
+          <strong style="color: #8C6EA0; font-size: 20px;">🕯️ 「가장 깊은 사랑은 가장 조용해요. 아내는 긴말 대신 비녀를 내어놓았어요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'modern09_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

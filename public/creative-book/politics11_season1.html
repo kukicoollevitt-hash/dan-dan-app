@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏦 잠들지 않는 돈 — 은호의 첫 통장</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작정치경제11/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🏦 잠들지 않는 돈 — 은호의 첫 통장</h1>
+        <p class="subtitle">
+          — 돈은 흐르며 일한다, 돈을 다룰 줄 아는 사람이 돈의 주인이 된다 —<br>
+          교과기반 창작도서 · 정치경제 11
+        </p>
+        <div class="characters">
+          <h3>🏦 등장인물 소개</h3>
+          <p><strong>★ 은호 (주인공):</strong> 사상 최대의 세뱃돈 십만 원을 손에 쥔 아이. 돈을 지키는 법과 불리는 법을 배워 간다.</p>
+          <p><strong>★ 할아버지:</strong> 옛날 돈 수집가. 조개껍데기부터 카드까지, 돈의 긴 역사를 들려주는 사람.</p>
+          <p><strong>★ 정 선생님 (조력자):</strong> 은호의 첫 통장을 만들어 준 은행원. 돈의 흐름을 보여 주는 안내자.</p>
+          <p><strong>★ 아빠:</strong> 젊은 날의 투자 실패담을 숨기지 않고 들려주는 사람.</p>
+          <p><strong>★ 첫 통장:</strong> 은호의 이름이 찍힌 초록색 통장. 숫자가 자라나는 작은 밭.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 보관의 갈등:</strong> 서랍 속에서 잠자는 돈 vs. 은행에서 흐르며 일하는 돈</p>
+          <p><strong>② 시간의 갈등:</strong> 느리지만 안전한 저축 vs. 빠르지만 위험한 투자</p>
+          <p><strong>③ 물가의 갈등:</strong> 열심히 모은 돈 vs. 슬금슬금 오르는 물건값</p>
+          <p><strong>④ 유혹의 갈등:</strong> "두 배로 불려 준다"는 달콤한 말 vs. 차근차근 공부하며 가는 길</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>십만 원의 무게</h2>
+        <p>설날 저녁, 은호는 방문을 잠그고 책상 앞에 앉았습니다. 그리고 주머니에서 봉투들을 꺼내 세어 보았습니다. 만 원, 이만 원, 삼만 원... 십만 원! 할아버지 댁과 큰집을 돌며 받은 세뱃돈이, 태어나서 처음으로 십만 원을 넘긴 것입니다.</p>
+        <p>기쁨도 잠시, 곧바로 걱정이 밀려왔습니다. 이 큰돈을 어디에 두어야 할까요. 책상 서랍은 동생이 뒤질 것 같고, 필통 속은 잃어버릴 것 같고, 베개 밑은 엄마가 청소하다 발견할 것 같았습니다. 은호는 결국 양말 속에 돈을 넣어 옷장 깊숙이 숨겼습니다.</p>
+        <p>그런데 그날부터 이상한 병이 생겼습니다. 학교에 가서도 양말 속 돈이 무사한지 자꾸 생각났고, 밤에는 도둑 꿈까지 꾸었습니다. 하루에도 몇 번씩 옷장을 열어 확인하는 은호를 보고, 동생이 고개를 갸웃거렸습니다.<br><br><span class="dialogue">"형, 옷장에 뭐 숨겼어?"</span><br><br><span class="dialogue">"아, 아무것도 아니야!"</span></p>
+        <p>돈을 갖는 것이 이렇게 피곤한 일일 줄은 몰랐습니다. 게다가 양말 속의 돈은 아무 일도 하지 않았습니다. 쓰지도 못하고, 늘어나지도 않고, 그저 은호의 걱정만 키우며 잠자고 있을 뿐이었습니다.</p>
+        <p>결국 은호는 저녁 밥상에서 손을 들고 말했습니다.<br><br><span class="dialogue">"저... 상의할 게 있어요. 제 세뱃돈, 어떻게 하면 좋을까요? 숨겨 놓으니까 너무 불안해요."</span><br><br>엄마와 아빠가 마주 보며 웃었습니다.<br><br><span class="dialogue">"드디어 올 것이 왔구나. 은호도 이제 돈 공부를 시작할 때가 됐네."</span></p>
+        <p><span class="highlight">양말 속의 십만 원은 은호를 부자가 아니라 걱정쟁이로 만들었습니다.</span> 돈은 어디에 두어야 하는 걸까요. 은호의 돈 공부가 시작되려 하고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>할아버지의 보물 상자</h2>
+        <p>주말에 놀러 간 할아버지 댁에서, 은호는 처음 보는 상자를 만났습니다. 할아버지가 벽장 깊숙한 곳에서 꺼낸 낡은 나무 상자였습니다. 뚜껑을 열자 이상한 것들이 가지런히 놓여 있었습니다. 반질반질한 조개껍데기, 엽전 꾸러미, 빛바랜 옛날 지폐들이었습니다.</p>
+        <p><span class="dialogue">"이게 전부 돈이란다. 할아버지가 평생 모은 돈의 역사지. 아주 먼 옛날에는 돈이 없어서 물건과 물건을 맞바꾸는 물물 교환을 했어. 그런데 내 쌀을 원하는 사람이 하필 내가 원하는 소금을 갖고 있어야 하니, 여간 불편한 게 아니었지."</span></p>
+        <p><span class="dialogue">"그래서 사람들은 누구나 받아 주는 물건을 돈으로 쓰기 시작했단다. 조개껍데기, 소금, 그다음엔 이런 금속 엽전. 그리고 종이돈과 동전이 나왔고, 요즘은 카드와 전자 화폐로 눈에 보이지도 않게 돈이 오가지. 이렇게 사고팔 때 쓰는 돈을 <span class="vocab-tip" data-meaning="물건을 사고팔 때 사용하는 돈">화폐</span>라고 한단다."</span></p>
+        <p>은호는 조개껍데기를 손바닥에 올려놓고 신기하게 들여다보았습니다. 이 작은 껍데기로 쌀을 사고 옷을 샀다니요. 할아버지는 의미심장하게 덧붙였습니다.<br><br><span class="dialogue">"그런데 은호야, 모양은 변해도 돈이 하는 일은 옛날이나 지금이나 똑같아. 돈은 세 가지 일을 한단다. 그게 뭔지는 숙제다. 돈을 직접 다뤄 보면 알게 될 게야."</span></p>
+        <p>돌아오는 차 안에서 은호는 양말 속에 잠든 십만 원을 생각했습니다. 조개껍데기에서 전자 화폐까지 달려온 돈이, 지금 자기 옷장 안에서는 아무 일도 하지 않고 있었습니다. 돈이 하는 세 가지 일이라니, 궁금해서 견딜 수가 없었습니다.</p>
+        <p><span class="highlight">조개껍데기에서 카드까지, 돈은 모습을 바꾸며 달려왔습니다.</span> 그리고 할아버지의 숙제가 은호의 돈 공부에 불을 붙였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>첫 통장이 생긴 날</h2>
+        <p>다음 주말, 은호는 엄마와 함께 은행에 갔습니다. 양말 속에서 꺼낸 십만 원을 손에 꼭 쥐고서였습니다. 창구의 정 선생님은 은호의 이야기를 듣더니 환하게 웃었습니다.<br><br><span class="dialogue">"첫 통장을 만들러 왔구나. 환영해요, 꼬마 손님!"</span></p>
+        <p>이름 석 자가 찍힌 초록색 통장을 받아 든 순간, 은호는 가슴이 뿌듯했습니다. 그런데 문득 궁금해졌습니다.<br><br><span class="dialogue">"선생님, 제 돈은 이제 은행 금고에 잘 보관되는 거죠?"</span><br><br>정 선생님이 고개를 저으며 뜻밖의 대답을 했습니다.<br><br><span class="dialogue">"아니요, 은호 님의 돈은 오늘부터 일하러 다닐 거예요."</span></p>
+        <p><span class="dialogue">"은행은 여러 사람이 맡긴 돈을 모아서, 돈이 필요한 사람에게 빌려줘요. 가게를 여는 사장님이나 집을 사는 가족에게요. 그리고 빌려준 대가로 <span class="vocab-tip" data-meaning="돈을 빌려준 대가로 받거나, 맡긴 돈에 대해 받는 추가 금액">이자</span>를 받고, 그중 일부를 은호 님처럼 돈을 맡긴 분들께 나눠 드리죠. 이렇게 돈이 흘러 다니게 하는 활동을 <span class="vocab-tip" data-meaning="예금, 대출, 투자 등 돈과 관련된 모든 활동">금융</span>이라고 한답니다."</span></p>
+        <p><span class="dialogue">"은행 말고도 증권 회사, 보험 회사 같은 <span class="vocab-tip" data-meaning="은행, 증권 회사, 보험 회사 등 금융 활동을 하는 곳">금융 기관</span>들이 이 흐름을 이어 줘요. 돈은 고여 있으면 힘이 없지만, 흐르면 세상 곳곳에서 일을 한답니다."</span><br><br>은호는 입이 딱 벌어졌습니다. 양말 속에서 잠자던 돈이, 이제 어딘가의 가게와 집을 짓는 데 힘을 보태러 간다는 것이었습니다.</p>
+        <p>집으로 오는 길, 은호는 통장을 몇 번이고 펼쳐 보았습니다. 십만 원이라는 숫자가 든든하게 찍혀 있었습니다. 도둑 걱정도, 동생 걱정도 끝이었습니다. 무엇보다 마음에 든 것은, 자기 돈이 잠들지 않고 일한다는 사실이었습니다.</p>
+        <p><span class="highlight">돈은 고이면 힘이 없고, 흐르면 일을 합니다.</span> 은호의 십만 원은 그날부터 세상 어딘가에서 부지런히 일하기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>자라나는 숫자</h2>
+        <p>통장이 생기자 은호에게 새로운 목표가 생겼습니다. 음악 시간에 반해 버린 전자 키보드였습니다. 가격은 십오만 원. 통장에는 십만 원이 있으니, 앞으로 오만 원을 더 모으면 되는 것이었습니다. 은호는 통장 첫 장에 목표를 적었습니다. 여름 방학까지 키보드 사기!</p>
+        <p>그날부터 은호는 <span class="vocab-tip" data-meaning="나중에 쓰기 위해 돈을 모아 두는 것">저축</span>의 재미에 푹 빠졌습니다. 매달 용돈에서 오천 원씩 떼어 은행에 갔습니다. 통장에 숫자가 찍힐 때마다 밭에서 싹이 자라는 것 같았습니다. 십만 오천 원, 십일만 원, 십일만 오천 원.</p>
+        <p>석 달쯤 지난 어느 날, 은호는 통장을 확인하다가 이상한 것을 발견했습니다. 자기가 넣은 적 없는 몇백 원이 들어와 있는 것입니다.<br><br><span class="dialogue">"엄마! 은행이 실수로 돈을 잘못 넣었어요!"</span><br><br>엄마가 깔깔 웃으며 말했습니다.<br><br><span class="dialogue">"실수가 아니라 이자란다. 네 돈이 일해서 벌어 온 첫 월급인 셈이지."</span></p>
+        <p>은호는 그 몇백 원이 십만 원보다 신기했습니다. 가만히 있어도 돈이 돈을 벌어 오다니요. 정 선생님이 알려 준 돈의 흐름이 정말로 자기 통장까지 이어져 있었던 것입니다. 은호는 동생에게도 으스대며 통장을 보여 주었습니다.<br><br><span class="dialogue">"봐, 이게 내 돈이 벌어 온 돈이야."</span></p>
+        <p>여름이 가까워질수록 통장의 숫자는 목표에 다가갔습니다. 십삼만 원, 십사만 원. 은호는 문구점 앞을 지나면서도 군것질의 유혹을 씩씩하게 이겨 냈습니다. 키보드 건반을 두드리는 자기 모습을 떠올리면, 참는 것쯤은 일도 아니었습니다.</p>
+        <p><span class="highlight">저축은 미래의 나에게 보내는 선물이었습니다.</span> 통장 속 숫자와 함께, 은호의 꿈도 차곡차곡 자라고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>도망가는 키보드</h2>
+        <p>드디어 여름 방학 첫날, 통장에는 십오만 이천 원이 모였습니다. 목표 달성이었습니다. 은호는 콧노래를 부르며 악기점으로 달려갔습니다. 그런데 진열장 앞에서 은호의 발이 얼어붙었습니다. 그 키보드의 가격표가 바뀌어 있었던 것입니다. 십오만 원이 아니라, 십칠만 원.</p>
+        <p><span class="dialogue">"아저씨, 이거 십오만 원 아니었어요?"</span><br><br><span class="dialogue">"아이고, 미안해서 어쩌나. 요즘 물가가 다 올라서 말이야. 부품값이 오르니 악기값도 오를 수밖에 없단다."</span><br><br>은호는 눈앞이 캄캄했습니다. 반년을 꼬박 모았는데, 목표가 저만치 도망가 버린 것입니다.</p>
+        <p>집에 돌아온 은호는 침대에 엎어졌습니다. 억울했습니다. 놀고 싶은 것도 참고 군것질도 끊었는데, 세상 물건값이 오르는 바람에 통장 속 돈의 힘이 줄어들다니요. 아빠가 방에 들어와 조용히 말했습니다.<br><br><span class="dialogue">"그걸 물가 상승이라고 한단다. 물건값이 오르면, 같은 돈으로 살 수 있는 게 줄어들지. 저축의 한 가지 약점이야."</span></p>
+        <p><span class="dialogue">"열심히 모으기만 하면 되는 줄 알았는데..."</span><br><br><span class="dialogue">"모으는 건 훌륭한 일이야. 다만 세상의 돈 공부에는 그다음 장이 있다는 거지. 이자보다 물가가 빨리 오를 때, 사람들이 어떻게 하는지 말이야."</span><br><br>은호는 눈물이 그렁그렁한 채로 아빠를 올려다보았습니다.</p>
+        <p>그날 밤 은호는 통장을 펼쳐 놓고 오래 들여다보았습니다. 숫자는 분명 자랐는데, 그 숫자의 힘은 오히려 줄어 있었습니다. 돈의 세계는 생각보다 훨씬 복잡한 곳이었습니다.</p>
+        <p><span class="highlight">통장의 숫자는 자랐지만, 물가는 더 빨리 달렸습니다.</span> 성실한 저축왕 은호 앞에, 돈 공부의 다음 장이 펼쳐지고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>두 배로 불려 준다는 말</h2>
+        <p>은호의 시무룩한 사연을 들은 짝꿍 태오가 눈을 반짝이며 귓속말을 했습니다.<br><br><span class="dialogue">"야, 저축은 바보들이나 하는 거야. 우리 사촌 형은 코인인가 뭔가에 넣어서 한 달 만에 두 배 벌었대. 게임 아이템 되팔기도 있어. 인기 아이템 사 놨다가 오르면 파는 거지. 너도 해 봐!"</span></p>
+        <p>두 배라는 말이 은호의 귀에 쏙 박혔습니다. 두 배면 십칠만 원짜리 키보드가 문제가 아니었습니다. 은호는 시험 삼아 용돈 삼천 원으로 태오가 알려 준 게임 아이템을 샀습니다. 오를 때 팔면 된다는 것이었습니다.</p>
+        <p>결과는 일주일 만에 나왔습니다. 게임 업데이트로 그 아이템이 흔해지면서, 삼천 원짜리가 천오백 원이 되어 버린 것입니다. 반토막이었습니다. 은호는 얼얼한 기분으로 화면만 바라보았습니다. 오를 줄 알았던 것이 내릴 수도 있다는 것을, 몸으로 배운 순간이었습니다.</p>
+        <p>저녁에 아빠는 은호의 이야기를 듣고, 뜻밖에도 자기 이야기를 꺼냈습니다.<br><br><span class="dialogue">"아빠도 젊을 때 친구 말만 믿고 잘 알지도 못하는 회사에 큰돈을 넣었다가 절반을 잃은 적이 있단다. 이익을 바라고 돈을 넣는 것을 <span class="vocab-tip" data-meaning="이익을 얻기 위해 돈을 주식, 부동산 등에 넣는 것">투자</span>라고 하는데, 투자는 저축보다 높은 수익을 기대할 수 있지만 그만큼 잃을 위험도 함께 있는 거야."</span></p>
+        <p>은호는 머리가 뒤죽박죽이 되었습니다. 저축은 안전하지만 물가를 못 따라가고, 투자는 불릴 수 있지만 반토막이 날 수도 있고. 대체 돈은 어떻게 다뤄야 하는 걸까요. 답답해진 은호는 통장을 들고 외쳤습니다.<br><br><span class="dialogue">"이럴 거면 그냥 다시 양말에 넣을래요!"</span></p>
+        <p><span class="highlight">저축은 느리고, 투자는 무섭고.</span> 두 갈래 길 앞에서 은호의 돈 공부는 가장 어려운 고개를 만났습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>양말로 돌아갈까</h2>
+        <p>은호는 정말로 은행에 가서 돈을 다 찾아올까 진지하게 고민했습니다. 통장을 만들고 나서 좋은 일도 많았지만, 요즘은 돈 생각만 하면 머리가 지끈거렸습니다. 물가는 오르고, 투자는 무섭고, 키보드는 멀어지고. 차라리 아무것도 몰랐던 양말 시절이 편했던 것 같기도 했습니다.</p>
+        <p>학교에서도 은호는 내내 시무룩했습니다. 음악실 앞을 지나다 열린 문틈으로 키보드가 보이자, 발걸음이 저절로 느려졌습니다. 육 학년 형이 치는 경쾌한 멜로디가 복도까지 흘러나왔습니다. 은호는 입술을 깨물고 돌아섰습니다.</p>
+        <p>집에서는 동생이 얄밉게 약을 올렸습니다.<br><br><span class="dialogue">"형, 그 키보드 그냥 포기해. 어차피 또 오를 텐데 뭐."</span><br><br>평소라면 발끈했을 텐데, 은호는 대꾸할 힘도 없었습니다. 정말 그럴지도 모른다는 생각이 들었기 때문입니다.</p>
+        <p>밤에 은호는 용돈 기입장을 펼쳤습니다. 반년 동안의 기록이 빼곡했습니다. 참았던 군것질들, 차곡차곡 쌓인 입금 도장들, 그리고 첫 이자 몇백 원에 신나서 그려 놓은 웃는 얼굴. 그 웃는 얼굴을 보는데 코끝이 시큰해졌습니다. 이 노력들이 다 헛일이었을까요.</p>
+        <p>그때 방문이 열리고 엄마가 들어왔습니다.<br><br><span class="dialogue">"은호야, 이번 주 토요일에 은행에서 어린이 경제 교실을 연대. 정 선생님이 너 꼭 오라고 하시던데? 물가를 이기는 법을 가르쳐 준다나?"</span><br><br>은호의 고개가 번쩍 들렸습니다. 물가를 이기는 법이라니요.</p>
+        <p><span class="highlight">반년의 노력이 담긴 기입장 앞에서, 은호는 포기와 궁금함 사이에 서 있었습니다.</span> 물가를 이기는 법. 그 답을 들으러 가 보기로 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>어린이 경제 교실</h2>
+        <p>토요일, 은행 회의실에서 열린 어린이 경제 교실에서 정 선생님은 은호의 고민을 듣더니 칠판에 저울 그림을 그렸습니다.<br><br><span class="dialogue">"저축과 투자는 적이 아니라 저울의 양쪽이에요. 지킬 돈은 저축으로, 불릴 돈은 공부한 만큼만 투자로. 어느 한쪽에 다 실으면 저울은 기울고 말아요."</span></p>
+        <p><span class="dialogue">"꼭 지켜야 할 돈, 급할 때 쓸 돈은 저축에 두세요. 저축은 느려 보여도 이자가 이자를 낳으며 눈덩이처럼 자라거든요. 그리고 잃어도 배움이 남을 만큼의 돈만, 충분히 공부한 다음에 투자하는 거예요. 태오 형처럼 남의 말만 듣고 하는 건 투자가 아니라 도박이랍니다."</span></p>
+        <p>그때 은호의 머릿속에서 할아버지의 숙제가 번쩍 떠올랐습니다. 돈이 하는 세 가지 일. 은호는 손을 번쩍 들고 말했습니다.<br><br><span class="dialogue">"선생님, 저 알 것 같아요! 돈은 물건을 사고파는 <span class="vocab-tip" data-meaning="물건을 사고파는 데 쓰이는 돈의 역할">교환의 수단</span>이고, 물건값을 나타내는 <span class="vocab-tip" data-meaning="물건의 가격을 나타내는 돈의 역할">가치의 척도</span>고, 모아 두었다 나중에 쓰는 <span class="vocab-tip" data-meaning="나중에 쓰기 위해 모아 두는 돈의 역할">가치의 저장</span>이에요!"</span></p>
+        <p><span class="dialogue">"정확해요! 그리고 물가가 오르면 바로 그 세 번째, 저장된 가치가 조금씩 새어 나가는 거예요. 그래서 돈을 다루는 사람은 공부를 멈추면 안 되는 거고요. 은호 님은 이미 훌륭한 출발을 했어요. 통장과 기입장, 그리고 실패의 경험까지. 전부 자산이랍니다."</span></p>
+        <p>집으로 돌아오는 길, 은호의 발걸음은 오랜만에 가벼웠습니다. 실패까지 자산이라는 말이 마음에 남았습니다. 반토막 난 삼천 원도, 도망간 키보드도 전부 수업료였던 셈입니다. 은호는 새 계획을 세우기 시작했습니다.</p>
+        <p><span class="highlight">지킬 돈은 저축으로, 불릴 돈은 공부한 만큼만.</span> 저울의 지혜와 함께, 할아버지의 숙제도 마침내 풀렸습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>첫 연주</h2>
+        <p>은호의 새 계획은 이랬습니다. 첫째, 목표 날짜를 두 달 늘리기. 둘째, 이자를 더 주는 어린이 적금으로 갈아타기. 셋째, 개학하면 안 쓰는 장난감을 알뜰장터에 팔아 보태기. 물가가 달아난 만큼, 은호도 더 빠르고 영리하게 쫓아가기로 한 것입니다.</p>
+        <p>정 선생님은 은호의 계획서를 보고 어린이 적금 통장을 만들어 주었습니다.<br><br><span class="dialogue">"목표가 있는 저축이 제일 힘이 세답니다. 두 달 뒤에 웃는 얼굴로 만나요."</span><br><br>장난감 판매도 대성공이었습니다. 아끼던 로봇을 파는 것은 아쉬웠지만, 키보드 앞에서는 로봇도 기꺼이 양보해 주었습니다.</p>
+        <p>그리고 두 달 뒤, 은호는 마침내 악기점 문을 열었습니다. 통장에서 찾은 십칠만 원을 내밀 때, 손이 조금 떨렸습니다. 반년 하고도 두 달, 물가와의 달리기 끝에 잡은 목표였습니다. 아저씨는 키보드 상자에 악보 받침대를 덤으로 얹어 주었습니다.<br><br><span class="dialogue">"이렇게 열심히 모아서 온 손님은 처음이라서 말이야."</span></p>
+        <p>그날 저녁, 은호의 방에서 첫 연주회가 열렸습니다. 서툰 젓가락 행진곡이었지만 가족 모두가 박수를 쳤습니다. 할아버지는 영상 통화로 연주를 듣고 껄껄 웃으셨습니다.<br><br><span class="dialogue">"조개껍데기가 키보드가 되었구나! 돈의 세 가지 일도 다 풀었다지? 우리 은호가 돈의 주인이 다 됐어."</span></p>
+        <p>연주가 끝나고 은호는 키보드를 쓰다듬었습니다. 이 건반들 속에는 반년의 참을성과, 도망간 목표를 다시 쫓아간 두 달과, 반토막 났던 삼천 원의 교훈까지 전부 들어 있었습니다. 세상에서 하나뿐인, 이야기가 담긴 키보드였습니다.</p>
+        <p><span class="highlight">물가에게 따라잡혔던 목표를, 은호는 지혜와 끈기로 다시 따라잡았습니다.</span> 첫 연주의 음표들이 그 긴 여정의 축하곡이 되어 주었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>돈의 주인</h2>
+        <p>가을 사회 시간, 은호는 일 년의 돈 공부 이야기를 발표했습니다. 양말 속에서 시작해 통장으로, 물가와의 달리기를 지나 첫 연주까지. 화면에는 반년치 용돈 기입장과 이자가 찍힌 통장 사진이 차례로 떠올랐습니다.</p>
+        <p><span class="dialogue">"저는 돈이 그냥 종이인 줄 알았습니다. 그런데 아니었어요. 돈은 물건을 사고파는 교환의 수단이고, 값을 나타내는 가치의 척도고, 미래를 위해 모아 두는 가치의 저장입니다. 그리고 은행에 맡긴 돈은 잠들지 않고, 세상 곳곳으로 흘러가 일을 합니다."</span></p>
+        <p><span class="dialogue">"저축은 안전하지만 물가가 오르면 힘이 줄고, 투자는 불릴 수 있지만 잃을 수도 있습니다. 그래서 지킬 돈은 저축으로, 불릴 돈은 공부한 만큼만. 그리고 남의 말만 듣고 돈을 넣는 건 투자가 아니라 도박입니다. 제 삼천 원이 그렇게 사라졌거든요."</span><br><br>교실에 폭소가 터졌고, 선생님도 웃으며 박수를 보냈습니다.</p>
+        <p>발표를 마친 은호에게 태오가 다가와 머쓱하게 말했습니다.<br><br><span class="dialogue">"야, 나도 통장 만들었다? 우리 사촌 형, 사실 그 코인 다시 반토막 났대..."</span><br><br>두 아이는 마주 보고 웃음을 터뜨렸습니다. 은호는 태오에게 용돈 기입장 쓰는 법부터 가르쳐 주기로 했습니다.</p>
+        <p>은호의 책상 위에는 이제 키보드와 새 적금 통장이 나란히 놓여 있습니다. 다음 목표는 중학교 입학 전까지 헤드폰 사기. 통장 옆에는 할아버지가 주신 조개껍데기 하나가 문진처럼 얹혀 있습니다. 돈의 긴 역사와 은호의 짧은 역사가, 그 책상 위에서 나란히 반짝입니다.</p>
+        <p><span class="highlight">돈을 무서워하지도, 얕보지도 않고 다룰 줄 아는 것.</span> 그것이 일 년의 돈 공부가 은호에게 남긴, 통장보다 값진 자산이었습니다.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(46, 125, 100, 0.15); border-radius: 16px;">
+          <strong style="color: #2E7D64; font-size: 20px;">🏦 「돈은 잠들지 않는다. 흐르며 일한다. 다룰 줄 아는 사람이 돈의 주인이 된다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'politics11_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

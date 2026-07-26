@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏙️ 뜨거운 도시, 조용한 마을 — 온이의 온도계 일지</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작지리11/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🏙️ 뜨거운 도시, 조용한 마을 — 온이의 온도계 일지</h1>
+        <p class="subtitle">
+          — 도시와 농촌은 한 나라의 두 허파예요 —<br>
+          교과기반 창작도서 · 지리 11 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🏙️ 등장인물 소개</h3>
+          <p><strong>★ 온이 (주인공):</strong> 온도계를 들고 다니는 아이예요. 도시의 밤과 시골의 밤이 왜 다른지 재다가, 나라의 커다란 쏠림을 발견하지요.</p>
+          <p><strong>★ 할아버지:</strong> 비어 가는 시골 마을을 지키는 분이에요. 마을이 북적이던 시절을 기억하지요.</p>
+          <p><strong>★ 아빠:</strong> 시골에서 나고 도시에서 사는 사람이에요. 떠나온 마음과 남은 마음을 모두 알지요.</p>
+          <p><strong>★ 폐교가 된 초등학교:</strong> 아빠의 모교. 비어 가는 농촌의 상징이자, 다시 살아날 수 있는 희망.</p>
+          <p><strong>★ 도시의 밤:</strong> 한밤에도 식지 않는 뜨거운 공기. 열섬 현상의 얼굴.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 두 마을의 갈등:</strong> 미어터지는 도시 vs. 비어 가는 농촌</p>
+          <p><strong>② 온도의 갈등:</strong> 잠 못 드는 도시의 열대야 vs. 서늘하지만 쓸쓸한 시골의 밤</p>
+          <p><strong>③ 세대의 갈등:</strong> 도시로 떠나온 아빠의 선택 vs. 마을에 남아 지키는 할아버지의 자리</p>
+          <p><strong>④ 미래의 갈등:</strong> 한쪽으로만 쏠리는 나라 vs. 골고루 숨 쉬는 나라</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리11/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>잠들지 못하는 밤</h2>
+        <p>한여름 밤 열한 시,<br>
+온이는 침대에서 몸을 뒤척였어요.<br>
+창문을 활짝 열어도<br>
+들어오는 것은 후끈한 공기뿐이었지요.<br>
+밤인데도 도로에서는<br>
+자동차 소리가 그치지 않았어요.</p>
+        <p>온이는 잠이 안 오는 김에<br>
+창턱에 온도계를 올려 보았어요.<br>
+밤 열한 시인데 29도.<br>
+밤에도 잠들기 힘들 만큼 더운 밤을<br>
+<span class="vocab-tip" data-meaning="밤에도 기온이 25도 아래로 내려가지 않는 더운 밤">열대야</span>라고 한대요.<br><br><span class="dialogue">"아빠 어릴 적 시골에서는 여름밤에 이불을 덮고 잤단다. 밤만 되면 서늘해서 말이야. 같은 나라인데 참 신기하지."</span><br><br>온이는 귀가 솔깃해졌지요.</p>
+        <p>마침 다음 주에 온 가족이<br>
+할아버지가 계신 시골 마을로<br>
+여름휴가를 가기로 되어 있었어요.<br>
+아빠가 나고 자란 고향 마을이었지요.</p>
+        <p>온이는 가방에 온도계부터 챙겨 넣었어요.<br>
+그리고 공책 표지에 큼직하게 적었지요.<br>
+두 마을 온도 일지.<br>
+도시의 밤과 시골의 밤을<br>
+똑같은 온도계로 재 보기로 한 거예요.<br>
+<span class="highlight">같은 나라의 두 여름밤은 왜 온도가 다를까.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리11/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>스무 도의 밤</h2>
+        <p>휴가 첫날, 차는 꽉 막힌 고속도로를<br>
+세 시간이나 기어간 끝에야 도시를 벗어났어요.<br>
+창밖 풍경은 차츰 아파트 숲에서<br>
+진짜 숲으로 바뀌었지요.</p>
+        <p>저녁을 먹고 마당 <span class="vocab-tip" data-meaning="마당에 놓고 앉거나 눕는 넓은 나무 자리">평상</span>에 눕자,<br>
+온이는 눈이 휘둥그레졌어요.<br>
+하늘에 별이 쏟아질 듯 가득했던 거예요.<br>
+그리고 팔뚝에 소름이 돋을 만큼<br>
+공기가 서늘했지요.<br>
+온이는 얼른 온도계를 꺼냈어요.<br>
+밤 열한 시, 20도.<br>
+같은 시각 도시의 창턱은 29도였지요.<br>
+무려 9도 차이였어요.<br><br><span class="dialogue">"시골 밤은 원래 이렇단다. 한여름에도 새벽엔 서늘하지."</span></p>
+        <p>온이는 일지의 첫 장에<br>
+두 숫자를 나란히 적었어요.<br>
+도시의 밤 29도, 마을의 밤 20도.<br>
+왜 이렇게까지 다른 걸까요.</p>
+        <p>그런데 별을 세던 온이는<br>
+이상한 점을 하나 더 발견했어요.<br>
+이렇게 좋은 마을인데, 너무 조용했지요.<br>
+아이들 소리가 어디에서도 들리지 않았어요.<br>
+<span class="highlight">서늘한 밤 속에는, 온도계로는 잴 수 없는 또 다른 이야기가 숨어 있었지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리11/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 만남</span>
+        <h2>아빠의 학교</h2>
+        <p>이튿날 아침, 온이는 아빠와<br>
+마을을 한 바퀴 돌았어요.<br>
+그런데 마당에 풀이 무성한 빈집이<br>
+자꾸 나타났지요.<br>
+길에서 마주치는 분들도<br>
+모두 허리 굽은 어르신들뿐이었어요.</p>
+        <p>마을 안쪽 언덕에는 작은 학교가 있었어요.<br>
+교문에는 녹슨 자물쇠가 걸려 있었지요.<br><br><span class="dialogue">"여기가 아빠 학교였어. 아빠 다닐 때는 전교생이 사백 명이 넘었는데, 십 년 전에 문을 닫았단다."</span><br><br>저녁 밥상에서 할아버지가 말했어요.<br><br><span class="dialogue">"일자리가 도시에 몰리면서 젊은 사람들이 다 떠났지. 이렇게 농촌을 떠나 도시로 가는 것을 <span class="vocab-tip" data-meaning="농촌을 떠나 도시로 이동하는 현상">이촌향도</span>라고 한다더구나."</span></p>
+        <p>아빠가 설명을 보탰어요.<br>
+농사 중심이던 나라가 공업 중심으로 바뀌는 것을<br>
+<span class="vocab-tip" data-meaning="농업 중심에서 공업 중심으로 경제가 변하는 것">산업화</span>라 하고,<br>
+사람들이 도시로 모여들어 도시가 커지는 것을<br>
+<span class="vocab-tip" data-meaning="도시에 인구가 모이고 도시가 점점 커지는 현상">도시화</span>라고 한대요.<br>
+지금은 열 명 중 아홉 명이 도시에 살지요.</p>
+        <p>온이는 깜짝 놀랐어요.<br>
+도시의 밤이 그렇게 뜨거웠던 것도,<br>
+이 마을이 이렇게 조용한 것도,<br>
+알고 보니 같은 이야기의 양쪽 면이었지요.<br>
+<span class="highlight">잠긴 교문과 도시의 열대야는 한 줄로 이어져 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리11/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>고추밭의 어르신들</h2>
+        <p>다음 날 온이네 가족은<br>
+할아버지의 고추밭 일을 도왔어요.<br>
+<span class="vocab-tip" data-meaning="몹시 뜨겁게 내리쬐는 여름 햇볕">뙤약볕</span> 아래에서 한 시간을 일하고 나니<br>
+팔이 뻐근했지요.</p>
+        <p>밭에서 허리를 펴고 둘러보니,<br>
+이웃 밭에서 일하는 분들이<br>
+모두 백발의 어르신이었어요.<br><br><span class="dialogue">"이 동네에서 내가 젊은 축이란다. 일흔둘인데 말이야. 노인 비율이 자꾸 높아지는 것을 <span class="vocab-tip" data-meaning="전체 인구에서 노인 인구의 비율이 높아지는 현상">고령화</span>라고 한다지. 우리 마을은 그게 아주 심하지."</span><br><br>마을에 하나 있던 가게가 문을 닫아<br>
+라면 하나 사려 해도<br>
+<span class="vocab-tip" data-meaning="시골에서 가게와 관공서가 모여 있는 중심 동네">읍내</span>까지 나가야 한대요.</p>
+        <p>온이는 일지에 새로운 장을 만들었어요.<br>
+마을 어르신 수, 빈집 수, 문 닫은 가게.<br>
+세다 보니 이 마을에서 온이보다 어린 사람은<br>
+한 명도 만나지 못했다는 것을 깨달았지요.<br><br><span class="dialogue">"할아버지는 도시로 안 가고 싶으셨어요?"</span><br><br><span class="dialogue">"왜 안 그랬겠니. 그래도 누군가는 땅을 지켜야지. 너희가 먹는 쌀이며 고추가 다 이런 마을에서 나오는 거란다."</span></p>
+        <p><span class="highlight">서늘하고 별이 쏟아지는 마을은, 동시에 비어 가고 늙어 가는 마을이었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리11/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>병원까지 한 시간</h2>
+        <p>휴가 마지막 날 아침, 일이 벌어졌어요.<br>
+밭에 나갔던 할아버지가<br>
+허리를 삐끗해 주저앉으신 거예요.<br>
+온이는 발을 동동 굴렀지요.<br><br><span class="dialogue">"빨리 병원 가요! 병원 어디 있어요?"</span></p>
+        <p>그런데 돌아온 대답에<br>
+온이는 말문이 막혔어요.<br>
+마을에는 병원이 없었지요.<br>
+가장 가까운 병원은 읍내에 있는데, 차로 사십 분.<br>
+큰 병원은 한 시간을 더 가야 했어요.</p>
+        <p>아빠의 차가 시골길을 달리는 동안,<br>
+온이는 할아버지의 거친 손을 꼭 잡고 있었어요.<br>
+다행히 가벼운 근육 통증이라고 했지요.<br>
+하지만 돌아오는 길,<br>
+차 안은 무거운 침묵에 잠겨 있었어요.</p>
+        <p>온이는 도시의 집 앞 골목을 떠올렸어요.<br>
+걸어서 오 분 거리에 병원이 세 개나 있었지요.<br>
+한쪽에는 병원이 넘치고,<br>
+한쪽에는 병원 하나가 없어서<br>
+아픈 할아버지가 한 시간을 실려 가야 했어요.<br>
+사람이 떠난 마을에서는 학교도 가게도<br>
+병원도 함께 떠나고 있었지요.<br>
+<span class="highlight">사람이 빠져나간 자리에는 꼭 필요한 것들도 하나둘 사라지고 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리11/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>넘치는 도시의 병</h2>
+        <p>도시로 돌아온 온이는<br>
+이제 도시가 예전과 다르게 보였어요.<br>
+아빠는 아침마다 꽉 막힌 도로에서<br>
+한 시간을 보냈지요.<br>
+차들이 거북이걸음을 하는<br>
+<span class="vocab-tip" data-meaning="차가 많아 도로가 꽉 막히는 현상">교통 체증</span>이었어요.<br>
+뉴스에서는 <span class="vocab-tip" data-meaning="살 집이 필요한 만큼 모자란 상태">주택 부족</span>과<br>
+<span class="vocab-tip" data-meaning="공기나 물, 땅이 더러워지는 것">환경 오염</span> 이야기가 이어졌지요.</p>
+        <p>온이는 온도계를 들고<br>
+큰길가와 공원의 온도를 재 보았어요.<br>
+큰길가는 30도, 나무가 우거진 공원은 27도.<br>
+같은 도시 안에서도 3도나 차이가 났지요.<br><br><span class="dialogue">"아주 좋은 관찰이야. 도시 한복판이 주변보다 더 뜨거워지는 것을 <span class="vocab-tip" data-meaning="도시 가운데의 기온이 주변보다 높아지는 현상">열섬 현상</span>이라고 한단다. 아스팔트가 낮의 열을 품고, 자동차와 에어컨이 열을 내뿜기 때문이지."</span></p>
+        <p>온이의 열대야 수수께끼가 마침내 풀렸어요.<br>
+도시의 밤이 뜨거웠던 것은<br>
+너무 많은 사람과 건물과 차가<br>
+한곳에 몰린 탓이기도 했던 거예요.<br>
+도시는 사람이 넘쳐서 뜨겁게 앓고,<br>
+시골은 사람이 모자라서 조용히 앓고 있었지요.<br>
+<span class="highlight">도시의 병과 농촌의 병은 이름만 다를 뿐, 뿌리는 같은 쏠림이었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리11/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>철거된다는 소식</h2>
+        <p>가을이 깊어 가던 어느 저녁,<br>
+할아버지에게서 전화가 왔어요.<br>
+수화기를 건네받은 아빠의 표정이<br>
+점점 어두워졌지요.<br><br><span class="dialogue">"학교가... 내년에 <span class="vocab-tip" data-meaning="낡은 건물을 허물어 없애는 것">철거</span>될지도 모른대. 오래 비워 둔 건물이 위험하다고, 아예 허물자는 얘기가 나왔다는구나."</span></p>
+        <p>온이는 가슴이 철렁했어요.<br>
+그 학교는 아빠의 어린 시절이<br>
+고스란히 담긴 곳이었지요.<br>
+아빠는 그날 밤 오래된 앨범을 꺼냈어요.<br><br><span class="dialogue">"이 아이들이 지금은 다 도시에 흩어져 살아. 학교가 헐리면, 우리가 돌아갈 자리 하나가 없어지는 기분이구나."</span></p>
+        <p>온이는 방으로 돌아와 일지를 펼쳤어요.<br>
+뜨거운 밤, 막히는 길, 비싼 집.<br>
+빈집, <span class="vocab-tip" data-meaning="학생이 없어 문을 닫은 학교">폐교</span>, 사라진 병원.<br>
+문제는 잘 정리했는데,<br>
+어느 쪽 하나 온이가 풀 수 있는 것이 없었지요.</p>
+        <p>사람들을 억지로 시골로 보낼 수도,<br>
+도시를 줄일 수도 없는 노릇이었어요.<br>
+조사할수록 문제만 쌓이는 탐구라니.<br>
+<span class="highlight">기록만으로는 아무것도 지킬 수 없었지요.</span><br>
+온이의 탐구는 가장 깊은 바닥에 닿았어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리11/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>되살아난 폐교들</h2>
+        <p>침울해하는 온이에게<br>
+선생님이 뜻밖의 이야기를 들려주었어요.<br><br><span class="dialogue">"온이야, 폐교라고 다 헐리는 건 아니란다. 요즘은 문 닫은 학교를 고쳐서 새로 쓰는 마을이 많아. 미술관이 된 폐교도 있고, 캠핑장이나 마을 체험관이 된 폐교도 있지."</span><br><br><span class="dialogue">"그래서 나라에서도 두 곳이 함께 살아나는 <span class="vocab-tip" data-meaning="지역 사이에 차이 없이 골고루 발전하는 것">균형 발전</span>을 위해 애쓴단다. 도시를 떠나 농촌으로 삶터를 옮기는 <span class="vocab-tip" data-meaning="도시를 떠나 농촌으로 가서 사는 것">귀농·귀촌</span>도 조금씩 늘고 있어."</span></p>
+        <p>온이의 머릿속에 반짝 불이 켜졌어요.<br>
+도시에 넘치는 것은 사람,<br>
+농촌에 넘치는 것은 자연과 빈 공간.<br>
+도시에 넘치는 것을 농촌에 나누면,<br>
+두 곳의 병이 함께 나을 수 있다는 이야기였지요.</p>
+        <p>그날 밤 온이는 아빠와 머리를 맞대고<br>
+편지를 썼어요.<br>
+받는 곳은 할아버지 마을의<br>
+<span class="vocab-tip" data-meaning="시골 마을의 일을 맡아보는 관공서">면사무소</span>였지요.<br>
+학교를 허물지 말고<br>
+도시 아이들의 농촌 체험 학교로<br>
+만들어 달라는 제안이었어요.<br>
+아빠는 졸업생들의 서명을 모아 보기로 했지요.<br>
+<span class="highlight">비어 가는 곳과 넘치는 곳이 서로를 살릴 수 있었어요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리11/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>운동장에 돌아온 소리</h2>
+        <p>겨울이 지나고 봄이 왔어요.<br>
+할아버지에게서 들뜬 목소리의<br>
+전화가 걸려 왔지요.<br><br><span class="dialogue">"학교 말이다, 안 허물기로 했단다! 졸업생들 편지가 큰 몫을 했다는구나. 마을 체험 학교로 고쳐 쓰기로 했어!"</span></p>
+        <p>철거 대신 수리가 시작되었어요.<br>
+낡은 교실은 도시 아이들이<br>
+하룻밤 묵을 수 있는 체험관으로 바뀌었지요.<br>
+마을 어르신들은 농사 선생님이 되기로 했어요.<br>
+고추 심기, 감자 캐기, 별자리 보기.<br>
+어르신들이 평생 해 온 일들이<br>
+훌륭한 수업이 되었지요.</p>
+        <p>여름 방학, 온이네 반 아이들이<br>
+첫 손님으로 마을을 찾았어요.<br>
+조용하던 마을 운동장에 십 년 만에<br>
+아이들 웃음소리가 울려 퍼졌지요.<br>
+체험 학교 소식을 듣고 찾아왔던 젊은 부부가<br>
+아예 마을로 이사를 오면서<br>
+빈집 하나에 다시 불이 켜졌어요.</p>
+        <p>도시의 온이네 동네에도 변화가 생겼어요.<br>
+큰길가 빈터에 나무를 심고<br>
+쉼터를 만드는 공사가 시작된 거예요.<br>
+<span class="highlight">한쪽의 남는 것이 다른 쪽의 모자람을 채우자, 두 마을이 함께 숨을 쉬기 시작했지요.</span></p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작지리11/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>두 개의 온도</h2>
+        <p>가을, 온이는 학교 탐구 발표 대회의<br>
+마지막 발표자로 무대에 섰어요.<br>
+두 마을 온도 일지.<br>
+도시의 밤 29도, 마을의 밤 20도.<br><br><span class="dialogue">"저는 처음에 온도의 차이가 궁금했습니다. 그런데 온도를 따라가 보니, 그 뒤에 사람의 이동이 있었습니다. 지금은 열 명 중 아홉 명이 도시에 삽니다."</span></p>
+        <p>온이는 두 마을의 앓는 소리를<br>
+나란히 보여 주었어요.<br>
+사람이 넘치는 도시의 교통 체증과 열섬 현상,<br>
+사람이 빠져나간 농촌의 폐교와 사라진 병원.<br><br><span class="dialogue">"도시와 농촌은 경쟁하는 사이가 아니라, 한 나라의 두 허파라고 생각합니다. 두 허파가 골고루 숨 쉬게 하는 것, 그것이 균형 발전입니다."</span></p>
+        <p>발표가 끝나고 온이는 큰 박수를 받았어요.<br>
+그날 저녁, 할아버지에게 전화를 걸자<br>
+수화기 너머로 체험 학교에 온 아이들의<br>
+왁자한 소리가 들려왔지요.<br>
+그 소리가 온이에게는<br>
+세상에서 가장 반가운 소음이었어요.<br>
+<span class="highlight">온도계 하나로 시작한 탐구는, 나라의 커다란 쏠림과 그것을 풀어 갈 길까지 가닿았지요.</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(70, 130, 180, 0.15); border-radius: 16px;">
+          <strong style="color: #4682B4; font-size: 20px;">🏙️ 「도시와 농촌은 한 나라의 두 허파예요. 한쪽만으로는 숨 쉴 수 없어요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'geo11_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

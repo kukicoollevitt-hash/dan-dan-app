@@ -1,659 +1,721 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>⭐ 별빛 마을의 열 가지 약속</title>
- <style>
- * {
- margin: 0;
- padding: 0;
- box-sizing: border-box;
- }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⭐ 별빛 마을의 열 가지 약속</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
- body {
- font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
- overflow-x: hidden;
- background: #1a1a1a;
- }
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
 
- /* 고정 지도 캔버스 */
- #map-container {
- position: fixed;
- top: 0;
- left: 0;
- width: 100%;
- height: 100vh;
- background: url('/images/창작도서/창작법01/00.jpg');
- background-size: cover;
- background-position: center;
- background-repeat: no-repeat;
- transition: background-image 1s ease-in-out;
- z-index: 1;
- }
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작법01/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
 
- #map-canvas {
- display: none;
- }
+    #map-canvas {
+      display: none;
+    }
 
- /* 스크롤 가능한 콘텐츠 */
- #content {
- position: relative;
- z-index: 2;
- pointer-events: none;
- }
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
 
- .story-section {
- min-height: 100vh;
- display: flex;
- align-items: center;
- justify-content: flex-start;
- padding: 60px 120px;
- pointer-events: none;
- }
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
 
- /* 홀수 섹션은 왼쪽 */
- .story-section:nth-child(odd) {
- justify-content: flex-start;
- }
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
 
- /* 짝수 섹션은 오른쪽 */
- .story-section:nth-child(even) {
- justify-content: flex-end;
- }
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
 
- .story-card {
- background: rgba(255, 255, 255, 0.85);
- backdrop-filter: blur(15px);
- padding: 40px;
- border-radius: 24px;
- max-width: 600px;
- box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
- transform: translateX(100px);
- opacity: 0;
- transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
- pointer-events: auto;
- }
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
 
- /* 왼쪽에서 나오는 카드 */
- .story-section:nth-child(odd) .story-card {
- transform: translateX(-100px);
- }
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
 
- /* 오른쪽에서 나오는 카드 */
- .story-section:nth-child(even) .story-card {
- transform: translateX(100px);
- }
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
 
- .story-card.active {
- transform: translateX(0);
- opacity: 1;
- }
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
 
- .story-card .chapter {
- display: inline-block;
- padding: 8px 20px;
- background: linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%);
- color: white;
- border-radius: 20px;
- font-size: 14px;
- font-weight: 600;
- margin-bottom: 15px;
- box-shadow: 0 4px 15px rgba(92, 107, 192, 0.3);
- }
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(92, 107, 192, 0.3);
+    }
 
- .story-card .theme {
- display: inline-block;
- padding: 4px 12px;
- background: rgba(92, 107, 192, 0.15);
- color: #3949AB;
- border-radius: 12px;
- font-size: 12px;
- font-weight: 600;
- margin-left: 8px;
- }
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(92, 107, 192, 0.15);
+      color: #3949AB;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
 
- .story-card h2 {
- font-size: 26px;
- color: #2c3e50;
- margin-bottom: 20px;
- line-height: 1.4;
- }
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
 
- .story-card p {
- font-size: 15px;
- line-height: 1.9;
- color: #34495e;
- margin-bottom: 14px;
- text-align: justify;
- }
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
 
- .story-card p:last-child {
- margin-bottom: 0;
- }
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
 
- .story-card .highlight {
- color: #5C6BC0;
- font-weight: 600;
- }
+    .story-card .highlight {
+      color: #5C6BC0;
+      font-weight: 600;
+    }
 
- .story-card .dialogue {
- color: #3949AB;
- font-weight: 600;
- }
+    .story-card .dialogue {
+      color: #3949AB;
+      font-weight: 600;
+    }
 
- .vocab-tip {
- position: relative;
- color: #5C6BC0;
- border-bottom: 1px dotted #5C6BC0;
- cursor: help;
- font-weight: 600;
- }
- .vocab-tip::after {
- content: attr(data-meaning);
- position: absolute;
- bottom: 100%;
- left: 50%;
- transform: translateX(-50%);
- background: #333;
- color: #fff;
- padding: 8px 12px;
- border-radius: 8px;
- font-size: 13px;
- white-space: nowrap;
- opacity: 0;
- pointer-events: none;
- transition: opacity 0.2s;
- z-index: 100;
- }
- .vocab-tip:hover::after {
- opacity: 1;
- }
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
 
- /* 인트로 섹션 */
- .intro-section {
- min-height: 100vh;
- display: flex;
- flex-direction: column;
- align-items: center;
- justify-content: center;
- text-align: center;
- padding: 60px;
- }
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
 
- .intro-content {
- background: rgba(0, 0, 0, 0.5);
- backdrop-filter: blur(10px);
- padding: 60px 80px;
- border-radius: 30px;
- max-width: 850px;
- animation: fadeInUp 1s ease-out;
- }
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
 
- .intro-content h1 {
- font-size: 44px;
- font-weight: 700;
- color: #ffffff;
- margin-bottom: 20px;
- text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
- }
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
 
- .intro-content .subtitle {
- font-size: 20px;
- line-height: 1.8;
- color: #e0e0e0;
- margin-bottom: 30px;
- font-weight: 400;
- }
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
 
- .intro-content .characters {
- text-align: left;
- background: rgba(255, 255, 255, 0.1);
- padding: 25px;
- border-radius: 16px;
- margin-bottom: 30px;
- }
+    .intro-content .characters h3 {
+      color: #B3C5FF;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
 
- .intro-content .characters h3 {
- color: #B3C5FF;
- font-size: 16px;
- margin-bottom: 15px;
- }
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
 
- .intro-content .characters p {
- color: #d0d0d0;
- font-size: 14px;
- line-height: 1.7;
- margin-bottom: 8px;
- }
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(92, 107, 192, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
 
- .intro-content .conflict {
- text-align: left;
- background: rgba(92, 107, 192, 0.2);
- padding: 25px;
- border-radius: 16px;
- margin-bottom: 30px;
- }
+    .intro-content .conflict h3 {
+      color: #B3C5FF;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
 
- .intro-content .conflict h3 {
- color: #B3C5FF;
- font-size: 16px;
- margin-bottom: 15px;
- }
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
 
- .intro-content .conflict p {
- color: #d0d0d0;
- font-size: 14px;
- line-height: 1.7;
- margin-bottom: 8px;
- }
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
 
- .intro-content .scroll-hint {
- font-size: 16px;
- color: #ffffff;
- font-weight: 600;
- animation: pulse 2s infinite;
- text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
- }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
- @keyframes fadeInUp {
- from {
- opacity: 0;
- transform: translateY(30px);
- }
- to {
- opacity: 1;
- transform: translateY(0);
- }
- }
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
 
- @keyframes pulse {
- 0%, 100% {
- opacity: 1;
- }
- 50% {
- opacity: 0.5;
- }
- }
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
 
- /* 스크롤 인디케이터 */
- .scroll-indicator {
- position: fixed;
- bottom: 40px;
- left: 50%;
- transform: translateX(-50%);
- z-index: 1000;
- animation: bounce 2s infinite;
- pointer-events: none;
- }
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
 
- .scroll-indicator svg {
- width: 40px;
- height: 40px;
- opacity: 0.7;
- }
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
 
- @keyframes bounce {
- 0%, 20%, 50%, 80%, 100% {
- transform: translateX(-50%) translateY(0);
- }
- 40% {
- transform: translateX(-50%) translateY(-20px);
- }
- 60% {
- transform: translateX(-50%) translateY(-10px);
- }
- }
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
 
- /* 반응형 디자인 */
- @media (max-width: 768px) {
- .story-section {
- padding: 40px 20px;
- }
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
 
- .story-card {
- max-width: 100%;
- padding: 30px;
- }
+      .story-card h2 {
+        font-size: 22px;
+      }
 
- .story-card h2 {
- font-size: 22px;
- }
+      .story-card p {
+        font-size: 14px;
+      }
 
- .story-card p {
- font-size: 14px;
- }
+      .intro-content {
+        padding: 40px 30px;
+      }
 
- .intro-content {
- padding: 40px 30px;
- }
+      .intro-content h1 {
+        font-size: 28px;
+      }
 
- .intro-content h1 {
- font-size: 28px;
- }
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
 
- .intro-content .subtitle {
- font-size: 15px;
- }
- }
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
 
- /* 네비게이션 버튼 */
- .nav-buttons {
- position: fixed;
- bottom: 40px;
- left: 50%; transform: translateX(-50%);
- z-index: 1000;
- display: flex;
- gap: 15px;
- pointer-events: auto;
- }
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(92, 107, 192, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(92, 107, 192, 0.3);
+    }
 
- .nav-btn {
- padding: 15px 30px;
- background: rgba(92, 107, 192, 0.9);
- backdrop-filter: blur(10px);
- color: white;
- border: none;
- border-radius: 12px;
- font-size: 16px;
- font-weight: 600;
- cursor: pointer;
- transition: all 0.3s ease;
- box-shadow: 0 4px 15px rgba(92, 107, 192, 0.3);
- }
+    .nav-btn:hover {
+      background: rgba(57, 73, 171, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(92, 107, 192, 0.4);
+    }
 
- .nav-btn:hover {
- background: rgba(57, 73, 171, 0.9);
- transform: translateY(-2px);
- box-shadow: 0 6px 20px rgba(92, 107, 192, 0.4);
- }
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
 
- @media (max-width: 768px) {
- .nav-buttons {
- bottom: 20px;
- right: 20px;
- flex-direction: column;
- }
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
 
- .nav-btn {
- padding: 12px 24px;
- font-size: 14px;
- }
- }
- </style>
+  </style>
 </head>
 <body>
- <!-- 고정된 배경 컨테이너 -->
- <div id="map-container">
- <canvas id="map-canvas"></canvas>
- </div>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
 
- <!-- 스크롤 가능한 스토리 콘텐츠 -->
- <div id="content">
- <!-- 인트로 -->
- <section class="intro-section">
- <div class="intro-content">
- <h1>⭐ 별빛 마을의 열 가지 약속</h1>
- <p class="subtitle">
- 잃어버린 인권의 보석을 찾아서<br>
- — 태어나자마자 가진 선물, 인권이라는 약속 —<br>
- 교과기반 창작도서 · 창작법 01 · 초3-4
- </p>
- <div class="characters">
- <h3>📋 등장인물 소개</h3>
- <p><strong>★ 하늘이:</strong> 별빛 마을에서 태어난 호기심 많은 소녀. 태어날 때 '인권의 보석'을 선물받았지만 그 <span class="vocab-tip" data-meaning="뜻">의미</span>를 아직 모른다. 인권의 <span class="vocab-tip" data-meaning="소중하게 여길 만한 것">가치</span>를 깨달아가며 마을 사람들이 깨어나도록 돕는 주인공.</p>
- <p><strong>★ 그림자 영주:</strong> 별빛 마을 너머 어둠의 성에 사는 존재. 사람들의 인권 보석을 하나씩 빼앗아 자신의 힘을 키운다. 혼자서 모든 것을 결정하려는 나쁜 힘의 상징.</p>
- <p><strong>★ 할머니 지혜:</strong> 마을에서 가장 오래 산 이야기꾼. 인권의 <span class="vocab-tip" data-meaning="옛날부터 지금까지 이어온 일">역사</span>를 기억하는 유일한 사람이며, 지혜로운 가르침을 전하는 선생님.</p>
- <p><strong>★ <span class="vocab-tip" data-meaning="두려움을 이기는 마음">용기</span>:</strong> 하늘이의 반려 고양이. 위험할 때마다 빛을 내며 하늘이를 지킨다.</p>
- <p><strong>★ 열 명의 빛의 수호자:</strong> 각각 사람들의 소중한 <span class="vocab-tip" data-meaning="마땅히 누려야 할 것">권리</span> 한 가지씩을 지키는 존재들.</p>
- </div>
- <div class="conflict">
- <h3>⚡ <span class="vocab-tip" data-meaning="서로 다투는 상태">갈등</span> <span class="vocab-tip" data-meaning="부분들이 짜여진 모습">구조</span></h3>
- <p>그림자 영주가 마을 사람들의 인권 보석을 하나씩 훔치면서 마을에는 차별, 억압, 침묵이 퍼진다. 하늘이는 열 개의 잃어버린 보석을 찾는 여정을 떠나며, 각 보석을 되찾을 때마다 인권이 얼마나 소중한지 깨닫는다. 이 여정은 나라가 국민의 권리를 지켜주어야 한다는 약속을 발견하는 <span class="vocab-tip" data-meaning="일이 진행되는 차례">과정</span>이다.</p>
- </div>
- <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
- </div>
- </section>
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>⭐ 별빛 마을의 열 가지 약속</h1>
+        <p class="subtitle">
+          잃어버린 <span class="vocab-tip" data-meaning="사람이라면 누구나 가지는 권리">인권</span>의 보석을 찾아서<br>
+          — 태어나자마자 가진 선물, 인권이라는 약속 —<br>
+          교과기반 창작도서 · 창작법 01 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>📋 등장인물 소개</h3>
+          <p><strong>★ 하늘이:</strong> 별빛 마을에서 태어난 호기심 많은 소녀예요. 태어날 때 '인권의 보석'을 선물받았어요.</p>
+          <p><strong>★ 그림자 영주:</strong> 어둠의 성에 사는 존재예요. 사람들의 인권 보석을 하나씩 빼앗아요.</p>
+          <p><strong>★ 할머니 지혜:</strong> 마을에서 가장 오래 산 이야기꾼이에요. 인권의 역사를 기억하지요.</p>
+          <p><strong>★ 용기:</strong> 하늘이의 고양이예요. 위험할 때마다 빛을 내며 하늘이를 지켜요.</p>
+          <p><strong>★ 열 명의 빛의 수호자:</strong> 인권의 가치를 하나씩 지키는 수호자들이에요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚡ 갈등 구조</h3>
+          <p>그림자 영주가 인권 보석을 하나씩 훔치자 마을에 차별과 억압이 퍼져요.<br>
+하늘이는 열 개의 보석을 찾는 여행을 떠나요.<br>
+보석을 되찾을 때마다 인권의 소중한 가치를 깨닫게 되지요.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
 
- <!-- 제1장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법01/01.jpg">
- <div class="story-card">
- <span class="chapter">제1장</span>
- <span class="theme">✨ 태어남과 권리</span>
- <h2>첫 번째 보석, '탄생의 빛'</h2>
- <p><strong>【중심 문장】</strong> 모든 사람은 태어나는 <span class="vocab-tip" data-meaning="아주 짧은 시간">순간</span> 누구에게도 빼앗길 수 없는 소중한 권리를 갖는다.</p>
- <p>아주 먼 옛날, '별빛 마을'이라는 아름다운 곳이 있었습니다. 이 마을에서는 아기가 태어날 때마다 하늘에서 '<span class="vocab-tip" data-meaning="사람이라면 누구나 가지는 기본적인 권리">인권</span>의 보석'이 내려왔습니다.</p>
- <p>어느 겨울밤, 작은 오두막집에서 아기 '하늘이'가 태어났습니다. 하늘이가 첫 울음을 터뜨리자, 무지개빛 보석이 아기의 가슴 위에 내려앉았습니다.</p>
- <p>할머니 지혜가 말했습니다.<br><br><span class="dialogue">"이 보석은 사람이라면 누구나 가지는 권리란다. 왕의 아이든, 농부의 아이든 똑같이 주어지지."</span></p>
- <p><span class="highlight">태어나는 것 자체가 권리의 시작이며, 그 누구도 이 권리를 빼앗을 수 없습니다.</span></p>
- <p>하늘이의 작은 가슴 위에서 보석은 밝게 빛나고 있었습니다. 고양이 용기가 아기 곁에 다가와 몸을 웅크렸습니다.</p>
- </div>
- </section>
+    <!-- 제1장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법01/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">✨ 태어남과 <span class="vocab-tip" data-meaning="마땅히 누려야 할 것">권리</span></span>
+        <h2>첫 번째 보석, '탄생의 빛'</h2>
+        <p><strong>【중심 문장】</strong> 모든 사람은 태어나는 순간 소중한 권리를 가져요.</p>
+        <p>아주 먼 옛날, '별빛 마을'이라는 아름다운 곳이 있었어요.<br>
+이 마을에서는 아기가 태어날 때마다<br>
+하늘에서 작은 보석 하나가 내려왔지요.<br>
+사람들은 그것을 '인권의 보석'이라 불렀어요.</p>
+        <p>어느 추운 겨울밤, 가장 작은 오두막집에서 아기가 태어났어요.<br>
+아기의 이름은 '하늘이'였지요.<br>
+하늘이가 첫 울음을 터뜨리자,<br>
+무지개빛 보석이 내려와 가슴 위에 살포시 앉았어요.</p>
+        <p>어른들은 모두 축하했지만, 할머니 지혜만은 진지했어요.<br><br><span class="dialogue">"이 보석은 단순한 장신구가 아니란다. 하늘이가 사람으로서 당연히 가져야 할 모든 <span class="vocab-tip" data-meaning="마땅히 누려야 할 것">권리</span>가 담긴 선물이야."</span></p>
+        <p>사람들은 고개를 갸우뚱했어요.<br>
+보석은 아무 조건도 따지지 않고 찾아왔지요.<br>
+왕의 아이든 농부의 아이든 똑같이 내려왔어요.</p>
+        <p><span class="highlight">이것이 인권의 첫 번째 비밀이었어요. 태어나는 것 자체가 권리의 시작이고, 누구도 이 권리를 빼앗을 수 없다는 것이지요.</span></p>
+        <p>아기의 작은 가슴 위에서 보석은<br>
+세상 어떤 별보다 밝게 빛나고 있었지요.</p>
+      </div>
+    </section>
 
- <!-- 제2장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법01/02.jpg">
- <div class="story-card">
- <span class="chapter">제2장</span>
- <span class="theme">🪞 인간의 존엄</span>
- <h2>두 번째 보석, '<span class="vocab-tip" data-meaning="사람으로서 마땅히 가지는 품위와 가치">존엄</span>의 거울'</h2>
- <p><strong>【중심 문장】</strong> 모든 인간은 그 자체로 소중하며, 누구도 다른 사람의 <span class="vocab-tip" data-meaning="사람으로서 마땅히 가지는 품위와 가치">존엄성</span>을 함부로 <span class="vocab-tip" data-meaning="상하게 하거나 해치다">훼손</span>할 수 없다.</p>
- <p>하늘이가 다섯 살이 되던 해, 그림자 영주가 사람들의 '존엄의 빛'을 빼앗기 시작했습니다.</p>
- <p>존엄을 잃은 사람들은 자신을 하찮게 여기기 시작했습니다.<br><br><span class="dialogue">"나 같은 건 아무 쓸모도 없어."</span><br><br>떡집 아주머니와 나무꾼 아저씨 모두 고개를 숙였습니다.</p>
- <p>할머니 지혜가 말했습니다.<br><br><span class="dialogue">"존엄이란 거울과 같단다. 모든 사람은 그 자체로 소중한 존재야."</span></p>
- <p>하늘이는 마을 광장에서 한 사람 한 사람에게 따뜻한 말을 건넸습니다.<br><br><span class="dialogue">"아주머니는 맛있는 떡을 만들잖아요. 아저씨는 숲의 나무 이름을 다 알잖아요."</span></p>
- <p>하늘이의 말에 사람들의 보석이 다시 빛나기 시작했습니다. <span class="highlight">존엄은 원래부터 모든 사람 안에 있는 빛입니다.</span></p>
- </div>
- </section>
+    <!-- 제2장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법01/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">🪞 인간의 존엄</span>
+        <h2>두 번째 보석, '존엄의 거울'</h2>
+        <p><strong>【중심 문장】</strong> 모든 사람은 그 자체로 소중해요.</p>
+        <p>하늘이가 다섯 살이 되던 해, 마을에 이상한 일이 벌어졌어요.<br>
+밤마다 어둠의 성에서 차가운 바람이 불어왔지요.<br>
+그림자 영주가 사람들의 보석에서<br>
+'<span class="vocab-tip" data-meaning="사람이라면 누구나 존중받아야 할 소중함">존엄</span>의 빛'을 하나씩 빼앗고 있었던 거예요.</p>
+        <p>존엄을 잃은 사람들은 자신을 하찮게 여기기 시작했어요.<br><br><span class="dialogue">"나 같은 건 아무 쓸모도 없어."</span><br><br>떡집 아주머니가 고개를 숙이며 말했지요.<br><br><span class="dialogue">"나는 배운 것도 없으니 말할 자격이 없지."</span><br><br>나무꾼 아저씨도 입을 꾹 다물었어요.</p>
+        <p>할머니 지혜가 하늘이를 무릎에 앉히고 말했어요.<br><br><span class="dialogue">"존엄이란 거울과 같단다. 누가 뭐라 하든, 그 거울에 비친 너는 언제나 소중한 존재야."</span></p>
+        <p>하늘이는 결심했어요.<br>
+마을 광장에 나가 한 사람 한 사람에게 말했지요.<br><br><span class="dialogue">"아주머니는 세상에서 가장 맛있는 떡을 만들잖아요. 아저씨는 숲의 모든 나무 이름을 알잖아요."</span></p>
+        <p>그 말에 사람들의 가슴에서 보석이 다시 빛나기 시작했어요.<br>
+<span class="highlight">존엄은 누가 주는 것이 아니라, 원래부터 모든 사람 안에 있는 빛이었지요.</span></p>
+      </div>
+    </section>
 
- <!-- 제3장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법01/03.jpg">
- <div class="story-card">
- <span class="chapter">제3장</span>
- <span class="theme">🕊️ <span class="vocab-tip" data-meaning="원래 이름은 '자유권'. 스스로 생각하고 말하고 행동할 수 있는 권리">'자유롭게 살 권리'</span></span>
- <h2>세 번째 보석, '날개의 깃털'</h2>
- <p><strong>【중심 문장】</strong> 모든 사람은 자유롭게 생각하고, 말하고, 행동할 권리가 있다.</p>
- <p>어느 날, 그림자 영주가 마을에 보이지 않는 울타리를 세웠습니다. 사람들은 마을 밖으로 나갈 수도, 하고 싶은 말도 할 수 없게 되었습니다.</p>
- <p><span class="dialogue">"오늘부터 허락 없이는 아무것도 할 수 없다!"</span><br><br>그림자 영주의 목소리에 마을이 얼어붙었습니다.</p>
- <p>하늘이가 외쳤습니다.<br><br><span class="dialogue">"이건 잘못된 거야!"</span></p>
- <p>할머니 지혜가 말했습니다.<br><br><span class="dialogue">"자유란 네 생각을 펼치고, 네 목소리를 전할 수 있는 날개란다."</span></p>
- <p>하늘이가 용기를 안고 울타리 앞에 섰습니다. 가슴의 보석에서 빛이 뿜어져 나와 울타리에 금이 갔습니다.</p>
- <p><span class="highlight"><span class="vocab-tip" data-meaning="스스로 할 수 있는 것">자유</span>는 태어날 때부터 우리 안에 있는 날개입니다.</span> 마을 사람들도 하나둘 일어섰고, 울타리는 부서져 흩어졌습니다.</p>
- </div>
- </section>
+    <!-- 제3장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법01/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">🕊️ 자유권</span>
+        <h2>세 번째 보석, '날개의 깃털'</h2>
+        <p><strong>【중심 문장】</strong> 모든 사람은 자유롭게 생각하고 말할 권리가 있어요.</p>
+        <p>어느 날, 그림자 영주는 더 대담한 작전을 펼쳤어요.<br>
+마을에 보이지 않는 울타리를 세운 거예요.<br>
+사람들은 마을 밖으로 나갈 수 없게 되었고,<br>
+하고 싶은 말도 할 수 없게 되었지요.</p>
+        <p><span class="dialogue">"오늘부터 허락 없이는 아무것도 할 수 없다!"</span><br><br>그림자 영주의 목소리에 마을은 얼어붙었어요.<br>
+아이들은 들판에서 뛰어놀 수 없었지요.<br>
+노래하던 새들마저 입을 다물었어요.</p>
+        <p>할머니 지혜가 오래된 책을 보여주었어요.<br><br><span class="dialogue">"옛날 이 마을에는 '날개의 깃털'이라는 보석이 있었단다. 자유란 네 생각을 마음껏 펼치고, 네 목소리를 세상에 전할 수 있는 날개란다."</span></p>
+        <p>하늘이는 울타리 앞에 섰어요.<br>
+두려웠지만, <span class="vocab-tip" data-meaning="스스로 결정하고 행동할 수 있는 것">자유</span>가 없는 세상은 날개 없는 새와 같다는 것을 알았지요.<br>
+한 걸음 내딛자 보석에서 빛이 뿜어져 나와<br>
+울타리에 금이 가기 시작했어요.</p>
+        <p><span class="highlight">자유는 누가 허락해주는 것이 아니라, 태어날 때부터 우리 안에 있는 날개였어요.</span><br><br>마을 사람들도 하나둘 일어섰고, 울타리는 부서져 바람에 흩어졌지요.</p>
+      </div>
+    </section>
 
- <!-- 제4장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법01/04.jpg">
- <div class="story-card">
- <span class="chapter">제4장</span>
- <span class="theme">⚖️ <span class="vocab-tip" data-meaning="원래 이름은 '평등권'. 모두가 똑같이 대우받을 수 있는 권리">'똑같이 대우받을 권리'</span></span>
- <h2>네 번째 보석, '같음의 저울'</h2>
- <p><strong>【중심 문장】</strong> 모든 사람은 성별, 나이, 외모, 출신에 상관없이 <span class="vocab-tip" data-meaning="똑같이 대하는 것">동등한</span> 대우를 받을 권리가 있다.</p>
- <p>그림자 영주가 마을 사람들 사이에 보이지 않는 선을 그었습니다.</p>
- <p><span class="dialogue">"키가 큰 사람은 이쪽, 작은 사람은 저쪽!"</span><br><br>하늘이는 친구 달이와도 만날 수 없게 되었습니다. 달이는 남쪽에서 왔다는 <span class="vocab-tip" data-meaning="그렇게 된 까닭">이유</span>로 북쪽 학교에 다닐 수 없었습니다.</p>
- <p><span class="dialogue">"달이는 저랑 똑같은 아이인데!"</span><br><br>하늘이가 소리쳤습니다.</p>
- <p>할머니 지혜가 저울을 꺼냈습니다.<br><br><span class="dialogue">"이것은 '같음의 저울'이란다. 이 저울 위에서는 모두 같은 무게를 가진단다."</span></p>
- <p>하늘이가 저울을 들고 선 위에 놓자, 저울이 빛나며 선들이 녹아 없어졌습니다.</p>
- <p>달이가 하늘이에게 달려왔습니다. <span class="highlight">누구든지 차별받지 않을 권리가 있습니다.</span></p>
- </div>
- </section>
+    <!-- 제4장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법01/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">⚖️ 평등권</span>
+        <h2>네 번째 보석, '같음의 저울'</h2>
+        <p><strong>【중심 문장】</strong> 모든 사람은 똑같이 대우받을 권리가 있어요.</p>
+        <p>울타리가 사라진 후, 그림자 영주는 더 교활한 방법을 꾸몄어요.<br>
+마을 사람들 사이에 보이지 않는 선을 그은 거예요.<br><br><span class="dialogue">"키가 큰 사람은 이쪽, 작은 사람은 저쪽!"</span><br><br><span class="dialogue">"피부가 하얀 사람은 큰 집에, 까무잡잡한 사람은 작은 집에!"</span></p>
+        <p>마을은 순식간에 여러 조각으로 나뉘었어요.<br>
+하늘이는 친구 달이와도 만날 수 없게 되었지요.<br>
+달이는 남쪽에서 왔다는 이유만으로 북쪽 학교에 다닐 수 없었지요.</p>
+        <p>할머니 지혜가 낡은 저울 하나를 꺼냈어요.<br><br><span class="dialogue">"이것은 '같음의 저울'이란다. 이 저울 위에서는 왕도, 아이도, 어른도 모두 같은 무게를 가진단다. 사람의 가치는 겉모습으로 정해지는 것이 아니거든."</span></p>
+        <p>하늘이는 저울을 들고 마을 한가운데에 섰어요.<br>
+보이지 않는 선 위에 저울을 놓자,<br>
+저울이 환하게 빛나며 선들이 녹아 없어졌지요.</p>
+        <p>달이가 웃으며 달려왔고, 두 아이는 꼭 껴안았어요.<br>
+<span class="highlight">그림자 영주가 만든 <span class="vocab-tip" data-meaning="다르다는 이유로 부당하게 대하는 것">차별</span>의 선은 <span class="vocab-tip" data-meaning="차별 없이 같게 대우받는 것">평등</span>의 빛 앞에서 힘없이 사라졌지요.</span></p>
+      </div>
+    </section>
 
- <!-- 제5장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법01/05.jpg">
- <div class="story-card">
- <span class="chapter">제5장</span>
- <span class="theme">🌱 <span class="vocab-tip" data-meaning="원래 이름은 '사회권'. 교육·병원·일자리 등을 보장받을 권리">'사람답게 살 권리'</span></span>
- <h2>다섯 번째 보석, '나눔의 씨앗'</h2>
- <p><strong>【중심 문장】</strong> 모든 사람은 건강하게 살고, 배우고, 일할 권리가 있으며, <span class="vocab-tip" data-meaning="사람들이 모여 사는 집단">사회</span>는 이를 <span class="vocab-tip" data-meaning="틀림없이 지켜주다">보장</span>해야 한다.</p>
- <p>그림자 영주가 우물을 말리고 학교 문을 닫았습니다. 아픈 사람을 치료하던 약초원도 메말랐습니다.</p>
- <p><span class="dialogue">"이제 마을 사람들은 배우지도, 먹지도, 치료받지도 못할 거야!"</span></p>
- <p>하늘이가 물었습니다.<br><br><span class="dialogue">"할머니, 먹고 배우고 건강하게 사는 것도 권리인 거잖아요?"</span></p>
- <p>할머니 지혜가 씨앗을 꺼냈습니다.<br><br><span class="dialogue">"이것은 '나눔의 씨앗'이란다. 나누면 나눌수록 더 많이 자란단다."</span></p>
- <p>하늘이가 씨앗을 땅에 심자, 나무가 자라났습니다. 가지에서는 열매와 약초와 책이 열렸고, 뿌리에서는 물이 샘솟았습니다.</p>
- <p><span class="highlight">모든 사람은 사람답게 살 권리가 있습니다.</span></p>
- </div>
- </section>
+    <!-- 제5장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법01/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">🌱 사회권</span>
+        <h2>다섯 번째 보석, '나눔의 씨앗'</h2>
+        <p><strong>【중심 문장】</strong> 모든 사람은 배우고 건강하게 살 권리가 있어요.</p>
+        <p>그림자 영주의 다음 작전은 우물을 말리는 것이었어요.<br>
+물이 마르자 밭의 작물도 시들었지요.<br>
+학교의 문도 닫혔어요.<br>
+아픈 사람을 치료하던 약초원도 메말라 버렸지요.</p>
+        <p><span class="dialogue">"이제 마을 사람들은 배우지도, 먹지도, 치료받지도 못할 거야!"</span><br><br>그림자 영주는 비웃었지요.</p>
+        <p>배가 고파 우는 아이들, 아파도 약을 구할 수 없는 노인들.<br>
+마을은 점점 생기를 잃어갔어요.<br>
+<span class="dialogue">"할머니, 먹고 배우고 건강하게 사는 것도 권리인 거잖아요?"</span><br><br>하늘이가 물었어요.</p>
+        <p>할머니 지혜가 품속에서 작은 씨앗을 꺼냈어요.<br><br><span class="dialogue">"이것은 '나눔의 씨앗'이란다. 나누면 나눌수록 더 많이 자란단다."</span></p>
+        <p>하늘이가 씨앗을 심자 놀라운 일이 일어났어요.<br>
+순식간에 커다란 나무가 자라났지요.<br>
+가지마다 열매와 약초와 책이 열렸어요.<br>
+뿌리에서는 맑은 물이 샘솟았지요.</p>
+        <p><span class="highlight"><span class="vocab-tip" data-meaning="인간답게 살도록 나라가 도와줄 것을 요구할 권리">사회권</span>이란 바로 이런 것이었어요. 모두가 배고프지 않게, 아프지 않게, 배울 수 있게 함께 돌보는 약속이지요.</span><br><br>아이들은 다시 책을 펼치며 꿈을 키웠어요.</p>
+      </div>
+    </section>
 
- <!-- 제6장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법01/06.jpg">
- <div class="story-card">
- <span class="chapter">제6장</span>
- <span class="theme">🔔 <span class="vocab-tip" data-meaning="원래 이름은 '참정권'. 선거나 정치에 참여할 수 있는 권리">'정치에 참여할 권리'</span></span>
- <h2>여섯 번째 보석, '목소리의 종'</h2>
- <p><strong>【중심 문장】</strong> 모든 사람은 자기가 사는 세상의 일에 참여하고 <span class="vocab-tip" data-meaning="어떤 일에 대한 생각">의견</span>을 말할 권리가 있다.</p>
- <p>그림자 영주가 마을 회의를 없앴습니다.<br><br><span class="dialogue">"마을의 모든 결정은 내가 한다!"</span></p>
- <p><span class="dialogue">"이건 우리 마을인데, 왜 우리가 결정할 수 없는 거예요?"</span><br><br>하늘이가 물었습니다.</p>
- <p>할머니 지혜가 종탑을 가리켰습니다.<br><br><span class="dialogue">"저것은 '목소리의 종'이란다. 옛날에는 마을 사람들이 함께 의견을 나누고 결정했지."</span></p>
- <p>하늘이의 보석이 빛나자, 종탑에서 종소리가 울렸습니다. 마을 사람들이 광장에 모여 자기 생각을 이야기했습니다.</p>
- <p><span class="highlight">우리 삶에 <span class="vocab-tip" data-meaning="다른 것에 작용을 미치는 것">영향</span>을 주는 일에 의견을 말할 수 있는 것이 우리의 권리입니다.</span></p>
- </div>
- </section>
+    <!-- 제6장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법01/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">🔔 참정권</span>
+        <h2>여섯 번째 보석, '목소리의 종'</h2>
+        <p><strong>【중심 문장】</strong> 모든 사람은 마을 일에 참여하고 의견을 말할 권리가 있어요.</p>
+        <p>마을이 다시 살아나자, 그림자 영주는 마을 회의를 없애버렸어요.<br><br><span class="dialogue">"마을의 모든 결정은 내가 한다! 너희는 그저 따르기만 하면 돼!"</span></p>
+        <p>사람들은 억울했지만 아무 말도 할 수 없었어요.<br>
+<span class="dialogue">"이건 우리 마을인데, 왜 우리가 결정할 수 없는 거예요?"</span><br><br>하늘이가 주먹을 꽉 쥐며 물었어요.</p>
+        <p>할머니 지혜가 마을 종탑을 가리켰어요.<br><br><span class="dialogue">"저 종은 마을 사람들이 함께 <span class="vocab-tip" data-meaning="어떤 일을 서로 의견을 나누며 상의하는 것">의논</span>할 때 울리던 '목소리의 종'이란다. 그런데 그림자 영주가 종의 추를 훔쳐 가버렸어."</span></p>
+        <p>하늘이는 용기와 함께 어둠의 성 근처까지 갔어요.<br>
+무서웠지만, 사람들의 목소리를 되찾아야 했지요.<br>
+가슴의 보석이 강하게 빛나자,<br>
+종탑에서 새로운 종소리가 울려 퍼졌어요.</p>
+        <p>종소리를 들은 사람들이 광장에 모이기 시작했어요.<br>
+오랜만에 모두가 돌아가며 자기 생각을 이야기했지요.</p>
+        <p><span class="highlight"><span class="vocab-tip" data-meaning="나라나 마을의 일에 참여할 수 있는 권리">참정권</span>이란 이처럼 자기 삶에 관한 일에 직접 목소리를 낼 수 있는 권리였어요.</span><br><br>어린 하늘이의 의견도, 할머니의 의견도 똑같이 소중했지요.</p>
+      </div>
+    </section>
 
- <!-- 제7장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법01/07.jpg">
- <div class="story-card">
- <span class="chapter">제7장</span>
- <span class="theme">⚒️ <span class="vocab-tip" data-meaning="원래 이름은 '청구권'. 억울한 일을 당했을 때 도움을 요청할 수 있는 권리">'억울함 풀 권리'</span></span>
- <h2>일곱 번째 보석, '<span class="vocab-tip" data-meaning="옳고 바른 것">정의</span>의 망치'</h2>
- <p><strong>【중심 문장】</strong> 권리를 <span class="vocab-tip" data-meaning="다른 사람의 권리를 빼앗거나 해치는 것">침해</span>당했을 때, 누구나 공정한 도움을 요청하고 <span class="vocab-tip" data-meaning="어려움에서 벗어나도록 도와주는 것">구제</span>받을 권리가 있다.</p>
- <p>그림자 영주가 떡집을 부수고 나무꾼의 도끼를 빼앗았습니다. 사람들은 억울해도 도움받을 곳이 없었습니다.</p>
- <p><span class="dialogue">"할머니, 억울한 일을 당하면 어떻게 해야 해요?"</span></p>
- <p>할머니 지혜가 '정의의 집'을 가리켰습니다.<br><br><span class="dialogue">"저곳에 가면 도움을 청할 수 있단다. '정의의 망치'가 있거든."</span></p>
- <p>하늘이가 망치를 들자 빛이 살아났습니다. 망치가 울리자 부서진 가게가 다시 세워지고, 도끼도 주인에게 돌아왔습니다.</p>
- <p><span class="highlight">억울한 일을 당했을 때 바로잡아 달라고 말할 수 있는 것이 우리의 권리입니다.</span></p>
- </div>
- </section>
+    <!-- 제7장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법01/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">⚒️ 청구권</span>
+        <h2>일곱 번째 보석, '정의의 망치'</h2>
+        <p><strong>【중심 문장】</strong> 억울한 일을 당하면 누구나 도움을 요청할 권리가 있어요.</p>
+        <p>마을에 다시 활기가 돌자, 그림자 영주는 더 비열한 짓을 벌였어요.<br>
+한밤중에 몰래 내려와 떡집 아주머니의 가게를 부수고,<br>
+나무꾼 아저씨의 도끼를 빼앗았지요.</p>
+        <p>사람들은 울며 <span class="vocab-tip" data-meaning="억울한 일을 다른 사람에게 이야기하는 것">하소연</span>했지만 소용없었어요.<br><br><span class="dialogue">"억울해도 아무 소용없어. 누구에게 말해도 달라지는 건 없다고."</span></p>
+        <p><span class="dialogue">"할머니, 억울한 일을 당하면 어떻게 해야 해요?"</span></p>
+        <p>할머니는 먼지 쌓인 작은 건물을 가리켰어요.<br><br><span class="dialogue">"저곳은 옛날에 '정의의 집'이었단다. 누구든 억울한 일을 당하면 도움을 청할 수 있었지. '정의의 망치'가 울리면 잘못은 바로잡히고 피해는 회복되었단다."</span></p>
+        <p>하늘이는 정의의 집 문을 열었어요.<br>
+안에는 빛을 잃은 망치가 놓여 있었지요.<br>
+하늘이가 들어 올리자 망치에 다시 빛이 살아났어요.<br>
+망치가 세 번 울리자 부서진 가게가 다시 세워지고,<br>
+빼앗긴 도끼는 주인에게 돌아왔지요.</p>
+        <p><span class="highlight"><span class="vocab-tip" data-meaning="억울한 일을 바로잡아 달라고 요청할 수 있는 권리">청구권</span>이란 부당한 일을 당했을 때 "바로잡아 주세요"라고 당당히 요청할 수 있는 권리였어요.</span></p>
+      </div>
+    </section>
 
- <!-- 제8장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법01/08.jpg">
- <div class="story-card">
- <span class="chapter">제8장</span>
- <span class="theme">💔 어둠의 습격</span>
- <h2>여덟 번째 보석, '기억의 수정구슬'</h2>
- <p><strong>【중심 문장】</strong> 역사 속에서 인권이 침해된 사례를 기억하는 것은 같은 아픔을 되풀이하지 않기 위함이다.</p>
- <p>그날 밤, 그림자 영주가 마을을 덮쳤습니다. 검은 번개가 하늘을 가르고, 마을 광장에 거대한 어둠의 구체가 나타났습니다. 사람들의 보석이 하나둘 빛을 잃어갔습니다.</p>
- <p><span class="dialogue">"마을 사람들을 지켜야 해!"</span></p>
-<p>하늘이가 달려갔습니다. 그러나 어둠의 힘이 너무 강했습니다. 그때, 작은 고양이 용기가 하늘이 앞을 막아섰습니다.</p>
- <p><span class="dialogue">"용기야, 안 돼!"</span></p>
-<p>용기가 어둠의 구체를 향해 뛰어들었습니다. 작은 몸에서 뿜어져 나온 빛이 구체에 금을 냈습니다. 하지만 그 반동으로 용기는 멀리 튕겨나갔습니다.</p>
- <p>하늘이가 달려가 보니, 용기는 숨을 몰아쉬며 쓰러져 있었습니다. 앞다리가 이상하게 꺾여 있었고, 한쪽 눈을 뜨지 못했습니다. 하늘이는 울면서 용기를 안아 들었습니다.</p>
-<p>할머니 지혜가 달려왔습니다. <span class="dialogue">"어서 치료를 해야 해."</span><br><br><span class="highlight">기억하는 것이 더 나은 내일을 만드는 첫걸음입니다.</span></p>
- </div>
- </section>
+    <!-- 제8장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법01/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">🔮 권리 침해 사례</span>
+        <h2>여덟 번째 보석, '기억의 수정구슬'</h2>
+        <p><strong>【중심 문장】</strong> 아픈 역사를 기억해야 같은 아픔이 되풀이되지 않아요.</p>
+        <p>일곱 개의 보석을 되찾은 하늘이는 어느 날 밤,<br>
+이상한 꿈을 꾸었어요.<br>
+꿈속에서 시간의 강을 따라 여러 시대를 여행했지요.</p>
+        <p>어떤 시대에서는 피부색이 다르다는 이유로<br>
+같은 물을 마실 수 없는 사람들을 보았어요.<br>
+여자라는 이유로 학교에 갈 수 없는 소녀들도 만났지요.<br>
+전쟁으로 집을 잃은 가족들도 보았어요.</p>
+        <p>하늘이는 눈물을 멈출 수 없었어요.<br><br><span class="dialogue">"이 모든 게 실제로 일어났던 일이란 말이에요?"</span></p>
+        <p>꿈에서 깬 하늘이에게 할머니가 '기억의 수정구슬'을 보여주었어요.<br><br><span class="dialogue">"이 구슬 속에는 아픈 역사가 담겨 있단다. 기억하는 이유는 복수하기 위해서가 아니야. 같은 아픔이 다시 일어나지 않도록 약속하기 위해서란다."</span></p>
+        <p>구슬 속에는 사람들이 저지른<br>
+수많은 인권 <span class="vocab-tip" data-meaning="남의 권리를 함부로 짓밟는 것">침해</span>의 기록이 담겨 있었어요.</p>
+        <p>하늘이는 구슬을 가슴에 꼭 안았어요.<br>
+아프지만 잊어서는 안 되는 기억이었지요.<br>
+<span class="highlight">기억하는 것이야말로 더 나은 내일을 만드는 첫걸음이었어요.</span><br><br>구슬은 여덟 번째 보석이 되어 함께 빛났지요.</p>
+      </div>
+    </section>
 
- <!-- 제9장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법01/09.jpg">
- <div class="story-card">
- <span class="chapter">제9장</span>
- <span class="theme">✨ 용기의 회복</span>
- <h2>아홉 번째 보석, '약속의 팔찌'</h2>
- <p><strong>【중심 문장】</strong> 권리에는 반드시 <span class="vocab-tip" data-meaning="맡아서 해야 할 일">책임</span>이 따르며, 나의 권리를 지키려면 다른 사람의 권리도 존중해야 한다.</p>
- <p>할머니 지혜의 오두막에서 용기는 며칠 동안 잠만 잤습니다. 하늘이는 한시도 곁을 떠나지 않았습니다.</p>
-<p>사흘째 되던 날, 용기가 간신히 눈을 떴습니다. 한쪽 눈은 여전히 보이지 않았고, 앞다리를 절뚝거렸습니다.</p>
-<p><span class="dialogue">"용기야... 미안해. 나 때문에..."</span></p>
-<p>하늘이가 울먹였습니다. 그러자 용기가 고개를 부비며 말했습니다.</p>
-<p><span class="dialogue">"하늘아... 괜찮아. 네 웃음을 지킨 거잖아."</span></p>
-<p>용기의 목에서 작은 빛이 반짝였습니다. 그것은 '약속의 팔찌'로 변해 하늘이의 손목에 감겼습니다. 용기는 예전처럼 빠르게 달리지 못했지만, 눈빛만은 여전히 빛나고 있었습니다.</p>
- <p><span class="highlight">나의 권리가 소중한 만큼, 다른 사람의 권리도 똑같이 소중합니다.</span></p>
- </div>
- </section>
+    <!-- 제9장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법01/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">🤝 권리와 책임</span>
+        <h2>아홉 번째 보석, '약속의 팔찌'</h2>
+        <p><strong>【중심 문장】</strong> 권리에는 반드시 책임이 따라요.</p>
+        <p>아홉 번째 보석을 찾아 나선 하늘이 앞에<br>
+뜻밖의 시련이 나타났어요.<br>
+이번에는 마을 안에서 문제가 생긴 거예요.<br>
+사람들이 자기 권리만 주장하기 시작한 것이지요.</p>
+        <p><span class="dialogue">"나는 자유롭게 노래할 권리가 있어!"</span><br><br>한밤중에 청년이 큰 소리로 노래를 불러<br>
+이웃들이 잠을 잘 수 없었어요.<br><br><span class="dialogue">"나는 내 생각을 말할 권리가 있다고!"</span></p>
+        <p>마을은 다시 시끄러워지고 다툼이 늘어났어요.</p>
+        <p>할머니 지혜가 하늘이의 손목에 팔찌를 채워주었어요.<br><br><span class="dialogue">"이것은 '약속의 팔찌'란다. 권리라는 동전에는 반드시 뒷면이 있어. 그것이 바로 <span class="vocab-tip" data-meaning="맡은 일을 잘 해내야 하는 의무">책임</span>이지."</span></p>
+        <p>하늘이는 사람들 앞에 서서 말했어요.<br><br><span class="dialogue">"우리 모두 노래할 권리가 있지만, 이웃의 잠잘 권리도 소중해요. 말할 권리가 있지만, 다른 사람의 존엄을 지켜줄 책임도 있어요."</span></p>
+        <p>사람들은 비로소 깨달았어요.<br>
+나의 권리가 소중한 만큼 옆 사람의 권리도 소중하다는 것을요.</p>
+        <p><span class="highlight">약속의 팔찌가 빛나며 아홉 번째 보석이 되었고, 마을에는 진정한 평화가 찾아왔어요.</span></p>
+      </div>
+    </section>
 
- <!-- 제10장 -->
- <section class="story-section" data-bg="/images/창작도서/창작법01/10.jpg">
- <div class="story-card">
- <span class="chapter">제10장</span>
- <span class="theme">💝 함께하는 내일</span>
- <h2>열 번째 보석, '무지개의 왕관'</h2>
- <p><strong>【중심 문장】</strong> 인권은 누구에게나 주어진 권리이며, 우리 모두가 함께 지켜야 할 소중한 약속이다.</p>
- <p>용기와 함께 마을 광장으로 나섰습니다. 절뚝거리는 용기 곁을 하늘이가 천천히 걸었습니다. 마을 사람들이 하나둘 다가왔습니다.</p>
- <p><span class="dialogue">"용기 덕분에 우리가 무사했어요."</span><br><br>사람들이 용기를 쓰다듬었습니다. 용기의 상처 난 눈에서 작은 눈물이 흘렀습니다.</p>
- <p>그때, 그림자 영주가 다시 나타났습니다. 하지만 이번에는 달랐습니다. 마을 사람들이 모두 손을 잡고 원을 만들었습니다.</p>
- <p><span class="dialogue">"인권은 혼자 지키는 게 아니야!"</span><br><br>하늘이가 외쳤습니다. 모든 보석이 무지개가 되어 그림자 영주를 감쌌습니다.</p>
- <p>그때 하늘이는 알았습니다. <span class="highlight">보석은 사라진 적이 없었어요.</span> 그림자 영주가 훔친 건 보석이 아니라, 사람들이 자기 보석을 보는 눈이었어요.<br><br><span class="dialogue">"인권은 빼앗을 수 없어요. 다만 가려질 뿐이에요. 우리가 다시 기억하면 빛은 돌아와요."</span></p>
- <p>영주의 어둠이 벗겨지자, 그 안에는 외롭고 슬픈 아이가 있었습니다.</p>
- <p>하늘이가 손을 내밀었습니다.<br><br><span class="dialogue">"너에게도 인권이 있어. 함께 가자."</span></p>
-<p>할머니 지혜가 다가와 그 아이를 안아주었습니다. 용기도 절뚝거리며 다가가 아이의 손등에 코를 비볐습니다.</p>
-<p>할머니가 말했습니다.<br><br><span class="dialogue">"상처가 있어도 괜찮아. 용기처럼 말이야. 중요한 건 함께하는 거란다."</span></p>
- <p>아홉 개의 보석이 합쳐지며 '무지개의 왕관'이 되었습니다. 절뚝거리는 용기와 함께 걷는 하늘이의 머리 위에서 부드럽게 빛났습니다.</p>
- <p><span class="highlight">모든 사람이 소중하게 여겨지고, 모든 사람의 권리가 지켜지는 세상. 이것이 우리가 꿈꾸는 세상입니다.</span></p>
- <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(92, 107, 192, 0.15); border-radius: 16px;">
- <strong style="color: #3949AB; font-size: 20px;">🌱 「인권은 누구에게나 주어진 권리이며, 우리 모두가 함께 지켜야 할 소중한 약속이다.」</strong>
- </p>
- </div>
- </section>
- </div>
+    <!-- 제10장 -->
+    <section class="story-section" data-bg="/images/창작도서/창작법01/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">🌈 모두의 인권</span>
+        <h2>열 번째 보석, '무지개의 왕관'</h2>
+        <p><strong>【중심 문장】</strong> 인권은 우리 모두가 함께 지켜야 할 소중한 약속이에요.</p>
+        <p>마침내 어둠의 성 앞에 선 하늘이 앞에 그림자 영주가 나타났어요.<br><br><span class="dialogue">"어리석은 아이야, 인권 따위는 강한 자 앞에서 먼지같이 사라지는 것이야!"</span></p>
+        <p>하늘이는 대답했어요.<br><br><span class="dialogue">"아니에요. 인권은 먼지가 아니에요. 모든 사람 안에 있는 별빛이에요."</span></p>
+        <p>그 순간, 마을 사람들이 하늘이 뒤에 모여들었어요.<br>
+모두의 가슴에서 빛난 보석이 무지개가 되자,<br>
+그림자 영주의 어둠은 서서히 걷혔지요.</p>
+        <p><span class="highlight">보석은 한 번도 마을을 떠난 적이 없었어요.</span><br><br><span class="dialogue">"인권은 빼앗을 수 없어요. 가려진 빛은 우리가 다시 기억하면 언제든 되살아나요."</span></p>
+        <p>그림자가 사라지자, 그 안에는 슬픈 작은 존재가 있었어요.<br>
+하늘이는 손을 내밀었지요.<br><br><span class="dialogue">"당신에게도 인권이 있어요. 함께 가요."</span></p>
+        <p>아홉 개의 보석이 합쳐지며 모두를 위한 '무지개의 왕관'이 탄생했어요.<br>
+<span class="highlight">왕관의 빛이 비추자, 별빛 마을은 세상에서 가장 아름다운 마을이 되었어요.</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(92, 107, 192, 0.15); border-radius: 16px;">
+          <strong style="color: #3949AB; font-size: 20px;">🌱 「인권은 누구에게나 주어진 소중한 약속이에요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
 
- <!-- 네비게이션 버튼 -->
- <div class="nav-buttons">
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
     <button class="nav-btn" onclick="location.href='law01_season1_quiz.html?season=season1'" style="background: linear-gradient(135deg, #5C6BC0, #3949AB);">📝 관문평가</button>
- </div>
+  </div>
 
- <!-- 스크롤 인디케이터 -->
- <div class="scroll-indicator" id="scrollIndicator">
- <svg viewBox="0 0 24 24" fill="white">
- <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
- </svg>
- </div>
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
 
- <script>
- const mapContainer = document.getElementById('map-container');
- const sections = document.querySelectorAll('.story-section');
- const scrollIndicator = document.getElementById('scrollIndicator');
- let currentBg = '';
- let ticking = false;
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
 
- function updateBackground() {
- const scrollPos = window.scrollY + window.innerHeight / 2;
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
 
- // 스크롤 인디케이터 숨기기/보이기
- if (window.scrollY > 100) {
- scrollIndicator.style.opacity = '0';
- } else {
- scrollIndicator.style.opacity = '1';
- }
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
 
- sections.forEach(section => {
- const rect = section.getBoundingClientRect();
- const sectionTop = window.scrollY + rect.top;
- const sectionBottom = sectionTop + rect.height;
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
 
- if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
- // 배경 업데이트
- const bgImage = section.dataset.bg;
- if (bgImage && bgImage !== currentBg) {
- currentBg = bgImage;
- mapContainer.style.backgroundImage = `url(${bgImage})`;
- }
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
 
- // 카드 활성화
- const card = section.querySelector('.story-card');
- if (card && !card.classList.contains('active')) {
- card.classList.add('active');
- }
- }
- });
- }
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
 
- window.addEventListener('scroll', () => {
- if (!ticking) {
- window.requestAnimationFrame(() => {
- updateBackground();
- ticking = false;
- });
- ticking = true;
- }
- });
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
 
- // 초기 실행
- updateBackground();
+    // 초기 실행
+    updateBackground();
 
- function goBack() {
- // 부모 창이 있으면 부모에게 메시지 전송
- if (window.parent !== window) {
- window.parent.postMessage({ action: 'closeStory' }, '*');
- } else {
- window.history.back();
- }
- }
- </script>
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
 </body>
 </html>

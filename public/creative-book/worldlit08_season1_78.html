@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐺 늑대의 아이 모글리 — 정글북</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계문학08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🐺 늑대의 아이 모글리 — 정글북</h1>
+        <p class="subtitle">
+          — 키플링의 성장 문학으로 읽는 정체성의 물음 —<br>
+          교과기반 창작도서 · 세계문학 08
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 모글리:</strong> 정글에서 늑대의 손에 길러진 아이. 정글과 인간 세계 사이에서 자신이 누구인지 고민한다.</p>
+          <p><strong>★ 발루와 바기라:</strong> 모글리를 가르치고 지켜 주는 곰 선생과 흑표범. 정글의 지혜를 전한다.</p>
+          <p><strong>★ 감상 길잡이:</strong> 「정글북」은 키플링이 1894년에 발표한 성장 문학으로, 두 세계 사이에서 자신의 정체성을 찾아가는 소년의 이야기를 그렸습니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학08/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 발단</span>
+        <h2>동굴 앞의 아기</h2>
+        <p>깊은 정글의 어느 동굴 앞에, 길을 잃은 아기 하나가 홀로 남겨졌습니다. 무서운 호랑이 시어칸을 피해 도망친 그 아기를, 늑대 부부가 발견했습니다. 늑대 부부는 그 아기를 자신들의 새끼처럼 거두기로 했습니다.</p>
+        <p>늑대 부부는 아기에게 모글리라는 이름을 지어 주었습니다. 인간의 아기가 늑대의 손에서 자라게 된 것입니다. 모글리는 늑대 형제들과 함께 뛰놀며 정글의 아이로 자라났습니다.</p>
+        <p>모글리는 자신이 늑대와 다른 존재라는 것을 알지 못한 채 정글에서 자랐습니다. 정글이 곧 모글리의 집이었고, 짐승들이 모글리의 가족이었습니다. 모글리는 정글의 규칙을 배우며 씩씩하게 성장했습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 늑대의 손에 길러진 인간 아이 모글리의 특별한 처지입니다. 이 성장 문학은 정글과 인간 세계라는 두 세계 사이에서 자신의 정체성을 찾아가는 여정을 그립니다. 동굴 앞에 남겨진 아기가 그 출발점이 됩니다.</p>
+        <p>나는 누구인가라는 물음을, 모글리는 두 세계 사이에서 마주하게 됩니다. 늑대의 아이 모글리의 이야기가 이렇게 시작됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학08/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 공동체</span>
+        <h2>늑대 무리의 회의</h2>
+        <p>모글리를 무리에 받아들일지를 두고, 늑대들은 회의를 열었습니다. 정글에는 무리를 다스리는 나름의 규칙과 법이 있었기 때문입니다. 인간의 아이를 무리에 들이는 것은 쉬운 결정이 아니었습니다.</p>
+        <p>곰 발루와 흑표범 바기라가 모글리를 위해 나서 주었습니다. 이들은 모글리가 정글의 훌륭한 일원이 될 것이라며 늑대들을 설득했습니다. 마침내 모글리는 늑대 무리의 정식 일원으로 받아들여졌습니다.</p>
+        <p>이렇게 모글리는 정글 공동체의 한 구성원이 되었습니다. 정글에는 정글만의 질서와 법이 있었고, 모글리는 그것을 지키며 살아가야 했습니다. 모글리는 정글의 규칙을 배우며 그 세계에 뿌리내렸습니다.</p>
+        <p>이 대목은 모글리가 정글 공동체의 일원이 되는 도입의 단계입니다. 늑대 무리의 회의와 규칙이, 정글에도 나름의 질서가 있음을 보여 줍니다. 모글리가 정글이라는 한 세계에 속하게 되는 과정이 그려집니다.</p>
+        <p>모글리는 정글에서 살아가기 위해 여러 가지를 배워야 했습니다. 곰 발루와 흑표범 바기라가 그의 스승이 되어 주었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학08/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 배움</span>
+        <h2>발루 선생님의 수업</h2>
+        <p>곰 발루는 모글리에게 정글의 법을 가르치는 스승이었습니다. 발루는 모글리에게 정글에서 살아가는 데 필요한 온갖 지혜를 일러 주었습니다. 어떤 짐승을 조심해야 하는지, 어떻게 위험을 피하는지를 하나하나 가르쳤습니다.</p>
+        <p>발루의 수업은 때로는 엄격했지만, 그 속에는 모글리를 아끼는 따뜻한 마음이 담겨 있었습니다. 발루는 모글리가 정글에서 무사히 살아남기를 진심으로 바랐습니다. 모글리는 발루의 가르침을 통해 정글의 지혜를 익혀 갔습니다.</p>
+        <p>정글의 법은 짐승들이 서로 어우러져 살아가기 위한 소중한 규칙이었습니다. 그 법을 배우는 것은, 모글리가 정글의 참된 일원이 되기 위한 과정이었습니다. 모글리는 배움을 통해 조금씩 성장해 갔습니다.</p>
+        <p>이 대목은 모글리가 정글의 지혜를 배우는 전개의 단계입니다. 발루 선생님의 가르침이, 모글리를 정글의 일원으로 성장시킵니다. 배움을 통해 한 세계에 뿌리내리는 과정이 정겹게 그려집니다.</p>
+        <p>발루의 낮 수업이 끝나면, 흑표범 바기라의 밤 수업이 기다리고 있었습니다. 바기라는 모글리에게 또 다른 지혜를 전해 주었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학08/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 보호</span>
+        <h2>바기라의 밤 수업</h2>
+        <p>흑표범 바기라는 모글리를 밤의 위험으로부터 지켜 주는 든든한 보호자였습니다. 바기라는 정글의 어둠 속에 숨은 위험을 모글리에게 일러 주었습니다. 그리고 언제나 모글리 곁에서 그를 지켰습니다.</p>
+        <p>바기라는 모글리에게, 정글에는 모글리를 노리는 무서운 존재가 있다는 것도 알려 주었습니다. 바로 호랑이 시어칸이었습니다. 시어칸은 오래전부터 모글리를 잡아먹으려 노리고 있었습니다.</p>
+        <p>발루와 바기라, 두 스승의 가르침과 보호 속에서 모글리는 무럭무럭 자랐습니다. 그러나 시어칸의 위협은 점점 다가오고 있었습니다. 모글리의 평화로운 정글살이에 그림자가 드리우기 시작했습니다.</p>
+        <p>이 대목은 모글리가 스승들의 보호 속에 자라는 전개의 단계입니다. 바기라의 든든한 지킴이, 정글에서 모글리를 살아가게 하는 힘이 됩니다. 그러나 시어칸이라는 위협이 다가오며 긴장이 감돌기 시작합니다.</p>
+        <p>마침내 호랑이 시어칸이 모글리를 노리고 본격적으로 움직이기 시작했습니다. 정글에 큰 위기가 닥쳐온 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학08/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 위협</span>
+        <h2>시어칸의 이빨</h2>
+        <p>호랑이 시어칸은 모글리를 잡아먹으려는 뜻을 노골적으로 드러냈습니다. 시어칸은 인간의 아이가 정글에 있는 것을 못마땅해했습니다. 시어칸의 날카로운 이빨은 언제나 모글리를 향하고 있었습니다.</p>
+        <p>시어칸은 힘이 세고 교활한 정글의 폭군이었습니다. 그는 모글리뿐 아니라, 모글리를 지키는 늑대 무리까지 위협했습니다. 정글에는 팽팽한 긴장감이 감돌았습니다.</p>
+        <p>모글리는 시어칸의 위협 앞에서 자신이 힘없는 인간의 아이라는 것을 실감했습니다. 늑대나 곰, 흑표범처럼 강한 몸도, 날카로운 이빨도 없었기 때문입니다. 모글리는 자신이 정글의 다른 짐승들과 다르다는 것을 처음으로 느끼기 시작했습니다.</p>
+        <p>이 대목은 시어칸의 위협이 모글리를 위기로 몰아넣는 단계입니다. 강한 짐승들 사이에서 자신이 인간임을 자각하는 모글리의 모습이, 정체성의 물음을 일깨웁니다. 두 세계 사이에서 모글리의 고민이 깊어지기 시작합니다.</p>
+        <p>시어칸의 위협이 거세지면서, 늑대 무리마저 흔들리기 시작했습니다. 모글리는 점점 외로운 처지에 놓였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학08/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 흔들림</span>
+        <h2>흔들리는 무리</h2>
+        <p>시어칸의 위협과 회유에 늑대 무리는 흔들리기 시작했습니다. 몇몇 늑대는 인간의 아이 때문에 무리가 위험에 빠진다며 모글리를 못마땅해했습니다. 모글리를 지지하던 무리에 균열이 생긴 것입니다.</p>
+        <p>모글리는 자신을 가족처럼 여기던 늑대들이 등을 돌리려 하자 큰 상처를 받았습니다. 자신이 정글의 진짜 일원이 아닐지도 모른다는 생각이 들었습니다. 모글리는 자신이 어디에 속하는지 혼란스러워졌습니다.</p>
+        <p>모글리는 정글에서 나고 자랐지만, 결국 인간이라는 사실은 변하지 않았습니다. 그렇다고 인간 세계를 아는 것도 아니었습니다. 모글리는 두 세계 어디에도 온전히 속하지 못하는 자신의 처지를 깨닫기 시작했습니다.</p>
+        <p>이 대목은 모글리가 정체성의 혼란을 겪는 위기의 심화 단계입니다. 늑대 무리가 흔들리면서, 모글리는 자신이 어디에 속하는지 고민하게 됩니다. 두 세계 사이에서 방황하는 소년의 아픔이 그려집니다.</p>
+        <p>모글리는 시어칸에 맞서기 위해, 정글의 짐승들이 가장 두려워하는 것을 떠올렸습니다. 그것은 바로 인간만이 다룰 수 있는 붉은 꽃, 곧 불이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학08/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 대결</span>
+        <h2>붉은 꽃을 든 소년</h2>
+        <p>모글리는 시어칸에 맞서기 위해 인간의 마을에서 붉은 꽃, 곧 불을 가져왔습니다. 정글의 모든 짐승은 불을 몹시 두려워했습니다. 오직 인간만이 불을 다룰 수 있었기 때문입니다.</p>
+        <p>모글리가 타오르는 불을 손에 들자, 그토록 사납던 시어칸도 겁에 질려 물러섰습니다. 모글리는 불의 힘으로 시어칸을 정글에서 몰아냈습니다. 힘없는 인간의 아이라 여겨지던 모글리가, 인간만의 지혜로 정글의 폭군을 이긴 것입니다.</p>
+        <p>그러나 이 승리의 순간, 모글리는 묘한 깨달음을 얻었습니다. 자신이 불을 다룰 수 있다는 것은, 곧 자신이 정글의 짐승이 아니라 인간이라는 증거였기 때문입니다. 승리와 함께, 자신의 정체성이 더욱 또렷해진 것입니다.</p>
+        <p>이 대목은 이야기의 절정으로, 모글리가 불의 힘으로 시어칸을 물리치는 대결의 단계입니다. 인간만의 지혜로 승리하지만, 그것이 곧 자신이 인간임을 확인시키는 아이러니가 드러납니다. 정체성의 물음이 승리 속에서 더욱 깊어집니다.</p>
+        <p>시어칸을 몰아낸 뒤, 모글리는 자신이 정글에 온전히 속할 수 없다는 것을 더욱 분명히 느끼게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학08/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>어디에도 속하지 못한 아이</h2>
+        <p>시어칸을 물리친 뒤에도, 모글리의 마음은 편치 않았습니다. 불을 다룰 수 있는 자신은 정글의 짐승들과 분명히 달랐기 때문입니다. 짐승들도 이제 모글리를 조금은 두려워하며 거리를 두었습니다.</p>
+        <p>모글리는 자신이 정글에도, 인간 세계에도 온전히 속하지 못하는 존재임을 깨달았습니다. 정글에서 자랐지만 인간이고, 인간이지만 인간 세계를 알지 못했습니다. 두 세계 사이에 놓인 자신의 처지가 모글리를 외롭게 했습니다.</p>
+        <p>그 순간 모글리는 중요한 것을 깨달았습니다. 어디에도 온전히 속하지 못한다는 것은 슬픈 일이지만, 동시에 두 세계를 모두 아는 특별한 존재라는 뜻이기도 했습니다. 자신의 정체성을 있는 그대로 받아들이는 것이 중요했습니다.</p>
+        <p>이 대목은 이야기의 정신적 절정, 곧 모글리의 각성입니다. 두 세계 사이에서 자신의 정체성을 받아들이는 모글리의 성장이 그려집니다. 어디에도 속하지 못함이 곧 두 세계를 잇는 특별함일 수 있음을, 모글리는 깨닫습니다. 남과 다르다는 것이 부족함이 아니라 고유함일 수 있다는 것을 모글리는 알게 되었습니다.</p>
+        <p>모글리는 이제 자신이 나아갈 길을 스스로 정해야 하는 때가 왔음을 느꼈습니다. 정글과 인간 세계 사이에서, 모글리는 어려운 선택을 앞두고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학08/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 선택</span>
+        <h2>두 세계의 아이</h2>
+        <p>모글리는 자신을 길러 준 정글을 사랑했지만, 자신이 인간이라는 사실도 부정할 수 없었습니다. 모글리는 언젠가 인간 세계로 돌아가야 할지도 모른다는 것을 어렴풋이 느꼈습니다. 두 세계 사이에서 모글리는 자신의 길을 고민했습니다.</p>
+        <p>그러나 모글리는 어느 한쪽을 완전히 버리지 않기로 했습니다. 정글에서 배운 지혜와 인간으로서의 자신을 모두 소중히 여기기로 한 것입니다. 두 세계를 모두 품은 특별한 존재로 살아가기로 마음먹었습니다.</p>
+        <p>모글리의 이러한 선택은, 자신의 정체성을 온전히 받아들인 성숙한 결정이었습니다. 어디에 속하느냐가 아니라, 자신이 누구인지를 스스로 정하는 것이 중요했습니다. 모글리는 두 세계의 아이로서 당당히 살아가기로 했습니다.</p>
+        <p>이 대목은 모글리가 자신의 정체성을 받아들이며 성장하는 결말의 단계입니다. 두 세계를 모두 품기로 한 모글리의 선택이, 성숙한 자아의 모습을 보여 줍니다. 정체성이란 스스로 만들어 가는 것임을 이 장면은 일깨웁니다.</p>
+        <p>모글리는 정글의 짐승들과 작별하면서도, 언제든 다시 만나리라는 약속을 남겼습니다. 두 세계를 잇는 모글리의 여정은 계속될 것이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계문학08/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>정글이 들려주는 이야기</h2>
+        <p>「정글북」은 늑대의 손에 길러진 소년이 두 세계 사이에서 자신의 정체성을 찾아가는 성장 문학입니다. 모글리는 정글과 인간 세계 어디에도 온전히 속하지 못하는 처지에서, 자신이 누구인지를 스스로 정해 갑니다. 그 과정에서 모글리는 한층 성숙해집니다.</p>
+        <p>이 작품이 지닌 매력은 여럿입니다. 첫째는 정글이라는 생생한 배경과 개성 넘치는 짐승들이요, 둘째는 두 세계 사이에서 정체성을 고민하는 깊이 있는 주제입니다. 키플링은 이를 흥미진진한 모험과 함께 그려 냈습니다.</p>
+        <p>무엇보다 이 작품은, 나는 누구인가라는 근본적인 물음을 던집니다. 어디에 속하느냐가 아니라, 자신이 누구인지를 스스로 받아들이고 정하는 것이 중요합니다. 두 세계를 모두 품은 모글리는, 그 물음에 대한 성숙한 답을 보여 줍니다.</p>
+        <p>정글이 들려주는 모글리의 이야기는, 자신의 정체성을 고민하는 우리 모두에게 깊은 울림을 줍니다. 어느 한쪽에 온전히 속하지 못하더라도, 그것은 결핍이 아니라 두 세계를 잇는 특별함일 수 있습니다. 이 작품은 우리에게, 자신을 있는 그대로 받아들이는 용기를 일러 줍니다.</p>
+        <p><span class="highlight">나는 누구인가. 어디에 속하느냐가 아니라, 스스로를 받아들이는 것이 참된 정체성입니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'worldlit08_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

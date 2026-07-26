@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🗺️ 두 발로 그린 나라 — 김정호와 대동여지도</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작한국인물12/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🗺️ 두 발로 그린 나라 — 김정호와 대동여지도</h1>
+        <p class="subtitle">
+          — 꿈은 걸음으로 완성된다 —<br>
+          교과기반 창작도서 · 한국인물 12 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🗺️ 등장인물 소개</h3>
+          <p><strong>★ 김정호 (주인공):</strong> 조선 후기의 지리학자예요. 30여 년 동안 전국을 두 발로 걸어 대동여지도를 완성해요.</p>
+          <p><strong>★ 길 위의 백성들:</strong> 답사길에 만난 사공, 주막 주인, 나무꾼들이에요. 길과 이름을 일러 준 이름 없는 스승들이지요.</p>
+          <p><strong>★ 청구도:</strong> 1834년에 먼저 완성한 지도예요. 대동여지도로 가는 디딤돌이지요.</p>
+          <p><strong>★ 대동여지도:</strong> 1861년 완성된 거대한 지도예요. 조선 시대 지도의 최고봉이지요.</p>
+          <p><strong>★ 목판:</strong> 지도를 찍어 낸 나무판이에요. 한 사람의 지도를 모두의 지도로 바꾸어 주었지요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 현실의 갈등:</strong> 제대로 된 지도가 없던 조선 vs. 정확한 지도를 향한 꿈</p>
+          <p><strong>② 길의 갈등:</strong> 30년에 걸친 고된 답사 vs. 끝내 멈추지 않은 걸음</p>
+          <p><strong>③ 기술의 갈등:</strong> 손과 발로 잰 옛 측량 vs. 현대 기술도 놀라는 정확함</p>
+          <p><strong>④ 나눔의 갈등:</strong> 혼자 간직할 수도 있던 지도 vs. 목판으로 찍어 나눈 지도</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물12/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 꿈</span>
+        <h2>지도를 꿈꾼 소년</h2>
+        <p>조선 후기, 1804년 무렵 한 사내아이가 태어났어요.<br>
+훗날 우리나라 최고의 지도를 만들게 되는 김정호예요.<br>
+정확한 출생 연도조차 알려지지 않은,<br>
+평범한 집안의 아이였지요.</p>
+        <p>김정호는 어릴 때부터 유독 <span class="vocab-tip" data-meaning="땅의 생김새와 지역의 특징">지리</span>에 큰 관심을 가졌어요.<br>
+산줄기는 어디에서 시작되어 어디까지 뻗는지.<br>
+강물은 어느 고을을 지나 바다에 닿는지.<br>
+뒷산 꼭대기에서 사방을 내려다보는 것이 가장 즐거운 놀이였지요.</p>
+        <p>난생처음 지도를 보던 날의 놀라움을 오래 간직했어요.<br><br><span class="dialogue">"이 넓은 나라가 종이 한 장에 다 들어가다니! 그런데… 이 지도는 어딘가 이상하다. 우리 고을의 강줄기가 실제와 다르지 않은가."</span></p>
+        <p>어린아이의 눈에 지도의 잘못이 또렷이 보였던 거예요.<br>
+김정호는 그날부터 하나의 꿈을 품게 되었어요.<br>
+이 나라의 참모습을 담은 정확한 지도를 만들겠다는 꿈이었지요.</p>
+        <p>땅을 연구하는 <span class="vocab-tip" data-meaning="땅의 생김새와 지역의 특징을 연구하는 학자">지리학자</span>의 길은 그렇게 시작되었어요.<br>
+남들 눈에는 엉뚱해도,<br>
+김정호에게는 평생을 걸어 볼 만한 단 하나의 꿈이었지요.</p>
+        <p><span class="highlight">한 아이의 마음속에 심긴 지도의 꿈.</span> 그 꿈이 자라서 조선 지도의 역사를 바꾸게 돼요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물12/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 문제</span>
+        <h2>지도 없는 나라</h2>
+        <p>김정호가 살던 시절, 조선에는 제대로 된 전국 지도가 없었어요.<br>
+있던 지도들은 정확하지 않고 정보도 부족했지요.<br>
+강이 엉뚱한 곳에 그려져 있거나,<br>
+고을이 통째로 빠져 있는 지도도 있었어요.</p>
+        <p>지도가 부정확하면 피해는 길 위의 사람들에게 돌아갔어요.<br>
+장사꾼은 지도만 믿고 가다 엉뚱한 골짜기에서 헤매기 일쑤였지요.<br>
+나라에서도 크고 작은 곤란을 겪었어요.</p>
+        <p>김정호는 그 현실을 그냥 지나치지 않았어요.<br><br><span class="dialogue">"지도가 틀리면 길이 틀리고, 길이 틀리면 사람이 고생한다. 나라의 살림에도 바른 지도가 반드시 있어야 한다."</span></p>
+        <p>정확한 지도를 만들려면 땅을 정확히 재는 일,<br>
+곧 <span class="vocab-tip" data-meaning="땅의 길이와 넓이, 위치를 정확하게 재는 일">측량</span>이 필요했어요.<br>
+그러나 넓디넓은 조선 팔도를 일일이 잰다는 것은<br>
+누구도 엄두를 내지 못하는 일이었지요.</p>
+        <p>김정호는 벼슬아치도 부자도 아니었어요.<br>
+가진 것은 지도를 향한 꿈과 튼튼한 두 다리뿐이었지요.<br>
+그러나 꿈에는 본래 자격증이 없는 법이에요.</p>
+        <p><span class="highlight">나라도 하지 못한 일을, 한 사람이 하겠다고 나선 거예요.</span> 김정호의 위대한 결심이 조용히 세워지고 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물12/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 결심</span>
+        <h2>내 발로 재리라</h2>
+        <p>오랜 고민 끝에 김정호는 굳게 결심했어요.<br>
+직접 측량을 하고 자료를 모아 정확한 지도를 만들기로 한 거예요.<br>
+남의 지도를 베끼는 대신,<br>
+처음부터 제 손으로 다시 시작하기로 했지요.</p>
+        <p>준비는 더없이 꼼꼼했어요.<br>
+구할 수 있는 옛 지도와 지리책을 모두 구해 샅샅이 살폈지요.<br>
+어떤 부분이 맞고 어떤 부분이 틀렸는지 하나하나 가려냈어요.</p>
+        <p>그러나 책상 위의 자료만으로는 부족했어요.<br>
+기록끼리 서로 다르게 적힌 곳이 많았거든요.<br><br><span class="dialogue">"글로 적힌 것은 서로 다투지만, 땅은 거짓말을 하지 않는다. 결국 내 발로 가서 내 눈으로 확인하는 수밖에 없다."</span></p>
+        <p>주위 사람들은 하나같이 고개를 저었어요.<br>
+평생이 걸려도 못 할 일이라고 말렸지요.<br>
+그 말은 틀리지 않았어요.<br>
+다만 김정호는 그 평생을 기꺼이 내놓을 작정이었지요.</p>
+        <p>김정호의 뜻은 꺾이지 않았어요.<br>
+짚신을 여러 켤레 챙기고 붓과 종이를 봇짐에 넣었지요.<br>
+문밖의 길이 곧 김정호의 서재가 될 참이었어요.</p>
+        <p><span class="highlight">위대한 지도는 책상이 아니라 길 위에서 시작되었어요.</span> 김정호의 긴 걸음이 첫발을 내디뎠지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물12/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 답사</span>
+        <h2>삼십 년의 걸음</h2>
+        <p>그날부터 김정호는 30여 년 동안 전국을 <span class="vocab-tip" data-meaning="현장에 직접 찾아가서 조사하는 것">답사</span>했어요.<br>
+봄이면 남쪽 바닷가로.<br>
+가을이면 북쪽 산으로.<br>
+계절이 바뀔 때마다 봇짐은 새로운 길 위에 있었지요.</p>
+        <p>산과 강, 도로와 마을의 위치를 일일이 확인하고 기록했어요.<br>
+고개를 넘으면 그 이름과 험한 정도를 적었지요.<br>
+강을 건널 때면 나루터의 위치를 꼼꼼히 적었어요.<br>
+봇짐 속 종이가 날마다 빼곡하게 채워져 갔지요.</p>
+        <p>길 위에서 만난 사람들은 이름 없는 스승들이었어요.<br>
+<span class="vocab-tip" data-meaning="배가 닿고 떠나는 물가">나루터</span>의 사공은 물길의 사정을,<br>
+주막 주인은 고을 사이의 거리를 일러 주었지요.<br><br><span class="dialogue">"이 고개를 넘으면 삼십 리, 저 강을 따라가면 오십 리라오."</span></p>
+        <p>김정호는 그 말들을 흘려듣지 않았어요.<br>
+귀로 들은 것은 반드시 제 발로 걸어가 확인했지요.<br>
+두 눈으로 확인한 것만 기록으로 남겼어요.</p>
+        <p>한 해 두 해가 쌓여 십 년이 되고, 삼십 년이 되었어요.<br>
+그 긴 세월 동안 김정호의 눈은 언제나 땅을 향해 있었지요.</p>
+        <p><span class="highlight">대동여지도의 한 줄 한 줄은 사실 김정호의 발자국이었어요.</span> 그러나 그 길이 순탄하기만 했던 것은 아니지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물12/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 시련</span>
+        <h2>길 위의 고생</h2>
+        <p>30년의 답사길에서 김정호는 수많은 고생을 겪었어요.<br>
+험한 산길에서 발을 헛디뎌 구르기도 했지요.<br>
+비바람에 아끼던 기록이 젖을 뻔한 순간도 여러 번이었어요.</p>
+        <p>길 위에서 끼니를 거르는 일은 예사였어요.<br>
+밥 대신 찬물로 배를 채우는 날도 많았지요.<br>
+잠잘 곳을 못 구해 헛간이나 처마 밑에서<br>
+새우잠을 청하기도 했어요.</p>
+        <p>몸의 고생보다 더 힘든 것은 사람들의 차가운 시선이었어요.<br><br><span class="dialogue">"밥벌이도 안 되는 지도를 만든다고 저 고생이라니, 참 딱한 사람일세."</span><br><br>그런 수군거림이 가는 곳마다 따라붙었지요.</p>
+        <p>마음이 흔들릴 만한 날인들 왜 없었겠어요.<br>
+그때마다 김정호는 어릴 적 꿈을 떠올렸어요.<br>
+이 일은 누군가는 반드시 해내야 하는 일이었지요.<br>
+그 누군가가 바로 자신이라고 믿었어요.</p>
+        <p>김정호는 포기하지 않았어요.<br>
+지친 다리를 두드리며 다시 일어나 묵묵히 걸었지요.<br>
+<span class="vocab-tip" data-meaning="물건을 보자기에 싸서 등에 지고 다니는 짐">봇짐</span> 속 기록이 두꺼워질수록 걸음에 힘이 붙었어요.</p>
+        <p><span class="highlight">고생은 김정호의 걸음을 늦추었지만, 결코 멈추게 하지는 못했어요.</span> 그 걸음은 마침내 첫 열매를 맺지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물12/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">전환 · 결실</span>
+        <h2>청구도, 첫 번째 열매</h2>
+        <p>그러던 1834년, 김정호는 첫 번째 큰 열매를 거두었어요.<br>
+청구도라는 지도를 완성해 낸 거예요.<br>
+수십 년의 답사가 처음으로 한 벌의 지도가 되어 나온,<br>
+<span class="vocab-tip" data-meaning="마음 깊이 크게 감동하는 것">감격</span>스러운 순간이었지요.</p>
+        <p>청구도는 그때까지 나온 어떤 지도보다 정확하고 자세했어요.<br>
+지도를 본 사람들은 놀라움을 감추지 못했지요.<br><br><span class="dialogue">"놀랍구나. 이 지도만 있으면 가 보지 않은 고을도 손금 보듯 훤히 알 수 있겠구나."</span></p>
+        <p>보통 사람이라면 여기서 만족하고 붓을 내려놓았을 거예요.<br>
+그러나 김정호의 엄격한 눈에는<br>
+아직도 고치고 다듬어야 할 점들이 보였지요.</p>
+        <p><span class="dialogue">"아직 더 정확해질 수 있다. 더 보기 쉽게, 더 들고 다니기 좋게 만들 수 있다. 여기에서 멈춘다면 이 지도는 절반의 지도로 끝나고 말 것이다."</span></p>
+        <p>김정호는 청구도 이후에도 쉬지 않고 연구를 계속했어요.<br>
+다시 봇짐을 꾸려 길에 올랐지요.<br>
+청구도는 꿈의 끝이 아니라,<br>
+더 완전한 지도를 향한 디딤돌이었던 거예요.</p>
+        <p><span class="highlight">좋은 것에서 멈추지 않는 사람만이 위대한 것에 이르러요.</span> 김정호의 시선은 이미 다음 지도를 향해 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물12/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 완성</span>
+        <h2>대동여지도가 펼쳐지다</h2>
+        <p>마침내 1861년, 김정호는 평생을 바친 대동여지도를 완성했어요.<br>
+어린 날의 꿈이 머리 희끗한 나이에 이루어진 거예요.<br>
+조선 지도의 역사가 새로 쓰이는 순간이었지요.</p>
+        <p>대동여지도는 어마어마한 지도였어요.<br>
+전부 펼치면 가로 4미터, 세로 7미터에 이르는 크기였지요.<br>
+조선 팔도의 산천이 그 안에 통째로 담긴 셈이에요.</p>
+        <p>놀라운 것은 크기만이 아니었어요.<br>
+김정호는 이 큰 지도를 22첩으로 나누어<br>
+<span class="vocab-tip" data-meaning="접었다 폈다 할 수 있는 칸막이">병풍</span>처럼 접을 수 있게 만들었지요.<br>
+필요한 부분만 골라 봇짐에 넣으면 되니,<br>
+누구나 간편하게 가지고 다닐 수 있게 된 거예요.</p>
+        <p>지도의 내용은 더욱 놀라웠어요.<br>
+산맥과 하천, 도로, 고을까지<br>
+나라의 구석구석이 정밀하게 표시되어 있었지요.</p>
+        <p>도로 위에는 십 리마다 점을 찍어 두었어요.<br>
+지도만 보고도 오늘 얼마나 가야 할지 알 수 있었지요.<br>
+쓰는 사람을 생각한 정성이 곳곳에 배어 있었어요.</p>
+        <p><span class="highlight">30년의 발자국이 마침내 한 벌의 지도가 되었어요.</span> 그런데 이 지도에는 더 놀라운 비밀이 숨어 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물12/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 검증</span>
+        <h2>현대 기술도 놀란 정확성</h2>
+        <p>대동여지도의 가장 큰 특징은 정확성이에요.<br>
+훗날 현대 기술로 잰 것과 비교해 보았더니,<br>
+<span class="vocab-tip" data-meaning="실제 값과 잰 값 사이의 차이">오차</span>가 매우 작았지요.<br>
+지도가 실제 땅과 거의 그대로 들어맞았던 거예요.</p>
+        <p>그 시절은 인공위성도 비행기도 없던 시절이에요.<br>
+하늘에서 내려다볼 방법이 전혀 없던 때에,<br>
+두 발로 걷고 두 눈으로 확인해 만든 지도가<br>
+이만한 정확성을 이루어 낸 것이지요.</p>
+        <p>그 비밀은 특별한 도구가 아니라 한결같은 태도에 있었어요.<br>
+의심스러우면 다시 걸어가 확인하는 우직함.<br>
+작은 시내 하나도 대충 그리지 않던 꼼꼼함이<br>
+그 정확성을 만들어 낸 거예요.</p>
+        <p>훗날의 학자들은 감탄에 감탄을 거듭했어요.<br><br><span class="dialogue">"이 산줄기의 흐름을 보라. 위성 지도와 견주어도 크게 어긋나지 않는다. 대체 어떻게 이런 지도가 가능했단 말인가."</span></p>
+        <p>정확한 지도란 단순한 그림이 아니라 하나의 믿음이에요.<br>
+지도를 믿고 떠난 사람이 목적지에 무사히 닿을 때,<br>
+지도는 비로소 제 몫을 다하는 것이지요.</p>
+        <p><span class="highlight">기계가 아니라 정성이 이룬 정확성이었어요.</span> 그리고 김정호에게는 마지막 한 걸음이 남아 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물12/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 나눔</span>
+        <h2>나무판에 새긴 지도</h2>
+        <p>지도를 완성한 뒤에도 김정호는<br>
+그 귀한 지도를 서랍 속에 간직해 두지 않았어요.<br>
+지도를 <span class="vocab-tip" data-meaning="글자나 그림을 새겨 종이에 찍어 내던 나무판">목판</span>에 새겨 <span class="vocab-tip" data-meaning="글이나 그림을 찍어 내는 것">인쇄</span>한 거예요.<br>
+많은 사람이 쓸 수 있게 하기 위해서였지요.</p>
+        <p>붓으로 그린 지도는 세상에 단 한 벌뿐이에요.<br>
+그러나 목판에 새겨 찍어 내면 몇 벌이고 만들 수 있지요.<br>
+김정호는 그 고된 새김질을 마다하지 않았어요.<br>
+칼끝으로 산줄기와 물줄기를 한 획 한 획 새겨 나갔지요.</p>
+        <p>이것이야말로 김정호다운 마무리였어요.<br>
+30년을 바친 지도라면 비싸게 팔 수도 있었을 거예요.<br>
+그러나 김정호가 바란 것은<br>
+지도가 세상에 널리 쓰이는 것 하나뿐이었지요.</p>
+        <p><span class="dialogue">"지도란 벽에 걸어 두고 바라보는 그림이 아니다. 길 떠나는 사람의 봇짐 속에 들어가서 쓰일 때, 비로소 지도가 되는 것이다."</span></p>
+        <p>목판에서 찍혀 나온 대동여지도는 손에서 손으로 퍼져 나갔어요.<br>
+장사꾼의 봇짐 속에서, 나그네의 소매 속에서<br>
+지도는 비로소 제 몫을 다하기 시작했지요.</p>
+        <p><span class="highlight">김정호는 지도를 만든 사람이자, 지도를 나눈 사람이었어요.</span> 백성을 돕겠다는 그 뜻이 끝까지 한결같았지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물12/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>발자국이 남긴 유산</h2>
+        <p>대동여지도는 오늘날까지도<br>
+조선 시대 지도 가운데 가장 뛰어난 작품으로 평가받아요.<br>
+이름 없는 한 학자의 평생이<br>
+온 나라의 보물이 된 것이지요.</p>
+        <p>김정호의 삶에는 화려한 벼슬도, 넉넉한 재산도 없었어요.<br>
+가진 것은 하나의 꿈과,<br>
+그 꿈을 향해 30년을 걸은 두 다리뿐이었지요.<br>
+그것만으로 역사에 굵은 이름을 남겼어요.</p>
+        <p>지도라는 단 하나의 길에 삶 전체를 건<br>
+그 <span class="vocab-tip" data-meaning="몸과 마음을 바쳐 온 힘을 다하는 것">헌신</span>이<br>
+대동여지도라는 걸작을 낳은 거예요.</p>
+        <p>오늘날 우리는 손안의 화면으로 세계 어디든 볼 수 있어요.<br>
+그 편리함의 뿌리에는 김정호처럼<br>
+두 발로 땅을 재어 온 사람들의 노고가 깔려 있지요.</p>
+        <p>김정호의 삶은 우리에게 말해요.<br>
+꿈은 크기보다 끈기가 중요하다고.<br>
+포기하지 않고 걸어가는 것이<br>
+꿈을 이루는 가장 확실한 길이라고요.</p>
+        <p><span class="highlight">김정호는 조선 팔도를 두 발로 걸어 종이 위에 옮겨 놓았어요.</span> 대동여지도는 지도이기 이전에, 30년 걸음의 기록이지요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(110, 130, 90, 0.15); border-radius: 16px;">
+          <strong style="color: #6E825A; font-size: 20px;">🗺️ 「꿈은 걸음으로 완성돼요. 대동여지도의 모든 선은 김정호의 발자국이었지요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'korperson12_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

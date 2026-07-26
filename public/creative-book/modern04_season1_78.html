@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚗 운수 좋은 날</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/현대문학04/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #78909C 0%, #546E7A 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(120, 144, 156, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(120, 144, 156, 0.15);
+      color: #37474F;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #37474F;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #546E7A;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #B0BEC5;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(120, 144, 156, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #B0BEC5;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(120, 144, 156, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(120, 144, 156, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(84, 110, 122, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(120, 144, 156, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🚗 운수 좋은 날</h1>
+        <p class="subtitle">
+          — 현진건의 사실주의 소설로 읽는 반어의 비극 —<br>
+          교과기반 창작도서 · 현대문학 04
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 김 첨지:</strong> 일제강점기 서울의 인력거꾼. 병든 아내를 두고 하루하루 힘겹게 살아가는 도시 하층민이다.</p>
+          <p><strong>★ 아내:</strong> 오래 병을 앓으며 설렁탕 한 그릇을 먹고 싶어 하는 김 첨지의 아내.</p>
+          <p><strong>★ 감상 길잡이:</strong> 「운수 좋은 날」은 현진건이 1924년에 발표한 사실주의 소설로, 가장 운이 좋았던 날이 가장 비극적인 날이 되는 반어를 통해 식민지 하층민의 삶을 그렸습니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 인물</span>
+        <h2>김 첨지의 하루</h2>
+        <p>김 첨지는 일제강점기 서울에서 인력거를 끄는 사람입니다. 인력거꾼은 사람을 태우고 달려 그 삯으로 겨우 생계를 잇는, 도시의 가난한 하층민이었습니다. 김 첨지는 날마다 무거운 인력거를 끌며 힘겹게 살아갔습니다.</p>
+        <p>그의 집에는 오랫동안 병을 앓고 있는 아내가 누워 있었습니다. 아내는 제대로 먹지도 못한 채 자리보전을 하고 있었습니다. 가난한 살림에 약 한 첩 제대로 쓰지 못하는 형편이었습니다.</p>
+        <p>김 첨지에게는 어린 자식도 있었습니다. 병든 아내와 어린 자식을 먹여 살려야 하는 무거운 짐이 그의 어깨를 짓눌렀습니다. 그는 하루 벌어 하루를 사는 고달픈 삶을 이어 갔습니다. 궂은 날씨에도 인력거를 놓을 수 없는 것이 그의 처지였습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 식민지 시대 도시 하층민의 고단한 삶입니다. 이 사실주의 소설은 인력거꾼 김 첨지의 하루를 통해, 가난한 사람들의 현실을 있는 그대로 그려 냅니다. 그 삶의 무게가 이야기의 바탕을 이룹니다.</p>
+        <p>「운수 좋은 날」은 이렇게 가난한 인력거꾼의 하루에서 시작됩니다. 현진건은 이 평범한 하루에 짙은 비극의 그림자를 드리워 놓습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 불안</span>
+        <h2>오늘은 나가지 말아요</h2>
+        <p>그날 아침, 병든 아내는 김 첨지에게 오늘은 일하러 나가지 말라고 힘없이 말했습니다. 왠지 모를 불안한 마음이 들었기 때문입니다. 아내는 남편이 곁에 있어 주기를 바랐습니다.</p>
+        <p>그러나 김 첨지는 그 말을 대수롭지 않게 여겼습니다. 하루라도 일을 쉬면 당장 먹을 것이 없어지는 형편이었기 때문입니다. 그는 아내의 만류를 뿌리치고 인력거를 끌고 집을 나섰습니다.</p>
+        <p>아내는 나가는 남편에게, 돌아올 때 설렁탕 한 그릇만 사다 달라고 부탁했습니다. 오래 앓아 온 아내가 겨우 입에 올린 작은 소원이었습니다. 김 첨지는 그러마고 대답하며 길을 나섰습니다. 그 설렁탕 한 그릇이 뒷날 얼마나 아픈 의미로 남게 될지, 그때는 알지 못했습니다.</p>
+        <p>이 대목은 앞으로 벌어질 비극을 예고하는 불안의 단계입니다. 나가지 말라는 아내의 만류와 설렁탕에 대한 소박한 바람이, 뒤에 올 슬픔을 암시합니다. 이러한 복선은 사실주의 소설이 비극을 준비하는 방식입니다.</p>
+        <p>김 첨지는 무거운 마음을 애써 떨치며 거리로 나섰습니다. 그러나 그의 마음 한구석에는 아내에 대한 불안이 자리하고 있었습니다. 설렁탕 한 그릇이라는 소박한 소원이 그날따라 유난히 마음에 걸렸습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 행운</span>
+        <h2>운수가 트이다</h2>
+        <p>그런데 그날따라 김 첨지에게 이상하게도 손님이 끊이지 않았습니다. 아침부터 인력거를 타려는 사람이 줄을 이었습니다. 평소 같으면 하루 종일 애써도 벌기 힘든 돈이 순식간에 모였습니다.</p>
+        <p>김 첨지는 뜻밖의 행운에 신이 났습니다. 이렇게 벌이가 좋은 날은 좀처럼 없었기 때문입니다. 그는 오늘이야말로 운수 좋은 날이라고 여기며 부지런히 인력거를 끌었습니다.</p>
+        <p>손님이 이어질수록 김 첨지의 주머니는 두둑해졌습니다. 그는 이 돈으로 아내가 그토록 바라던 설렁탕을 사 줄 수 있겠다고 생각했습니다. 오랜만에 그의 얼굴에 웃음이 돌았습니다.</p>
+        <p>이 대목은 김 첨지에게 뜻밖의 행운이 찾아오는 전개의 단계입니다. 그러나 이 행운은 소설의 제목처럼 반어적인 의미를 지닙니다. 가장 운이 좋아 보이는 이날이, 사실은 가장 불행한 날이 되기 때문입니다. 독자는 이 행운이 커질수록 오히려 마음이 조여드는 묘한 긴장을 느끼게 됩니다.</p>
+        <p>행운이 이어질수록 김 첨지의 마음은 들떴습니다. 그러나 그 들뜬 마음 뒤편에는 알 수 없는 불안이 그림자처럼 따라붙고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 불안</span>
+        <h2>반나절의 대박</h2>
+        <p>행운은 반나절이 넘도록 계속되었습니다. 김 첨지는 이제껏 만져 보지 못한 큰돈을 손에 쥐게 되었습니다. 그는 스스로도 믿기지 않을 만큼 벌이가 좋은 날에 어리둥절했습니다.</p>
+        <p>그러나 돈을 벌면 벌수록, 김 첨지의 마음 한구석에는 이상한 불안이 커져 갔습니다. 집에 두고 온 아내가 자꾸만 눈앞에 어른거렸습니다. 나가지 말라던 아내의 힘없는 목소리가 귓가에 맴돌았습니다.</p>
+        <p>김 첨지는 애써 그 불안을 떨쳐 내려 했습니다. 오늘은 운수 좋은 날이니 나쁜 일이 있을 리 없다고 스스로를 다독였습니다. 그러나 불안은 좀처럼 가시지 않았습니다.</p>
+        <p>이 대목은 행운 속에서 불안이 함께 커져 가는 전개의 단계입니다. 돈을 벌수록 커지는 불안은, 다가올 비극에 대한 짙은 복선입니다. 겉으로는 운수 좋은 날이지만, 그 이면에는 불길함이 깔려 있습니다.</p>
+        <p>김 첨지의 마음속에서는 기쁨과 불안이 뒤엉켜 다투었습니다. 그는 이 불안의 정체가 무엇인지 애써 외면하려 했습니다. 그러나 외면하면 할수록 불안은 더욱 또렷해질 뿐이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 불길함</span>
+        <h2>무거워지는 마음</h2>
+        <p>시간이 지날수록 김 첨지의 마음은 점점 더 무거워졌습니다. 집으로 돌아가는 것이 왠지 두려워졌습니다. 그는 집에 가면 무언가 좋지 않은 일이 기다리고 있을 것만 같았습니다.</p>
+        <p>김 첨지는 집으로 향하는 발걸음을 자꾸만 늦추었습니다. 아내의 상태를 확인하는 것이 두려워, 오히려 집에 가기를 미루었습니다. 불안이 그의 발목을 붙잡은 것입니다.</p>
+        <p>이 불길한 예감은 병든 아내에게 무슨 일이 생겼을지도 모른다는 두려움에서 비롯된 것이었습니다. 그러나 김 첨지는 그 예감을 인정하고 싶지 않았습니다. 그는 애써 다른 생각을 하며 마음을 다잡으려 했습니다.</p>
+        <p>이 대목은 다가올 비극에 대한 불길한 예감이 짙어지는 위기의 단계입니다. 집에 가기를 두려워하는 김 첨지의 모습이, 독자에게 불안을 전합니다. 행운의 이면에 드리운 어두운 그림자가 점점 뚜렷해집니다. 밝음과 어둠을 나란히 놓아 긴장을 키우는 것이 이 소설의 뛰어난 구성입니다.</p>
+        <p>김 첨지는 무거운 마음을 달래기 위해, 집으로 곧장 가는 대신 다른 곳으로 발길을 돌렸습니다. 그곳에서 그는 우연히 옛 친구를 만났습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 회피</span>
+        <h2>술로도 달래지지 않는 마음</h2>
+        <p>김 첨지는 길에서 만난 친구와 함께 술집에 들렀습니다. 무거운 마음을 술로라도 달래 보려 한 것입니다. 그는 벌어들인 돈으로 술을 마시며 애써 불안을 잊으려 했습니다.</p>
+        <p>그러나 술을 마셔도 마음속 불안은 좀처럼 가시지 않았습니다. 김 첨지는 오히려 취기 속에서 아내에 대한 걱정과 두려움을 더욱 크게 느꼈습니다. 그는 횡설수설하며 속마음을 드러냈습니다.</p>
+        <p>김 첨지는 술에 취해 큰소리를 치기도 하고, 까닭 없이 화를 내기도 했습니다. 그 모든 것이 실은 아내에 대한 불안을 애써 감추려는 몸짓이었습니다. 술로도 달랠 수 없는 불안이 그를 짓눌렀습니다.</p>
+        <p>이 대목은 김 첨지가 불안을 회피하려 애쓰는 위기의 단계입니다. 술로도 달래지지 않는 마음은, 그의 불안이 얼마나 깊은지를 보여 줍니다. 집으로 돌아가기를 미루는 그의 모습에서 다가올 비극이 더욱 선명하게 예고됩니다.</p>
+        <p>마침내 김 첨지는 아내가 부탁한 설렁탕을 사 들고 집으로 향했습니다. 그의 발걸음은 무겁기만 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 귀가</span>
+        <h2>집으로, 집으로</h2>
+        <p>김 첨지는 아내를 위한 설렁탕을 손에 들고 집으로 향했습니다. 그러나 집이 가까워질수록 그의 마음은 더욱 조여들었습니다. 불길한 예감이 온몸을 감쌌습니다.</p>
+        <p>집 앞에 다다른 김 첨지는 이상한 낌새를 느꼈습니다. 집 안이 지나치게 조용했던 것입니다. 평소라면 들려야 할 아이의 울음소리조차 들리지 않았습니다.</p>
+        <p>김 첨지는 두려움에 떨며 방문을 열었습니다. 그 순간, 그는 온몸이 얼어붙는 듯한 광경을 마주했습니다. 오래 앓던 아내가 싸늘하게 식어 있었던 것입니다.</p>
+        <p>이 대목은 이야기가 비극적 절정으로 치닫는 귀가의 단계입니다. 그토록 불안해하던 예감이 끔찍한 현실이 되어 김 첨지를 덮친 것입니다. 운수 좋은 날의 행운이, 가장 참혹한 비극과 마주하는 순간입니다.</p>
+        <p>김 첨지는 아내의 죽음 앞에서 아무 말도 할 수 없었습니다. 하루 종일 이어진 행운의 끝에 기다린 것은, 가장 슬픈 이별이었습니다. 나가지 말라던 아내의 마지막 만류를 뿌리친 것이 사무치게 후회되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 비극</span>
+        <h2>돌아오지 않는 온기</h2>
+        <p>김 첨지는 죽은 아내를 붙들고 흔들어 보았지만, 아내의 몸에는 이미 온기가 남아 있지 않았습니다. 나가지 말라던 아내의 마지막 부탁이, 그의 귓가에 아프게 되살아났습니다. 그때 곁에 있어 주지 못한 것이 한없이 후회되었습니다.</p>
+        <p>어린 자식은 죽은 어머니의 곁에서 배가 고파 울고 있었습니다. 그 광경은 김 첨지의 가슴을 갈기갈기 찢어 놓았습니다. 하루 동안 벌어들인 돈도, 이제는 아무 소용이 없었습니다.</p>
+        <p>가장 운이 좋았던 날이, 가장 비극적인 날이 되고 만 것입니다. 이 잔인한 어긋남이 바로 이 소설이 그려 내는 반어입니다. 제목의 운수 좋은 날은, 사실 가장 불행한 날을 가리키는 반어적 표현이었습니다.</p>
+        <p>이 대목은 이야기의 비극적 절정입니다. 행운과 불행이 극명하게 대비되며, 반어의 비극이 완성됩니다. 하루 종일 이어진 행운이 도리어 아내의 죽음을 더욱 참담하게 드러내는 것입니다. 기쁨이 클수록 뒤따른 슬픔도 그만큼 깊어, 독자의 가슴을 더욱 아프게 후벼 팝니다.</p>
+        <p>김 첨지는 식어 버린 아내 곁에서 오열했습니다. 사 들고 온 설렁탕은, 이제 먹을 사람을 잃은 채 부질없이 식어 가고 있었습니다. 뜨거운 김이 스러지듯, 하루의 행운도 그렇게 허망하게 식어 버렸습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 반어</span>
+        <h2>왜 먹지를 못하니</h2>
+        <p>김 첨지는 죽은 아내 앞에 설렁탕을 놓으며 울부짖었습니다. 그토록 먹고 싶어 하던 설렁탕을 왜 이제는 먹지 못하느냐고, 그는 아내를 향해 절규했습니다. 이 장면은 이 소설에서 가장 가슴 아픈 대목입니다.</p>
+        <p>살아 있을 때 설렁탕 한 그릇 제대로 사 주지 못한 남편의 회한이, 이 절규 속에 고스란히 담겨 있습니다. 뒤늦게 사 온 설렁탕은, 이제 아내에게 아무런 위로도 되지 못했습니다. 가난이 남긴 상처가 그 어느 때보다 아프게 드러납니다.</p>
+        <p>이 절규는 반어의 비극을 가장 강렬하게 보여 줍니다. 운수 좋은 날 벌어들인 돈으로 산 설렁탕이, 죽은 아내 앞에 놓인 것입니다. 행운의 상징이 곧 비극의 상징이 되는 이 어긋남이, 읽는 이의 가슴을 후벼 팝니다.</p>
+        <p>이 대목은 반어의 비극이 완성되는 결말의 단계입니다. 설렁탕 한 그릇을 두고 벌어진 이 비극은, 식민지 하층민의 처참한 현실을 압축해 보여 줍니다. 가장 슬픈 절규 속에 이 소설의 주제가 응축되어 있습니다.</p>
+        <p>김 첨지의 절규는 오래도록 방 안에 울렸습니다. 운수 좋은 날은, 그렇게 가장 비극적인 날로 저물어 갔습니다. 창밖으로는 여전히 궂은 날씨가 이어지며, 그의 슬픔을 말없이 감쌌습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학04/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>운수 좋은 날의 비극</h2>
+        <p>「운수 좋은 날」은 가장 운이 좋았던 하루가 가장 비극적인 날이 되는 반어를 통해, 식민지 하층민의 삶을 그려 낸 사실주의 소설입니다. 인력거꾼 김 첨지의 행운과 불행이 극명하게 대비되며, 짙은 비극을 완성합니다. 제목의 반어가 그 비극을 더욱 뼈아프게 합니다.</p>
+        <p>이 작품이 지닌 힘은 여럿입니다. 첫째는 행운과 불행을 극적으로 대비시킨 반어의 구성이요, 둘째는 식민지 시대 도시 빈민의 삶을 사실적으로 그려 낸 점입니다. 현진건은 이를 통해 시대의 어두운 현실을 날카롭게 드러냈습니다.</p>
+        <p>무엇보다 이 소설은, 개인의 비극을 통해 시대의 아픔을 보여 줍니다. 설렁탕 한 그릇조차 마음 편히 사 줄 수 없었던 가난은, 김 첨지 한 사람만의 문제가 아니었습니다. 그것은 식민지 시대 수많은 하층민이 겪어야 했던 공통의 아픔이었습니다. 한 사람의 비극에 시대 전체의 고통을 담아낸 점에서, 이 작품의 사실주의 정신이 빛납니다.</p>
+        <p>운수 좋은 날이라는 반어적인 제목은, 그래서 더욱 깊은 슬픔을 자아냅니다. 가장 밝아 보이는 날 뒤에 가장 어두운 비극이 감춰져 있었던 것입니다. 이 작품은 우리 사실주의 문학이 시대의 아픔을 어떻게 그려 냈는지를 잘 보여 주는 걸작으로 남아 있습니다.</p>
+        <p><span class="highlight">가장 운이 좋았던 날이 가장 비극적인 날이 되는 반어 속에, 식민지 하층민의 아픔이 담겨 있습니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">🏆 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = '/creative-book/modern04_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

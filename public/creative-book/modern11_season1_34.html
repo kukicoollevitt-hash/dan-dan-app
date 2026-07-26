@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌊 흐린 강물을 거슬러 — 탁류, 초봉이 이야기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/현대문학11/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🌊 흐린 강물을 거슬러 — 탁류, 초봉이 이야기</h1>
+        <p class="subtitle">
+          — 맑던 물은 어쩌다 흐려졌는가 —<br>
+          교과기반 창작도서 · 현대문학 11 · 초3-4
+        </p>
+        <div class="characters">
+          <h3>🌊 등장인물 소개</h3>
+          <p><strong>★ 초봉 (주인공):</strong> 총명하고 고운 소녀예요. 성실하게 살려 하지만 시대의 흐린 물살에 자꾸 떠밀려요.</p>
+          <p><strong>★ 정 주사:</strong> 초봉의 아버지예요. 사업에 실패하고 사기까지 당해 집안을 기울게 해요.</p>
+          <p><strong>★ 고태수:</strong> 초봉의 남편이 되는 사람이에요. 겉은 점잖지만 속은 딴판이에요.</p>
+          <p><strong>★ 시어머니:</strong> 초봉을 모질게 구박하다 끝내 내쫓는 사람이에요.</p>
+          <p><strong>★ 금강의 탁류:</strong> 군산 앞을 흐르는 흐린 강물이에요. 흐려질 수밖에 없던 시대를 보여 줘요.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 집안의 갈등:</strong> 기울어 가는 집안 vs. 딸의 어깨에 얹힌 살림의 무게</p>
+          <p><strong>② 혼인의 갈등:</strong> 겉으로 점잖은 남편 vs. 딴판인 속모습</p>
+          <p><strong>③ 시대의 갈등:</strong> 정직하게 살려는 사람들 vs. 그것을 허락하지 않는 세상</p>
+          <p><strong>④ 강물의 갈등:</strong> 맑게 살고 싶은 마음 vs. 자꾸만 흐려지는 삶</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학11/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 배경</span>
+        <h2>흐린 강이 흐르는 도시</h2>
+        <p>금강이 바다와 만나는 곳에 군산이라는 <span class="vocab-tip" data-meaning="배가 드나드는 바닷가 도시">항구</span> 도시가 있었어요.<br>
+일제강점기의 군산은 장사와 돈놀이로 북적이던 곳이었지요.<br>
+부두에는 쌀가마니가 산처럼 쌓여 있었어요.</p>
+        <p>그러나 그 북적임 속에는 서글픈 사정이 있었어요.<br>
+군산은 일본인들이 조선의 쌀을 <span class="vocab-tip" data-meaning="강제로 빼앗아 가는 것">수탈</span>해 가는 곳이기도 했지요.<br>
+조선 땅에서 난 쌀이 조선 사람의 밥상에 오르지 못하고 배에 실려 떠나갔어요.</p>
+        <p>거리에는 하루아침에 부자가 되었다는 이야기와<br>
+하루아침에 알거지가 되었다는 이야기가 바람처럼 떠돌았어요.<br>
+성실하게 버는 돈보다 <span class="vocab-tip" data-meaning="노력 없이 우연히 얻는 행운">요행</span>을 좇는 돈이 커 보이는, 어지러운 도시였지요.</p>
+        <p>그 도시 앞을 금강이 흘렀어요.<br>
+위에서는 맑았을 물이 아래에 이르러 흐려져 있었지요.<br>
+사람들은 그 흐린 물을 <span class="vocab-tip" data-meaning="맑지 않고 흐린 물줄기">탁류</span>라고 불렀어요.</p>
+        <p>강만 흐린 것이 아니었어요.<br>
+그 시절 사람들의 삶도 강물을 닮아 갔지요.<br>
+맑게 시작한 인생이 시대에 휩쓸려 자꾸만 흐려지곤 했어요.</p>
+        <p><span class="highlight">이 흐린 강가 도시에서, 한 소녀의 이야기가 시작돼요.</span> 소녀의 이름은 초봉이었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학11/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>기울어 가는 집</h2>
+        <p>군산에 정 주사라는 사람이 살았어요.<br>
+한때는 살림이 제법 넉넉했던 사람이지요.<br>
+그러나 손대는 사업마다 실패하면서 <span class="vocab-tip" data-meaning="집안의 살림 형편">가세</span>가 기울었어요.</p>
+        <p>넓던 기와집은 좁은 집으로, 좁은 집은 더 초라한 셋집으로 바뀌었어요.<br>
+정 주사는 한숨으로 하루를 보내는 날이 많아졌지요.<br>
+옛날의 넉넉하던 시절 이야기만 자꾸 늘어놓았어요.</p>
+        <p>정 주사에게는 초봉이라는 딸이 있었어요.<br>
+초봉은 어려서부터 총명하고 얼굴이 고왔지요.<br><br><span class="dialogue">"저 집 큰딸은 인물도 좋고 머리도 좋으니, 크게 될 아이야."</span><br><br>동네 어른들이 한마디씩 거들 정도였어요.</p>
+        <p>초봉이도 꿈이 많았어요.<br>
+공부를 더 해서 훌륭한 사람이 되고 싶었지요.<br>
+책을 펼치면 시간 가는 줄 몰랐고, 학교 성적도 늘 앞자리였어요.</p>
+        <p>그러나 기울어 가는 집안은 딸의 꿈을 지켜 줄 힘이 없었어요.<br>
+동생들은 어렸고, 아버지의 벌이는 끊긴 지 오래였지요.<br>
+집안 형편이라는 무거운 돌이 초봉의 책가방 위에 얹히고 있었어요.</p>
+        <p><span class="highlight">총명한 딸과 기울어 가는 집. 이 어긋남에서 초봉의 이야기가 비틀리기 시작해요.</span> 첫 번째 갈림길은 학교였지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학11/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 분투</span>
+        <h2>책가방 대신 장부를</h2>
+        <p>결국 초봉은 학교를 그만두어야 했어요.<br>
+집안 형편 때문에 공부를 접고 은행에 <span class="vocab-tip" data-meaning="일자리를 얻어 회사에 들어가는 것">취직</span>하게 된 거예요.<br>
+책가방을 내려놓던 날, 초봉은 혼자 조용히 울었지요.</p>
+        <p>그러나 다음 날부터 초봉은 마음을 고쳐먹었어요.<br>
+공부 대신 일로 집안을 일으키면 된다고 다독인 거지요.<br><br><span class="dialogue">'내가 버티면 동생들은 학교를 마칠 수 있어. 그거면 됐어.'</span></p>
+        <p>은행에서 초봉은 성실하게 일했어요.<br>
+<span class="vocab-tip" data-meaning="돈이 들어오고 나간 것을 적는 책">장부</span>를 정리하는 손은 꼼꼼했지요.<br>
+은행 사람들은 야무진 초봉을 다들 아꼈어요.</p>
+        <p>월급날이면 초봉은 봉투째 어머니에게 가져다 드렸어요.<br>
+제 몫으로는 차비 정도만 남겼지요.<br>
+그 돈으로 동생들 학비를 내고 쌀을 사는 것이 무엇보다 뿌듯했어요.</p>
+        <p>고달팠지만 부끄럽지 않은 나날이었어요.<br>
+정직하고 성실하게 살면 언젠가 좋은 날이 오리라 믿었지요.<br>
+그 믿음이 초봉을 버티게 하는 기둥이었어요.</p>
+        <p><span class="highlight">초봉은 제 몫의 삶을 맑게 살아 내고 있었어요.</span> 흐려진 것은 초봉이 아니라, 초봉을 둘러싼 세상이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학11/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 몰락</span>
+        <h2>빚더미에 앉은 아버지</h2>
+        <p>그러나 초봉의 바람은 오래가지 못했어요.<br>
+아버지 정 주사가 그만 <span class="vocab-tip" data-meaning="남을 속여 돈이나 재물을 빼앗는 것">사기</span>를 당하고 만 거예요.<br>
+한몫 잡게 해 주겠다는 달콤한 말에 넘어가,<br>
+남은 재산을 몽땅 날리고 큰 빚까지 떠안았지요.</p>
+        <p>집안은 순식간에 빚더미에 앉았어요.<br>
+빚쟁이들이 아침저녁으로 찾아와 대문을 두드렸지요.<br>
+세간살이가 하나둘 빚 대신 실려 나갔어요.</p>
+        <p>정 주사는 갈수록 작아졌어요.<br>
+미안함을 술로 달래는 날이 늘었지요.<br><br><span class="dialogue">"내가 이럴 사람이 아닌데… 세상이 나를 이렇게 만들었지."</span><br><br>탓하는 말끝은 늘 세상을 향했지만, 고통은 식구들 몫이었어요.</p>
+        <p>초봉의 월급만으로는 빚을 감당할 수 없었어요.<br>
+밤마다 어머니의 한숨 소리가 벽을 타고 넘어왔지요.<br>
+동생들은 영문도 모른 채 배를 곯았어요.</p>
+        <p>정직하게 모은 돈은 한 줌이었고, 속아서 잃은 돈은 산더미였어요.<br>
+성실한 사람의 십 년이 사기꾼의 하루를 당하지 못하는 세상이었지요.</p>
+        <p><span class="highlight">가족의 몰락이 시작되었어요. 그 무게는 가장 성실했던 초봉에게 얹혔지요.</span> 초봉의 불행은 여기서부터 시작되었어요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학11/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 혼인</span>
+        <h2>내 뜻이 아닌 혼인</h2>
+        <p>가난에 쪼들리던 정 주사는 초봉의 <span class="vocab-tip" data-meaning="결혼할 상대나 자리">혼처</span>를 서둘러 정했어요.<br>
+상대는 고태수라는 사람이었지요.<br>
+겉보기에는 나무랄 데 없는 신랑감이었지요.</p>
+        <p>정 주사 내외는 이 혼인이 집안을 일으킬 동아줄이라 여겼어요.<br><br><span class="dialogue">"태수 같은 사위를 얻는 것이 우리 집안엔 복이다. 초봉아, 네 팔자도 이제 펴는 게야."</span><br><br>부모의 눈에는 딸의 얼굴보다 집안의 빚이 먼저 보였지요.</p>
+        <p>초봉의 마음속에는 묻지 못한 물음이 가득했어요.<br>
+그 사람은 어떤 사람일까.<br>
+나는 그 사람을 알지도 못하는데.<br>
+그러나 초봉은 제 마음을 말할 자리를 찾지 못했지요.</p>
+        <p>초봉은 오랜 침묵 끝에 고개를 끄덕였어요.<br>
+제 혼인으로 집안의 짐이 덜어진다면 그것으로 되었다고 다독인 거예요.<br>
+언제나 저보다 식구가 먼저인 사람이었지요.</p>
+        <p>혼례날, 초봉은 고운 옷을 입고 낯선 사람 곁에 섰어요.<br>
+사람들은 축하했지만, 신부의 마음속은 안개가 낀 듯 뿌옇기만 했지요.</p>
+        <p><span class="highlight">초봉의 혼인은 사랑의 약속이 아니라, 가난이 대신 써 준 답안지였어요.</span> 그리고 그 답은 처음부터 틀린 답이었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학11/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>겉과 속이 다른 사람</h2>
+        <p>혼인하고 얼마 지나지 않아 초봉은 알게 되었어요.<br>
+고태수는 겉으로는 점잖았지만, 속으로는 <span class="vocab-tip" data-meaning="술과 놀이에 빠져 함부로 사는 것">방탕</span>한 사람이었지요.<br>
+혼인 전의 점잖음은 처음부터 꾸며 낸 모습이었던 거예요.</p>
+        <p>고태수는 집안일에 조금도 관심이 없었어요.<br>
+밤늦도록 술자리를 돌다 들어왔지요.<br>
+버는 돈보다 쓰는 돈이 많았어요.</p>
+        <p>시집살이는 모질었어요.<br>
+시어머니는 사사건건 초봉을 트집 잡았지요.<br><br><span class="dialogue">"친정에서 뭘 배워 왔길래 살림이 이 모양이냐."</span><br><br>아무리 정성을 다해도 돌아오는 것은 타박뿐이었어요.</p>
+        <p>초봉은 외로움 속에 하루하루를 보냈어요.<br>
+친정에 알릴 수도 없었지요.<br>
+제 혼인으로 형편이 나아졌다고 믿는 식구들이었으니까요.<br>
+편지를 쓰다가 몇 번이나 종이를 구겨 버렸어요.</p>
+        <p>밤이면 초봉은 부엌 뒷문에 서서 멀리 강 쪽을 바라보았어요.<br>
+제 앞날이 꼭 그 강물 같다고 생각했지요.<br>
+바람이 강 냄새를 실어 올 때면 어쩐지 눈물이 났어요.</p>
+        <p><span class="highlight">집을 일으키려던 혼인은, 초봉을 더 깊은 물속으로 끌고 들어갔어요.</span> 그런데 그 물은 아직 바닥이 아니었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학11/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 파국</span>
+        <h2>돌아갈 곳이 없다</h2>
+        <p>그러던 어느 날, 남편 고태수가 몹쓸 병에 걸려 자리에 눕더니,<br>
+오래 버티지 못하고 끝내 세상을 떠나고 말았어요.<br>
+방탕한 남편이었지만 초봉에게는 하나뿐인 울타리였지요.<br>
+그 울타리가 하루아침에 무너진 거예요.</p>
+        <p>시어머니는 장례가 끝나기 무섭게 초봉을 내쫓았어요.<br><br><span class="dialogue">"네가 들어온 뒤로 집안에 좋은 일이 없더니… 꼴도 보기 싫으니 당장 나가거라!"</span><br><br>서러움을 말할 곳도 없었지요.</p>
+        <p>초봉은 작은 보따리 하나만 안고 친정으로 돌아왔어요.<br>
+그러나 친정마저 <span class="vocab-tip" data-meaning="집안이 산산이 부서지듯 완전히 망하는 것">풍비박산</span>이 나 있었지요.<br>
+빚에 몰린 살림은 거덜 났고, 식구들은 뿔뿔이 흩어질 판이었어요.</p>
+        <p>아버지는 여전히 술에 빠져 지내고 있었어요.<br>
+어머니는 딸을 붙들고 울기만 할 뿐이었지요.<br>
+초봉이 도리어 어머니를 다독여야 했어요.</p>
+        <p>시집에서도 쫓겨나고, 친정도 무너지고.<br>
+초봉은 방 한구석에 앉아 손가락을 꼽아 보았어요.<br>
+이 넓은 세상에 기댈 곳이 한 군데도 없었지요.</p>
+        <p><span class="highlight">초봉에게 의지할 곳은 아무 데도 없었어요.</span> 스물을 갓 넘긴 사람이 감당하기에는 너무나 가혹한 처지였지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학11/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 표류</span>
+        <h2>탁류 속으로</h2>
+        <p>이제 초봉은 제 손 하나로 살림을 꾸려야 했어요.<br>
+은행에서 장부를 쓰던 손으로,<br>
+남의 집 궂은일과 힘든 <span class="vocab-tip" data-meaning="몸으로 하는 힘든 일">막노동</span>까지 하게 되었지요.<br>
+고운 손은 갈라지고, 얼굴에는 그늘이 깊어졌어요.</p>
+        <p>하루 벌어 하루를 사는 나날이었어요.<br>
+초봉은 닥치는 대로 일을 받아 식구들 입에 풀칠을 했지요.<br>
+그래도 살림은 늘 벼랑 끝이었어요.</p>
+        <p>어쩌다 물에 비친 제 모습을 보면 초봉은 흠칫 놀랐어요.<br>
+총명하다던 소녀도, 야무진 은행 처녀도 거기에는 없었지요.<br>
+삶에 지친 낯선 여인이 서 있을 뿐이었어요.</p>
+        <p>초봉의 삶은 탁류처럼 흐려졌어요.<br>
+맑게 살려는 마음이 모자라서가 아니에요.<br>
+아버지의 사기 피해가, 남편의 방탕이, 시집의 구박이<br>
+차례차례 초봉을 흐린 물속으로 밀어 넣은 거지요.</p>
+        <p>강가에 선 초봉은 흘러가는 탁류를 오래 바라보았어요.<br><br><span class="dialogue">'이 물도 처음 산에서 솟았을 때는 맑았겠지. 나도… 그랬는데.'</span><br><br>강물은 대답 없이 바다로 흘러갈 뿐이었지요.</p>
+        <p><span class="highlight">성실했던 한 사람이 어떻게 벼랑으로 내몰리는지, 탁류는 그 과정을 고스란히 보여 줘요.</span> 그런데 이것은 정말 초봉의 잘못일까요?</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학11/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 인식</span>
+        <h2>누구의 잘못인가</h2>
+        <p>초봉의 이야기를 따라온 사람이라면 누구나 묻게 돼요.<br>
+초봉은 대체 무엇을 잘못했을까요?<br>
+집안을 위해 일한 것?<br>
+부모의 뜻을 따라 혼인한 것?<br>
+어느 것 하나 초봉의 잘못이라 하기 어려워요.</p>
+        <p>초봉은 매 순간 가장 성실한 선택을 했어요.<br>
+그런데도 삶은 자꾸 나빠지기만 했지요.<br>
+성실이 보답받지 못한다면, 문제는 사람이 아니라 세상 쪽에 있는 거예요.</p>
+        <p>초봉을 밀어뜨린 손은 하나가 아니었어요.<br>
+돈놀이가 판치던 세상이,<br>
+딸의 뜻을 묻지 않던 낡은 집안 풍습이,<br>
+조선 사람의 것을 빼앗아 가던 식민지가 겹겹이 초봉을 밀었지요.</p>
+        <p>작가는 그것을 말하고 싶었던 거예요.<br>
+초봉의 삶은 한 사람의 잘못이 아니라 시대의 문제였다고요.</p>
+        <p>그 시절 조선 땅에는 수많은 초봉이가 살았어요.<br>
+정직하게 살려 해도 살 수 없었던 사람들.<br>
+탁류라는 제목은 그들 모두의 이름이기도 하지요.</p>
+        <p><span class="highlight">흐린 것은 초봉이가 아니라 시대의 강물이었어요.</span> 그 속에서도 초봉은 자기가 본래 맑은 물이었음을 끝내 기억하고 있었지요.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학11/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>흐린 강물이 비추는 시대</h2>
+        <p>「탁류」는 채만식이 쓴 긴 소설이에요.<br>
+일제강점기 군산을 배경으로,<br>
+한 여인의 슬픈 삶을 통해 그 시대의 잘못을 보여 준 작품이지요.</p>
+        <p>제목의 탁류는 맑지 않고 흐린 강물을 뜻해요.<br>
+자기 뜻과 상관없이 시대에 휩쓸려 무너져 가는 사람의 슬픔을,<br>
+작가는 이 흐린 강물 하나에 담아냈지요.<br>
+제목이 곧 작품 전체의 <span class="vocab-tip" data-meaning="어떤 뜻을 눈에 보이는 사물로 대신 나타내는 것">상징</span>인 셈이에요.</p>
+        <p>초봉은 성실하고 착한 사람이었어요.<br>
+그러나 아버지의 사기 피해와 남편의 방탕, 시댁의 구박이 겹치며 무너져 갔지요.<br>
+잘못 없는 사람이 가장 큰 벌을 받는 이 어긋남이, 작품이 고발하는 시대의 민낯이에요.</p>
+        <p>이 작품은 현실을 있는 그대로 그려 내는 <span class="vocab-tip" data-meaning="현실을 꾸미지 않고 진실하게 그려 내려는 문학의 흐름">리얼리즘</span> 문학의 대표작으로 평가받아요.<br>
+흐린 강물을 비추어, 그 시대가 얼마나 흐렸는지 보여 준 거울 같은 소설이지요.</p>
+        <p><span class="highlight">사람이 흐려지는 시대는 잘못된 시대예요.</span> 탁류를 읽는 일은, 누구도 억울하게 휩쓸리지 않는 세상을 생각해 보는 일이기도 해요.</p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(70, 120, 130, 0.15); border-radius: 16px;">
+          <strong style="color: #46787F; font-size: 20px;">🌊 「초봉이를 흐리게 한 것은 시대의 강물이었어요. 흐린 물속에서도 사람은 제 맑음을 기억해요.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'modern11_season1_quiz.html?season=season1';
+    }
+  </script>
+</body>
+</html>

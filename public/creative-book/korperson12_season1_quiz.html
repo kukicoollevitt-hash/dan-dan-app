@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🗺️ 두 발로 그린 나라 — 김정호와 대동여지도 - 시즌1 관문평가</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      background: url('/images/창작도서/창작한국인물12/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 0;
+    }
+
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 30px;
+      padding: 50px;
+      max-width: 750px;
+      width: 100%;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.5s ease-out;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .quiz-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .quiz-header h1 {
+      font-size: 32px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .quiz-header .gate-number {
+      font-size: 18px;
+      color: #2d6a4f;
+      font-weight: 600;
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .quiz-header .category-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #2d6a4f 0%, #1b4332 100%);
+      border-radius: 10px;
+      transition: width 0.5s ease;
+    }
+
+    .question-box {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 20px;
+      margin-bottom: 30px;
+      border-left: 5px solid #2d6a4f;
+    }
+
+    .question-text {
+      font-size: 20px;
+      color: #2c3e50;
+      font-weight: 600;
+      line-height: 1.7;
+    }
+
+    .options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .option-btn {
+      background: white;
+      border: 2px solid #e0e0e0;
+      padding: 20px 25px;
+      border-radius: 15px;
+      font-size: 17px;
+      color: #2c3e50;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: left;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .option-btn:hover {
+      border-color: #2d6a4f;
+      background: #f0fff4;
+      transform: translateX(5px);
+    }
+
+    .option-btn.selected {
+      border-color: #2d6a4f;
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      color: white;
+    }
+
+    .option-btn.correct {
+      border-color: #27ae60;
+      background: #27ae60;
+      color: white;
+    }
+
+    .option-btn.wrong {
+      border-color: #e74c3c;
+      background: #e74c3c;
+      color: white;
+    }
+
+    .option-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(45, 106, 79, 0.4);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .result-message {
+      text-align: center;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: 600;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .result-message.correct {
+      background: #d4edda;
+      color: #155724;
+      border: 2px solid #28a745;
+    }
+
+    .result-message.wrong {
+      background: #f8d7da;
+      color: #721c24;
+      border: 2px solid #dc3545;
+    }
+
+    .congrats-container {
+      text-align: center;
+      animation: scaleIn 0.6s ease-out;
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .congrats-container h2 {
+      font-size: 44px;
+      margin-bottom: 20px;
+    }
+
+    .congrats-container p {
+      font-size: 18px;
+      color: #555;
+      margin-bottom: 30px;
+      line-height: 1.8;
+    }
+
+    .score-summary {
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 16px;
+      margin: 25px 0;
+      text-align: left;
+    }
+
+    .score-summary h3 {
+      font-size: 18px;
+      color: #2d6a4f;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .score-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .score-item:last-child {
+      border-bottom: none;
+    }
+
+    .score-item .category {
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .score-item .score {
+      font-weight: 700;
+      color: #2d6a4f;
+    }
+
+    .back-btn {
+      background: white;
+      border: 2px solid #2d6a4f;
+      color: #2d6a4f;
+      padding: 15px 30px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-right: 10px;
+    }
+
+    .back-btn:hover {
+      background: #2d6a4f;
+      color: white;
+    }
+
+    /* 레이더 차트 */
+    .radar-container {
+      display: flex;
+      justify-content: center;
+      margin: 25px 0;
+    }
+
+    .radar-chart {
+      position: relative;
+      width: 280px;
+      height: 280px;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .quiz-container {
+        padding: 30px 20px;
+      }
+      .quiz-header h1 {
+        font-size: 24px;
+      }
+      .question-text {
+        font-size: 17px;
+      }
+      .option-btn {
+        font-size: 15px;
+        padding: 15px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container" id="quizContainer">
+    <!-- 퀴즈 내용이 여기에 동적으로 생성됩니다 -->
+  </div>
+
+  <script>
+    // 퀴즈 문제 데이터 - 5가지 카테고리별 2문제씩 총 10문제
+    // 카테고리: 인물파악, 내용일치, 내용구조, 내용어휘, 내용추론
+    const quizDataSeason1 = [
+      {"gate": 1, "category": "인물파악", "question": "어린 김정호가 '정확한 지도를 만들겠다'는 꿈을 품게 된 계기는 무엇인가요?", "options": ["아버지가 지도 만드는 일을 했기 때문에", "난생처음 본 지도에서 자기 고을의 강줄기가 실제와 다르게 그려진 것을 발견했기 때문에", "나라에서 상금을 걸었기 때문에", "장사꾼이 되어 길을 잘 알고 싶었기 때문에"], "correct": 1},
+      {"gate": 2, "category": "인물파악", "question": "첫 지도 청구도가 큰 감탄을 받았는데도 김정호가 다시 봇짐을 꾸린 까닭은 무엇인가요?", "options": ["청구도가 팔리지 않았기 때문에", "나라의 명령을 받았기 때문에", "여행이 좋아서 견딜 수 없었기 때문에", "엄격한 자기 눈에는 아직 고칠 점이 보였고, 여기서 멈추면 절반의 지도로 끝난다고 여겼기 때문에"], "correct": 3},
+      {"gate": 3, "category": "내용일치", "question": "김정호의 답사에 대한 설명으로 알맞은 것은 무엇인가요?", "options": ["30여 년 동안 전국을 걸으며, 귀로 들은 것은 반드시 발로 걸어가 확인한 것만 기록했다", "말을 타고 일 년 만에 전국을 돌았다", "제자들을 보내 대신 조사하게 했다", "관청의 기록만 베껴 정리했다"], "correct": 0},
+      {"gate": 4, "category": "내용일치", "question": "대동여지도에 대한 설명으로 알맞은 것은 무엇인가요?", "options": ["한 장짜리 작은 지도였다", "외국 지도를 번역한 것이다", "1861년 완성되었고, 전부 펼치면 가로 4미터 세로 7미터이며, 22첩으로 접어 다닐 수 있고 도로에 십 리마다 점을 찍었다", "궁궐에만 보관되어 아무도 볼 수 없었다"], "correct": 2},
+      {"gate": 5, "category": "내용구조", "question": "\"글로 적힌 것은 서로 다투지만, 땅은 거짓말을 하지 않는다.\"라는 말에 담긴 김정호의 태도는 무엇인가요?", "options": ["기록끼리 다를 때는 직접 가서 눈으로 확인하는 것이 가장 확실하다는 태도", "책은 믿을 수 없으니 읽지 않겠다는 태도", "땅의 신에게 물어보겠다는 태도", "글보다 말이 정확하다는 태도"], "correct": 0},
+      {"gate": 6, "category": "내용구조", "question": "완성한 지도를 목판에 새겨 인쇄한 일에 담긴 김정호의 뜻은 무엇인가요?", "options": ["지도를 비싸게 팔아 고생을 보상받으려는 뜻", "단 한 벌뿐인 지도를 여러 벌 찍어, 길 떠나는 많은 사람들의 봇짐 속에서 쓰이게 하려는 뜻", "목판 조각 솜씨를 자랑하려는 뜻", "지도를 오래 보관하려는 뜻"], "correct": 1},
+      {"gate": 7, "category": "내용어휘", "question": "'측량'의 뜻으로 알맞은 것은 무엇인가요?", "options": ["날씨를 예측하는 일", "곡식의 양을 재는 일", "땅의 위치와 거리 등을 정확히 재는 일", "물의 깊이만 재는 일"], "correct": 2},
+      {"gate": 8, "category": "내용어휘", "question": "'답사'의 뜻으로 알맞은 것은 무엇인가요?", "options": ["편지에 답장을 쓰는 일", "현장에 직접 가서 보고 조사하는 일", "시험 답안을 쓰는 일", "스승을 찾아가는 일"], "correct": 1},
+      {"gate": 9, "category": "내용추론", "question": "인공위성도 없던 시절의 대동여지도가 놀라운 정확성을 이룬 비결을 짐작하면 무엇인가요?", "options": ["의심스러우면 다시 걸어가 확인하는 우직함과, 작은 시내 하나도 대충 그리지 않은 꼼꼼함", "외국의 측량 기계를 몰래 들여왔기 때문", "하늘이 도와준 운 덕분", "높은 산에서 내려다보며 그렸기 때문"], "correct": 0},
+      {"gate": 10, "category": "내용추론", "question": "\"대동여지도의 모든 선은 김정호의 발자국이었지요.\"라는 말의 뜻으로 알맞은 것은 무엇인가요?", "options": ["지도에 발자국 무늬를 그렸다는 뜻", "김정호가 지도 위를 걸어 다녔다는 뜻", "지도의 선 하나하나가 30년 동안 직접 걸으며 확인한 노력의 기록이라는 뜻", "지도가 발 모양을 닮았다는 뜻"], "correct": 2}
+    ];
+
+    // 시즌2 (5~6학년 수준) - 표현 약간 어렵게
+    const quizDataSeason2 = [
+      {"gate": 1, "category": "인물파악", "question": "'꿈에는 본래 자격증이 없는 법'이라는 서술이 김정호의 처지와 관련해 뜻하는 바는 무엇입니까?", "options": ["김정호가 자격시험에 떨어졌다는 것", "지도 제작에는 면허가 필요했다는 것", "벼슬도 재산도 없는 평범한 사람이지만, 꿈을 품고 도전하는 데는 아무 자격도 필요 없다는 것", "꿈은 어른만 꿀 수 있다는 것"], "correct": 2},
+      {"gate": 2, "category": "인물파악", "question": "'밥벌이도 안 되는 지도를 만든다'는 수군거림 속에서 김정호를 버티게 한 것은 무엇입니까?", "options": ["이 일은 누군가 반드시 해야 하며, 그 누군가가 자신이라는 믿음", "나라의 보상 약속", "가족의 넉넉한 재산", "경쟁자를 이기려는 승부욕"], "correct": 0},
+      {"gate": 3, "category": "내용일치", "question": "답사길에서 김정호가 겪은 고생으로 옳은 것은 무엇입니까?", "options": ["관청에 잡혀가 옥살이를 했다", "호랑이에게 쫓겨 기록을 잃었다", "배가 뒤집혀 바다에 빠졌다", "산길에서 구르고, 끼니를 거르고, 헛간과 처마 밑에서 새우잠을 잤으며 차가운 시선까지 견뎠다"], "correct": 3},
+      {"gate": 4, "category": "내용일치", "question": "청구도에 대한 설명으로 옳은 것은 무엇입니까?", "options": ["1834년에 완성한 김정호의 첫 번째 지도로, 그때까지 나온 어떤 지도보다 정확하고 자세했다", "대동여지도 이후에 만든 축소판이다", "중국에서 들여온 지도를 베낀 것이다", "미완성으로 끝난 지도다"], "correct": 0},
+      {"gate": 5, "category": "내용구조", "question": "'길 위에서 만난 사람들은 이름 없는 스승들이었다'는 표현의 뜻은 무엇입니까?", "options": ["길에서 유명한 학자들을 만났다는 것", "사공과 주막 주인처럼 평범한 사람들의 생생한 앎이 지도의 소중한 재료가 되었다는 것", "스승의 이름을 잊어버렸다는 것", "길에서 글을 배웠다는 것"], "correct": 1},
+      {"gate": 6, "category": "내용구조", "question": "'청구도는 꿈의 끝이 아니라 디딤돌'이라는 표현이 보여 주는 김정호의 태도는 무엇입니까?", "options": ["첫 성과에 만족하지 않고 더 완전한 것을 향해 나아가는 정진의 자세", "청구도를 부끄러워하는 겸손", "새 지도로 돈을 벌려는 계획", "경쟁자를 의식한 조바심"], "correct": 0},
+      {"gate": 7, "category": "내용어휘", "question": "'목판'의 의미로 가장 적절한 것은 무엇입니까?", "options": ["나무로 만든 밥상", "글씨나 그림을 새겨 종이에 찍어 내는 나무판", "나무를 자르는 톱", "지도를 거는 나무 액자"], "correct": 1},
+      {"gate": 8, "category": "내용어휘", "question": "'오차'의 의미로 가장 적절한 것은 무엇입니까?", "options": ["다섯 번의 실수", "시간의 차이", "실제 값과 잰 값 사이의 어긋난 차이", "다섯 가지 차 종류"], "correct": 2},
+      {"gate": 9, "category": "내용추론", "question": "대동여지도를 22첩으로 접게 만들고 십 리마다 점을 찍은 데서 추론할 수 있는 김정호의 마음은 무엇입니까?", "options": ["지도를 실제로 들고 다니며 쓸 사람의 편의를 끝까지 생각한 정성", "지도를 예술 작품으로 만들려는 욕심", "종이를 아끼려는 절약 정신", "숫자를 좋아하는 취향"], "correct": 0},
+      {"gate": 10, "category": "내용추론", "question": "'손안의 화면으로 세계를 보는 편리함의 뿌리'에 김정호 같은 사람들이 있다는 말을 추론하면 무엇입니까?", "options": ["김정호가 스마트폰을 예언했다는 것", "옛날 지도가 더 정확하다는 것", "현대 기술은 배울 것이 없다는 것", "오늘날의 지도 기술도 두 발로 땅을 재어 온 앞선 사람들의 노고 위에 서 있다는 것"], "correct": 3}
+    ];
+
+    // 시즌3 (중1~2 수준) - 표현 더 어렵게
+    const quizDataSeason3 = [
+      {"gate": 1, "category": "인물파악", "question": "김정호의 삶을 관통하는 핵심 가치로 이 책이 제시하는 것은 무엇인가?", "options": ["꿈은 크기보다 끈기가 중요하며, 포기하지 않는 걸음이 꿈을 완성한다는 것", "기회는 준비된 자에게 온다는 것", "재능은 타고나야 한다는 것", "명예는 스스로 구하는 것이라는 것"], "correct": 0},
+      {"gate": 2, "category": "인물파악", "question": "'지도란 봇짐 속에 들어가 쓰일 때 비로소 지도가 된다'는 김정호의 말이 담고 있는 철학은 무엇인가?", "options": ["지도는 클수록 좋다는 것", "지도는 국가 기밀이어야 한다는 것", "창작물의 가치는 소장이 아니라 실제 쓰임에서 완성된다는 것", "지도는 그림보다 아름다워야 한다는 것"], "correct": 2},
+      {"gate": 3, "category": "내용일치", "question": "김정호의 두 지도에 대한 서술로 옳은 것은 무엇인가?", "options": ["청구도와 대동여지도는 같은 해에 완성되었다", "1834년의 청구도를 디딤돌 삼아, 1861년 평생의 결실인 대동여지도를 완성했다", "대동여지도가 먼저이고 청구도가 나중이다", "두 지도 모두 미완성으로 남았다"], "correct": 1},
+      {"gate": 4, "category": "내용일치", "question": "대동여지도의 정확성에 대한 서술로 옳은 것은 무엇인가?", "options": ["현대 기술로 잰 것과 비교해 오차가 매우 작아, 산줄기 흐름이 위성 지도와도 크게 어긋나지 않는다", "절반 이상이 상상으로 채워졌다", "바닷가 지역만 정확하다", "현대에 와서 오류가 많이 발견되었다"], "correct": 0},
+      {"gate": 5, "category": "내용구조", "question": "'문밖의 길이 곧 김정호의 서재가 될 참이었다'는 표현이 압축하는 학문의 방식은 무엇인가?", "options": ["서재를 길가에 지었다는 것", "책상 위의 문헌 연구를 넘어, 현장을 직접 걷고 확인하는 실증의 학문", "독서를 그만두었다는 것", "떠돌이 생활의 낭만"], "correct": 1},
+      {"gate": 6, "category": "내용구조", "question": "이야기가 '지도의 오류를 발견한 소년'에서 '오류 없는 지도를 만든 노인'으로 이어지는 구성의 효과는 무엇인가?", "options": ["소년 시절의 작은 물음이 평생의 업적으로 완성되는 원환 구조로 꿈과 끈기의 주제를 완결한다", "노년의 쓸쓸함을 부각한다", "지도 기술의 발전사를 요약한다", "세월의 무상함을 강조한다"], "correct": 0},
+      {"gate": 7, "category": "내용어휘", "question": "'지리학자'의 개념으로 가장 적절한 것은 무엇인가?", "options": ["지리산에 사는 학자", "땅의 생김새와 그 위의 삶을 연구하는 학자", "길을 안내하는 사람", "지도를 파는 상인"], "correct": 1},
+      {"gate": 8, "category": "내용어휘", "question": "'걸작(傑作)'을 대동여지도에 적용할 때 그 근거로 가장 적절한 것은 무엇인가?", "options": ["조선 시대 지도 가운데 가장 뛰어난 작품으로 평가받으며 오늘날까지 보물로 남았다는 것", "크기가 가장 크다는 것", "가장 비싸게 팔렸다는 것", "임금이 칭찬했다는 것"], "correct": 0},
+      {"gate": 9, "category": "내용추론", "question": "'정확한 지도란 하나의 믿음'이라는 서술이 함축하는 바를 추론하면 무엇인가?", "options": ["지도는 종교와 관련이 있다는 것", "지도를 믿고 떠난 사람이 무사히 목적지에 닿게 하는 신뢰, 그것이 지도의 본질이라는 것", "믿음이 있으면 지도가 없어도 된다는 것", "지도는 그린 사람만 믿을 수 있다는 것"], "correct": 1},
+      {"gate": 10, "category": "내용추론", "question": "「꿈은 걸음으로 완성돼요.」라는 경구가 오늘의 독자에게 주는 메시지를 추론하면 무엇인가?", "options": ["걷기 운동이 건강에 좋다는 것", "꿈은 빨리 이룰수록 좋다는 것", "큰 꿈일수록 재능 있는 사람의 몫이라는 것", "꿈은 선언이 아니라 하루하루의 꾸준한 실천이 쌓여 이루어진다는 것"], "correct": 3}
+    ];
+
+    // URL 파라미터에서 시즌 정보 가져오기
+    function getSeasonFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('season') || 'season1';
+    }
+
+    // 시즌에 따른 퀴즈 데이터 선택
+    const season = getSeasonFromUrl();
+    const quizData = season === 'season1' ? quizDataSeason1
+                   : season === 'season2' ? quizDataSeason2
+                   : quizDataSeason3;
+
+
+    let currentGate = 0;
+    let selectedAnswer = null;
+    let categoryScores = {
+      "인물파악": 0,
+      "내용일치": 0,
+      "내용구조": 0,
+      "내용어휘": 0,
+      "내용추론": 0
+    };
+
+    function renderQuiz() {
+      const container = document.getElementById('quizContainer');
+      const quiz = quizData[currentGate];
+
+      container.innerHTML = `
+        <div class="quiz-header">
+          <h1>🌿 관문평가</h1>
+          <p class="gate-number">10개 관문 중 ${quiz.gate}번째</p>
+          <span class="category-badge">${quiz.category}</span>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar" style="width: ${(quiz.gate / 10) * 100}%"></div>
+        </div>
+
+        <div class="question-box">
+          <p class="question-text">${quiz.question}</p>
+        </div>
+
+        <div class="options-container">
+          ${quiz.options.map((option, index) => `
+            <button class="option-btn" onclick="selectAnswer(${index})">
+              ${index + 1}. ${option}
+            </button>
+          `).join('')}
+        </div>
+
+        <button class="submit-btn" onclick="submitAnswer()" disabled>
+          답안 제출
+        </button>
+      `;
+    }
+
+    function selectAnswer(index) {
+      selectedAnswer = index;
+
+      // 모든 버튼 선택 해제
+      const buttons = document.querySelectorAll('.option-btn');
+      buttons.forEach(btn => btn.classList.remove('selected'));
+
+      // 선택한 버튼 표시
+      buttons[index].classList.add('selected');
+
+      // 제출 버튼 활성화
+      document.querySelector('.submit-btn').disabled = false;
+    }
+
+    function submitAnswer() {
+      const quiz = quizData[currentGate];
+      const buttons = document.querySelectorAll('.option-btn');
+      const submitBtn = document.querySelector('.submit-btn');
+
+      // 버튼 비활성화
+      buttons.forEach(btn => btn.disabled = true);
+      submitBtn.disabled = true;
+
+      const isCorrect = selectedAnswer === quiz.correct;
+
+      if (isCorrect) {
+        // 정답 - 카테고리 점수 추가
+        categoryScores[quiz.category]++;
+        buttons[selectedAnswer].classList.remove('selected');
+        buttons[selectedAnswer].classList.add('correct');
+        showResult(true);
+      } else {
+        // 오답 - 정답 표시
+        buttons[selectedAnswer].classList.remove('selected');
+        buttons[selectedAnswer].classList.add('wrong');
+        buttons[quiz.correct].classList.add('correct');
+        showResult(false);
+      }
+    }
+
+    function showResult(isCorrect) {
+      const container = document.getElementById('quizContainer');
+
+      // 결과 메시지 추가
+      const resultMsg = document.createElement('div');
+      if (isCorrect) {
+        resultMsg.className = 'result-message correct';
+        resultMsg.innerHTML = '🎉 정답입니다! 다음 관문으로 이동합니다...';
+      } else {
+        resultMsg.className = 'result-message wrong';
+        resultMsg.innerHTML = '❌ 틀렸습니다. 다음 관문으로 이동합니다...';
+      }
+      container.insertBefore(resultMsg, container.firstChild);
+
+      // 1.5초 후 다음 문제로
+      setTimeout(() => {
+        currentGate++;
+        selectedAnswer = null;
+
+        if (currentGate >= quizData.length) {
+          // 모든 관문 완료!
+          showCongratulations();
+        } else {
+          renderQuiz();
+        }
+      }, 1500);
+    }
+
+    // 영역별 점수를 10점 만점으로 환산 (2문제=10점, 1문제=5점, 0문제=1점)
+    function convertToRadarScore(correctCount) {
+      if (correctCount === 2) return 10;
+      if (correctCount === 1) return 5;
+      return 1;
+    }
+
+    // 레이더 차트 그리기
+    function drawRadarChart(scores) {
+      const canvas = document.getElementById('radarCanvas');
+      const ctx = canvas.getContext('2d');
+      const centerX = 140;
+      const centerY = 140;
+      const maxRadius = 100;
+
+      // 5각형 좌표 계산 (상단부터 시계방향)
+      const angles = [];
+      for (let i = 0; i < 5; i++) {
+        angles.push((Math.PI * 2 * i / 5) - Math.PI / 2);
+      }
+
+      // 배경 격자 그리기 (10, 5, 1 레벨)
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.lineWidth = 1;
+
+      [1, 0.5, 0.1].forEach(ratio => {
+        ctx.beginPath();
+        for (let i = 0; i <= 5; i++) {
+          const angle = angles[i % 5];
+          const x = centerX + Math.cos(angle) * maxRadius * ratio;
+          const y = centerY + Math.sin(angle) * maxRadius * ratio;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      });
+
+      // 축 그리기
+      ctx.strokeStyle = '#d0d0d0';
+      angles.forEach(angle => {
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX + Math.cos(angle) * maxRadius, centerY + Math.sin(angle) * maxRadius);
+        ctx.stroke();
+      });
+
+      // 데이터 영역 그리기
+      const categories = ['인물파악', '내용일치', '내용구조', '내용어휘', '내용추론'];
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(45, 106, 79, 0.3)';
+      ctx.strokeStyle = '#2d6a4f';
+      ctx.lineWidth = 2;
+
+      categories.forEach((cat, i) => {
+        const score = scores[cat];
+        const ratio = score / 10;
+        const x = centerX + Math.cos(angles[i]) * maxRadius * ratio;
+        const y = centerY + Math.sin(angles[i]) * maxRadius * ratio;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 데이터 포인트 그리기
+      ctx.fillStyle = '#1b4332';
+      categories.forEach((cat, i) => {
+        const score = scores[cat];
+        const ratio = score / 10;
+        const x = centerX + Math.cos(angles[i]) * maxRadius * ratio;
+        const y = centerY + Math.sin(angles[i]) * maxRadius * ratio;
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 라벨 그리기
+      ctx.fillStyle = '#2c3e50';
+      ctx.font = 'bold 12px "Noto Sans KR", sans-serif';
+      ctx.textAlign = 'center';
+
+      const labelOffset = 18;
+      const labels = ['인물파악', '내용일치', '내용구조', '내용어휘', '내용추론'];
+      labels.forEach((label, i) => {
+        const x = centerX + Math.cos(angles[i]) * (maxRadius + labelOffset);
+        const y = centerY + Math.sin(angles[i]) * (maxRadius + labelOffset);
+        ctx.fillText(label, x, y + 4);
+      });
+    }
+
+    function showCongratulations() {
+      const container = document.getElementById('quizContainer');
+
+      // 영역별 레이더 점수 계산 (10점 만점)
+      const radarScores = {
+        "인물파악": convertToRadarScore(categoryScores["인물파악"]),
+        "내용일치": convertToRadarScore(categoryScores["내용일치"]),
+        "내용구조": convertToRadarScore(categoryScores["내용구조"]),
+        "내용어휘": convertToRadarScore(categoryScores["내용어휘"]),
+        "내용추론": convertToRadarScore(categoryScores["내용추론"])
+      };
+
+      // 총점 계산 (100점 만점)
+      const totalRadarScore = Object.values(radarScores).reduce((a, b) => a + b, 0);
+      const totalScore100 = totalRadarScore * 2; // 50점 만점 → 100점 만점으로 환산
+
+      container.innerHTML = `
+        <div class="congrats-container">
+          <h2>🎊 관문평가 완료! 🎊</h2>
+          <p>
+            10개의 관문을 모두 완료했습니다!<br>
+            '김정호와 대동여지도' 이야기를 잘 이해하셨네요.
+          </p>
+
+          <div class="radar-container">
+            <canvas id="radarCanvas" width="280" height="280"></canvas>
+          </div>
+
+          <div class="score-summary">
+            <h3>📊 영역별 점수 (각 10점 만점)</h3>
+            <div class="score-item">
+              <span class="category">👤 인물파악</span>
+              <span class="score">${radarScores["인물파악"]} / 10</span>
+            </div>
+            <div class="score-item">
+              <span class="category">✅ 내용일치</span>
+              <span class="score">${radarScores["내용일치"]} / 10</span>
+            </div>
+            <div class="score-item">
+              <span class="category">🏗️ 내용구조</span>
+              <span class="score">${radarScores["내용구조"]} / 10</span>
+            </div>
+            <div class="score-item">
+              <span class="category">📚 내용어휘</span>
+              <span class="score">${radarScores["내용어휘"]} / 10</span>
+            </div>
+            <div class="score-item">
+              <span class="category">🔍 내용추론</span>
+              <span class="score">${radarScores["내용추론"]} / 10</span>
+            </div>
+            <div class="score-item" style="border-top: 2px solid #2d6a4f; margin-top: 10px; padding-top: 15px;">
+              <span class="category" style="font-size: 18px;">총점</span>
+              <span class="score" style="font-size: 22px; color: #1b4332;">${totalScore100}점</span>
+            </div>
+          </div>
+
+          <button class="back-btn" onclick="goBack()">
+            ← 목록으로 돌아가기
+          </button>
+          <button class="submit-btn" onclick="retryQuiz()" style="margin-top: 10px;">
+            🔄 다시 풀기
+          </button>
+        </div>
+      `;
+
+      // 레이더 차트 그리기
+      setTimeout(() => {
+        drawRadarChart(radarScores);
+      }, 100);
+
+      // 결과 저장 (서버 API 호출)
+      saveQuizResult(radarScores, totalScore100);
+
+      // 결과 저장 (부모 창에 전달)
+      if (window.parent !== window) {
+        window.parent.postMessage({
+          action: 'quizComplete',
+          storyId: 'korperson12',
+          season: getSeasonFromUrl(),
+          scores: radarScores,
+          totalScore: totalScore100
+        }, '*');
+      }
+    }
+
+    // 서버에 결과 저장
+    async function saveQuizResult(scores, totalScore) {
+      try {
+        // 로그인 정보 가져오기 (sessionStorage 'user' 키 사용)
+        const userInfo = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '{}');
+        const grade = userInfo.grade || '';
+        const name = userInfo.name || '';
+
+        if (!grade || !name) {
+          console.log('[saveQuizResult] 로그인 정보 없음 - 저장 건너뜀');
+          return;
+        }
+
+        // URL 파라미터에서 시즌 가져오기
+        const season = getSeasonFromUrl();
+
+        const response = await fetch('/api/creative-quiz/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade,
+            name,
+            storyId: 'korperson12',
+            season,
+            scores,
+            totalScore
+          })
+        });
+
+        const result = await response.json();
+        if (result.ok) {
+          console.log('[saveQuizResult] 저장 완료:', result);
+        } else {
+          console.error('[saveQuizResult] 저장 실패:', result.message);
+        }
+      } catch (err) {
+        console.error('[saveQuizResult] 오류:', err);
+      }
+    }
+
+    function goBack() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function retryQuiz() {
+      currentGate = 0;
+      selectedAnswer = null;
+      categoryScores = {
+        "인물파악": 0,
+        "내용일치": 0,
+        "내용구조": 0,
+        "내용어휘": 0,
+        "내용추론": 0
+      };
+      renderQuiz();
+    }
+
+    // 페이지 로드 시 첫 번째 퀴즈 표시
+    window.addEventListener('DOMContentLoaded', () => {
+      renderQuiz();
+    });
+
+    // ESC 키로 뒤로가기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (confirm('퀴즈를 종료하고 목록으로 돌아가시겠습니까?')) {
+          goBack();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

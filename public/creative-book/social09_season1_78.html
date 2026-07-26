@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📰 진짜를 찾는 아이들 — 소문이 삼킨 마을</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작사회문화09/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>📰 진짜를 찾는 아이들 — 소문이 삼킨 마을</h1>
+        <p class="subtitle">
+          — 정보 판별과 미디어 리터러시로 배우는 비판적 읽기 —<br>
+          교과기반 창작도서 · 사회문화 09
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 하윤:</strong> 빠르게 퍼지는 소문 속에서 진짜를 가려내는 법을 배우는 아이.</p>
+          <p><strong>★ 도현:</strong> 확인되지 않은 소문 때문에 억울하게 오해받는 친구.</p>
+          <p><strong>★ 핵심 개념:</strong> 정보의 홍수, 가짜 정보, 사실 확인, 미디어 리터러시, 비판적 읽기.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>조회 수 1,204</h2>
+        <p>어느 날, 반 아이들의 대화방에 한 게시글이 올라왔습니다. 도현이가 반 친구의 물건을 몰래 가져갔다는 내용이었습니다. 그 글은 순식간에 퍼져 조회 수가 천 명을 넘어섰습니다.</p>
+        <p>많은 아이가 그 글을 읽고 도현이를 수군거렸습니다. 조회 수가 높다는 것은 그만큼 많은 사람이 그 글을 사실로 받아들였다는 뜻이었습니다. 도현이에 대한 소문은 걷잡을 수 없이 번져 갔습니다.</p>
+        <p>그러나 하윤이는 그 글이 정말 사실인지 의문이 들었습니다. 도현이는 평소 그럴 아이가 아니었기 때문입니다. 하윤이는 사람들이 확인도 하지 않고 소문을 믿는 것이 이상하게 느껴졌습니다. 조회 수가 높다고 해서 그것이 곧 진실이 되는 것은 아니었습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 확인되지 않은 소문이 순식간에 퍼지는 상황입니다. 이 이야기는 정보의 홍수 속에서 진짜를 가려내는 법, 곧 미디어 리터러시를 배우는 여정을 그립니다. 조회 수 천이 넘은 게시글이 그 출발점이 됩니다.</p>
+        <p>빠른 것이 반드시 옳은 것은 아니라는 것을, 하윤이는 이 일을 통해 배우게 됩니다. 소문이 삼킨 마을의 이야기가 이렇게 시작됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 확산</span>
+        <h2>스크린샷 한 장</h2>
+        <p>소문은 스크린샷 한 장과 함께 더욱 빠르게 퍼져 나갔습니다. 누군가 찍어 올린 사진 한 장이 그럴듯한 증거처럼 여겨졌습니다. 그러나 그 사진이 정말 무엇을 담고 있는지는 아무도 제대로 확인하지 않았습니다.</p>
+        <p>사람들은 사진만 보고 도현이가 범인이라고 단정 지었습니다. 사진의 앞뒤 사정도, 그것이 진짜인지도 따지지 않았습니다. 그저 눈에 보이는 것만으로 성급하게 판단한 것입니다.</p>
+        <p>하윤이는 사진 한 장이 이렇게 큰 힘을 가진다는 것에 놀랐습니다. 그러나 그 사진이 진실을 온전히 담고 있는지는 알 수 없었습니다. 하윤이는 눈에 보이는 것이 전부가 아닐 수도 있다고 생각했습니다.</p>
+        <p>이 대목은 확인되지 않은 정보가 증거처럼 퍼지는 도입의 단계입니다. 스크린샷 한 장이 진실인 양 받아들여지는 모습이, 정보 판별의 필요성을 일깨웁니다. 눈에 보이는 것도 함부로 믿어서는 안 된다는 것이 드러나기 시작합니다.</p>
+        <p>하윤이는 이 소문의 진실이 무엇인지 직접 알아보기로 했습니다. 그러나 그러기도 전에, 도현이가 큰 상처를 받고 있었습니다. 소문은 진실을 확인할 겨를도 주지 않고 빠르게 번져 갔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 상처</span>
+        <h2>빈 자리</h2>
+        <p>소문이 퍼진 뒤로, 도현이는 학교에 나오지 않았습니다. 도현이의 빈 자리를 볼 때마다 하윤이는 마음이 무거웠습니다. 확인되지 않은 소문이 한 사람을 이토록 힘들게 만든 것입니다.</p>
+        <p>알고 보니 도현이는 억울함에 크게 상심하여 학교에 오기가 두려웠던 것입니다. 아무 잘못도 없이 온 반의 손가락질을 받았으니 견디기 힘들었습니다. 소문은 도현이에게 깊은 상처를 남겼습니다.</p>
+        <p>하윤이는 소문이 진짜인지 아닌지도 모른 채, 사람들이 한 친구를 이렇게 몰아세운 것에 화가 났습니다. 정보를 함부로 믿고 퍼뜨리는 것이 얼마나 위험한지를 실감했습니다. 하윤이는 진실을 밝혀야겠다고 마음먹었습니다.</p>
+        <p>이 대목은 확인되지 않은 소문이 상처를 주는 전개의 단계입니다. 도현이의 빈 자리가, 잘못된 정보가 낳은 아픔을 보여 줍니다. 정보를 함부로 다루는 것이 사람을 얼마나 아프게 하는지가 드러납니다.</p>
+        <p>하윤이는 이 소문이 어디서 시작되었는지부터 파헤쳐 보기로 했습니다. 진실을 찾는 여정이 시작된 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 추적</span>
+        <h2>처음 올린 사람은 누구인가</h2>
+        <p>하윤이는 소문이 처음 어디서 시작되었는지 거슬러 올라가 보았습니다. 수많은 사람이 퍼 날랐지만, 맨 처음 그 글을 올린 사람이 있을 터였습니다. 하윤이는 정보의 출처를 찾기 시작했습니다.</p>
+        <p>그러나 소문은 이 사람 저 사람을 거치며 퍼진 탓에, 처음 올린 사람을 찾기가 쉽지 않았습니다. 게다가 퍼지는 과정에서 내용이 조금씩 부풀려지고 바뀌어 있었습니다. 처음의 이야기와 지금의 소문은 사뭇 달랐습니다.</p>
+        <p>하윤이는 정보가 퍼지는 과정에서 얼마나 쉽게 왜곡되는지를 알게 되었습니다. 출처가 분명하지 않은 정보는 그만큼 믿기 어려웠습니다. 정보를 판단할 때는 그것이 어디서 나왔는지를 따져야 한다는 것을 하윤이는 깨달았습니다.</p>
+        <p>이 대목은 하윤이가 정보의 출처를 추적하는 전개의 시도 단계입니다. 소문이 퍼지며 왜곡되는 과정을 확인하며, 출처의 중요성을 배운 것입니다. 정보 판별의 첫걸음이 출처 확인임을 하윤이는 알게 되었습니다.</p>
+        <p>그러던 중 하윤이는, 소문을 퍼뜨린 아이들이 별생각 없이 그저 재미로 그랬다는 사실을 알게 되었습니다. 하윤이는 어이가 없었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 좌절</span>
+        <h2>재미있으면 된 거 아니에요?</h2>
+        <p>하윤이가 소문을 퍼뜨린 아이들에게 따지자, 그들은 대수롭지 않게 대답했습니다. 그저 재미있어서 퍼 날랐을 뿐이라는 것이었습니다. 자신들의 행동이 도현이에게 얼마나 큰 상처를 주었는지 알지 못했습니다.</p>
+        <p>하윤이는 그 말에 크게 실망했습니다. 재미로 퍼뜨린 확인되지 않은 정보가, 한 사람의 삶을 무너뜨릴 수도 있다는 것을 아이들은 몰랐던 것입니다. 정보를 다루는 데 아무런 책임감도 느끼지 못했습니다.</p>
+        <p>하윤이는 이대로는 안 되겠다고 생각했습니다. 사람들이 정보를 재미로만 여기고 함부로 퍼뜨리는 한, 억울한 피해자는 계속 생길 것이었습니다. 하윤이는 정보를 대하는 태도부터 바꾸어야 한다고 느꼈습니다.</p>
+        <p>이 대목은 정보를 가볍게 여기는 태도에 하윤이가 좌절하는 위기의 단계입니다. 재미로 정보를 퍼뜨리는 무책임함이, 문제의 뿌리임이 드러납니다. 정보에는 책임이 따른다는 것을 사람들이 알아야 함을 하윤이는 깨닫습니다.</p>
+        <p>하윤이는 소문이 진짜인지 가려내기 위해, 정보를 확인하는 방법을 제대로 알아보기로 했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>아무도 안 믿는 교실</h2>
+        <p>소문이 걷잡을 수 없이 번지면서, 교실은 온통 의심과 불신으로 가득해졌습니다. 아이들은 서로가 하는 말을 믿지 못하게 되었습니다. 확인되지 않은 정보가 넘쳐 나자, 무엇이 진짜인지 아무도 알 수 없게 된 것입니다.</p>
+        <p>하윤이는 정보가 넘쳐 나는 것이 오히려 진실을 가린다는 것을 깨달았습니다. 수많은 정보 속에서 진짜를 가려내지 못하면, 결국 아무것도 믿을 수 없게 되는 것입니다. 정보의 홍수 속에서 판단하는 힘이 얼마나 중요한지를 하윤이는 실감했습니다.</p>
+        <p>하윤이는 이렇게 넘쳐 나는 정보를 비판적으로 읽고 판단하는 능력이 꼭 필요하다고 느꼈습니다. 무작정 믿거나 무작정 의심하는 것이 아니라, 사실인지 아닌지를 따져 보는 힘 말입니다. 이러한 능력을 미디어 리터러시라고 합니다.</p>
+        <p>이 대목은 정보의 홍수가 진실을 가리는 위기의 심화 단계입니다. 아무도 믿지 못하는 교실이, 정보 판별 능력의 부재가 낳은 결과를 보여 줍니다. 비판적으로 정보를 읽는 미디어 리터러시의 필요성이 뚜렷해집니다. 넘쳐 나는 정보 자체가 문제가 아니라, 그것을 가려낼 눈이 없는 것이 문제였습니다.</p>
+        <p>하윤이는 정보를 확인하는 구체적인 방법을 찾아 나섰습니다. 그리고 진짜를 가려내는 세 가지 원칙을 알게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 방법</span>
+        <h2>세 가지를 확인하기</h2>
+        <p>하윤이는 정보가 진짜인지 확인하는 세 가지 방법을 배웠습니다. 첫째는 그 정보가 어디서 나왔는지 출처를 확인하는 것이었습니다. 둘째는 그것을 뒷받침하는 근거가 있는지 살피는 것이었습니다.</p>
+        <p>셋째는 다른 여러 자료와 견주어 사실인지 대조해 보는 것이었습니다. 하나의 정보만 믿지 말고, 여러 곳에서 확인해 보아야 한다는 것이었습니다. 이 세 가지를 따져 보면, 진짜와 가짜를 훨씬 잘 가려낼 수 있었습니다.</p>
+        <p>하윤이는 이 방법으로 도현이에 관한 소문을 하나하나 따져 보았습니다. 출처도 불분명하고, 근거도 없으며, 다른 어떤 자료와도 맞지 않았습니다. 그 소문은 확인되지 않은 거짓 정보였던 것입니다.</p>
+        <p>이 대목은 하윤이가 정보를 판별하는 방법을 익히는 절정의 단계입니다. 출처·근거·대조라는 세 가지 확인법이, 진짜를 가려내는 열쇠임이 드러납니다. 미디어 리터러시의 구체적인 실천 방법을 하윤이는 배웠습니다. 이 세 가지는 어른이 되어서도 두고두고 쓸 수 있는 소중한 도구였습니다.</p>
+        <p>하윤이는 이 세 가지 확인을 통해 밝혀낸 진실을, 반 아이들에게 알리기로 했습니다. 진실을 아는 것에 그치지 않고, 그것을 널리 알리는 것까지가 자신의 몫이라고 여겼습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>87명이 읽은 기사</h2>
+        <p>하윤이는 도현이에 관한 소문이 거짓임을 밝히는 글을 정성껏 써서 올렸습니다. 출처와 근거를 하나하나 따져, 그 소문이 사실이 아님을 조목조목 밝혔습니다. 그 글은 여든일곱 명이 읽었습니다.</p>
+        <p>처음 소문을 퍼뜨린 글보다 조회 수는 적었지만, 하윤이의 글은 진실을 담고 있었습니다. 하윤이의 글을 읽은 아이들은 그동안 자신들이 확인되지 않은 소문을 믿고 퍼뜨렸음을 깨달았습니다. 하나둘 도현이에 대한 오해를 풀기 시작했습니다.</p>
+        <p>그 순간 하윤이는 중요한 깨달음을 얻었습니다. 빠르게 퍼지는 것이 반드시 옳은 것은 아니며, 조금 느리더라도 진실을 확인하는 것이 훨씬 중요하다는 사실을 말입니다. 정보의 홍수 속에서 진짜를 가려내는 힘이 얼마나 소중한지를 온몸으로 배운 것입니다.</p>
+        <p>이 대목은 이야기의 정신적 절정, 곧 하윤이의 각성입니다. 진실을 확인하여 밝힘으로써, 빠른 것보다 정확한 것이 중요함을 깨달은 것입니다. 미디어 리터러시가 억울한 피해를 막는 힘임을, 하윤이는 온전히 배웠습니다. 조회 수가 아니라 진실이야말로 정보의 참된 가치임을 하윤이는 알게 되었습니다.</p>
+        <p>하윤이의 글 덕분에, 도현이는 마침내 억울한 오해를 벗을 수 있게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>도현이의 그림</h2>
+        <p>오해가 풀리자, 도현이는 다시 학교에 나올 수 있게 되었습니다. 반 아이들은 도현이에게 진심으로 사과했습니다. 확인하지 않은 소문을 믿고 상처를 준 것을 뉘우친 것입니다.</p>
+        <p>도현이는 자신의 억울함을 풀어 준 하윤이에게 고마움을 담아 그림 한 장을 선물했습니다. 그림 속에는 진실을 찾아 준 하윤이에 대한 고마움이 담겨 있었습니다. 두 친구의 사이는 예전보다 더욱 돈독해졌습니다.</p>
+        <p>이 대목은 진실이 밝혀져 오해가 풀리는 결말의 돌파입니다. 미디어 리터러시를 통해 억울한 친구를 구해 낸 것입니다. 정보를 비판적으로 판별하는 힘이 한 사람을 지켜 냈음을 보여 준 순간입니다.</p>
+        <p>반 아이들은 이 일을 통해 정보를 대하는 태도를 완전히 바꾸었습니다. 무엇이든 확인 없이 믿거나 퍼뜨리지 않기로 다짐한 것입니다. 정보의 홍수 속에서 진짜를 가려내는 것이 얼마나 중요한지를 모두가 배웠습니다.</p>
+        <p>하윤이는 진실을 찾는 일이 때로는 느리고 힘들지만, 반드시 필요한 일임을 마음에 새겼습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작사회문화09/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>한 번 더 묻는 습관</h2>
+        <p>이 일을 겪은 뒤, 하윤이와 반 아이들에게는 새로운 습관이 생겼습니다. 어떤 정보를 접하면, 그것이 진짜인지 한 번 더 묻고 확인하는 습관이었습니다. 그 작은 습관이 억울한 피해를 막아 주었습니다.</p>
+        <p>이 이야기가 우리에게 주는 가르침은 분명합니다. 정보가 넘쳐 나는 세상에서, 빠르게 퍼지는 것이 반드시 옳은 것은 아니라는 것입니다. 조금 느리더라도, 출처와 근거를 따져 진실을 확인하는 것이 훨씬 중요합니다.</p>
+        <p>무엇보다 이 이야기는, 정보를 비판적으로 읽는 미디어 리터러시의 소중함을 일깨웁니다. 무작정 믿거나 함부로 퍼뜨리지 말고, 사실인지 아닌지를 따져 보아야 합니다. 그 판단하는 힘이 나와 남을 함께 지켜 줍니다.</p>
+        <p>하윤이는 앞으로도 정보를 접할 때마다 한 번 더 묻는 습관을 지키기로 했습니다. 그리고 확인되지 않은 것으로 남에게 상처 주지 않기로 다짐했습니다. 진짜를 찾는 이 습관은, 하윤이를 현명한 정보의 주인으로 자라게 했습니다. 정보에 휘둘리는 사람이 아니라, 정보를 다스리는 사람이 되기로 한 것입니다.</p>
+        <p><span class="highlight">빠른 것이 반드시 옳은 것은 아닙니다. 출처와 근거를 따져 진실을 확인하는 힘이 중요합니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'social09_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

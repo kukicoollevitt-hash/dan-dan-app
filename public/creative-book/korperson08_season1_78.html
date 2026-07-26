@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎨 붓끝에 피어난 풀과 벌레 — 신사임당</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작한국인물08/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🎨 붓끝에 피어난 풀과 벌레 — 신사임당</h1>
+        <p class="subtitle">
+          — 성별의 한계를 넘어 예술과 학문을 이룬 조선의 여성 —<br>
+          교과기반 창작도서 · 한국인물 08
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 신사임당(1504~1551):</strong> 시·글씨·그림에 두루 뛰어났던 조선 중기의 예술가이자 학자. 「초충도」로 이름 높다.</p>
+          <p><strong>★ 시대 배경:</strong> 여성의 사회 활동이 크게 제약받던 조선 사회. 그러나 학문과 예술을 존중하던 강릉의 집안 분위기.</p>
+          <p><strong>★ 핵심 개념:</strong> 여성에 대한 사회적 제약, 시·서·화의 재능, 「초충도」, 자녀 교육, 오만 원권의 인물.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물08/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 재능</span>
+        <h2>강릉의 총명한 딸</h2>
+        <p>신사임당은 1504년, 강원도 강릉의 학문을 존중하는 집안에서 태어났습니다. 그는 어릴 때부터 남달리 총명하여, 글을 읽고 그림을 그리는 데 뛰어난 재능을 보였습니다. 특히 풀과 벌레, 꽃을 그리는 솜씨는 어른들도 감탄할 정도였습니다.</p>
+        <p>그러나 신사임당이 살던 조선은 여성의 재능을 마음껏 펼치기 어려운 사회였습니다. 여성은 학문과 예술보다 집안일에 힘써야 한다는 생각이 강했기 때문입니다. 아무리 재능이 뛰어나도, 여성이라는 이유로 그 재능이 묻히기 쉬운 시대였습니다.</p>
+        <p>다행히 신사임당의 집안은 학문과 예술을 귀하게 여겼습니다. 특히 그의 아버지는 딸의 재능을 알아보고 이를 아끼며 북돋아 주었습니다. 시대의 벽 속에서도 그의 재능은 따뜻한 응원 속에 자라날 수 있었습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 신사임당이 지닌 빼어난 재능과 그것을 가로막는 시대의 벽입니다. 재능은 하늘이 주었으나, 그것을 펼칠 기회는 성별에 따라 크게 달랐던 시절입니다. 신사임당의 삶은 그 벽을 넘어선 여정이 됩니다.</p>
+        <p>재능은 성별을 가리지 않는다는 것을, 신사임당은 자신의 삶으로 보여 주게 됩니다. 강릉의 총명한 딸이 어떤 예술가로 자라날지, 이야기는 조용히 기대를 품게 합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물08/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>아버지의 결심</h2>
+        <p>신사임당의 아버지는 딸의 재능을 그냥 두고 볼 수 없었습니다. 그는 딸에게 아들과 다름없이 학문과 예술을 가르치기로 결심하였습니다. 당시로서는 매우 드물고 앞선 생각이었습니다.</p>
+        <p>아버지는 딸에게 유학의 경전을 읽게 하고, 붓글씨와 그림을 익히게 하였습니다. 신사임당은 그 배움을 스펀지처럼 빨아들이며 하루가 다르게 성장했습니다. 좋은 스승과 열린 집안이 그의 재능에 날개를 달아 준 것입니다.</p>
+        <p>특히 신사임당은 옛 화가들의 그림을 본떠 그리며 그림 실력을 갈고닦았습니다. 그러면서도 남을 그대로 따라 하는 데 그치지 않고, 자신만의 눈으로 세상을 담아내려 하였습니다. 그의 그림에는 어느새 그만의 개성이 배어들기 시작했습니다.</p>
+        <p>이 대목은 신사임당이 본격적으로 재능을 키워 가는 사건의 시작입니다. 딸의 재능을 알아보고 가르친 아버지의 결심이, 한 예술가의 탄생을 가능하게 한 것입니다. 재능을 알아보는 눈과 그것을 키우는 환경이 얼마나 소중한지를 보여 줍니다.</p>
+        <p>신사임당의 붓끝은 나날이 무르익어 갔습니다. 그의 재능은 시대의 벽에도 불구하고 조금씩 세상에 알려지기 시작했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물08/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 수련</span>
+        <h2>네 가지 붓</h2>
+        <p>신사임당의 재능은 그림 하나에만 머물지 않았습니다. 그는 시를 짓고, 글씨를 쓰고, 그림을 그리는 데 두루 뛰어났습니다. 시와 글씨와 그림에 모두 능한 것은 옛 선비들이 이상으로 여기던 경지였습니다.</p>
+        <p>신사임당의 붓은 때로는 아름다운 시가 되고, 때로는 단정한 글씨가 되며, 때로는 생생한 그림이 되었습니다. 하나의 재능도 갖추기 어려운데, 그는 여러 재능을 두루 지닌 보기 드문 예술가였습니다. 사람들은 그의 다재다능함에 놀라움을 감추지 못했습니다.</p>
+        <p>그는 자신의 재능을 뽐내기 위해서가 아니라, 세상의 아름다움을 담아내기 위해 붓을 들었습니다. 작은 풀 한 포기, 벌레 한 마리에서도 그는 생명의 아름다움을 발견했습니다. 그 섬세한 시선이 그의 예술을 더욱 깊게 만들었습니다.</p>
+        <p>이 대목은 신사임당이 여러 예술 분야에서 실력을 쌓아 가는 수련의 단계입니다. 시와 글씨, 그림을 모두 익히며 그는 참된 예술가로 성장해 갔습니다. 그의 다재다능함은 끊임없는 노력의 결실이었습니다.</p>
+        <p>신사임당의 재능은 이제 강릉을 넘어 널리 알려지기 시작했습니다. 그러나 그를 진정 유명하게 만든 것은 바로 풀과 벌레를 그린 그림이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물08/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 절정기</span>
+        <h2>새가 쪼아 댄 포도</h2>
+        <p>신사임당의 그림 솜씨가 얼마나 뛰어났는지를 보여 주는 이야기가 전해집니다. 그가 마당에 그림을 말리려 내어놓았는데, 그림 속 벌레가 어찌나 생생했던지 닭이 진짜 벌레인 줄 알고 쪼아 댔다는 것입니다. 또 포도 그림이 어찌나 실제 같았던지 새가 날아와 쪼려 했다고도 합니다.</p>
+        <p>이러한 이야기는 신사임당의 그림이 얼마나 사실적이고 생동감 넘쳤는지를 잘 말해 줍니다. 그는 풀과 벌레를 오래도록 관찰하여, 그 모습을 살아 있는 듯 화폭에 담아냈습니다. 이렇게 풀과 벌레를 그린 그림을 「초충도」라고 부릅니다.</p>
+        <p>신사임당의 「초충도」는 작고 하찮아 보이는 생명들을 따뜻한 눈으로 바라본 그림이었습니다. 나비와 잠자리, 수박과 가지, 이름 없는 풀꽃까지 그의 붓끝에서 생명을 얻었습니다. 그의 그림에는 세상 모든 생명을 사랑하는 마음이 담겨 있었습니다.</p>
+        <p>이 대목은 신사임당의 예술이 절정에 이르는 전개의 단계입니다. 그의 「초충도」는 단순히 솜씨가 뛰어난 그림을 넘어, 생명에 대한 깊은 애정이 깃든 작품이었습니다. 그래서 그의 그림은 오랜 세월이 지나도 사람들의 마음을 울립니다.</p>
+        <p>신사임당의 붓끝에서 풀과 벌레가 살아 숨 쉬었습니다. 작은 생명을 향한 그의 따뜻한 시선이 곧 그의 예술의 힘이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물08/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">전환 · 혼인</span>
+        <h2>두 개의 길을 함께</h2>
+        <p>이윽고 신사임당은 혼인을 하여 한 집안의 아내이자 어머니가 되었습니다. 당시 여성에게 혼인은 곧 예술과 학문을 접는 것을 뜻하는 경우가 많았습니다. 그러나 신사임당은 그 길을 택하지 않았습니다.</p>
+        <p>그는 아내이자 어머니로서의 책임을 다하면서도, 예술가로서의 삶을 결코 포기하지 않았습니다. 집안일을 돌보는 틈틈이 붓을 들어 그림을 그리고 시를 지었습니다. 두 개의 길을 함께 걸어가는 것은 결코 쉬운 일이 아니었습니다.</p>
+        <p>신사임당은 친정 강릉의 부모를 지극히 모시면서도, 시댁의 살림을 알뜰히 꾸려 나갔습니다. 그러면서도 자신의 재능을 갈고닦는 일을 게을리하지 않았습니다. 여러 역할 사이에서 균형을 잡아 가는 그의 지혜는 남달랐습니다.</p>
+        <p>이 대목은 신사임당의 삶이 새로운 국면으로 접어드는 전환의 단계입니다. 그는 시대가 여성에게 지운 역할을 감당하면서도, 자신의 꿈을 놓지 않았습니다. 두 개의 길을 함께 걸어간 그의 삶은 그 자체로 하나의 도전이었습니다.</p>
+        <p>신사임당은 아내이자 어머니이자 예술가로 살아갔습니다. 어느 하나도 소홀히 하지 않은 그의 삶은, 뒷날 여러 사람에게 큰 본보기가 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물08/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">전개 · 교육</span>
+        <h2>어머니라는 스승</h2>
+        <p>신사임당은 자녀 교육에도 남다른 정성을 쏟았습니다. 그는 자녀들에게 학문과 예술을 가르치며, 무엇보다 올바른 사람됨을 강조했습니다. 지식보다 먼저 사람의 도리를 가르치는 것이 그의 교육이었습니다.</p>
+        <p>신사임당은 자녀들에게 스스로 모범을 보였습니다. 늘 책을 읽고 붓을 들며 배움을 게을리하지 않는 어머니의 모습은, 어떤 가르침보다 큰 교육이 되었습니다. 자녀들은 그런 어머니를 보며 자연스럽게 배움을 사랑하게 되었습니다.</p>
+        <p>그의 정성 어린 교육은 자녀들을 훌륭한 인물로 길러 냈습니다. 여러 자녀가 학문과 예술에서 뛰어난 성취를 이루었습니다. 신사임당은 예술가이자, 동시에 자녀들의 첫 번째 스승이었습니다.</p>
+        <p>이 대목은 신사임당이 어머니이자 스승으로서의 역할을 다하는 전개의 단계입니다. 그의 교육은 자녀의 재능뿐 아니라 인격을 함께 길러 내는 것이었습니다. 스스로 모범이 되는 그의 교육법은 오늘날에도 큰 울림을 줍니다.</p>
+        <p>신사임당의 가르침은 자녀들의 삶 속에 깊이 뿌리내렸습니다. 그 가운데에서도 한 아들은 훗날 조선을 대표하는 위대한 학자로 자라나게 됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물08/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 결실</span>
+        <h2>율곡 이이의 어머니</h2>
+        <p>신사임당의 아들 가운데 한 사람이 바로 율곡 이이입니다. 율곡 이이는 조선을 대표하는 위대한 학자이자 정치가로 성장하였습니다. 그가 그렇게 훌륭한 인물이 된 데에는 어머니 신사임당의 가르침이 큰 밑거름이 되었습니다.</p>
+        <p>율곡은 어머니에게서 학문과 예술뿐 아니라, 무엇보다 올곧은 마음가짐을 배웠습니다. 어머니가 몸소 보여 준 성실함과 반듯함이 그의 삶의 바탕이 된 것입니다. 위대한 학자의 뒤에는 위대한 어머니가 있었습니다.</p>
+        <p>그러나 신사임당을 단지 훌륭한 아들을 둔 어머니로만 기억하는 것은 온당치 않습니다. 그는 그 자신이 뛰어난 예술가이자 학자였습니다. 자녀 교육에서의 성취는 그의 여러 빛나는 면모 가운데 하나일 뿐입니다.</p>
+        <p>이 대목은 신사임당의 교육이 큰 결실을 맺는 절정의 단계입니다. 위대한 학자를 길러 낸 어머니이자, 그 자신 뛰어난 예술가였던 그의 삶이 온전히 빛나는 순간입니다. 그는 여러 방면에서 자신의 가치를 증명한 인물이었습니다.</p>
+        <p>신사임당은 예술가로서, 그리고 어머니로서 모두 큰 발자취를 남겼습니다. 그의 삶은 한 사람이 여러 영역에서 어떻게 빛날 수 있는지를 보여 줍니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물08/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 예술</span>
+        <h2>국보가 된 그림들</h2>
+        <p>신사임당이 세상을 떠난 뒤에도 그의 그림은 사라지지 않고 오래도록 전해졌습니다. 그의 「초충도」를 비롯한 여러 작품은 조선 시대 회화의 걸작으로 높이 평가받았습니다. 세월이 흐를수록 그의 예술은 더욱 빛을 발했습니다.</p>
+        <p>사람들은 그의 그림 속 생생한 풀과 벌레, 그리고 그 안에 담긴 따뜻한 시선에 감탄했습니다. 작은 생명 하나하나를 정성껏 담아낸 그의 그림은, 시대를 넘어 사람들의 마음을 울렸습니다. 예술의 힘은 세월을 뛰어넘는 것이었습니다.</p>
+        <p>신사임당의 작품 가운데 일부는 오늘날 소중한 문화유산으로 지정되어 보호받고 있습니다. 여성의 예술 활동이 제약받던 시대에 남긴 그의 작품이, 이제는 온 국민이 아끼는 보물이 된 것입니다. 그의 붓끝이 남긴 것은 영원한 가치였습니다.</p>
+        <p>이 대목은 신사임당의 예술이 후세에 길이 인정받는 절정의 단계입니다. 그가 시대의 벽을 넘어 남긴 작품들이, 마침내 온전한 평가를 받게 된 것입니다. 진정한 예술은 결코 시대에 묻히지 않음을 그의 그림이 증명합니다.</p>
+        <p>신사임당의 그림은 지금도 우리 곁에서 숨 쉬고 있습니다. 그 안에 담긴 생명에 대한 사랑은 오늘의 우리에게도 잔잔한 감동을 전합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물08/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 유산</span>
+        <h2>오만 원권 속의 얼굴</h2>
+        <p>오늘날 신사임당은 우리나라 오만 원권 지폐의 인물로 등장합니다. 우리 화폐에 실린 최초의 여성 인물이 바로 신사임당입니다. 이는 그가 우리 역사에서 얼마나 소중한 인물인지를 잘 보여 줍니다.</p>
+        <p>오만 원권에는 신사임당의 얼굴과 함께 그의 그림이 담겨 있습니다. 날마다 우리가 쓰는 화폐 속에서, 그의 예술이 여전히 사람들과 함께하고 있는 것입니다. 그의 재능과 삶이 온 국민에게 기억되고 있다는 증거입니다.</p>
+        <p>화폐에 그의 얼굴이 실렸다는 것은, 그가 단지 훌륭한 어머니여서만이 아닙니다. 그 자신이 뛰어난 예술가이자 학자로서 남긴 업적이 그만큼 크기 때문입니다. 신사임당은 여러 방면에서 우리 역사에 큰 발자취를 남긴 인물입니다.</p>
+        <p>이 대목은 신사임당이 남긴 유산이 오늘날까지 이어지는 결말의 단계입니다. 그의 얼굴이 화폐에 실린 것은, 시대의 벽을 넘어선 그의 삶에 대한 온 국민의 존경입니다. 그의 정신은 지금도 우리 곁에 살아 있습니다.</p>
+        <p>신사임당이 남긴 것은 그림과 글씨만이 아니었습니다. 그것은 성별의 한계에 굴하지 않고 자신의 재능을 꽃피운, 한 인간의 당당한 삶이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작한국인물08/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>길을 먼저 걸은 사람</h2>
+        <p>신사임당은 여성의 활동이 크게 제약받던 시대에, 예술과 학문에서 빛나는 성취를 이룬 인물입니다. 그는 아내이자 어머니로서의 역할을 다하면서도, 예술가로서의 자신을 결코 잃지 않았습니다. 그의 삶은 시대의 벽을 넘어선 값진 여정이었습니다.</p>
+        <p>이 인물이 우리에게 남기는 가르침은 분명합니다. 재능은 결코 성별을 가리지 않으며, 그것을 펼칠 기회와 노력이 있다면 누구든 빛날 수 있다는 것입니다. 신사임당은 그 진리를 자신의 삶으로 보여 주었습니다.</p>
+        <p>무엇보다 신사임당의 삶은, 여러 역할 사이에서도 자신의 꿈을 지켜 낼 수 있음을 일깨웁니다. 그는 주어진 책임을 다하면서도, 자신만의 예술 세계를 끝까지 가꾸어 나갔습니다. 그 균형과 끈기가 그를 위대한 인물로 만들었습니다.</p>
+        <p>신사임당은 뒤에 올 많은 이들을 위해 길을 먼저 걸어간 사람입니다. 그의 발자취는 재능을 지닌 이라면 누구든 그 꿈을 펼칠 수 있다는 희망을 전해 줍니다. 그가 남긴 붓끝의 생명들은 오늘도 우리에게 그 진리를 속삭이고 있습니다.</p>
+        <p><span class="highlight">재능은 성별을 가리지 않습니다. 신사임당은 시대의 벽을 넘어 자신의 재능을 당당히 꽃피웠습니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'korperson08_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

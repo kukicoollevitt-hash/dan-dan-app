@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏦 잠들지 않는 돈 — 은호의 첫 통장</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작정치경제11/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🏦 잠들지 않는 돈 — 은호의 첫 통장</h1>
+        <p class="subtitle">
+          — 저축과 이자, 그리고 현명한 금융 생활 —<br>
+          교과기반 창작도서 · 정치경제 11
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 은호:</strong> 첫 통장을 만들며 저축과 이자, 돈을 다루는 법을 배우는 아이.</p>
+          <p><strong>★ 할아버지:</strong> 돈이 흐르며 일한다는 이치와 현명한 금융 생활을 은호에게 일러 주는 안내자.</p>
+          <p><strong>★ 핵심 개념:</strong> 저축, 은행과 통장, 이자, 금융 사기의 위험, 현명한 금융 생활.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>십만 원의 무게</h2>
+        <p>은호는 그동안 모은 세뱃돈과 용돈을 합쳐 십만 원이라는 큰돈을 갖게 되었습니다. 은호에게 십만 원은 참으로 큰돈이었습니다. 은호는 이 돈을 어떻게 해야 할지 고민에 빠졌습니다.</p>
+        <p>은호는 처음에 그 돈을 그냥 서랍 속에 넣어 두었습니다. 그러나 서랍 속의 돈은 아무리 시간이 지나도 그대로였습니다. 오히려 조금씩 꺼내 쓰다 보면 줄어들기만 할 것 같았습니다.</p>
+        <p>은호는 이 소중한 돈을 안전하게 지키면서도 잘 관리할 방법이 없을지 궁금했습니다. 큰돈을 다루는 것은 생각보다 어려운 일이었습니다. 은호는 어른들에게 조언을 구하기로 했습니다. 어렵게 모은 돈인 만큼, 함부로 쓰거나 잃고 싶지 않았기 때문입니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 큰돈을 갖게 된 은호의 고민입니다. 이 이야기는 은호가 첫 통장을 만들며 저축과 이자, 돈을 다루는 법을 배우는 여정을 그립니다. 십만 원의 무게가 그 출발점이 됩니다.</p>
+        <p>돈은 흐르며 일하고, 돈을 다룰 줄 아는 사람이 돈의 주인이 된다는 것을 은호는 이 일을 통해 배우게 됩니다. 은호의 첫 통장 이야기가 이렇게 시작됩니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 만남</span>
+        <h2>할아버지의 보물 상자</h2>
+        <p>은호는 돈을 잘 다루기로 소문난 할아버지를 찾아갔습니다. 할아버지는 은호에게 오래된 보물 상자 하나를 보여 주었습니다. 그 안에는 할아버지가 오랫동안 모아 온 것들의 기록이 담겨 있었습니다.</p>
+        <p>할아버지는 돈을 그냥 쌓아 두기만 하면 아무 일도 하지 않는다고 했습니다. 그러나 돈을 잘 굴리면, 돈이 스스로 일을 하며 불어난다고 했습니다. 은호는 돈이 일을 한다는 말이 무슨 뜻인지 궁금해졌습니다.</p>
+        <p>할아버지는 돈을 안전하게 맡기고 관리하는 곳이 바로 은행이라고 알려 주었습니다. 은행에 돈을 맡기면 안전하게 지킬 수 있을 뿐 아니라, 이자라는 것도 받을 수 있다고 했습니다. 은호는 은행과 이자라는 말에 귀가 솔깃해졌습니다.</p>
+        <p>이 대목은 은호가 은행과 저축이라는 개념을 처음 만나는 도입의 단계입니다. 돈을 쌓아 두는 것과 굴리는 것의 차이를 알게 되면서, 은호의 관심이 커집니다. 돈이 일한다는 흥미로운 원리가 은호를 새로운 배움으로 이끕니다.</p>
+        <p>은호는 자신의 십만 원을 은행에 맡겨 보기로 했습니다. 돈이 어떻게 일하는지 직접 확인해 보고 싶었기 때문입니다. 할아버지의 보물 상자 속 기록들이 은호에게 큰 용기를 주었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 시도</span>
+        <h2>첫 통장이 생긴 날</h2>
+        <p>은호는 할아버지와 함께 은행에 가서 자신의 첫 통장을 만들었습니다. 통장에는 은호가 맡긴 십만 원이 또렷이 적혀 있었습니다. 은호는 자신의 이름이 적힌 통장을 보며 어른이 된 듯한 뿌듯함을 느꼈습니다.</p>
+        <p>은호가 맡긴 돈은 은행이 안전하게 보관해 주었습니다. 서랍 속에 두는 것보다 훨씬 안전했습니다. 그리고 일정한 기간이 지나면, 맡긴 돈에 이자가 붙는다고 했습니다.</p>
+        <p>은호는 이렇게 돈을 쓰지 않고 모아 두는 것을 저축이라고 부른다는 것을 배웠습니다. 저축은 소중한 돈을 안전하게 지키면서, 미래를 준비하는 지혜로운 방법이었습니다. 은호는 저축의 첫걸음을 내디딘 것입니다.</p>
+        <p>이 대목은 은호가 저축을 직접 시도하는 전개의 단계입니다. 첫 통장을 만들며 저축이 무엇인지를 몸으로 익힌 것입니다. 돈을 안전하게 지키고 미래를 준비하는 저축의 의미가 은호에게 다가왔습니다.</p>
+        <p>은호는 자신의 돈이 앞으로 어떻게 될지 설레는 마음으로 지켜보기로 했습니다. 그리고 얼마 뒤, 통장 속 숫자에 놀라운 변화가 일어났습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 발견</span>
+        <h2>자라나는 숫자</h2>
+        <p>얼마 뒤 은호가 통장을 확인해 보니, 맡긴 십만 원에 조금이나마 돈이 더 붙어 있었습니다. 은호가 아무것도 하지 않았는데도 돈이 늘어난 것입니다. 이렇게 맡긴 돈에 붙는 돈을 이자라고 합니다.</p>
+        <p>은호는 신기해했습니다. 서랍 속에 두었다면 그대로였을 돈이, 은행에 맡기니 스스로 조금씩 불어난 것입니다. 할아버지가 말한 돈이 일한다는 것이 바로 이것이었습니다.</p>
+        <p>할아버지는 은행이 여러 사람의 돈을 모아 필요한 곳에 빌려주고, 그 대가로 이자를 받는다고 설명했습니다. 그렇게 돈이 이곳저곳으로 흐르며 일을 하는 것이었습니다. 은호가 맡긴 돈도 그 흐름 속에서 일을 하며 이자를 낳은 것입니다.</p>
+        <p>이 대목은 은호가 이자의 원리를 발견하는 전개의 단계입니다. 맡긴 돈이 스스로 불어나는 것을 보며, 돈이 흐르며 일한다는 이치를 깨달은 것입니다. 저축이 단순한 보관을 넘어 돈을 불리는 방법임을 은호는 배웠습니다. 작은 이자라도 꾸준히 쌓이면 큰 힘이 된다는 사실이 은호에게 새롭게 다가왔습니다.</p>
+        <p>은호는 저축의 즐거움에 푹 빠졌습니다. 그러나 그 무렵, 돈을 두 배로 불려 준다는 솔깃한 이야기가 은호를 유혹했습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 유혹</span>
+        <h2>도망가는 키보드</h2>
+        <p>어느 날 은호는 인터넷에서 돈을 순식간에 두 배로 불려 준다는 광고를 보았습니다. 은행 이자와는 비교도 안 될 만큼 큰 이익을 준다는 것이었습니다. 은호는 솔깃한 마음에 마음이 흔들렸습니다.</p>
+        <p>그 광고는 지금 돈을 맡기면 며칠 만에 두 배로 돌려주겠다고 했습니다. 은호는 그렇게 하면 큰돈을 벌 수 있겠다고 생각했습니다. 은호의 손가락이 광고를 누르려는 순간, 무언가 이상하다는 생각이 들었습니다.</p>
+        <p>은호는 은행 이자는 조금씩 붙는데, 어떻게 며칠 만에 두 배가 될 수 있는지 의아했습니다. 지나치게 좋은 조건은 오히려 수상했습니다. 은호는 성급하게 누르려던 손을 멈추었습니다.</p>
+        <p>이 대목은 은호가 금융 사기의 유혹에 흔들리는 위기의 단계입니다. 지나치게 좋은 조건 앞에서 은호가 잠시 흔들리는 모습이 그려집니다. 그러나 이상함을 느끼고 멈추는 데서, 현명함의 실마리가 보입니다.</p>
+        <p>은호는 이 수상한 광고에 대해 할아버지에게 물어보기로 했습니다. 할아버지의 대답은 은호를 아찔하게 만들었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>두 배로 불려 준다는 말</h2>
+        <p>할아버지는 은호의 이야기를 듣고 정색을 했습니다. 그런 광고는 대부분 사람들을 속여 돈을 가로채는 금융 사기라는 것이었습니다. 지나치게 좋은 조건으로 사람을 꾀어 돈을 빼앗는 수법이었습니다.</p>
+        <p>할아버지는 돈이 며칠 만에 두 배로 불어나는 일은 세상에 없다고 했습니다. 이자는 돈이 일한 만큼 조금씩 붙는 것이지, 마법처럼 순식간에 불어나지 않는다는 것이었습니다. 그럴듯한 말로 큰 이익을 약속하는 것은 대부분 함정이었습니다.</p>
+        <p>은호는 자신이 하마터면 소중한 돈을 잃을 뻔했다는 사실에 아찔해졌습니다. 성급하게 광고를 눌렀다면 큰일이 났을 것입니다. 은호는 이상함을 느끼고 멈춘 것이 얼마나 다행인지 깨달았습니다.</p>
+        <p>이 대목은 은호가 금융 사기의 위험을 깊이 이해하는 위기의 심화 단계입니다. 지나치게 좋은 조건은 의심해야 한다는 것이, 현명한 금융 생활의 중요한 교훈입니다. 돈을 지키려면 유혹을 경계하는 지혜가 필요함을 은호는 배웠습니다. 세상에 공짜로 큰돈을 안겨 주는 일은 없다는 것을 은호는 마음에 새겼습니다.</p>
+        <p>은호는 돈을 불리는 것보다 먼저, 소중한 돈을 지키는 것이 중요함을 깨달았습니다. 그러나 은호의 마음속에는 또 다른 고민이 생겨났습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 바닥</span>
+        <h2>양말로 돌아갈까</h2>
+        <p>금융 사기의 위험을 알게 된 은호는 은근히 겁이 났습니다. 돈을 굴리는 일이 위험하게 느껴져, 차라리 예전처럼 돈을 그냥 양말 속에 숨겨 둘까 하는 생각마저 들었습니다. 은호는 다시 망설였습니다.</p>
+        <p>은호는 돈을 안전하게 두려면 아무 데도 맡기지 말아야 하는 것은 아닌지 고민했습니다. 그러나 그렇게 하면 돈은 일하지 못하고 그저 잠들어 있을 뿐이었습니다. 은호는 어떻게 해야 할지 갈피를 잡지 못했습니다.</p>
+        <p>이 대목은 은호가 위험에 겁먹어 뒷걸음질 치려는 절정의 바닥입니다. 그러나 바로 이 지점에서 은호는 중요한 것을 깨닫습니다. 위험을 피한다고 돈을 숨겨 두기만 하면, 돈은 일하지 못하고 아무런 도움이 되지 못한다는 것이었습니다.</p>
+        <p>은호는 위험을 무작정 피하기보다, 안전한 방법으로 현명하게 돈을 다루는 것이 옳다는 것을 알게 되었습니다. 은행 저축처럼 안전하면서도 이자를 주는 방법이 있었기 때문입니다. 은호는 다시 마음을 다잡았습니다.</p>
+        <p>은호는 돈을 다루는 법을 제대로 배우기로 했습니다. 마침 동네에서 어린이를 위한 경제 교실이 열린다는 소식이 들려왔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 각성</span>
+        <h2>어린이 경제 교실</h2>
+        <p>은호는 어린이 경제 교실에 참여하여 돈을 다루는 법을 제대로 배웠습니다. 그곳에서 은호는 안전하게 저축하는 법, 이자의 원리, 그리고 금융 사기를 피하는 법을 익혔습니다. 돈에 대한 은호의 이해가 한층 깊어졌습니다.</p>
+        <p>은호는 돈이란 무작정 숨겨 두는 것도, 위험하게 굴리는 것도 아니라는 것을 배웠습니다. 안전한 곳에 맡겨 조금씩 불리고, 지나치게 좋은 유혹은 경계하는 것이 현명한 금융 생활이었습니다. 은호는 돈을 다루는 지혜를 갖추어 갔습니다.</p>
+        <p>그 순간 은호는 중요한 깨달음을 얻었습니다. 돈은 그저 쌓아 두는 것이 아니라 흐르며 일하는 것이며, 그 돈을 다룰 줄 아는 사람이 바로 돈의 주인이 된다는 사실을 말입니다. 돈에 휘둘리지 않고 돈을 부리는 사람이 되어야 했습니다.</p>
+        <p>이 대목은 이야기의 정신적 절정, 곧 은호의 각성입니다. 돈을 다룰 줄 아는 사람이 돈의 주인이 된다는 것을 깨달은 것입니다. 안전하게 저축하고 유혹을 경계하는 현명한 금융 생활의 지혜를, 은호는 온전히 배웠습니다. 돈에 끌려다니는 사람이 아니라 돈을 부리는 사람이 되기로 은호는 마음먹었습니다.</p>
+        <p>은호는 이제 돈을 두려워하지도, 함부로 대하지도 않게 되었습니다. 돈을 현명하게 다루는 어엿한 주인이 되어 가고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 돌파</span>
+        <h2>첫 연주</h2>
+        <p>은호는 배운 것을 바탕으로 자신만의 저축 계획을 세웠습니다. 용돈의 일부를 꾸준히 저축하고, 목표를 정해 미래를 준비하기로 한 것입니다. 은호의 통장 속 숫자는 조금씩, 그러나 꾸준히 자라 갔습니다.</p>
+        <p>은호는 돈이 마치 자신의 지휘에 따라 움직이는 것 같다고 느꼈습니다. 지휘자가 악기를 다루어 아름다운 연주를 만들어 내듯, 은호도 돈을 다루어 미래를 준비하고 있었습니다. 돈을 부리는 첫 연주가 시작된 것입니다.</p>
+        <p>이 대목은 은호가 배운 것을 실제 생활에 적용하는 결말의 돌파입니다. 저축 계획을 세워 돈을 현명하게 다루며, 돈의 주인으로 성장한 것입니다. 돈을 부릴 줄 아는 사람이 된 은호의 모습이 뿌듯하게 그려집니다.</p>
+        <p>은호는 꾸준한 저축이 얼마나 큰 힘이 되는지 실감했습니다. 작은 돈도 꾸준히 모으고 잘 굴리면, 시간이 지나 큰 자산이 되었기 때문입니다. 은호는 돈을 다루는 즐거움과 보람을 알게 되었습니다.</p>
+        <p>은호는 앞으로도 현명하게 돈을 다루기로 다짐했습니다. 첫 통장에서 시작된 은호의 배움은, 어엿한 경제 주체로 자라나는 밑거름이 되었습니다. 잠들어 있던 돈이 일을 하기 시작하면서, 은호의 미래도 함께 자라 갔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작정치경제11/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>돈의 주인</h2>
+        <p>「은호의 첫 통장」은 저축과 이자, 그리고 현명한 금융 생활을 배우는 이야기입니다. 은호는 첫 통장을 만들며 돈이 흐르며 일한다는 이치를 배우고, 금융 사기의 위험도 알게 되었습니다. 그리고 마침내 돈을 다룰 줄 아는 주인이 되었습니다.</p>
+        <p>이 이야기가 우리에게 주는 가르침은 분명합니다. 돈은 그냥 쌓아 두면 잠들어 있지만, 안전한 곳에 맡겨 잘 굴리면 이자를 낳으며 일한다는 것입니다. 저축은 소중한 돈을 지키면서 미래를 준비하는 지혜로운 방법입니다.</p>
+        <p>무엇보다 이 이야기는, 돈을 다룰 줄 아는 사람이 돈의 주인이 된다는 것을 일깨웁니다. 지나치게 좋은 조건의 유혹을 경계하고, 안전하게 저축하며 현명하게 관리하는 것이 중요합니다. 그래야 돈에 휘둘리지 않고 돈을 부릴 수 있습니다.</p>
+        <p>돈은 흐르며 일하고, 그 돈을 현명하게 다루는 사람이 진정한 주인이 됩니다. 은호는 첫 통장을 통해 그 소중한 지혜를 배웠습니다. 이 이야기는 우리에게, 돈을 두려워하거나 함부로 대하지 말고 현명하게 다루는 법을 일러 줍니다.</p>
+        <p><span class="highlight">돈은 흐르며 일합니다. 돈을 다룰 줄 아는 사람이 돈의 주인이 됩니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'politics11_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

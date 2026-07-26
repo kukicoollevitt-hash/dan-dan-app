@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎭 궤짝 속에서 나온 큰소리 — 배 비장 이야기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/고전문학10/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <!-- 인트로 -->
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🎭 궤짝 속에서 나온 큰소리 — 배 비장 이야기</h1>
+        <p class="subtitle">
+          — 겉과 속이 다른 말은 언젠가 들통난다 —<br>
+          교과기반 창작도서 · 고전문학 10
+        </p>
+        <div class="characters">
+          <h3>🎭 등장인물 소개</h3>
+          <p><strong>★ 배 비장 (주인공):</strong> 자신은 어떤 유혹에도 흔들리지 않는다고 자랑하기 좋아하는 관리. 그 큰소리가 시험대에 오른다.</p>
+          <p><strong>★ 제주목사 김 경:</strong> 새로 제주도를 다스리러 가는 벼슬아치. 배 비장의 허풍을 듣고 속으로 웃으며 시험을 꾸민다.</p>
+          <p><strong>★ 기생 애랑:</strong> 제주에서 가장 아리따운 기생. 재치와 꾀로 위선자를 골탕 먹이는 민중의 지혜를 보여 준다.</p>
+          <p><strong>★ 배 비장의 아내:</strong> 남편의 큰소리를 걱정스레 지켜보는 사람. 먼 길 떠나는 남편에게 노자를 챙겨 준다.</p>
+          <p><strong>★ 궤짝:</strong> 배 비장이 제 발로 들어간 큰 상자. 감추고 싶던 겉과 속의 차이를 만천하에 드러내는 무대가 된다.</p>
+        </div>
+        <div class="conflict">
+          <h3>⚔️ 갈등 구조</h3>
+          <p><strong>① 말의 갈등:</strong> "절대 흔들리지 않는다"는 큰소리 vs. 조금씩 흔들리는 진짜 마음</p>
+          <p><strong>② 시험의 갈등:</strong> 허풍을 시험해 보려는 목사의 꾀 vs. 아무것도 모르는 배 비장</p>
+          <p><strong>③ 위선의 갈등:</strong> 겉으로는 도덕적인 척 vs. 속으로는 유혹에 약한 모습</p>
+          <p><strong>④ 웃음의 갈등:</strong> 망신을 당한 양반 vs. 통쾌하게 웃는 민중의 지혜</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학10/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 결핍</span>
+        <h2>큰소리 대감의 아침</h2>
+        <p>조선 시대에 배 씨 성을 가진 관리가 있었습니다. 사람들은 그를 배 비장이라 불렀습니다. <span class="vocab-tip" data-meaning="목사 같은 높은 벼슬아치를 곁에서 돕던 벼슬">비장</span>이란 높은 벼슬아치를 곁에서 도와 일하는 자리였습니다. 목사의 눈과 귀가 되어 움직이는 자리라, 누구보다 몸가짐이 발라야 한다고들 했습니다.</p>
+        <p>배 비장에게는 남다른 버릇이 하나 있었습니다. 바로 제 자랑이었습니다. 그중에서도 자신이 얼마나 마음가짐이 바르고 정숙한지, 어떤 유혹에도 흔들리지 않는 굳은 의지를 가졌는지 자랑하기를 가장 좋아했습니다.</p>
+        <p>모임 자리마다 배 비장의 목소리가 제일 컸습니다.<br><br><span class="dialogue">"나로 말할 것 같으면, 평생 곁눈질 한 번 한 적이 없는 사람이오. 내 마음은 바위처럼 단단해서 그 무엇도 흔들 수 없소!"</span><br><br>같은 자랑을 어찌나 자주 하는지, 듣던 사람들이 그 뒷말을 먼저 외울 지경이었습니다.</p>
+        <p>듣는 사람들은 겉으로는 고개를 끄덕였지만, 속으로는 슬며시 웃었습니다. 스스로 떠벌리는 자랑일수록 믿기 어려운 법이니까요. 그러나 배 비장은 사람들의 그런 눈치를 조금도 알아채지 못했습니다. 심지어 동네 아이들까지 배 비장의 헛기침을 흉내 내며 킥킥거릴 정도였습니다.</p>
+        <p>배 비장의 아내는 남편의 큰소리가 늘 조마조마했습니다. 말이란 높이 쌓을수록 무너질 때 소리가 큰 법인데, 남편은 날마다 그 탑을 한 층씩 더 높이 올리고 있었기 때문입니다. 그러나 아내의 그런 걱정을 배 비장은 귓등으로도 듣지 않았습니다.</p>
+        <p><span class="highlight">배 비장의 굳은 의지는 아직 한 번도 진짜 시험을 치러 본 적이 없었습니다.</span> 시험 없이 쌓아 올린 자신감은 과연 얼마나 단단할까요.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학10/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 사건</span>
+        <h2>제주로 가는 길</h2>
+        <p>그 무렵 나라에서는 김 경이라는 벼슬아치를 새 제주목사로 임명했습니다. 목사는 한 고을을 다스리는 큰 벼슬로, 김 경은 바다 건너 제주도로 <span class="vocab-tip" data-meaning="벼슬을 받아 일할 곳으로 가는 것">부임</span>하게 되었습니다. 제주도는 한양에서 멀고 먼 남쪽 바다 한가운데 있는 섬으로, 뱃길이 험해 아무나 쉽게 오갈 수 없는 곳이었습니다.</p>
+        <p>목사가 부임할 때는 곁에서 일을 도울 비장들도 함께 갑니다. 배 비장도 그 일행에 뽑혔습니다. 배 비장은 어깨가 으쓱해져 온 동네에 제주행을 자랑하고 다녔습니다. 함께 뽑힌 비장이 여럿이었지만, 그중에서도 배 비장의 목소리가 가장 요란했습니다.</p>
+        <p>떠나기 전, 아내가 조심스레 당부했습니다.<br><br><span class="dialogue">"제주는 경치가 곱기로 이름난 곳이라, 아리따운 <span class="vocab-tip" data-meaning="잔치에서 노래와 춤으로 흥을 돋우던 여성">기생</span>도 많다 들었습니다. 부디 몸가짐을 조심하셔요."</span><br><br>아내는 먼 길 떠나는 남편을 위해 노잣돈과 귀한 물건들도 꼼꼼히 챙겨 넣어 주었습니다.</p>
+        <p>배 비장은 껄껄 웃으며 가슴을 탕탕 쳤습니다.<br><br><span class="dialogue">"무슨 걱정이오! 제주에 아무리 아름다운 기생이 있어도 내 마음은 절대로 흔들리지 않을 것이오. 이 배 비장을 대체 뭘로 보고!"</span></p>
+        <p>그런데 그 큰소리를 마침 곁을 지나던 김 경이 듣고 말았습니다. 김 경은 속으로 픽 웃었습니다. '허허, 저 허풍을 그냥 두기는 아깝구나. 제주에 가거든 저 말이 참말인지 한번 시험해 보아야겠다.' 큰소리가 요란할수록, 그 속이 궁금해지는 법이었습니다.</p>
+        <p><span class="highlight">배 비장의 큰소리는 이미 시험관의 귀에 들어가 있었습니다.</span> 배는 아무것도 모르는 배 비장을 싣고 푸른 바다를 건너 제주로 향했습니다. 갑판 위에서도 배 비장의 자랑은 그칠 줄을 몰랐습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학10/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 발단</span>
+        <h2>한라산 아래 헛기침</h2>
+        <p>여러 날 뱃길 끝에 일행은 마침내 제주에 닿았습니다. 한라산이 구름 위로 우뚝 솟아 있고, 짭조름한 바닷바람에 말 울음소리가 실려 오는, 낯설고도 아름다운 땅이었습니다. 까만 돌담과 밭에서 일하는 사람들의 모습까지, 뭍과는 사뭇 다른 풍경이었습니다.</p>
+        <p>부임을 축하하는 잔치가 열리자 다른 비장들은 흥겹게 어울렸습니다. 제주의 이름난 음식과 노랫가락이 어우러져 잔치는 밤늦도록 흥겨웠습니다. 그러나 배 비장만은 잔치 자리 한쪽에 꼿꼿이 앉아 연신 헛기침만 해 댔습니다.</p>
+        <p><span class="dialogue">"나는 저런 흥청거림과는 거리가 먼 사람이오. 어험, 어험."</span><br><br>배 비장은 고개를 빳빳이 들고 아무것도 보지 않는 척했습니다. 그 모습이 어찌나 유난스러운지 오히려 잔치 자리에서 제일 눈에 띌 정도였습니다. 다른 비장들은 그 유난스러움에 혀를 찼습니다.</p>
+        <p>그 모습을 지켜보던 김 경은 출발 전에 들었던 큰소리를 떠올리며 무릎을 쳤습니다. '옳지, 이제 저 바위 같다는 의지를 시험해 볼 때가 되었구나. 말로만 굳은 의지인지, 진짜 굳은 의지인지 가려 보면 재미있겠지.'</p>
+        <p>김 경은 곁에 있던 신하를 불러 조용히 물었습니다.<br><br><span class="dialogue">"제주에서 가장 지혜롭고 아리따운 기생이 누구인가."</span><br><br>신하는 망설임 없이 한 이름을 댔습니다. 애랑이었습니다. 재치와 총명함으로는 제주에서 따를 사람이 없다는 말도 덧붙였습니다.</p>
+        <p><span class="highlight">유난히 고고한 척하는 사람일수록, 시험해 보고 싶어지는 법입니다.</span> 배 비장이 치를 시험지가 조용히 준비되고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학10/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 모의</span>
+        <h2>목사의 은밀한 부탁</h2>
+        <p>다음 날 김 경은 <span class="vocab-tip" data-meaning="벼슬아치들이 나랏일을 보던 관청 건물">관아</span>로 애랑을 조용히 불렀습니다. 과연 소문대로 애랑은 눈빛이 총명하고 말솜씨가 구슬처럼 반짝이는 사람이었습니다. 애랑은 갑작스러운 부름에도 조금도 주눅 들지 않고 또렷하게 인사를 올렸습니다.</p>
+        <p>김 경은 터져 나오려는 웃음을 참으며 사정을 이야기했습니다.<br><br><span class="dialogue">"배 비장이라는 이가 제 입으로, 어떤 유혹에도 흔들리지 않는다 큰소리를 쳤다. 네가 그 말이 참인지 한번 시험해 보겠느냐."</span><br><br>목사가 기생에게 이런 부탁을 하는 것은 좀처럼 없는 일이었습니다.</p>
+        <p>애랑은 이야기를 다 듣고 방긋 웃었습니다. 그 눈이 장난스럽게 반짝였습니다.<br><br><span class="dialogue">"겉으로만 점잖은 척하는 분이라면, 열흘도 걸리지 않을 것이옵니다."</span><br><br>그렇게 목사와 애랑 사이에 은밀한 약속이 맺어졌습니다. 상으로 무엇을 원하느냐는 물음에, 애랑은 그저 재미있으면 그만이라며 웃었습니다.</p>
+        <p>애랑이 보기에 그런 사람일수록 오히려 다루기 쉬웠습니다. 진짜 단단한 사람은 조용히 단단하지만, 겉으로 요란하게 단단한 척하는 사람은 속이 텅 비어 있기 마련이니까요. 애랑은 오랫동안 세상을 살피며 사람 보는 눈을 길러 온 터였습니다.</p>
+        <p>이 내기는 곧 관아 사람들 사이의 은밀한 구경거리가 되었습니다. 모두가 시치미를 뚝 떼고 있었으니, 이 판에서 아무것도 모르는 사람은 오직 배 비장 하나뿐이었습니다. 다들 배 비장이 며칠이나 버틸지 내기하듯 수군거렸습니다.</p>
+        <p><span class="highlight">배 비장의 큰소리는 어느새 온 관아가 지켜보는 내기가 되었습니다.</span> 과연 그 바위 같다던 마음은 며칠이나 버틸 수 있을까요.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학10/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 동요</span>
+        <h2>흔들리는 바위</h2>
+        <p>애랑의 시험은 뜻밖에도 차갑게 시작되었습니다. 애랑은 길에서 배 비장과 마주쳐도 눈길 한 번 주지 않았습니다. 일부러 <span class="vocab-tip" data-meaning="쌀쌀맞고 차가운 태도">냉담</span>하게 군 것입니다. 그 쌀쌀맞기가 한겨울 바닷바람 같았습니다.</p>
+        <p>배 비장은 처음에는 콧방귀를 뀌었습니다. 자기야말로 눈길 한 번 주지 않겠노라 다짐하면서요. 그런데 이상한 일이었습니다. 자기를 본 척도 하지 않는 애랑이, 어쩐지 자꾸만 신경 쓰이기 시작한 것입니다. '저 사람은 어째서 나를 몰라본단 말인가.' 은근히 자존심까지 상했습니다.</p>
+        <p>그러던 어느 날부터 애랑의 태도가 조금씩 달라졌습니다. 우연인 듯 마주치면 살짝 웃어 보이고, 지나가는 길에 안부를 묻는 척했습니다. 물론 그 모든 것이 촘촘하게 계획된 꾀였습니다. 그 밀고 당기기에 배 비장은 속절없이 끌려 들어갔습니다.</p>
+        <p>바위 같다던 배 비장의 마음이 흔들리기 시작했습니다. 애랑의 웃음 한 번에 하루가 환해지고, 애랑이 보이지 않는 날에는 온종일 마음이 뒤숭숭해 일이 손에 잡히지 않았습니다. 밥을 먹다가도, 글을 읽다가도 애랑의 웃는 얼굴이 자꾸 떠올랐습니다.</p>
+        <p>배 비장은 스스로에게 변명을 늘어놓았습니다. '아니다, 나는 흔들리는 게 아니다. 그저... 저 사람이 어떤 사람인지 조금 궁금할 뿐이다.' 그러나 그런 변명을 한다는 것이야말로, 이미 흔들리고 있다는 가장 확실한 증거였습니다.</p>
+        <p><span class="highlight">단단하다고 큰소리치던 바위에 가느다란 실금이 가기 시작했습니다.</span> 금이 간 바위가 무너지는 것은 이제 시간문제였습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학10/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 심화</span>
+        <h2>무너진 큰소리</h2>
+        <p>얼마 지나지 않아 배 비장은 출발 전에 쳤던 큰소리를 까맣게 잊고 애랑에게 푹 빠져들었습니다. 그토록 자신만만하던 다짐이 무너지는 데는 열흘이 채 걸리지 않았습니다. 낮에는 점잖은 얼굴로 관아 일을 보다가, 밤이 되면 남몰래 애랑을 만나러 다녔습니다.</p>
+        <p>아내에게 받아 온 <span class="vocab-tip" data-meaning="먼 길을 떠날 때 쓰라고 챙기는 돈">노자</span>도, 소중히 간직해 온 귀한 물건들도 하나둘 애랑에게 건네주었습니다. 애랑이 살짝 웃어 주기만 하면 아까운 줄을 몰랐습니다. 나중에는 선물을 마련하느라 지니고 온 것이 거의 남지 않을 지경이 되었습니다.</p>
+        <p>그러면서도 낮의 배 비장은 여전히 헛기침을 하며 점잖은 척했습니다.<br><br><span class="dialogue">"나는 그런 유혹 따위에 흔들리는 사람이 아니오. 어험."</span><br><br>그러나 그렇게 말한 날 밤에도 발걸음은 어김없이 애랑의 집으로 향하고 있었습니다. 찔리는 것이 많은 사람일수록 겉치레는 오히려 요란해지는 법이니까요.</p>
+        <p>관아 사람들은 그 모습을 훤히 다 알면서도 모르는 척 웃음을 참았습니다. 김 경은 애랑에게서 소식을 전해 들을 때마다 배를 잡고 웃었습니다. 일이 계획보다도 잘 풀리고 있었으니까요. 애랑은 이제 마지막 마무리만 남았다고 조용히 전해 왔습니다.</p>
+        <p>겉 다르고 속 다른 나날이 이어질수록, 배 비장이 쌓아 올린 큰소리의 탑은 점점 더 위태로워졌습니다. 이제는 무너질 일만 남은 탑이었습니다. 탑이란 높이 쌓을수록 무너질 때 소리가 큰 법입니다.</p>
+        <p><span class="highlight">말과 행동이 갈라지는 순간부터, 망신은 이미 예약되어 있었습니다.</span> 남은 것은 그 망신의 날짜뿐이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학10/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 함정</span>
+        <h2>궤짝 속으로</h2>
+        <p>어느 날 밤, 애랑이 배 비장에게 은근한 목소리로 말했습니다.<br><br><span class="dialogue">"나리, 오늘 밤에는 우리 사랑을 영원히 하기 위해, 아주 특별한 의식을 치러야겠어요."</span><br><br>그 목소리가 어찌나 달콤한지 배 비장은 넋을 놓고 들었습니다.</p>
+        <p>배 비장이 무슨 의식이냐고 묻자, 애랑은 방 한가운데 놓인 커다란 <span class="vocab-tip" data-meaning="물건을 넣어 두는 큰 나무 상자">궤</span>를 가리켰습니다. 입고 있던 옷을 벗어 두고 저 궤 속에 들어가 있어야 한다는 것이었습니다. 그래야만 두 사람의 약속이 영원해진다는, 앞뒤가 맞지 않는 말이었습니다.</p>
+        <p>제정신이라면 누구라도 당장 이상하게 여겼을 일입니다. 그러나 애랑에게 푹 빠진 배 비장의 눈에는 아무것도 보이지 않았습니다. 배 비장은 시키는 대로 옷을 훌훌 벗어 놓고 궤 속으로 기어들어 갔습니다. 궤 속은 캄캄하고 비좁았지만, 배 비장은 의심 한 조각 하지 않았습니다.</p>
+        <p>철컥. 배 비장이 들어가자마자 애랑은 뚜껑을 닫고 자물쇠를 채워 버렸습니다.<br><br><span class="dialogue">"아니, 애랑아? 이게 무슨 일이냐? 어서 문 좀 열어 다오!"</span><br><br>궤 속에서 다급한 목소리가 쿵쿵 울렸지만 소용없었습니다. 애랑은 궤 밖에서 시치미를 뚝 떼고 대답하지 않았습니다.</p>
+        <p>애랑은 미리 약속해 둔 사람들을 조용히 불렀고, 궤는 그날 밤 어둠을 틈타 어디론가 옮겨졌습니다. 궤가 내려진 곳은 다름 아닌, 목사가 있는 관아 앞마당이었습니다. 밤길에 흔들리며 실려 가는 동안, 배 비장은 궤 속에서 영문도 모른 채 끙끙거렸습니다.</p>
+        <p><span class="highlight">배 비장은 제 발로 궤 속에 들어갔습니다.</span> 남에게 보이려던 겉모습이 아니라, 꽁꽁 감추고 싶던 속모습을 안은 채로 말입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학10/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 폭로</span>
+        <h2>관아 앞에서 열린 뚜껑</h2>
+        <p>다음 날 아침, 관아 앞마당에 사람들이 구름처럼 모여들었습니다. 목사와 관리들은 물론이고, 소문을 들은 온 마을 사람들까지 몰려와 정체 모를 궤짝을 겹겹이 둘러쌌습니다. 무슨 구경이 났느냐며 지나가던 장사꾼들까지 걸음을 멈추었습니다.</p>
+        <p>김 경이 짐짓 근엄한 목소리로 명령했습니다.<br><br><span class="dialogue">"바다에서 떠내려온 수상한 궤라 들었다. 안에 무엇이 들었는지 어서 열어 보아라."</span><br><br>물론 김 경은 궤 속에 누가 들어 있는지 처음부터 훤히 알고 있었습니다.</p>
+        <p>자물쇠가 풀리고 뚜껑이 활짝 열렸습니다. 그 순간, 옷도 제대로 걸치지 못한 배 비장이 눈을 끔뻑이며 궤 속에서 엉거주춤 일어났습니다. 마당은 한순간 조용해졌다가, 이내 떠나갈 듯한 웃음바다가 되었습니다. 아이도 어른도, 양반도 상민도 배를 잡고 웃었습니다.</p>
+        <p>어떤 유혹에도 흔들리지 않는다던 바로 그 배 비장이, 기생의 꾀에 홀려 궤짝에 갇힌 채 <span class="vocab-tip" data-meaning="온 세상 사람들이 다 알게 됨">만천하</span>에 드러난 것입니다. 큰소리로 쌓아 올린 탑이 와르르 무너지는 순간이었습니다. 출발 전 아내 앞에서 친 큰소리까지 낱낱이 알려지니 더욱 낯을 들 수가 없었습니다.</p>
+        <p>배 비장은 얼굴이 홍당무처럼 붉어져 고개를 들지 못했습니다. 그토록 자랑하던 굳은 의지도, 애써 지키던 점잖은 체면도, 왁자한 웃음소리 속에서 흔적도 없이 사라졌습니다. 궤짝 하나가 열리자, 감춰 온 모든 것이 함께 열린 셈이었습니다.</p>
+        <p><span class="highlight">꽁꽁 감추어 온 속모습은 하필 가장 많은 사람들 앞에서 드러났습니다.</span> 위선의 끝은 언제나 이렇게 요란한 법입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학10/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 성찰</span>
+        <h2>웃음이 가르쳐 준 것</h2>
+        <p>웃음소리가 잦아든 뒤, 김 경이 궤 앞으로 다가와 말했습니다.<br><br><span class="dialogue">"출발 전 그대의 큰소리를 내 두 귀로 똑똑히 들었네. 사람이 유혹에 흔들리는 것은 부끄러운 일이 아니나, 흔들리지 않는 척 꾸미는 것은 부끄러운 일일세."</span><br><br>꾸짖음이라기보다 타이름에 가까운, 뼈 있는 말이었습니다.</p>
+        <p>배 비장은 그제야 이 모든 일이 자신의 허풍을 시험하기 위해 꾸며진 것임을 깨달았습니다. 원망하는 마음이 잠깐 일었지만, 곰곰이 돌아볼수록 탓할 사람은 저 자신뿐이었습니다. 지난밤들의 어리석음이 하나하나 떠올라 얼굴이 다시 화끈거렸습니다.</p>
+        <p>큰소리를 친 것도, 그 큰소리를 지키지 못한 것도, 그러면서 겉으로만 점잖은 척한 것도 모두 배 비장 자신이 한 일이었습니다. 애랑과 목사는 다만 감추어져 있던 그 <span class="vocab-tip" data-meaning="겉으로는 바른 척하지만 속은 다른 것">위선</span>을 드러나게 했을 뿐이었습니다. 거짓으로 쌓은 탑을 무너뜨린 것은, 결국 그 탑을 쌓은 손이었습니다.</p>
+        <p>마을 사람들의 웃음은 미움의 웃음이 아니었습니다. 높은 자리에서 거들먹거리며 겉과 속이 다르게 살던 양반을, 힘없는 사람들의 재치와 지혜가 통쾌하게 이긴 웃음이었습니다.</p>
+        <p>그날 이후 배 비장은 조금씩 달라졌습니다. 자랑이 목까지 차오를 때마다 궤짝 속의 그 아침을 떠올렸습니다. 그리고 말로 떠벌리는 대신 행동으로 보여 주는 법을 하나씩 배워 갔습니다. 허풍이 사라진 자리에는 뜻밖에도 사람들의 진짜 믿음이 조금씩 쌓이기 시작했습니다.</p>
+        <p><span class="highlight">그 망신은 배 비장이 평생 받은 것 중 가장 따끔하고, 가장 좋은 가르침이었습니다.</span> 큰소리 대신 부끄러움을 아는 사람이 된 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/고전문학10/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>풍자와 해학의 웃음</h2>
+        <p>배비장전은 조선 후기에 만들어진 대표적인 풍자 소설입니다. <span class="vocab-tip" data-meaning="잘못이나 사회 문제를 빗대어 꼬집고 비웃는 것">풍자</span>란 잘못된 것을 대놓고 꾸짖는 대신, 웃음에 실어 슬쩍 꼬집는 것을 말합니다. 직접 혼내는 것보다 웃음거리로 만드는 쪽이 훨씬 따갑고 오래가기 때문입니다.</p>
+        <p>이 작품이 겨눈 과녁은 배 비장 한 사람이 아니었습니다. 겉으로는 도덕적인 척하면서 속으로는 유혹에 약했던, 당시 양반들의 헛된 겉치레와 허위의식이 진짜 과녁이었습니다. 사람들은 배 비장을 보며 저마다 아는 누군가를 떠올렸을 것입니다.</p>
+        <p>기생 애랑과 제주목사는 그런 위선자를 골탕 먹이는 민중의 지혜를 상징합니다. 신분은 낮아도 눈은 밝았던 백성들이, 이야기 속에서나마 거드름 피우는 양반을 통쾌하게 이겨 보았던 것입니다. 현실에서 차마 하지 못한 말을, 이야기가 대신해 준 셈이지요.</p>
+        <p>배비장전은 판소리로도 불리며 사람들 사이에 널리 퍼졌습니다. 뼈 있는 비판 속에도 <span class="vocab-tip" data-meaning="익살스럽고 재치 있는 웃음">해학</span>이 넘쳐서, 듣는 이들은 배꼽을 잡으면서도 고개를 끄덕였습니다. 조선 후기 서민 문학의 발달을 잘 보여 주는 작품입니다. 소리꾼의 너스레에 장터가 웃음으로 들썩였다고 전해집니다.</p>
+        <p>이야기가 남긴 교훈은 오늘날에도 그대로 통합니다. 겉과 속이 다른 행동은 언젠가 반드시 들통나고 만다는 것. 그러니 꾸며 낸 겉모습보다, 정직한 속마음을 가꾸어야 한다는 것입니다.</p>
+        <p><span class="highlight">궤짝 뚜껑은 언젠가 열립니다. 그때 부끄럽지 않은 사람은, 겉과 속이 같은 사람뿐입니다.</span></p>
+        <p style="text-align: center; margin-top: 25px; padding: 20px; background: rgba(130, 100, 180, 0.15); border-radius: 16px;">
+          <strong style="color: #8264B4; font-size: 20px;">🎭 「겉을 꾸민 큰소리는 궤짝 속에서도 숨지 못한다. 겉과 속이 같은 사람만이 부끄러움이 없다.」</strong>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'classic10_season1_quiz.html?season=season2';
+    }
+  </script>
+</body>
+</html>

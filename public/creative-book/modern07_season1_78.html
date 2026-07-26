@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🥔 감자 몇 알의 무게 — 복녀 이야기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/현대문학07/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #6C5CE7 0%, #341f97 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(108, 92, 231, 0.15);
+      color: #341f97;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #6C5CE7;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #341f97;
+      font-weight: 600;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 900px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .intro-content .characters h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(108, 92, 231, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border-left: 4px solid #A29BFE;
+    }
+
+    .intro-content .conflict h3 {
+      color: #A29BFE;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .intro-content .conflict p {
+      color: #e0e0e0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 26px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(108, 92, 231, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(52, 31, 151, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🥔 감자 몇 알의 무게 — 복녀 이야기</h1>
+        <p class="subtitle">
+          — 김동인의 자연주의 소설로 읽는 환경과 인간 —<br>
+          교과기반 창작도서 · 현대문학 07
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 복녀:</strong> 본래 순박하고 도덕적이었으나, 가난이라는 환경 속에서 점차 타락해 가는 여인.</p>
+          <p><strong>★ 왕 서방:</strong> 감자밭을 가진 중국인 지주. 복녀의 삶을 뒤흔드는 인물이다.</p>
+          <p><strong>★ 감상 길잡이:</strong> 「감자」는 김동인이 1925년에 발표한 자연주의 소설로, 가난한 환경이 한 인간을 어떻게 변화시키는가를 냉정한 시선으로 그려 냈습니다.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학07/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 인물</span>
+        <h2>순박한 처녀 복녀</h2>
+        <p>복녀는 본래 가난하지만 반듯한 농가에서 자란 순박한 처녀였습니다. 그는 어려서부터 옳고 그름을 아는 도덕적인 사람이었습니다. 가난한 살림 속에서도 복녀는 바르게 살고자 했습니다.</p>
+        <p>복녀는 자신보다 나이가 훨씬 많은 게으른 홀아비에게 시집을 갔습니다. 넉넉지 못한 형편 탓에 어쩔 수 없는 혼인이었습니다. 그러나 복녀는 처음에는 그 처지에서도 성실히 살아 보려 애썼습니다.</p>
+        <p>남편은 일할 생각은 하지 않고 게으르기만 했습니다. 살림은 점점 기울어 갔고, 두 사람은 갈 곳을 잃고 떠돌게 되었습니다. 복녀의 삶은 조금씩 벼랑으로 내몰렸습니다. 아무리 성실하려 해도 나아지지 않는 형편이 복녀를 지치게 했습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 본래 순박하고 도덕적이었던 복녀의 모습입니다. 이 자연주의 소설은 그런 복녀가 환경에 의해 어떻게 변해 가는가를 냉정하게 추적합니다. 처음의 순박함이 뒤의 변화를 더욱 뚜렷하게 드러냅니다.</p>
+        <p>「감자」는 이렇게 순박한 복녀의 모습에서 시작됩니다. 김동인은 한 인간이 환경에 의해 변해 가는 과정을, 감정을 절제한 냉정한 시선으로 그려 냅니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학07/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 전락</span>
+        <h2>칠성문 밖으로</h2>
+        <p>떠돌던 복녀 부부는 마침내 칠성문 밖 빈민굴로 흘러들었습니다. 그곳은 가난한 사람들이 모여 사는, 가장 밑바닥의 삶터였습니다. 복녀의 삶은 이제 더 물러설 곳이 없는 지경에 이르렀습니다.</p>
+        <p>빈민굴은 도덕이나 체면을 지키기 어려운 곳이었습니다. 당장 굶주림을 면하는 것이 무엇보다 급한 곳이었습니다. 복녀는 그런 환경 속에 던져진 것입니다.</p>
+        <p>이 빈민굴이라는 환경은 복녀의 삶을 결정짓는 중요한 배경이 됩니다. 자연주의 소설은 인간이 환경과 본능에 크게 지배받는 존재라고 봅니다. 복녀가 놓인 이 열악한 환경이, 앞으로의 변화를 예고합니다.</p>
+        <p>이 대목은 복녀가 밑바닥 환경으로 떨어지는 도입의 전락 단계입니다. 칠성문 밖 빈민굴은 도덕이 무너지기 쉬운 극한의 환경입니다. 이 환경이 순박했던 복녀를 어떻게 바꾸어 놓을지가 이야기의 핵심입니다. 인물을 특정한 환경 속에 놓고 그 변화를 관찰하는 것이 자연주의 소설의 방식입니다.</p>
+        <p>복녀는 이 열악한 환경 속에서 살아남기 위해 발버둥 쳐야 했습니다. 그러나 그 발버둥은 조금씩 복녀를 변하게 만들었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학07/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 궁핍</span>
+        <h2>밑 빠진 살림</h2>
+        <p>빈민굴에서도 복녀 부부의 살림은 좀처럼 나아지지 않았습니다. 게으른 남편은 여전히 일하려 하지 않았고, 굶주림은 날마다 두 사람을 괴롭혔습니다. 복녀는 어떻게든 먹고살 방법을 찾아야 했습니다.</p>
+        <p>복녀는 여러 일을 해 보았지만, 가난은 좀처럼 물러가지 않았습니다. 아무리 애를 써도 밑 빠진 독에 물 붓기처럼 살림은 나아지지 않았습니다. 복녀는 점점 지쳐 갔습니다.</p>
+        <p>굶주림이 계속되자, 복녀의 마음속에서는 옳고 그름을 따지던 도덕관념이 조금씩 흐려지기 시작했습니다. 당장 살아남는 것이 급하니, 바르게 살겠다는 다짐도 힘을 잃어 갔습니다. 환경이 복녀의 마음을 서서히 바꾸어 놓은 것입니다.</p>
+        <p>이 대목은 궁핍이 복녀의 도덕을 흔들기 시작하는 전개의 단계입니다. 극심한 가난 앞에서 도덕관념이 무너져 가는 과정이 냉정하게 그려집니다. 자연주의 소설이 주목하는, 환경이 인간을 지배하는 모습이 드러나기 시작합니다.</p>
+        <p>복녀는 이제 예전의 순박한 처녀가 아니었습니다. 가난이 조금씩 복녀를 다른 사람으로 만들어 가고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학07/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">위기 · 굶주림</span>
+        <h2>굶주림의 겨울</h2>
+        <p>혹독한 겨울이 찾아오자, 복녀의 굶주림은 극에 달했습니다. 먹을 것이 없어 온 가족이 굶어 죽을 지경에 이르렀습니다. 복녀는 살아남기 위해 무엇이든 해야 했습니다.</p>
+        <p>그 무렵 복녀는 빈민굴 사람들과 함께 감자를 도둑질하러 다니게 되었습니다. 굶주림 앞에서 도덕은 더 이상 힘을 쓰지 못했습니다. 살아남기 위한 절박함이 복녀를 그렇게 내몰았습니다.</p>
+        <p>예전 같으면 상상도 하지 못했을 일을, 복녀는 굶주림 때문에 하게 된 것입니다. 이 변화는 복녀 개인의 잘못이라기보다, 그를 그렇게 만든 환경의 탓이 컸습니다. 자연주의 소설은 바로 이 점을 냉정하게 보여 줍니다.</p>
+        <p>이 대목은 굶주림이 복녀를 도둑질로 내모는 위기의 단계입니다. 극한의 가난 앞에서 인간의 도덕이 얼마나 쉽게 무너지는지가 그려집니다. 복녀의 변화를 개인의 타락이 아니라 환경의 산물로 보게 하는 것이 이 소설의 시선입니다. 배고픔이라는 절박한 본능 앞에서 도덕이 밀려나는 과정이 냉정하게 포착됩니다.</p>
+        <p>감자를 훔치러 다니던 복녀는, 어느 날 감자밭의 주인인 왕 서방과 마주치게 됩니다. 그 만남이 복녀의 삶을 또 한 번 바꾸어 놓습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학07/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 전환</span>
+        <h2>왕 서방의 감자밭</h2>
+        <p>어느 날 밤, 복녀는 왕 서방의 감자밭에서 감자를 훔치다 그만 왕 서방에게 붙잡히고 말았습니다. 왕 서방은 그 감자밭을 가진 중국인 지주였습니다. 복녀는 크게 당황했습니다.</p>
+        <p>그러나 이 만남은 뜻밖의 방향으로 흘러갔습니다. 왕 서방은 복녀를 벌하는 대신, 돈을 주고 복녀와 관계를 맺었습니다. 복녀는 그 대가로 돈을 받게 되었습니다.</p>
+        <p>이 일을 계기로 복녀의 삶은 또 한 번 크게 달라졌습니다. 복녀는 왕 서방에게서 받는 돈으로 굶주림을 면하게 되었습니다. 그러나 그 대가로 복녀는 더욱 깊이 타락의 길로 들어서게 되었습니다.</p>
+        <p>이 대목은 복녀의 삶이 또 한 번 전환되는 위기의 단계입니다. 왕 서방과의 만남이 복녀를 더 깊은 타락으로 이끕니다. 굶주림을 면하는 대신 도덕을 잃어 가는 복녀의 모습이 냉정하게 그려집니다. 생존을 위한 선택이 곧 도덕의 상실로 이어지는 역설이 서늘하게 드러납니다.</p>
+        <p>복녀는 이제 돈을 위해 스스로를 내던지는 지경에 이르렀습니다. 한때 순박했던 복녀의 모습은 어디에서도 찾아볼 수 없게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학07/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 타락</span>
+        <h2>달라진 복녀</h2>
+        <p>왕 서방에게서 돈을 받게 된 뒤, 복녀는 완전히 다른 사람으로 변해 갔습니다. 굶주림에서 벗어난 복녀는 오히려 그 생활에 익숙해져 갔습니다. 도덕관념은 이제 복녀에게서 거의 사라져 버렸습니다.</p>
+        <p>복녀는 돈을 위해서라면 무엇이든 하게 되었습니다. 예전의 순박하고 반듯했던 처녀의 모습은 흔적도 남지 않았습니다. 환경이 한 인간을 이토록 철저하게 바꾸어 놓은 것입니다.</p>
+        <p>복녀의 남편조차 아내의 이런 변화를 못 본 척했습니다. 아내가 벌어 오는 돈으로 먹고살 수 있었기 때문입니다. 가난이라는 환경은 부부의 도덕마저 함께 무너뜨렸습니다.</p>
+        <p>이 대목은 복녀의 타락이 완성되는 위기의 단계입니다. 순박했던 복녀가 환경에 의해 완전히 변해 버린 모습이 냉정하게 그려집니다. 인간의 도덕이 환경 앞에서 얼마나 무력한지를 이 소설은 가차 없이 보여 줍니다. 처음의 순박함과 지금의 모습이 극명하게 대비되어 그 변화가 더욱 충격적으로 다가옵니다.</p>
+        <p>그러나 복녀의 이런 삶에도 뜻밖의 위기가 다가오고 있었습니다. 왕 서방이 새 아내를 맞아들이게 된 것입니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학07/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 질투</span>
+        <h2>손가락질 속에서</h2>
+        <p>어느 날 왕 서방이 젊은 여인을 새 아내로 맞아들인다는 소식이 전해졌습니다. 복녀는 그 소식에 걷잡을 수 없는 질투와 분노에 사로잡혔습니다. 왕 서방을 향한 복녀의 마음은 이미 단순한 거래를 넘어서 있었습니다.</p>
+        <p>복녀는 왕 서방이 다른 여인과 혼인하는 것을 참을 수 없었습니다. 굶주림에서 벗어나게 해 준 왕 서방을 복녀는 자신의 것이라 여겼기 때문입니다. 질투에 눈이 먼 복녀는 이성을 잃어 갔습니다.</p>
+        <p>복녀의 이러한 감정은 그가 놓인 처지와 본능이 뒤엉킨 결과였습니다. 자연주의 소설은 인간이 이성보다 본능과 환경에 크게 좌우되는 존재임을 보여 줍니다. 질투에 사로잡힌 복녀의 모습이 그 점을 드러냅니다.</p>
+        <p>이 대목은 복녀의 질투가 폭발하는 절정의 단계입니다. 왕 서방의 혼인 소식이 복녀를 파국으로 몰아갑니다. 이성을 잃은 복녀의 모습에서, 환경과 본능에 지배당하는 인간의 비극이 드러납니다. 순박했던 처음의 복녀를 떠올리면, 이 파국은 더욱 깊은 안타까움을 자아냅니다.</p>
+        <p>질투에 사로잡힌 복녀는 왕 서방의 혼인날 밤, 낫을 들고 왕 서방을 찾아갔습니다. 비극의 그림자가 짙게 드리웠습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학07/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 비극</span>
+        <h2>감자밭의 밤</h2>
+        <p>왕 서방의 혼인날 밤, 복녀는 낫을 손에 쥐고 신방으로 뛰어들었습니다. 질투와 분노에 휩싸인 복녀는 이성을 완전히 잃은 상태였습니다. 복녀는 왕 서방을 향해 낫을 휘둘렀습니다.</p>
+        <p>그러나 몸싸움 끝에, 도리어 그 낫에 복녀 자신이 목숨을 잃고 말았습니다. 왕 서방을 해치려던 복녀가, 오히려 스스로 비극적인 죽음을 맞은 것입니다. 순박했던 처녀의 삶은 이렇게 참혹하게 끝나 버렸습니다.</p>
+        <p>복녀의 죽음은 개인의 잘못만으로 볼 수 없습니다. 그를 그렇게 만든 것은 가난이라는 환경이었습니다. 자연주의 소설은 이 비극을 통해, 환경이 인간을 어떻게 파멸로 이끄는가를 냉정하게 고발합니다.</p>
+        <p>이 대목은 이야기의 비극적 절정입니다. 복녀가 스스로의 낫에 목숨을 잃는 참혹한 결말이 그려집니다. 순박했던 한 인간이 환경에 의해 파멸에 이르는 과정이, 이 죽음으로 완성됩니다. 남을 해치려던 칼끝이 결국 자신을 향하고 만 이 비극이 서늘한 여운을 남깁니다.</p>
+        <p>복녀는 그렇게 감자밭 곁의 어두운 밤 속에서 스러졌습니다. 그러나 복녀의 죽음 뒤에는 더욱 씁쓸한 광경이 기다리고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학07/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 냉정</span>
+        <h2>땅에 떨어진 감자</h2>
+        <p>복녀가 죽은 뒤, 그 뒤처리는 참으로 냉정하게 이루어졌습니다. 왕 서방과 복녀의 남편은 돈으로 복녀의 죽음을 조용히 덮었습니다. 한 인간의 죽음이 몇 푼의 돈으로 거래된 것입니다.</p>
+        <p>복녀의 남편은 아내의 죽음 앞에서 슬퍼하기보다, 돈을 받는 데 관심을 두었습니다. 왕 서방 역시 아무 일도 없었다는 듯 태연했습니다. 인간의 생명이 이토록 하찮게 취급되는 냉혹한 현실이 드러났습니다.</p>
+        <p>이 냉정한 결말은 자연주의 소설의 특징을 잘 보여 줍니다. 작가는 어떤 감정도 드러내지 않고, 벌어진 일을 있는 그대로 냉정하게 서술합니다. 그 냉정함이 오히려 현실의 비참함을 더욱 뼈아프게 드러냅니다.</p>
+        <p>이 대목은 복녀의 죽음이 냉정하게 처리되는 결말의 단계입니다. 생명이 돈으로 거래되는 비정한 현실이 감정 없이 그려집니다. 이 냉혹한 서술이 자연주의 소설의 힘이자, 이 작품이 남기는 서늘한 울림입니다.</p>
+        <p>복녀의 삶과 죽음은 그렇게 아무렇지 않게 지나갔습니다. 그러나 그 이야기는 읽는 이의 가슴에 무거운 질문을 남깁니다. 한 사람의 삶이 어쩌다 이토록 무너졌는지, 그 책임은 누구에게 있는지를 곱씹게 합니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/현대문학07/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>감자가 말해 주는 것</h2>
+        <p>「감자」는 순박했던 한 인간이 가난이라는 환경 속에서 어떻게 타락하고 파멸해 가는가를 그린 자연주의 소설입니다. 복녀의 변화는 그 자신의 의지라기보다, 그를 둘러싼 열악한 환경의 산물이었습니다. 이 작품은 그 과정을 냉정하게 추적합니다.</p>
+        <p>이 작품이 던지는 물음은 무겁습니다. 복녀를 타락시킨 것은 과연 복녀 자신인가, 아니면 그를 그렇게 내몬 환경인가 하는 것입니다. 자연주의 소설은 인간이 환경에 크게 지배받는 존재임을 보여 주며, 개인만을 탓할 수 없는 현실을 드러냅니다.</p>
+        <p>무엇보다 이 소설은, 감정을 절제한 냉정한 서술로 현실의 비참함을 고발합니다. 작가는 복녀를 동정하거나 비난하지 않고, 벌어진 일을 있는 그대로 보여 줍니다. 그 냉정함이 오히려 독자에게 더 깊은 울림을 남깁니다. 판단을 독자에게 맡기는 이 절제된 서술이 자연주의 문학의 뚜렷한 특징입니다.</p>
+        <p>감자 몇 알에서 시작된 복녀의 비극은, 가난이 인간을 어떻게 무너뜨리는가를 서늘하게 증언합니다. 환경과 인간의 관계에 대한 이 냉정한 성찰은, 우리 자연주의 문학의 대표작으로 이 작품을 자리매김하게 했습니다. 복녀의 이야기는 오래도록 우리에게 묵직한 물음을 던집니다.</p>
+        <p><span class="highlight">순박했던 한 인간을 무너뜨린 것은 그 자신이 아니라, 그를 둘러싼 가난한 환경이었습니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+
+    function goToQuiz() {
+      window.location.href = 'modern07_season1_quiz.html?season=season3';
+    }
+  </script>
+</body>
+</html>

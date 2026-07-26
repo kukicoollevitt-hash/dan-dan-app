@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🗿 돌 속에 갇힌 사람을 꺼낸 소년, 미켈란젤로</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      background: #1a1a1a;
+    }
+
+    /* 고정 지도 캔버스 */
+    #map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: url('/images/창작도서/창작세계인물05/00.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      z-index: 1;
+    }
+
+    #map-canvas {
+      display: none;
+    }
+
+    /* 스크롤 가능한 콘텐츠 */
+    #content {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 60px 120px;
+      pointer-events: none;
+    }
+
+    /* 홀수 섹션은 왼쪽 */
+    .story-section:nth-child(odd) {
+      justify-content: flex-start;
+    }
+
+    /* 짝수 섹션은 오른쪽 */
+    .story-section:nth-child(even) {
+      justify-content: flex-end;
+    }
+
+    .story-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateX(100px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+      pointer-events: auto;
+    }
+
+    /* 왼쪽에서 나오는 카드 */
+    .story-section:nth-child(odd) .story-card {
+      transform: translateX(-100px);
+    }
+
+    /* 오른쪽에서 나오는 카드 */
+    .story-section:nth-child(even) .story-card {
+      transform: translateX(100px);
+    }
+
+    .story-card.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .story-card .chapter {
+      display: inline-block;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #00897b 0%, #004d40 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .story-card .theme {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 137, 123, 0.15);
+      color: #004d40;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .story-card h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .story-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #34495e;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+
+    .story-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-card .highlight {
+      color: #00897b;
+      font-weight: 600;
+    }
+
+    .story-card .dialogue {
+      color: #004d40;
+      font-weight: 600;
+    }
+
+    .story-card .key-sentence {
+      display: block;
+      background: rgba(0, 137, 123, 0.1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-left: 4px solid #00897b;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #004d40;
+      font-size: 14px;
+    }
+
+    /* 인트로 섹션 */
+    .intro-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .intro-content {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 60px 80px;
+      border-radius: 30px;
+      max-width: 850px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .intro-content h1 {
+      font-size: 44px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .intro-content .subtitle {
+      font-size: 20px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .intro-content .characters {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .characters h3 {
+      color: #4dd0e1;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .characters p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .conflict {
+      text-align: left;
+      background: rgba(0, 137, 123, 0.2);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .intro-content .conflict h3 {
+      color: #80cbc4;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .intro-content .conflict p {
+      color: #d0d0d0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .intro-content .scroll-hint {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      pointer-events: none;
+    }
+
+    .scroll-indicator svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.7;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      40% {
+        transform: translateX(-50%) translateY(-20px);
+      }
+      60% {
+        transform: translateX(-50%) translateY(-10px);
+      }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .story-section {
+        padding: 40px 20px;
+      }
+
+      .story-card {
+        max-width: 100%;
+        padding: 30px;
+      }
+
+      .story-card h2 {
+        font-size: 22px;
+      }
+
+      .story-card p {
+        font-size: 14px;
+      }
+
+      .intro-content {
+        padding: 40px 30px;
+      }
+
+      .intro-content h1 {
+        font-size: 28px;
+      }
+
+      .intro-content .subtitle {
+        font-size: 15px;
+      }
+    }
+
+    /* 네비게이션 버튼 */
+    .nav-buttons {
+      position: fixed;
+      bottom: 40px;
+      left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      padding: 15px 30px;
+      background: rgba(0, 137, 123, 0.9);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 137, 123, 0.3);
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 77, 64, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 137, 123, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        bottom: 20px;
+        right: 20px;
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  
+    .vocab-tip {
+      position: relative;
+      color: #e67e22;
+      border-bottom: 1px dotted #e67e22;
+      cursor: help;
+    }
+    .vocab-tip::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+    .vocab-tip:hover::after {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 배경 컨테이너 -->
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <!-- 스크롤 가능한 스토리 콘텐츠 -->
+  <div id="content">
+    <section class="intro-section">
+      <div class="intro-content">
+        <h1>🗿 돌 속에 갇힌 사람을 꺼낸 소년, 미켈란젤로</h1>
+        <p class="subtitle">
+          — 르네상스를 빛낸 조각가이자 화가의 열정 —<br>
+          교과기반 창작도서 · 세계인물 05
+        </p>
+        <div class="characters">
+          <h3>📘 등장인물 · 핵심 개념</h3>
+          <p><strong>★ 미켈란젤로(1475~1564):</strong> 르네상스 시대 이탈리아의 위대한 조각가이자 화가. 다비드상과 시스티나 성당 천장화를 남겼다.</p>
+          <p><strong>★ 시대 배경:</strong> 예술과 학문이 크게 꽃핀 르네상스 시대의 이탈리아. 뛰어난 예술가를 후원하던 메디치 가문이 있었다.</p>
+          <p><strong>★ 핵심 개념:</strong> 르네상스, 조각과 회화, 예술에 대한 열정, 후원과 예술, 불굴의 노력.</p>
+        </div>
+        <p class="scroll-hint">↓ 아래로 스크롤하여 이야기를 시작하세요 ↓</p>
+      </div>
+    </section>
+
+    <!-- Part 1 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물05/01.jpg">
+      <div class="story-card">
+        <span class="chapter">제1장</span>
+        <span class="theme">도입 · 재능</span>
+        <h2>돌을 만지는 아이</h2>
+        <p>미켈란젤로는 1475년, 이탈리아에서 태어났습니다. 그는 어릴 때부터 그림을 그리고 돌을 다루는 데 남다른 재능을 보였습니다. 다른 아이들이 뛰노는 동안, 미켈란젤로는 돌과 조각에 마음을 빼앗겼습니다.</p>
+        <p>미켈란젤로가 살던 시대는 르네상스라 불리는 시기였습니다. 르네상스는 예술과 학문이 크게 꽃핀 시대로, 뛰어난 예술가들이 많이 활동했습니다. 미켈란젤로는 그러한 시대의 한복판에서 자라났습니다.</p>
+        <p>미켈란젤로의 아버지는 아들이 예술가가 되는 것을 탐탁지 않게 여겼습니다. 그러나 미켈란젤로의 예술을 향한 열정은 조금도 꺾이지 않았습니다. 그는 자신이 나아갈 길이 예술에 있음을 일찍부터 확신했습니다.</p>
+        <p>이야기의 첫머리에서 드러나는 것은, 어린 미켈란젤로의 남다른 재능과 예술을 향한 열정입니다. 이 전기는 르네상스를 빛낸 위대한 예술가가 어떻게 자라났는지를 그립니다. 돌을 만지던 아이가 그 출발점이 됩니다.</p>
+        <p>돌 속에 갇힌 사람을 꺼내듯 조각에 열정을 바친 미켈란젤로의 삶이, 이렇게 시작됩니다. 그가 이룰 위대한 예술의 세계가 조금씩 문을 열고 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 2 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물05/02.jpg">
+      <div class="story-card">
+        <span class="chapter">제2장</span>
+        <span class="theme">도입 · 수련</span>
+        <h2>열세 살, 공방의 문을 열다</h2>
+        <p>미켈란젤로는 열세 살 무렵, 한 화가의 공방에 들어가 본격적으로 예술을 배우기 시작했습니다. 그는 그곳에서 그림 그리는 법과 여러 기법을 익혔습니다. 미켈란젤로의 재능은 곧 스승도 놀랄 만큼 빛을 발했습니다.</p>
+        <p>미켈란젤로는 배우는 데 그치지 않고, 끊임없이 연습하며 실력을 갈고닦았습니다. 그는 옛 대가들의 작품을 본떠 그리며 기초를 다졌습니다. 타고난 재능에 부단한 노력이 더해진 것입니다.</p>
+        <p>특히 미켈란젤로는 조각에 깊은 매력을 느꼈습니다. 딱딱한 돌덩이에서 살아 있는 듯한 형상을 깎아 내는 조각은, 그에게 가장 큰 기쁨이었습니다. 미켈란젤로는 조각가로서의 꿈을 키워 갔습니다.</p>
+        <p>이 대목은 미켈란젤로가 예술가로 성장하기 위해 정진하는 수련의 단계입니다. 재능에 노력을 더하며 실력을 쌓아 가는 모습이 그려집니다. 조각을 향한 그의 열정이 점점 깊어져 갑니다.</p>
+        <p>미켈란젤로의 재능은 곧 당대 최고의 후원자였던 메디치 가문의 눈에 들게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 3 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물05/03.jpg">
+      <div class="story-card">
+        <span class="chapter">제3장</span>
+        <span class="theme">전개 · 후원</span>
+        <h2>메디치의 정원</h2>
+        <p>미켈란젤로의 재능을 알아본 메디치 가문은 그를 후원하기로 했습니다. 메디치 가문은 뛰어난 예술가들을 아끼고 지원하던, 르네상스 시대의 큰 후원자였습니다. 미켈란젤로는 메디치 가문의 정원에서 조각을 배우며 재능을 마음껏 펼쳤습니다.</p>
+        <p>메디치 가문의 후원 덕분에, 미켈란젤로는 좋은 환경에서 예술에 전념할 수 있었습니다. 훌륭한 스승과 뛰어난 예술가들 사이에서, 그의 실력은 나날이 깊어졌습니다. 후원자의 지원이 재능을 활짝 꽃피운 것입니다.</p>
+        <p>이 시기 미켈란젤로는 인간의 몸을 깊이 연구했습니다. 살아 있는 듯 생생한 조각을 만들기 위해, 근육과 뼈의 움직임까지 세밀히 살핀 것입니다. 그의 이러한 노력은 훗날 위대한 작품의 밑바탕이 되었습니다.</p>
+        <p>이 대목은 미켈란젤로가 후원 속에서 크게 성장하는 전개의 단계입니다. 메디치 가문의 지원이, 그의 재능을 활짝 꽃피우는 밑거름이 됩니다. 좋은 환경과 부단한 연구가 위대한 예술가를 길러 냅니다.</p>
+        <p>그러나 미켈란젤로를 아끼던 후원자가 세상을 떠나면서, 그는 새로운 길을 찾아 로마로 향하게 되었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 4 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물05/04.jpg">
+      <div class="story-card">
+        <span class="chapter">제4장</span>
+        <span class="theme">전개 · 도전</span>
+        <h2>후원자를 잃고, 로마로</h2>
+        <p>미켈란젤로를 아끼던 메디치 가문의 후원자가 세상을 떠나자, 그는 새로운 기회를 찾아 로마로 갔습니다. 로마는 당시 예술의 중심지 가운데 하나였습니다. 미켈란젤로는 그곳에서 자신의 실력을 증명해야 했습니다.</p>
+        <p>로마에서 미켈란젤로는 여러 조각 작품을 만들며 이름을 알리기 시작했습니다. 그의 조각은 마치 살아 있는 사람처럼 생생하여, 보는 이들을 감탄하게 했습니다. 미켈란젤로의 명성은 점점 높아졌습니다.</p>
+        <p>미켈란젤로는 후원자를 잃은 어려움 속에서도, 자신의 실력으로 새 길을 열어 갔습니다. 재능과 노력이 있었기에, 어려움을 딛고 일어설 수 있었던 것입니다. 그는 홀로서기를 통해 더욱 단단해졌습니다.</p>
+        <p>이 대목은 미켈란젤로가 후원자를 잃고 스스로 길을 개척하는 전개의 도전 단계입니다. 어려움 속에서도 실력으로 새 길을 여는 모습이 그려집니다. 재능과 노력이 그를 다시 일으켜 세웁니다.</p>
+        <p>그러던 어느 날, 미켈란젤로에게 아무도 손대지 못한 거대한 돌덩이가 주어졌습니다. 그것은 그의 인생을 바꿀 도전이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 5 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물05/05.jpg">
+      <div class="story-card">
+        <span class="chapter">제5장</span>
+        <span class="theme">위기 · 도전</span>
+        <h2>아무도 손대지 못한 돌</h2>
+        <p>미켈란젤로에게 거대한 대리석 덩어리 하나가 주어졌습니다. 그 돌은 오랫동안 방치되어 있던 것으로, 여러 조각가가 손을 댔다가 포기한 것이었습니다. 아무도 그 돌로 훌륭한 작품을 만들지 못했습니다.</p>
+        <p>그러나 미켈란젤로는 그 돌을 보고 예사롭지 않은 것을 느꼈습니다. 그는 돌 속에 이미 하나의 형상이 갇혀 있으며, 자신은 그저 그것을 꺼내 주기만 하면 된다고 여겼습니다. 미켈란젤로는 그 어려운 도전을 기꺼이 받아들였습니다.</p>
+        <p>미켈란젤로는 몇 년에 걸쳐 그 거대한 돌을 조각했습니다. 밤낮없이 정과 망치를 든 그의 노력은 실로 대단했습니다. 아무도 손대지 못한 돌이, 그의 손끝에서 조금씩 사람의 형상으로 살아나기 시작했습니다.</p>
+        <p>이 대목은 미켈란젤로가 아무도 해내지 못한 도전에 나서는 위기의 단계입니다. 방치된 돌에서 형상을 꺼내려는 그의 열정이, 위대한 작품의 탄생을 예고합니다. 남들이 포기한 것에서 가능성을 본 그의 안목이 빛납니다. 같은 돌을 보고도 그 안의 형상을 읽어 낸 것은 오직 미켈란젤로뿐이었습니다.</p>
+        <p>마침내 미켈란젤로는 그 돌로 다비드상이라는 위대한 조각을 완성했습니다. 그것은 살아 있는 듯 완벽한 걸작이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 6 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물05/06.jpg">
+      <div class="story-card">
+        <span class="chapter">제6장</span>
+        <span class="theme">위기 · 명령</span>
+        <h2>붓을 들라는 명령</h2>
+        <p>다비드상으로 미켈란젤로의 명성은 하늘을 찌를 듯 높아졌습니다. 그러던 어느 날, 교황이 미켈란젤로에게 뜻밖의 일을 맡겼습니다. 시스티나 성당의 거대한 천장에 그림을 그리라는 명령이었습니다.</p>
+        <p>미켈란젤로는 크게 당황했습니다. 자신은 조각가이지 화가가 아니라고 여겼기 때문입니다. 게다가 높다란 천장에 그림을 그리는 것은 상상하기 어려울 만큼 힘든 일이었습니다.</p>
+        <p>미켈란젤로는 그 명령을 마다하고 싶었지만, 결국 그 어려운 일을 맡기로 했습니다. 조각가인 자신에게 회화라는 새로운 도전이 주어진 것입니다. 미켈란젤로는 이 거대한 과업 앞에 섰습니다.</p>
+        <p>이 대목은 미켈란젤로가 낯선 회화라는 도전을 맡게 되는 위기의 단계입니다. 조각가에게 천장화를 그리라는 명령이, 감당하기 힘든 과업으로 다가옵니다. 그러나 이 도전이 또 하나의 위대한 걸작을 낳게 됩니다.</p>
+        <p>미켈란젤로는 높은 천장 아래 발판을 세우고, 고개를 젖힌 채 그림을 그리기 시작했습니다. 그것은 상상 이상으로 고된 작업이었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 7 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물05/07.jpg">
+      <div class="story-card">
+        <span class="chapter">제7장</span>
+        <span class="theme">절정 · 노력</span>
+        <h2>고개를 젖힌 4년</h2>
+        <p>미켈란젤로는 시스티나 성당의 천장화를 그리기 위해, 무려 4년에 가까운 세월을 바쳤습니다. 그는 높은 발판 위에서 고개를 뒤로 젖힌 불편한 자세로 그림을 그렸습니다. 물감이 얼굴로 떨어지고 목과 눈이 성할 날이 없었습니다.</p>
+        <p>그 고된 작업은 상상하기 어려울 만큼 힘들었습니다. 미켈란젤로는 온몸이 아프고 지쳤지만, 결코 붓을 놓지 않았습니다. 위대한 작품을 완성하겠다는 열정이 그를 버티게 했습니다.</p>
+        <p>미켈란젤로의 이러한 노력은, 위대한 예술이 결코 저절로 이루어지지 않음을 보여 줍니다. 타고난 재능도 중요하지만, 그것을 완성하는 것은 끝없는 노력과 열정이었습니다. 미켈란젤로는 그 진리를 온몸으로 증명했습니다.</p>
+        <p>이 대목은 미켈란젤로의 불굴의 노력이 빛나는 절정의 단계입니다. 4년에 걸친 고된 작업이, 위대한 예술의 뒤에 숨은 땀을 보여 줍니다. 재능을 완성하는 것은 끝없는 열정임을, 그의 모습이 일깨웁니다. 우리가 감탄하는 걸작 뒤에는 이렇듯 보이지 않는 인내가 숨어 있었습니다.</p>
+        <p>마침내 미켈란젤로의 천장화가 완성을 앞두게 되었습니다. 그 그림 속에는 특히 유명한 한 장면이 담겨 있었습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 8 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물05/08.jpg">
+      <div class="story-card">
+        <span class="chapter">제8장</span>
+        <span class="theme">절정 · 완성</span>
+        <h2>닿지 않은 두 손가락</h2>
+        <p>미켈란젤로의 천장화 가운데 가장 유명한 것은, 두 손가락이 서로를 향해 뻗어 있는 장면입니다. 두 손가락은 아주 가까이 다가가 있지만, 아슬아슬하게 서로 닿지 않았습니다. 그 미묘한 간격이 오히려 큰 감동을 자아냈습니다.</p>
+        <p>닿을 듯 닿지 않은 그 두 손가락은, 보는 이의 마음에 깊은 울림을 남겼습니다. 미켈란젤로는 완벽한 형상뿐 아니라, 그 사이의 미묘한 긴장까지 담아낸 것입니다. 그것은 인간의 손이 빚어낸 놀라운 예술이었습니다.</p>
+        <p>이 장면은 미켈란젤로의 예술이 얼마나 깊고 섬세한지를 보여 줍니다. 단순히 그림을 잘 그리는 것을 넘어, 그 안에 깊은 뜻과 감동을 담아낸 것입니다. 미켈란젤로의 천장화는 인류의 위대한 걸작으로 남게 되었습니다.</p>
+        <p>이 대목은 미켈란젤로의 예술이 절정에 이르는 완성의 단계입니다. 닿지 않은 두 손가락이, 그의 예술이 지닌 깊이와 섬세함을 상징합니다. 위대한 걸작이 마침내 완성되는 감동적인 순간입니다.</p>
+        <p>4년에 걸친 고된 작업 끝에, 마침내 시스티나 성당의 천장이 온전히 열리는 날이 왔습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 9 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물05/09.jpg">
+      <div class="story-card">
+        <span class="chapter">제9장</span>
+        <span class="theme">결말 · 완성</span>
+        <h2>천장이 열리던 날</h2>
+        <p>마침내 시스티나 성당의 천장화가 완성되어 사람들 앞에 공개되었습니다. 그 웅장하고 아름다운 그림을 본 사람들은 모두 감탄을 금치 못했습니다. 조각가라 여겨지던 미켈란젤로가, 회화에서도 위대한 걸작을 남긴 것입니다.</p>
+        <p>미켈란젤로의 천장화는 르네상스 예술의 정점으로 손꼽히게 되었습니다. 그의 재능과 4년에 걸친 불굴의 노력이, 인류의 보물을 탄생시킨 것입니다. 미켈란젤로는 조각과 회화 모두에서 위대한 업적을 남긴 예술가가 되었습니다.</p>
+        <p>미켈란젤로는 이 위대한 작품을 통해, 예술이 인간에게 얼마나 큰 감동을 줄 수 있는지를 보여 주었습니다. 그의 작품은 시대를 넘어 사람들의 마음을 울렸습니다. 위대한 예술은 세월이 지나도 그 빛을 잃지 않았습니다.</p>
+        <p>이 대목은 미켈란젤로의 걸작이 세상에 공개되는 결말의 단계입니다. 천장이 열리던 날의 감동이, 그의 위대한 업적을 증언합니다. 재능과 노력이 맺은 결실이 인류의 보물이 됩니다.</p>
+        <p>미켈란젤로가 남긴 위대한 작품들은, 500년이 넘는 세월이 흐른 오늘날까지도 사람들에게 감동을 전하고 있습니다. 그의 손끝에서 태어난 예술은 시간이 지날수록 더욱 빛나고 있습니다.</p>
+      </div>
+    </section>
+
+    <!-- Part 10 -->
+    <section class="story-section" data-bg="/images/창작도서/창작세계인물05/10.jpg">
+      <div class="story-card">
+        <span class="chapter">제10장</span>
+        <span class="theme">결말 · 귀결</span>
+        <h2>500년 뒤에도 뻗어 있는 손</h2>
+        <p>미켈란젤로가 남긴 다비드상과 시스티나 성당 천장화는, 500년이 넘는 세월이 지난 오늘날에도 인류의 위대한 보물로 남아 있습니다. 그의 작품 속 뻗어 있는 손은, 시대를 넘어 여전히 우리에게 감동을 전합니다. 위대한 예술은 세월을 뛰어넘는 것이었습니다.</p>
+        <p>이 인물이 우리에게 남기는 가르침은 분명합니다. 위대한 예술은 타고난 재능만으로 이루어지지 않으며, 끝없는 노력과 열정이 있어야 완성된다는 것입니다. 미켈란젤로는 4년간 고개를 젖힌 채 그림을 그리며 그 진리를 증명했습니다.</p>
+        <p>무엇보다 미켈란젤로의 삶은, 남들이 포기한 것에서도 가능성을 보는 안목과, 그것을 끝까지 완성하는 열정의 소중함을 일깨웁니다. 아무도 손대지 못한 돌에서 다비드상을 꺼낸 것처럼, 그는 남다른 눈과 불굴의 의지를 지닌 예술가였습니다.</p>
+        <p>미켈란젤로의 이야기는 오늘의 우리에게도 깊은 울림을 줍니다. 자신의 재능을 믿고, 어떤 어려움 앞에서도 열정을 잃지 않는다면, 시대를 넘어 빛나는 것을 이룰 수 있다는 것입니다. 500년 뒤에도 뻗어 있는 그의 손은, 우리에게 그 진리를 전하고 있습니다.</p>
+        <p><span class="highlight">위대한 예술은 재능만으로 이루어지지 않습니다. 끝없는 노력과 열정이 돌 속에 갇힌 사람을 꺼냅니다.</span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <div class="nav-buttons">
+    <button class="nav-btn" style="background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);" onclick="goToQuiz()">📝 관문평가</button>
+  </div>
+
+  <!-- 스크롤 인디케이터 -->
+  <div class="scroll-indicator" id="scrollIndicator">
+    <svg viewBox="0 0 24 24" fill="white">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+    </svg>
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('map-container');
+    const sections = document.querySelectorAll('.story-section');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    let currentBg = '';
+    let ticking = false;
+
+    function updateBackground() {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      // 스크롤 인디케이터 숨기기/보이기
+      if (window.scrollY > 100) {
+        scrollIndicator.style.opacity = '0';
+      } else {
+        scrollIndicator.style.opacity = '1';
+      }
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = window.scrollY + rect.top;
+        const sectionBottom = sectionTop + rect.height;
+
+        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+          // 배경 업데이트
+          const bgImage = section.dataset.bg;
+          if (bgImage && bgImage !== currentBg) {
+            currentBg = bgImage;
+            mapContainer.style.backgroundImage = `url(${bgImage})`;
+          }
+
+          // 카드 활성화
+          const card = section.querySelector('.story-card');
+          if (card && !card.classList.contains('active')) {
+            card.classList.add('active');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackground();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // 초기 실행
+    updateBackground();
+
+    function goBack() {
+      // 부모 창이 있으면 부모에게 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeStory' }, '*');
+      } else {
+        window.history.back();
+      }
+    }
+      function goToQuiz() { window.location.href = '/creative-book/worldperson05_season1_quiz.html?season=season3'; }
+  </script>
+</body>
+</html>
