@@ -1369,6 +1369,27 @@ const monthlyExamResultSchema = new mongoose.Schema({
 monthlyExamResultSchema.index({ userId: 1, examGrade: 1, round: 1 }, { unique: true });
 const MonthlyExamResult = mongoose.model('MonthlyExamResult', monthlyExamResultSchema);
 
+// ===== LTI 문해력 성향 검사 결과 (초등·중등) =====
+// source: 'student' = 학생 메뉴(로그인 세션), 'academy' = 학원 대시보드 입력(비로그인)
+const ltiResultSchema = new mongoose.Schema({
+  source:      { type: String, enum: ['student','academy'], default: 'student', index: true },
+  userId:      { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true }, // 학생 세션 저장 시에만
+  studentName: { type: String, required: true, index: true }, // 검색/조회용
+  grade:       { type: String, default: '' },                 // 학생 학년(예: '초3','중2','고1')
+  academyName: { type: String, default: '', index: true },    // 소속/입력 학원
+  studentPhone:{ type: String, default: '' },                 // 학원 입력 시 연락처
+  level:       { type: String, enum: ['elem','mid'], required: true, index: true },
+  code:        { type: String, required: true },              // LTI 4글자 (예: 'DFLP')
+  mbti:        { type: String, default: '' },                 // 대응 MBTI (예: 'ISTJ')
+  nickname:    { type: String, default: '' },                 // 캐릭터 별명
+  scores:      { type: mongoose.Schema.Types.Mixed, default: {} }, // {DW,FR,LE,PM}
+  submittedAt: { type: Date, default: Date.now, index: true },
+  updatedAt:   { type: Date, default: Date.now },
+}, { minimize: false });
+// 로그인 학생은 같은 학년(레벨)당 최신 1건만 유지 (userId가 ObjectId일 때만 유니크 · 학원입력(userId없음)은 제외)
+ltiResultSchema.index({ userId: 1, level: 1 }, { unique: true, partialFilterExpression: { userId: { $type: 'objectId' } } });
+const LtiResult = mongoose.model('LtiResult', ltiResultSchema);
+
 // ===== 학습 행동 데이터 스키마 (본문학습 오답 추적) =====
 const learningBehaviorSchema = new mongoose.Schema({
   grade: String,
@@ -27602,6 +27623,101 @@ app.delete("/api/monthly-exam/result", async (req, res) => {
   }
 });
 
+// ===== LTI 문해력 성향 검사 결과 저장/조회 =====
+const _validLtiLevel = (v) => v === 'elem' || v === 'mid';
+
+// 결과 저장 (재응시 → 최신본으로 덮어쓰기)
+app.post("/api/lti/result", async (req, res) => {
+  try {
+    const user = _requireStudentSession(req, res);
+    if (!user) return;
+    const b = req.body || {};
+    const level = String(b.level || '').trim();
+    if (!_validLtiLevel(level)) return res.status(400).json({ ok: false, error: 'bad_level' });
+    const code = String(b.code || '').trim().toUpperCase();
+    if (!/^[DW][FR][LE][PM]$/.test(code)) return res.status(400).json({ ok: false, error: 'bad_code' });
+
+    // scores는 4개 축 숫자값만 화이트리스트로 저장
+    const rawScores = (b.scores && typeof b.scores === 'object') ? b.scores : {};
+    const scores = {};
+    ['DW', 'FR', 'LE', 'PM'].forEach(k => { const v = +rawScores[k]; if (Number.isFinite(v)) scores[k] = v; });
+
+    const payload = {
+      userId: user._id,
+      studentName: user.name || '',
+      grade: user.grade || '',
+      academyName: user.academyName || user.school || '',
+      level,
+      code,
+      mbti: String(b.mbti || '').trim().toUpperCase().slice(0, 4),
+      nickname: String(b.nickname || '').slice(0, 40),
+      scores,
+      submittedAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const doc = await LtiResult.findOneAndUpdate(
+      { userId: user._id, level },
+      { $set: payload },
+      { upsert: true, new: true }
+    );
+    return res.json({ ok: true, id: String(doc._id) });
+  } catch (err) {
+    console.error('[POST /api/lti/result]', err);
+    return res.status(500).json({ ok: false, error: 'server_error' });
+  }
+});
+
+// 본인 결과 조회 (초등·중등 전체)
+app.get("/api/lti/result", async (req, res) => {
+  try {
+    const user = _requireStudentSession(req, res);
+    if (!user) return;
+    const rows = await LtiResult.find({ userId: user._id }).sort({ level: 1 }).lean();
+    return res.json({ ok: true, results: rows });
+  } catch (err) {
+    console.error('[GET /api/lti/result]', err);
+    return res.status(500).json({ ok: false, error: 'server_error' });
+  }
+});
+
+// 학원 대시보드 입력용 결과 저장 (세션 불필요 · 입력한 학원/학생 정보로 저장 · 진단테스트와 동일 방식)
+app.post("/api/lti/result-academy", async (req, res) => {
+  try {
+    const b = req.body || {};
+    const level = String(b.level || '').trim();
+    if (!_validLtiLevel(level)) return res.status(400).json({ ok: false, error: 'bad_level' });
+    const code = String(b.code || '').trim().toUpperCase();
+    if (!/^[DW][FR][LE][PM]$/.test(code)) return res.status(400).json({ ok: false, error: 'bad_code' });
+    const studentName = String(b.name || b.studentName || '').trim();
+    const academyName = String(b.academyName || b.branchName || '').trim();
+    if (!studentName) return res.status(400).json({ ok: false, error: 'no_name' });
+    if (!academyName) return res.status(400).json({ ok: false, error: 'no_academy' });
+
+    const rawScores = (b.scores && typeof b.scores === 'object') ? b.scores : {};
+    const scores = {};
+    ['DW', 'FR', 'LE', 'PM'].forEach(k => { const v = +rawScores[k]; if (Number.isFinite(v)) scores[k] = v; });
+
+    const doc = await LtiResult.create({
+      source: 'academy',
+      studentName,
+      grade: String(b.grade || '').slice(0, 10),
+      academyName,
+      studentPhone: String(b.phone || b.studentPhone || '').slice(0, 30),
+      level,
+      code,
+      mbti: String(b.mbti || '').trim().toUpperCase().slice(0, 4),
+      nickname: String(b.nickname || '').slice(0, 40),
+      scores,
+      submittedAt: new Date(),
+      updatedAt: new Date(),
+    });
+    return res.json({ ok: true, id: String(doc._id) });
+  } catch (err) {
+    console.error('[POST /api/lti/result-academy]', err);
+    return res.status(500).json({ ok: false, error: 'server_error' });
+  }
+});
+
 // ✅ 관리자(admin) 세션 정보 조회 API
 // 🔹 계약구분 기반 approvedSeries 보정: 프리미엄·스탠다드 모두 항상 모든 시리즈 열림으로 응답
 //    (DB의 stale approvedSeries 값 무시 — contractType이 source of truth)
@@ -33183,6 +33299,30 @@ app.delete("/api/academy-course-applications/delete-selected", async (req, res) 
   }
 });
 
+// ===== 슈퍼관리자: 전체 센터 LTI 문해성향 결과 =====
+app.get("/api/academy-lti-results", requireSuperAdmin, async (req, res) => {
+  try {
+    const rows = await LtiResult.find({}).sort({ submittedAt: -1 }).lean();
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error("[GET /api/academy-lti-results]", error);
+    res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
+  }
+});
+app.delete("/api/academy-lti-results/delete-selected", requireSuperAdmin, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.json({ success: false, message: "삭제할 항목을 선택해주세요." });
+    }
+    const result = await LtiResult.deleteMany({ _id: { $in: ids } });
+    res.json({ success: true, deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error("[DELETE /api/academy-lti-results/delete-selected]", error);
+    res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
+  }
+});
+
 // 문해력 진단테스트 정답 배열 (25문제) - diagnostic_reading_test.html과 동일하게 유지
 const diagnosticCorrectAnswers = [2, 0, 1, 1, 2, 1, 2, 1, 2, 3, 2, 0, 1, 1, 2, 1, 1, 1, 2, 2, 1, 0, 1, 1, 2];
 
@@ -33798,6 +33938,46 @@ app.get("/api/admin/diagnostic-tests", async (req, res) => {
   }
 });
 
+// LTI 문해성향 결과 목록 조회 (브랜치 관리자용 - 학원명 필터링)
+app.get("/api/admin/lti-results", async (req, res) => {
+  try {
+    const viewingBranch = req.session && req.session.viewingBranch;
+    if (!viewingBranch && (!req.session || !req.session.admin || !req.session.admin.academyName)) {
+      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+    }
+    const sessionAdmin = viewingBranch || req.session.admin;
+    const academyName = sessionAdmin.academyName;
+
+    // 학원명(본명+별칭)으로 academyName 필터 (진단과 동일 철학, 단 LtiResult는 academyName 필드)
+    let names = [sessionAdmin.academyName].filter(Boolean);
+    try {
+      const adminId = sessionAdmin.id || sessionAdmin._id;
+      if (adminId) {
+        const fresh = await Admin.findById(adminId).select('academyName academyAliases').lean();
+        if (fresh) names = getAdminAcademyNames(fresh);
+      }
+    } catch {}
+    // 학원명이 없으면 전체 노출 방지 → 빈 목록
+    if (!names || names.length === 0) {
+      return res.json({ success: true, data: [], academyName, userType: viewingBranch ? 'academy' : (req.session.admin.userType || 'school') });
+    }
+    const esc = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const clauses = names.map(n => ({ academyName: { $regex: esc(n), $options: 'i' } }));
+    const filter = clauses.length === 1 ? clauses[0] : { $or: clauses };
+
+    const rows = await LtiResult.find(filter).sort({ submittedAt: -1 }).lean();
+    return res.json({
+      success: true,
+      data: rows,
+      academyName,
+      userType: viewingBranch ? 'academy' : (req.session.admin.userType || 'school')
+    });
+  } catch (err) {
+    console.error('[GET /api/admin/lti-results]', err);
+    return res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
+  }
+});
+
 // 수강신청 목록 조회 (브랜치 관리자용 - 지점명 필터링)
 app.get("/api/admin/course-applications", async (req, res) => {
   try {
@@ -33915,6 +34095,40 @@ app.delete("/api/admin/course-applications/delete-selected", async (req, res) =>
     res.json({ success: true, deletedCount: result.deletedCount });
   } catch (error) {
     console.error("브랜치 관리자 수강신청 선택삭제 오류:", error);
+    res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
+  }
+});
+
+// LTI 문해성향 결과 선택삭제 (자기 학원 것만)
+app.delete("/api/admin/lti-results/delete-selected", async (req, res) => {
+  try {
+    const viewingBranch = req.session && req.session.viewingBranch;
+    if (!viewingBranch && (!req.session || !req.session.admin || !req.session.admin.academyName)) {
+      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+    }
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: "삭제할 항목을 선택해주세요." });
+    }
+    // LTI 목록 조회와 동일한 학원명(본명+별칭) 스코프로만 삭제 (타 학원 삭제 차단)
+    const sessionAdmin = viewingBranch || req.session.admin;
+    let names = [sessionAdmin.academyName].filter(Boolean);
+    try {
+      const adminId = sessionAdmin.id || sessionAdmin._id;
+      if (adminId) {
+        const fresh = await Admin.findById(adminId).select('academyName academyAliases').lean();
+        if (fresh) names = getAdminAcademyNames(fresh);
+      }
+    } catch {}
+    if (!names || names.length === 0) return res.json({ success: true, deletedCount: 0 });
+    const esc = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const clauses = names.map(n => ({ academyName: { $regex: esc(n), $options: 'i' } }));
+    const academyFilter = clauses.length === 1 ? clauses[0] : { $or: clauses };
+
+    const result = await LtiResult.deleteMany({ _id: { $in: ids }, ...academyFilter });
+    res.json({ success: true, deletedCount: result.deletedCount });
+  } catch (err) {
+    console.error('[DELETE /api/admin/lti-results/delete-selected]', err);
     res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
   }
 });

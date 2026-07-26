@@ -384,6 +384,17 @@
         padding: 10px 8px;
       }
     }
+    /* LTI 유형/결과보기 */
+    .lti-type-badge { display:inline-block; padding:4px 10px; border-radius:12px; background:#eef6ff; color:#2b6ca3; font-size:13px; font-weight:700; white-space:nowrap; }
+    .lti-mbti-badge { display:inline-block; padding:3px 9px; border-radius:10px; background:#f3eeff; color:#7a5fb0; font-size:12px; font-weight:700; white-space:nowrap; }
+    .lti-view-btn { padding:7px 14px; border:none; border-radius:10px; cursor:pointer; background:linear-gradient(135deg,#1f9ed1 0%,#54c7ec 100%); color:#fff; font-size:13px; font-weight:700; white-space:nowrap; transition:transform .12s, box-shadow .12s; box-shadow:0 3px 8px rgba(31,158,209,.3); }
+    .lti-view-btn:hover { transform:translateY(-1px); box-shadow:0 5px 12px rgba(31,158,209,.4); }
+    .lti-result-overlay { position:fixed; inset:0; z-index:100000; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; padding:16px; }
+    .lti-result-overlay.show { display:flex; }
+    .lti-result-box { position:relative; width:100%; max-width:1040px; height:92vh; max-height:940px; background:#fff; border-radius:22px; overflow:hidden; box-shadow:0 24px 70px rgba(0,0,0,.45); }
+    .lti-result-box iframe { width:100%; height:100%; border:none; display:block; }
+    .lti-result-close { position:absolute; top:12px; right:14px; z-index:2; width:40px; height:40px; border:none; border-radius:50%; background:rgba(0,0,0,.45); color:#fff; font-size:18px; font-weight:700; cursor:pointer; line-height:1; transition:background .15s; }
+    .lti-result-close:hover { background:rgba(0,0,0,.7); }
   </style>
 </head>
 <body>
@@ -476,6 +487,52 @@
           더보기 (<span id="applicationHiddenCount">0</span>명 더)
         </button>
       </div>
+    </div>
+
+    <!-- 🧠 LTI 문해성향 결과 목록 (전체 센터) -->
+    <div class="section">
+      <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span>🧠 LTI 문해성향 결과 목록 (전체 센터)</span>
+          <span class="count-badge" id="ltiCount">0명</span>
+        </div>
+        <button id="deleteLtiBtn" class="delete-btn" onclick="deleteSelectedLti()" disabled>🗑 선택삭제 (<span id="ltiSelectedCount">0</span>명)</button>
+      </div>
+      <div class="search-container">
+        <input type="text" id="ltiSearch" class="search-input" placeholder="🔍 센터명, 학년, 이름, 유형, MBTI 검색..." oninput="filterLti()">
+      </div>
+      <div class="table-container">
+        <div id="ltiLoading" class="loading">데이터를 불러오는 중...</div>
+        <table id="ltiTable" style="display: none;">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="select-checkbox" id="ltiSelectAll" onchange="toggleAllLti(this)"></th>
+              <th>No.</th>
+              <th>센터명</th>
+              <th>학년</th>
+              <th>이름</th>
+              <th>연락처</th>
+              <th>문해 유형</th>
+              <th>MBTI</th>
+              <th>검사일</th>
+              <th>결과</th>
+            </tr>
+          </thead>
+          <tbody id="ltiBody"></tbody>
+        </table>
+        <div id="ltiEmpty" class="empty-message" style="display: none;">등록된 LTI 결과가 없습니다.</div>
+        <button id="ltiShowMoreBtn" class="show-more-btn" style="display: none;" onclick="toggleLtiRows()">
+          더보기 (<span id="ltiHiddenCount">0</span>명 더)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🧠 LTI 결과보기 팝업 (iframe) -->
+  <div id="ltiResultModal" class="lti-result-overlay" onclick="closeLtiResult(event)">
+    <div class="lti-result-box" onclick="event.stopPropagation()">
+      <button class="lti-result-close" onclick="closeLtiResult()" title="닫기">✕</button>
+      <iframe id="ltiResultFrame" title="LTI 결과" src="about:blank"></iframe>
     </div>
   </div>
 
@@ -1022,9 +1079,149 @@
       }
     }
 
+    // ===== 🧠 LTI 문해성향 결과 목록 (전체 센터) =====
+    let allLti = [];
+    let ltiExpanded = false;
+    function ltiEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    async function loadAcademyLtiResults() {
+      try {
+        const res = await fetch('/api/academy-lti-results');
+        const result = await res.json();
+        document.getElementById('ltiLoading').style.display = 'none';
+        if (result.success && Array.isArray(result.data)) {
+          allLti = result.data;
+          renderLtiRows(allLti);
+        } else {
+          document.getElementById('ltiEmpty').style.display = 'block';
+        }
+      } catch (err) {
+        console.error('LTI 결과 로드 오류:', err);
+        document.getElementById('ltiLoading').textContent = '데이터 로드 중 오류가 발생했습니다.';
+      }
+    }
+
+    function renderLtiRows(data) {
+      const table = document.getElementById('ltiTable');
+      const empty = document.getElementById('ltiEmpty');
+      const body = document.getElementById('ltiBody');
+      const countBadge = document.getElementById('ltiCount');
+      const showMoreBtn = document.getElementById('ltiShowMoreBtn');
+      // 선택상태 초기화
+      const selAll = document.getElementById('ltiSelectAll'); if (selAll) selAll.checked = false;
+      document.getElementById('ltiSelectedCount').textContent = '0';
+      document.getElementById('deleteLtiBtn').disabled = true;
+
+      if (data.length > 0) {
+        table.style.display = 'table';
+        empty.style.display = 'none';
+        countBadge.textContent = `${data.length}명`;
+        body.innerHTML = data.map((r, index) => {
+          const s = r.scores || {};
+          const params = new URLSearchParams();
+          params.set('code', r.code || '');
+          params.set('level', r.level || 'elem');
+          params.set('name', r.studentName || '');
+          params.set('grade', r.grade || '');
+          if (s.DW != null) params.set('dw', s.DW);
+          if (s.FR != null) params.set('fr', s.FR);
+          if (s.LE != null) params.set('le', s.LE);
+          if (s.PM != null) params.set('pm', s.PM);
+          const url = '/mbti.html?' + params.toString();
+          const dt = r.submittedAt ? new Date(r.submittedAt).toLocaleString('ko-KR') : '-';
+          const typeLabel = (r.nickname ? ltiEsc(r.nickname) + ' · ' : '') + ltiEsc(r.code || '');
+          return `
+            <tr class="${index >= DISPLAY_LIMIT ? 'hidden-row lti-hidden' : ''}">
+              <td><input type="checkbox" class="select-checkbox lti-checkbox" data-id="${r._id}" onchange="updateLtiCount()"></td>
+              <td>${index + 1}</td>
+              <td>${ltiEsc(r.academyName || '-')}</td>
+              <td style="white-space:nowrap;">${ltiEsc(r.grade || '-')}</td>
+              <td>${ltiEsc(r.studentName || '-')}</td>
+              <td>${ltiEsc(r.studentPhone || '-')}</td>
+              <td><span class="lti-type-badge">${typeLabel || '-'}</span></td>
+              <td><span class="lti-mbti-badge">${ltiEsc(r.mbti || '-')}</span></td>
+              <td style="white-space:nowrap;">${dt}</td>
+              <td><button class="lti-view-btn" data-url="${ltiEsc(url)}" onclick="openLtiResult(this.dataset.url)">📄 결과보기</button></td>
+            </tr>`;
+        }).join('');
+        if (data.length > DISPLAY_LIMIT) {
+          showMoreBtn.style.display = 'block';
+          ltiExpanded = false;
+          showMoreBtn.innerHTML = `더보기 (<span id="ltiHiddenCount">${data.length - DISPLAY_LIMIT}</span>명 더)`;
+        } else {
+          showMoreBtn.style.display = 'none';
+        }
+      } else {
+        table.style.display = 'none';
+        empty.style.display = 'block';
+        empty.textContent = allLti.length ? '검색 결과가 없습니다.' : '등록된 LTI 결과가 없습니다.';
+        countBadge.textContent = '0명';
+        showMoreBtn.style.display = 'none';
+      }
+    }
+
+    function filterLti() {
+      const term = document.getElementById('ltiSearch').value.toLowerCase().trim();
+      if (!term) { renderLtiRows(allLti); return; }
+      const filtered = allLti.filter(r => {
+        return [(r.academyName||''), (r.grade||''), (r.studentName||''), (r.studentPhone||''),
+                (r.nickname||''), (r.code||''), (r.mbti||'')]
+               .some(v => String(v).toLowerCase().includes(term));
+      });
+      renderLtiRows(filtered);
+    }
+    function toggleLtiRows() {
+      const hiddenRows = document.querySelectorAll('.lti-hidden');
+      const btn = document.getElementById('ltiShowMoreBtn');
+      ltiExpanded = !ltiExpanded;
+      hiddenRows.forEach(row => row.classList.toggle('hidden-row', !ltiExpanded));
+      if (ltiExpanded) { btn.textContent = '접기'; }
+      else { btn.innerHTML = `더보기 (<span id="ltiHiddenCount">${hiddenRows.length}</span>명 더)`; }
+    }
+    function toggleAllLti(checkbox) {
+      document.querySelectorAll('.lti-checkbox').forEach(cb => cb.checked = checkbox.checked);
+      updateLtiCount();
+    }
+    function updateLtiCount() {
+      const checked = document.querySelectorAll('.lti-checkbox:checked');
+      const all = document.querySelectorAll('.lti-checkbox');
+      document.getElementById('ltiSelectedCount').textContent = checked.length;
+      document.getElementById('deleteLtiBtn').disabled = checked.length === 0;
+      const selAll = document.getElementById('ltiSelectAll');
+      if (selAll) selAll.checked = all.length > 0 && checked.length === all.length;
+    }
+    async function deleteSelectedLti() {
+      const ids = Array.from(document.querySelectorAll('.lti-checkbox:checked')).map(cb => cb.dataset.id);
+      if (ids.length === 0) { alert('삭제할 항목을 선택해주세요.'); return; }
+      if (!confirm(`⚠️ 선택한 ${ids.length}명의 LTI 결과를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) return;
+      try {
+        const res = await fetch('/api/academy-lti-results/delete-selected', {
+          method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids })
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert(`✅ ${result.deletedCount}건의 LTI 결과가 삭제되었습니다.`);
+          loadAcademyLtiResults();
+        } else {
+          alert('삭제 중 오류가 발생했습니다: ' + (result.message || '알 수 없는 오류'));
+        }
+      } catch (e) { console.error('LTI 삭제 오류:', e); alert('삭제 중 오류가 발생했습니다.'); }
+    }
+    function openLtiResult(url) {
+      document.getElementById('ltiResultFrame').src = url;
+      document.getElementById('ltiResultModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLtiResult() {
+      document.getElementById('ltiResultModal').classList.remove('show');
+      document.getElementById('ltiResultFrame').src = 'about:blank';
+      document.body.style.overflow = '';
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       loadDiagnosticTests();
       loadCourseApplications();
+      loadAcademyLtiResults();
     });
   </script>
 </body>
