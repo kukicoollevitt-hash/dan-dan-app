@@ -27629,8 +27629,6 @@ const _validLtiLevel = (v) => v === 'elem' || v === 'mid';
 // 결과 저장 (재응시 → 최신본으로 덮어쓰기)
 app.post("/api/lti/result", async (req, res) => {
   try {
-    const user = _requireStudentSession(req, res);
-    if (!user) return;
     const b = req.body || {};
     const level = String(b.level || '').trim();
     if (!_validLtiLevel(level)) return res.status(400).json({ ok: false, error: 'bad_level' });
@@ -27642,22 +27640,54 @@ app.post("/api/lti/result", async (req, res) => {
     const scores = {};
     ['DW', 'FR', 'LE', 'PM'].forEach(k => { const v = +rawScores[k]; if (Number.isFinite(v)) scores[k] = v; });
 
-    const payload = {
-      userId: user._id,
-      studentName: user.name || '',
-      grade: user.grade || '',
-      academyName: user.academyName || user.school || '',
-      level,
-      code,
-      mbti: String(b.mbti || '').trim().toUpperCase().slice(0, 4),
-      nickname: String(b.nickname || '').slice(0, 40),
-      scores,
-      submittedAt: new Date(),
-      updatedAt: new Date(),
-    };
+    const mbti = String(b.mbti || '').trim().toUpperCase().slice(0, 4);
+    const nickname = String(b.nickname || '').slice(0, 40);
+
+    // 로그인 세션이 있으면 세션 정보 우선(권장·userId로 최신 1건 유지),
+    // 없으면(본사 테스트 계정 등 localStorage 기반) 클라이언트가 보낸 학생정보로 저장
+    const sessionUser = (req.session && req.session.user && req.session.user._id) ? req.session.user : null;
+
+    if (sessionUser) {
+      const payload = {
+        source: 'student',
+        userId: sessionUser._id,
+        studentName: sessionUser.name || '',
+        grade: sessionUser.grade || '',
+        academyName: sessionUser.academyName || sessionUser.school || String(b.academyName || ''),
+        level, code, mbti, nickname, scores,
+        submittedAt: new Date(), updatedAt: new Date(),
+      };
+      const doc = await LtiResult.findOneAndUpdate(
+        { userId: sessionUser._id, level },
+        { $set: payload },
+        { upsert: true, new: true }
+      );
+      return res.json({ ok: true, id: String(doc._id) });
+    }
+
+    // 세션 없음 → 클라이언트 학생정보로 저장 (이름 필수)
+    const studentName = String(b.name || b.studentName || '').trim();
+    if (!studentName) return res.status(400).json({ ok: false, error: 'no_name' });
+    const grade = String(b.grade || '').slice(0, 10);
+    let academyName = String(b.academyName || '').trim();
+    // 학원명이 비어있으면 User 계정(이름+학년)에서 조회해 채움 (대시보드 노출용)
+    if (!academyName) {
+      try {
+        const q = { name: studentName };
+        if (grade) q.grade = grade;
+        const stu = await User.findOne(q).select('academyName school').lean();
+        if (stu) academyName = stu.academyName || stu.school || '';
+      } catch (e) {}
+    }
+    // 같은 학생(이름+학년)의 같은 레벨은 최신 1건만 유지 (재검사 시 덮어씀 · 중복 방지)
     const doc = await LtiResult.findOneAndUpdate(
-      { userId: user._id, level },
-      { $set: payload },
+      { source: 'student', studentName, grade, level },
+      { $set: {
+          source: 'student', studentName, grade, academyName,
+          studentPhone: String(b.phone || b.studentPhone || '').slice(0, 30),
+          level, code, mbti, nickname, scores,
+          submittedAt: new Date(), updatedAt: new Date(),
+        } },
       { upsert: true, new: true }
     );
     return res.json({ ok: true, id: String(doc._id) });

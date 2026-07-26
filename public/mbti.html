@@ -730,9 +730,20 @@ function saveResultToServer(code, nick){
         })
       }).catch(()=>{});
     }else{
+      // 학생 메뉴: 로그인 세션이 있으면 서버가 세션정보를 우선 사용,
+      // 세션이 없어도(본사 테스트 계정 등) 저장되도록 localStorage 학생정보를 함께 전송
+      const read=(store,key)=>{ try{ return JSON.parse(store.getItem(key)||'null'); }catch(e){ return null; } };
+      const cs = read(localStorage,'currentStudent') || {};
+      const su = read(sessionStorage,'user') || {};
       fetch('/api/lti/result',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ level, code, mbti:mbtiOf(code), nickname:nick||'', scores })
+        body:JSON.stringify({
+          level, code, mbti:mbtiOf(code), nickname:nick||'', scores,
+          name: cs.name || su.name || '',
+          grade: cs.grade || su.grade || '',
+          academyName: cs.academyName || cs.school || su.academyName || su.school || '',
+          phone: cs.phone || cs.studentPhone || su.phone || ''
+        })
       }).catch(()=>{});
     }
   }catch(e){}
