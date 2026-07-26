@@ -1216,7 +1216,6 @@
 <meta charset="UTF-8">
 <title>${fileTitle}</title>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<scr` + `ipt src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></scr` + `ipt>
 <style>
   * { box-sizing: border-box; }
   html, body { margin:0; padding:0; background:#fff; width:800px; }
@@ -1303,10 +1302,18 @@
     animation:spin 0.9s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+  @media print {
+    @page { margin: 10mm; }
+    html, body { width:auto !important; margin:0 !important; }
+    .pdf-doc { width:100% !important; max-width:100% !important; padding:0 !important; }
+    /* 그래프를 인쇄 폭에 맞춰 유동적으로 (고정 720px 오버플로우 방지) */
+    .trend-chart-wrap svg { width:100% !important; height:auto !important; max-width:100% !important; }
+    #loading { display:none !important; }
+    * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+  }
 </style>
 </head>
 <body>
-<div id="loading"><div class="spinner"></div><div>PDF 생성 중...</div><div style="font-size:12px;opacity:0.7;font-weight:500;">잠시만 기다려주세요</div></div>
 <div class="pdf-doc" id="pdfRoot">
   <div class="pdf-brand">
     <div class="name">${stu.academy || '브레인 문해력'}</div>
@@ -1321,34 +1328,16 @@
 </div>
 <scr` + `ipt>
 (function(){
-  var FILENAME = ${JSON.stringify(fileTitle + '.pdf')};
-  function generate(){
-    if (typeof html2pdf === 'undefined') { alert('PDF 라이브러리 로드 실패'); return; }
-    var el = document.getElementById('pdfRoot');
-    html2pdf().from(el).set({
-      margin: [10, 10, 10, 10],
-      filename: FILENAME,
-      image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: {
-        scale: 2, useCORS: true, backgroundColor: '#ffffff',
-        width: 800, windowWidth: 800,
-        x: 0, y: 0, scrollX: 0, scrollY: 0
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-      pagebreak: { mode: ['css', 'legacy'] }
-    }).save().then(function(){
-      setTimeout(function(){ try { window.close(); } catch(e){} }, 400);
-    }).catch(function(err){
-      console.error(err);
-      document.getElementById('loading').innerHTML = '<div>PDF 생성 실패</div><div style="font-size:12px;opacity:0.7;">브라우저 인쇄 → PDF 저장을 이용해주세요.</div>';
+  // 결과 PDF와 동일하게 '브라우저 인쇄 → PDF 저장' 방식. 파일명 = 문서 title.
+  function doPrint(){
+    try { window.focus(); } catch(e){}
+    window.addEventListener('afterprint', function(){
+      setTimeout(function(){ try { window.close(); } catch(e){} }, 200);
     });
+    window.print();
   }
-  function waitLib(retries){
-    if (typeof html2pdf !== 'undefined') { generate(); return; }
-    if (retries <= 0) { alert('PDF 라이브러리를 불러오지 못했습니다.'); return; }
-    setTimeout(function(){ waitLib(retries - 1); }, 200);
-  }
-  window.addEventListener('load', function(){ waitLib(30); });
+  // 폰트·SVG 렌더 대기 후 인쇄창 오픈
+  window.addEventListener('load', function(){ setTimeout(doPrint, 400); });
 })();
 </scr` + `ipt>
 </body>
