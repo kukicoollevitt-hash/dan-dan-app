@@ -1146,9 +1146,10 @@ app.use(express.static(path.join(__dirname, "public"), {
     }
     // JS/CSS 파일은 1시간 캐시
     else if (filePath.match(/\.(js|css)$/i)) {
-      // learning-common.js: 전 학습 페이지에서 로드되고 가드 로직(복붙 차단 등)이 들어 있어
-      // 즉시 전파가 중요 → ETag 재검증으로 변경 시 즉시 반영
-      if (filePath.endsWith('learning-common.js')) {
+      // learning-common.js / auto-logout.js: 전 학습 페이지에서 로드되고 보안 가드 로직
+      // (복붙 차단 · 단일세션 강제)이 들어 있어 즉시 전파가 중요 → 재검증으로 변경 즉시 반영
+      // (private 지시로 Cloudflare 엣지 캐시도 우회)
+      if (filePath.endsWith('learning-common.js') || filePath.endsWith('auto-logout.js')) {
         res.set('Cache-Control', 'no-cache, must-revalidate, private');
       } else {
         res.set('Cache-Control', 'public, max-age=3600'); // 1시간
