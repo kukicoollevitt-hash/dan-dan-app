@@ -8,6 +8,50 @@
 (function() {
   'use strict';
 
+  // ============================================================
+  // 🔒 단일 세션(1계정 = 1기기) 클라이언트 가드
+  //   - 서버가 다른 기기 로그인 감지 시 401 { kicked:true } 반환
+  //   - 모든 fetch 응답을 감시 + 30초 주기 /api/session 확인 → 즉시 로그아웃
+  //   - menu.html 등에서 먼저 설치했으면(window.__ssGuardInstalled) 중복 설치 생략
+  // ============================================================
+  (function singleSessionGuard() {
+    if (window.__ssGuardInstalled) return;
+    window.__ssGuardInstalled = true;
+
+    window.handleSessionKicked = function () {
+      if (window.__ssKicked) return;
+      window.__ssKicked = true;
+      try { localStorage.removeItem('currentStudent'); sessionStorage.removeItem('user'); } catch (e) {}
+      alert('⚠️ 다른 기기에서 로그인되어 로그아웃되었습니다.\n한 계정은 한 기기에서만 사용할 수 있어요.');
+      location.href = '/';
+    };
+
+    const _origFetch = window.fetch;
+    if (_origFetch) {
+      window.fetch = function () {
+        return _origFetch.apply(this, arguments).then(function (res) {
+          try {
+            if (res && res.status === 401) {
+              res.clone().json().then(function (d) {
+                if (d && d.kicked) window.handleSessionKicked();
+              }).catch(function () {});
+            }
+          } catch (e) {}
+          return res;
+        });
+      };
+    }
+
+    setInterval(function () {
+      try {
+        (_origFetch || window.fetch)('/api/session')
+          .then(function (r) { return r.json(); })
+          .then(function (d) { if (d && d.kicked) window.handleSessionKicked(); })
+          .catch(function () {});
+      } catch (e) {}
+    }, 30000);
+  })();
+
   // 설정
   const AUTO_LOGOUT_MINUTES = 60; // 1시간
   const AUTO_LOGOUT_MS = AUTO_LOGOUT_MINUTES * 60 * 1000;

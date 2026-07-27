@@ -439,6 +439,25 @@
       height: 0; margin: 28px 0 16px;
     }
 
+    /* 상단 탭 (카테고리 구분) */
+    .an-tabbar { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+    .an-tab {
+      flex: 1 1 auto; min-width: 130px; cursor: pointer;
+      border: 2px solid #e5e7eb; background: #fff; color: #64748b;
+      font-family: inherit; font-size: 13.5px; font-weight: 800;
+      padding: 11px 12px; border-radius: 12px; position: relative;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.15s ease; white-space: nowrap;
+    }
+    .an-tab:hover { border-color: #cbd5e1; background: #f8fafc; }
+    .an-tab.active.training { background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); color: #5b21b6; border-color: #8b5cf6; box-shadow: 0 2px 8px rgba(124,58,237,0.2); }
+    .an-tab.active.update { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; border-color: #f59e0b; box-shadow: 0 2px 8px rgba(245,158,11,0.2); }
+    .an-tab.active.instructor { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; border-color: #10b981; box-shadow: 0 2px 8px rgba(16,185,129,0.2); }
+    .an-tab-badge {
+      font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 10px;
+      background: #ef4444; color: #fff; letter-spacing: 0.2px;
+    }
+
     .an-list { display: flex; flex-direction: column; gap: 10px; }
     .an-item {
       background: #fff;
@@ -526,6 +545,7 @@
     /* 상세 보기 상태: 펼쳐진 항목만 보이고 헤더/구분선/다른 항목은 숨김 */
     .an-modal-body.viewing-detail .an-item:not(.expanded) { display: none; }
     .an-modal-body.viewing-detail .an-section-header,
+    .an-modal-body.viewing-detail .an-tabbar,
     .an-modal-body.viewing-detail .an-section-divider { display: none; }
     .an-modal-body.viewing-detail .an-item.expanded {
       box-shadow: 0 12px 40px -16px rgba(15, 23, 42, 0.18),
@@ -1680,6 +1700,7 @@
     let _anCache = { notices: [], canWrite: false };
     let _anEditingId = null;
     let _anFilter = { '정기교육': '', '업데이트': '', '문해력지도사': '' };
+    let _anActiveTab = '정기교육';  // 상단 탭 활성 카테고리
     const AN_NEW_HOURS = 72;
     const AN_SEEN_KEY = 'an_lastSeenAt';
 
@@ -1994,50 +2015,58 @@
       if (input) input.disabled = (all.length === 0);
     }
 
-    // 전체 모달 본문 그리기 — 헤더/검색 input은 여기서 1회만 생성
+    // 상단 탭 정의 (순서: 정기교육 / 활용안내 및 업데이트 / 문해력 전문 지도사 과정)
+    const AN_TABS = [
+      { cat: '정기교육',     label: '📚 정기교육',              klass: 'training' },
+      { cat: '업데이트',     label: '🔔 활용안내 및 업데이트',   klass: 'update' },
+      { cat: '문해력지도사', label: '🎓 문해력 전문 지도사 과정', klass: 'instructor', badge: '오픈예정' },
+    ];
+
+    // 전체 모달 본문 그리기 — 상단 탭 + 활성 카테고리만 표시
     function renderAcademyNotices() {
       const body = document.getElementById('anModalBody');
       body.classList.remove('viewing-detail');
 
-      const headerHtml = (cat, label, klass) => {
-        const q = _anFilter[cat] || '';
-        const clearStyle = q ? '' : 'display:none;';
-        return `
-          <div class="an-section-header ${klass}">
-            <span class="an-section-label">${label}</span>
-            <div class="an-section-search" id="anSearchBox_${klass}" onclick="event.stopPropagation();">
-              <span class="an-search-icon">🔍</span>
-              <input type="text"
-                     id="anSearch_${klass}"
-                     value="${anEscape(q)}"
-                     placeholder="검색 (제목·내용)"
-                     autocomplete="off"
-                     oninput="onAcademyNoticeSearch('${anEscape(cat)}', this.value)"
-                     oncompositionstart="window._anComposing=true;"
-                     oncompositionend="window._anComposing=false; onAcademyNoticeSearch('${anEscape(cat)}', this.value);">
-              <button type="button" class="an-search-clear"
-                      style="${clearStyle}"
-                      onclick="event.stopPropagation(); clearAcademyNoticeSearch('${anEscape(cat)}');">×</button>
-            </div>
+      if (!AN_TABS.some(t => t.cat === _anActiveTab)) _anActiveTab = '정기교육';
+      const active = AN_TABS.find(t => t.cat === _anActiveTab);
+
+      const tabBar = `<div class="an-tabbar">` + AN_TABS.map(t => `
+        <button type="button" class="an-tab ${t.klass}${t.cat === _anActiveTab ? ' active' : ''}"
+                onclick="switchAcademyNoticeTab('${anEscape(t.cat)}')">
+          ${t.label}${t.badge ? `<span class="an-tab-badge">${t.badge}</span>` : ''}
+        </button>`).join('') + `</div>`;
+
+      const q = _anFilter[active.cat] || '';
+      const clearStyle = q ? '' : 'display:none;';
+      const headerHtml = `
+        <div class="an-section-header ${active.klass}">
+          <span class="an-section-label">${active.label}</span>
+          <div class="an-section-search" id="anSearchBox_${active.klass}" onclick="event.stopPropagation();">
+            <span class="an-search-icon">🔍</span>
+            <input type="text"
+                   id="anSearch_${active.klass}"
+                   value="${anEscape(q)}"
+                   placeholder="검색 (제목·내용)"
+                   autocomplete="off"
+                   oninput="onAcademyNoticeSearch('${anEscape(active.cat)}', this.value)"
+                   oncompositionstart="window._anComposing=true;"
+                   oncompositionend="window._anComposing=false; onAcademyNoticeSearch('${anEscape(active.cat)}', this.value);">
+            <button type="button" class="an-search-clear"
+                    style="${clearStyle}"
+                    onclick="event.stopPropagation(); clearAcademyNoticeSearch('${anEscape(active.cat)}');">×</button>
           </div>
-        `;
-      };
+        </div>`;
 
-      body.innerHTML = `
-        ${headerHtml('정기교육', '📚 정기교육', 'training')}
-        <div id="anList_training"></div>
-        <div class="an-section-divider"></div>
-        ${headerHtml('문해력지도사', '🎓 문해력 전문 지도사 과정', 'instructor')}
-        <div id="anList_instructor"></div>
-        <div class="an-section-divider"></div>
-        ${headerHtml('업데이트', '🔔 활용안내 및 업데이트', 'update')}
-        <div id="anList_update"></div>
-      `;
+      body.innerHTML = tabBar + headerHtml + `<div id="anList_${active.klass}"></div>`;
+      renderAcademyNoticeListOnly(active.cat);
+    }
 
-      // 리스트만 채움 (input은 위에서 한 번만 생성됨)
-      renderAcademyNoticeListOnly('정기교육');
-      renderAcademyNoticeListOnly('문해력지도사');
-      renderAcademyNoticeListOnly('업데이트');
+    // 탭 전환
+    function switchAcademyNoticeTab(cat) {
+      _anActiveTab = cat;
+      renderAcademyNotices();
+      const body = document.getElementById('anModalBody');
+      if (body) body.scrollTop = 0;
     }
 
     // 검색 입력 즉시 반영 — input 요소는 그대로 두고 리스트만 다시 그림
@@ -2088,8 +2117,9 @@
     }
 
     function openAcademyNoticeModal() {
-      // 모달을 새로 열 때 검색 필터 초기화
+      // 모달을 새로 열 때 검색 필터·활성 탭 초기화
       _anFilter = { '정기교육': '', '업데이트': '', '문해력지도사': '' };
+      _anActiveTab = '정기교육';
       document.getElementById('anModal').classList.add('show');
       loadAcademyNotices();
     }

@@ -7848,6 +7848,14 @@ canvas[id^="confetti-canvas"] {
         const response = await fetch('/api/session');
         const data = await response.json();
 
+        // 🔒 단일 세션: 다른 기기에서 로그인되어 이 기기가 로그아웃된 경우 (로드 시점)
+        if (data && data.kicked) {
+          try { localStorage.removeItem('currentStudent'); sessionStorage.removeItem('user'); } catch (e) {}
+          alert('⚠️ 다른 기기에서 로그인되어 로그아웃되었습니다.\n한 계정은 한 기기에서만 사용할 수 있어요.');
+          location.href = '/';
+          return;
+        }
+
         if (data.ok && data.user) {
           // 🛡️ view-as 모드(관리자가 학생 프리뷰) 감지 — localStorage.currentStudent와 세션 학생이 다르면 view-as
           //    이 경우 관리자 세션이 sessionStorage.user를 덮어쓰면 학생의 assignedSeries가 사라져 시리즈 표시가 깨짐

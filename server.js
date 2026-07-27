@@ -589,6 +589,39 @@ app.use(
   })
 );
 
+// ============================================================
+// 🔒 단일 세션(1계정 = 1기기) 강제 미들웨어
+//   - 다른 기기에서 로그인하면 User.activeSessionId가 갱신됨
+//   - 이 세션ID가 활성 세션ID와 다르면 = 다른 기기에 밀린 것 → 세션 파기 후 요청 거부
+//   - API 요청은 매번 검사(데이터 동작 즉시 차단), 페이지/자산 요청은 15초 캐시(부하 최소화)
+//   - 학생 세션(role:student)에만 적용 · activeSessionId 없는 계정은 미적용(점진 안전 적용)
+//   - DB 오류 시 기존 세션 유지(사고 방지)
+// ============================================================
+async function enforceSingleSession(req, res, next) {
+  try {
+    const su = req.session && req.session.user;
+    if (su && su._id && su.role === 'student') {
+      const isApi = req.path.startsWith('/api/');
+      const now = Date.now();
+      let doCheck = isApi;
+      if (!isApi && (now - (req.session._ssCheckedAt || 0) > 15000)) doCheck = true;
+      if (doCheck) {
+        const u = await User.findById(su._id).select('activeSessionId').lean();
+        if (!isApi) req.session._ssCheckedAt = now; // 페이지/자산만 캐시 타임스탬프 기록
+        if (u && u.activeSessionId && u.activeSessionId !== req.sessionID) {
+          return req.session.destroy(() => {
+            if (isApi) return res.status(401).json({ ok: false, kicked: true, error: 'session_superseded' });
+            if (req.method === 'GET' && req.accepts('html')) return res.redirect('/?kicked=1');
+            return res.status(401).end();
+          });
+        }
+      }
+    }
+  } catch (e) { /* 조회 실패 시 통과(기존 세션 유지) */ }
+  next();
+}
+app.use(enforceSingleSession);
+
 // 학생 로그인 페이지
 app.get("/student-login", (req, res) => {
   res.sendFile(path.join(__dirname, "public/student-login.html"));
@@ -1143,6 +1176,7 @@ const userSchema = new mongoose.Schema({
   id: String,
   pw: String,
   lastLogin: Date,
+  activeSessionId: String,   // 🔹 단일 세션: 현재 활성 기기의 세션ID (다른 기기 로그인 시 갱신 → 기존 기기 로그아웃)
   school: String,
   // 🔹 학원용: 학원명 (학교용은 school 필드 사용)
   academyName: String,
@@ -27280,9 +27314,11 @@ req.session.user = {
   maxUnitsPerSubject: user.maxUnitsPerSubject || 0,
 };
 
+// 🔒 단일 세션: 이 기기의 세션ID를 활성 세션으로 기록 (기존 다른 기기 세션은 무효화됨)
+req.session.user.sid = req.sessionID;
 await User.updateOne(
   { _id: user._id },
-  { $set: { lastLogin: new Date() } }
+  { $set: { lastLogin: new Date(), activeSessionId: req.sessionID } }
 );
 
 // 📱 학부모 알림 발송 (로그인)
@@ -27469,9 +27505,11 @@ app.post("/academy-login", async (req, res) => {
       maxUnitsPerSubject: user.maxUnitsPerSubject || 0,
     };
 
+    // 🔒 단일 세션: 이 기기의 세션ID를 활성 세션으로 기록 (기존 다른 기기 세션은 무효화됨)
+    req.session.user.sid = req.sessionID;
     await User.updateOne(
       { _id: user._id },
-      { $set: { lastLogin: new Date() } }
+      { $set: { lastLogin: new Date(), activeSessionId: req.sessionID } }
     );
 
     console.log("✅ 학원용 로그인 성공:", user.name, user.grade, user.academyName);
@@ -27501,12 +27539,21 @@ app.post("/academy-login", async (req, res) => {
 });
 
 // ✅ 세션 정보 조회 API (클라이언트에서 사용)
-app.get("/api/session", (req, res) => {
-  if (req.session && req.session.user) {
-    return res.json({ ok: true, user: req.session.user });
-  } else {
+app.get("/api/session", async (req, res) => {
+  if (!(req.session && req.session.user)) {
     return res.json({ ok: false, user: null });
   }
+  // 🔒 단일 세션 검사: 다른 기기에서 로그인하면 활성 세션ID가 바뀜 → 이 세션은 무효
+  try {
+    const uid = req.session.user._id;
+    if (uid) {
+      const u = await User.findById(uid).select('activeSessionId').lean();
+      if (u && u.activeSessionId && u.activeSessionId !== req.sessionID) {
+        return req.session.destroy(() => res.json({ ok: false, user: null, kicked: true }));
+      }
+    }
+  } catch (e) { /* 조회 실패 시 기존 세션 유지 (안전측) */ }
+  return res.json({ ok: true, user: req.session.user });
 });
 
 /* ============================================================
