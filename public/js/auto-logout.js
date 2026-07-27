@@ -22,9 +22,52 @@
       if (window.__ssKicked) return;
       window.__ssKicked = true;
       try { localStorage.removeItem('currentStudent'); sessionStorage.removeItem('user'); } catch (e) {}
-      alert('⚠️ 다른 기기에서 로그인되어 로그아웃되었습니다.\n한 계정은 한 기기에서만 사용할 수 있어요.');
-      location.href = '/';
+      showKickedModal();
     };
+
+    // 예쁜 로그아웃 안내 모달 (자체 스타일 · 어느 페이지에서든 동작)
+    function showKickedModal() {
+      var goLogin = function () { location.href = '/'; };
+      var body = document.body;
+      if (!body) { goLogin(); return; }
+
+      var st = document.createElement('style');
+      st.textContent =
+        '@keyframes ssFade{from{opacity:0}to{opacity:1}}' +
+        '@keyframes ssPop{0%{transform:scale(.82);opacity:0}60%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}' +
+        '@keyframes ssFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}';
+      document.head.appendChild(st);
+
+      var ov = document.createElement('div');
+      ov.setAttribute('style',
+        'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;' +
+        'padding:20px;background:rgba(18,22,38,.55);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);' +
+        'animation:ssFade .25s ease;font-family:"Noto Sans KR",-apple-system,BlinkMacSystemFont,sans-serif;');
+
+      var card = document.createElement('div');
+      card.setAttribute('style',
+        'background:#fff;border-radius:26px;max-width:350px;width:100%;padding:34px 26px 24px;text-align:center;' +
+        'box-shadow:0 26px 80px rgba(0,0,0,.4);animation:ssPop .4s cubic-bezier(.2,1.3,.4,1);');
+      card.innerHTML =
+        '<div style="font-size:64px;line-height:1;margin-bottom:8px;animation:ssFloat 2.4s ease-in-out infinite;">📱</div>' +
+        '<div style="font-size:22px;font-weight:800;color:#e0533a;margin-bottom:12px;letter-spacing:-.3px;">다른 기기에서 로그인되었어요</div>' +
+        '<div style="font-size:15px;font-weight:600;color:#5a6472;line-height:1.7;margin-bottom:24px;">' +
+        '한 계정은 <b style="color:#2b2f38;">한 기기에서만</b> 사용할 수 있어요.<br>이 기기는 안전하게 로그아웃됩니다.</div>' +
+        '<button id="__ssKickBtn" style="width:100%;border:none;cursor:pointer;font-family:inherit;font-weight:800;' +
+        'font-size:16px;color:#fff;background:linear-gradient(135deg,#ff8a3d,#ff5d5d);padding:16px;border-radius:16px;' +
+        'box-shadow:0 10px 22px rgba(255,90,60,.38);transition:transform .12s;">로그인 화면으로 이동</button>' +
+        '<div style="font-size:12px;color:#9aa3b0;font-weight:600;margin-top:12px;">잠시 후 자동으로 이동합니다…</div>';
+      ov.appendChild(card);
+      body.appendChild(ov);
+
+      var btn = document.getElementById('__ssKickBtn');
+      if (btn) {
+        btn.onclick = goLogin;
+        btn.onmousedown = function () { btn.style.transform = 'scale(.97)'; };
+        btn.onmouseup = function () { btn.style.transform = ''; };
+      }
+      setTimeout(goLogin, 4000); // 4초 후 자동 이동
+    }
 
     const _origFetch = window.fetch;
     if (_origFetch) {

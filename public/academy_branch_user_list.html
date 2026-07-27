@@ -1366,6 +1366,49 @@
   </div>
 
   <script>
+    // ===== 예쁜 확인/알림 모달 (브라우저 confirm/alert 대체) =====
+    function _uiModal(opts) {
+      return new Promise(function (resolve) {
+        if (!document.getElementById('_uiKf')) {
+          var kf = document.createElement('style'); kf.id = '_uiKf';
+          kf.textContent = '@keyframes uiPop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}@keyframes uiFade{from{opacity:0}to{opacity:1}}';
+          document.head.appendChild(kf);
+        }
+        var ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(18,22,38,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);animation:uiFade .2s ease;font-family:"Noto Sans KR",-apple-system,sans-serif;';
+        var okColor = opts.danger ? 'linear-gradient(135deg,#ff6b5d,#e0533a)' : 'linear-gradient(135deg,#667eea,#5a67d8)';
+        var okShadow = opts.danger ? 'rgba(224,83,58,.35)' : 'rgba(90,103,216,.35)';
+        var cancelBtn = opts.cancelText
+          ? '<button id="_uiCancel" style="flex:1;border:none;cursor:pointer;font-family:inherit;font-weight:800;font-size:15px;color:#5a6472;background:#eef1f6;padding:14px;border-radius:14px;">' + opts.cancelText + '</button>'
+          : '';
+        var card = document.createElement('div');
+        card.style.cssText = 'background:#fff;border-radius:22px;max-width:360px;width:100%;padding:28px 24px 22px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.35);animation:uiPop .3s cubic-bezier(.2,1.3,.4,1);';
+        card.innerHTML =
+          '<div style="font-size:52px;line-height:1;margin-bottom:10px;">' + (opts.icon || '❓') + '</div>' +
+          '<div style="font-size:19px;font-weight:800;color:#2b2f38;margin-bottom:' + (opts.message ? '10px' : '0') + ';letter-spacing:-.3px;">' + opts.title + '</div>' +
+          (opts.message ? '<div style="font-size:14px;font-weight:600;color:#5a6472;line-height:1.65;">' + opts.message + '</div>' : '') +
+          '<div style="display:flex;gap:10px;margin-top:22px;">' + cancelBtn +
+          '<button id="_uiOk" style="flex:1;border:none;cursor:pointer;font-family:inherit;font-weight:800;font-size:15px;color:#fff;background:' + okColor + ';padding:14px;border-radius:14px;box-shadow:0 8px 18px ' + okShadow + ';">' + (opts.confirmText || '확인') + '</button>' +
+          '</div>';
+        ov.appendChild(card); document.body.appendChild(ov);
+        function close(v) { ov.remove(); resolve(v); }
+        card.querySelector('#_uiOk').onclick = function () { close(true); };
+        var c = card.querySelector('#_uiCancel'); if (c) c.onclick = function () { close(false); };
+        ov.onclick = function (e) { if (e.target === ov && opts.cancelText) close(false); };
+      });
+    }
+    function uiConfirm(title, message, opts) { opts = opts || {}; return _uiModal({ icon: opts.icon || '🗑️', title: title, message: message, confirmText: opts.confirmText || '삭제', cancelText: opts.cancelText || '취소', danger: opts.danger !== false }); }
+    function uiAlert(title, message, icon) { return _uiModal({ icon: icon || '✅', title: title, message: message, confirmText: '확인' }); }
+    // 기존 alert(...) 호출을 전부 예쁜 모달로 (줄바꿈·특수문자 처리, 이모지로 성공/오류 자동 아이콘)
+    window.alert = function (msg) {
+      var s = String(msg == null ? '' : msg);
+      var icon = /✅|완료|성공/.test(s) ? '✅' : (/❌|실패|오류|에러/.test(s) ? '❌' : 'ℹ️');
+      var title = /✅|완료|성공/.test(s) ? '완료' : (/❌|실패|오류|에러/.test(s) ? '오류' : '알림');
+      var html = s.replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; })
+                  .replace(/^[✅❌⚠️ℹ️]\s*/, '').replace(/\n/g, '<br>');
+      uiAlert(title, html, icon);
+    };
+
     const ADMIN_KEY = "DandanAdminKey!";
     let currentAcademyName = "";
     let deleteTargetId = "";
@@ -1752,8 +1795,7 @@
           return;
         }
 
-        const confirmMsg = `선택한 ${selectedIds.length}명의 학생을 영구 삭제하시겠습니까?\n\n⚠️ 삭제 후 데이터는 복원되지 않습니다.`;
-        if (!confirm(confirmMsg)) return;
+        if (!(await uiConfirm(`선택한 ${selectedIds.length}명 영구 삭제`, `선택한 학생을 영구 삭제할까요?<br><span style="color:#e0533a;font-weight:800;">삭제 후 데이터는 복원되지 않아요.</span>`))) return;
 
         try {
           const res = await fetch('/api/branch/hard-delete-user', {
@@ -2346,7 +2388,7 @@
 
     // 스케줄 삭제
     async function deleteSchedule(scheduleId, grade, name) {
-      if (!confirm('이 스케줄을 삭제하시겠습니까?')) {
+      if (!(await uiConfirm('스케줄 삭제', '이 자동과제 스케줄을 삭제할까요?'))) {
         return;
       }
 
