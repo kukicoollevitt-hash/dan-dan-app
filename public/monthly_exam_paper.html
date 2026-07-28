@@ -76,6 +76,53 @@
   .page-foot.fl { left: var(--page-pad-h); }
   .page-foot.fr { right: var(--page-pad-h); }
 
+  /* ─── 표지 (첫 페이지) ─── */
+  .cover {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    text-align: center;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .cover-logo { width: 44mm; height: auto; margin-top: 11mm; }
+  .cover-title { font-size: 39pt; font-weight: 900; color: #111; margin-top: 11mm; letter-spacing: 2px; white-space: nowrap; }
+  .cover-title .cover-lv { color: #1a3d7c; }
+  .cover-round {
+    font-size: 16pt; font-weight: 800; color: #fff; background: #1a3d7c;
+    padding: 2mm 9mm; border-radius: 30px; margin-top: 7mm; letter-spacing: 2px;
+  }
+  .cover-info { font-size: 11pt; color: #555; margin-top: 5mm; letter-spacing: 1px; }
+  .cover-fields { display: flex; gap: 12mm; margin-top: 14mm; }
+  .cover-box {
+    display: flex; align-items: center; gap: 6mm;
+    border: 2px solid var(--ink); border-radius: 2.5mm;
+    padding: 6mm 8mm; min-width: 66mm;
+  }
+  .cover-box-lbl { font-size: 13pt; font-weight: 800; color: #222; flex-shrink: 0; letter-spacing: 1px; }
+  .cover-box-line { flex: 1; border-bottom: 1.5px solid #888; height: 8mm; }
+  .cover-notes { align-self: stretch; margin: 12mm 4mm 0; border-top: 1.5px solid #aaa; padding-top: 5mm; text-align: left; }
+  .cover-notes .nt { font-size: 10.5pt; color: #333; line-height: 1.75; display: flex; gap: 2.5mm; margin-bottom: 2mm; }
+  .cover-notes .nt::before { content: '▸'; color: #1a3d7c; font-weight: 900; flex-shrink: 0; }
+  .cover-sign {
+    align-self: stretch; margin: 9mm 4mm 0; border: 2px solid var(--ink); border-radius: 3mm;
+    padding: 5mm 7mm 6mm; text-align: left;
+  }
+  .cover-sign .sh { font-size: 12pt; font-weight: 800; color: #111; margin-bottom: 1.5mm; }
+  .cover-sign .sd { font-size: 9.5pt; color: #666; margin-bottom: 4mm; }
+  .cover-sign .sp {
+    font-size: 15pt; font-weight: 800; color: #1a3d7c; letter-spacing: 1px;
+    text-align: center; margin-bottom: 9mm;
+  }
+  .cover-sign .sgrid {
+    display: flex; flex-wrap: nowrap; justify-content: center; gap: 1.5mm;
+  }
+  .cover-sign .sq {
+    flex: 1 1 0; min-width: 0; max-width: 12mm;
+    aspect-ratio: 1 / 1;             /* 글자 수와 무관하게 한 줄에 채워 정사각 유지 */
+    border: 1.3px solid var(--ink); border-radius: 1mm;
+  }
+  .cover-sign .sq-sp { border-style: dashed; border-color: #bbb; } /* 띄어쓰기 칸 */
+  .cover-foot { margin-top: auto; font-size: 8.5pt; color: #999; padding-top: 6mm; letter-spacing: .5px; }
+
   /* ─── 머리말 (1페이지 상단) ─── */
   .paper-head {
     border: 2.5px solid var(--ink);
@@ -237,6 +284,22 @@
 
 <script>
   const CIRCLED = ['①','②','③','④','⑤'];
+  // 회차별 필적 확인 문구 (정자로 기재) — 문해·성장 테마의 고운 문장
+  const HANDWRITING = [
+    '하늘은 맑고 바다는 푸르다',
+    '봄바람에 꽃잎이 곱게 흩날린다',
+    '책 속에 길이 있고 꿈이 자란다',
+    '별빛은 어둠 속에서 더욱 빛난다',
+    '맑은 물은 돌 틈으로 굽이쳐 흐른다',
+    '한 걸음씩 오르면 높은 산도 넘는다',
+    '아침 해가 온 세상을 환히 비춘다',
+    '작은 씨앗이 큰 나무로 자란다',
+    '글을 읽는 마음이 세상을 넓힌다',
+    '바람은 쉬지 않고 강물은 흐른다',
+    '새벽이슬 머금은 풀잎이 반짝인다',
+    '오늘의 땀방울이 내일의 열매가 된다',
+  ];
+  const LOGO_SRC = 'images/%EB%B8%8C%EB%A0%88%EC%9D%B8%EB%AC%B8%ED%95%B4%EB%A0%A5%EB%A1%9C%EA%B3%A0_%ED%88%AC%EB%AA%85.png';
   const params = new URLSearchParams(location.search);
   const level = params.get('level') === 'mid' ? 'mid' : 'elem';
   const round = Math.min(12, Math.max(1, parseInt(params.get('round') || '1', 10) || 1));
@@ -322,7 +385,44 @@
       return e;
     }
 
-    newPage(true);
+    // 학생용 시험지에는 맨 앞에 표지 1페이지 (교사용/해설지는 제외)
+    if (!showAnswers) {
+      const phrase = HANDWRITING[(round - 1) % HANDWRITING.length];
+      const cover = document.createElement('div');
+      cover.className = 'page';
+      cover.innerHTML = `
+        <div class="cover">
+          <img class="cover-logo" src="${LOGO_SRC}" alt="브레인 문해력">
+          <div class="cover-title">브레인 <span class="cover-lv">${levelKo}</span> 문해 모의고사</div>
+          <div class="cover-round">제 ${round} 회차</div>
+          <div class="cover-info">${d.totalQuestions}문항 · ${d.totalMinutes}분 · ${d.totalScore}점 만점</div>
+          <div class="cover-fields">
+            <div class="cover-box">
+              <div class="cover-box-lbl">학년</div>
+              <div class="cover-box-line"></div>
+            </div>
+            <div class="cover-box">
+              <div class="cover-box-lbl">이름</div>
+              <div class="cover-box-line"></div>
+            </div>
+          </div>
+          <div class="cover-notes">
+            <div class="nt">문제지의 해당란에 <b>학년</b>과 <b>성명</b>을 정확히 기재하시오.</div>
+            <div class="nt">시험지를 다 푼 이후에는 <b>답안지를 문해프로그램에 입력</b>해 주세요.</div>
+          </div>
+          <div class="cover-sign">
+            <div class="sh">■ 필적 확인란</div>
+            <div class="sd">아래 문구를 정자로 또박또박 기재하시오.</div>
+            <div class="sp">“${phrase}”</div>
+            <div class="sgrid">${phrase.split('').map(ch => `<span class="sq${ch === ' ' ? ' sq-sp' : ''}"></span>`).join('')}</div>
+          </div>
+          <div class="cover-foot">브레인 월말 문해 모의고사 ${round}회차</div>
+        </div>`;
+      sheet.appendChild(cover);
+    }
+
+    // 학생용은 표지에 정보가 있으니 문제 첫 장 머리말 생략 · 교사용/해설지는 머리말 유지
+    newPage(showAnswers);
 
     d.passages.forEach(p => {
       const qs = p.questions || [];
@@ -388,9 +488,12 @@
       `));
     }
 
-    /* 페이지 하단: 중앙 번호 + 좌우 꼬리말 */
+    /* 페이지 하단: 중앙 번호 + 좌우 꼬리말 (표지는 번호·꼬리말 없음, 문제 첫 장부터 -1-) */
+    const hasCover = !showAnswers;
     sheet.querySelectorAll('.page').forEach((pg, i) => {
-      pg.appendChild(el('div', 'page-num', `- ${i + 1} -`));
+      if (hasCover && i === 0) return; // 표지 건너뜀 (자체 푸터 있음)
+      const num = hasCover ? i : (i + 1);
+      pg.appendChild(el('div', 'page-num', `- ${num} -`));
       pg.appendChild(el('div', 'page-foot fl', 'Brain Literacy Exam'));
       pg.appendChild(el('div', 'page-foot fr', `${levelKo}문해모의고사`));
     });
