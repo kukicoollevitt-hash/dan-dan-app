@@ -69266,9 +69266,37 @@
       }
     }
 
-    // pdf-lib로 최종 PDF 병합: front + frontBack + innerPng(이미지로 박힌 페이지) + commonPdfs + bodyJsPdf + backBack + band
+    // ─── 권별 목차 2장 로드 (전체 기준 10/11 페이지) ───
+    //   폴더: /images/권당목차/{시리즈} 시리즈1~12권 목차/pageNN_1.jpg
+    //   각 권 = 3장(구분표지 + 목차2장) → N권 목차 = page(3N-1), page(3N)
+    async function loadVolumeTocImages(seriesKor, volNum) {
+      const folder = encodeURIComponent('권당목차');
+      const sub = encodeURIComponent(`${seriesKor} 시리즈1~12권 목차`);
+      const p1 = String(3 * volNum - 1).padStart(2, '0');
+      const p2 = String(3 * volNum).padStart(2, '0');
+      const urls = [
+        `/images/${folder}/${sub}/page${p1}_1.jpg`,
+        `/images/${folder}/${sub}/page${p2}_1.jpg`
+      ];
+      const loadOne = (url) => new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth || 794;
+          c.height = img.naturalHeight || 1123;
+          c.getContext('2d').drawImage(img, 0, 0);
+          try { resolve(c.toDataURL('image/jpeg', 0.95)); } catch (e) { resolve(null); }
+        };
+        img.onerror = () => { console.warn('권 목차 로드 실패:', url); resolve(null); };
+        img.src = url;
+      });
+      return Promise.all(urls.map(loadOne));
+    }
+
+    // pdf-lib로 최종 PDF 병합: front + frontBack + innerPng(이미지로 박힌 페이지) + commonPdfs + [목차2장] + bodyJsPdf + backBack + band
     // 모든 PDF 페이지는 A4 (210×297mm) 로 통일됨 (필요시 스케일)
-    async function mergeFinalPdf({ frontBytes, frontBackBytes, innerPngDataUrl, commonPdfsBytes, bodyJsPdfBytes, backBackBytes, bandBytes }) {
+    async function mergeFinalPdf({ frontBytes, frontBackBytes, innerPngDataUrl, commonPdfsBytes, tocImageDataUrls, bodyJsPdfBytes, backBackBytes, bandBytes }) {
       const { PDFDocument, PageSizes } = window.PDFLib;
       const merged = await PDFDocument.create();
       const [A4_W, A4_H] = PageSizes.A4; // [595.28, 841.89] points
@@ -69304,6 +69332,14 @@
       // 4) 교재공용 6장 PDF
       for (const bytes of (commonPdfsBytes || [])) {
         await addFirstPageFromBytes(bytes);
+      }
+      // 4-b) 권별 목차 2장 (이미지 → 새 페이지 임베드) — 전체 기준 10·11 페이지
+      for (const dataUrl of (tocImageDataUrls || [])) {
+        if (!dataUrl) continue;
+        const isPng = String(dataUrl).startsWith('data:image/png');
+        const img = isPng ? await merged.embedPng(dataUrl) : await merged.embedJpg(dataUrl);
+        const page = merged.addPage([A4_W, A4_H]);
+        page.drawImage(img, { x: 0, y: 0, width: A4_W, height: A4_H });
       }
       // 5) 본문 jsPDF (메모장 + 주차 표지 + 어휘 + 28강)
       await addAllPagesFromBytes(bodyJsPdfBytes);
@@ -69431,6 +69467,8 @@
         const commonPdfsBytes = await loadCommonPdfs();
         if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 속지 로드 중...</span>`;
         const innerPngDataUrl = await loadVolumeInnerImage('브레인온', volNum);
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 목차 2장 로드 중...</span>`;
+        const tocImageDataUrls = await loadVolumeTocImages('브레인온', volNum);
 
         const totalPages = 3 + commonPdfsBytes.filter(Boolean).length + 1 + prebuilt.length + 2; // 앞표지+25+속지 + 공용 + 메모장 + 본문 + 26+띠지
 
@@ -69537,6 +69575,7 @@
           frontBackBytes: coverPdfs.frontBack,
           innerPngDataUrl,
           commonPdfsBytes,
+          tocImageDataUrls,
           bodyJsPdfBytes,
           backBackBytes: coverPdfs.backBack,
           bandBytes: coverPdfs.band
@@ -69633,6 +69672,8 @@
         const commonPdfsBytes = await loadCommonPdfs();
         if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 속지 로드 중...</span>`;
         const innerPngDataUrl = await loadVolumeInnerImage('브레인업', volNum);
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 목차 2장 로드 중...</span>`;
+        const tocImageDataUrls = await loadVolumeTocImages('브레인업', volNum);
 
         const totalPages = 3 + commonPdfsBytes.filter(Boolean).length + 1 + prebuilt.length + 2;
 
@@ -69734,6 +69775,7 @@
           frontBackBytes: coverPdfs.frontBack,
           innerPngDataUrl,
           commonPdfsBytes,
+          tocImageDataUrls,
           bodyJsPdfBytes,
           backBackBytes: coverPdfs.backBack,
           bandBytes: coverPdfs.band
@@ -69830,6 +69872,8 @@
         const commonPdfsBytes = await loadCommonPdfs();
         if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 속지 로드 중...</span>`;
         const innerPngDataUrl = await loadVolumeInnerImage('브레인핏', volNum);
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 목차 2장 로드 중...</span>`;
+        const tocImageDataUrls = await loadVolumeTocImages('브레인핏', volNum);
 
         const totalPages = 3 + commonPdfsBytes.filter(Boolean).length + 1 + prebuilt.length + 2;
 
@@ -69931,6 +69975,7 @@
           frontBackBytes: coverPdfs.frontBack,
           innerPngDataUrl,
           commonPdfsBytes,
+          tocImageDataUrls,
           bodyJsPdfBytes,
           backBackBytes: coverPdfs.backBack,
           bandBytes: coverPdfs.band
@@ -70027,6 +70072,8 @@
         const commonPdfsBytes = await loadCommonPdfs();
         if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 속지 로드 중...</span>`;
         const innerPngDataUrl = await loadVolumeInnerImage('브레인딥', volNum);
+        if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>권 목차 2장 로드 중...</span>`;
+        const tocImageDataUrls = await loadVolumeTocImages('브레인딥', volNum);
 
         const totalPages = 3 + commonPdfsBytes.filter(Boolean).length + 1 + prebuilt.length + 2;
 
@@ -70128,6 +70175,7 @@
           frontBackBytes: coverPdfs.frontBack,
           innerPngDataUrl,
           commonPdfsBytes,
+          tocImageDataUrls,
           bodyJsPdfBytes,
           backBackBytes: coverPdfs.backBack,
           bandBytes: coverPdfs.band
