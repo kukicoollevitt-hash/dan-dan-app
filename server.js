@@ -914,9 +914,13 @@ app.get("/api/academies", async (req, res) => {
     // 두 목록 합치기 (중복 제거)
     const allAcademies = [...new Set([...adminAcademies, ...userAcademies])];
 
-    // 빈 값 제거 및 정렬
+    // 로그인 센터 목록에서 숨길 이름 (센터명 변경 등으로 남은 옛 이름)
+    //   · 꿀잼센터 → 방화센터로 변경됨 (학생 데이터는 유지, 목록에서만 제외)
+    const HIDDEN_ACADEMIES = ['브레인문해력_꿀잼센터'];
+
+    // 빈 값·숨김 대상 제거 및 정렬
     const academies = allAcademies
-      .filter(name => name && name.trim() && name !== "어드민")
+      .filter(name => name && name.trim() && name !== "어드민" && !HIDDEN_ACADEMIES.includes(name))
       .sort((a, b) => a.localeCompare(b, "ko"));
 
     res.json({ ok: true, academies });
@@ -2270,13 +2274,14 @@ app.get("/academy/behavior-data", requireAdminLogin, (req, res) => {
 // ✅ 학원 관리자: 관문 통과 기록 API (학원명 필터) - 최적화 버전
 app.get("/api/academy/gate-passes", requireAdminLogin, async (req, res) => {
   try {
-    const academyName = req.session.admin?.academyName;
+    const sessionAdmin = req.session.viewingBranch || req.session.admin;
+    const academyName = sessionAdmin?.academyName;
     if (!academyName) {
       return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
     }
 
     // 1. 해당 학원 학생 목록을 먼저 조회 (본명 + 별칭 모두 포함)
-    const academyNames = getAdminAcademyNames(req.session.admin);
+    const academyNames = getAdminAcademyNames(sessionAdmin);
     const academyUsers = await User.find({ academyName: { $in: academyNames } }).select('grade name').lean();
 
     // 2. grade+name 조합으로 Set 생성 (빠른 검색용)
@@ -2342,7 +2347,8 @@ app.get("/api/academy/gate-passes", requireAdminLogin, async (req, res) => {
 // ✅ 학원 관리자: 관문 상세 정보 API
 app.get("/api/academy/gate-pass-details", requireAdminLogin, async (req, res) => {
   try {
-    const academyName = req.session.admin?.academyName;
+    const sessionAdmin = req.session.viewingBranch || req.session.admin;
+    const academyName = sessionAdmin?.academyName;
     if (!academyName) {
       return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
     }
@@ -2354,7 +2360,7 @@ app.get("/api/academy/gate-pass-details", requireAdminLogin, async (req, res) =>
     }
 
     // 학원 소속 학생인지 확인 (본명 + 별칭 모두 허용)
-    const academyNames = getAdminAcademyNames(req.session.admin);
+    const academyNames = getAdminAcademyNames(sessionAdmin);
     const user = await User.findOne({ grade, name }).lean();
     if (!user || !academyNames.includes(user.academyName)) {
       return res.json({ ok: false, message: "해당 학생 정보를 찾을 수 없습니다." });
@@ -2450,13 +2456,14 @@ app.get("/api/academy/gate-pass-details", requireAdminLogin, async (req, res) =>
 // ✅ 학원 관리자: 학습 행동 데이터 API (학원명 필터) - 최적화 버전
 app.get("/api/academy/learning-behaviors", requireAdminLogin, async (req, res) => {
   try {
-    const academyName = req.session.admin?.academyName;
+    const sessionAdmin = req.session.viewingBranch || req.session.admin;
+    const academyName = sessionAdmin?.academyName;
     if (!academyName) {
       return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
     }
 
     // 1. 해당 학원 학생 목록을 먼저 조회 (본명 + 별칭 모두 포함)
-    const academyNames = getAdminAcademyNames(req.session.admin);
+    const academyNames = getAdminAcademyNames(sessionAdmin);
     const academyUsers = await User.find({ academyName: { $in: academyNames } }).select('grade name').lean();
 
     // 2. grade+name 조합으로 Set 생성 (빠른 검색용)
@@ -2491,13 +2498,14 @@ app.get("/api/academy/learning-behaviors", requireAdminLogin, async (req, res) =
 // ✅ 학원용 중간평가 대상 학생 조회 API
 app.get("/api/academy/midterm-pending", requireAdminLogin, async (req, res) => {
   try {
-    const academyName = req.session.admin?.academyName;
+    const sessionAdmin = req.session.viewingBranch || req.session.admin;
+    const academyName = sessionAdmin?.academyName;
     if (!academyName) {
       return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
     }
 
     // 해당 학원 학생 목록 조회 (본명 + 별칭)
-    const academyNames = getAdminAcademyNames(req.session.admin);
+    const academyNames = getAdminAcademyNames(sessionAdmin);
     const academyUsers = await User.find({ academyName: { $in: academyNames } }).select('grade name school').lean();
     const studentKeys = new Set(academyUsers.map(u => `${u.grade}||${u.name}`));
     const studentMap = {};
