@@ -1484,14 +1484,15 @@
       });
     });
 
-    async function fetchBranchStudents(q = "", sort = "") {
+    async function fetchBranchStudents(q = "", sort = "", _retry = 0) {
+      const MAX_RETRY = 2;   // 검색어 없는 전체목록이 일시적으로 비면 자동 재시도 (새로고침 대체)
       const tbody = document.getElementById("student-tbody");
       const errorBox = document.getElementById("error-box");
       errorBox.style.display = "none";
 
       tbody.innerHTML = `
         <tr class="empty-row">
-          <td colspan="13">학생 목록을 불러오는 중입니다…</td>
+          <td colspan="13">학생 목록을 불러오는 중입니다…${_retry ? ` (재시도 ${_retry}/${MAX_RETRY})` : ''}</td>
         </tr>
       `;
 
@@ -1502,6 +1503,7 @@
 
         const res = await fetch("/api/branch/users" + params, {
           credentials: "include",
+          cache: "no-store",
         });
 
         if (!res.ok) throw new Error("HTTP " + res.status);
@@ -1509,8 +1511,20 @@
         const data = await res.json();
         const list = data.students || data.users || [];
 
+        // 🔁 전체 목록(검색어 없음)인데 비어있으면 일시적 응답 가능성 → 자동 재시도
+        //    (학생이 있는데 "표시할 학생이 없습니다"가 뜨고 새로고침해야 되던 현상 보완)
+        if (list.length === 0 && !q && _retry < MAX_RETRY) {
+          await new Promise(r => setTimeout(r, 500 + _retry * 400));
+          return fetchBranchStudents(q, sort, _retry + 1);
+        }
+
         renderTable(list);
       } catch (err) {
+        // 네트워크/일시 오류도 전체목록 로드면 자동 재시도
+        if (!q && _retry < MAX_RETRY) {
+          await new Promise(r => setTimeout(r, 500 + _retry * 400));
+          return fetchBranchStudents(q, sort, _retry + 1);
+        }
         tbody.innerHTML = `
           <tr class="empty-row">
             <td colspan="13">❌ 학생 목록을 불러오는 중 오류가 발생했습니다.</td>
