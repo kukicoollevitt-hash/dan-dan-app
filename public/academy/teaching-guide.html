@@ -1526,6 +1526,76 @@
       vertical-align: middle;
     }
 
+    /* 📖 본문 읽기 표시 — 핵심어 네모 · 중심 문장 밑줄 */
+    .tg-mark-legend {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #64748b;
+      margin-left: 8px;
+      vertical-align: middle;
+      letter-spacing: normal;
+    }
+    .tg-mark-guide {
+      background: #eff6ff;
+      border-left: 3px solid #2563eb;
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      font-size: 12.5px;
+      color: #1e40af;
+      line-height: 1.5;
+    }
+    .tg-passage-wrap {
+      background: #fffdf7;
+      border: 1px solid #f0e6cf;
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+    .tg-para {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .tg-para:last-child { margin-bottom: 0; }
+    .tg-para-num {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent, #d9822b);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 4px;
+    }
+    .tg-para-text {
+      flex: 1;
+      font-size: 15px;
+      line-height: 2.15;
+      color: #333;
+    }
+    /* 핵심어 네모 */
+    .tg-key {
+      display: inline-block;
+      border: 1.6px solid #d9822b;
+      border-radius: 5px;
+      padding: 0 5px;
+      margin: 0 1px;
+      font-weight: 700;
+      color: #b45309;
+      background: #fff7ec;
+      line-height: 1.4;
+    }
+    /* 중심 문장 밑줄 */
+    .tg-mid {
+      border-bottom: 2.5px solid #2563eb;
+      padding-bottom: 1px;
+      background: linear-gradient(transparent 62%, rgba(37,99,235,0.10) 62%);
+    }
+
     /* 문단별 중심내용 */
     .paragraph-list {
       list-style: none;
@@ -60986,6 +61056,118 @@
     }
     window.downloadAllWorkbookPDF = downloadAllWorkbookPDF;
 
+    // 📖 본문 읽기 표시: 핵심어 네모 + 중심 문장 밑줄 (네모+밑줄만 읽어도 중심내용 완성)
+    // 핵심어(네모) = 기존 <b> ∪ 중심내용(paragraphMain)에 등장하는 명사(어절 시작, 불용어·동사어미 제외)
+    //   · 우선순위 <b> → 짧은 명사, 문단당 최대 CAP개, 앞 문단에 이미 나온 네모는 반복 안 함(글로벌 중복 제거)
+    // 밑줄 = 중심내용과 단어 겹침이 큰 문장 (한 문단 전 문장이면 상위 2문장만)
+    function buildMarkedPassage(passages, mains) {
+      if (!Array.isArray(passages) || passages.length === 0) return '';
+      const CAP = 5; // 문단당 네모 상한
+      const STOP = new Set(['살아','있는','있지','않은','없는','여러','모든','서로','함께','다시','매우','아주','바로','이런','그런','우리','또한','그리고','하지만','통해','통한','위해','위한','대해','대한','중요','관계','이해','활동','과정','방법','모습','다양','존재','주변','가지','스스로','구분','예시','눈에','따라','없이','항상','처음','오랜','점점','같이','모두','얼마','이후','이제','정말','무척']);
+      const JOSA = '의은는이가을를과와에도로으인란만께서';
+      const BAD_END = '다지게며고은는을운던'; // 동사·관형형 어미 컷 (참여·태도·나라 등 명사는 보존)
+      const stripTags = s => String(s).replace(/<[^>]+>/g, '');
+      const stemOf = tok => { let s = tok; while (s.length > 2 && JOSA.includes(s[s.length - 1])) s = s.slice(0, -1); return s; };
+      const keywordsOf = m => String(m || '').split(/[^가-힣]+/).filter(w => w.length >= 2);
+      const isBoundary = ch => ch === undefined || ' \t,.·、。()'.includes(ch);
+      const scoreSentence = (txt, kws) => {
+        let s = 0;
+        for (const k of kws) {
+          if (txt.includes(k)) { s++; continue; }
+          if (k.length >= 3 && txt.includes(k.slice(0, -1))) { s++; }
+        }
+        return s;
+      };
+      // 문장 HTML에서 word를 첫 어절-시작 1회 네모 처리 (<b>word</b> 우선, 없으면 평문)
+      // 기존 <b>/네모 span 내부는 건드리지 않음. 이미 처리된 word(boxedDone)는 skip.
+      const boxInto = (html, word, boxedDone) => {
+        if (boxedDone.has(word)) return html;
+        const bt = '<b>' + word + '</b>';
+        const bi = html.indexOf(bt);
+        if (bi >= 0) { boxedDone.add(word); return html.slice(0, bi) + '<span class="tg-key">' + word + '</span>' + html.slice(bi + bt.length); }
+        let i = 0, out = '', inKey = false;
+        while (i < html.length) {
+          if (html.startsWith('<span class="tg-key">', i)) { const e = html.indexOf('>', i) + 1; out += html.slice(i, e); i = e; inKey = true; continue; }
+          if (inKey && html.startsWith('</span>', i)) { out += '</span>'; i += 7; inKey = false; continue; }
+          if (html[i] === '<') { const e = html.indexOf('>', i); out += html.slice(i, e + 1); i = e + 1; continue; }
+          if (!inKey && html.startsWith(word, i) && (i === 0 || isBoundary(html[i - 1]) || out.endsWith('>'))) {
+            out += '<span class="tg-key">' + word + '</span>' + html.slice(i + word.length);
+            boxedDone.add(word);
+            return out;
+          }
+          out += html[i]; i++;
+        }
+        return out;
+      };
+
+      const used = new Set(); // 글로벌 중복 제거 — 앞 문단에서 쓴 네모는 뒷문단에서 생략
+      let body = '';
+      passages.forEach((para, i) => {
+        const paraStr = String(para);
+        const plain = stripTags(paraStr);
+        const kws = keywordsOf((mains && mains[i]) || '');
+        const bWords = (paraStr.match(/<b>([\s\S]*?)<\/b>/g) || []).map(x => stripTags(x));
+        // 후보: <b>(작가 지정) 우선 → 중심내용 파생 명사(짧은 순)
+        const cand = [];
+        bWords.forEach(b => { if (!cand.includes(b)) cand.push(b); });
+        const derived = [], seen = new Set();
+        kws.forEach(tok => {
+          const st = stemOf(tok);
+          if (st.length < 2 || STOP.has(st) || seen.has(st)) return;
+          if (BAD_END.includes(st[st.length - 1])) return;       // 명사 필터 강화
+          if (bWords.some(b => b.includes(st))) return;
+          let ok = false;
+          for (let idx = plain.indexOf(st); idx >= 0; idx = plain.indexOf(st, idx + 1)) {
+            if (isBoundary(plain[idx - 1])) { ok = true; break; }
+          }
+          if (ok) { derived.push(st); seen.add(st); }
+        });
+        derived.sort((a, b) => a.length - b.length); // 짧은 명사 우선
+        derived.forEach(d => { if (!cand.includes(d)) cand.push(d); });
+        // 상한 + 반복 제거
+        const box = [];
+        for (const w of cand) {
+          if (used.has(w)) continue;
+          box.push(w);
+          if (box.length >= CAP) break;
+        }
+        box.forEach(w => used.add(w));
+        const boxSorted = [...box].sort((a, b) => b.length - a.length); // 긴 단어 먼저(무생물→생물)
+
+        // 문장 분리 → 밑줄 점수
+        const sentences = paraStr.split(/(?<=\.)\s+/).filter(s => s.trim());
+        const scored = sentences.map(sen => ({ sen, sc: scoreSentence(stripTags(sen), kws) }));
+        const maxSc = scored.reduce((m, o) => Math.max(m, o.sc), 0);
+        const threshold = maxSc >= 2 ? 2 : (maxSc >= 1 ? 1 : 99);
+        let chosen = scored.map((o, j) => (o.sc >= threshold && o.sc >= 1) ? j : -1).filter(j => j >= 0);
+        // 전 문장이 밑줄이면(중복) 점수 상위 2문장만
+        if (chosen.length === sentences.length && sentences.length > 2) {
+          chosen = scored.map((o, j) => j).sort((a, b) => scored[b].sc - scored[a].sc).slice(0, 2).sort((a, b) => a - b);
+        }
+        const underline = new Set(chosen);
+
+        const boxedDone = new Set(); // 문단 내 첫 등장만
+        const marked = scored.map(({ sen }, j) => {
+          let h = sen;
+          for (const w of boxSorted) h = boxInto(h, w, boxedDone);
+          if (underline.has(j)) h = `<span class="tg-mid">${h}</span>`;
+          return h;
+        }).join(' ');
+
+        body += `
+          <div class="tg-para">
+            <span class="tg-para-num">${i + 1}</span>
+            <span class="tg-para-text">${marked}</span>
+          </div>`;
+      });
+      return `
+        <div class="detail-section">
+          <h4>📖 본문 읽기 표시 <span class="tg-mark-legend"><span class="tg-key">핵심어</span> 네모 · <span class="tg-mid">중심 문장</span> 밑줄</span></h4>
+          <div class="tg-mark-guide">네모(핵심어)와 밑줄(중심 문장)만 이어 읽으면 각 문단의 중심내용이 완성됩니다.</div>
+          <div class="tg-passage-wrap">${body}</div>
+        </div>`;
+    }
+
     function renderUnitDetail(data, unitKey) {
       let html = '';
       const guideData = TEACHER_GUIDES[unitKey];
@@ -61009,27 +61191,10 @@
         `;
       }
 
-      // 1. 문단별 중심내용
-      html += `
-        <div class="detail-section">
-          <h4>📌 문단별 중심내용</h4>
-          <ul class="paragraph-list">
-      `;
-      if (data.paragraphMain && data.paragraphMain.length > 0) {
-        data.paragraphMain.forEach((content, idx) => {
-          html += `
-            <li class="paragraph-item">
-              <span class="paragraph-num">${idx + 1}</span>
-              <span class="paragraph-content">${content}</span>
-            </li>
-          `;
-        });
-      } else {
-        html += `<li class="paragraph-item"><span class="paragraph-content" style="color: #9ca3af; font-style: italic;">(문단별 중심내용 데이터 없음)</span></li>`;
-      }
-      html += `</ul></div>`;
+      // 📖 본문 읽기 표시 (핵심어 네모 · 중심 문장 밑줄) — 맨 위
+      html += buildMarkedPassage(data.passage, data.paragraphMain);
 
-      // 2. 5개 지수 문제풀이 정답 및 해설
+      // 1. 5개 지수 문제풀이 정답 및 해설
       html += `<div class="detail-section">
         <h4>📝 5개 지수 문제풀이 정답 및 해설</h4>
       `;
@@ -61107,6 +61272,26 @@
         html += `<div class="quiz-no-data">(문제풀이 데이터가 없습니다)</div>`;
       }
       html += `</div>`;
+
+      // 2. 문단별 중심내용
+      html += `
+        <div class="detail-section">
+          <h4>📌 문단별 중심내용</h4>
+          <ul class="paragraph-list">
+      `;
+      if (data.paragraphMain && data.paragraphMain.length > 0) {
+        data.paragraphMain.forEach((content, idx) => {
+          html += `
+            <li class="paragraph-item">
+              <span class="paragraph-num">${idx + 1}</span>
+              <span class="paragraph-content">${content}</span>
+            </li>
+          `;
+        });
+      } else {
+        html += `<li class="paragraph-item"><span class="paragraph-content" style="color: #9ca3af; font-style: italic;">(문단별 중심내용 데이터 없음)</span></li>`;
+      }
+      html += `</ul></div>`;
 
       // 3. 교사용 지도 가이드
       if (guideData && guideData.teacherGuide) {
