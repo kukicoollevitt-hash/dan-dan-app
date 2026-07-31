@@ -1970,6 +1970,72 @@ app.get("/super/dashboard", requireSuperAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "super_admin_dashboard.html"));
 });
 
+// ===== 🎥 온라인 설명회 고정 링크 (슈퍼관리자가 줌 링크만 갱신, 배포 불필요) =====
+const BRIEFING_KEY = 'onlineBriefingZoomUrl';
+
+// 고정 안내 링크: 현재 줌 링크로 리다이렉트 (없으면 안내 페이지) · 공개(누구나)
+app.get("/online-briefing", async (req, res) => {
+  try {
+    const doc = await mongoose.connection.db.collection('system_settings').findOne({ key: BRIEFING_KEY });
+    const url = doc && doc.value ? String(doc.value).trim() : '';
+    if (url && /^https?:\/\//i.test(url)) {
+      return res.redirect(url);
+    }
+    // 미개설 안내 페이지
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    return res.send(`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>온라인 설명회 — 브레인 문해력</title>
+<style>
+ *{margin:0;padding:0;box-sizing:border-box;font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;}
+ body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#eef4ff,#f6f0ff);}
+ .card{background:#fff;border-radius:26px;max-width:420px;width:100%;padding:40px 30px 34px;text-align:center;box-shadow:0 24px 60px rgba(60,90,150,.22);}
+ .em{font-size:64px;line-height:1;}
+ h1{font-size:23px;font-weight:800;color:#2b3a67;margin:14px 0 10px;}
+ p{font-size:15px;font-weight:600;color:#5a6472;line-height:1.7;}
+ .tip{margin-top:20px;font-size:13px;color:#8a94a6;background:#f4f6fb;border-radius:14px;padding:12px 14px;font-weight:600;}
+</style></head><body>
+ <div class="card">
+   <div class="em">🎥</div>
+   <h1>온라인 설명회 준비 중이에요</h1>
+   <p>아직 설명회가 시작되지 않았어요.<br>설명회 시작 시 이 링크로 바로 입장할 수 있어요.</p>
+   <div class="tip">이 페이지 링크를 저장해 두시면,<br>설명회가 열릴 때 새로고침만으로 입장됩니다.</div>
+ </div>
+</body></html>`);
+  } catch (e) {
+    console.error('[GET /online-briefing]', e);
+    res.status(500).send('오류가 발생했습니다.');
+  }
+});
+
+// 슈퍼관리자: 현재 온라인설명회 링크 조회
+app.get("/api/super/briefing-link", requireSuperAdmin, async (req, res) => {
+  try {
+    const doc = await mongoose.connection.db.collection('system_settings').findOne({ key: BRIEFING_KEY });
+    res.json({ ok: true, url: (doc && doc.value) || '', updatedAt: (doc && doc.updatedAt) || null });
+  } catch (e) {
+    console.error('[GET /api/super/briefing-link]', e);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 슈퍼관리자: 온라인설명회 링크 저장/삭제
+app.post("/api/super/briefing-link", requireSuperAdmin, async (req, res) => {
+  try {
+    let url = String((req.body && req.body.url) || '').trim();
+    if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url; // 스킴 없으면 보정
+    await mongoose.connection.db.collection('system_settings').updateOne(
+      { key: BRIEFING_KEY },
+      { $set: { key: BRIEFING_KEY, value: url, updatedAt: new Date() } },
+      { upsert: true }
+    );
+    res.json({ ok: true, url });
+  } catch (e) {
+    console.error('[POST /api/super/briefing-link]', e);
+    res.status(500).json({ ok: false });
+  }
+});
+
 // ✅ 슈퍼관리자: 진단테스트 및 수강신청 관리
 app.get("/super/diagnostic-management", requireSuperAdmin, (req, res) => {
   console.log(
