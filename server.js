@@ -31986,26 +31986,36 @@ async function runWordBattleMonthlyDistribution() {
       { rank: 3, title: '동상',   badges: 1000 }
     ];
 
-    // TOP 3 보너스 지급 + 챔피언 스냅샷
-    for (const rw of REWARD) {
-      const winner = sorted[rw.rank - 1];
-      if (!winner) continue;
+    // 중복 방지: 이 달 챔피언 스냅샷을 먼저 비우고 다시 기록 (cron 재실행 대비)
+    await WordBattleChampion.deleteMany({ monthKey: lastMonth });
+
+    // TOP 5 스냅샷 저장 (전광판용) + 보너스 뱃지는 1~3위만
+    const TOP_N = 5;
+    for (let i = 0; i < TOP_N; i++) {
+      const winner = sorted[i];
+      if (!winner) break;
+      const rank = i + 1;
+      const rw = REWARD.find(r => r.rank === rank);
+      const title = rw ? rw.title : `${rank}위`;
+      const bonus = rw ? rw.badges : 0;
       await WordBattleChampion.create({
         monthKey: lastMonth,
-        rank: rw.rank,
-        title: rw.title,
+        rank,
+        title,
         grade: winner.grade,
         name: winner.name,
         academyName: winner.academyName,
         totalPoints: winner.totalPoints,
-        bonusBadges: rw.badges
+        bonusBadges: bonus
       });
-      await UserProgress.updateOne(
-        { grade: winner.grade, name: winner.name },
-        { $inc: { 'vocabularyQuiz.totalCoins': rw.badges } },
-        { upsert: true }
-      );
-      console.log(`  🥇 ${rw.rank}위 [${rw.title}] ${winner.grade} ${winner.name} — ${winner.totalPoints}점 → 보너스 ${rw.badges}뱃지`);
+      if (bonus > 0) {
+        await UserProgress.updateOne(
+          { grade: winner.grade, name: winner.name },
+          { $inc: { 'vocabularyQuiz.totalCoins': bonus } },
+          { upsert: true }
+        );
+      }
+      console.log(`  🏅 ${rank}위 [${title}] ${winner.grade} ${winner.name} — ${winner.totalPoints}점${bonus ? ` → 보너스 ${bonus}뱃지` : ''}`);
     }
 
     // 모든 단어배틀 기록의 awardedPoints 리셋 (새 달 시작)
@@ -32539,6 +32549,9 @@ async function runLiteracyKingMonthlyDistribution() {
       { rank: 3, title: '동상',   badges: 1500 }
     ];
 
+    // 중복 방지: 이 달 챔피언 스냅샷을 먼저 비우고 다시 기록 (cron 재실행 대비)
+    await LiteracyKingChampion.deleteMany({ monthKey: lastMonth });
+
     // 시리즈별 종합 순위 계산
     for (const series of LK_SERIES_LIST) {
       const records = await LiteracyKingRecord.find(
@@ -32573,18 +32586,61 @@ async function runLiteracyKingMonthlyDistribution() {
       }
     }
 
-    // 새 달 시작 — 모든 awardedPoints 리셋
-    const newMonth = getCurrentMonthKey();
-    const result = await LiteracyKingRecord.updateMany(
-      {}, { $set: { awardedPoints: 0, monthKey: newMonth } }
-    );
-    console.log(`✅ [문해왕] 월별 정산 완료. ${result.modifiedCount}개 기록 리셋 → 새 월 ${newMonth}`);
+    // 통합(전 시리즈) TOP 5 스냅샷 — 전광판용. 종합순위 팝업과 동일한 bestScore+순위보너스 기준.
+    // 삭제 전에 계산해야 하므로 여기서 스냅샷. series:'overall' 로 저장.
+    try {
+      const allRecs = await LiteracyKingRecord.find({}, { grade: 1, name: 1, academyName: 1, unitId: 1, bestScore: 1, bestTime: 1 }).lean();
+      const unitGroups = {};
+      for (const r of allRecs) (unitGroups[r.unitId] = unitGroups[r.unitId] || []).push(r);
+      const sp = {}, meta = {};
+      for (const uid in unitGroups) {
+        const s = unitGroups[uid].sort((a, b) => (b.bestScore - a.bestScore) || (a.bestTime - b.bestTime));
+        s.forEach((rec, idx) => {
+          const k = `${rec.grade}|${rec.name}`;
+          sp[k] = (sp[k] || 0) + (rec.bestScore || 0) + rankToPoints(idx + 1);
+          if (!meta[k]) meta[k] = { grade: rec.grade, name: rec.name, academyName: rec.academyName || '' };
+        });
+      }
+      const overallTop = Object.entries(sp).map(([k, p]) => ({ ...meta[k], totalPoints: p }))
+        .sort((a, b) => b.totalPoints - a.totalPoints).slice(0, 5);
+      for (let i = 0; i < overallTop.length; i++) {
+        const w = overallTop[i];
+        await LiteracyKingChampion.create({
+          monthKey: lastMonth, series: 'overall', rank: i + 1, title: `${i + 1}위`,
+          grade: w.grade, name: w.name, academyName: w.academyName, totalPoints: w.totalPoints, bonusBadges: 0
+        });
+      }
+      console.log(`  🏆 [통합] TOP ${overallTop.length} 전광판 스냅샷 저장`);
+    } catch (e) { console.error('통합 스냅샷 저장 오류:', e.message); }
+
+    // 새 달 시작 — 지난달 기록 전체 삭제(어휘월드컵과 동일한 완전 리셋)
+    // 챔피언 스냅샷(LiteracyKingChampion)은 위에서 이미 보존했으므로 안전.
+    // 순위가 bestScore 기반이라, 삭제해야 새 달 리더보드가 실제로 빈 상태로 시작한다.
+    const delRes = await LiteracyKingRecord.deleteMany({});
+    console.log(`✅ [문해왕] 월별 정산 완료. 기록 ${delRes.deletedCount}개 삭제 → 새 달 빈 리더보드로 시작`);
   } catch (err) {
     console.error('❌ [문해왕] 월별 정산 오류:', err);
   }
 }
 cron.schedule('0 0 1 * *', runLiteracyKingMonthlyDistribution, { timezone: 'Asia/Seoul' });
 console.log('✅ 문해왕 월별 챔피언 정산 스케줄러 등록 (매월 1일 00:00 KST)');
+
+// 🔧 [수동] 문해왕 월별 리셋 즉시 실행 — 정산이 누락된 달 복구용 (슈퍼관리자 전용)
+// 브라우저에서 슈퍼관리자 로그인 상태로 아래 URL 접속:
+//   /api/super/literacy-king/run-monthly-reset?confirm=RESET
+app.get('/api/super/literacy-king/run-monthly-reset', requireSuperAdmin, async (req, res) => {
+  if (req.query.confirm !== 'RESET') {
+    return res.status(400).json({ ok: false, message: "확인 파라미터 필요: ?confirm=RESET" });
+  }
+  try {
+    console.log('🔧 [문해왕] 수동 월별 리셋 실행 요청');
+    await runLiteracyKingMonthlyDistribution();
+    res.json({ ok: true, message: '문해왕 월별 리셋 실행 완료. 리더보드가 새 달 기준으로 비워졌습니다.' });
+  } catch (e) {
+    console.error('❌ [문해왕] 수동 리셋 오류:', e);
+    res.status(500).json({ ok: false, message: e.message });
+  }
+});
 
 console.log('✅ 독서 감상문 월간 리셋 스케줄러 등록 완료 (매월 1일 0시 실행)');
 

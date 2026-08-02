@@ -1611,17 +1611,7 @@
   }
 
   // ───── 지난달 단어월드컵 TOP 5 LED 전광판 ─────
-  // 매월 1일에 직전 달 결과로 교체. 데이터는 /api/word-battle/overall-ranking 스냅샷 기준.
-  const WB_MONTHLY_TOP5 = {
-    '2026-06': [
-      { rank: 1, grade: '초6',  name: '장유진', points: 20000 },
-      { rank: 2, grade: '초5',  name: '최건우', points: 7800  },
-      { rank: 3, grade: '5학년', name: '정하영', points: 6500  },
-      { rank: 4, grade: '초6',  name: '이재희', points: 5570  },
-      { rank: 5, grade: '중2',  name: '이지유', points: 2280  }
-    ]
-  };
-
+  // 데이터는 /api/word-battle/last-champions(지난달 챔피언 스냅샷)에서 자동 로드 → 매월 수동 갱신 불필요.
   function maskName(name) {
     if (!name) return '';
     const chars = [...name];
@@ -1630,19 +1620,37 @@
     return chars[0] + '○'.repeat(chars.length - 2) + chars[chars.length - 1];
   }
 
-  function renderMonthlyLed() {
+  async function renderMonthlyLed() {
     const monthEl = document.getElementById('wbMonthlyLedMonth');
     const trackEl = document.getElementById('wbMonthlyLedTrack');
     if (!monthEl || !trackEl) return;
 
     const now = new Date();
     const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const yyyy = prev.getFullYear();
-    const mm = String(prev.getMonth() + 1).padStart(2, '0');
-    const key = `${yyyy}-${mm}`;
-    const top5 = WB_MONTHLY_TOP5[key];
+    let labelMonth = prev.getMonth() + 1;
 
-    monthEl.textContent = `🏆 ${prev.getMonth() + 1}월 TOP 5`;
+    // 지난달 챔피언 스냅샷을 서버에서 로드 (중복 rank 제거, 최대 5명)
+    let top5 = [];
+    try {
+      const res = await fetch('/api/word-battle/last-champions');
+      const data = await res.json();
+      if (data.ok && data.monthKey) {
+        const m = parseInt(String(data.monthKey).split('-')[1], 10);
+        if (m) labelMonth = m;
+      }
+      if (data.ok && Array.isArray(data.champions)) {
+        const byRank = new Map();
+        for (const c of data.champions) {
+          if (!byRank.has(c.rank)) byRank.set(c.rank, c); // 같은 rank 중복 문서 → 첫 개만
+        }
+        top5 = [...byRank.values()]
+          .sort((a, b) => a.rank - b.rank)
+          .slice(0, 5)
+          .map(c => ({ rank: c.rank, grade: c.grade, name: c.name, points: c.totalPoints || 0 }));
+      }
+    } catch (e) { console.warn('전광판 챔피언 조회 실패', e); }
+
+    monthEl.textContent = `🏆 ${labelMonth}월 TOP 5`;
 
     if (!top5 || top5.length === 0) {
       trackEl.textContent = '이번 달 첫 번째 우승자에 도전해 보세요! ⚡';

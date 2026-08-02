@@ -781,11 +781,63 @@
     text-align: center; color: #78350f;
   }
   .wb-top-my-row.empty { display: none; }
+
+  /* 지난달 통합 TOP 5 LED 전광판 */
+  .lk-monthly-led {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px; margin: 0 0 14px 0;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    border: 1.5px solid #facc15; border-radius: 14px;
+    box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.25) inset, 0 8px 22px rgba(15, 23, 42, 0.25);
+    overflow: hidden;
+  }
+  .lk-monthly-led-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    color: #fff; font-size: 11px; font-weight: 900; letter-spacing: 0.5px;
+    border-radius: 999px; flex: 0 0 auto; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.45);
+  }
+  .lk-monthly-led-dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: lkMonthlyBlink 1.2s ease-in-out infinite; }
+  @keyframes lkMonthlyBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .lk-monthly-led-month {
+    flex: 0 0 auto; font-size: 13px; font-weight: 800; color: #facc15;
+    text-shadow: 0 0 8px rgba(250, 204, 21, 0.5); white-space: nowrap;
+  }
+  .lk-monthly-led-track-wrap { flex: 1 1 auto; overflow: hidden; position: relative; min-width: 0; }
+  .lk-monthly-led-track {
+    display: inline-block; white-space: nowrap; padding-left: 100%;
+    color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.3px;
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.55), 0 0 12px rgba(250, 204, 21, 0.35);
+    animation: lkMonthlyScroll 26s linear infinite, lkMonthlyFlicker 0.9s steps(2, end) infinite;
+  }
+  @keyframes lkMonthlyScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+  @keyframes lkMonthlyFlicker { 0%, 49% { opacity: 1; filter: brightness(1.15); } 50%, 100% { opacity: 0.85; filter: brightness(0.95); } }
+  .lk-monthly-led-track .rank-gold   { color: #fde047; }
+  .lk-monthly-led-track .rank-silver { color: #e5e7eb; }
+  .lk-monthly-led-track .rank-bronze { color: #fdba74; }
+  .lk-monthly-led-track .rank-four   { color: #a7f3d0; }
+  .lk-monthly-led-track .rank-five   { color: #bae6fd; }
+  .lk-monthly-led-track .star { color: #facc15; }
+  @media (max-width: 640px) {
+    .lk-monthly-led { padding: 7px 10px; gap: 7px; }
+    .lk-monthly-led-month { font-size: 12px; }
+    .lk-monthly-led-track { font-size: 12px; }
+    .lk-monthly-led-badge { font-size: 10px; padding: 2px 7px; }
+  }
 </style>
 </head>
 <body>
 
 <div class="container">
+  <!-- 지난달 통합 TOP 5 LED 전광판 -->
+  <div class="lk-monthly-led" id="lkMonthlyLed">
+    <span class="lk-monthly-led-badge"><span class="lk-monthly-led-dot"></span>LIVE</span>
+    <span class="lk-monthly-led-month" id="lkMonthlyLedMonth">🏆 TOP 5</span>
+    <div class="lk-monthly-led-track-wrap">
+      <div class="lk-monthly-led-track" id="lkMonthlyLedTrack"></div>
+    </div>
+  </div>
+
   <div class="header">
     <button class="lk-rules-btn" onclick="openLkRulesModal()">📜 점수규정</button>
     <div class="crown">👑</div>
@@ -1138,6 +1190,7 @@
       document.body.innerHTML = '<div style="text-align:center;padding:40px;font-size:16px;">로그인이 필요합니다.<br><br>학생 메인에서 접속해주세요.</div>';
       return;
     }
+    renderMonthlyLed(); // 지난달 통합 TOP 5 전광판
     // 학생 시리즈 부여 매핑
     const assigned = user.assignedSeries || [];
     const seriesSet = new Set();
@@ -1424,6 +1477,63 @@
       renderPodium(data);
     } catch (err) { console.error(err); }
   }
+  // ───── 지난달 통합 TOP 5 LED 전광판 ─────
+  // /api/literacy-king/last-champions(시리즈별 챔피언 스냅샷)을 학생별로 합산해 통합 순위 TOP 5 산출
+  async function renderMonthlyLed() {
+    const monthEl = document.getElementById('lkMonthlyLedMonth');
+    const trackEl = document.getElementById('lkMonthlyLedTrack');
+    if (!monthEl || !trackEl) return;
+    const now = new Date();
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    let labelMonth = prev.getMonth() + 1;
+    let top5 = [];
+    try {
+      const res = await fetch('/api/literacy-king/last-champions');
+      const data = await res.json();
+      if (data.ok && data.monthKey) {
+        const m = parseInt(String(data.monthKey).split('-')[1], 10);
+        if (m) labelMonth = m;
+      }
+      if (data.ok && Array.isArray(data.champions)) {
+        // 통합(overall) 순위 스냅샷을 우선 사용 (종합순위 팝업과 동일 bestScore 기준)
+        const overall = data.champions.filter(c => c.series === 'overall');
+        if (overall.length) {
+          const byRank = new Map();
+          for (const c of overall) if (!byRank.has(c.rank)) byRank.set(c.rank, c);
+          top5 = [...byRank.values()].sort((a, b) => a.rank - b.rank).slice(0, 5)
+            .map(c => ({ rank: c.rank, grade: c.grade, name: c.name, points: c.totalPoints || 0 }));
+        } else {
+          // 폴백: overall 스냅샷이 없으면 시리즈별 챔피언을 학생별 합산
+          const seenDoc = new Set(), byStudent = new Map();
+          for (const c of data.champions) {
+            const dk = `${c.series}|${c.rank}`;
+            if (seenDoc.has(dk)) continue;
+            seenDoc.add(dk);
+            const sk = `${c.grade}|${c.name}`;
+            const cur = byStudent.get(sk) || { grade: c.grade, name: c.name, points: 0 };
+            cur.points += (c.totalPoints || 0);
+            byStudent.set(sk, cur);
+          }
+          top5 = [...byStudent.values()].sort((a, b) => b.points - a.points).slice(0, 5)
+            .map((s, i) => ({ rank: i + 1, grade: s.grade, name: s.name, points: s.points }));
+        }
+      }
+    } catch (e) { console.warn('전광판 챔피언 조회 실패', e); }
+
+    monthEl.textContent = `🏆 ${labelMonth}월 TOP 5`;
+    if (!top5.length) { trackEl.textContent = '이번 달 첫 번째 문해왕에 도전해 보세요! ⚡'; return; }
+    const medals = { 1:['🥇','rank-gold'], 2:['🥈','rank-silver'], 3:['🥉','rank-bronze'], 4:['','rank-four'], 5:['','rank-five'] };
+    const segments = top5.map(r => {
+      const [emoji, cls] = medals[r.rank] || ['', ''];
+      const masked = maskName(r.name);
+      const pts = (r.points || 0).toLocaleString();
+      const prefix = emoji ? `${emoji} ${r.rank}위` : `${r.rank}위`;
+      return `<span class="${cls}">${prefix} ${r.grade} ${masked} <span class="star">⭐</span> ${pts}</span>`;
+    });
+    const html = segments.join(' &nbsp;&nbsp;|&nbsp;&nbsp; ') + ' &nbsp;&nbsp;&nbsp;&nbsp;';
+    trackEl.innerHTML = html + html;
+  }
+
   function maskName(n) { return n && n.length >= 2 ? n.charAt(0) + '○' + n.slice(-1) : (n || ''); }
   function renderPodium(data) {
     const card = document.getElementById('wbPodiumCard');
