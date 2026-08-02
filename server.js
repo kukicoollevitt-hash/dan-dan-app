@@ -30777,9 +30777,9 @@ async function assignAITasksDaily() {
     const behaviorData = await LearningBehavior.find({});
     console.log(`📊 조회된 행동 데이터 수: ${behaviorData.length}개`);
 
-    // 오답 기준: 중심문단 오답 + 문제 오답 >= 3회, 12시간 경과
+    // 오답 기준: 중심문단 오답 + 문제 오답 >= 3회, 7일 경과
     const ERROR_THRESHOLD = 3;
-    const WAIT_HOURS_FOR_ERROR = 12; // 12시간 후 부여
+    const WAIT_HOURS_FOR_ERROR = 168; // 7일(168시간) 후 부여
 
     // 학생별로 그룹화
     const behaviorByStudent = {};
