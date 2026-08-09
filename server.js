@@ -1089,6 +1089,8 @@ return res.redirect("/brain_landing.html?signup=pending");
 app.use((req, res, next) => {
   // super_admin_dashboard.html 또는 /super/ 폴더 내 HTML 직접 접근 차단
   if (req.path === '/super_admin_dashboard.html' ||
+      req.path === '/super_kpi.html' ||
+      req.path === '/super_kpi_login.html' ||
       (req.path.startsWith('/super/') && req.path.endsWith('.html'))) {
     console.log("⛔ 슈퍼관리자 파일 직접 접근 차단:", req.path);
     // 학원용 관리자인지 확인 후 적절한 로그인 페이지로
@@ -1327,6 +1329,116 @@ const adminSchema = new mongoose.Schema({
 });
 
 const Admin = mongoose.model("Admin", adminSchema);
+
+// ============================================
+// 🏆 브레인 KPI 자동관리시스템 - 계정/지사 모델
+// ============================================
+// 소속(scope): 본사 / 사업본부 / 예비지사 / 정식지사
+const KPI_SCOPES = ["본사", "사업본부", "예비지사", "정식지사"];
+const KPI_BRANCH_TYPES = ["예비지사", "정식지사"];
+
+// 지사(트리 노드) — 예비지사/정식지사만 지사 레코드를 가짐
+const kpiBranchSchema = new mongoose.Schema({
+  type: { type: String, enum: KPI_BRANCH_TYPES, required: true }, // 예비지사 / 정식지사
+  branchName: { type: String, required: true },                    // 지사명 (예: "김형태 지사")
+  createdBy: { type: String, default: "" },                        // 개설한 담당자 이름
+  createdByScope: { type: String, default: "" },                   // 개설한 소속
+  createdAt: { type: Date, default: Date.now },
+});
+const KpiBranch = mongoose.model("KpiBranch", kpiBranchSchema);
+
+// 계정 — 로그인 단위 (소속 + 담당자 + 비번)
+const kpiAccountSchema = new mongoose.Schema({
+  scope: { type: String, enum: KPI_SCOPES, required: true },       // 소속
+  name: { type: String, required: true },                          // 담당자 이름 (로그인 ID)
+  passwordHash: { type: String, required: true },                  // scrypt 해시 (salt:hash)
+  branchId: { type: mongoose.Schema.Types.ObjectId, ref: "KpiBranch", default: null }, // 예비/정식지사일 때만
+  role: { type: String, enum: ["지사장", "담당자"], default: "담당자" }, // 지사 내 역할
+  createdBy: { type: String, default: "" },                        // 생성한 담당자 이름
+  createdAt: { type: Date, default: Date.now },
+  lastLogin: { type: Date, default: null },
+});
+// 같은 소속·지사 안에서 담당자 이름 중복 방지
+kpiAccountSchema.index({ scope: 1, branchId: 1, name: 1 }, { unique: true });
+const KpiAccount = mongoose.model("KpiAccount", kpiAccountSchema);
+
+// 학원 리드/계약 파이프라인 (KPI 대시보드 우측 테이블)
+const kpiAcademySchema = new mongoose.Schema({
+  // 귀속 (등록한 부서/지사)
+  scope: { type: String, enum: KPI_SCOPES, required: true },
+  branchId: { type: mongoose.Schema.Types.ObjectId, ref: "KpiBranch", default: null },
+
+  // 1차 학원정보
+  inflow: { type: String, default: "" },            // 유입경로: 지인소개/홈페이지/인스타그램/페이스북
+  firstConsultDate: { type: String, default: "" },  // 최초상담일 (YYYY-MM-DD)
+  academyName: { type: String, required: true },    // 학원명
+  region: { type: String, default: "" },            // 지역
+  directorName: { type: String, default: "" },      // 학원장 이름
+  phone: { type: String, default: "" },             // 연락처
+  purpose: { type: String, default: "" },           // 목적: 신규창업/추가과목개설/문해력관확장
+
+  // 2차 계약진행상황 (유/무)
+  step_firstConsult: { type: Boolean, default: false },   // 최초상담
+  step_briefingApply: { type: Boolean, default: false },  // 설명회신청
+  step_briefingAttend: { type: Boolean, default: false }, // 설명회참석
+  step_followup: { type: Boolean, default: false },       // 후속연락
+  step_offlineMeeting: { type: Boolean, default: false }, // 오프미팅
+  step_contract: { type: Boolean, default: false },       // 계약
+  holdReason: { type: String, default: "" },              // 계약보류사유(계약=무): 금액부담/좀더고민
+  step_payment: { type: Boolean, default: false },        // 결제확정(계약=유)
+
+  createdBy: { type: String, default: "" },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+kpiAcademySchema.index({ scope: 1, branchId: 1, createdAt: -1 });
+const KpiAcademy = mongoose.model("KpiAcademy", kpiAcademySchema);
+
+// 계약유형별 계약금액(만원)·총계정 (계약유형 선택 시 자동 세팅)
+const KPI_CONTRACT_TYPES = {
+  "스탠다드": { amount: 180, totalAccounts: 120 },
+  "프리미엄": { amount: 420, totalAccounts: 360 },
+};
+
+// 센터(계약 후 운영) - 관리 KPI 대시보드
+const kpiCenterSchema = new mongoose.Schema({
+  scope: { type: String, enum: KPI_SCOPES, required: true },
+  branchId: { type: mongoose.Schema.Types.ObjectId, ref: "KpiBranch", default: null },
+
+  // 1차 센터정보
+  contractType: { type: String, default: "" },   // 스탠다드 / 프리미엄
+  centerName: { type: String, required: true },   // 센터명
+  contractDate: { type: String, default: "" },    // 계약일 (YYYY-MM-DD)
+  directorName: { type: String, default: "" },    // 학원장명
+  phone: { type: String, default: "" },           // 연락처
+
+  // 2차 관리현황 (입력값 · 금액은 만원 단위)
+  currentStudents: { type: Number, default: 0 },     // 현재등록학생
+  usedAccounts: { type: Number, default: 0 },        // 사용계정 (총계정은 계약유형에서 파생)
+  tuitionPerAccount: { type: Number, default: 0 },   // 계정당수강료 (만원)
+  // 학원매출 = 수강료×사용계정, 투자대비수익 = 매출−계약금액 → 조회 시 계산(비저장)
+
+  createdBy: { type: String, default: "" },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+kpiCenterSchema.index({ scope: 1, branchId: 1, createdAt: -1 });
+const KpiCenter = mongoose.model("KpiCenter", kpiCenterSchema);
+
+// 🔐 비밀번호 해시/검증 (Node 내장 crypto scrypt — 외부 의존성 없음)
+function hashKpiPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(String(password), salt, 64).toString("hex");
+  return `${salt}:${hash}`;
+}
+function verifyKpiPassword(password, stored) {
+  if (!stored || typeof stored !== "string" || !stored.includes(":")) return false;
+  const [salt, hash] = stored.split(":");
+  const test = crypto.scryptSync(String(password), salt, 64).toString("hex");
+  const a = Buffer.from(hash, "hex");
+  const b = Buffer.from(test, "hex");
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
 
 // ✅ 관리자의 학원명 전체 목록 반환 (본명 + 별칭)
 //   · 학생 조회 시 { academyName: { $in: getAdminAcademyNames(admin) } } 형태로 사용
@@ -1968,6 +2080,706 @@ app.get("/super/dashboard", requireSuperAdmin, (req, res) => {
     req.session.admin && req.session.admin.name
   );
   res.sendFile(path.join(__dirname, "public", "super_admin_dashboard.html"));
+});
+
+// ============================================
+// 🏆 브레인 KPI 자동관리시스템
+// ============================================
+
+// KPI 로그인 여부 확인 미들웨어 (슈퍼관리자 안의 2차 로그인)
+function requireKpiUser(req, res, next) {
+  if (!req.session || !req.session.kpiUser) {
+    if (req.path.startsWith("/api/")) {
+      return res.status(401).json({ ok: false, message: "KPI 로그인이 필요합니다." });
+    }
+    return res.redirect("/super/kpi/login");
+  }
+  next();
+}
+
+// 권한 헬퍼
+function kpiCanCreateBranch(scope) {
+  return scope === "본사" || scope === "사업본부";
+}
+function kpiCanManageAccounts(scope) {
+  return scope === "본사" || scope === "사업본부" || scope === "예비지사" || scope === "정식지사";
+}
+
+// 로그인 페이지
+app.get("/super/kpi/login", requireSuperAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "super_kpi_login.html"));
+});
+
+// KPI 대시보드 (2차 로그인까지 완료해야 접근)
+app.get("/super/kpi", requireSuperAdmin, requireKpiUser, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "super_kpi.html"));
+});
+
+// 로그인 처리
+app.post("/api/super/kpi/login", requireSuperAdmin, async (req, res) => {
+  try {
+    const { scope, name, password } = req.body || {};
+    if (!scope || !name || !password) {
+      return res.status(400).json({ ok: false, message: "소속·담당자·비밀번호를 모두 입력하세요." });
+    }
+    if (!KPI_SCOPES.includes(scope)) {
+      return res.status(400).json({ ok: false, message: "소속이 올바르지 않습니다." });
+    }
+    const acc = await KpiAccount.findOne({ scope, name: String(name).trim() });
+    if (!acc || !verifyKpiPassword(password, acc.passwordHash)) {
+      return res.status(401).json({ ok: false, message: "담당자 이름 또는 비밀번호가 올바르지 않습니다." });
+    }
+    let branch = null;
+    if (acc.branchId) branch = await KpiBranch.findById(acc.branchId);
+
+    acc.lastLogin = new Date();
+    await acc.save();
+
+    req.session.kpiUser = {
+      id: String(acc._id),
+      scope: acc.scope,
+      name: acc.name,
+      role: acc.role,
+      branchId: acc.branchId ? String(acc.branchId) : null,
+      branchName: branch ? branch.branchName : null,
+    };
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ KPI 로그인 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 로그아웃
+app.post("/api/super/kpi/logout", (req, res) => {
+  if (req.session) delete req.session.kpiUser;
+  res.json({ ok: true });
+});
+
+// 현재 로그인 정보
+app.get("/api/super/kpi/me", requireSuperAdmin, requireKpiUser, (req, res) => {
+  const u = req.session.kpiUser;
+  res.json({
+    ok: true,
+    user: u,
+    canCreateBranch: kpiCanCreateBranch(u.scope),
+    canManageAccounts: kpiCanManageAccounts(u.scope),
+  });
+});
+
+// 좌측 트리 (권한별 노출 범위)
+app.get("/api/super/kpi/tree", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    const accSlim = (a) => ({ id: String(a._id), name: a.name, role: a.role, scope: a.scope });
+
+    // 담당자(비지사) 로그인: 본인 지사만
+    if (u.scope === "예비지사" || u.scope === "정식지사") {
+      const branch = u.branchId ? await KpiBranch.findById(u.branchId) : null;
+      if (!branch) return res.json({ ok: true, sections: [] });
+      const members = await KpiAccount.find({ branchId: branch._id }).sort({ createdAt: 1 });
+      return res.json({
+        ok: true,
+        sections: [{
+          key: u.scope, label: u.scope, type: "branchGroup",
+          branches: [{ id: String(branch._id), branchName: branch.branchName, accounts: members.map(accSlim) }],
+        }],
+      });
+    }
+
+    // 본사 / 사업본부 로그인
+    const sections = [];
+    if (u.scope === "본사") {
+      const hq = await KpiAccount.find({ scope: "본사" }).sort({ createdAt: 1 });
+      sections.push({ key: "본사", label: "본사", type: "scopeGroup", accounts: hq.map(accSlim) });
+    }
+    const biz = await KpiAccount.find({ scope: "사업본부" }).sort({ createdAt: 1 });
+    sections.push({ key: "사업본부", label: "사업본부", type: "scopeGroup", accounts: biz.map(accSlim) });
+
+    for (const t of ["예비지사", "정식지사"]) {
+      const branches = await KpiBranch.find({ type: t }).sort({ createdAt: 1 });
+      const out = [];
+      for (const b of branches) {
+        const members = await KpiAccount.find({ branchId: b._id }).sort({ createdAt: 1 });
+        out.push({ id: String(b._id), branchName: b.branchName, accounts: members.map(accSlim) });
+      }
+      sections.push({ key: t, label: t, type: "branchGroup", branches: out });
+    }
+    res.json({ ok: true, sections });
+  } catch (err) {
+    console.error("❌ KPI 트리 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 지사 개설 (본사·사업본부만) — 지사 + 지사장 계정 동시 생성
+app.post("/api/super/kpi/branches", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    if (!kpiCanCreateBranch(u.scope)) {
+      return res.status(403).json({ ok: false, message: "지사 개설 권한이 없습니다." });
+    }
+    const { type, branchName, managerName, password } = req.body || {};
+    if (!KPI_BRANCH_TYPES.includes(type)) {
+      return res.status(400).json({ ok: false, message: "지사 구분(예비/정식)이 올바르지 않습니다." });
+    }
+    if (!branchName || !managerName || !password) {
+      return res.status(400).json({ ok: false, message: "지사명·지사장 이름·비밀번호를 모두 입력하세요." });
+    }
+    const branch = await KpiBranch.create({
+      type,
+      branchName: String(branchName).trim(),
+      createdBy: u.name,
+      createdByScope: u.scope,
+    });
+    await KpiAccount.create({
+      scope: type,
+      name: String(managerName).trim(),
+      passwordHash: hashKpiPassword(password),
+      branchId: branch._id,
+      role: "지사장",
+      createdBy: u.name,
+    });
+    res.json({ ok: true, branchId: String(branch._id) });
+  } catch (err) {
+    if (err && err.code === 11000) {
+      return res.status(409).json({ ok: false, message: "이미 같은 이름의 담당자가 있습니다." });
+    }
+    console.error("❌ KPI 지사 개설 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 담당자 계정 생성 (계층형)
+app.post("/api/super/kpi/accounts", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    if (!kpiCanManageAccounts(u.scope)) {
+      return res.status(403).json({ ok: false, message: "계정 생성 권한이 없습니다." });
+    }
+    let { scope, name, password, branchId } = req.body || {};
+    if (!name || !password) {
+      return res.status(400).json({ ok: false, message: "담당자 이름과 비밀번호를 입력하세요." });
+    }
+
+    // 권한별 생성 가능 범위 강제
+    if (u.scope === "예비지사" || u.scope === "정식지사") {
+      // 지사: 본인 지사 내 담당자만
+      scope = u.scope;
+      branchId = u.branchId;
+    } else if (u.scope === "사업본부") {
+      // 사업본부: 예비/정식지사 담당자만 (기존 지사에)
+      if (scope !== "예비지사" && scope !== "정식지사") {
+        return res.status(403).json({ ok: false, message: "사업본부는 예비/정식지사 담당자만 생성할 수 있습니다." });
+      }
+      if (!branchId) return res.status(400).json({ ok: false, message: "지사를 선택하세요." });
+    } else if (u.scope === "본사") {
+      // 본사: 모든 소속. 지사 소속이면 branchId 필수
+      if (!KPI_SCOPES.includes(scope)) {
+        return res.status(400).json({ ok: false, message: "소속이 올바르지 않습니다." });
+      }
+      if ((scope === "예비지사" || scope === "정식지사") && !branchId) {
+        return res.status(400).json({ ok: false, message: "지사를 선택하세요." });
+      }
+      if (scope === "본사" || scope === "사업본부") branchId = null;
+    }
+
+    // 지사 유효성 확인
+    if (branchId) {
+      const b = await KpiBranch.findById(branchId);
+      if (!b) return res.status(400).json({ ok: false, message: "지사를 찾을 수 없습니다." });
+      if (b.type !== scope) return res.status(400).json({ ok: false, message: "소속과 지사 구분이 일치하지 않습니다." });
+    }
+
+    await KpiAccount.create({
+      scope,
+      name: String(name).trim(),
+      passwordHash: hashKpiPassword(password),
+      branchId: branchId || null,
+      role: "담당자",
+      createdBy: u.name,
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    if (err && err.code === 11000) {
+      return res.status(409).json({ ok: false, message: "이미 같은 이름의 담당자가 있습니다." });
+    }
+    console.error("❌ KPI 계정 생성 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 비밀번호 재설정 (상위 권한자만) — 본사=전체, 사업본부=지사 담당자, 지사=본인 지사 담당자
+app.post("/api/super/kpi/accounts/:id/reset-password", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    const { password } = req.body || {};
+    if (!password) return res.status(400).json({ ok: false, message: "새 비밀번호를 입력하세요." });
+
+    const target = await KpiAccount.findById(req.params.id);
+    if (!target) return res.status(404).json({ ok: false, message: "계정을 찾을 수 없습니다." });
+
+    // 권한 검사
+    let allowed = false;
+    if (u.scope === "본사") allowed = true;
+    else if (u.scope === "사업본부") allowed = (target.scope === "예비지사" || target.scope === "정식지사");
+    else if (u.scope === "예비지사" || u.scope === "정식지사") {
+      allowed = target.branchId && String(target.branchId) === String(u.branchId);
+    }
+    if (!allowed) return res.status(403).json({ ok: false, message: "재설정 권한이 없습니다." });
+
+    target.passwordHash = hashKpiPassword(password);
+    await target.save();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ KPI 비번 재설정 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ----- 학원 리드/계약 파이프라인 -----
+// 노드(소속/지사) 열람 권한: 본사=전체, 사업본부=본사제외, 지사=본인지사만
+function kpiCanAccessScope(u, scope, branchId) {
+  if (u.scope === "본사") return true;
+  if (u.scope === "사업본부") return scope !== "본사";
+  return scope === u.scope && String(branchId || "") === String(u.branchId || "");
+}
+// PATCH 허용 필드
+const KPI_ACADEMY_FIELDS = [
+  "inflow", "firstConsultDate", "academyName", "region", "directorName", "phone", "purpose",
+  "step_firstConsult", "step_briefingApply", "step_briefingAttend", "step_followup",
+  "step_offlineMeeting", "step_contract", "holdReason", "step_payment",
+];
+
+// 선택 노드의 학원 목록
+app.get("/api/super/kpi/academies", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    const scope = req.query.scope;
+    const branchId = req.query.branchId || null;
+    if (!KPI_SCOPES.includes(scope)) return res.status(400).json({ ok: false, message: "소속이 올바르지 않습니다." });
+    if (!kpiCanAccessScope(u, scope, branchId)) return res.status(403).json({ ok: false, message: "열람 권한이 없습니다." });
+    const query = { scope };
+    query.branchId = (scope === "예비지사" || scope === "정식지사") ? branchId : null;
+    const rows = await KpiAcademy.find(query).sort({ createdAt: -1 }).lean();
+    res.json({ ok: true, rows });
+  } catch (err) {
+    console.error("❌ KPI 학원목록 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 학원 목록 엑셀(.xlsx) 내보내기 (선택 노드 + 월 필터 반영)
+app.get("/api/super/kpi/academies/export", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    const scope = req.query.scope;
+    const branchId = req.query.branchId || null;
+    const month = (req.query.month || "").replace(/[^0-9-]/g, ""); // YYYY-MM 또는 빈값
+    if (!KPI_SCOPES.includes(scope)) return res.status(400).json({ ok: false, message: "소속이 올바르지 않습니다." });
+    if (!kpiCanAccessScope(u, scope, branchId)) return res.status(403).json({ ok: false, message: "열람 권한이 없습니다." });
+    const query = { scope };
+    query.branchId = (scope === "예비지사" || scope === "정식지사") ? branchId : null;
+    if (month) query.firstConsultDate = { $regex: "^" + month };
+    const rows = await KpiAcademy.find(query).sort({ createdAt: -1 }).lean();
+
+    const ExcelJS = require("exceljs");
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("학원관리");
+    const yn = (b) => (b ? "O" : "X");
+    ws.columns = [
+      { header: "유입경로", key: "inflow", width: 12 },
+      { header: "최초상담일", key: "firstConsultDate", width: 13 },
+      { header: "학원명", key: "academyName", width: 22 },
+      { header: "지역", key: "region", width: 14 },
+      { header: "학원장", key: "directorName", width: 12 },
+      { header: "연락처", key: "phone", width: 15 },
+      { header: "목적", key: "purpose", width: 14 },
+      { header: "최초상담", key: "s1", width: 9 },
+      { header: "설명회신청", key: "s2", width: 10 },
+      { header: "설명회참석", key: "s3", width: 10 },
+      { header: "후속연락", key: "s4", width: 9 },
+      { header: "오프미팅", key: "s5", width: 9 },
+      { header: "계약", key: "s6", width: 7 },
+      { header: "계약보류사유", key: "hold", width: 13 },
+      { header: "결제확정", key: "pay", width: 9 },
+    ];
+    rows.forEach((r) => ws.addRow({
+      inflow: r.inflow || "", firstConsultDate: r.firstConsultDate || "", academyName: r.academyName || "",
+      region: r.region || "", directorName: r.directorName || "", phone: r.phone || "", purpose: r.purpose || "",
+      s1: yn(r.step_firstConsult), s2: yn(r.step_briefingApply), s3: yn(r.step_briefingAttend),
+      s4: yn(r.step_followup), s5: yn(r.step_offlineMeeting), s6: yn(r.step_contract),
+      hold: r.step_contract ? "" : (r.holdReason || ""),
+      pay: yn(r.step_payment),
+    }));
+    const head = ws.getRow(1);
+    head.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    head.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE67E22" } };
+    head.alignment = { horizontal: "center", vertical: "middle" };
+    ws.views = [{ state: "frozen", ySplit: 1 }];
+
+    const fname = encodeURIComponent(`KPI_학원관리_${scope}${month ? "_" + month : ""}.xlsx`);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${fname}`);
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error("❌ KPI 엑셀 내보내기 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 학원 등록 (본인 소속으로만 생성)
+app.post("/api/super/kpi/academies", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    const { inflow, firstConsultDate, academyName, region, directorName, phone, purpose, targetScope, targetBranchId } = req.body || {};
+    if (!academyName || !String(academyName).trim()) {
+      return res.status(400).json({ ok: false, message: "학원명을 입력하세요." });
+    }
+
+    // 등록 귀속: 본사=대상 선택 가능(본사/사업본부/지사), 사업본부=사업본부 고정, 지사=본인 지사 고정
+    let scope, branchId;
+    if (u.scope === "본사") {
+      scope = targetScope;
+      if (!KPI_SCOPES.includes(scope)) return res.status(400).json({ ok: false, message: "등록 대상 소속이 올바르지 않습니다." });
+      if (scope === "예비지사" || scope === "정식지사") {
+        if (!targetBranchId) return res.status(400).json({ ok: false, message: "등록할 지사를 선택하세요." });
+        const b = await KpiBranch.findById(targetBranchId);
+        if (!b) return res.status(400).json({ ok: false, message: "지사를 찾을 수 없습니다." });
+        if (b.type !== scope) return res.status(400).json({ ok: false, message: "소속과 지사 구분이 일치하지 않습니다." });
+        branchId = b._id;
+      } else {
+        branchId = null; // 본사/사업본부
+      }
+    } else if (u.scope === "사업본부") {
+      scope = "사업본부"; branchId = null;
+    } else {
+      scope = u.scope; branchId = u.branchId; // 예비/정식지사
+    }
+
+    const doc = await KpiAcademy.create({
+      scope, branchId,
+      inflow: inflow || "",
+      firstConsultDate: firstConsultDate || "",
+      academyName: String(academyName).trim(),
+      region: region || "",
+      directorName: directorName || "",
+      phone: phone || "",
+      purpose: purpose || "",
+      createdBy: u.name,
+    });
+    res.json({ ok: true, id: String(doc._id) });
+  } catch (err) {
+    console.error("❌ KPI 학원등록 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 학원 정보/진행상황 수정
+app.patch("/api/super/kpi/academies/:id", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    const row = await KpiAcademy.findById(req.params.id);
+    if (!row) return res.status(404).json({ ok: false, message: "학원을 찾을 수 없습니다." });
+    if (!kpiCanAccessScope(u, row.scope, row.branchId)) {
+      return res.status(403).json({ ok: false, message: "수정 권한이 없습니다." });
+    }
+    for (const f of KPI_ACADEMY_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(req.body, f)) row[f] = req.body[f];
+    }
+    // 조건부 정합성: 계약=유면 보류사유 제거 (결제확정은 독립 O/X)
+    if (row.step_contract) row.holdReason = "";
+    row.updatedAt = new Date();
+    await row.save();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ KPI 학원수정 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 학원 삭제
+app.delete("/api/super/kpi/academies/:id", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    const row = await KpiAcademy.findById(req.params.id);
+    if (!row) return res.status(404).json({ ok: false, message: "학원을 찾을 수 없습니다." });
+    if (!kpiCanAccessScope(u, row.scope, row.branchId)) {
+      return res.status(403).json({ ok: false, message: "삭제 권한이 없습니다." });
+    }
+    await row.deleteOne();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ KPI 학원삭제 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// ----- 관리 KPI: 센터(계약 후 운영) -----
+const KPI_CENTER_FIELDS = [
+  "contractType", "centerName", "contractDate", "directorName", "phone",
+  "currentStudents", "usedAccounts", "tuitionPerAccount",
+];
+// 계약일 기준 D+경과일 / D-잔여일(1년 만기) 문자열
+function kpiContractDday(contractDate) {
+  if (!contractDate || !/^\d{4}-\d{2}-\d{2}$/.test(contractDate)) return { elapsed: "", remain: "" };
+  const start = new Date(contractDate + "T00:00:00");
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const end = new Date(start); end.setFullYear(end.getFullYear() + 1);
+  const elapsed = Math.floor((today - start) / 86400000);
+  const remain = Math.floor((end - today) / 86400000);
+  // 계약기간: D+30까지 무료체험 → 이후 D+1
+  let elapsedStr;
+  if (elapsed < 0) elapsedStr = "";
+  else if (elapsed <= 30) elapsedStr = `무료체험(${elapsed}/30일)`;
+  else elapsedStr = `D+${elapsed - 30}`;
+  return { elapsed: elapsedStr, remain: remain < 0 ? `만료(+${-remain}일)` : `D-${remain}` };
+}
+// 계약유형 파생값 + 매출/수익 계산
+function kpiCenterDerived(c) {
+  const info = KPI_CONTRACT_TYPES[c.contractType] || { amount: 0, totalAccounts: 0 };
+  const revenue = (Number(c.tuitionPerAccount) || 0) * (Number(c.usedAccounts) || 0);
+  return {
+    contractAmount: info.amount,          // 계약금액(만원)
+    totalAccounts: info.totalAccounts,    // 총계정
+    revenue,                              // 학원매출(만원)
+    roi: revenue - info.amount,           // 투자대비수익(만원)
+  };
+}
+
+// 센터 목록
+app.get("/api/super/kpi/centers", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    const scope = req.query.scope;
+    const branchId = req.query.branchId || null;
+    if (!KPI_SCOPES.includes(scope)) return res.status(400).json({ ok: false, message: "소속이 올바르지 않습니다." });
+    if (!kpiCanAccessScope(u, scope, branchId)) return res.status(403).json({ ok: false, message: "열람 권한이 없습니다." });
+    const query = { scope };
+    query.branchId = (scope === "예비지사" || scope === "정식지사") ? branchId : null;
+    const rows = await KpiCenter.find(query).sort({ createdAt: -1 }).lean();
+    rows.forEach((r) => Object.assign(r, kpiCenterDerived(r)));
+    res.json({ ok: true, rows });
+  } catch (err) {
+    console.error("❌ KPI 센터목록 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 센터 등록 (본사 전용 · 대상 부서/지사 선택)
+app.post("/api/super/kpi/centers", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    if (u.scope !== "본사") return res.status(403).json({ ok: false, message: "센터 등록은 본사만 가능합니다." });
+    const { contractType, centerName, contractDate, directorName, phone, targetScope, targetBranchId } = req.body || {};
+    if (!centerName || !String(centerName).trim()) return res.status(400).json({ ok: false, message: "센터명을 입력하세요." });
+
+    let scope, branchId;
+    scope = targetScope;
+    if (!KPI_SCOPES.includes(scope)) return res.status(400).json({ ok: false, message: "등록 대상 소속이 올바르지 않습니다." });
+    if (scope === "예비지사" || scope === "정식지사") {
+      if (!targetBranchId) return res.status(400).json({ ok: false, message: "등록할 지사를 선택하세요." });
+      const b = await KpiBranch.findById(targetBranchId);
+      if (!b) return res.status(400).json({ ok: false, message: "지사를 찾을 수 없습니다." });
+      if (b.type !== scope) return res.status(400).json({ ok: false, message: "소속과 지사 구분이 일치하지 않습니다." });
+      branchId = b._id;
+    } else branchId = null;
+
+    const doc = await KpiCenter.create({
+      scope, branchId,
+      contractType: contractType || "",
+      centerName: String(centerName).trim(),
+      contractDate: contractDate || "",
+      directorName: directorName || "",
+      phone: phone || "",
+      createdBy: u.name,
+    });
+    res.json({ ok: true, id: String(doc._id) });
+  } catch (err) {
+    console.error("❌ KPI 센터등록 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 센터 수정 (1차 정보 + 2차 관리현황)
+app.patch("/api/super/kpi/centers/:id", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    if (u.scope !== "본사") return res.status(403).json({ ok: false, message: "센터 수정은 본사만 가능합니다." });
+    const row = await KpiCenter.findById(req.params.id);
+    if (!row) return res.status(404).json({ ok: false, message: "센터를 찾을 수 없습니다." });
+    for (const f of KPI_CENTER_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(req.body, f)) {
+        row[f] = ["currentStudents", "usedAccounts", "tuitionPerAccount"].includes(f) ? (Number(req.body[f]) || 0) : req.body[f];
+      }
+    }
+    row.updatedAt = new Date();
+    await row.save();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ KPI 센터수정 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 센터 삭제
+app.delete("/api/super/kpi/centers/:id", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    if (u.scope !== "본사") return res.status(403).json({ ok: false, message: "센터 삭제는 본사만 가능합니다." });
+    const row = await KpiCenter.findById(req.params.id);
+    if (!row) return res.status(404).json({ ok: false, message: "센터를 찾을 수 없습니다." });
+    await row.deleteOne();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ KPI 센터삭제 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 센터 목록 엑셀(.xlsx) 내보내기
+app.get("/api/super/kpi/centers/export", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    const scope = req.query.scope;
+    const branchId = req.query.branchId || null;
+    const month = (req.query.month || "").replace(/[^0-9-]/g, ""); // 계약일 기준
+    if (!KPI_SCOPES.includes(scope)) return res.status(400).json({ ok: false, message: "소속이 올바르지 않습니다." });
+    if (!kpiCanAccessScope(u, scope, branchId)) return res.status(403).json({ ok: false, message: "열람 권한이 없습니다." });
+    const query = { scope };
+    query.branchId = (scope === "예비지사" || scope === "정식지사") ? branchId : null;
+    if (month) query.contractDate = { $regex: "^" + month };
+    const rows = await KpiCenter.find(query).sort({ createdAt: -1 }).lean();
+
+    const ExcelJS = require("exceljs");
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("관리현황");
+    ws.columns = [
+      { header: "계약유형", key: "contractType", width: 12 },
+      { header: "센터명", key: "centerName", width: 22 },
+      { header: "계약일", key: "contractDate", width: 13 },
+      { header: "학원장", key: "directorName", width: 12 },
+      { header: "연락처", key: "phone", width: 15 },
+      { header: "계약기간", key: "elapsed", width: 10 },
+      { header: "계약종료", key: "remain", width: 12 },
+      { header: "현재등록학생", key: "currentStudents", width: 12 },
+      { header: "누적사용계정", key: "usedAccounts", width: 12 },
+      { header: "총계정", key: "totalAccounts", width: 9 },
+      { header: "계정사용률(%)", key: "usageRate", width: 12 },
+      { header: "계정당수강료(만원)", key: "tuitionPerAccount", width: 15 },
+      { header: "학원매출(만원)", key: "revenue", width: 13 },
+      { header: "계약금액(만원)", key: "contractAmount", width: 13 },
+      { header: "투자대비수익(만원)", key: "roi", width: 15 },
+    ];
+    rows.forEach((r) => {
+      const d = kpiCenterDerived(r);
+      const dd = kpiContractDday(r.contractDate);
+      ws.addRow({
+        contractType: r.contractType || "", centerName: r.centerName || "", contractDate: r.contractDate || "",
+        directorName: r.directorName || "", phone: r.phone || "",
+        elapsed: dd.elapsed, remain: dd.remain,
+        currentStudents: r.currentStudents || 0, usedAccounts: r.usedAccounts || 0, totalAccounts: d.totalAccounts,
+        usageRate: d.totalAccounts ? Math.round((r.usedAccounts / d.totalAccounts) * 100) : 0,
+        tuitionPerAccount: r.tuitionPerAccount || 0, revenue: d.revenue, contractAmount: d.contractAmount, roi: d.roi,
+      });
+    });
+    const head = ws.getRow(1);
+    head.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    head.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2E86C1" } };
+    head.alignment = { horizontal: "center", vertical: "middle" };
+    ws.views = [{ state: "frozen", ySplit: 1 }];
+
+    const fname = encodeURIComponent(`KPI_관리현황_${scope}${month ? "_" + month : ""}.xlsx`);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${fname}`);
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error("❌ KPI 센터 엑셀 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 종합 현황 (가시 범위 전체 합산 + 부서/지사별 집계) — 계약 KPI + 관리 KPI 동시
+app.get("/api/super/kpi/overview", requireSuperAdmin, requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    const STEP_KEYS = ["step_firstConsult", "step_briefingApply", "step_briefingAttend", "step_followup", "step_offlineMeeting", "step_contract"];
+
+    // 1) 가시 노드 목록
+    const nodes = [];
+    if (u.scope === "예비지사" || u.scope === "정식지사") {
+      const b = u.branchId ? await KpiBranch.findById(u.branchId) : null;
+      nodes.push({ key: "b" + u.branchId, label: b ? b.branchName : u.scope, scope: u.scope, branchId: u.branchId ? String(u.branchId) : null });
+    } else {
+      if (u.scope === "본사") nodes.push({ key: "본사", label: "본사", scope: "본사", branchId: null });
+      nodes.push({ key: "사업본부", label: "사업본부", scope: "사업본부", branchId: null });
+      for (const t of ["예비지사", "정식지사"]) {
+        const bs = await KpiBranch.find({ type: t }).sort({ createdAt: 1 });
+        for (const b of bs) nodes.push({ key: "b" + String(b._id), label: b.branchName, scope: t, branchId: String(b._id) });
+      }
+    }
+
+    // 2) 가시 범위 데이터 로드
+    let filter;
+    if (u.scope === "예비지사" || u.scope === "정식지사") filter = { scope: u.scope, branchId: u.branchId };
+    else if (u.scope === "사업본부") filter = { scope: { $in: ["사업본부", "예비지사", "정식지사"] } };
+    else filter = {}; // 본사=전체
+    const [acads, centers] = await Promise.all([
+      KpiAcademy.find(filter).lean(),
+      KpiCenter.find(filter).lean(),
+    ]);
+
+    // 3) 노드별 집계
+    const keyOf = (scope, branchId) => (scope === "예비지사" || scope === "정식지사") ? "b" + String(branchId) : scope;
+    const map = {};
+    for (const nd of nodes) {
+      map[nd.key] = {
+        ...nd,
+        contract: { total: 0, steps: { step_firstConsult: 0, step_briefingApply: 0, step_briefingAttend: 0, step_followup: 0, step_offlineMeeting: 0, step_contract: 0 }, payment: 0, rate: 0 },
+        manage: { centers: 0, students: 0, used: 0, total: 0, revenue: 0, roi: 0 },
+      };
+    }
+    for (const a of acads) {
+      const m = map[keyOf(a.scope, a.branchId)]; if (!m) continue;
+      m.contract.total++;
+      for (const k of STEP_KEYS) if (a[k]) m.contract.steps[k]++;
+      if (a.step_payment) m.contract.payment++;
+    }
+    for (const c of centers) {
+      const m = map[keyOf(c.scope, c.branchId)]; if (!m) continue;
+      const info = KPI_CONTRACT_TYPES[c.contractType] || { amount: 0, totalAccounts: 0 };
+      const rev = (Number(c.tuitionPerAccount) || 0) * (Number(c.usedAccounts) || 0);
+      m.manage.centers++;
+      m.manage.students += Number(c.currentStudents) || 0;
+      m.manage.used += Number(c.usedAccounts) || 0;
+      m.manage.total += info.totalAccounts;
+      m.manage.revenue += rev;
+      m.manage.roi += rev - info.amount;
+    }
+    const out = nodes.map((nd) => {
+      const x = map[nd.key];
+      x.contract.rate = x.contract.total ? Math.round((x.contract.payment / x.contract.total) * 100) : 0;
+      return x;
+    });
+
+    // 전체 목록 (소속 라벨 부착) — 종합 하단 표시용
+    const allBranches = await KpiBranch.find({}).lean();
+    const bMap = {};
+    allBranches.forEach((b) => { bMap[String(b._id)] = b.branchName; });
+    const labelOf = (scope, branchId) =>
+      (scope === "예비지사" || scope === "정식지사") ? (bMap[String(branchId)] || scope) : scope;
+    const academies = acads
+      .map((a) => ({ ...a, _id: String(a._id), branchId: a.branchId ? String(a.branchId) : null, ownerLabel: labelOf(a.scope, a.branchId) }));
+    const centersOut = centers
+      .map((c) => ({ ...c, _id: String(c._id), branchId: c.branchId ? String(c.branchId) : null, ownerLabel: labelOf(c.scope, c.branchId), ...kpiCenterDerived(c) }));
+
+    res.json({ ok: true, nodes: out, academies, centers: centersOut });
+  } catch (err) {
+    console.error("❌ KPI 종합현황 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
 });
 
 // ===== 🎥 온라인 설명회 고정 링크 (슈퍼관리자가 줌 링크만 갱신, 배포 불필요) =====
@@ -44538,6 +45350,23 @@ mongoose
       console.log("✅ LearningLog 인덱스 동기화 완료");
     } catch (indexErr) {
       console.error("⚠️ 인덱스 동기화 오류:", indexErr.message);
+    }
+
+    // 🏆 KPI 시스템 - 최초 본사 계정 시드 (없을 때만)
+    try {
+      const hqExists = await KpiAccount.findOne({ scope: "본사" });
+      if (!hqExists) {
+        await KpiAccount.create({
+          scope: "본사",
+          name: "관리자",
+          passwordHash: hashKpiPassword("brain1234"),
+          role: "담당자",
+          createdBy: "system",
+        });
+        console.log("✅ KPI 최초 본사 계정 생성: 관리자 / brain1234");
+      }
+    } catch (seedErr) {
+      console.error("⚠️ KPI 본사 계정 시드 오류:", seedErr.message);
     }
 
 // ============================================

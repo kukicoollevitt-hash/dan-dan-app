@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>브레인 KPI 자동관리시스템</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif; background: #f4f5f7; color: #2c3e50; }
+    .layout { display: flex; min-height: 100vh; }
+
+    /* 좌측 사이드바 */
+    .sidebar { width: 260px; background: #2c3e50; color: #ecf0f1; display: flex; flex-direction: column; flex-shrink: 0; position: sticky; top: 0; height: 100vh; }
+    .sidebar-head { padding: 20px 18px 14px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .sidebar-head .title { font-size: 16px; font-weight: 800; }
+    .sidebar-head .who { margin-top: 8px; font-size: 12px; color: #bdc3c7; line-height: 1.5; }
+    .sidebar-head .who b { color: #E67E22; }
+    .tree { flex: 1; overflow-y: auto; padding: 10px 8px; }
+    .sec { margin-bottom: 4px; }
+    .sec-title { font-size: 12px; font-weight: 700; color: #E67E22; padding: 8px 10px 4px; letter-spacing: .3px; }
+    .node { padding: 7px 11px; margin: 2px 6px; border-radius: 8px; cursor: pointer; font-size: 13.5px; display: flex; align-items: center; gap: 7px; }
+    .node:hover { background: rgba(255,255,255,0.08); }
+    .node.active { background: #E67E22; color: #fff; font-weight: 600; }
+    .node.branch { font-weight: 600; }
+    .node.member { margin-left: 20px; font-size: 12.5px; color: #cfd8df; }
+    .node .role { font-size: 11px; opacity: .7; margin-left: auto; }
+    .node .reset { font-size: 11px; margin-left: auto; background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 2px 7px; border-radius: 6px; cursor: pointer; display: none; }
+    .node.member:hover .reset { display: inline-block; }
+    .empty-hint { font-size: 12px; color: #7f8c9a; padding: 3px 14px 8px; }
+    .sidebar-actions { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 7px; }
+    .sidebar-actions button { width: 100%; padding: 9px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-branch { background: #E67E22; color: #fff; }
+    .btn-account { background: #3498db; color: #fff; }
+    .btn-logout { background: transparent; color: #bdc3c7; border: 1px solid rgba(255,255,255,0.2) !important; }
+
+    /* 우측 본문 */
+    .main { flex: 1; padding: 26px 30px; overflow-x: hidden; }
+    .main-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; gap: 16px; }
+    .main-head h2 { font-size: 21px; }
+    .breadcrumb { font-size: 12.5px; color: #95a5a6; margin-top: 4px; }
+    .btn-register { background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%); color: #fff; border: none; border-radius: 9px; padding: 11px 18px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+
+    /* 탭 (계약 KPI / 센터 KPI) */
+    .tabs { display: flex; gap: 4px; border-bottom: 2px solid #e3e7eb; margin-bottom: 18px; }
+    .tab { background: none; border: none; padding: 11px 20px; font-size: 15px; font-weight: 700; color: #95a5a6; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+    .tab.active { color: #E67E22; border-bottom-color: #E67E22; }
+    .tab:hover:not(.active) { color: #566; }
+    /* 센터 KPI: 파랑 계열 강조 */
+    #manageView thead th.g1, #manageView thead th.c1 { background:#e7f0fb; color:#205098; }
+    #manageView thead th.g2, #manageView thead th.c2 { background:#eafaf1; color:#1e8449; }
+    .num-input { width: 66px; border: 1px solid #ddd; border-radius: 6px; padding: 5px 6px; font-size: 12.5px; text-align: right; }
+    .money { font-weight: 700; }
+    .money.pos { color: #1e8449; }
+    .money.neg { color: #e74c3c; }
+    .acct { color: #7f8c9a; font-size: 12px; }
+
+    /* 컨트롤 바 (월필터/엑셀) */
+    .controls { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .controls label { font-size: 13px; font-weight: 600; color: #566; }
+    .controls select { padding: 8px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .btn-export { margin-left: auto; background: #1e6b3a; color: #fff; border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-export:hover { background: #17512c; }
+
+    /* 퍼널 요약 */
+    .funnel { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .conv-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+    .conv-chip { background: #f0ecf7; color: #6c3fa4; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 20px; }
+    .conv-chip b { color: #4a2578; }
+
+    /* 종합 현황 */
+    .overview { background: #fbfcfd; border: 1px solid #e6ebf0; border-radius: 14px; padding: 16px 18px; margin-bottom: 22px; }
+    .overview h3 { font-size: 15px; color: #2c3e50; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .overview h3 .live { font-size: 11px; font-weight: 700; color: #fff; background: #e74c3c; border-radius: 10px; padding: 2px 8px; }
+    .overview .funnel { margin-bottom: 12px; }
+    .ov-table { width: 100%; border-collapse: collapse; font-size: 12.5px; background: #fff; border-radius: 8px; overflow: hidden; }
+    .ov-table th, .ov-table td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #eef1f4; white-space: nowrap; }
+    .ov-table thead th { background: #eef2f6; color: #566; font-weight: 700; }
+    .ov-table td.node { text-align: left; font-weight: 700; cursor: pointer; color: #2c5aa0; }
+    .ov-table td.node:hover { text-decoration: underline; }
+    .ov-table tr.sum td { background: #fff6ec; font-weight: 800; border-top: 2px solid #f0d9c0; }
+    .ov-scope { display: inline-block; font-size: 10px; color: #95a5a6; margin-left: 4px; }
+    .fcard { background: #fff; border-radius: 12px; padding: 12px 16px; min-width: 92px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-top: 3px solid #dfe4ea; }
+    .fcard .lbl { font-size: 12px; color: #7f8c9a; margin-bottom: 4px; }
+    .fcard .val { font-size: 22px; font-weight: 800; }
+    .fcard.total { border-top-color: #34495e; }
+    .fcard.contract { border-top-color: #E67E22; }
+    .fcard.payment { border-top-color: #27ae60; }
+    .fcard.rate { border-top-color: #9b59b6; background: #faf5fd; }
+    .fcard.cbtr { border-top-color: #16a085; background: #f2fbf9; }  /* 계약 기여도 카드 */
+    /* 작은 요약 카드 (스탠다드/프리미엄 나란히) */
+    .funnel.sc-small { gap: 7px; }
+    .funnel.sc-small .fcard { padding: 8px 10px; min-width: 60px; border-radius: 10px; }
+    .funnel.sc-small .fcard .lbl { font-size: 10.5px; margin-bottom: 2px; }
+    .funnel.sc-small .fcard .val { font-size: 15px !important; }
+
+    /* 테이블 */
+    .table-wrap { background: #fff; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; min-width: 1180px; font-size: 13px; }
+    th, td { padding: 10px 10px; text-align: center; white-space: nowrap; border-bottom: 1px solid #eef1f4; }
+    thead th { background: #f8f9fb; color: #566; font-weight: 700; font-size: 12px; position: sticky; top: 0; }
+    /* 1차(파랑) / 2차(주황) 헤더 색 구분 */
+    thead th.g1, thead th.c1 { background: #e7f0fb; color: #205098; }
+    thead th.g2, thead th.c2 { background: #fdeede; color: #b5651d; }
+    thead th.g1, thead th.g2 { font-size: 13.5px; font-weight: 800; border-bottom: 2px solid rgba(0,0,0,0.06); }
+    tbody tr:hover { background: #fcfcfd; }
+    td.name { font-weight: 700; text-align: left; }
+    .toggle { border: none; border-radius: 6px; width: 30px; height: 26px; font-size: 13px; font-weight: 800; cursor: pointer; }
+    .toggle.on { background: #27ae60; color: #fff; }
+    .toggle.off { background: #fdecec; color: #e74c3c; }
+    .mini-select { border: 1px solid #ddd; border-radius: 6px; padding: 4px 6px; font-size: 12px; }
+    .na { color: #cbd2d8; }
+    .del { background: none; border: none; cursor: pointer; color: #c0392b; font-size: 14px; opacity: .5; }
+    .del:hover { opacity: 1; }
+    .empty-table { padding: 50px; text-align: center; color: #95a5a6; }
+    .btn-edit { background: #eef2f8; color: #2c5aa0; border: 1px solid #d3ddec; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-edit:hover { background: #dfe8f5; }
+    .row-chk { width: 15px; height: 15px; cursor: pointer; }
+    th.chk-col { width: 34px; }
+    /* 선택 삭제 바 */
+    .selbar { display: none; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 8px; }
+    .selbar .cnt { font-size: 13px; color: #566; font-weight: 600; }
+    .btn-bulkdel { background: #e74c3c; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-bulkdel:hover { background: #c0392b; }
+    /* 이탈 단계 필터 */
+    .dropoff-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0; }
+    .dropoff-bar .dlabel { font-size: 12px; color: #7f8c9a; font-weight: 700; margin-right: 4px; }
+    .dbtn { border: 1px solid #d8dde3; background: #fff; border-radius: 16px; padding: 5px 12px; font-size: 12.5px; cursor: pointer; color: #566; }
+    .dbtn:hover { background: #f4f6f8; }
+    .dbtn.active { background: #34495e; color: #fff; border-color: #34495e; font-weight: 700; }
+    .dbtn.prob.active { background: #e74c3c; border-color: #e74c3c; }
+    .dbtn .dcnt { font-weight: 800; margin-left: 3px; }
+
+    /* 모달 */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 430px; padding: 26px; max-height: 92vh; overflow-y: auto; }
+    .modal h3 { font-size: 18px; margin-bottom: 16px; }
+    .modal label { display: block; font-size: 13px; font-weight: 600; color: #555; margin: 12px 0 5px; }
+    .modal select, .modal input { width: 100%; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 9px; font-size: 14px; outline: none; }
+    .modal select:focus, .modal input:focus { border-color: #E67E22; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-actions button { flex: 1; padding: 12px; border: none; border-radius: 9px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .modal-cancel { background: #ecf0f1; color: #555; }
+    .modal-ok { background: #E67E22; color: #fff; }
+    .modal-ok.green { background: #27ae60; }
+    .modal-err { display: none; color: #e74c3c; font-size: 13px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <div class="title">🏆 브레인 KPI</div>
+        <div class="who" id="whoami">불러오는 중...</div>
+      </div>
+      <div class="tree" id="tree"></div>
+      <div class="sidebar-actions">
+        <button class="btn-branch" id="btnAddBranch" style="display:none" onclick="openBranchModal()">＋ 지사 개설</button>
+        <button class="btn-account" id="btnAddAccount" style="display:none" onclick="openAccountModal()">＋ 담당자 계정 추가</button>
+        <button class="btn-logout" onclick="logout()">로그아웃</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="main-head">
+        <div>
+          <h2 id="mainTitle">KPI</h2>
+          <div class="breadcrumb" id="breadcrumb"></div>
+        </div>
+        <button class="btn-register" id="btnRegister" onclick="openRegister()">＋ 학원 등록</button>
+      </div>
+
+      <div class="tabs" id="tabBar">
+        <button class="tab active" id="tab-contract" onclick="switchTab('contract')">계약 KPI 관리</button>
+        <button class="tab" id="tab-manage" onclick="switchTab('manage')">센터 KPI 관리</button>
+      </div>
+
+      <div id="nodeArea">
+      <!-- 계약 KPI 뷰 (학원 파이프라인) -->
+      <div id="contractView">
+        <div class="controls" id="controls" style="display:none">
+          <label>기간(월별·최초상담일)</label>
+          <select id="monthFilter" onchange="applyFilter()"></select>
+          <button class="btn-export" onclick="exportExcel()">📊 엑셀 내보내기</button>
+        </div>
+        <div class="funnel" id="funnel"></div>
+        <div class="conv-row" id="convRow"></div>
+        <div class="dropoff-bar" id="dropoffBar"></div>
+        <div class="selbar" id="cSelBar">
+          <span class="cnt" id="cSelCnt"></span>
+          <button class="btn-bulkdel" onclick="bulkDeleteAcademies()">선택 삭제</button>
+        </div>
+        <div id="tableArea"></div>
+      </div>
+
+      <!-- 센터 KPI 뷰 (센터 운영/매출) -->
+      <div id="manageView" style="display:none">
+        <div class="controls" id="mControls" style="display:none">
+          <label>기간(월별·계약일)</label>
+          <select id="mMonthFilter" onchange="applyCenterFilter()"></select>
+          <label>유형</label>
+          <select id="mType" onchange="applyCenterFilter()">
+            <option value="">전체</option>
+            <option value="스탠다드">스탠다드</option>
+            <option value="프리미엄">프리미엄</option>
+          </select>
+          <label>정렬</label>
+          <select id="mSort" onchange="applyCenterFilter()">
+            <option value="date">계약일 최신순</option>
+            <option value="expire">계약종료 임박순</option>
+            <option value="students">현재등록학생 많은순</option>
+            <option value="usage">사용률 높은순</option>
+            <option value="revenue">학원매출 높은순</option>
+            <option value="roi">투자대비수익 높은순</option>
+            <option value="breakeven">손익분기 느린순(관리대상)</option>
+          </select>
+          <button class="btn-export" onclick="exportCenters()">📊 엑셀 내보내기</button>
+        </div>
+        <div class="funnel" id="mSummary"></div>
+        <div class="selbar" id="mSelBar">
+          <span class="cnt" id="mSelCnt"></span>
+          <button class="btn-bulkdel" onclick="bulkDeleteCenters()">선택 삭제</button>
+        </div>
+        <div id="mTableArea"></div>
+      </div>
+      </div><!-- /nodeArea -->
+
+      <!-- 종합 실시간 현황 (본사 전용 · 좌측 메뉴에서 진입) -->
+      <div id="overviewView" style="display:none"></div>
+    </main>
+  </div>
+
+  <!-- 학원 정보 수정 모달 (1차 정보) -->
+  <div class="overlay" id="editModal">
+    <div class="modal">
+      <h3>학원 정보 수정</h3>
+      <label>유입경로 (선택)</label>
+      <select id="ed_inflow"><option value="">선택 안 함</option><option>지인소개</option><option>홈페이지</option><option>인스타그램</option><option>페이스북</option></select>
+      <label>최초상담일</label>
+      <input type="date" id="ed_date" />
+      <label>학원명 *</label>
+      <input type="text" id="ed_name" placeholder="학원명" />
+      <label>지역</label>
+      <input type="text" id="ed_region" placeholder="예: 서울 강남구" />
+      <label>학원장 이름</label>
+      <input type="text" id="ed_director" placeholder="학원장 이름" />
+      <label>연락처</label>
+      <input type="text" id="ed_phone" placeholder="예: 010-1234-5678" />
+      <label>목적 (선택)</label>
+      <select id="ed_purpose"><option value="">선택 안 함</option><option>신규창업</option><option>추가과목개설</option><option>문해력관확장</option><option>브랜드교체</option></select>
+      <p class="modal-err" id="ed_err"></p>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeModal('editModal')">취소</button>
+        <button class="modal-ok" onclick="submitEdit()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 센터 정보 수정 모달 (1차 센터정보) -->
+  <div class="overlay" id="centerEditModal">
+    <div class="modal">
+      <h3>센터 정보 수정</h3>
+      <label>계약유형</label>
+      <select id="ced_type"><option value="">선택 안 함</option><option value="스탠다드">스탠다드 (180만원 · 120계정)</option><option value="프리미엄">프리미엄 (420만원 · 360계정)</option></select>
+      <label>센터명 *</label>
+      <input type="text" id="ced_name" placeholder="센터명" />
+      <label>계약일</label>
+      <input type="date" id="ced_date" />
+      <label>학원장명</label>
+      <input type="text" id="ced_director" placeholder="학원장명" />
+      <label>연락처</label>
+      <input type="text" id="ced_phone" placeholder="예: 010-1234-5678" />
+      <p class="modal-err" id="ced_err"></p>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeModal('centerEditModal')">취소</button>
+        <button class="modal-ok green" onclick="submitCenterEdit()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 학원 등록 모달 (1차 정보) -->
+  <div class="overlay" id="registerModal">
+    <div class="modal">
+      <h3>학원 등록 <span id="rg_scope" style="font-size:13px;color:#E67E22"></span></h3>
+      <div id="rg_targetWrap" style="display:none">
+        <label>등록 대상 소속</label>
+        <select id="rg_targetScope" onchange="onRegTargetChange()"></select>
+        <div id="rg_targetBranchWrap" style="display:none">
+          <label>지사 선택</label>
+          <select id="rg_targetBranch"></select>
+        </div>
+      </div>
+      <label>유입경로 (선택)</label>
+      <select id="rg_inflow"><option value="">선택 안 함</option><option>지인소개</option><option>홈페이지</option><option>인스타그램</option><option>페이스북</option></select>
+      <label>최초상담일</label>
+      <input type="date" id="rg_date" />
+      <label>학원명 *</label>
+      <input type="text" id="rg_name" placeholder="학원명" />
+      <label>지역</label>
+      <input type="text" id="rg_region" placeholder="예: 서울 강남구" />
+      <label>학원장 이름</label>
+      <input type="text" id="rg_director" placeholder="학원장 이름" />
+      <label>연락처</label>
+      <input type="text" id="rg_phone" placeholder="예: 010-1234-5678" />
+      <label>목적 (선택)</label>
+      <select id="rg_purpose"><option value="">선택 안 함</option><option>신규창업</option><option>추가과목개설</option><option>문해력관확장</option><option>브랜드교체</option></select>
+      <p class="modal-err" id="rg_err"></p>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeModal('registerModal')">취소</button>
+        <button class="modal-ok green" onclick="submitRegister()">등록</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 센터 등록 모달 (1차 센터정보) -->
+  <div class="overlay" id="centerModal">
+    <div class="modal">
+      <h3>센터 등록 <span id="cg_scope" style="font-size:13px;color:#E67E22"></span></h3>
+      <div id="cg_targetWrap" style="display:none">
+        <label>등록 대상 소속</label>
+        <select id="cg_targetScope" onchange="onCenterTargetChange()"></select>
+        <div id="cg_targetBranchWrap" style="display:none">
+          <label>지사 선택</label>
+          <select id="cg_targetBranch"></select>
+        </div>
+      </div>
+      <label>계약유형</label>
+      <select id="cg_type"><option value="">선택 안 함</option><option value="스탠다드">스탠다드 (180만원 · 120계정)</option><option value="프리미엄">프리미엄 (420만원 · 360계정)</option></select>
+      <label>센터명 *</label>
+      <input type="text" id="cg_name" placeholder="센터명" />
+      <label>계약일</label>
+      <input type="date" id="cg_date" />
+      <label>학원장명</label>
+      <input type="text" id="cg_director" placeholder="학원장명" />
+      <label>연락처</label>
+      <input type="text" id="cg_phone" placeholder="예: 010-1234-5678" />
+      <p class="modal-err" id="cg_err"></p>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeModal('centerModal')">취소</button>
+        <button class="modal-ok green" onclick="submitCenter()">등록</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 지사 개설 모달 -->
+  <div class="overlay" id="branchModal">
+    <div class="modal">
+      <h3>지사 개설</h3>
+      <label>구분</label>
+      <select id="b_type"><option value="예비지사">예비지사</option><option value="정식지사">정식지사</option></select>
+      <label>지사명</label>
+      <input type="text" id="b_name" placeholder="예: 김형태 지사" />
+      <label>지사장 이름 (담당자)</label>
+      <input type="text" id="b_manager" placeholder="지사장 이름" />
+      <label>초기 비밀번호</label>
+      <input type="password" id="b_pw" placeholder="비밀번호" />
+      <p class="modal-err" id="b_err"></p>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeModal('branchModal')">취소</button>
+        <button class="modal-ok" onclick="submitBranch()">개설</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 계정 추가 모달 -->
+  <div class="overlay" id="accountModal">
+    <div class="modal">
+      <h3>담당자 계정 추가</h3>
+      <div id="a_scopeWrap">
+        <label>소속</label>
+        <select id="a_scope" onchange="onScopeChange()"></select>
+      </div>
+      <div id="a_branchWrap" style="display:none">
+        <label>지사 선택</label>
+        <select id="a_branch"></select>
+      </div>
+      <label>담당자 이름</label>
+      <input type="text" id="a_name" placeholder="담당자 이름" />
+      <label>초기 비밀번호</label>
+      <input type="password" id="a_pw" placeholder="비밀번호" />
+      <p class="modal-err" id="a_err"></p>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeModal('accountModal')">취소</button>
+        <button class="modal-ok" onclick="submitAccount()">추가</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 비번 재설정 모달 -->
+  <div class="overlay" id="resetModal">
+    <div class="modal">
+      <h3>비밀번호 재설정</h3>
+      <p style="font-size:13px;color:#777" id="r_target"></p>
+      <label>새 비밀번호</label>
+      <input type="password" id="r_pw" placeholder="새 비밀번호" />
+      <p class="modal-err" id="r_err"></p>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeModal('resetModal')">취소</button>
+        <button class="modal-ok" onclick="submitReset()">재설정</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let ME = null, TREE = null, resetTargetId = null;
+    let SELECTED = null;    // 현재 보고 있는 노드 {scope, branchId, label}
+    let OWN = null;         // 로그인 사용자 본인 노드 (등록 대상)
+    let ROWS = [];          // 현재 노드의 학원 목록 (전체)
+    let FILTERED = [];       // 월 필터 적용 후 화면에 보이는 목록
+    let ACTIVE_TAB = 'contract';  // contract | manage
+    let CENTERS = [];        // 센터 KPI: 센터 목록 (전체)
+    let CFILTERED = [];      // 센터 월 필터 적용본
+    const CONTRACT_TYPES = { '스탠다드': { amount: 180, total: 120 }, '프리미엄': { amount: 420, total: 360 } };
+    const TARGET_BREAKEVEN = 60;  // 손익분기 목표일 (일)
+    let OVERVIEW = [];       // 종합: 노드별 집계
+    let OV_ACADEMIES = [];   // 종합: 전체 학원 목록
+    let OV_CENTERS = [];     // 종합: 전체 센터 목록
+    let OV_TAB = 'contract'; // 종합 서브탭: contract | center
+    let OV_CSORT = 'date';   // 종합 센터 목록 정렬
+    let OV_CTYPE = '';       // 종합 센터 목록 유형 필터 ('' = 전체)
+    let MODE = 'node';       // node | overview
+    let SELECTED_IDS = new Set();  // 계약 KPI: 선택된 학원 id
+    let EDIT_ID = null;      // 학원 정보 수정 대상
+    let SELECTED_CIDS = new Set(); // 센터 KPI: 선택된 센터 id
+    let EDIT_CID = null;     // 센터 정보 수정 대상
+
+    const STEPS = [
+      { key: 'step_firstConsult', label: '최초상담' },
+      { key: 'step_briefingApply', label: '설명회신청' },
+      { key: 'step_briefingAttend', label: '설명회참석' },
+      { key: 'step_followup', label: '후속연락' },
+      { key: 'step_offlineMeeting', label: '오프미팅' },
+      { key: 'step_contract', label: '계약' },
+    ];
+    const HOLD_REASONS = ['금액부담', '좀더고민', '기타'];
+
+    // 이탈 단계 필터 (계약 기준 역순 누적: 미계약 → +오프미팅✕ → +후속연락✕ → …)
+    const DROPOFF_ORDER = ['step_contract', 'step_offlineMeeting', 'step_followup', 'step_briefingAttend', 'step_briefingApply', 'step_firstConsult'];
+    const DROPOFF_LABELS = ['미계약', '오프미팅✕', '후속연락✕', '설명회참석✕', '설명회신청✕', '최초상담✕'];
+    let DROPOFF_SEL = new Set();     // 노드 상세 테이블 필터 (빈 Set=전체) · 독립 다중선택 AND
+    let OV_DROPOFF_SEL = new Set();  // 종합 전체목록 필터 (빈 Set=전체)
+    // 선택한 모든 단계를 '안 함'으로 만족(AND)
+    function matchDropoffMulti(r, sel) { for (const i of sel) { if (r[DROPOFF_ORDER[i]]) return false; } return true; }
+    function dropoffBarHtml(base, sel, fnName) {
+      let html = `<span class="dlabel">이탈 단계(중복선택·모두 해당):</span><button class="dbtn ${sel.size === 0 ? 'active' : ''}" onclick="${fnName}(null)">전체 <span class="dcnt">${base.length}</span></button>`;
+      for (let i = 0; i < DROPOFF_LABELS.length; i++) {
+        const cnt = base.filter(r => !r[DROPOFF_ORDER[i]]).length; // 그 단계 단독 미완료 수
+        html += `<button class="dbtn prob ${sel.has(i) ? 'active' : ''}" onclick="${fnName}(${i})">${DROPOFF_LABELS[i]} <span class="dcnt">${cnt}</span></button>`;
+      }
+      return html;
+    }
+    function setDropoff(i) { if (i == null) DROPOFF_SEL.clear(); else (DROPOFF_SEL.has(i) ? DROPOFF_SEL.delete(i) : DROPOFF_SEL.add(i)); applyFilter(); }
+    function ovSetDropoff(i) { if (i == null) OV_DROPOFF_SEL.clear(); else (OV_DROPOFF_SEL.has(i) ? OV_DROPOFF_SEL.delete(i) : OV_DROPOFF_SEL.add(i)); renderOverview(); }
+
+    async function api(url, opts) {
+      const res = await fetch(url, opts);
+      if (res.status === 401) { location.href = '/super/kpi/login'; throw new Error('unauthorized'); }
+      return res.json();
+    }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    // 날짜 내림차순(최신 먼저), 빈 날짜는 맨 아래
+    function byDateDesc(field) {
+      return (a, b) => {
+        const av = a[field] || '', bv = b[field] || '';
+        if (!av && !bv) return 0;
+        if (!av) return 1;
+        if (!bv) return -1;
+        return bv.localeCompare(av);
+      };
+    }
+
+    async function init() {
+      const me = await api('/api/super/kpi/me');
+      if (!me.ok) { location.href = '/super/kpi/login'; return; }
+      ME = me;
+      const u = me.user;
+      document.getElementById('whoami').innerHTML = `<b>${esc(u.scope)}</b>${u.branchName ? ' · ' + esc(u.branchName) : ''}<br>${esc(u.name)} 님`;
+      document.getElementById('btnAddBranch').style.display = me.canCreateBranch ? 'block' : 'none';
+      document.getElementById('btnAddAccount').style.display = me.canManageAccounts ? 'block' : 'none';
+      // 본인 노드(등록 대상)
+      OWN = { scope: u.scope, branchId: u.branchId || null, label: u.branchName || u.scope };
+      updateRegisterButton();
+      await loadTree();
+      // 본사는 종합 실시간 현황을 기본 화면으로, 그 외는 본인 노드
+      if (u.scope === '본사') selectOverview();
+      else selectNodeData(OWN.scope, OWN.branchId, OWN.label);
+    }
+
+    function setMode(mode) {
+      MODE = mode;
+      const ov = mode === 'overview';
+      document.getElementById('tabBar').style.display = ov ? 'none' : 'flex';
+      document.getElementById('nodeArea').style.display = ov ? 'none' : 'block';
+      document.getElementById('overviewView').style.display = ov ? 'block' : 'none';
+      if (ov) document.getElementById('btnRegister').style.display = 'none';
+      else updateRegisterButton();
+    }
+
+    async function selectOverview() {
+      setMode('overview');
+      document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+      const el = document.getElementById('ovNode'); if (el) el.classList.add('active');
+      document.getElementById('mainTitle').textContent = '📊 종합 실시간 현황';
+      document.getElementById('breadcrumb').textContent = '전체 부서·지사 합산 (본사 전용)';
+      await loadOverview();
+    }
+
+    function updateRegisterButton() {
+      const isHQ = ME.user.scope === '본사';
+      const btn = document.getElementById('btnRegister');
+      // 센터 KPI 탭은 본사만 등록 가능 → 그 외에는 버튼 숨김
+      if (ACTIVE_TAB === 'manage' && !isHQ) { btn.style.display = 'none'; return; }
+      btn.style.display = '';
+      const noun = ACTIVE_TAB === 'contract' ? '학원' : '센터';
+      btn.textContent = isHQ ? `＋ ${noun} 등록` : `＋ ${noun} 등록 (${OWN.label})`;
+    }
+
+    function openRegister() { ACTIVE_TAB === 'contract' ? openRegisterModal() : openCenterModal(); }
+
+    function switchTab(tab) {
+      ACTIVE_TAB = tab;
+      document.getElementById('tab-contract').classList.toggle('active', tab === 'contract');
+      document.getElementById('tab-manage').classList.toggle('active', tab === 'manage');
+      document.getElementById('contractView').style.display = (tab === 'contract') ? 'block' : 'none';
+      document.getElementById('manageView').style.display = (tab === 'manage') ? 'block' : 'none';
+      updateRegisterButton();
+      loadActiveTab();
+    }
+
+    async function loadActiveTab() {
+      return ACTIVE_TAB === 'contract' ? loadAcademies() : loadCenters();
+    }
+
+    async function loadTree() {
+      const data = await api('/api/super/kpi/tree');
+      TREE = data.sections || [];
+      renderTree();
+    }
+
+    function renderTree() {
+      const el = document.getElementById('tree');
+      let html = '';
+      // 종합 실시간 현황 (본사 전용, 맨 위)
+      if (ME.user.scope === '본사') {
+        html += `<div class="sec"><div class="node" id="ovNode" style="background:rgba(230,126,34,0.18);font-weight:700" onclick="selectOverview()">📊 종합 실시간 현황</div></div>`;
+      }
+      for (const sec of TREE) {
+        html += `<div class="sec"><div class="sec-title">${esc(sec.label)}</div>`;
+        if (sec.type === 'scopeGroup') {
+          html += `<div class="node" data-scope="${esc(sec.key)}" onclick="selectNodeData('${esc(sec.key)}',null,'${esc(sec.label)} 전체')">📁 ${esc(sec.label)} 전체</div>`;
+          for (const a of (sec.accounts || [])) html += memberNode(a);
+          if (!(sec.accounts || []).length) html += `<div class="empty-hint">담당자 없음</div>`;
+        } else if (sec.type === 'branchGroup') {
+          if (!(sec.branches || []).length) html += `<div class="empty-hint">개설된 지사 없음</div>`;
+          for (const b of (sec.branches || [])) {
+            html += `<div class="node branch" data-branch="${b.id}" onclick="selectNodeData('${esc(sec.key)}','${b.id}','${esc(b.branchName)}')">🏢 ${esc(b.branchName)}</div>`;
+            for (const a of (b.accounts || [])) html += memberNode(a);
+          }
+        }
+        html += `</div>`;
+      }
+      el.innerHTML = html;
+    }
+
+    function memberNode(a) {
+      const right = ME.canManageAccounts
+        ? `<button class="reset" onclick="event.stopPropagation();openReset('${a.id}','${esc(a.name)}')">비번</button>`
+        : `<span class="role">${esc(a.role)}</span>`;
+      return `<div class="node member">👤 ${esc(a.name)} ${right}</div>`;
+    }
+
+    /* ===== 종합 현황 (가시 범위 전체) ===== */
+    async function loadOverview() {
+      const data = await api('/api/super/kpi/overview');
+      OVERVIEW = data.ok ? (data.nodes || []) : [];
+      OV_ACADEMIES = data.academies || [];
+      OV_CENTERS = data.centers || [];
+      OV_DROPOFF_SEL.clear();
+      renderOverview();
+    }
+    function ovCard(cls, lbl, val, sub, valCls) {
+      return `<div class="fcard ${cls || ''}"><div class="lbl">${lbl}</div><div class="val ${valCls || ''}" style="font-size:${String(val).length > 6 ? '17px' : '22px'}">${val}${sub ? `<span style="font-size:12px;color:#95a5a6"> ${sub}</span>` : ''}</div></div>`;
+    }
+    function ovNodeCell(n, tab) {
+      const bid = n.branchId ? `'${n.branchId}'` : 'null';
+      return `<td class="node" onclick="ovGoNode('${n.scope}',${bid},'${esc(n.label)}','${tab}')">${esc(n.label)}<span class="ov-scope">${n.scope}</span></td>`;
+    }
+    // 종합에서 특정 노드로 이동 (해당 탭 상세로)
+    function ovGoNode(scope, branchId, label, tab) {
+      ACTIVE_TAB = tab;
+      document.getElementById('tab-contract').classList.toggle('active', tab === 'contract');
+      document.getElementById('tab-manage').classList.toggle('active', tab === 'manage');
+      document.getElementById('contractView').style.display = (tab === 'contract') ? 'block' : 'none';
+      document.getElementById('manageView').style.display = (tab === 'manage') ? 'block' : 'none';
+      selectNodeData(scope, branchId, label);
+    }
+    function ovSwitch(tab) { OV_TAB = tab; renderOverview(); }
+
+    function renderOverview() {
+      const bar = `<div class="tabs" style="margin-bottom:18px">
+        <button class="tab ${OV_TAB === 'contract' ? 'active' : ''}" onclick="ovSwitch('contract')">🤝 계약 KPI 종합</button>
+        <button class="tab ${OV_TAB === 'center' ? 'active' : ''}" onclick="ovSwitch('center')">💰 센터 KPI 종합</button>
+      </div>`;
+      const body = OV_TAB === 'contract' ? renderOvContract() : renderOvCenter();
+      document.getElementById('overviewView').innerHTML = bar + body;
+    }
+
+    // 단계별 전환율 세분화 칩 (인접 단계) — 노드/종합 공용
+    function convRowHtml(rows) {
+      const n = rows.length;
+      const cnt = {};
+      for (const s of STEPS) cnt[s.key] = rows.filter(r => r[s.key]).length;
+      const pay = rows.filter(r => r.step_payment).length;
+      const seq = [
+        { label: '전체', v: n },
+        { label: '최초상담', v: cnt.step_firstConsult },
+        { label: '설명회신청', v: cnt.step_briefingApply },
+        { label: '설명회참석', v: cnt.step_briefingAttend },
+        { label: '후속연락', v: cnt.step_followup },
+        { label: '오프미팅', v: cnt.step_offlineMeeting },
+        { label: '계약', v: cnt.step_contract },
+        { label: '결제확정', v: pay },
+      ];
+      let conv = '';
+      for (let i = 1; i < seq.length; i++) {
+        const r = seq[i - 1].v ? Math.round((seq[i].v / seq[i - 1].v) * 100) : 0;
+        conv += `<span class="conv-chip">${seq[i - 1].label}→${seq[i].label} <b>${r}%</b></span>`;
+      }
+      return conv;
+    }
+    // 계약 KPI 종합 (합산 + 비교표 + 전체 학원 목록)
+    // 특정 단계 '함/안함' 그룹의 계약률
+    function contribStats(rows, stepKey) {
+      const on = rows.filter(r => r[stepKey]);
+      const off = rows.filter(r => !r[stepKey]);
+      const rate = arr => arr.length ? Math.round(arr.filter(r => r.step_contract).length / arr.length * 100) : 0;
+      return { onN: on.length, onC: on.filter(r => r.step_contract).length, onRate: rate(on),
+               offN: off.length, offC: off.filter(r => r.step_contract).length, offRate: rate(off) };
+    }
+    // 🎯 계약 기여도 → 네모 카드 3개 (퍼널과 같은 행에 이어붙임)
+    function renderContribution() {
+      const rows = OV_ACADEMIES;
+      if (!rows.length) return '';
+      const b = contribStats(rows, 'step_briefingAttend');
+      const o = contribStats(rows, 'step_offlineMeeting');
+      const bLift = b.onRate - b.offRate, oLift = o.onRate - o.offRate;
+      const both = rows.filter(r => r.step_briefingAttend && r.step_offlineMeeting);
+      const bothC = both.filter(r => r.step_contract).length;
+      const bothRate = both.length ? Math.round(bothC / both.length * 100) : 0;
+      const sign = v => (v >= 0 ? '+' : '') + v;
+      return ovCard('cbtr', '설명회→계약', b.onRate + '%', `미참여 ${b.offRate}% · ${sign(bLift)}%p`)
+        + ovCard('cbtr', '오프미팅→계약', o.onRate + '%', `미참여 ${o.offRate}% · ${sign(oLift)}%p`)
+        + ovCard('cbtr', '둘 다→계약', bothRate + '%', `${bothC}/${both.length}`);
+    }
+    function renderOvContract() {
+      const nodes = OVERVIEW;
+      const ct = { total: 0, contract: 0, payment: 0 };
+      nodes.forEach(n => { ct.total += n.contract.total; ct.contract += n.contract.steps.step_contract; ct.payment += n.contract.payment; });
+      const crate = ct.total ? Math.round(ct.payment / ct.total * 100) : 0;
+      let cRows = '';
+      nodes.forEach(n => {
+        cRows += `<tr>${ovNodeCell(n, 'contract')}<td>${n.contract.total}</td><td>${n.contract.steps.step_contract}</td><td>${n.contract.payment}</td><td>${n.contract.rate}%</td></tr>`;
+      });
+      const summary =
+        `<div class="overview"><h3>🤝 계약 KPI 종합 <span class="live">실시간</span></h3>
+         <div class="funnel">
+           ${ovCard('total', '전체 학원', ct.total)}
+           ${ovCard('contract', '계약', ct.contract)}
+           ${ovCard('payment', '결제확정', ct.payment)}
+           ${ovCard('rate', '계약전환율', crate + '%')}
+           ${renderContribution()}
+         </div>
+         <div class="conv-row">${convRowHtml(OV_ACADEMIES)}</div>
+         <table class="ov-table"><thead><tr><th>부서·지사</th><th>학원수</th><th>계약</th><th>결제</th><th>전환율</th></tr></thead>
+         <tbody>${cRows}<tr class="sum"><td style="text-align:left">합계</td><td>${ct.total}</td><td>${ct.contract}</td><td>${ct.payment}</td><td>${crate}%</td></tr></tbody></table></div>`;
+      return summary + renderOvAcademyList();
+    }
+
+    // 전체 학원 목록 (읽기전용, 소속열, 최초상담일 최신순, 이탈 필터)
+    function renderOvAcademyList() {
+      const base = OV_ACADEMIES.slice();
+      const barHtml = `<div class="dropoff-bar">${dropoffBarHtml(base, OV_DROPOFF_SEL, 'ovSetDropoff')}</div>`;
+      const rows = (OV_DROPOFF_SEL.size === 0 ? base : base.filter(r => matchDropoffMulti(r, OV_DROPOFF_SEL))).sort(byDateDesc('firstConsultDate'));
+      if (!rows.length) return `<h3 style="margin:20px 0 10px;font-size:15px">📋 전체 학원 목록 (0)</h3>${barHtml}<div class="table-wrap"><div class="empty-table">해당 조건의 학원이 없습니다.</div></div>`;
+      const ox = (r, k) => r[k] ? '<b style="color:#27ae60">O</b>' : '<b style="color:#e74c3c">X</b>';
+      const stepHead = STEPS.map(s => `<th class="c2">${s.label}</th>`).join('');
+      let html = `<h3 style="margin:20px 0 10px;font-size:15px">📋 전체 학원 목록 (${rows.length}) · 최초상담일 최신순</h3>${barHtml}
+        <div class="table-wrap"><table>
+        <thead>
+          <tr><th rowspan="2">소속</th><th class="g1" colspan="7">1차 학원정보</th><th class="g2" colspan="${STEPS.length + 2}">2차 계약진행상황</th></tr>
+          <tr><th class="c1">유입경로</th><th class="c1">최초상담일</th><th class="c1">학원명</th><th class="c1">지역</th><th class="c1">학원장</th><th class="c1">연락처</th><th class="c1">목적</th>${stepHead}<th class="c2">보류사유</th><th class="c2">결제확정</th></tr>
+        </thead><tbody>`;
+      for (const r of rows) {
+        const bid = r.branchId ? `'${r.branchId}'` : 'null';
+        html += `<tr style="cursor:pointer" onclick="ovGoNode('${r.scope}',${bid},'${esc(r.ownerLabel)}','contract')">
+          <td style="font-weight:700;color:#2c5aa0;text-align:left">${esc(r.ownerLabel)}</td>
+          <td>${esc(r.inflow) || '<span class="na">-</span>'}</td>
+          <td>${esc(r.firstConsultDate) || '<span class="na">-</span>'}</td>
+          <td class="name">${esc(r.academyName)}</td>
+          <td>${esc(r.region) || '<span class="na">-</span>'}</td>
+          <td>${esc(r.directorName) || '<span class="na">-</span>'}</td>
+          <td>${esc(r.phone) || '<span class="na">-</span>'}</td>
+          <td>${esc(r.purpose) || '<span class="na">-</span>'}</td>
+          ${STEPS.map(s => `<td>${ox(r, s.key)}</td>`).join('')}
+          <td>${r.step_contract ? '<span class="na">—</span>' : (esc(r.holdReason) || '<span class="na">-</span>')}</td>
+          <td>${ox(r, 'step_payment')}</td>
+        </tr>`;
+      }
+      html += `</tbody></table></div>`;
+      return html;
+    }
+
+    // 센터 KPI 종합 (합산 + 비교표 + 전체 센터 목록)
+    function renderOvCenter() {
+      const nodes = OVERVIEW;
+      const mt = { centers: 0, students: 0, used: 0, total: 0, revenue: 0, roi: 0 };
+      nodes.forEach(n => { mt.centers += n.manage.centers; mt.students += n.manage.students; mt.used += n.manage.used; mt.total += n.manage.total; mt.revenue += n.manage.revenue; mt.roi += n.manage.roi; });
+      const musage = mt.total ? Math.round(mt.used / mt.total * 100) : 0;
+      const mroiCls = mt.roi >= 0 ? 'pos' : 'neg';
+      let mRows = '';
+      nodes.forEach(n => {
+        const usage = n.manage.total ? Math.round(n.manage.used / n.manage.total * 100) : 0;
+        const roiCls = n.manage.roi >= 0 ? 'pos' : 'neg';
+        mRows += `<tr>${ovNodeCell(n, 'manage')}<td>${n.manage.centers}</td><td>${n.manage.students.toLocaleString('ko-KR')}</td><td>${usage}% <span class="acct">(${n.manage.used}/${n.manage.total})</span></td><td class="money">${fmtMoney(n.manage.revenue)}</td><td class="money ${roiCls}">${fmtMoney(n.manage.roi)}</td></tr>`;
+      });
+      const summary =
+        `<div class="overview"><h3>💰 센터 KPI 종합 <span class="live">실시간</span></h3>
+         ${centerSummaryHtml(OV_CENTERS)}
+         <table class="ov-table" style="margin-top:6px"><thead><tr><th>부서·지사</th><th>센터</th><th>학생</th><th>누적사용/총계정</th><th>매출</th><th>투자대비수익</th></tr></thead>
+         <tbody>${mRows}<tr class="sum"><td style="text-align:left">합계</td><td>${mt.centers}</td><td>${mt.students.toLocaleString('ko-KR')}</td><td>${musage}% (${mt.used}/${mt.total})</td><td class="money">${fmtMoney(mt.revenue)}</td><td class="money ${mroiCls}">${fmtMoney(mt.roi)}</td></tr></tbody></table></div>`;
+      return summary + renderOvCenterList();
+    }
+
+    // 전체 센터 목록 (읽기전용, 소속열, 계약일 최신순)
+    function renderOvCenterList() {
+      const typed = OV_CTYPE ? OV_CENTERS.filter(c => c.contractType === OV_CTYPE) : OV_CENTERS.slice();
+      const rows = sortCentersBy(typed, OV_CSORT);
+      const typeOpts = [['','전체'],['스탠다드','스탠다드'],['프리미엄','프리미엄']].map(([v,l]) => `<option value="${v}"${OV_CTYPE===v?' selected':''}>${l}</option>`).join('');
+      const sortBar = `<div class="controls" style="margin:12px 0"><label>유형</label><select onchange="ovSetCType(this.value)">${typeOpts}</select><label>정렬</label><select onchange="ovSetCSort(this.value)">${centerSortOptions(OV_CSORT)}</select></div>`;
+      if (!rows.length) return `<h3 style="margin:20px 0 10px;font-size:15px">📋 전체 센터 목록 (0)</h3>${sortBar}<div class="table-wrap"><div class="empty-table">센터 없음</div></div>`;
+      let html = `<h3 style="margin:20px 0 10px;font-size:15px">📋 전체 센터 목록 (${rows.length})</h3>${sortBar}
+        <div class="table-wrap"><table>
+        <thead>
+          <tr><th rowspan="2">소속</th><th class="g1" colspan="5">1차 센터정보</th><th class="g2" colspan="8">2차 관리현황</th></tr>
+          <tr><th class="c1">계약유형</th><th class="c1">센터명</th><th class="c1">계약일</th><th class="c1">학원장</th><th class="c1">연락처</th>
+          <th class="c2">계약기간</th><th class="c2">계약종료</th><th class="c2">현재등록학생</th><th class="c2">누적사용/총계정</th><th class="c2">계정당수강료</th><th class="c2">학원매출</th><th class="c2">투자대비수익</th><th class="c2">손익분기</th></tr>
+        </thead><tbody>`;
+      for (const c of rows) {
+        const d = centerDerived(c);
+        const roiCls = d.roi >= 0 ? 'pos' : 'neg';
+        const bid = c.branchId ? `'${c.branchId}'` : 'null';
+        html += `<tr style="cursor:pointer" onclick="ovGoNode('${c.scope}',${bid},'${esc(c.ownerLabel)}','manage')">
+          <td style="font-weight:700;color:#2c5aa0;text-align:left">${esc(c.ownerLabel)}</td>
+          <td>${esc(c.contractType) || '<span class="na">-</span>'}</td>
+          <td class="name">${esc(c.centerName)}</td>
+          <td>${esc(c.contractDate) || '<span class="na">-</span>'}</td>
+          <td>${esc(c.directorName) || '<span class="na">-</span>'}</td>
+          <td>${esc(c.phone) || '<span class="na">-</span>'}</td>
+          <td>${cellElapsed(c.contractDate)}</td>
+          <td>${cellRemain(c.contractDate)}</td>
+          <td>${(Number(c.currentStudents) || 0).toLocaleString('ko-KR')}</td>
+          <td>${Number(c.usedAccounts) || 0} <span class="acct">/ ${d.total}</span></td>
+          <td>${(Number(c.tuitionPerAccount) || 0).toLocaleString('ko-KR')} <span class="acct">만원</span></td>
+          <td class="money">${fmtMoney(d.revenue)}</td>
+          <td class="money ${roiCls}">${fmtMoney(d.roi)}</td>
+          <td>${cellBreakeven(c)}</td>
+        </tr>`;
+      }
+      html += `</tbody></table></div>`;
+      return html;
+    }
+
+    /* ===== 노드 선택 → 학원 목록 로드 ===== */
+    async function selectNodeData(scope, branchId, label) {
+      setMode('node');
+      SELECTED = { scope, branchId: branchId || null, label };
+      // 트리 활성표시
+      document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+      const sel = branchId
+        ? document.querySelector(`.node[data-branch="${branchId}"]`)
+        : document.querySelector(`.node[data-scope="${scope}"]`);
+      if (sel) sel.classList.add('active');
+      document.getElementById('mainTitle').textContent = `${label} · KPI 관리`;
+      document.getElementById('breadcrumb').textContent = ACTIVE_TAB === 'contract' ? '계약 KPI · 1차 학원정보 + 2차 계약진행상황' : '센터 KPI · 1차 센터정보 + 2차 관리현황';
+      await loadActiveTab();
+    }
+
+    async function loadAcademies() {
+      const q = new URLSearchParams({ scope: SELECTED.scope });
+      if (SELECTED.branchId) q.set('branchId', SELECTED.branchId);
+      const data = await api('/api/super/kpi/academies?' + q.toString());
+      ROWS = data.ok ? (data.rows || []) : [];
+      SELECTED_IDS.clear();
+      DROPOFF_SEL.clear();
+      document.getElementById('controls').style.display = 'flex';
+      buildMonthOptions();
+      applyFilter();
+    }
+
+    function buildMonthOptions() {
+      const months = [...new Set(ROWS.map(r => (r.firstConsultDate || '').slice(0, 7)).filter(m => /^\d{4}-\d{2}$/.test(m)))].sort().reverse();
+      const sel = document.getElementById('monthFilter');
+      const prev = sel.value;
+      let html = '<option value="">전체 기간</option>';
+      for (const m of months) html += `<option value="${m}">${m.replace('-', '년 ')}월</option>`;
+      sel.innerHTML = html;
+      if (prev && months.includes(prev)) sel.value = prev; // 선택 유지
+    }
+
+    function applyFilter() {
+      const m = document.getElementById('monthFilter').value;
+      const base = m ? ROWS.filter(r => (r.firstConsultDate || '').startsWith(m)) : ROWS.slice();
+      document.getElementById('dropoffBar').innerHTML = dropoffBarHtml(base, DROPOFF_SEL, 'setDropoff');
+      const disp = (DROPOFF_SEL.size === 0) ? base : base.filter(r => matchDropoffMulti(r, DROPOFF_SEL));
+      FILTERED = disp.sort(byDateDesc('firstConsultDate'));
+      renderFunnel(FILTERED);
+      renderTable(FILTERED);
+    }
+
+    function renderFunnel(rows) {
+      const n = rows.length;
+      const cnt = {};
+      for (const s of STEPS) cnt[s.key] = rows.filter(r => r[s.key]).length;
+      const pay = rows.filter(r => r.step_payment).length;
+      const rate = n ? Math.round((pay / n) * 100) : 0;
+      let html = `<div class="fcard total"><div class="lbl">전체 학원</div><div class="val">${n}</div></div>`;
+      for (const s of STEPS) {
+        const cls = s.key === 'step_contract' ? ' contract' : '';
+        html += `<div class="fcard${cls}"><div class="lbl">${s.label}</div><div class="val">${cnt[s.key]}</div></div>`;
+      }
+      html += `<div class="fcard payment"><div class="lbl">결제확정</div><div class="val">${pay}</div></div>`;
+      html += `<div class="fcard rate"><div class="lbl">계약전환율</div><div class="val">${rate}%</div></div>`;
+      document.getElementById('funnel').innerHTML = html;
+
+      // 단계별 전환율 세분화 (인접 단계)
+      document.getElementById('convRow').innerHTML = convRowHtml(rows);
+    }
+
+    function renderTable(rows) {
+      if (!rows.length) {
+        document.getElementById('tableArea').innerHTML = `<div class="table-wrap"><div class="empty-table">해당 조건의 학원이 없습니다. 우측 상단 <b>＋ 학원 등록</b>으로 추가하세요.</div></div>`;
+        updateSelBar();
+        return;
+      }
+      const stepHead = STEPS.map(s => `<th class="c2">${s.label}</th>`).join('');
+      let html = `<div class="table-wrap"><table>
+        <thead>
+          <tr><th rowspan="2" class="chk-col"><input type="checkbox" class="row-chk" title="전체선택" onclick="toggleSelectAllC(this)"></th><th class="g1" colspan="7">1차 학원정보</th><th class="g2" colspan="${STEPS.length + 2}">2차 계약진행상황</th><th rowspan="2">수정</th></tr>
+          <tr>
+            <th class="c1">유입경로</th><th class="c1">최초상담일</th><th class="c1">학원명</th><th class="c1">지역</th><th class="c1">학원장</th><th class="c1">연락처</th><th class="c1">목적</th>
+            ${stepHead}<th class="c2">보류사유</th><th class="c2">결제확정</th>
+          </tr>
+        </thead><tbody>`;
+      for (const r of rows) {
+        const tog = (key) => `<button class="toggle ${r[key] ? 'on' : 'off'}" onclick="toggleStep('${r._id}','${key}')">${r[key] ? 'O' : 'X'}</button>`;
+        // 보류사유: 계약=무일 때만
+        let holdCell;
+        if (r.step_contract) holdCell = `<span class="na">—</span>`;
+        else {
+          const opts = ['<option value="">-</option>'].concat(HOLD_REASONS.map(h => `<option${r.holdReason === h ? ' selected' : ''}>${h}</option>`)).join('');
+          holdCell = `<select class="mini-select" onchange="setHold('${r._id}', this.value)">${opts}</select>`;
+        }
+        // 결제확정: 항상 O/X 선택 가능
+        const payCell = `<button class="toggle ${r.step_payment ? 'on' : 'off'}" onclick="toggleStep('${r._id}','step_payment')">${r.step_payment ? 'O' : 'X'}</button>`;
+        html += `<tr>
+          <td><input type="checkbox" class="row-chk" ${SELECTED_IDS.has(r._id) ? 'checked' : ''} onclick="toggleRowSel('${r._id}',this.checked)"></td>
+          <td>${esc(r.inflow) || '<span class="na">-</span>'}</td>
+          <td>${esc(r.firstConsultDate) || '<span class="na">-</span>'}</td>
+          <td class="name">${esc(r.academyName)}</td>
+          <td>${esc(r.region) || '<span class="na">-</span>'}</td>
+          <td>${esc(r.directorName) || '<span class="na">-</span>'}</td>
+          <td>${esc(r.phone) || '<span class="na">-</span>'}</td>
+          <td>${esc(r.purpose) || '<span class="na">-</span>'}</td>
+          ${STEPS.map(s => `<td>${tog(s.key)}</td>`).join('')}
+          <td>${holdCell}</td>
+          <td>${payCell}</td>
+          <td><button class="btn-edit" onclick="openEditModal('${r._id}')">✏️ 수정</button></td>
+        </tr>`;
+      }
+      html += `</tbody></table></div>`;
+      document.getElementById('tableArea').innerHTML = html;
+      updateSelBar();
+    }
+
+    /* ===== 선택 삭제 / 정보 수정 (계약 KPI) ===== */
+    function toggleRowSel(id, checked) {
+      if (checked) SELECTED_IDS.add(id); else SELECTED_IDS.delete(id);
+      updateSelBar();
+    }
+    function toggleSelectAllC(cb) {
+      FILTERED.forEach(r => { if (cb.checked) SELECTED_IDS.add(r._id); else SELECTED_IDS.delete(r._id); });
+      renderTable(FILTERED);
+    }
+    function updateSelBar() {
+      const visIds = new Set(FILTERED.map(r => r._id));
+      let cnt = 0; SELECTED_IDS.forEach(id => { if (visIds.has(id)) cnt++; });
+      document.getElementById('cSelCnt').textContent = cnt + '개 선택됨';
+      document.getElementById('cSelBar').style.display = cnt > 0 ? 'flex' : 'none';
+    }
+    async function bulkDeleteAcademies() {
+      const visIds = new Set(FILTERED.map(r => r._id));
+      const ids = [...SELECTED_IDS].filter(id => visIds.has(id));
+      if (!ids.length) return;
+      if (!confirm(`선택한 ${ids.length}개 학원을 삭제할까요?`)) return;
+      for (const id of ids) await api(`/api/super/kpi/academies/${id}`, { method: 'DELETE' });
+      SELECTED_IDS.clear();
+      await loadActiveTab();
+    }
+    function openEditModal(id) {
+      const r = ROWS.find(x => x._id === id); if (!r) return;
+      EDIT_ID = id;
+      document.getElementById('ed_inflow').value = r.inflow || '';
+      document.getElementById('ed_date').value = r.firstConsultDate || '';
+      document.getElementById('ed_name').value = r.academyName || '';
+      document.getElementById('ed_region').value = r.region || '';
+      document.getElementById('ed_director').value = r.directorName || '';
+      document.getElementById('ed_phone').value = r.phone || '';
+      document.getElementById('ed_purpose').value = r.purpose || '';
+      document.getElementById('ed_err').style.display = 'none';
+      openModal('editModal');
+    }
+    async function submitEdit() {
+      const err = document.getElementById('ed_err');
+      const name = document.getElementById('ed_name').value.trim();
+      if (!name) { showErr(err, '학원명을 입력하세요.'); return; }
+      const body = {
+        inflow: document.getElementById('ed_inflow').value,
+        firstConsultDate: document.getElementById('ed_date').value,
+        academyName: name,
+        region: document.getElementById('ed_region').value.trim(),
+        directorName: document.getElementById('ed_director').value.trim(),
+        phone: document.getElementById('ed_phone').value.trim(),
+        purpose: document.getElementById('ed_purpose').value,
+      };
+      const data = await api(`/api/super/kpi/academies/${EDIT_ID}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (data.ok) { closeModal('editModal'); await loadActiveTab(); }
+      else showErr(err, data.message || '수정 실패');
+    }
+
+    /* ===== 학원 등록 ===== */
+    function openRegisterModal() {
+      const isHQ = ME.user.scope === '본사';
+      const tw = document.getElementById('rg_targetWrap');
+      if (isHQ) {
+        // 본사: 대상 소속 선택 (본사/사업본부/예비지사/정식지사)
+        tw.style.display = 'block';
+        document.getElementById('rg_scope').textContent = '';
+        document.getElementById('rg_targetScope').innerHTML = ['본사','사업본부','예비지사','정식지사'].map(o=>`<option value="${o}">${o}</option>`).join('');
+        // 현재 보고 있는 노드를 기본 대상으로
+        document.getElementById('rg_targetScope').value = (SELECTED && SELECTED.scope) ? SELECTED.scope : '본사';
+        onRegTargetChange();
+        if (SELECTED && SELECTED.branchId) document.getElementById('rg_targetBranch').value = SELECTED.branchId;
+      } else {
+        tw.style.display = 'none';
+        document.getElementById('rg_scope').textContent = `→ ${OWN.label} 소속`;
+      }
+      ['rg_name','rg_region','rg_director','rg_phone','rg_date'].forEach(i => document.getElementById(i).value = '');
+      document.getElementById('rg_inflow').value = '';
+      document.getElementById('rg_purpose').value = '';
+      document.getElementById('rg_err').style.display = 'none';
+      openModal('registerModal');
+    }
+    function onRegTargetChange() {
+      const scope = document.getElementById('rg_targetScope').value;
+      const needBranch = (scope === '예비지사' || scope === '정식지사');
+      document.getElementById('rg_targetBranchWrap').style.display = needBranch ? 'block' : 'none';
+      if (needBranch) {
+        const branches = branchOptionsFor(scope);
+        document.getElementById('rg_targetBranch').innerHTML = branches.length
+          ? branches.map(b=>`<option value="${b.id}">${esc(b.branchName)}</option>`).join('')
+          : '<option value="">개설된 지사 없음</option>';
+      }
+    }
+    async function submitRegister() {
+      const err = document.getElementById('rg_err');
+      const isHQ = ME.user.scope === '본사';
+      const payload = {
+        inflow: document.getElementById('rg_inflow').value,
+        firstConsultDate: document.getElementById('rg_date').value,
+        academyName: document.getElementById('rg_name').value.trim(),
+        region: document.getElementById('rg_region').value.trim(),
+        directorName: document.getElementById('rg_director').value.trim(),
+        phone: document.getElementById('rg_phone').value.trim(),
+        purpose: document.getElementById('rg_purpose').value,
+      };
+      if (!payload.academyName) { showErr(err, '학원명을 입력하세요.'); return; }
+      // 등록 대상 결정
+      let target;
+      if (isHQ) {
+        const scope = document.getElementById('rg_targetScope').value;
+        const branchId = (scope === '예비지사' || scope === '정식지사') ? document.getElementById('rg_targetBranch').value : null;
+        if ((scope === '예비지사' || scope === '정식지사') && !branchId) { showErr(err, '등록할 지사를 선택하세요.'); return; }
+        payload.targetScope = scope; payload.targetBranchId = branchId;
+        const label = branchId ? (branchOptionsFor(scope).find(b=>b.id===branchId)||{}).branchName || scope : scope;
+        target = { scope, branchId, label };
+      } else {
+        target = { scope: OWN.scope, branchId: OWN.branchId, label: OWN.label };
+      }
+      const data = await api('/api/super/kpi/academies', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      if (data.ok) {
+        closeModal('registerModal');
+        selectNodeData(target.scope, target.branchId, target.label); // 등록한 대상 노드로 이동
+      } else showErr(err, data.message || '등록 실패');
+    }
+
+    /* ===== 엑셀 내보내기 (현재 노드 + 월 필터 반영) ===== */
+    function exportExcel() {
+      if (!SELECTED) return;
+      const q = new URLSearchParams({ scope: SELECTED.scope });
+      if (SELECTED.branchId) q.set('branchId', SELECTED.branchId);
+      const m = document.getElementById('monthFilter').value;
+      if (m) q.set('month', m);
+      window.location = '/api/super/kpi/academies/export?' + q.toString();
+    }
+
+    /* =====================================================
+       센터 KPI (센터 운영/매출)
+       ===================================================== */
+    function centerDerived(c) {
+      const info = CONTRACT_TYPES[c.contractType] || { amount: 0, total: 0 };
+      const revenue = (Number(c.tuitionPerAccount) || 0) * (Number(c.usedAccounts) || 0);
+      return { amount: info.amount, total: info.total, revenue, roi: revenue - info.amount };
+    }
+    function fmtMoney(v) { return (Number(v) || 0).toLocaleString('ko-KR') + '만원'; }
+    // 계약일 기준 D+경과일 / D-잔여일(1년 만기)
+    function contractDdays(contractDate) {
+      if (!contractDate || !/^\d{4}-\d{2}-\d{2}$/.test(contractDate)) return null;
+      const start = new Date(contractDate + 'T00:00:00');
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const end = new Date(start); end.setFullYear(end.getFullYear() + 1);
+      const elapsed = Math.floor((today - start) / 86400000);
+      const remain = Math.floor((end - today) / 86400000);
+      return { elapsed, remain };
+    }
+    // 계약기간 셀 (D+30까지 무료체험 → 이후 D+1)
+    function cellElapsed(contractDate) {
+      const d = contractDdays(contractDate);
+      if (!d || d.elapsed < 0) return '<span class="na">-</span>';
+      if (d.elapsed <= 30) return `<b style="color:#2980b9">무료체험 (${d.elapsed}/30일)</b>`;
+      return `<b>D+${d.elapsed - 30}</b>`;
+    }
+    // 계약종료 셀 (D-잔여, 만료/임박 색상)
+    function cellRemain(contractDate) {
+      const d = contractDdays(contractDate);
+      if (!d) return '<span class="na">-</span>';
+      if (d.remain < 0) return `<b style="color:#e74c3c">만료 (+${-d.remain}일)</b>`;
+      const color = d.remain <= 30 ? '#e67e22' : (d.remain <= 60 ? '#d4a017' : '#1e8449');
+      return `<b style="color:${color}">D-${d.remain}</b>`;
+    }
+    // 손익분기 예상일수 = 30(무료체험) + (계약금액 ÷ 월매출) × 30
+    function breakevenDays(amount, revenue) {
+      if (!revenue || revenue <= 0) return null;
+      return 30 + Math.ceil((amount / revenue) * 30);
+    }
+    // 센터 행: 손익분기 예상일수 셀 (경과일 지나면 달성)
+    function cellBreakeven(c) {
+      const d = centerDerived(c);
+      const be = breakevenDays(d.amount, d.revenue);
+      if (be == null) return '<b style="color:#e74c3c">매출없음</b>';  // 관리 필요
+      const el = contractDdays(c.contractDate);
+      if (el && el.elapsed >= be) return '<b style="color:#1e8449">달성</b>';
+      const over = be > TARGET_BREAKEVEN;  // 목표 초과 = 관리 대상
+      return `<b style="color:${over ? '#e74c3c' : '#1e8449'}">${be}일${over ? ' ▲' : ''}</b>`;
+    }
+    // 그룹(전체/스탠다드/프리미엄) 요약 카드 한 줄
+    function centerGroupHtml(label, color, g, withCount, small) {
+      let students = 0, used = 0, total = 0, revenue = 0, roi = 0, amount = 0;
+      g.forEach(c => { const d = centerDerived(c); students += Number(c.currentStudents) || 0; used += Number(c.usedAccounts) || 0; total += d.total; revenue += d.revenue; roi += d.roi; amount += d.amount; });
+      const usage = total ? Math.round(used / total * 100) : 0;
+      const roiCls = roi >= 0 ? 'pos' : 'neg';
+      const be = breakevenDays(amount, revenue);
+      const beVal = be == null ? '—' : (be + '일');
+      const beColor = (be != null && be > TARGET_BREAKEVEN) ? '#e74c3c' : '#1e8449';
+      const countCard = withCount ? ovCard('total', '센터 수', g.length) : '';
+      const outerStyle = small ? 'flex:1 1 340px;min-width:300px;margin-bottom:12px' : 'margin-bottom:12px';
+      const labelSize = small ? '12.5px' : '13.5px';
+      return `<div style="${outerStyle}">
+        <div style="font-weight:800;color:${color};font-size:${labelSize};margin-bottom:6px">■ ${label} <span style="color:#95a5a6;font-weight:600">(${g.length}곳)</span></div>
+        <div class="funnel${small ? ' sc-small' : ''}">
+          ${countCard}
+          ${ovCard('', '현재 학생', students.toLocaleString('ko-KR'))}
+          ${ovCard('', '계정 사용률', usage + '%', `(${used}/${total})`)}
+          ${ovCard('payment', '총 학원매출', fmtMoney(revenue))}
+          ${ovCard('rate', '총 투자대비수익', fmtMoney(roi), '', roiCls)}
+          ${ovCard('', '손익분기 예상 / 목표', `<span style="color:${beColor};font-weight:800">${beVal}</span> / ${TARGET_BREAKEVEN}일`)}
+        </div>
+      </div>`;
+    }
+    // 전체(크게) + 스탠다드/프리미엄(작게, 한 줄에 나란히)
+    function centerSummaryHtml(rows) {
+      const full = centerGroupHtml('전체', '#2c3e50', rows, true, false);
+      const std = centerGroupHtml('스탠다드', '#2980b9', rows.filter(c => c.contractType === '스탠다드'), false, true);
+      const prem = centerGroupHtml('프리미엄', '#E67E22', rows.filter(c => c.contractType === '프리미엄'), false, true);
+      return full + `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">${std}${prem}</div>`;
+    }
+
+    async function loadCenters() {
+      const q = new URLSearchParams({ scope: SELECTED.scope });
+      if (SELECTED.branchId) q.set('branchId', SELECTED.branchId);
+      const data = await api('/api/super/kpi/centers?' + q.toString());
+      CENTERS = data.ok ? (data.rows || []) : [];
+      SELECTED_CIDS.clear();
+      document.getElementById('mControls').style.display = 'flex';
+      buildCenterMonthOptions();
+      applyCenterFilter();
+    }
+    function buildCenterMonthOptions() {
+      const months = [...new Set(CENTERS.map(c => (c.contractDate || '').slice(0, 7)).filter(m => /^\d{4}-\d{2}$/.test(m)))].sort().reverse();
+      const sel = document.getElementById('mMonthFilter');
+      const prev = sel.value;
+      let html = '<option value="">전체 기간</option>';
+      for (const m of months) html += `<option value="${m}">${m.replace('-', '년 ')}월</option>`;
+      sel.innerHTML = html;
+      if (prev && months.includes(prev)) sel.value = prev;
+    }
+    // 공용 센터 정렬 (정렬키를 인자로)
+    function sortCentersBy(arr, s) {
+      const remainOf = c => { const d = contractDdays(c.contractDate); return d ? d.remain : Infinity; };
+      const usageOf = c => { const d = centerDerived(c); return d.total ? (Number(c.usedAccounts) || 0) / d.total : 0; };
+      if (s === 'expire') return arr.sort((a, b) => remainOf(a) - remainOf(b));                       // 임박(잔여 적은) 먼저
+      if (s === 'students') return arr.sort((a, b) => (Number(b.currentStudents) || 0) - (Number(a.currentStudents) || 0));
+      if (s === 'usage') return arr.sort((a, b) => usageOf(b) - usageOf(a));
+      if (s === 'revenue') return arr.sort((a, b) => centerDerived(b).revenue - centerDerived(a).revenue);
+      if (s === 'roi') return arr.sort((a, b) => centerDerived(b).roi - centerDerived(a).roi);
+      if (s === 'breakeven') { const beOf = c => { const d = centerDerived(c); const be = breakevenDays(d.amount, d.revenue); return be == null ? Infinity : be; }; return arr.sort((a, b) => beOf(b) - beOf(a)); } // 느린(오래걸리는)순
+      return arr.sort(byDateDesc('contractDate'));                                                    // 기본: 계약일 최신순
+    }
+    // 정렬 옵션 <option> 묶음 (재사용)
+    function centerSortOptions(sel) {
+      const opts = [['date','계약일 최신순'],['expire','계약종료 임박순'],['students','현재등록학생 많은순'],['usage','사용률 높은순'],['revenue','학원매출 높은순'],['roi','투자대비수익 높은순'],['breakeven','손익분기 느린순(관리대상)']];
+      return opts.map(([v,l]) => `<option value="${v}"${sel===v?' selected':''}>${l}</option>`).join('');
+    }
+    function ovSetCSort(s) { OV_CSORT = s; renderOverview(); }
+    function ovSetCType(t) { OV_CTYPE = t; renderOverview(); }
+    function applyCenterFilter() {
+      const m = document.getElementById('mMonthFilter').value;
+      const base = m ? CENTERS.filter(c => (c.contractDate || '').startsWith(m)) : CENTERS.slice();
+      renderCenterSummary(base);  // 요약은 항상 전체/유형별 모두 표시(월 필터만 반영)
+      const t = document.getElementById('mType').value;
+      const typed = t ? base.filter(c => c.contractType === t) : base;
+      CFILTERED = sortCentersBy(typed, document.getElementById('mSort').value);
+      renderCenterTable(CFILTERED);
+    }
+    function renderCenterSummary(rows) {
+      document.getElementById('mSummary').innerHTML = `<div style="width:100%">${centerSummaryHtml(rows)}</div>`;
+    }
+    function renderCenterTable(rows) {
+      if (!rows.length) {
+        document.getElementById('mTableArea').innerHTML = `<div class="table-wrap"><div class="empty-table">등록된 센터가 없습니다.${ME.user.scope === '본사' ? ' 우측 상단 <b>＋ 센터 등록</b>으로 추가하세요.' : ''}</div></div>`;
+        updateCenterSelBar();
+        return;
+      }
+      const canEdit = ME.user.scope === '본사';  // 센터 수정·삭제는 본사만
+      const chkHead = canEdit ? `<th rowspan="2" class="chk-col"><input type="checkbox" class="row-chk" title="전체선택" onclick="toggleSelectAllCenters(this)"></th>` : '';
+      const editHead = canEdit ? `<th rowspan="2">수정</th>` : '';
+      let html = `<div class="table-wrap"><table>
+        <thead>
+          <tr>${chkHead}<th class="g1" colspan="5">1차 센터정보</th><th class="g2" colspan="8">2차 관리현황</th>${editHead}</tr>
+          <tr>
+            <th class="c1">계약유형</th><th class="c1">센터명</th><th class="c1">계약일</th><th class="c1">학원장</th><th class="c1">연락처</th>
+            <th class="c2">계약기간</th><th class="c2">계약종료</th><th class="c2">현재등록학생</th><th class="c2">누적사용/총계정</th><th class="c2">계정당수강료</th><th class="c2">학원매출</th><th class="c2">투자대비수익</th><th class="c2">손익분기</th>
+          </tr>
+        </thead><tbody>`;
+      for (const c of rows) {
+        const d = centerDerived(c);
+        const roiCls = d.roi >= 0 ? 'pos' : 'neg';
+        // 2차 관리현황: 본사만 인라인 입력, 그 외 읽기전용
+        const studentsCell = canEdit
+          ? `<input class="num-input" type="number" min="0" value="${Number(c.currentStudents) || 0}" onchange="patchCenter('${c._id}',{currentStudents:this.value})">`
+          : (Number(c.currentStudents) || 0).toLocaleString('ko-KR');
+        const acctCell = canEdit
+          ? `<input class="num-input" type="number" min="0" value="${Number(c.usedAccounts) || 0}" onchange="patchCenter('${c._id}',{usedAccounts:this.value})" style="width:52px"> <span class="acct">/ ${d.total}</span>`
+          : `${Number(c.usedAccounts) || 0} <span class="acct">/ ${d.total}</span>`;
+        const tuitionCell = canEdit
+          ? `<input class="num-input" type="number" min="0" value="${Number(c.tuitionPerAccount) || 0}" onchange="patchCenter('${c._id}',{tuitionPerAccount:this.value})" style="width:56px"> <span class="acct">만원</span>`
+          : `${(Number(c.tuitionPerAccount) || 0).toLocaleString('ko-KR')} <span class="acct">만원</span>`;
+        const chkCell = canEdit ? `<td><input type="checkbox" class="row-chk" ${SELECTED_CIDS.has(c._id) ? 'checked' : ''} onclick="toggleRowSelC('${c._id}',this.checked)"></td>` : '';
+        const editCell = canEdit ? `<td><button class="btn-edit" onclick="openCenterEditModal('${c._id}')">✏️ 수정</button></td>` : '';
+        html += `<tr>
+          ${chkCell}
+          <td>${esc(c.contractType) || '<span class="na">-</span>'}</td>
+          <td class="name">${esc(c.centerName)}</td>
+          <td>${esc(c.contractDate) || '<span class="na">-</span>'}</td>
+          <td>${esc(c.directorName) || '<span class="na">-</span>'}</td>
+          <td>${esc(c.phone) || '<span class="na">-</span>'}</td>
+          <td>${cellElapsed(c.contractDate)}</td>
+          <td>${cellRemain(c.contractDate)}</td>
+          <td>${studentsCell}</td>
+          <td>${acctCell}</td>
+          <td>${tuitionCell}</td>
+          <td class="money">${fmtMoney(d.revenue)}</td>
+          <td class="money ${roiCls}">${fmtMoney(d.roi)}</td>
+          <td>${cellBreakeven(c)}</td>
+          ${editCell}
+        </tr>`;
+      }
+      html += `</tbody></table></div>`;
+      document.getElementById('mTableArea').innerHTML = html;
+      updateCenterSelBar();
+    }
+
+    /* ===== 센터 선택 삭제 / 정보 수정 (본사) ===== */
+    function toggleRowSelC(id, checked) {
+      if (checked) SELECTED_CIDS.add(id); else SELECTED_CIDS.delete(id);
+      updateCenterSelBar();
+    }
+    function toggleSelectAllCenters(cb) {
+      CFILTERED.forEach(c => { if (cb.checked) SELECTED_CIDS.add(c._id); else SELECTED_CIDS.delete(c._id); });
+      renderCenterTable(CFILTERED);
+    }
+    function updateCenterSelBar() {
+      const visIds = new Set(CFILTERED.map(c => c._id));
+      let cnt = 0; SELECTED_CIDS.forEach(id => { if (visIds.has(id)) cnt++; });
+      document.getElementById('mSelCnt').textContent = cnt + '개 선택됨';
+      document.getElementById('mSelBar').style.display = cnt > 0 ? 'flex' : 'none';
+    }
+    async function bulkDeleteCenters() {
+      const visIds = new Set(CFILTERED.map(c => c._id));
+      const ids = [...SELECTED_CIDS].filter(id => visIds.has(id));
+      if (!ids.length) return;
+      if (!confirm(`선택한 ${ids.length}개 센터를 삭제할까요?`)) return;
+      for (const id of ids) await api(`/api/super/kpi/centers/${id}`, { method: 'DELETE' });
+      SELECTED_CIDS.clear();
+      await loadActiveTab();
+    }
+    function openCenterEditModal(id) {
+      const c = CENTERS.find(x => x._id === id); if (!c) return;
+      EDIT_CID = id;
+      document.getElementById('ced_type').value = c.contractType || '';
+      document.getElementById('ced_name').value = c.centerName || '';
+      document.getElementById('ced_date').value = c.contractDate || '';
+      document.getElementById('ced_director').value = c.directorName || '';
+      document.getElementById('ced_phone').value = c.phone || '';
+      document.getElementById('ced_err').style.display = 'none';
+      openModal('centerEditModal');
+    }
+    async function submitCenterEdit() {
+      const err = document.getElementById('ced_err');
+      const name = document.getElementById('ced_name').value.trim();
+      if (!name) { showErr(err, '센터명을 입력하세요.'); return; }
+      const body = {
+        contractType: document.getElementById('ced_type').value,
+        centerName: name,
+        contractDate: document.getElementById('ced_date').value,
+        directorName: document.getElementById('ced_director').value.trim(),
+        phone: document.getElementById('ced_phone').value.trim(),
+      };
+      const data = await api(`/api/super/kpi/centers/${EDIT_CID}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (data.ok) { closeModal('centerEditModal'); await loadActiveTab(); }
+      else showErr(err, data.message || '수정 실패');
+    }
+
+    /* 센터 등록 */
+    function openCenterModal() {
+      const isHQ = ME.user.scope === '본사';
+      const tw = document.getElementById('cg_targetWrap');
+      if (isHQ) {
+        tw.style.display = 'block';
+        document.getElementById('cg_scope').textContent = '';
+        document.getElementById('cg_targetScope').innerHTML = ['본사','사업본부','예비지사','정식지사'].map(o=>`<option value="${o}">${o}</option>`).join('');
+        document.getElementById('cg_targetScope').value = (SELECTED && SELECTED.scope) ? SELECTED.scope : '본사';
+        onCenterTargetChange();
+        if (SELECTED && SELECTED.branchId) document.getElementById('cg_targetBranch').value = SELECTED.branchId;
+      } else {
+        tw.style.display = 'none';
+        document.getElementById('cg_scope').textContent = `→ ${OWN.label} 소속`;
+      }
+      ['cg_name','cg_date','cg_director','cg_phone'].forEach(i => document.getElementById(i).value = '');
+      document.getElementById('cg_type').value = '';
+      document.getElementById('cg_err').style.display = 'none';
+      openModal('centerModal');
+    }
+    function onCenterTargetChange() {
+      const scope = document.getElementById('cg_targetScope').value;
+      const needBranch = (scope === '예비지사' || scope === '정식지사');
+      document.getElementById('cg_targetBranchWrap').style.display = needBranch ? 'block' : 'none';
+      if (needBranch) {
+        const branches = branchOptionsFor(scope);
+        document.getElementById('cg_targetBranch').innerHTML = branches.length
+          ? branches.map(b=>`<option value="${b.id}">${esc(b.branchName)}</option>`).join('')
+          : '<option value="">개설된 지사 없음</option>';
+      }
+    }
+    async function submitCenter() {
+      const err = document.getElementById('cg_err');
+      const isHQ = ME.user.scope === '본사';
+      const payload = {
+        contractType: document.getElementById('cg_type').value,
+        centerName: document.getElementById('cg_name').value.trim(),
+        contractDate: document.getElementById('cg_date').value,
+        directorName: document.getElementById('cg_director').value.trim(),
+        phone: document.getElementById('cg_phone').value.trim(),
+      };
+      if (!payload.centerName) { showErr(err, '센터명을 입력하세요.'); return; }
+      let target;
+      if (isHQ) {
+        const scope = document.getElementById('cg_targetScope').value;
+        const branchId = (scope === '예비지사' || scope === '정식지사') ? document.getElementById('cg_targetBranch').value : null;
+        if ((scope === '예비지사' || scope === '정식지사') && !branchId) { showErr(err, '등록할 지사를 선택하세요.'); return; }
+        payload.targetScope = scope; payload.targetBranchId = branchId;
+        const label = branchId ? (branchOptionsFor(scope).find(b=>b.id===branchId)||{}).branchName || scope : scope;
+        target = { scope, branchId, label };
+      } else {
+        target = { scope: OWN.scope, branchId: OWN.branchId, label: OWN.label };
+      }
+      const data = await api('/api/super/kpi/centers', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      if (data.ok) { closeModal('centerModal'); selectNodeData(target.scope, target.branchId, target.label); }
+      else showErr(err, data.message || '등록 실패');
+    }
+    async function patchCenter(id, body) {
+      const data = await api(`/api/super/kpi/centers/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      if (!data.ok) alert(data.message || '수정 실패');
+      await loadActiveTab();
+    }
+    async function delCenter(id, name) {
+      if (!confirm(`'${name}' 센터를 삭제할까요?`)) return;
+      const data = await api(`/api/super/kpi/centers/${id}`, { method:'DELETE' });
+      if (!data.ok) { alert(data.message || '삭제 실패'); return; }
+      await loadActiveTab();
+    }
+    function exportCenters() {
+      if (!SELECTED) return;
+      const q = new URLSearchParams({ scope: SELECTED.scope });
+      if (SELECTED.branchId) q.set('branchId', SELECTED.branchId);
+      const m = document.getElementById('mMonthFilter').value;
+      if (m) q.set('month', m);
+      window.location = '/api/super/kpi/centers/export?' + q.toString();
+    }
+
+    /* ===== 2차 토글/보류사유/삭제 ===== */
+    async function patchRow(id, body) {
+      const data = await api(`/api/super/kpi/academies/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      if (!data.ok) { alert(data.message || '수정 실패'); }
+      await loadActiveTab();
+    }
+    function toggleStep(id, key) {
+      const r = ROWS.find(x => x._id === id); if (!r) return;
+      patchRow(id, { [key]: !r[key] });
+    }
+    function setHold(id, val) { patchRow(id, { holdReason: val }); }
+    async function delRow(id, name) {
+      if (!confirm(`'${name}' 학원을 삭제할까요?`)) return;
+      const data = await api(`/api/super/kpi/academies/${id}`, { method:'DELETE' });
+      if (!data.ok) { alert(data.message || '삭제 실패'); return; }
+      await loadActiveTab();
+    }
+
+    /* ===== 지사 개설 ===== */
+    function openBranchModal() { document.getElementById('b_err').style.display='none'; ['b_name','b_manager','b_pw'].forEach(i=>document.getElementById(i).value=''); openModal('branchModal'); }
+    async function submitBranch() {
+      const payload = { type: document.getElementById('b_type').value, branchName: document.getElementById('b_name').value.trim(), managerName: document.getElementById('b_manager').value.trim(), password: document.getElementById('b_pw').value };
+      const err = document.getElementById('b_err');
+      if (!payload.branchName || !payload.managerName || !payload.password) { showErr(err,'모든 항목을 입력하세요.'); return; }
+      const data = await api('/api/super/kpi/branches', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      if (data.ok) { closeModal('branchModal'); await loadTree(); } else showErr(err, data.message || '개설 실패');
+    }
+
+    /* ===== 계정 추가 ===== */
+    function openAccountModal() {
+      const err = document.getElementById('a_err'); err.style.display='none';
+      document.getElementById('a_name').value=''; document.getElementById('a_pw').value='';
+      const u = ME.user; let opts;
+      if (u.scope === '본사') opts = ['본사','사업본부','예비지사','정식지사'];
+      else if (u.scope === '사업본부') opts = ['예비지사','정식지사'];
+      else opts = [u.scope];
+      document.getElementById('a_scope').innerHTML = opts.map(o=>`<option value="${o}">${o}</option>`).join('');
+      document.getElementById('a_scopeWrap').style.display = (u.scope==='예비지사'||u.scope==='정식지사') ? 'none' : 'block';
+      onScopeChange();
+      openModal('accountModal');
+    }
+    function branchOptionsFor(scope) { const sec = TREE.find(s => s.key === scope && s.type === 'branchGroup'); return sec ? (sec.branches || []) : []; }
+    function onScopeChange() {
+      const u = ME.user;
+      const scope = (u.scope==='예비지사'||u.scope==='정식지사') ? u.scope : document.getElementById('a_scope').value;
+      const needBranch = (scope === '예비지사' || scope === '정식지사') && !(u.scope==='예비지사'||u.scope==='정식지사');
+      document.getElementById('a_branchWrap').style.display = needBranch ? 'block' : 'none';
+      if (needBranch) {
+        const branches = branchOptionsFor(scope);
+        document.getElementById('a_branch').innerHTML = branches.length ? branches.map(b=>`<option value="${b.id}">${esc(b.branchName)}</option>`).join('') : '<option value="">개설된 지사 없음</option>';
+      }
+    }
+    async function submitAccount() {
+      const u = ME.user; const err = document.getElementById('a_err');
+      const scope = (u.scope==='예비지사'||u.scope==='정식지사') ? u.scope : document.getElementById('a_scope').value;
+      const payload = { scope, name: document.getElementById('a_name').value.trim(), password: document.getElementById('a_pw').value };
+      const needBranch = (scope === '예비지사' || scope === '정식지사') && !(u.scope==='예비지사'||u.scope==='정식지사');
+      if (needBranch) payload.branchId = document.getElementById('a_branch').value;
+      if (!payload.name || !payload.password) { showErr(err,'이름과 비밀번호를 입력하세요.'); return; }
+      if (needBranch && !payload.branchId) { showErr(err,'지사를 선택하세요.'); return; }
+      const data = await api('/api/super/kpi/accounts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      if (data.ok) { closeModal('accountModal'); await loadTree(); } else showErr(err, data.message || '추가 실패');
+    }
+
+    /* ===== 비번 재설정 ===== */
+    function openReset(id, name) { resetTargetId = id; document.getElementById('r_target').textContent = `대상: ${name}`; document.getElementById('r_pw').value=''; document.getElementById('r_err').style.display='none'; openModal('resetModal'); }
+    async function submitReset() {
+      const err = document.getElementById('r_err'); const pw = document.getElementById('r_pw').value;
+      if (!pw) { showErr(err,'새 비밀번호를 입력하세요.'); return; }
+      const data = await api(`/api/super/kpi/accounts/${resetTargetId}/reset-password`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: pw }) });
+      if (data.ok) { closeModal('resetModal'); alert('비밀번호가 재설정되었습니다.'); } else showErr(err, data.message || '재설정 실패');
+    }
+
+    /* ===== 공통 ===== */
+    function openModal(id){ document.getElementById(id).classList.add('open'); }
+    function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+    function showErr(el,msg){ el.textContent=msg; el.style.display='block'; }
+    async function logout(){ await fetch('/api/super/kpi/logout',{method:'POST'}); location.href='/super/dashboard?type=academy'; }
+
+    init().catch(e => console.error(e));
+  </script>
+</body>
+</html>
