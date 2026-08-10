@@ -1270,6 +1270,12 @@ const adminSchema = new mongoose.Schema({
     default: false,
   },
 
+  // 📚 교재 전체 현황 열람/처리 권한 (슈퍼 아닌 담당자에게 개별 부여)
+  canViewTextbook: {
+    type: Boolean,
+    default: false,
+  },
+
   status: {
     type: String,
     enum: ["pending", "approved"],
@@ -1644,6 +1650,26 @@ function requireSuperAdmin(req, res, next) {
   }
 
   next();
+}
+
+// 📚 교재 전체 현황: 슈퍼관리자(기존 규칙) 또는 canViewTextbook 권한 담당자 허용
+async function requireSuperOrTextbook(req, res, next) {
+  const sa = req.session && req.session.admin;
+  if (!sa) {
+    if (req.path.startsWith('/api/')) return res.status(401).json({ ok: false, message: '로그인이 필요합니다.' });
+    return res.redirect("/academy-admin-login");
+  }
+  // 슈퍼관리자는 기존 requireSuperAdmin 규칙(PIN 포함) 그대로
+  if (sa.isSuper) return requireSuperAdmin(req, res, next);
+  // 일반 담당자: DB에서 열람 권한 확인
+  try {
+    const doc = await Admin.findById(sa.id).select("canViewTextbook deleted").lean();
+    if (doc && !doc.deleted && doc.canViewTextbook) return next();
+  } catch (e) {
+    console.error("[requireSuperOrTextbook] 오류:", e.message);
+  }
+  if (req.path.startsWith('/api/')) return res.status(403).json({ ok: false, message: '교재 현황 열람 권한이 없습니다.' });
+  return res.redirect("/academy-admin-login");
 }
 
 /* ====================================
@@ -2857,14 +2883,14 @@ app.get("/super/diagnostic-management", requireSuperAdmin, (req, res) => {
 });
 
 // ✅ 슈퍼관리자: 교재 전체 현황 관리
-app.get("/super/textbook-management", requireSuperAdmin, (req, res) => {
+app.get("/super/textbook-management", requireSuperOrTextbook, (req, res) => {
   console.log("✅ [GET] /super/textbook-management -> public/super/textbook-management.html");
   res.sendFile(path.join(__dirname, "public", "super", "textbook-management.html"));
 });
 
 // ✅ 교재 잔여 재고 — 슈퍼관리자만
 const TextbookInventory = require('./models/TextbookInventory');
-app.get("/api/super/textbook-inventory", requireSuperAdmin, async (req, res) => {
+app.get("/api/super/textbook-inventory", requireSuperOrTextbook, async (req, res) => {
   try {
     const doc = await TextbookInventory.findById('inventory');
     const quantities = doc ? Object.fromEntries(doc.quantities) : {};
@@ -2913,7 +2939,7 @@ function mapOrderItemToInventoryKeys(item) {
 }
 
 // 차감 미리보기 (모달용)
-app.get("/api/super/textbook-orders/:id/decrement-preview", requireSuperAdmin, async (req, res) => {
+app.get("/api/super/textbook-orders/:id/decrement-preview", requireSuperOrTextbook, async (req, res) => {
   try {
     const order = await TextbookOrder.findById(req.params.id).lean();
     if (!order) return res.status(404).json({ ok: false, message: '주문을 찾을 수 없습니다' });
@@ -2946,7 +2972,7 @@ app.get("/api/super/textbook-orders/:id/decrement-preview", requireSuperAdmin, a
 });
 
 // 실제 차감 + 배송완료 토글 (idempotent)
-app.post("/api/super/textbook-orders/:id/decrement-and-deliver", requireSuperAdmin, async (req, res) => {
+app.post("/api/super/textbook-orders/:id/decrement-and-deliver", requireSuperOrTextbook, async (req, res) => {
   try {
     const order = await TextbookOrder.findById(req.params.id);
     if (!order) return res.status(404).json({ ok: false, message: '주문을 찾을 수 없습니다' });
@@ -2996,7 +3022,7 @@ app.post("/api/super/textbook-orders/:id/decrement-and-deliver", requireSuperAdm
   }
 });
 
-app.put("/api/super/textbook-inventory", requireSuperAdmin, async (req, res) => {
+app.put("/api/super/textbook-inventory", requireSuperOrTextbook, async (req, res) => {
   try {
     const incoming = (req.body && req.body.quantities) || {};
     // 유효 키만 통과 (위변조 방지)
