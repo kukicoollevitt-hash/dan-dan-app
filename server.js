@@ -2496,6 +2496,28 @@ app.post("/api/super/kpi/academies", requireSuperAdmin, requireKpiUser, async (r
       createdBy: u.name,
     });
     res.json({ ok: true, id: String(doc._id) });
+
+    // 📱 사업본부·지사가 등록하면 본사에 알림 문자 (본사 직접 등록은 제외) — 응답 후 비동기
+    // 단문(SMS) 유지를 위해 90바이트 이내로 구성/절단
+    if (u.scope !== "본사") {
+      const who = (u.scope === "사업본부") ? "사업본부" : (u.branchName || u.scope);
+      let smsMsg = `[KPI학원등록] ${who} ${u.name} - ${String(academyName).trim()}`;
+      if (getByteLength(smsMsg) > 90) {
+        let cut = "", bytes = 0;
+        for (const ch of smsMsg) {
+          const cb = ch.charCodeAt(0) > 127 ? 2 : 1;
+          if (bytes + cb > 90) break;
+          cut += ch; bytes += cb;
+        }
+        smsMsg = cut;
+      }
+      (async () => {
+        for (const hqPhone of HQ_ADMIN_PHONES) {
+          try { await sendSMS(hqPhone, smsMsg); }
+          catch (e) { console.error("📱 [KPI 학원등록 본사알림] 발송 오류:", e.message); }
+        }
+      })();
+    }
   } catch (err) {
     console.error("❌ KPI 학원등록 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
