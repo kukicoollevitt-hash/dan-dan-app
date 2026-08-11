@@ -101,6 +101,7 @@
     <button class="tab-btn active" data-tab="crit">📰 BRAIN비평 <span class="badge-count" id="tabCritCount">0</span></button>
     <button class="tab-btn" data-tab="kh">🇰🇷 BRAIN한국사 <span class="badge-count" id="tabKhCount">0</span></button>
     <button class="tab-btn" data-tab="wr100">✍️ BRAIN입문 쓰기문해 <span class="badge-count" id="tabWr100Count">0</span></button>
+    <button class="tab-btn" data-tab="mock">📊 BRAIN모고 <span class="badge-count" id="tabMockCount">0</span></button>
   </div>
   <!-- 비평 섹션 -->
   <div class="section active" id="sectionCrit">
@@ -329,6 +330,58 @@
     <div class="info-line" id="wr100Info"></div>
     <div class="more-bar"><button class="more-btn" id="wr100MoreBtn" style="display:none;">더보기 (+10)</button></div>
   </div>
+
+  <!-- BRAIN모고 (초·중 월말 모의고사) 섹션 -->
+  <div class="section" id="sectionMock">
+    <h2 class="section-title">
+      📊 BRAIN모고 (초·중 문해 월말 모의고사) 회차별 응시 기록
+      <span class="count" id="mockCount">0건</span>
+    </h2>
+    <div class="filter-row">
+      <input type="text" id="mockSearchName" placeholder="👤 이름 검색" />
+      <input type="text" id="mockGrade" placeholder="🎓 학년 검색 (예: 초5)" />
+      <input type="text" id="mockAcademy" placeholder="🏫 센터(학원) 검색" />
+      <select id="mockExamGrade">
+        <option value="">전체 구분</option>
+        <option value="elem">초등 문해</option>
+        <option value="mid">중등 문해</option>
+      </select>
+      <select id="mockSort">
+        <option value="date-desc">최근 응시 순</option>
+        <option value="date-asc">오래된 순</option>
+        <option value="round-asc">회차 오름차순</option>
+        <option value="round-desc">회차 내림차순</option>
+        <option value="score-desc">점수 높은 순</option>
+        <option value="score-asc">점수 낮은 순</option>
+        <option value="grade-asc">학년 오름차순</option>
+        <option value="name-asc">이름 가나다순</option>
+      </select>
+      <button class="reset-btn" onclick="resetMockFilter()">초기화</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:44px;">#</th>
+            <th data-sort-section="mock" data-sort="grade" style="width:70px;">학년</th>
+            <th data-sort-section="mock" data-sort="name" style="width:100px;">학생명</th>
+            <th style="width:130px;">학교</th>
+            <th data-sort-section="mock" data-sort="academy">센터(학원)</th>
+            <th style="width:80px;text-align:center;">구분</th>
+            <th data-sort-section="mock" data-sort="round" style="width:64px;text-align:center;">회차</th>
+            <th data-sort-section="mock" data-sort="score" style="width:70px;text-align:center;">점수</th>
+            <th style="width:80px;text-align:center;">정답</th>
+            <th style="width:80px;text-align:center;">소요시간</th>
+            <th data-sort-section="mock" data-sort="date" style="width:150px;">응시일</th>
+            <th style="width:110px;">결과보기</th>
+          </tr>
+        </thead>
+        <tbody id="mockTbody"><tr><td colspan="12" class="empty">불러오는 중…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="info-line" id="mockInfo"></div>
+    <div class="more-bar"><button class="more-btn" id="mockMoreBtn" style="display:none;">더보기 (+10)</button></div>
+  </div>
 </div>
 
 <!-- 녹음 목록 팝업 (개별 다운로드) -->
@@ -352,6 +405,21 @@
     <div id="noticeBody" style="padding:20px 22px;font-size:14px;line-height:1.75;color:#334155;"></div>
     <div style="padding:0 22px 20px;text-align:right;">
       <button onclick="closeNotice()" style="padding:9px 22px;border:none;border-radius:9px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:white;font-size:13px;font-weight:700;cursor:pointer;">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 월말 모의고사 결과 뷰어 모달 -->
+<div id="mockResultOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9998;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:16px;max-width:560px;width:94%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,0.25);">
+    <div style="padding:16px 22px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:white;display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="margin:0;font-size:16px;font-weight:800;">📊 월말 모의고사 결과</h3>
+      <button onclick="closeMockResult()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;">×</button>
+    </div>
+    <div id="mockResultBody" style="padding:18px 22px;overflow-y:auto;flex:1;"></div>
+    <div id="mockResultFooter" style="display:none;padding:12px 20px;border-top:1px solid #e5e7eb;background:#fff;text-align:right;">
+      <button onclick="printMockResult()" style="padding:9px 18px;border:2px solid #0d9488;background:#fff;color:#0d9488;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">🖨️ 인쇄</button>
+      <button onclick="printMockResult()" style="padding:9px 18px;border:none;background:linear-gradient(135deg,#14b8a6,#0d9488);color:#fff;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;">📄 PDF 저장</button>
     </div>
   </div>
 </div>
@@ -768,7 +836,8 @@
   function switchTab(t) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    const targetId = t === 'kh' ? 'sectionKh' : (t === 'wr100' ? 'sectionWr100' : 'sectionCrit');
+    const _secMap = { crit: 'sectionCrit', kh: 'sectionKh', wr100: 'sectionWr100', mock: 'sectionMock' };
+    const targetId = _secMap[t] || 'sectionCrit';
     const target = document.getElementById(targetId);
     if (target) target.classList.add('active');
   }
@@ -779,7 +848,7 @@
   try {
     const params = new URLSearchParams(location.search);
     const initialTab = params.get('tab');
-    if (['kh', 'crit', 'wr100'].includes(initialTab)) switchTab(initialTab);
+    if (['kh', 'crit', 'wr100', 'mock'].includes(initialTab)) switchTab(initialTab);
   } catch {}
 
   // 카운트 동기화 — 섹션 count → 탭 배지
@@ -1036,17 +1105,347 @@
     _origOpenReport(type, grade, name);
   };
 
+  // ===== BRAIN모고 (초·중 월말 모의고사) 로드 =====
+  state.mock = { sort: 'date', dir: 'desc', offset: 0, total: 0, searchTimer: null };
+  const MOCK_AREA = [
+    { key: 'literal',     label: '사실적', color: '#c62828' },
+    { key: 'lexical',     label: '어휘적', color: '#d35a1a' },
+    { key: 'structural',  label: '구조적', color: '#f4b400' },
+    { key: 'inferential', label: '추론적', color: '#2e9c58' },
+    { key: 'critical',    label: '비판적', color: '#1e6091' }
+  ];
+  function mockExamGradeLabel(g) {
+    return g === 'elem' ? '초등' : (g === 'mid' ? '중등' : '-');
+  }
+  // 영역별 5지수 레이더 (학생 대시보드와 동일 룩)
+  function buildMockRadar(areaScore, areaMax) {
+    areaScore = areaScore || {}; areaMax = areaMax || {};
+    const size = 230, cx = size/2, cy = size/2, R = 78;
+    const n = MOCK_AREA.length;
+    const angles = MOCK_AREA.map((_, i) => -Math.PI / 2 + i * (2 * Math.PI / n));
+    let bg = '';
+    for (let ring = 1; ring <= 4; ring++) {
+      const r = R * ring / 4;
+      const pts = angles.map(a => `${cx + Math.cos(a) * r},${cy + Math.sin(a) * r}`).join(' ');
+      bg += `<polygon points="${pts}" fill="${ring===4?'rgba(240,253,250,0.7)':'none'}" stroke="#d5ece7" stroke-width="0.9"/>`;
+    }
+    angles.forEach(a => {
+      bg += `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos(a) * R}" y2="${cy + Math.sin(a) * R}" stroke="#d5ece7" stroke-width="0.7"/>`;
+    });
+    const labels = angles.map((a, i) => {
+      const lx = cx + Math.cos(a) * (R + 14);
+      const ly = cy + Math.sin(a) * (R + 14) + 3;
+      return `<text x="${lx}" y="${ly}" text-anchor="middle" font-size="11.5" font-weight="800" fill="${MOCK_AREA[i].color}">${MOCK_AREA[i].label}</text>`;
+    }).join('');
+    const scorePts = angles.map((a, i) => {
+      const k = MOCK_AREA[i].key;
+      const got = areaScore[k] || 0, max = areaMax[k] || 1;
+      const ratio = Math.max(0, Math.min(1, got / max));
+      return `${cx + Math.cos(a) * R * ratio},${cy + Math.sin(a) * R * ratio}`;
+    }).join(' ');
+    const dots = angles.map((a, i) => {
+      const k = MOCK_AREA[i].key;
+      const got = areaScore[k] || 0, max = areaMax[k] || 1;
+      const ratio = Math.max(0, Math.min(1, got / max));
+      return `<circle cx="${cx + Math.cos(a) * R * ratio}" cy="${cy + Math.sin(a) * R * ratio}" r="3" fill="#0d9488" stroke="#fff" stroke-width="1.5"/>`;
+    }).join('');
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+      ${bg}${labels}
+      <polygon points="${scorePts}" fill="rgba(20,184,166,0.35)" stroke="#0d9488" stroke-width="2" stroke-linejoin="round"/>
+      ${dots}
+    </svg>`;
+  }
+  // 과목 → 5대 분야 그룹 (학생 대시보드와 동일 · 분야별 색)
+  const MOCK_SUBJECT_GROUPS = [
+    { key: '과학분야', members: ['생물','지구과학','화학','물리'],   color: '#c62828' },
+    { key: '사회분야', members: ['지리','사회문화','법','정치경제'], color: '#1e6091' },
+    { key: '현대문학', members: ['현대문학'],                      color: '#2e9c58' },
+    { key: '고전문학', members: ['고전문학'],                      color: '#7e57c2' },
+    { key: '인물',    members: ['인물'],                         color: '#d35a1a' }
+  ];
+  function mockSubjectColor(subject) {
+    const g = MOCK_SUBJECT_GROUPS.find(g => g.members.includes(subject));
+    return g ? g.color : '#0d9488';
+  }
+  function groupMockSubjects(subjectScores) {
+    return MOCK_SUBJECT_GROUPS.map(g => {
+      let correct = 0, total = 0;
+      (subjectScores || []).forEach(s => {
+        if (g.members.includes(s.subject)) { correct += (s.correct || 0); total += (s.total || 0); }
+      });
+      return { subject: g.key, correct, total, color: g.color };
+    }).filter(g => g.total > 0);
+  }
+  // 과목별 레이더 (분야 축, 응시한 분야만)
+  function buildMockSubjectRadar(rows) {
+    const size = 230, cx = size/2, cy = size/2, R = 76;
+    const n = rows.length;
+    if (n < 3) return '';   // 축이 3개 미만이면 레이더 형태가 안 나오므로 생략
+    const angles = rows.map((_, i) => -Math.PI / 2 + i * (2 * Math.PI / n));
+    let bg = '';
+    for (let ring = 1; ring <= 4; ring++) {
+      const r = R * ring / 4;
+      const pts = angles.map(a => `${cx + Math.cos(a) * r},${cy + Math.sin(a) * r}`).join(' ');
+      bg += `<polygon points="${pts}" fill="${ring===4?'rgba(240,253,250,0.7)':'none'}" stroke="#d5ece7" stroke-width="0.9"/>`;
+    }
+    angles.forEach(a => {
+      bg += `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos(a) * R}" y2="${cy + Math.sin(a) * R}" stroke="#d5ece7" stroke-width="0.7"/>`;
+    });
+    const labels = angles.map((a, i) => {
+      const lx = cx + Math.cos(a) * (R + 16);
+      const ly = cy + Math.sin(a) * (R + 16) + 3;
+      return `<text x="${lx}" y="${ly}" text-anchor="middle" font-size="10.5" font-weight="800" fill="${rows[i].color || '#0f766e'}">${rows[i].subject}</text>`;
+    }).join('');
+    const scorePts = angles.map((a, i) => {
+      const s = rows[i];
+      const ratio = s.total > 0 ? Math.max(0, Math.min(1, s.correct / s.total)) : 0;
+      return `${cx + Math.cos(a) * R * ratio},${cy + Math.sin(a) * R * ratio}`;
+    }).join(' ');
+    const dots = angles.map((a, i) => {
+      const s = rows[i];
+      const ratio = s.total > 0 ? Math.max(0, Math.min(1, s.correct / s.total)) : 0;
+      return `<circle cx="${cx + Math.cos(a) * R * ratio}" cy="${cy + Math.sin(a) * R * ratio}" r="3.5" fill="${s.color || '#0d9488'}" stroke="#fff" stroke-width="1.5"/>`;
+    }).join('');
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+      ${bg}${labels}
+      <polygon points="${scorePts}" fill="rgba(20,184,166,0.35)" stroke="#0d9488" stroke-width="2" stroke-linejoin="round"/>
+      ${dots}
+    </svg>`;
+  }
+  function fmtDur(sec) {
+    const s = parseInt(sec, 10);
+    if (!Number.isFinite(s) || s <= 0) return '-';
+    const m = Math.floor(s / 60), r = s % 60;
+    return `${m}:${String(r).padStart(2, '0')}`;
+  }
+  async function loadMock(reset) {
+    const st = state.mock;
+    if (reset) { st.offset = 0; $('mockTbody').innerHTML = ''; }
+    document.querySelectorAll(`th[data-sort-section="mock"]`).forEach(th => {
+      th.classList.remove('sorted-asc','sorted-desc');
+      if (th.dataset.sort === st.sort) th.classList.add(st.dir==='asc'?'sorted-asc':'sorted-desc');
+    });
+    const params = new URLSearchParams({
+      search: $('mockSearchName').value.trim(),
+      grade: $('mockGrade').value.trim(),
+      academy: $('mockAcademy').value.trim(),
+      examGrade: $('mockExamGrade').value || '',
+      sort: st.sort, dir: st.dir, limit: PAGE_SIZE, offset: st.offset
+    });
+    try {
+      const res = await fetch(`/api/admin/monthly-exam-list?${params}`);
+      const data = await res.json();
+      if (!data.ok) {
+        $('mockTbody').innerHTML = `<tr><td colspan="12" class="empty" style="color:#c00;">${esc(data.message || '오류')}</td></tr>`;
+        return;
+      }
+      st.total = data.total;
+      $('mockCount').textContent = `${data.total}건`;
+      $('tabMockCount').textContent = String(data.total);
+      $('mockInfo').textContent = `총 ${data.total}건 중 ${st.offset + data.items.length}건 표시`;
+      renderMockRows(data.items);
+      st.offset += data.items.length;
+      $('mockMoreBtn').style.display = st.offset < st.total ? 'inline-block' : 'none';
+    } catch (err) {
+      console.error(err);
+      $('mockTbody').innerHTML = '<tr><td colspan="12" class="empty" style="color:#c00;">네트워크 오류</td></tr>';
+    }
+  }
+  function renderMockRows(items) {
+    const tbody = $('mockTbody');
+    if (state.mock.offset === 0 && items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="12" class="empty">월말 모의고사 응시 기록이 없습니다.</td></tr>';
+      return;
+    }
+    const html = items.map((it, idx) => {
+      const gBadge = it.examGrade === 'elem'
+        ? `<span class="badge" style="background:linear-gradient(135deg,#34d399,#059669);color:#fff;">초등</span>`
+        : `<span class="badge" style="background:linear-gradient(135deg,#60a5fa,#2563eb);color:#fff;">중등</span>`;
+      return `<tr>
+        <td class="num">${state.mock.offset + idx + 1}</td>
+        <td>${esc(it.grade)}</td>
+        <td><b>${esc(it.name)}</b></td>
+        <td>${esc(it.school || '-')}</td>
+        <td>${esc(it.academyName || '-')}</td>
+        <td style="text-align:center;">${gBadge}</td>
+        <td style="text-align:center;font-weight:800;color:#0d9488;">${it.round}회</td>
+        <td style="text-align:center;font-weight:800;font-size:15px;color:#0d9488;">${Math.round(it.totalScore || 0)}점</td>
+        <td style="text-align:center;">${it.correctCount ?? '-'}/${it.totalQuestions ?? '-'}</td>
+        <td style="text-align:center;color:#6b7280;">${fmtDur(it.durationSec)}</td>
+        <td style="font-size:12px;color:#6b7280;">${fmtDate(it.submittedAt)}</td>
+        <td><button class="report-btn" onclick="openMockResult('${esc(it.id)}')">📊 결과보기</button></td>
+      </tr>`;
+    }).join('');
+    if (state.mock.offset === 0) tbody.innerHTML = html;
+    else tbody.insertAdjacentHTML('beforeend', html);
+  }
+  function bindMockControls() {
+    $('mockSearchName').oninput = debounce('mock', () => loadMock(true));
+    $('mockGrade').oninput      = debounce('mock', () => loadMock(true));
+    $('mockAcademy').oninput    = debounce('mock', () => loadMock(true));
+    $('mockExamGrade').onchange = () => loadMock(true);
+    $('mockSort').onchange = () => {
+      const [s, d] = $('mockSort').value.split('-');
+      state.mock.sort = s; state.mock.dir = d;
+      loadMock(true);
+    };
+    $('mockMoreBtn').onclick = () => loadMock(false);
+    document.querySelectorAll('th[data-sort-section="mock"]').forEach(th => {
+      th.onclick = () => {
+        const key = th.dataset.sort;
+        const st = state.mock;
+        if (st.sort === key) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
+        else { st.sort = key; st.dir = 'desc'; }
+        st.offset = 0;
+        loadMock(true);
+      };
+    });
+  }
+  window.resetMockFilter = function() {
+    $('mockSearchName').value = ''; $('mockGrade').value = '';
+    $('mockAcademy').value = ''; $('mockExamGrade').value = '';
+    $('mockSort').value = 'date-desc';
+    state.mock.sort = 'date'; state.mock.dir = 'desc';
+    loadMock(true);
+  };
+
+  // 결과 뷰어 모달 — 서버 데이터로 read-only 렌더
+  let _mockCurrent = null;   // 인쇄/PDF 용 현재 결과 메타
+  window.openMockResult = async function(id) {
+    const ov = $('mockResultOverlay');
+    const body = $('mockResultBody');
+    ov.style.display = 'flex';
+    $('mockResultFooter').style.display = 'none';
+    body.innerHTML = '<div style="padding:30px;text-align:center;color:#94a3b8;">불러오는 중…</div>';
+    try {
+      const res = await fetch(`/api/admin/monthly-exam-detail?id=${encodeURIComponent(id)}`);
+      const data = await res.json();
+      if (!data.ok) {
+        body.innerHTML = `<div style="padding:30px;text-align:center;color:#c00;">${esc(data.message || '불러오기 실패')}</div>`;
+        return;
+      }
+      const r = data.result;
+      _mockCurrent = { name: r.name, grade: r.grade, examGrade: r.examGrade, round: r.round };
+      const score = Math.round(r.totalScore || 0);
+      // 영역별 점수 막대
+      const areaRows = MOCK_AREA.map(a => {
+        const got = (r.areaScore && r.areaScore[a.key]) || 0;
+        const max = (r.areaMax && r.areaMax[a.key]) || 0;
+        if (max <= 0) return '';
+        const pct = Math.round(got / max * 100);
+        return `
+          <div style="margin-bottom:9px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:3px;">
+              <span style="color:${a.color};">${a.label}</span>
+              <span style="color:#475569;">${got}/${max} · ${pct}%</span>
+            </div>
+            <div style="height:9px;background:#f1f5f9;border-radius:6px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${a.color};border-radius:6px;"></div>
+            </div>
+          </div>`;
+      }).join('');
+      // 과목별 정답
+      const subjRadar = buildMockSubjectRadar(groupMockSubjects(r.subjectScores));
+      const subj = (r.subjectScores || []).filter(s => s && (s.total || 0) > 0);
+      const subjRows = subj.length ? subj.map(s => {
+        const pct = s.total > 0 ? Math.round((s.correct || 0) / s.total * 100) : 0;
+        const color = mockSubjectColor(s.subject);
+        return `
+          <div style="margin-bottom:9px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:3px;">
+              <span style="color:${color};">${esc(s.subject || '-')}</span>
+              <span style="color:#475569;">${s.correct || 0}/${s.total} · ${pct}%</span>
+            </div>
+            <div style="height:9px;background:#f1f5f9;border-radius:6px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${color};border-radius:6px;"></div>
+            </div>
+          </div>`;
+      }).join('') : '';
+      body.innerHTML = `
+        <div style="margin-bottom:14px;">
+          <div style="font-size:17px;font-weight:800;color:#0f172a;">${esc(r.name)} <span style="font-size:13px;color:#64748b;font-weight:600;">${esc(r.grade)}</span></div>
+          <div style="font-size:12.5px;color:#64748b;margin-top:3px;">
+            ${mockExamGradeLabel(r.examGrade)} 문해 · <b style="color:#0d9488;">${r.round}회차</b>
+            ${r.school ? ' · ' + esc(r.school) : ''}${r.academyName ? ' · ' + esc(r.academyName) : ''}
+          </div>
+          <div style="font-size:11.5px;color:#94a3b8;margin-top:2px;">${fmtDate(r.submittedAt)}</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:18px;">
+          <div style="flex:1;text-align:center;padding:12px 8px;background:linear-gradient(135deg,#f0fdfa,#ccfbf1);border-radius:12px;">
+            <div style="font-size:11px;color:#0d9488;font-weight:700;">총점</div>
+            <div style="font-size:24px;font-weight:900;color:#0d9488;">${score}<span style="font-size:13px;">/100</span></div>
+          </div>
+          <div style="flex:1;text-align:center;padding:12px 8px;background:#f8fafc;border-radius:12px;">
+            <div style="font-size:11px;color:#64748b;font-weight:700;">정답</div>
+            <div style="font-size:24px;font-weight:900;color:#334155;">${r.correctCount ?? '-'}<span style="font-size:13px;color:#94a3b8;">/${r.totalQuestions ?? '-'}</span></div>
+          </div>
+          <div style="flex:1;text-align:center;padding:12px 8px;background:#f8fafc;border-radius:12px;">
+            <div style="font-size:11px;color:#64748b;font-weight:700;">소요시간</div>
+            <div style="font-size:24px;font-weight:900;color:#334155;">${fmtDur(r.durationSec)}</div>
+          </div>
+        </div>
+        ${areaRows ? `<div style="font-size:13px;font-weight:800;color:#0d9488;margin-bottom:6px;">📈 영역별 점수</div>
+          <div style="text-align:center;margin:2px 0 12px;">${buildMockRadar(r.areaScore, r.areaMax)}</div>
+          ${areaRows}` : ''}
+        ${subjRows ? `<div style="font-size:13px;font-weight:800;color:#0d9488;margin:18px 0 8px;">📚 과목별 정답</div>
+          ${subjRadar ? `<div style="text-align:center;margin:2px 0 12px;">${subjRadar}</div>` : ''}
+          ${subjRows}` : ''}
+        ${!areaRows && !subjRows ? '<div style="padding:16px;text-align:center;color:#94a3b8;font-size:13px;">세부 영역 데이터가 없습니다.</div>' : ''}
+      `;
+      $('mockResultFooter').style.display = 'block';
+    } catch (err) {
+      body.innerHTML = '<div style="padding:30px;text-align:center;color:#c00;">불러오기 실패</div>';
+    }
+  };
+  window.closeMockResult = function() { $('mockResultOverlay').style.display = 'none'; };
+
+  // 인쇄 / PDF 저장 — 새 창에 결과 내용을 옮겨 인쇄 대화상자 열기 (PDF는 '대상: PDF로 저장')
+  window.printMockResult = function() {
+    const bodyHtml = $('mockResultBody').innerHTML;
+    const c = _mockCurrent || {};
+    const gLabel = c.examGrade === 'elem' ? '초등' : (c.examGrade === 'mid' ? '중등' : '');
+    const titleName = [c.name, c.grade].filter(Boolean).join(' ');
+    const docTitle = [c.name, gLabel, (c.round ? c.round + '회' : '')].filter(Boolean).join('_') + '_월말모의고사결과';
+    const w = window.open('', '_blank', 'width=760,height=940');
+    if (!w) { alert('팝업이 차단되었습니다. 브라우저에서 팝업을 허용한 뒤 다시 시도해 주세요.'); return; }
+    w.document.write(
+      '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>' + docTitle + '</title>' +
+      '<style>' +
+      '*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+      "body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;padding:28px 34px;color:#1f2937;}" +
+      'h1{font-size:18px;color:#0d9488;margin:0 0 14px;}' +
+      '.pt-toolbar{text-align:right;margin-bottom:14px;}' +
+      '.pt-toolbar button{border:none;border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;background:#0d9488;color:#fff;font-size:14px;font-family:inherit;}' +
+      '@media print{.pt-toolbar{display:none!important;}body{padding:6px 10px;}}' +
+      '</style></head><body>' +
+      '<div class="pt-toolbar"><button onclick="window.print()">🖨️ 인쇄 · PDF로 저장</button></div>' +
+      '<h1>📊 브레인 월말 모의고사 결과' + (titleName ? ' — ' + titleName : '') + '</h1>' +
+      '<div>' + bodyHtml + '</div>' +
+      '</body></html>'
+    );
+    w.document.close();
+    w.focus();
+    setTimeout(function(){ try { w.print(); } catch(e) {} }, 400);
+  };
+  $('mockResultOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'mockResultOverlay') closeMockResult();
+  });
+
+  // 카운트 배지는 loadMock 에서 직접 갱신 (tabMockCount)
+
   // 초기 로드
   bindCritControls();
   bindKhControls();
   bindKhExamControls();
   bindKhCertControls();
   bindWr100Controls();
+  bindMockControls();
   loadCrit(true);
   loadKh(true);
   loadKhExam(true);
   loadKhCert(true);
   loadWr100(true);
+  loadMock(true);
 </script>
 </body>
 </html>

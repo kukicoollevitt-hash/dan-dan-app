@@ -12146,7 +12146,7 @@ app.post("/admin/assign-series", async (req, res) => {
     // 🔹 disabledSeries 처리 — 비평/한국사처럼 디폴트 활성 시리즈를 학원이 명시적으로 끈 경우 저장
     //    payload에 들어있을 때만 갱신 (기존 동작 보존)
     if (hasDisabledPayload) {
-      const VALID_DISABLED_VALUES = new Set(['BRAIN비평', 'BRAIN한국사']);
+      const VALID_DISABLED_VALUES = new Set(['BRAIN비평', 'BRAIN한국사', 'BRAIN모고']);
       user.disabledSeries = disabledSeries.filter(v => VALID_DISABLED_VALUES.has(v));
     }
     await user.save();
@@ -28511,20 +28511,30 @@ function _validRound(r) { return Number.isInteger(r) && r >= 1 && r <= 12; }
 // 결과 저장/덮어쓰기 (upsert)
 app.post("/api/monthly-exam/result", async (req, res) => {
   try {
-    const user = _requireStudentSession(req, res);
-    if (!user) return;
     const b = req.body || {};
     const examGrade = String(b.examGrade || '').trim();
     const round = parseInt(b.round, 10);
     if (!_validExamGrade(examGrade)) return res.status(400).json({ ok: false, error: 'bad_examGrade' });
     if (!_validRound(round))          return res.status(400).json({ ok: false, error: 'bad_round' });
 
+    // 신원 확인: 서버 세션 우선, 없으면 body의 studentGrade/studentName 으로 User 조회.
+    // (학생 앱은 localStorage currentStudent 기반이라 서버 세션이 없을 수 있어,
+    //  비평/쓰기문해 저장과 동일하게 명시적 신원도 허용한다. 세션이 없으면 저장 자체가 안 되던 문제 해결)
+    let ident = (req.session && req.session.user && req.session.user._id) ? req.session.user : null;
+    if (!ident) {
+      const sName = String(b.studentName || '').trim();
+      const sGrade = String(b.studentGrade || '').trim();
+      if (!sName || !sGrade) return res.status(401).json({ ok: false, error: 'login_required' });
+      ident = await User.findOne({ grade: sGrade, name: sName }).lean();
+      if (!ident) return res.status(404).json({ ok: false, error: 'student_not_found' });
+    }
+
     // 화이트리스트 필드만 저장 (임의 필드 유입 차단)
     const payload = {
-      userId: user._id,
-      studentName: user.name || '',
-      grade: user.grade || '',
-      academyName: user.academyName || user.school || '',
+      userId: ident._id,
+      studentName: ident.name || '',
+      grade: ident.grade || '',
+      academyName: ident.academyName || ident.school || '',
       examGrade,
       round,
       examKey: String(b.examKey || `monthly_${examGrade}_${round}`),
@@ -28542,7 +28552,7 @@ app.post("/api/monthly-exam/result", async (req, res) => {
     };
     // 재응시 → 최신본으로 덮어쓰기
     const doc = await MonthlyExamResult.findOneAndUpdate(
-      { userId: user._id, examGrade, round },
+      { userId: ident._id, examGrade, round },
       { $set: payload },
       { upsert: true, new: true }
     );
@@ -28554,12 +28564,21 @@ app.post("/api/monthly-exam/result", async (req, res) => {
 });
 
 // 본인 결과 전체 조회 (대시보드용)
+//   세션 우선, 없으면 query의 studentGrade/studentName 으로 User 조회 (저장 경로와 동일 신원 모델).
+//   신원을 못 찾으면 401 대신 빈 목록 → 대시보드 동기화가 조용히 로컬로 폴백.
 app.get("/api/monthly-exam/results", async (req, res) => {
   try {
-    const user = _requireStudentSession(req, res);
-    if (!user) return;
+    let userId = (req.session && req.session.user && req.session.user._id) ? req.session.user._id : null;
+    if (!userId) {
+      const sName = String(req.query.studentName || '').trim();
+      const sGrade = String(req.query.studentGrade || '').trim();
+      if (!sName || !sGrade) return res.json({ ok: true, results: [] });
+      const u = await User.findOne({ grade: sGrade, name: sName }, { _id: 1 }).lean();
+      if (!u) return res.json({ ok: true, results: [] });
+      userId = u._id;
+    }
     const examGrade = String(req.query.examGrade || '').trim();
-    const filter = { userId: user._id };
+    const filter = { userId };
     if (_validExamGrade(examGrade)) filter.examGrade = examGrade;
     const rows = await MonthlyExamResult.find(filter)
       .sort({ examGrade: 1, round: 1 })
@@ -44104,6 +44123,102 @@ app.get('/api/admin/writing100-list', requireAdminLogin, async (req, res) => {
     });
   } catch (err) {
     console.error('[admin/writing100-list] 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// ─────────────────────────────────────────────────────
+// 📊 브레인 월말 모의고사(초·중) · 관리자 조회
+// ─────────────────────────────────────────────────────
+// 행 단위: 학생 1명의 1회차 = 1행 (한 학생이 N회차 응시면 N행)
+app.get('/api/admin/monthly-exam-list', requireAdminLogin, async (req, res) => {
+  try {
+    const acFilter = await getAdminAcademyFilter(req);
+    if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
+
+    const { search, grade, academy, examGrade, sort = 'date', dir = 'desc', limit = 10, offset = 0 } = req.query;
+    const query = {};
+    if (acFilter) query.academyName = acFilter.academyName;
+    else if (academy && academy.trim()) query.academyName = { $regex: academy.trim(), $options: 'i' };
+    if (grade && grade.trim()) query.grade = { $regex: grade.trim(), $options: 'i' };
+    if (search) query.studentName = { $regex: search.trim(), $options: 'i' };
+    if (examGrade === 'elem' || examGrade === 'mid') query.examGrade = examGrade;
+
+    const sortObj = {};
+    if (sort === 'grade') sortObj.grade = dir === 'asc' ? 1 : -1;
+    else if (sort === 'name') sortObj.studentName = dir === 'asc' ? 1 : -1;
+    else if (sort === 'academy') sortObj.academyName = dir === 'asc' ? 1 : -1;
+    else if (sort === 'round') sortObj.round = dir === 'asc' ? 1 : -1;
+    else if (sort === 'score') sortObj.totalScore = dir === 'asc' ? 1 : -1;
+    else sortObj.submittedAt = dir === 'asc' ? 1 : -1;
+
+    const lim = Math.min(parseInt(limit) || 10, 200);
+    const off = Math.max(parseInt(offset) || 0, 0);
+
+    const total = await MonthlyExamResult.countDocuments(query);
+    const items = await MonthlyExamResult.find(query, {
+      studentName: 1, grade: 1, academyName: 1, examGrade: 1, round: 1,
+      totalScore: 1, correctCount: 1, totalQuestions: 1, durationSec: 1, submittedAt: 1
+    }).sort(sortObj).skip(off).limit(lim).lean();
+
+    // 학교 정보 (User 컬렉션에서 grade+name 으로 join)
+    const keys = [...new Set(items.map(i => `${i.grade}|${i.studentName}`))];
+    const users = keys.length ? await User.find({
+      $or: keys.map(k => { const [g, n] = k.split('|'); return { grade: g, name: n }; })
+    }, { grade: 1, name: 1, school: 1 }).lean() : [];
+    const schoolMap = {};
+    users.forEach(u => { schoolMap[`${u.grade}|${u.name}`] = u.school || ''; });
+
+    res.json({
+      ok: true,
+      items: items.map(i => ({
+        id: String(i._id),
+        grade: i.grade, name: i.studentName,
+        school: schoolMap[`${i.grade}|${i.studentName}`] || '',
+        academyName: i.academyName || '',
+        examGrade: i.examGrade, round: i.round,
+        totalScore: i.totalScore, correctCount: i.correctCount, totalQuestions: i.totalQuestions,
+        durationSec: i.durationSec, submittedAt: i.submittedAt
+      })),
+      total
+    });
+  } catch (err) {
+    console.error('[admin/monthly-exam-list] 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
+// 개별 회차 상세 (결과 뷰어 모달용) — 학생 기기 localStorage 없이 서버 데이터로 렌더
+app.get('/api/admin/monthly-exam-detail', requireAdminLogin, async (req, res) => {
+  try {
+    const acFilter = await getAdminAcademyFilter(req);
+    if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ ok: false, message: 'id 필요' });
+    let doc;
+    try { doc = await MonthlyExamResult.findById(id).lean(); }
+    catch { return res.status(400).json({ ok: false, message: '잘못된 id' }); }
+    if (!doc) return res.status(404).json({ ok: false, message: '기록 없음' });
+    // 센터 관리자는 자기 센터 학생만 열람
+    if (acFilter) {
+      const allowed = acFilter.academyName;
+      const ok = (allowed && typeof allowed === 'object' && Array.isArray(allowed.$in))
+        ? allowed.$in.includes(doc.academyName)
+        : doc.academyName === allowed;
+      if (!ok) return res.status(403).json({ ok: false, message: '권한 없음' });
+    }
+    const u = await User.findOne({ grade: doc.grade, name: doc.studentName }, { school: 1 }).lean();
+    res.json({ ok: true, result: {
+      grade: doc.grade, name: doc.studentName, school: u?.school || '',
+      academyName: doc.academyName || '', examGrade: doc.examGrade, round: doc.round,
+      totalScore: doc.totalScore, correctCount: doc.correctCount, totalQuestions: doc.totalQuestions,
+      durationSec: doc.durationSec, submittedAt: doc.submittedAt,
+      areaScore: (doc.areaScore && typeof doc.areaScore === 'object') ? doc.areaScore : {},
+      areaMax:   (doc.areaMax   && typeof doc.areaMax   === 'object') ? doc.areaMax   : {},
+      subjectScores: Array.isArray(doc.subjectScores) ? doc.subjectScores : []
+    }});
+  } catch (err) {
+    console.error('[admin/monthly-exam-detail] 오류:', err);
     res.status(500).json({ ok: false, message: '서버 오류' });
   }
 });

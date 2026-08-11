@@ -566,10 +566,19 @@
     function renderRounds() {
       const grid = document.getElementById('roundsGrid');
       grid.innerHTML = '';
+      // 순차 잠금: 1회차는 항상 열림, 직전 회차를 응시(완료)해야 다음 회차가 열림.
+      //   완료 기준 = 서버 동기화된 localStorage 기록. 테스트 계정(초3 김윤슬)은 전체 개방.
+      let _cs = {};
+      try { _cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); } catch (e) {}
+      const MONTHLY_ALL_OPEN = [{ grade: '초3', name: '김윤슬' }];
+      const isAllOpen = MONTHLY_ALL_OPEN.some(t => t.grade === _cs.grade && t.name === _cs.name);
       for (let r = 1; r <= TOTAL_ROUNDS; r++) {
         const result = loadResult(r);
-        const isOpen = r <= OPEN_ROUNDS;
         const isCompleted = !!result;
+        const prevDone = (r === 1) || !!loadResult(r - 1);   // 직전 회차 완료 여부
+        const isReleased = r <= OPEN_ROUNDS;                 // 전체 릴리즈 상한(관리자)
+        const isSeqOpen = isAllOpen || prevDone;             // 순차 잠금 통과
+        const isOpen = isReleased && isSeqOpen;
         const card = document.createElement('div');
         card.className = 'round-card' + (isCompleted ? ' completed' : isOpen ? ' open' : ' locked');
 
@@ -610,12 +619,13 @@
             <a href="/monthly_exam_paper.html?level=elem&round=${r}" target="_blank" rel="noopener" class="round-btn wide">🖨 시험지 다운로드</a>
           `;
         } else {
-          statusHtml = '<span class="round-status status-locked">🔒 준비 중</span>';
+          const seqLocked = isReleased && !isSeqOpen;   // 릴리즈됐지만 직전 회차 미완료로 잠김
+          statusHtml = `<span class="round-status status-locked">🔒 ${seqLocked ? '이전 회차 완료 후' : '준비 중'}</span>`;
           const emptyArea = buildEmptyMiniRadar(5);
           const emptySubject = buildEmptyMiniRadar(7);
           contentHtml = `
             <div class="round-score" style="visibility:hidden;">--<small>/ 100</small></div>
-            <div class="round-meta" style="text-align:center;">🔒 ${getMonthLabel(r)} 오픈 예정</div>
+            <div class="round-meta" style="text-align:center;">${seqLocked ? `🔒 ${r - 1}회차를 응시하면 열려요` : `🔒 ${getMonthLabel(r)} 오픈 예정`}</div>
             <div class="round-mini-radars locked-radars">
               <div class="round-mini-radar">${emptyArea}<div class="round-mini-radar-lbl">문해력 5지수</div></div>
               <div class="round-mini-radar">${emptySubject}<div class="round-mini-radar-lbl">과목별 정답률</div></div>
@@ -1352,13 +1362,28 @@
     ===== */
     async function syncFromServer() {
       try {
-        const r = await fetch('/api/monthly-exam/results?examGrade=' + GRADE, {
+        let cs = {};
+        try { cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); } catch (e) {}
+        const qs = new URLSearchParams({ examGrade: GRADE, studentGrade: cs.grade || '', studentName: cs.name || '' });
+        const r = await fetch('/api/monthly-exam/results?' + qs.toString(), {
           credentials: 'same-origin',
           headers: { 'Accept': 'application/json' }
         });
         if (!r.ok) return; // 비로그인(401)·서버오류 → 로컬만 사용
         const data = await r.json();
         if (!data || !data.ok || !Array.isArray(data.results)) return;
+        // 🔒 학생 전환 감지 → 이전 학생의 로컬 결과 제거 (기기 공유 시 성적 잔존·유출 방지)
+        //    localStorage 결과 키는 학생별로 분리돼 있지 않으므로, 소유자가 바뀌면 이 GRADE의 결과를 모두 비우고 서버본으로 재구성한다.
+        const ownerKey = `monthly_${GRADE}_owner`;
+        const curOwner = (cs.grade || '') + '|' + (cs.name || '');
+        let prevOwner = '';
+        try { prevOwner = localStorage.getItem(ownerKey) || ''; } catch (e) {}
+        if (prevOwner !== curOwner) {
+          for (let rr = 1; rr <= TOTAL_ROUNDS; rr++) {
+            try { localStorage.removeItem(`monthly_${GRADE}_${rr}_result`); } catch (e) {}
+          }
+          try { localStorage.setItem(ownerKey, curOwner); } catch (e) {}
+        }
         data.results.forEach(row => {
           const round = row.round;
           if (!round) return;

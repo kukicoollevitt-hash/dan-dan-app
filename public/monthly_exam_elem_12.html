@@ -1147,6 +1147,25 @@
        BRAIN 월말 응시 렌더러 (2단 · OMR · 형광펜)
     ======================================== */
     const EXAM = window.MONTHLY_EXAM_DATA;
+    // 🔒 학생 전환 감지 → 이전 학생의 로컬 결과 제거 (기기 공유 시 성적 잔존·유출 방지)
+    //    대시보드 syncFromServer와 동일 로직. 응시 중(같은 학생)에는 절대 지우지 않음.
+    (function () {
+      try {
+        const _g = (EXAM && EXAM.examKey && EXAM.examKey.indexOf('mid') !== -1) ? 'mid' : 'elem';
+        let _cs = {};
+        try { _cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); } catch (e) {}
+        const _ownerKey = 'monthly_' + _g + '_owner';
+        const _cur = (_cs.grade || '') + '|' + (_cs.name || '');
+        let _prev = '';
+        try { _prev = localStorage.getItem(_ownerKey) || ''; } catch (e) {}
+        if (_prev !== _cur) {
+          for (let _r = 1; _r <= 12; _r++) {
+            try { localStorage.removeItem('monthly_' + _g + '_' + _r + '_result'); } catch (e) {}
+          }
+          try { localStorage.setItem(_ownerKey, _cur); } catch (e) {}
+        }
+      } catch (e) {}
+    })();
     const STORAGE_KEY = 'monthly_elem_12_result';
     let currentPassageIdx = 0;
     let userAnswers = new Array(EXAM.totalQuestions + 1).fill(null);
@@ -2276,11 +2295,17 @@
       // 서버 저장 (로그인 상태일 때만 · 실패해도 로컬은 유지)
       try {
         const examGrade = EXAM.examKey && EXAM.examKey.indexOf('mid') !== -1 ? 'mid' : 'elem';
+        // 학생 신원(localStorage currentStudent)을 함께 전송 — 서버 세션이 없어도 저장되도록
+        let _cs = {};
+        try { _cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); } catch(e) {}
         fetch('/api/monthly-exam/result', {
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(Object.assign({}, payload, { examGrade, round: EXAM.round }))
+          body: JSON.stringify(Object.assign({}, payload, {
+            examGrade, round: EXAM.round,
+            studentName: _cs.name || '', studentGrade: _cs.grade || ''
+          }))
         }).catch(err => console.warn('[monthly-exam] 서버 저장 실패:', err));
       } catch(e) { /* 무시 */ }
     }
