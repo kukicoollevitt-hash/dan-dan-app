@@ -1052,13 +1052,15 @@
       if (!revenue || revenue <= 0) return null;
       return 30 + Math.ceil((amount / revenue) * 30);
     }
-    // 센터 행: 손익분기 예상일수 셀 (경과일 지나면 달성)
+    // 센터 행: 손익분기 셀
+    //   "달성" 판정 = 실제 투자대비수익(ROI) ≥ 0 (누적 학원매출이 계약금액을 회수).
+    //   예전엔 "경과일 ≥ 예상 손익분기일"로 판정해, ROI가 아직 음수(-)여도 달성으로 뜨는 모순이 있었음.
+    //   미달성 센터는 예상 손익분기 일수를 관리 지표로 표시.
     function cellBreakeven(c) {
       const d = centerDerived(c);
       const be = breakevenDays(d.amount, d.revenue);
       if (be == null) return '<b style="color:#e74c3c">매출없음</b>';  // 관리 필요
-      const el = contractDdays(c.contractDate);
-      if (el && el.elapsed >= be) return '<b style="color:#1e8449">달성</b>';
+      if (d.roi >= 0) return '<b style="color:#1e8449">달성</b>';       // 실제 회수 완료
       const over = be > TARGET_BREAKEVEN;  // 목표 초과 = 관리 대상
       return `<b style="color:${over ? '#e74c3c' : '#1e8449'}">${be}일${over ? ' ▲' : ''}</b>`;
     }
