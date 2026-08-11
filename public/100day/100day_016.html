@@ -2336,9 +2336,9 @@ function setupDragChip(chip) {
       if (zone && !zone.classList.contains('filled')) zone.classList.add('over');
     };
     const finish = (ev, dropped) => {
-      chip.removeEventListener('pointermove', onMove);
-      chip.removeEventListener('pointerup', onUp);
-      chip.removeEventListener('pointercancel', onCancel);
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onCancel);
       if (overZone) overZone.classList.remove('over');
       if (!ghost) return;              // 드래그 없이 손을 뗀 경우 (탭)
       ghost.remove();
@@ -2353,9 +2353,11 @@ function setupDragChip(chip) {
     const onUp = (ev) => finish(ev, true);
     const onCancel = (ev) => finish(ev, false);
     try { chip.setPointerCapture(e.pointerId); } catch (_) {}
-    chip.addEventListener('pointermove', onMove);
-    chip.addEventListener('pointerup', onUp);
-    chip.addEventListener('pointercancel', onCancel);
+    // 리스너를 document에 붙인다: 포인터 캡처가 풀려 손가락이 칩 밖으로 나가도
+    //   move/up이 계속 잡혀 ghost가 중간에 얼어붙지 않는다. (기존엔 chip에 붙어 캡처 유실 시 멈춤)
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onCancel);
   });
 }
 
