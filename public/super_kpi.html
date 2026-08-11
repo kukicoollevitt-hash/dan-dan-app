@@ -312,6 +312,21 @@
     </div>
   </div>
 
+  <!-- 센터 KPI 종합 보안 확인 모달 (본사 전체 재무 열람 전 추가 비번) -->
+  <div class="overlay" id="centerPwModal">
+    <div class="modal">
+      <h3>🔒 센터 KPI 종합 · 보안 확인</h3>
+      <p style="font-size:13px;color:#777;margin:-4px 0 12px">본사 전체 센터 재무 현황입니다.<br>열람 비밀번호를 입력하세요.</p>
+      <input type="password" id="centerPw" placeholder="비밀번호" autocomplete="off" inputmode="numeric"
+             onkeydown="if(event.key==='Enter'){event.preventDefault();submitCenterPw();}" />
+      <p class="modal-err" id="centerPw_err"></p>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeModal('centerPwModal')">취소</button>
+        <button class="modal-ok green" onclick="submitCenterPw()">확인</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 센터 등록 모달 (1차 센터정보) -->
   <div class="overlay" id="centerModal">
     <div class="modal">
@@ -518,6 +533,8 @@
     function openRegister() { ACTIVE_TAB === 'contract' ? openRegisterModal() : openCenterModal(); }
 
     function switchTab(tab) {
+      // 센터 KPI 관리(재무)도 종합과 동일하게 추가 비밀번호 확인
+      if (tab === 'manage' && !_centerKpiUnlocked) { _centerPwTarget = 'manage'; openCenterPw(); return; }
       ACTIVE_TAB = tab;
       document.getElementById('tab-contract').classList.toggle('active', tab === 'contract');
       document.getElementById('tab-manage').classList.toggle('active', tab === 'manage');
@@ -594,7 +611,36 @@
       document.getElementById('manageView').style.display = (tab === 'manage') ? 'block' : 'none';
       selectNodeData(scope, branchId, label);
     }
-    function ovSwitch(tab) { OV_TAB = tab; renderOverview(); }
+    let _centerKpiUnlocked = false;   // 센터 KPI(재무) 보안 잠금 (세션 내 1회 인증 → 종합·노드 공용)
+    let _centerPwTarget = 'overview'; // 인증 성공 후 이동할 대상: 'overview'(종합 센터탭) | 'manage'(노드 센터탭)
+    const CENTER_KPI_PW = '2846';
+    function ovSwitch(tab) {
+      // 💰 센터 KPI 종합(본사 전체 재무)은 민감 정보 → 추가 비밀번호 확인
+      if (tab === 'center' && !_centerKpiUnlocked) { _centerPwTarget = 'overview'; openCenterPw(); return; }
+      OV_TAB = tab; renderOverview();
+    }
+    function openCenterPw() {
+      const inp = document.getElementById('centerPw');
+      inp.value = '';
+      document.getElementById('centerPw_err').style.display = 'none';
+      openModal('centerPwModal');
+      setTimeout(() => inp.focus(), 60);
+    }
+    function submitCenterPw() {
+      const inp = document.getElementById('centerPw');
+      if (inp.value.trim() === CENTER_KPI_PW) {
+        _centerKpiUnlocked = true;
+        closeModal('centerPwModal');
+        if (_centerPwTarget === 'manage') {
+          switchTab('manage');           // 노드 센터 KPI 관리 탭 (이제 잠금 해제됨)
+        } else {
+          OV_TAB = 'center'; renderOverview();   // 종합 센터 KPI 종합 탭
+        }
+      } else {
+        showErr(document.getElementById('centerPw_err'), '비밀번호가 올바르지 않습니다.');
+        inp.value = ''; inp.focus();
+      }
+    }
 
     function renderOverview() {
       const bar = `<div class="tabs" style="margin-bottom:18px">
