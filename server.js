@@ -45425,7 +45425,13 @@ app.get("/api/academy-student-counts", async (req, res) => {
 // 모든 사용자가 Mac 기준과 100% 동일한 PDF를 받게 됨.
 let _pdfBrowser = null;
 async function getPdfBrowser() {
-  if (_pdfBrowser && _pdfBrowser.isConnected()) return _pdfBrowser;
+  // Puppeteer 버전 호환: 구버전은 isConnected() 메서드, 신버전(v20+)은 connected 속성
+  if (_pdfBrowser) {
+    const alive = (typeof _pdfBrowser.isConnected === 'function')
+      ? _pdfBrowser.isConnected()
+      : _pdfBrowser.connected;
+    if (alive) return _pdfBrowser;
+  }
   const puppeteer = require('puppeteer');
   _pdfBrowser = await puppeteer.launch({
     headless: 'new',
