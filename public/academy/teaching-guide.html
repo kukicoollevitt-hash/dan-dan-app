@@ -2461,21 +2461,24 @@
       }
       container.innerHTML = html;
 
-      // 📚 브레인온 탭 하단에 월간교재 12권 카드 append
-      if (series === 'brainon' && typeof renderMonthlyVolumeSection === 'function') {
-        try { renderMonthlyVolumeSection(container); } catch (e) { console.error('월간교재 섹션 렌더 오류:', e); }
-      }
-      // 📕 브레인업 탭 하단에 월간교재 12권 카드 append
-      if (series === 'brainup' && typeof renderMonthlyVolumeSectionUp === 'function') {
-        try { renderMonthlyVolumeSectionUp(container); } catch (e) { console.error('월간교재(브레인업) 섹션 렌더 오류:', e); }
-      }
-      // 📙 브레인핏 탭 하단에 월간교재 12권 카드 append
-      if (series === 'brainfit' && typeof renderMonthlyVolumeSectionFit === 'function') {
-        try { renderMonthlyVolumeSectionFit(container); } catch (e) { console.error('월간교재(브레인핏) 섹션 렌더 오류:', e); }
-      }
-      // 🎯 브레인딥 탭 하단에 월간교재 12권 카드 append
-      if (series === 'braindeep' && typeof renderMonthlyVolumeSectionDeep === 'function') {
-        try { renderMonthlyVolumeSectionDeep(container); } catch (e) { console.error('월간교재(브레인딥) 섹션 렌더 오류:', e); }
+      // 📚 월간교재 12권 카드 append — 🧪 본사 관리자(브레인문해원_테스트)에게만 노출
+      if (window.IS_BRAIN_ADMIN === true) {
+        // 📚 브레인온 탭 하단에 월간교재 12권 카드 append
+        if (series === 'brainon' && typeof renderMonthlyVolumeSection === 'function') {
+          try { renderMonthlyVolumeSection(container); } catch (e) { console.error('월간교재 섹션 렌더 오류:', e); }
+        }
+        // 📕 브레인업 탭 하단에 월간교재 12권 카드 append
+        if (series === 'brainup' && typeof renderMonthlyVolumeSectionUp === 'function') {
+          try { renderMonthlyVolumeSectionUp(container); } catch (e) { console.error('월간교재(브레인업) 섹션 렌더 오류:', e); }
+        }
+        // 📙 브레인핏 탭 하단에 월간교재 12권 카드 append
+        if (series === 'brainfit' && typeof renderMonthlyVolumeSectionFit === 'function') {
+          try { renderMonthlyVolumeSectionFit(container); } catch (e) { console.error('월간교재(브레인핏) 섹션 렌더 오류:', e); }
+        }
+        // 🎯 브레인딥 탭 하단에 월간교재 12권 카드 append
+        if (series === 'braindeep' && typeof renderMonthlyVolumeSectionDeep === 'function') {
+          try { renderMonthlyVolumeSectionDeep(container); } catch (e) { console.error('월간교재(브레인딥) 섹션 렌더 오류:', e); }
+        }
       }
     }
 
@@ -70888,6 +70891,21 @@
                   break;  // 한 컨테이너엔 한 박스만
                 }
               }
+            });
+
+            // 📚 월간교재 12권 — 관리자 확인 후 이미 열린 탭에 사후 렌더
+            //   (초기 renderSubjects는 IS_BRAIN_ADMIN=false 시점에 실행돼 월간 섹션이 스킵됨)
+            //   각 render 함수는 내부 중복가드가 있어 재호출해도 중복 생성 안 됨
+            [
+              { id: 'tab-brainon',   render: (typeof renderMonthlyVolumeSection === 'function')     ? renderMonthlyVolumeSection     : null },
+              { id: 'tab-brainup',   render: (typeof renderMonthlyVolumeSectionUp === 'function')   ? renderMonthlyVolumeSectionUp   : null },
+              { id: 'tab-brainfit',  render: (typeof renderMonthlyVolumeSectionFit === 'function')  ? renderMonthlyVolumeSectionFit  : null },
+              { id: 'tab-braindeep', render: (typeof renderMonthlyVolumeSectionDeep === 'function') ? renderMonthlyVolumeSectionDeep : null }
+            ].forEach(m => {
+              const cont = document.getElementById(m.id);
+              if (!cont || !m.render) return;
+              if (!cont.querySelector('.subject-accordion')) return;  // 아직 과목 렌더 안 된 탭은 스킵 (탭 열 때 렌더됨)
+              try { m.render(cont); } catch (e) { console.error('월간교재 사후 렌더 오류:', e); }
             });
           }
         } catch (e) {
