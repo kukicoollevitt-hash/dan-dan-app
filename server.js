@@ -2132,17 +2132,17 @@ function kpiCanManageAccounts(scope) {
 }
 
 // 로그인 페이지
-app.get("/super/kpi/login", requireSuperAdmin, (req, res) => {
+app.get("/super/kpi/login", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "super_kpi_login.html"));
 });
 
 // KPI 대시보드 (2차 로그인까지 완료해야 접근)
-app.get("/super/kpi", requireSuperAdmin, requireKpiUser, (req, res) => {
+app.get("/super/kpi", requireKpiUser, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "super_kpi.html"));
 });
 
 // 로그인 처리
-app.post("/api/super/kpi/login", requireSuperAdmin, async (req, res) => {
+app.post("/api/super/kpi/login", async (req, res) => {
   try {
     const { scope, name, password } = req.body || {};
     if (!scope || !name || !password) {
@@ -2183,7 +2183,7 @@ app.post("/api/super/kpi/logout", (req, res) => {
 });
 
 // 현재 로그인 정보
-app.get("/api/super/kpi/me", requireSuperAdmin, requireKpiUser, (req, res) => {
+app.get("/api/super/kpi/me", requireKpiUser, (req, res) => {
   const u = req.session.kpiUser;
   res.json({
     ok: true,
@@ -2194,7 +2194,7 @@ app.get("/api/super/kpi/me", requireSuperAdmin, requireKpiUser, (req, res) => {
 });
 
 // 좌측 트리 (권한별 노출 범위)
-app.get("/api/super/kpi/tree", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.get("/api/super/kpi/tree", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     const accSlim = (a) => ({ id: String(a._id), name: a.name, role: a.role, scope: a.scope });
@@ -2239,7 +2239,7 @@ app.get("/api/super/kpi/tree", requireSuperAdmin, requireKpiUser, async (req, re
 });
 
 // 지사 개설 (본사·사업본부만) — 지사 + 지사장 계정 동시 생성
-app.post("/api/super/kpi/branches", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.post("/api/super/kpi/branches", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     if (!kpiCanCreateBranch(u.scope)) {
@@ -2277,7 +2277,7 @@ app.post("/api/super/kpi/branches", requireSuperAdmin, requireKpiUser, async (re
 });
 
 // 담당자 계정 생성 (계층형)
-app.post("/api/super/kpi/accounts", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.post("/api/super/kpi/accounts", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     if (!kpiCanManageAccounts(u.scope)) {
@@ -2336,7 +2336,7 @@ app.post("/api/super/kpi/accounts", requireSuperAdmin, requireKpiUser, async (re
 });
 
 // 비밀번호 재설정 (상위 권한자만) — 본사=전체, 사업본부=지사 담당자, 지사=본인 지사 담당자
-app.post("/api/super/kpi/accounts/:id/reset-password", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.post("/api/super/kpi/accounts/:id/reset-password", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     const { password } = req.body || {};
@@ -2378,7 +2378,7 @@ const KPI_ACADEMY_FIELDS = [
 ];
 
 // 선택 노드의 학원 목록
-app.get("/api/super/kpi/academies", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.get("/api/super/kpi/academies", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     const scope = req.query.scope;
@@ -2396,7 +2396,7 @@ app.get("/api/super/kpi/academies", requireSuperAdmin, requireKpiUser, async (re
 });
 
 // 학원 목록 엑셀(.xlsx) 내보내기 (선택 노드 + 월 필터 반영)
-app.get("/api/super/kpi/academies/export", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.get("/api/super/kpi/academies/export", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     const scope = req.query.scope;
@@ -2456,7 +2456,7 @@ app.get("/api/super/kpi/academies/export", requireSuperAdmin, requireKpiUser, as
 });
 
 // 학원 등록 (본인 소속으로만 생성)
-app.post("/api/super/kpi/academies", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.post("/api/super/kpi/academies", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     const { inflow, firstConsultDate, academyName, region, directorName, phone, purpose, targetScope, targetBranchId } = req.body || {};
@@ -2525,7 +2525,7 @@ app.post("/api/super/kpi/academies", requireSuperAdmin, requireKpiUser, async (r
 });
 
 // 학원 정보/진행상황 수정
-app.patch("/api/super/kpi/academies/:id", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.patch("/api/super/kpi/academies/:id", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     const row = await KpiAcademy.findById(req.params.id);
@@ -2548,7 +2548,7 @@ app.patch("/api/super/kpi/academies/:id", requireSuperAdmin, requireKpiUser, asy
 });
 
 // 학원 삭제
-app.delete("/api/super/kpi/academies/:id", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.delete("/api/super/kpi/academies/:id", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     const row = await KpiAcademy.findById(req.params.id);
@@ -2597,7 +2597,7 @@ function kpiCenterDerived(c) {
 }
 
 // 센터 목록
-app.get("/api/super/kpi/centers", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.get("/api/super/kpi/centers", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     const scope = req.query.scope;
@@ -2616,7 +2616,7 @@ app.get("/api/super/kpi/centers", requireSuperAdmin, requireKpiUser, async (req,
 });
 
 // 센터 등록 (본사 전용 · 대상 부서/지사 선택)
-app.post("/api/super/kpi/centers", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.post("/api/super/kpi/centers", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     if (u.scope !== "본사") return res.status(403).json({ ok: false, message: "센터 등록은 본사만 가능합니다." });
@@ -2651,7 +2651,7 @@ app.post("/api/super/kpi/centers", requireSuperAdmin, requireKpiUser, async (req
 });
 
 // 센터 수정 (1차 정보 + 2차 관리현황)
-app.patch("/api/super/kpi/centers/:id", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.patch("/api/super/kpi/centers/:id", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     if (u.scope !== "본사") return res.status(403).json({ ok: false, message: "센터 수정은 본사만 가능합니다." });
@@ -2672,7 +2672,7 @@ app.patch("/api/super/kpi/centers/:id", requireSuperAdmin, requireKpiUser, async
 });
 
 // 센터 삭제
-app.delete("/api/super/kpi/centers/:id", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.delete("/api/super/kpi/centers/:id", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     if (u.scope !== "본사") return res.status(403).json({ ok: false, message: "센터 삭제는 본사만 가능합니다." });
@@ -2687,7 +2687,7 @@ app.delete("/api/super/kpi/centers/:id", requireSuperAdmin, requireKpiUser, asyn
 });
 
 // 센터 목록 엑셀(.xlsx) 내보내기
-app.get("/api/super/kpi/centers/export", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.get("/api/super/kpi/centers/export", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     const scope = req.query.scope;
@@ -2750,7 +2750,7 @@ app.get("/api/super/kpi/centers/export", requireSuperAdmin, requireKpiUser, asyn
 });
 
 // 종합 현황 (가시 범위 전체 합산 + 부서/지사별 집계) — 계약 KPI + 관리 KPI 동시
-app.get("/api/super/kpi/overview", requireSuperAdmin, requireKpiUser, async (req, res) => {
+app.get("/api/super/kpi/overview", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     const STEP_KEYS = ["step_firstConsult", "step_briefingApply", "step_briefingAttend", "step_followup", "step_offlineMeeting", "step_contract"];
