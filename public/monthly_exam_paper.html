@@ -307,6 +307,20 @@
   const isExplain = params.get('answers') === '1';   // 해설지 (응시 완료 학생용)
   const showAnswers = isTeacher || isExplain;
 
+  // 🖨 용지 크기: 기본 A4, size=a3 이면 A3로 확대 + 여백 넓게
+  //   zoom으로 균일 확대해 A4 레이아웃을 그대로 A3 크기로 키움(비율·정렬 유지, 깨짐 없음)
+  const paperSize = params.get('size') === 'a3' ? 'a3' : 'a4';
+  if (paperSize === 'a3') {
+    const st = document.createElement('style');
+    st.textContent =
+      '@page { size: A3; margin: 0; }' +
+      ' .page { zoom: 1.25; }' +                          /* A4 → A3 크기로 확대 */
+      ' @media print { .page { margin: 14mm auto; } }';   /* 인쇄 시 상하좌우 여백 추가 */
+    document.head.appendChild(st);
+    const _hint = document.querySelector('.tb-hint');
+    if (_hint) _hint.textContent = 'A3 크기 · 여백 넓게 — 인쇄 창에서 용지를 A3로 선택하세요';
+  }
+
   const script = document.createElement('script');
   script.src = `/monthly_exam_data/monthly_${level}_${round}.js?v=${Date.now()}`;   // 데이터 캐시 방지
   script.onload = render;
