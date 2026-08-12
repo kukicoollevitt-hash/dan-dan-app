@@ -1595,6 +1595,20 @@
       padding-bottom: 1px;
       background: linear-gradient(transparent 62%, rgba(37,99,235,0.10) 62%);
     }
+    /* 📕 교사용 워크북 PDF 본문 전용 — html2canvas가 또렷하게 캡처하도록 밑줄/네모 오버라이드 */
+    .wb-mark-p .tg-mid {
+      background: transparent;               /* 파란 틴트 제거 — 밑줄만 (요청) */
+      border-bottom: 0;                      /* 인라인 border는 html2canvas에서 늘어짐 → 제거 */
+      text-decoration: underline;            /* 글자 따라 정확히 밑줄 (캡처 깔끔, 안 늘어짐) */
+      text-decoration-color: #2563eb;
+      -webkit-text-decoration-color: #2563eb;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
+    }
+    .wb-mark-p .tg-key {
+      background: #fff2dc;                    /* 네모 박스 배경 살짝 진하게 (캡처 선명) */
+      border-color: #c2681a;
+    }
 
     /* 문단별 중심내용 */
     .paragraph-list {
@@ -61063,8 +61077,8 @@
     // 핵심어(네모) = 기존 <b> ∪ 중심내용(paragraphMain)에 등장하는 명사(어절 시작, 불용어·동사어미 제외)
     //   · 우선순위 <b> → 짧은 명사, 문단당 최대 CAP개, 앞 문단에 이미 나온 네모는 반복 안 함(글로벌 중복 제거)
     // 밑줄 = 중심내용과 단어 겹침이 큰 문장 (한 문단 전 문장이면 상위 2문장만)
-    function buildMarkedPassage(passages, mains) {
-      if (!Array.isArray(passages) || passages.length === 0) return '';
+    function markPassageParagraphs(passages, mains) {
+      if (!Array.isArray(passages) || passages.length === 0) return [];
       const CAP = 5; // 문단당 네모 상한
       const STOP = new Set(['살아','있는','있지','않은','없는','여러','모든','서로','함께','다시','매우','아주','바로','이런','그런','우리','또한','그리고','하지만','통해','통한','위해','위한','대해','대한','중요','관계','이해','활동','과정','방법','모습','다양','존재','주변','가지','스스로','구분','예시','눈에','따라','없이','항상','처음','오랜','점점','같이','모두','얼마','이후','이제','정말','무척']);
       const JOSA = '의은는이가을를과와에도로으인란만께서';
@@ -61104,7 +61118,7 @@
       };
 
       const used = new Set(); // 글로벌 중복 제거 — 앞 문단에서 쓴 네모는 뒷문단에서 생략
-      let body = '';
+      const result = [];
       passages.forEach((para, i) => {
         const paraStr = String(para);
         const plain = stripTags(paraStr);
@@ -61157,6 +61171,17 @@
           return h;
         }).join(' ');
 
+        result.push(marked);
+      });
+      return result;
+    }
+
+    // 화면 상세용: 문단별 마킹을 .tg-para 구조로 감싸 섹션 HTML 반환
+    function buildMarkedPassage(passages, mains) {
+      const marks = markPassageParagraphs(passages, mains);
+      if (marks.length === 0) return '';
+      let body = '';
+      marks.forEach((marked, i) => {
         body += `
           <div class="tg-para">
             <span class="tg-para-num">${i + 1}</span>
@@ -64000,9 +64025,13 @@
       const _passageMb = (unit._loosePassage === true) ? '10px'
         : _isClassicTight ? '7px' : _isPeople1_05TightBody ? '7px' : _isFitTightBody ? '6px' : (_isLongPassageUnit ? '8px' : '11px');
       const _passageFontSize = '16px';
+      // 교사용: 화면과 동일하게 핵심어 네모 + 중심문장 밑줄 마킹 (.tg-key/.tg-mid CSS가 캡처에 적용됨)
+      const _teacherMarks = isTeacher ? markPassageParagraphs(unit.passage || [], unit.paragraphMain || []) : null;
       const passageHtml = (unit.passage || []).map((p, idx) => {
-        const colored = String(p).replace(/<b>/g, '<b style="color:#d97706; font-weight:800;">');
-        return `<p style="font-size: ${_passageFontSize}; line-height: ${_passageLineH}; margin: 0 0 ${_passageMb}; text-indent: 16px;">${colored}</p>`;
+        const inner = (_teacherMarks && _teacherMarks[idx] != null)
+          ? _teacherMarks[idx]
+          : String(p).replace(/<b>/g, '<b style="color:#d97706; font-weight:800;">');
+        return `<p style="font-size: ${_passageFontSize}; line-height: ${_passageLineH}; margin: 0 0 ${_passageMb}; text-indent: 16px;">${inner}</p>`;
       }).join('');
       const paraMain = (unit.paragraphMain || []).map((m, i) =>
         `<li style="margin-bottom: 4px;">${i+1}문단: ${m}</li>`
@@ -65311,10 +65340,13 @@
         </div>`;
 
       // 교사용: 본문 폰트 살짝 줄여 지도 박스가 어휘 박스 위에 들어가도록
+      //  + 화면과 동일하게 핵심어 네모(.tg-key) · 중심문장 밑줄(.tg-mid) 마킹 적용
       const passageHtmlAdj = isTeacher
-        ? (unit.passage || []).map(p => {
-            const colored = String(p).replace(/<b>/g, '<b style="color:#d97706; font-weight:800;">');
-            return `<p style="font-size: 13px; line-height: 1.8; margin: 0 0 8px; text-indent: 13px;">${colored}</p>`;
+        ? (unit.passage || []).map((p, idx) => {
+            const inner = (_teacherMarks && _teacherMarks[idx] != null)
+              ? _teacherMarks[idx]
+              : String(p).replace(/<b>/g, '<b style="color:#d97706; font-weight:800;">');
+            return `<p class="wb-mark-p" style="font-size: 13px; line-height: 1.9; margin: 0 0 8px; text-indent: 13px;">${inner}</p>`;
           }).join('')
         : passageHtml;
 
