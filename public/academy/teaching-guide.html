@@ -65674,20 +65674,26 @@
           </div>`;
       }).join('');
 
-      // 🔗 짝 짓기 활동 — 좌측 단어 / 우측 뜻, 각각 다른 랜덤 순서로 셔플
-      function shuffleArr(arr) {
+      // 🔗 짝 짓기 활동 — 좌측 단어 / 우측 뜻, 각각 다른 순서로 셔플
+      // ⚠️ 결정적(deterministic) 셔플: unitKey를 시드로 써서 학생용·교사용 PDF가 항상 같은 배열이 되게 함
+      //    (Math.random 사용 시 학생 PDF·교사 PDF를 각각 뽑을 때마다 배열이 달라져 교사용 정답이 학생 배열과 불일치)
+      function seededShuffle(arr, seedStr) {
+        let h = 2166136261;
+        for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 16777619); }
+        let s = h >>> 0;
+        const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
         const a = [...arr];
         for (let i = a.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
+          const j = Math.floor(rnd() * (i + 1));
           [a[i], a[j]] = [a[j], a[i]];
         }
         return a;
       }
       // 짝 짓기도 8개로 통일
       const pairs = (unit.vocab || []).slice(0, 8);
-      // 학생용·교사용 모두 셔플 — 학생은 직접 선 긋고, 교사용은 정답 번호로 매칭 표시
-      const wordShuf = shuffleArr(pairs);
-      const meaningShuf = shuffleArr(pairs);
+      // 학생용·교사용 동일 배열 보장 (unitKey 고정 시드). 좌(단어)·우(뜻)는 서로 다른 시드로 셔플.
+      const wordShuf = seededShuffle(pairs, (unitKey || '') + '|word');
+      const meaningShuf = seededShuffle(pairs, (unitKey || '') + '|meaning');
       // 우측 뜻 순서에서 단어별 인덱스 매핑 (정답 표시용)
       const meaningOrderMap = {};
       meaningShuf.forEach((m, idx) => { meaningOrderMap[m[0]] = idx + 1; });
