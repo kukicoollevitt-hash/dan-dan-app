@@ -15293,6 +15293,19 @@ app.post("/api/log", async (req, res) => {
       } catch (lkErr) {
         console.error("⚠️ [/api/log] 문해왕 도전권 충전 실패:", lkErr.message);
       }
+
+      // 🥚 몽글 도감 도전권 충전 (최대 10까지) — 단어월드컵·문해왕과 동일 정책
+      try {
+        const mgState = await getOrInitMgState(grade, name);
+        const mgOld = mgState.balance;
+        mgState.balance = Math.min(mgState.balance + MG_REFILL_PER_UNIT, MG_BALANCE_CAP);
+        const mgAdded = mgState.balance - mgOld;
+        mgState.updatedAt = new Date();
+        await mgState.save();
+        console.log(`🥚 [/api/log] 몽글 도전권 +${mgAdded} 충전 → 잔액 ${mgState.balance}/${MG_BALANCE_CAP}`);
+      } catch (mgErr) {
+        console.error("⚠️ [/api/log] 몽글 도전권 충전 실패:", mgErr.message);
+      }
     }
 
     // 🔥 unit-grades 캐시 삭제 (학습 완료 시 등급 데이터 갱신 필요)
@@ -33503,6 +33516,170 @@ async function runLiteracyKingMonthlyDistribution() {
 }
 cron.schedule('0 0 1 * *', runLiteracyKingMonthlyDistribution, { timezone: 'Asia/Seoul' });
 console.log('✅ 문해왕 월별 챔피언 정산 스케줄러 등록 (매월 1일 00:00 KST)');
+
+// ============================================================
+// 🥚 몽글 도감 API (어휘 수집 게임 · BRAIN업 어휘 · /monggeul/)
+//   도전권: 기본 10/일 + 학습 완료 시 +10 (단어월드컵·문해왕과 동일 정책)
+//   랭킹: 월간 MP(몽글 포인트) 리셋 경쟁 · 도감(MonggeulDex)은 영구 보존
+// ============================================================
+const MG_DAILY_BASELINE = 10;   // 매일 잔액을 최소 이 값까지 보충
+const MG_BALANCE_CAP = 10;      // 잔액 최대치
+const MG_REFILL_PER_UNIT = 10;  // 단원 학습 완료 시 충전량
+const MG_MP = { feed: 10, hatch: 50, evolve: 100, complete: 200, newSpecies: 300, legendBonus: 1000 };
+
+const monggeulStateSchema = new mongoose.Schema({
+  grade: { type: String, required: true },
+  name: { type: String, required: true },
+  balance: { type: Number, default: MG_DAILY_BASELINE },   // 사용 가능 도전권(먹이)
+  attemptsUsedToday: { type: Number, default: 0 },
+  lastResetDayKey: { type: String, default: '' },
+  pet: { type: Object, default: null },                    // 진행 중 펫 {sub, spKey, phase, stage, prog}
+  subCorrect: { type: Object, default: {} },               // 과목별 누적 정답 (희귀알 보정용)
+  updatedAt: { type: Date, default: Date.now }
+});
+monggeulStateSchema.index({ grade: 1, name: 1 }, { unique: true });
+const MonggeulState = mongoose.model('MonggeulState', monggeulStateSchema);
+
+const monggeulDexSchema = new mongoose.Schema({
+  grade: { type: String, required: true },
+  name: { type: String, required: true },
+  counts: { type: Object, default: {} },                   // {speciesKey: 완성 횟수} — 영구 (월 무관 유지)
+  completedAt: { type: Date, default: null },              // 🏆 84종 완성 시각 (상장·트로피·상품 대상)
+  updatedAt: { type: Date, default: Date.now }
+});
+monggeulDexSchema.index({ grade: 1, name: 1 }, { unique: true });
+const MonggeulDex = mongoose.model('MonggeulDex', monggeulDexSchema);
+
+// 랭킹 — 누적 MP (리셋 없음)
+const monggeulScoreSchema = new mongoose.Schema({
+  grade: { type: String, required: true },
+  name: { type: String, required: true },
+  mp: { type: Number, default: 0 },
+  updatedAt: { type: Date, default: Date.now }
+});
+monggeulScoreSchema.index({ grade: 1, name: 1 }, { unique: true });
+monggeulScoreSchema.index({ mp: -1 });
+const MonggeulScore = mongoose.model('MonggeulScore', monggeulScoreSchema);
+
+const MG_DEX_TOTAL = 84;  // 14과목 × 6종
+function mgDayKey() { return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }); }
+async function getOrInitMgState(grade, name) {
+  let st = await MonggeulState.findOne({ grade, name });
+  if (!st) st = await MonggeulState.create({ grade, name, balance: MG_DAILY_BASELINE, lastResetDayKey: mgDayKey() });
+  const today = mgDayKey();
+  if (st.lastResetDayKey !== today) {  // 일일 lazy 리셋 — 잔액 최소 baseline 보충
+    st.balance = Math.max(st.balance, MG_DAILY_BASELINE);
+    st.attemptsUsedToday = 0;
+    st.lastResetDayKey = today;
+    await st.save();
+  }
+  return st;
+}
+async function mgAddMp(grade, name, amount) {
+  const doc = await MonggeulScore.findOneAndUpdate(
+    { grade, name },
+    { $inc: { mp: amount }, $set: { updatedAt: new Date() } },
+    { upsert: true, new: true, setDefaultsOnInsert: true });
+  return doc.mp;
+}
+
+// 상태 조회 (잔액·펫·도감·이번달 MP)
+app.get('/api/monggeul/state', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.json({ ok: false, message: '학생 정보가 필요합니다.' });
+    const st = await getOrInitMgState(grade, name);
+    const dex = await MonggeulDex.findOne({ grade, name }).lean();
+    const score = await MonggeulScore.findOne({ grade, name }).lean();
+    res.json({ ok: true, balance: st.balance, cap: MG_BALANCE_CAP, pet: st.pet || null,
+      subCorrect: st.subCorrect || {}, dexCounts: (dex && dex.counts) || {},
+      mp: (score && score.mp) || 0, dexCompletedAt: (dex && dex.completedAt) || null });
+  } catch (err) { console.error('[monggeul/state]', err); res.status(500).json({ ok: false }); }
+});
+
+// 먹이 시도 — 도전권 1 차감, 정답이면 MP 적립 + 과목 정답 누적
+app.post('/api/monggeul/feed', async (req, res) => {
+  try {
+    const { grade, name, ok, sub } = req.body || {};
+    if (!grade || !name) return res.json({ ok: false, message: '학생 정보가 필요합니다.' });
+    const st = await getOrInitMgState(grade, name);
+    if (st.balance <= 0) return res.json({ ok: false, code: 'NO_TICKET', balance: 0,
+      message: '도전권이 없어요. 학습실에서 단원을 완료하면 +10 충전돼요!' });
+    st.balance--; st.attemptsUsedToday++;
+    let mp = null;
+    if (ok === true) {
+      if (sub) { st.subCorrect = st.subCorrect || {}; st.subCorrect[sub] = (st.subCorrect[sub] || 0) + 1; st.markModified('subCorrect'); }
+      mp = await mgAddMp(grade, name, MG_MP.feed);
+    }
+    st.updatedAt = new Date(); await st.save();
+    res.json({ ok: true, balance: st.balance, mp });
+  } catch (err) { console.error('[monggeul/feed]', err); res.status(500).json({ ok: false }); }
+});
+
+// 펫 진행 저장 (부화 단계·성장 진행 — 기기 바뀌어도 이어하기)
+app.post('/api/monggeul/progress', async (req, res) => {
+  try {
+    const { grade, name, pet } = req.body || {};
+    if (!grade || !name) return res.json({ ok: false });
+    const st = await getOrInitMgState(grade, name);
+    st.pet = pet || null; st.markModified('pet'); st.updatedAt = new Date(); await st.save();
+    res.json({ ok: true });
+  } catch (err) { console.error('[monggeul/progress]', err); res.status(500).json({ ok: false }); }
+});
+
+// 보상 — 부화/진화/완성 MP + 완성 시 도감 등록
+app.post('/api/monggeul/reward', async (req, res) => {
+  try {
+    const { grade, name, type, spKey, isNew, rar } = req.body || {};
+    if (!grade || !name) return res.json({ ok: false });
+    let amount = 0, dexComplete = false;
+    if (type === 'hatch') amount = MG_MP.hatch;
+    else if (type === 'evolve') amount = MG_MP.evolve;
+    else if (type === 'complete') {
+      amount = MG_MP.complete + (isNew ? MG_MP.newSpecies : 0) + ((rar === 'l' && isNew) ? MG_MP.legendBonus : 0);
+      if (spKey && /^[a-z0-9_]{1,30}$/.test(String(spKey))) {
+        const dex = await MonggeulDex.findOneAndUpdate({ grade, name },
+          { $inc: { ['counts.' + spKey]: 1 }, $set: { updatedAt: new Date() } },
+          { upsert: true, new: true, setDefaultsOnInsert: true });
+        // 🏆 도감 84종 완성 감지 (최초 1회) — 상장·트로피 + 본사 상품 지급 알림
+        if (!dex.completedAt && Object.keys(dex.counts || {}).length >= MG_DEX_TOTAL) {
+          dex.completedAt = new Date();
+          await dex.save();
+          dexComplete = true;
+          try {
+            const msg = `[본사알림] 🏆 몽글도감 84종 완성! ${grade} ${name} — 상장·상품 지급 대상`;
+            HQ_ADMIN_PHONES.forEach(phone => sendSMS(phone, msg).catch(() => {}));
+          } catch (smsErr) { console.error('[monggeul] 완성 알림 실패:', smsErr.message); }
+          console.log(`🏆 [몽글] 도감 완성: ${grade} ${name}`);
+        }
+      }
+    } else return res.json({ ok: false, message: 'type 오류' });
+    const mp = await mgAddMp(grade, name, amount);
+    res.json({ ok: true, mp, added: amount, dexComplete });
+  } catch (err) { console.error('[monggeul/reward]', err); res.status(500).json({ ok: false }); }
+});
+
+// 랭킹 — 누적 MP 전국 TOP 20 + 내 순위 (리셋 없음 · 도감 완성자 🏆 표시)
+app.get('/api/monggeul/ranking', async (req, res) => {
+  try {
+    const top = await MonggeulScore.find({ mp: { $gt: 0 } }).sort({ mp: -1 }).limit(20).lean();
+    // 도감 완성자 트로피 표시용
+    const masters = await MonggeulDex.find({ completedAt: { $ne: null } }, { grade: 1, name: 1 }).lean();
+    const masterSet = new Set(masters.map(m => m.grade + '|' + m.name));
+    let mine = null;
+    const { grade, name } = req.query;
+    if (grade && name) {
+      const me = await MonggeulScore.findOne({ grade, name }).lean();
+      if (me && me.mp > 0) {
+        const higher = await MonggeulScore.countDocuments({ mp: { $gt: me.mp } });
+        mine = { rank: higher + 1, mp: me.mp };
+      }
+    }
+    res.json({ ok: true,
+      top: top.map((r, i) => ({ rank: i + 1, grade: r.grade, name: r.name, mp: r.mp, master: masterSet.has(r.grade + '|' + r.name) })),
+      mine });
+  } catch (err) { console.error('[monggeul/ranking]', err); res.status(500).json({ ok: false }); }
+});
 
 // 🔧 [수동] 문해왕 월별 리셋 즉시 실행 — 정산이 누락된 달 복구용 (슈퍼관리자 전용)
 // 브라우저에서 슈퍼관리자 로그인 상태로 아래 URL 접속:
