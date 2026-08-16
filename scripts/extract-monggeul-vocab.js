@@ -6,6 +6,9 @@ const path = require("path");
 const vm = require("vm");
 
 const ROOT = path.join(__dirname, "..", "public", "BRAINUP");
+// 시리즈 선택: node extract-monggeul-vocab.js [up|fit|deep]  (기본 up)
+const SERIES = (process.argv[2] || "up").toLowerCase();
+const PFX = SERIES === "fit" ? "fit_" : SERIES === "deep" ? "deep_" : "";  // 파일명·unitKey 접두사
 const SUBJECTS = [
   { key: "bio",     file: "science/bio_content.js",     name: "생물",     field: "과학" },
   { key: "earth",   file: "science/earth_content.js",   name: "지구과학", field: "과학" },
@@ -50,12 +53,12 @@ function runInSandbox(code) {
   return windowMock.CONTENTS;
 }
 
-const out = { series: "up", builtAt: new Date().toISOString().slice(0, 10), subjects: {} };
+const out = { series: SERIES, builtAt: new Date().toISOString().slice(0, 10), subjects: {} };
 let totalWords = 0, totalUnits = 0;
 const issues = [];
 
 for (const s of SUBJECTS) {
-  const fp = path.join(ROOT, s.file);
+  const fp = path.join(ROOT, s.file.replace(/([a-z0-9]+_content\.js)$/, PFX + "$1"));
   let contents;
   try {
     contents = runInSandbox(fs.readFileSync(fp, "utf8"));
@@ -64,7 +67,7 @@ for (const s of SUBJECTS) {
     continue;
   }
   const units = {};
-  const unitKeys = Object.keys(contents).filter(k => k.startsWith(s.key + "_")).sort();
+  const unitKeys = Object.keys(contents).filter(k => k.startsWith(PFX + s.key + "_")).sort();
   for (const uk of unitKeys) {
     const pack = contents[uk];
     if (!pack || !Array.isArray(pack.vocab)) { issues.push(`⚠️ ${uk}: vocab 없음`); continue; }
@@ -81,7 +84,7 @@ for (const s of SUBJECTS) {
 
 const outDir = path.join(__dirname, "..", "public", "monggeul");
 fs.mkdirSync(outDir, { recursive: true });
-const outPath = path.join(outDir, "vocab_up.json");
+const outPath = path.join(outDir, `vocab_${SERIES}.json`);
 fs.writeFileSync(outPath, JSON.stringify(out));
 console.log(`\n📦 저장: ${outPath}`);
 console.log(`   총 ${SUBJECTS.length}과목 · ${totalUnits}단원 · ${totalWords}단어 · ${(fs.statSync(outPath).size / 1024).toFixed(0)}KB`);

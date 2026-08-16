@@ -33515,10 +33515,17 @@ const MG_DAILY_BASELINE = 10;   // 매일 잔액을 최소 이 값까지 보충
 const MG_BALANCE_CAP = 10;      // 잔액 최대치
 const MG_REFILL_PER_UNIT = 10;  // 단원 학습 완료 시 충전량
 const MG_MP = { feed: 10, hatch: 50, evolve: 100, complete: 200, newSpecies: 300, legendBonus: 1000, shinyBonus: 500 };
-// 도감 완성 판정용 — ✨반짝이 키(…_s)는 84종 카운트에서 제외
+// 시즌 구성 — 시즌1: 84종(업 어휘) / 시즌2: 112종(핏 어휘, s2_ 프리픽스 키)
+const MG_SEASON_TOTAL = { 1: 84, 2: 112, 3: 140 };
+// 도감 카운트 — ✨반짝이 키(…_s) 제외. base=전시즌 합(칭호용), s1/s2=시즌별(완성 판정용)
 const mgDexBaseCount = (counts) => Object.keys(counts || {}).filter(k => !k.endsWith('_s')).length;
-// 🏅 수집 수 → 칭호
+const mgS1Count = (counts) => Object.keys(counts || {}).filter(k => !k.endsWith('_s') && !k.startsWith('s2_')).length;
+const mgS2Count = (counts) => Object.keys(counts || {}).filter(k => !k.endsWith('_s') && k.startsWith('s2_')).length;
+const mgS3Count = (counts) => Object.keys(counts || {}).filter(k => !k.endsWith('_s') && k.startsWith('s3_')).length;
+// 🏅 수집 수 → 칭호 (전 시즌 합산)
 function mgTitleOf(n) {
+  if (n >= 336) return '신화의 몽글 마스터';
+  if (n >= 196) return '전설의 몽글 마스터';
   if (n >= 84) return '몽글 마스터';
   if (n >= 50) return '몽글 박사';
   if (n >= 30) return '몽글 수집가';
@@ -33535,6 +33542,7 @@ const monggeulStateSchema = new mongoose.Schema({
   pet: { type: Object, default: null },                    // 진행 중 펫 {sub, spKey, phase, stage, prog}
   subCorrect: { type: Object, default: {} },               // 과목별 누적 정답 (희귀알 보정용)
   favorites: { type: Object, default: {} },                // ⭐ 과목별 대표 몽글이 {sub: spKey}
+  season: { type: Number, default: 1 },                    // 현재 시즌 (1: 업 84종 / 2: 핏 112종)
   updatedAt: { type: Date, default: Date.now }
 });
 monggeulStateSchema.index({ grade: 1, name: 1 }, { unique: true });
@@ -33544,7 +33552,9 @@ const monggeulDexSchema = new mongoose.Schema({
   grade: { type: String, required: true },
   name: { type: String, required: true },
   counts: { type: Object, default: {} },                   // {speciesKey: 완성 횟수} — 영구 (월 무관 유지)
-  completedAt: { type: Date, default: null },              // 🏆 84종 완성 시각 (상장·트로피·상품 대상)
+  completedAt: { type: Date, default: null },              // 🏆 시즌1 84종 완성 시각 (상장·트로피·상품 대상)
+  completedAt2: { type: Date, default: null },             // 🏆 시즌2 112종 완성 시각
+  completedAt3: { type: Date, default: null },             // 🏆 시즌3 140종 완성 시각
   updatedAt: { type: Date, default: Date.now }
 });
 monggeulDexSchema.index({ grade: 1, name: 1 }, { unique: true });
@@ -33592,8 +33602,10 @@ app.get('/api/monggeul/state', async (req, res) => {
     const dex = await MonggeulDex.findOne({ grade, name }).lean();
     const score = await MonggeulScore.findOne({ grade, name }).lean();
     res.json({ ok: true, balance: st.balance, cap: MG_BALANCE_CAP, pet: st.pet || null,
-      subCorrect: st.subCorrect || {}, favorites: st.favorites || {}, dexCounts: (dex && dex.counts) || {},
-      mp: (score && score.mp) || 0, dexCompletedAt: (dex && dex.completedAt) || null });
+      subCorrect: st.subCorrect || {}, favorites: st.favorites || {}, season: st.season || 1,
+      dexCounts: (dex && dex.counts) || {},
+      mp: (score && score.mp) || 0, dexCompletedAt: (dex && dex.completedAt) || null,
+      dexCompletedAt2: (dex && dex.completedAt2) || null, dexCompletedAt3: (dex && dex.completedAt3) || null });
   } catch (err) { console.error('[monggeul/state]', err); res.status(500).json({ ok: false }); }
 });
 
@@ -33617,11 +33629,12 @@ app.post('/api/monggeul/feed', async (req, res) => {
 // 펫 진행 저장 (부화 단계·성장 진행 — 기기 바뀌어도 이어하기)
 app.post('/api/monggeul/progress', async (req, res) => {
   try {
-    const { grade, name, pet, favorites } = req.body || {};
+    const { grade, name, pet, favorites, season } = req.body || {};
     if (!grade || !name) return res.json({ ok: false });
     const st = await getOrInitMgState(grade, name);
     st.pet = pet || null; st.markModified('pet');
     if (favorites && typeof favorites === 'object') { st.favorites = favorites; st.markModified('favorites'); }
+    if (season === 1 || season === 2 || season === 3) st.season = season;
     st.updatedAt = new Date(); await st.save();
     res.json({ ok: true });
   } catch (err) { console.error('[monggeul/progress]', err); res.status(500).json({ ok: false }); }
@@ -33641,16 +33654,32 @@ app.post('/api/monggeul/reward', async (req, res) => {
         const dex = await MonggeulDex.findOneAndUpdate({ grade, name },
           { $inc: { ['counts.' + spKey]: 1 }, $set: { updatedAt: new Date() } },
           { upsert: true, new: true, setDefaultsOnInsert: true });
-        // 🏆 도감 84종 완성 감지 (✨반짝이 키 제외, 최초 1회) — 상장·트로피 + 본사 상품 지급 알림
-        if (!dex.completedAt && mgDexBaseCount(dex.counts) >= MG_DEX_TOTAL) {
-          dex.completedAt = new Date();
-          await dex.save();
-          dexComplete = true;
+        // 🏆 시즌별 도감 완성 감지 (✨반짝이 키 제외, 시즌당 최초 1회) — 상장·트로피 + 본사 상품 지급 알림
+        const isS2 = String(spKey).startsWith('s2_');
+        const isS3 = String(spKey).startsWith('s3_');
+        if (isS3 && !dex.completedAt3 && mgS3Count(dex.counts) >= MG_SEASON_TOTAL[3]) {
+          dex.completedAt3 = new Date(); await dex.save(); dexComplete = true;
           try {
-            const msg = `[본사알림] 🏆 몽글도감 84종 완성! ${grade} ${name} — 상장·상품 지급 대상`;
+            const msg = `[본사알림] 🌌 몽글도감 시즌3(140종) 완성! ${grade} ${name} — 최종 상장·상품 지급 대상`;
             HQ_ADMIN_PHONES.forEach(phone => sendSMS(phone, msg).catch(() => {}));
           } catch (smsErr) { console.error('[monggeul] 완성 알림 실패:', smsErr.message); }
-          console.log(`🏆 [몽글] 도감 완성: ${grade} ${name}`);
+          console.log(`🌌 [몽글] 시즌3 도감 완성: ${grade} ${name}`);
+        }
+        if (!isS2 && !isS3 && !dex.completedAt && mgS1Count(dex.counts) >= MG_SEASON_TOTAL[1]) {
+          dex.completedAt = new Date(); await dex.save(); dexComplete = true;
+          try {
+            const msg = `[본사알림] 🏆 몽글도감 시즌1(84종) 완성! ${grade} ${name} — 상장·상품 지급 대상`;
+            HQ_ADMIN_PHONES.forEach(phone => sendSMS(phone, msg).catch(() => {}));
+          } catch (smsErr) { console.error('[monggeul] 완성 알림 실패:', smsErr.message); }
+          console.log(`🏆 [몽글] 시즌1 도감 완성: ${grade} ${name}`);
+        }
+        if (isS2 && !dex.completedAt2 && mgS2Count(dex.counts) >= MG_SEASON_TOTAL[2]) {
+          dex.completedAt2 = new Date(); await dex.save(); dexComplete = true;
+          try {
+            const msg = `[본사알림] 👑 몽글도감 시즌2(112종) 완성! ${grade} ${name} — 상장·상품 지급 대상`;
+            HQ_ADMIN_PHONES.forEach(phone => sendSMS(phone, msg).catch(() => {}));
+          } catch (smsErr) { console.error('[monggeul] 완성 알림 실패:', smsErr.message); }
+          console.log(`👑 [몽글] 시즌2 도감 완성: ${grade} ${name}`);
         }
       }
     } else return res.json({ ok: false, message: 'type 오류' });
