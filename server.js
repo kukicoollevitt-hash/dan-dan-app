@@ -15294,18 +15294,7 @@ app.post("/api/log", async (req, res) => {
         console.error("⚠️ [/api/log] 문해왕 도전권 충전 실패:", lkErr.message);
       }
 
-      // 🥚 몽글 도감 도전권 충전 (최대 10까지) — 단어월드컵·문해왕과 동일 정책
-      try {
-        const mgState = await getOrInitMgState(grade, name);
-        const mgOld = mgState.balance;
-        mgState.balance = Math.min(mgState.balance + MG_REFILL_PER_UNIT, MG_BALANCE_CAP);
-        const mgAdded = mgState.balance - mgOld;
-        mgState.updatedAt = new Date();
-        await mgState.save();
-        console.log(`🥚 [/api/log] 몽글 도전권 +${mgAdded} 충전 → 잔액 ${mgState.balance}/${MG_BALANCE_CAP}`);
-      } catch (mgErr) {
-        console.error("⚠️ [/api/log] 몽글 도전권 충전 실패:", mgErr.message);
-      }
+      // 🥚 몽글 도감 — 도전권 없이 무제한(1년 누적 랭킹)이라 충전 불필요
     }
 
     // 🔥 unit-grades 캐시 삭제 (학습 완료 시 등급 데이터 갱신 필요)
@@ -33525,7 +33514,17 @@ console.log('✅ 문해왕 월별 챔피언 정산 스케줄러 등록 (매월 1
 const MG_DAILY_BASELINE = 10;   // 매일 잔액을 최소 이 값까지 보충
 const MG_BALANCE_CAP = 10;      // 잔액 최대치
 const MG_REFILL_PER_UNIT = 10;  // 단원 학습 완료 시 충전량
-const MG_MP = { feed: 10, hatch: 50, evolve: 100, complete: 200, newSpecies: 300, legendBonus: 1000 };
+const MG_MP = { feed: 10, hatch: 50, evolve: 100, complete: 200, newSpecies: 300, legendBonus: 1000, shinyBonus: 500 };
+// 도감 완성 판정용 — ✨반짝이 키(…_s)는 84종 카운트에서 제외
+const mgDexBaseCount = (counts) => Object.keys(counts || {}).filter(k => !k.endsWith('_s')).length;
+// 🏅 수집 수 → 칭호
+function mgTitleOf(n) {
+  if (n >= 84) return '몽글 마스터';
+  if (n >= 50) return '몽글 박사';
+  if (n >= 30) return '몽글 수집가';
+  if (n >= 10) return '몽글 친구';
+  return '새싹 트레이너';
+}
 
 const monggeulStateSchema = new mongoose.Schema({
   grade: { type: String, required: true },
@@ -33535,6 +33534,7 @@ const monggeulStateSchema = new mongoose.Schema({
   lastResetDayKey: { type: String, default: '' },
   pet: { type: Object, default: null },                    // 진행 중 펫 {sub, spKey, phase, stage, prog}
   subCorrect: { type: Object, default: {} },               // 과목별 누적 정답 (희귀알 보정용)
+  favorites: { type: Object, default: {} },                // ⭐ 과목별 대표 몽글이 {sub: spKey}
   updatedAt: { type: Date, default: Date.now }
 });
 monggeulStateSchema.index({ grade: 1, name: 1 }, { unique: true });
@@ -33592,37 +33592,37 @@ app.get('/api/monggeul/state', async (req, res) => {
     const dex = await MonggeulDex.findOne({ grade, name }).lean();
     const score = await MonggeulScore.findOne({ grade, name }).lean();
     res.json({ ok: true, balance: st.balance, cap: MG_BALANCE_CAP, pet: st.pet || null,
-      subCorrect: st.subCorrect || {}, dexCounts: (dex && dex.counts) || {},
+      subCorrect: st.subCorrect || {}, favorites: st.favorites || {}, dexCounts: (dex && dex.counts) || {},
       mp: (score && score.mp) || 0, dexCompletedAt: (dex && dex.completedAt) || null });
   } catch (err) { console.error('[monggeul/state]', err); res.status(500).json({ ok: false }); }
 });
 
-// 먹이 시도 — 도전권 1 차감, 정답이면 MP 적립 + 과목 정답 누적
+// 먹이 시도 — 무제한(도전권 없음, 1년 누적 랭킹), 정답이면 MP 적립 + 과목 정답 누적
 app.post('/api/monggeul/feed', async (req, res) => {
   try {
-    const { grade, name, ok, sub } = req.body || {};
+    const { grade, name, ok, sub, fever } = req.body || {};
     if (!grade || !name) return res.json({ ok: false, message: '학생 정보가 필요합니다.' });
     const st = await getOrInitMgState(grade, name);
-    if (st.balance <= 0) return res.json({ ok: false, code: 'NO_TICKET', balance: 0,
-      message: '도전권이 없어요. 학습실에서 단원을 완료하면 +10 충전돼요!' });
-    st.balance--; st.attemptsUsedToday++;
+    st.attemptsUsedToday++;
     let mp = null;
     if (ok === true) {
       if (sub) { st.subCorrect = st.subCorrect || {}; st.subCorrect[sub] = (st.subCorrect[sub] || 0) + 1; st.markModified('subCorrect'); }
-      mp = await mgAddMp(grade, name, MG_MP.feed);
+      mp = await mgAddMp(grade, name, MG_MP.feed * (fever === true ? 2 : 1));  // 🔥 피버 중 2배
     }
     st.updatedAt = new Date(); await st.save();
-    res.json({ ok: true, balance: st.balance, mp });
+    res.json({ ok: true, mp });
   } catch (err) { console.error('[monggeul/feed]', err); res.status(500).json({ ok: false }); }
 });
 
 // 펫 진행 저장 (부화 단계·성장 진행 — 기기 바뀌어도 이어하기)
 app.post('/api/monggeul/progress', async (req, res) => {
   try {
-    const { grade, name, pet } = req.body || {};
+    const { grade, name, pet, favorites } = req.body || {};
     if (!grade || !name) return res.json({ ok: false });
     const st = await getOrInitMgState(grade, name);
-    st.pet = pet || null; st.markModified('pet'); st.updatedAt = new Date(); await st.save();
+    st.pet = pet || null; st.markModified('pet');
+    if (favorites && typeof favorites === 'object') { st.favorites = favorites; st.markModified('favorites'); }
+    st.updatedAt = new Date(); await st.save();
     res.json({ ok: true });
   } catch (err) { console.error('[monggeul/progress]', err); res.status(500).json({ ok: false }); }
 });
@@ -33630,19 +33630,19 @@ app.post('/api/monggeul/progress', async (req, res) => {
 // 보상 — 부화/진화/완성 MP + 완성 시 도감 등록
 app.post('/api/monggeul/reward', async (req, res) => {
   try {
-    const { grade, name, type, spKey, isNew, rar } = req.body || {};
+    const { grade, name, type, spKey, isNew, rar, shiny } = req.body || {};
     if (!grade || !name) return res.json({ ok: false });
     let amount = 0, dexComplete = false;
     if (type === 'hatch') amount = MG_MP.hatch;
     else if (type === 'evolve') amount = MG_MP.evolve;
     else if (type === 'complete') {
-      amount = MG_MP.complete + (isNew ? MG_MP.newSpecies : 0) + ((rar === 'l' && isNew) ? MG_MP.legendBonus : 0);
+      amount = MG_MP.complete + (isNew ? MG_MP.newSpecies : 0) + ((rar === 'l' && isNew) ? MG_MP.legendBonus : 0) + (shiny === true ? MG_MP.shinyBonus : 0);
       if (spKey && /^[a-z0-9_]{1,30}$/.test(String(spKey))) {
         const dex = await MonggeulDex.findOneAndUpdate({ grade, name },
           { $inc: { ['counts.' + spKey]: 1 }, $set: { updatedAt: new Date() } },
           { upsert: true, new: true, setDefaultsOnInsert: true });
-        // 🏆 도감 84종 완성 감지 (최초 1회) — 상장·트로피 + 본사 상품 지급 알림
-        if (!dex.completedAt && Object.keys(dex.counts || {}).length >= MG_DEX_TOTAL) {
+        // 🏆 도감 84종 완성 감지 (✨반짝이 키 제외, 최초 1회) — 상장·트로피 + 본사 상품 지급 알림
+        if (!dex.completedAt && mgDexBaseCount(dex.counts) >= MG_DEX_TOTAL) {
           dex.completedAt = new Date();
           await dex.save();
           dexComplete = true;
@@ -33663,9 +33663,14 @@ app.post('/api/monggeul/reward', async (req, res) => {
 app.get('/api/monggeul/ranking', async (req, res) => {
   try {
     const top = await MonggeulScore.find({ mp: { $gt: 0 } }).sort({ mp: -1 }).limit(20).lean();
-    // 도감 완성자 트로피 표시용
+    // 도감 완성자 트로피 + 🏅 칭호 계산용
     const masters = await MonggeulDex.find({ completedAt: { $ne: null } }, { grade: 1, name: 1 }).lean();
     const masterSet = new Set(masters.map(m => m.grade + '|' + m.name));
+    const titleMap = {};
+    if (top.length) {
+      const dexRows = await MonggeulDex.find({ $or: top.map(t => ({ grade: t.grade, name: t.name })) }, { grade: 1, name: 1, counts: 1 }).lean();
+      dexRows.forEach(d => { titleMap[d.grade + '|' + d.name] = mgTitleOf(mgDexBaseCount(d.counts)); });
+    }
     let mine = null;
     const { grade, name } = req.query;
     if (grade && name) {
@@ -33676,7 +33681,8 @@ app.get('/api/monggeul/ranking', async (req, res) => {
       }
     }
     res.json({ ok: true,
-      top: top.map((r, i) => ({ rank: i + 1, grade: r.grade, name: r.name, mp: r.mp, master: masterSet.has(r.grade + '|' + r.name) })),
+      top: top.map((r, i) => ({ rank: i + 1, grade: r.grade, name: r.name, mp: r.mp,
+        master: masterSet.has(r.grade + '|' + r.name), title: titleMap[r.grade + '|' + r.name] || '새싹 트레이너' })),
       mine });
   } catch (err) { console.error('[monggeul/ranking]', err); res.status(500).json({ ok: false }); }
 });
