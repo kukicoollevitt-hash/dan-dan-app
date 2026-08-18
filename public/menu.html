@@ -14030,11 +14030,20 @@ async function performLogout() {
             window.openKhReportModal();
           } else if (ao === 'critReport' && typeof window.openCritiqueModal === 'function') {
             // 비평 달력 모달 열고, 평균 별점 배지 자동 클릭 → 이번 달 비평 모음
+            // 배지는 제출기록 로드 완료 후에야 클릭 가능(data-empty=0)해지므로
+            // 고정 지연 대신 활성화될 때까지 폴링 (배포 환경은 로드가 600ms보다 느림)
             window.openCritiqueModal();
-            setTimeout(() => {
+            let critBadgeTries = 0;
+            const critBadgeTimer = setInterval(() => {
               const avgBadge = document.getElementById('critAvgStars');
-              if (avgBadge) avgBadge.click();
-            }, 600);
+              critBadgeTries++;
+              if (avgBadge && avgBadge.dataset.empty === '0') {
+                clearInterval(critBadgeTimer);
+                avgBadge.click();
+              } else if (critBadgeTries >= 40) {
+                clearInterval(critBadgeTimer); // ~10초 내 미활성 = 채점 기록 없음 → 달력만 표시
+              }
+            }, 250);
           } else if (ao === 'wr100Report' && typeof window.openWr100Report === 'function') {
             window.openWr100Report();
           }
@@ -43757,6 +43766,14 @@ ${content}
     .crit-avg-stars .crit-avg-empty {
       font-size: 11px; color: #999; font-weight: 600;
     }
+    /* 점수 우측 "리포트 전체보기" 안내 — 배지가 버튼임을 인식시키기 위한 문구 */
+    .crit-avg-stars .crit-avg-cta {
+      display: inline-flex; align-items: center; gap: 2px;
+      margin-left: 2px; padding-left: 8px;
+      border-left: 1px solid #ecd9a0;
+      font-size: 11px; font-weight: 700; color: #b45309;
+      white-space: nowrap;
+    }
     /* CSS 두 겹 오버레이 별점 (반쪽 별 정확히 표현) */
     .crit-stars {
       position: relative; display: inline-block;
@@ -44540,7 +44557,7 @@ ${content}
         }
         // 10점 만점 표시 (내부 stars 1~5 * 2)
         const score10 = avg * 2;
-        el.innerHTML = `<span class="crit-avg-num" style="font-family:'Noto Serif KR',serif;font-weight:800;color:#d97706;">${score10.toFixed(1)}</span><span style="font-size:10.5px;color:#a16207;font-weight:600;">/ 10 (${cnt}건)</span>`;
+        el.innerHTML = `<span class="crit-avg-num" style="font-family:'Noto Serif KR',serif;font-weight:800;color:#d97706;">${score10.toFixed(1)}</span><span style="font-size:10.5px;color:#a16207;font-weight:600;">/ 10 (${cnt}건)</span><span class="crit-avg-cta">📋 리포트 전체보기</span>`;
         el.dataset.empty = '0';
         el.onclick = openHistoryModal;
       }
