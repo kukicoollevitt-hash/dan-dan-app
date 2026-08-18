@@ -33688,6 +33688,52 @@ app.post('/api/monggeul/reward', async (req, res) => {
   } catch (err) { console.error('[monggeul/reward]', err); res.status(500).json({ ok: false }); }
 });
 
+// 🥚 슈퍼관리자 — 교과 몽글 도감 학생별 획득 현황 (누적 MP 순)
+app.get('/api/super/monggeul/students', requireSuperAdmin, async (req, res) => {
+  try {
+    const [scores, dexes, states] = await Promise.all([
+      MonggeulScore.find({}).lean(),
+      MonggeulDex.find({}).lean(),
+      MonggeulState.find({}, { grade: 1, name: 1, season: 1, updatedAt: 1 }).lean(),
+    ]);
+    const key = (x) => x.grade + '|' + x.name;
+    const scMap = {}, dxMap = {}, stMap = {};
+    scores.forEach(x => scMap[key(x)] = x);
+    dexes.forEach(x => dxMap[key(x)] = x);
+    states.forEach(x => stMap[key(x)] = x);
+    const keys = new Set([...scores.map(key), ...dexes.map(key), ...states.map(key)]);
+    // 학원명 매핑 (User 컬렉션)
+    const acMap = {};
+    try {
+      const users = await User.find({}, { grade: 1, name: 1, academyName: 1 }).lean();
+      users.forEach(u => { if (u.grade && u.name) acMap[u.grade + '|' + u.name] = u.academyName || ''; });
+    } catch (uErr) { console.warn('[super/monggeul] 학원명 매핑 실패:', uErr.message); }
+    const students = [];
+    for (const k of keys) {
+      const [grade, name] = k.split('|');
+      const sc = scMap[k], dx = dxMap[k], st = stMap[k];
+      const counts = (dx && dx.counts) || {};
+      const s1 = mgS1Count(counts), s2 = mgS2Count(counts), s3 = mgS3Count(counts);
+      const shiny = Object.keys(counts).filter(x => x.endsWith('_s')).length;
+      students.push({
+        grade, name, academyName: acMap[k] || '',
+        mp: (sc && sc.mp) || 0,
+        s1, s2, s3, total: s1 + s2 + s3, shiny,
+        title: mgTitleOf(s1 + s2 + s3),
+        season: (st && st.season) || 1,
+        completed1: !!(dx && dx.completedAt), completed2: !!(dx && dx.completedAt2), completed3: !!(dx && dx.completedAt3),
+        lastAt: (st && st.updatedAt) || (dx && dx.updatedAt) || (sc && sc.updatedAt) || null,
+      });
+    }
+    students.sort((a, b) => b.mp - a.mp || b.total - a.total);
+    students.forEach((s, i) => s.rank = i + 1);
+    res.json({ ok: true, students, totalCount: students.length });
+  } catch (err) {
+    console.error('[super/monggeul/students]', err);
+    res.status(500).json({ ok: false });
+  }
+});
+
 // 랭킹 — 누적 MP 전국 TOP 20 + 내 순위 (리셋 없음 · 도감 완성자 🏆 표시)
 app.get('/api/monggeul/ranking', async (req, res) => {
   try {

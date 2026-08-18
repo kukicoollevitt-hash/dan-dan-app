@@ -810,6 +810,45 @@
     </div>
   </div>
 
+  <!-- 🥚 교과 몽글 도감 획득 현황 -->
+    <div class="section">
+      <div class="section-title">
+        <span>🥚 교과 몽글 도감 획득 현황</span>
+        <span class="count-badge" id="mgStudentCount">총 0명</span>
+      </div>
+      <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 15px;">
+        누적 몽글 포인트(MP) 순 — 도감은 시즌별 영구 수집(시즌1 84종 · 시즌2 112종 · 시즌3 140종), 🏆 = 해당 시즌 도감 완성(상장·상품 지급 대상), ✨ = 반짝이 보유 수
+      </p>
+      <div class="filter-section" style="margin-bottom: 15px;">
+        <input type="text" id="mgSearchInput" placeholder="학년·학원·이름·칭호 실시간 검색" style="width: 300px;">
+        <button class="search-btn" style="background: #95a5a6;" onclick="clearMgFilter()">초기화</button>
+        <button class="search-btn" onclick="loadMgStudents()">🔄 새로고침</button>
+      </div>
+      <div class="snack-order-container" style="max-height: 500px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <table>
+          <thead style="position: sticky; top: 0; z-index: 10;">
+            <tr>
+              <th style="width: 60px;">순위</th>
+              <th style="width: 70px;">학년</th>
+              <th>학원/학교</th>
+              <th>이름</th>
+              <th style="width: 130px;">칭호</th>
+              <th style="width: 95px;">시즌1</th>
+              <th style="width: 95px;">시즌2</th>
+              <th style="width: 95px;">시즌3</th>
+              <th style="width: 55px;">✨</th>
+              <th style="width: 70px;">진행 시즌</th>
+              <th style="width: 110px;">누적 MP</th>
+              <th style="width: 130px;">마지막 활동</th>
+            </tr>
+          </thead>
+          <tbody id="mgStudentTableBody">
+            <tr><td colspan="12" class="loading">데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   <!-- 메시지 추가/수정 모달 -->
   <div class="modal-overlay" id="messageModal">
     <div class="modal-box">
@@ -2207,6 +2246,63 @@
 
     // 페이지 진입 시 문해왕 목록도 로드
     loadLkStudents();
+
+    // ============ 🥚 교과 몽글 도감 획득 현황 ============
+    let allMgStudents = [];
+    async function loadMgStudents() {
+      const tbody = document.getElementById('mgStudentTableBody');
+      tbody.innerHTML = '<tr><td colspan="12" class="loading">불러오는 중...</td></tr>';
+      try {
+        const res = await fetch('/api/super/monggeul/students', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.message || '오류');
+        allMgStudents = data.students || [];
+        document.getElementById('mgStudentCount').textContent = `총 ${data.totalCount}명`;
+        applyMgFilter();
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="12" class="loading" style="color:#c00;">오류: ${err.message}</td></tr>`;
+      }
+    }
+    function renderMgStudents(list) {
+      const tbody = document.getElementById('mgStudentTableBody');
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="12" class="empty-message">아직 몽글 도감을 플레이한 학생이 없습니다.</td></tr>';
+        return;
+      }
+      const seasonCell = (n, total, done) => `<span style="font-weight:700; color:${done ? '#d4af37' : (n > 0 ? '#333' : '#bbb')};">${n}/${total}${done ? ' 🏆' : ''}</span>`;
+      tbody.innerHTML = list.map((s) => {
+        const rankBadge = s.rank === 1 ? '🥇' : s.rank === 2 ? '🥈' : s.rank === 3 ? '🥉' : s.rank + '위';
+        const lastDate = s.lastAt ? new Date(s.lastAt).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-';
+        return `
+          <tr>
+            <td style="text-align:center; font-weight:700; color:${s.rank <= 3 ? '#d4af37' : '#555'};">${rankBadge}</td>
+            <td style="text-align:center;">${escapeHtml(s.grade)}</td>
+            <td>${escapeHtml(s.academyName || '-')}</td>
+            <td style="font-weight:600;">${escapeHtml(s.name)}</td>
+            <td style="text-align:center;"><span style="display:inline-block; padding:3px 9px; border-radius:10px; background:#fff2d0; color:#8a6a1a; font-size:11px; font-weight:700;">${escapeHtml(s.title)}</span></td>
+            <td style="text-align:center;">${seasonCell(s.s1, 84, s.completed1)}</td>
+            <td style="text-align:center;">${seasonCell(s.s2, 112, s.completed2)}</td>
+            <td style="text-align:center;">${seasonCell(s.s3, 140, s.completed3)}</td>
+            <td style="text-align:center; color:#c98f00; font-weight:700;">${s.shiny || 0}</td>
+            <td style="text-align:center;">시즌${s.season}</td>
+            <td style="text-align:right; font-weight:800; color:#e0567a;">⭐ ${s.mp.toLocaleString()}</td>
+            <td style="text-align:center; font-size:12px; color:#7f8c8d;">${lastDate}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+    function applyMgFilter() {
+      const q = (document.getElementById('mgSearchInput').value || '').trim().toLowerCase();
+      let list = allMgStudents;
+      if (q) list = list.filter(s => [s.grade, s.name, s.academyName, s.title].some(v => (v || '').toLowerCase().includes(q)));
+      renderMgStudents(list);
+    }
+    function clearMgFilter() {
+      document.getElementById('mgSearchInput').value = '';
+      applyMgFilter();
+    }
+    document.getElementById('mgSearchInput').addEventListener('input', applyMgFilter);
+    loadMgStudents();
   </script>
 </body>
 </html>
