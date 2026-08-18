@@ -15,6 +15,18 @@ const MongoStore = require("connect-mongo").default || require("connect-mongo");
 const OpenAI = require("openai");
 const nodemailer = require("nodemailer");
 const cron = require("node-cron");
+
+// 🛡️ 로컬 개발 서버에서는 크론 스케줄러 전체 비활성화 (2026-08-18)
+//    로컬 node server.js가 프로덕션 DB에 붙은 채 방치되면 Render 서버와 0시 크론이
+//    동시 실행되어 자동과제 중복 부여(하루 2개) 등이 발생함 — 화명센터 제보 원인.
+//    Render는 RENDER=true 환경변수를 자동 주입하므로 그 외 환경은 크론 미등록.
+//    로컬에서 크론 테스트가 필요하면 ENABLE_LOCAL_CRON=1 node server.js 로 실행.
+if (!process.env.RENDER && process.env.ENABLE_LOCAL_CRON !== '1') {
+  cron.schedule = (expr, fn, opts) => {
+    console.log(`⏭️ [로컬] 크론 미등록: ${expr}`);
+    return { start() {}, stop() {}, destroy() {} };
+  };
+}
 const multer = require("multer");
 const compression = require("compression");
 const cookieParser = require("cookie-parser");
@@ -31245,6 +31257,17 @@ app.post('/api/auto-task-settings', async (req, res) => {
       }
     }
 
+    // 🔥 menu-init 서버 캐시 무효화 — 시작/중단으로 학습실 과제가 바뀌었는데
+    //    새로고침 시 menu-init 캐시(옛 studyRoom 스냅샷)가 프리로드로 클라 캐시를 덮어써
+    //    "성공 팝업 후에도 과제가 안 보이고 한참 뒤에야 보이는" 문제의 원인이었음
+    const menuInitPrefix = `menu-init:{"grade":"${grade}","name":"${name}"`;
+    for (const key of cache.keys()) {
+      if (key.startsWith(menuInitPrefix)) {
+        cache.delete(key);
+        console.log("🗑️ [auto-task-settings] menu-init 캐시 삭제:", key);
+      }
+    }
+
     res.json({ ok: true, settings: updatedSettings });
   } catch (error) {
     console.error('자동과제부여 설정 저장 오류:', error);
@@ -34068,18 +34091,29 @@ async function executeAutoTaskAssignment() {
 
   // DB에서 마지막 실행 날짜 확인 (인스턴스 간 중복 방지)
   try {
-    const lastRunDoc = await mongoose.connection.db.collection('system_settings').findOne({ key: 'lastAutoTaskRunDate' });
-    if (lastRunDoc && lastRunDoc.value === todayKST) {
-      console.log(`⚠️ 자동과제부여가 오늘(${todayKST} KST) 이미 실행되었습니다. 스킵합니다.`);
-      return;
-    }
-
-    // 오늘 날짜로 즉시 업데이트 (다른 인스턴스가 중복 실행하지 않도록)
-    await mongoose.connection.db.collection('system_settings').updateOne(
-      { key: 'lastAutoTaskRunDate' },
-      { $set: { key: 'lastAutoTaskRunDate', value: todayKST, updatedAt: new Date() } },
-      { upsert: true }
+    // 원자적 선점: value가 오늘이 아닐 때만 오늘로 갱신 — 성공한 프로세스 1개만 실행권 획득
+    // (기존 findOne→updateOne 방식은 두 프로세스가 ~100ms 내 동시 진입 시 둘 다 통과하는
+    //  레이스가 있었음. 화명센터 자동과제 하루 2개 중복 부여의 방어선. 2026-08-18)
+    const claim = await mongoose.connection.db.collection('system_settings').updateOne(
+      { key: 'lastAutoTaskRunDate', value: { $ne: todayKST } },
+      { $set: { value: todayKST, updatedAt: new Date() } },
+      { upsert: false }
     );
+
+    if (claim.modifiedCount === 0) {
+      // 갱신 실패 = 이미 오늘 실행됨(다른 프로세스 선점) 또는 문서 자체가 없음
+      const lastRunDoc = await mongoose.connection.db.collection('system_settings').findOne({ key: 'lastAutoTaskRunDate' });
+      if (lastRunDoc) {
+        console.log(`⚠️ 자동과제부여가 오늘(${todayKST} KST) 이미 실행되었습니다. 스킵합니다.`);
+        return;
+      }
+      // 최초 실행 — 문서 생성 후 진행
+      await mongoose.connection.db.collection('system_settings').updateOne(
+        { key: 'lastAutoTaskRunDate' },
+        { $set: { key: 'lastAutoTaskRunDate', value: todayKST, updatedAt: new Date() } },
+        { upsert: true }
+      );
+    }
   } catch (dbError) {
     console.error('❌ DB 중복 체크 오류:', dbError);
     // DB 오류 시에도 메모리 락으로 진행
