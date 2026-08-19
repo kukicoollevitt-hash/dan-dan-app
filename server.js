@@ -122,7 +122,7 @@ function getByteLength(str) {
 // ZWJ(U+200D), Variation Selector(U+FE0E~U+FE0F) 등 invisible 문자도 함께 제거
 // — 안 그러면 🏴‍☠️ 같은 ZWJ 시퀀스에서 본체 이모지만 지워지고 ZWJ/VS가 남아 SMS에서 '?'로 깨짐
 function removeEmoji(str) {
-  return str.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F900}-\u{1F9FF}]|[\u{1FA00}-\u{1FA6F}]|[\u{1FA70}-\u{1FAFF}]|[\u{231A}-\u{231B}]|[\u{23E9}-\u{23F3}]|[\u{23F8}-\u{23FA}]|[\u{25AA}-\u{25AB}]|[\u{25B6}]|[\u{25C0}]|[\u{25FB}-\u{25FE}]|[\u{2614}-\u{2615}]|[\u{2648}-\u{2653}]|[\u{267F}]|[\u{2693}]|[\u{26A1}]|[\u{26AA}-\u{26AB}]|[\u{26BD}-\u{26BE}]|[\u{26C4}-\u{26C5}]|[\u{26CE}]|[\u{26D4}]|[\u{26EA}]|[\u{26F2}-\u{26F3}]|[\u{26F5}]|[\u{26FA}]|[\u{26FD}]|[\u{2702}]|[\u{2705}]|[\u{2708}-\u{270D}]|[\u{270F}]|[\u{2712}]|[\u{2714}]|[\u{2716}]|[\u{271D}]|[\u{2721}]|[\u{2728}]|[\u{2733}-\u{2734}]|[\u{2744}]|[\u{2747}]|[\u{274C}]|[\u{274E}]|[\u{2753}-\u{2755}]|[\u{2757}]|[\u{2763}-\u{2764}]|[\u{2795}-\u{2797}]|[\u{27A1}]|[\u{27B0}]|[\u{27BF}]|[\u{2934}-\u{2935}]|[\u{2B05}-\u{2B07}]|[\u{2B1B}-\u{2B1C}]|[\u{2B50}]|[\u{2B55}]|[\u{3030}]|[\u{303D}]|[\u{3297}]|[\u{3299}]|[\u{200B}-\u{200D}]|[\u{FE0E}-\u{FE0F}]/gu, '').replace(/\s+/g, ' ').trim();
+  return str.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F900}-\u{1F9FF}]|[\u{1FA00}-\u{1FA6F}]|[\u{1FA70}-\u{1FAFF}]|[\u{231A}-\u{231B}]|[\u{23E9}-\u{23F3}]|[\u{23F8}-\u{23FA}]|[\u{25AA}-\u{25AB}]|[\u{25B6}]|[\u{25C0}]|[\u{25FB}-\u{25FE}]|[\u{2614}-\u{2615}]|[\u{2648}-\u{2653}]|[\u{267F}]|[\u{2693}]|[\u{26A1}]|[\u{26AA}-\u{26AB}]|[\u{26BD}-\u{26BE}]|[\u{26C4}-\u{26C5}]|[\u{26CE}]|[\u{26D4}]|[\u{26EA}]|[\u{26F2}-\u{26F3}]|[\u{26F5}]|[\u{26FA}]|[\u{26FD}]|[\u{2702}]|[\u{2705}]|[\u{2708}-\u{270D}]|[\u{270F}]|[\u{2712}]|[\u{2714}]|[\u{2716}]|[\u{271D}]|[\u{2721}]|[\u{2728}]|[\u{2733}-\u{2734}]|[\u{2744}]|[\u{2747}]|[\u{274C}]|[\u{274E}]|[\u{2753}-\u{2755}]|[\u{2757}]|[\u{2763}-\u{2764}]|[\u{2795}-\u{2797}]|[\u{27A1}]|[\u{27B0}]|[\u{27BF}]|[\u{2934}-\u{2935}]|[\u{2B05}-\u{2B07}]|[\u{2B1B}-\u{2B1C}]|[\u{2B50}]|[\u{2B55}]|[\u{3030}]|[\u{303D}]|[\u{3297}]|[\u{3299}]|[\u{200B}-\u{200D}]|[\u{FE0E}-\u{FE0F}]/gu, '').replace(/[^\S\n]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 // SMS 발송 함수 (Aligo)
@@ -166,6 +166,35 @@ async function sendSMS(to, text) {
   } catch (error) {
     const errorData = error.response?.data ? JSON.stringify(error.response.data) : error.message;
     console.error(`📱 SMS 발송 오류 (Aligo): ${errorData}`);
+    return { success: false, error: error.response?.data || error.message };
+  }
+}
+
+// 📱 MMS(이미지 첨부) 발송 — Aligo 같은 엔드포인트, multipart + msg_type=MMS
+//   imageBuffer 는 JPG(≤300KB)로 사전 변환돼 있어야 함 (sharp 처리 후 전달)
+async function sendMMS(to, text, imageBuffer, filename = 'image.jpg') {
+  try {
+    const FormDataLib = require('form-data');
+    const cleanTo = String(to).replace(/-/g, '');
+    const cleanText = removeEmoji(text);
+    const form = new FormDataLib();
+    form.append('key', ALIGO_API_KEY);
+    form.append('user_id', ALIGO_USER_ID);
+    form.append('sender', SMS_SENDER);
+    form.append('receiver', cleanTo);
+    form.append('msg', cleanText);
+    form.append('msg_type', 'MMS');
+    form.append('image', imageBuffer, { filename, contentType: 'image/jpeg' });
+    const response = await axios.post('https://apis.aligo.in/send/', form, { headers: form.getHeaders() });
+    if (response.data.result_code === '1' || response.data.result_code === 1) {
+      console.log(`📱 MMS 발송 성공 (Aligo): ${cleanTo}, msg_id: ${response.data.msg_id}`);
+      return { success: true, result: response.data };
+    }
+    console.error(`📱 MMS 발송 실패 (Aligo): ${JSON.stringify(response.data)}`);
+    return { success: false, error: response.data };
+  } catch (error) {
+    const errorData = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+    console.error(`📱 MMS 발송 오류 (Aligo): ${errorData}`);
     return { success: false, error: error.response?.data || error.message };
   }
 }
@@ -333,6 +362,10 @@ async function sendHQAdminNotification(studentName, grade, type, additionalInfo 
       if (itemSummary.length > 40) itemSummary = itemSummary.slice(0, 37) + '...';
       const total = additionalInfo.totalBadges || 0;
       message = `[본사알림] ${location} ${grade} ${studentName} CU 응모: ${itemSummary} (${total}뱃지)`;
+      break;
+    case 'monggeulRaffle':
+      // 몽글 도감 과목 완성 응모권 사용
+      message = `[본사알림] ${location} ${grade} ${studentName} 몽글도감 응모: ${additionalInfo.itemName || ''}${additionalInfo.detail ? ` (${additionalInfo.detail})` : ''}`;
       break;
     case 'studentAdded':
       // 학원 브렌치 관리자가 학생 추가 — 현재 학원 active 학생 수 포함
@@ -1412,6 +1445,33 @@ const kpiAcademySchema = new mongoose.Schema({
 kpiAcademySchema.index({ scope: 1, branchId: 1, createdAt: -1 });
 const KpiAcademy = mongoose.model("KpiAcademy", kpiAcademySchema);
 
+// 📱 KPI 문자 발송 이력 (미계약 리드 대상 MMS/SMS — 본사 전용 기능)
+const kpiSmsLogSchema = new mongoose.Schema({
+  sentByName: String,                       // 발송자 (KPI 담당자 이름)
+  sentByScope: String,                      // 발송자 소속
+  message: String,                          // 원문 메시지 (치환 전)
+  hasImage: { type: Boolean, default: false },
+  recipients: [{
+    academyName: String,
+    directorName: String,
+    phone: String,
+    success: Boolean,
+  }],
+  sentAt: { type: Date, default: Date.now },
+});
+const KpiSmsLog = mongoose.model("KpiSmsLog", kpiSmsLogSchema);
+
+// 💾 KPI 문자 템플릿 — 그룹별(설명회미참석/오프미팅미진행/미계약) 문구+이미지 저장 (본사 전용)
+//    이미지는 저장 시점에 JPG ≤290KB 로 압축해 DB에 보관 (Render 디스크 의존 없음)
+const kpiSmsTemplateSchema = new mongoose.Schema({
+  key: { type: String, enum: ["noBriefing", "noMeeting", "noContract"], unique: true },
+  message: { type: String, default: "" },
+  image: { type: Buffer, default: null },
+  updatedBy: String,
+  updatedAt: { type: Date, default: Date.now },
+});
+const KpiSmsTemplate = mongoose.model("KpiSmsTemplate", kpiSmsTemplateSchema);
+
 // 계약유형별 계약금액(만원)·총계정 (계약유형 선택 시 자동 세팅)
 const KPI_CONTRACT_TYPES = {
   "스탠다드": { amount: 180, totalAccounts: 120 },
@@ -1512,6 +1572,22 @@ const monthlyStudentSnapshotSchema = new mongoose.Schema({
 });
 monthlyStudentSnapshotSchema.index({ academyName: 1, yearMonth: 1 }, { unique: true });
 const MonthlyStudentSnapshot = mongoose.model("MonthlyStudentSnapshot", monthlyStudentSnapshotSchema);
+
+// ===== 학생 상태(승인↔대기) 변경 이력 — 재계약 점검용 =====
+// 월말 직전 대기전환 → 월초 재승인으로 월 카운팅을 회피하는 패턴을
+// 재계약 시점에 사후 확인할 수 있도록 모든 상태 토글을 기록 (2026-08-19)
+const statusChangeLogSchema = new mongoose.Schema({
+  academyName: String,
+  userType: String,          // academy | school
+  grade: String,
+  name: String,
+  loginId: String,           // 변경 대상의 id 또는 phone
+  fromStatus: String,        // approved | pending
+  toStatus: String,
+  changedAt: { type: Date, default: Date.now },
+});
+statusChangeLogSchema.index({ academyName: 1, changedAt: -1 });
+const StatusChangeLog = mongoose.model("StatusChangeLog", statusChangeLogSchema);
 
 // ===== 브레인 월말 모의고사 결과 (초등·중등, 회차별) =====
 const monthlyExamResultSchema = new mongoose.Schema({
@@ -2609,6 +2685,168 @@ function kpiCenterDerived(c) {
 }
 
 // 센터 목록
+// 📱 KPI 미계약 리드 문자 발송 (본사 전용) — 이미지 첨부 시 MMS, 없으면 SMS/LMS 자동
+const kpiSmsUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+const KPI_SMS_FOOTER = '\n\n감사와 성공을 함께 만드는 기업 브레인문해력';
+
+// 이미지 → JPG ≤290KB 압축 (실패 시 null)
+async function kpiCompressJpeg(srcBuffer) {
+  const sharp = require('sharp');
+  let quality = 85;
+  let buf = await sharp(srcBuffer).rotate().resize({ width: 1200, withoutEnlargement: true }).jpeg({ quality }).toBuffer();
+  while (buf.length > 290 * 1024 && quality > 35) {
+    quality -= 10;
+    buf = await sharp(srcBuffer).rotate().resize({ width: 1000, withoutEnlargement: true }).jpeg({ quality }).toBuffer();
+  }
+  return buf.length <= 290 * 1024 ? buf : null;
+}
+// mongoose lean() 이 Buffer 를 Binary 로 돌려주는 경우 대응
+const kpiToBuffer = (img) => (img ? Buffer.from(img.buffer || img) : null);
+
+// 💾 문자 템플릿 조회 (본사 전용)
+app.get("/api/super/kpi/sms-templates", requireKpiUser, async (req, res) => {
+  try {
+    if (req.session.kpiUser.scope !== '본사') return res.status(403).json({ ok: false, message: '본사 전용' });
+    const rows = await KpiSmsTemplate.find({}).lean();
+    res.json({ ok: true, templates: rows.map(t => ({ key: t.key, message: t.message, hasImage: !!t.image, updatedAt: t.updatedAt })) });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 💾 템플릿 이미지 미리보기 (본사 전용)
+app.get("/api/super/kpi/sms-template-image/:key", requireKpiUser, async (req, res) => {
+  try {
+    if (req.session.kpiUser.scope !== '본사') return res.status(403).end();
+    const t = await KpiSmsTemplate.findOne({ key: req.params.key }).lean();
+    const buf = kpiToBuffer(t && t.image);
+    if (!buf || !buf.length) return res.status(404).end();
+    res.set('Content-Type', 'image/jpeg').set('Cache-Control', 'no-cache').send(buf);
+  } catch (err) {
+    res.status(500).end();
+  }
+});
+
+// 💾 문자 템플릿 저장 (본사 전용) — 새 이미지 첨부 시 교체, keepImage=1 이면 기존 유지, 둘 다 아니면 이미지 제거
+app.post("/api/super/kpi/sms-template", requireKpiUser, kpiSmsUpload.single('image'), async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    if (u.scope !== '본사') return res.status(403).json({ ok: false, message: '본사 전용' });
+    const key = String(req.body.key || '');
+    if (!['noBriefing', 'noMeeting', 'noContract'].includes(key)) return res.status(400).json({ ok: false, message: '잘못된 템플릿 키' });
+    const update = { message: String(req.body.message || '').trim(), updatedBy: u.name, updatedAt: new Date() };
+    if (req.file && req.file.buffer) {
+      const buf = await kpiCompressJpeg(req.file.buffer);
+      if (!buf) return res.status(400).json({ ok: false, message: '이미지를 300KB 이하로 압축하지 못했습니다.' });
+      update.image = buf;
+    } else if (req.body.keepImage !== '1') {
+      update.image = null;
+    }
+    await KpiSmsTemplate.findOneAndUpdate({ key }, { $set: update }, { upsert: true });
+    console.log(`💾 [KPI템플릿] ${u.name} — ${key} 저장 (이미지: ${update.image === null ? '제거' : (update.image ? '교체' : '유지')})`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('❌ KPI 템플릿 저장 오류:', err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 💬 카톡 발송용 — 저장된 템플릿 이미지를 공개 URL로 복사해 반환
+app.post("/api/super/kpi/kakao-image-from-template", requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    if (u.scope !== '본사') return res.status(403).json({ ok: false, message: '본사 전용' });
+    const key = String((req.body || {}).key || '');
+    const t = await KpiSmsTemplate.findOne({ key }).lean();
+    const buf = kpiToBuffer(t && t.image);
+    if (!buf || !buf.length) return res.status(404).json({ ok: false, message: '저장된 이미지가 없습니다.' });
+    const dir = path.join(UPLOAD_DIR, 'kpi-kakao');
+    require('fs').mkdirSync(dir, { recursive: true });
+    const name = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10) + '.jpg';
+    require('fs').writeFileSync(path.join(dir, name), buf);
+    const proto = (req.get('x-forwarded-proto') || req.protocol || 'https').split(',')[0];
+    res.json({ ok: true, url: `${proto}://${req.get('host')}/kpi-kakao-img/${name}` });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+app.post("/api/super/kpi/send-sms", requireKpiUser, kpiSmsUpload.single('image'), async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    if (u.scope !== '본사') return res.status(403).json({ ok: false, message: '본사 담당자만 발송할 수 있습니다.' });
+    const message = String(req.body.message || '').trim();
+    let ids = [];
+    try { ids = JSON.parse(req.body.ids || '[]'); } catch (e) {}
+    if (!message) return res.status(400).json({ ok: false, message: '메시지를 입력하세요.' });
+    if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ ok: false, message: '수신 대상을 선택하세요.' });
+    if (ids.length > 100) return res.status(400).json({ ok: false, message: '한 번에 100건까지 발송할 수 있습니다.' });
+
+    // 이미지 → JPG ≤290KB 자동 변환 · 첨부 없고 templateKey 있으면 저장된 템플릿 이미지 사용
+    let imageBuffer = null;
+    if (req.file && req.file.buffer) {
+      imageBuffer = await kpiCompressJpeg(req.file.buffer);
+      if (!imageBuffer) return res.status(400).json({ ok: false, message: '이미지를 300KB 이하로 압축하지 못했습니다. 더 작은 이미지를 사용해 주세요.' });
+    } else if (req.body.templateKey) {
+      const tpl = await KpiSmsTemplate.findOne({ key: String(req.body.templateKey) }).lean();
+      const tbuf = kpiToBuffer(tpl && tpl.image);
+      if (tbuf && tbuf.length) imageBuffer = tbuf;
+    }
+
+    const leads = await KpiAcademy.find({ _id: { $in: ids } }).lean();
+    const results = [];
+    for (const lead of leads) {
+      const phone = String(lead.phone || '').replace(/[^0-9]/g, '');
+      if (!phone || phone.length < 9) {
+        results.push({ academyName: lead.academyName, directorName: lead.directorName, phone: lead.phone || '', success: false });
+        continue;
+      }
+      // 치환 변수: {학원명} {원장님}
+      const personalized = message
+        .split('{학원명}').join(lead.academyName || '')
+        .split('{원장님}').join(lead.directorName || '원장님');
+      const finalMsg = personalized + KPI_SMS_FOOTER;
+      const r = imageBuffer ? await sendMMS(phone, finalMsg, imageBuffer) : await sendSMS(phone, finalMsg);
+      results.push({ academyName: lead.academyName, directorName: lead.directorName, phone: lead.phone || '', success: !!r.success });
+    }
+
+    await KpiSmsLog.create({ sentByName: u.name, sentByScope: u.scope, message, hasImage: !!imageBuffer, recipients: results });
+    const sent = results.filter(r => r.success).length;
+    console.log(`📱 [KPI문자] ${u.name} → ${sent}/${results.length}건 발송 (이미지: ${imageBuffer ? 'O' : 'X'})`);
+    res.json({ ok: true, sent, failed: results.length - sent, results });
+  } catch (err) {
+    console.error("❌ KPI 문자 발송 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 💬 카톡 공유용 이미지 업로드 (본사 전용) — 카카오 스크래퍼가 접근할 공개 URL 반환
+app.post("/api/super/kpi/kakao-image", requireKpiUser, kpiSmsUpload.single('image'), async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    if (u.scope !== '본사') return res.status(403).json({ ok: false, message: '본사 담당자만 사용할 수 있습니다.' });
+    if (!req.file || !req.file.buffer) return res.status(400).json({ ok: false, message: '이미지가 없습니다.' });
+    const sharp = require('sharp');
+    const buf = await sharp(req.file.buffer).rotate().resize({ width: 1600, withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer();
+    const dir = path.join(UPLOAD_DIR, 'kpi-kakao');
+    require('fs').mkdirSync(dir, { recursive: true });
+    const name = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10) + '.jpg';
+    require('fs').writeFileSync(path.join(dir, name), buf);
+    const proto = (req.get('x-forwarded-proto') || req.protocol || 'https').split(',')[0];
+    res.json({ ok: true, url: `${proto}://${req.get('host')}/kpi-kakao-img/${name}` });
+  } catch (err) {
+    console.error('❌ 카톡 이미지 업로드 오류:', err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+// 카톡 공유 이미지 공개 서빙 (무작위 파일명이라 URL 추측 불가)
+app.get('/kpi-kakao-img/:name', (req, res) => {
+  const name = String(req.params.name || '');
+  if (!/^[a-z0-9-]+\.jpg$/.test(name)) return res.status(400).send('bad name');
+  res.sendFile(path.join(UPLOAD_DIR, 'kpi-kakao', name), (err) => {
+    if (err && !res.headersSent) res.status(404).send('not found');
+  });
+});
+
 app.get("/api/super/kpi/centers", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
@@ -12300,10 +12538,28 @@ app.get("/admin/status", async (req, res) => {
       return res.status(404).send("상태를 변경할 사용자를 찾을 수 없습니다.");
     }
 
+    const prevStatus = user.status || "approved";
     user.status = status;
     await user.save();
 
     console.log("✅ 상태 변경:", user.name, "=>", status);
+
+    // 🕵️ 상태 변경 이력 기록 (재계약 점검용) — 실패해도 본 흐름에 영향 없음
+    if (prevStatus !== status) {
+      try {
+        await StatusChangeLog.create({
+          academyName: user.academyName || "",
+          userType: user.userType || "",
+          grade: user.grade || "",
+          name: user.name || "",
+          loginId: id,
+          fromStatus: prevStatus,
+          toStatus: status,
+        });
+      } catch (logErr) {
+        console.error("⚠️ 상태변경 이력 기록 실패:", logErr.message);
+      }
+    }
 
     // ✅ return 파라미터가 있으면 그쪽으로, 없으면 기존처럼 전체 회원 목록
     let returnUrl = req.query.return;
@@ -12327,6 +12583,32 @@ app.get("/admin/status", async (req, res) => {
   }
 });
 
+// 🕵️ 상태변경 이력 조회 (슈퍼관리자 · 재계약 점검용)
+//   월말 임박(25일~) 대기전환 / 월초(~5일) 재승인에 edge 표시를 붙여 반환
+app.get("/api/super/status-change-log", requireSuperAdmin, async (req, res) => {
+  try {
+    const { academyName } = req.query;
+    if (!academyName) return res.status(400).json({ ok: false, error: "academyName 필요" });
+    const limit = Math.min(parseInt(req.query.limit, 10) || 300, 1000);
+    const logs = await StatusChangeLog.find({ academyName })
+      .sort({ changedAt: -1 })
+      .limit(limit)
+      .lean();
+    const items = logs.map((l) => {
+      const kst = new Date(new Date(l.changedAt).getTime() + 9 * 60 * 60 * 1000);
+      const day = kst.getUTCDate();
+      let edge = null;
+      if (l.toStatus === "pending" && day >= 25) edge = "month-end-pending";   // 월말 임박 대기전환
+      else if (l.toStatus === "approved" && day <= 5) edge = "month-start-approve"; // 월초 재승인
+      return { ...l, edge };
+    });
+    const suspicious = items.filter((i) => i.edge).length;
+    res.json({ ok: true, total: items.length, suspicious, items });
+  } catch (err) {
+    console.error("❌ 상태변경 이력 조회 오류:", err);
+    res.status(500).json({ ok: false, error: "조회 오류" });
+  }
+});
 
 // ⭐⭐⭐ 회원 조회 페이지 (슈퍼관리자 전용, 새 디자인) ⭐⭐⭐
 app.get("/admin/users", async (req, res) => {
@@ -33582,6 +33864,88 @@ const monggeulDexSchema = new mongoose.Schema({
 });
 monggeulDexSchema.index({ grade: 1, name: 1 }, { unique: true });
 const MonggeulDex = mongoose.model('MonggeulDex', monggeulDexSchema);
+
+// ===== 🎟️ 몽글 도감 과목 완성 → CU 간식 응모권 (2026-08-19) =====
+//   과목×시즌 도감(시즌1: 6종/과목 …)을 모두 모으면 해당 간식에 무료 응모 1회.
+//   응모 건은 기존 CU 응모 풀(SnackOrder, 0뱃지)에 합류 → 본사 월 추첨 목록에 함께 표시.
+//   ⚠️ 아이템 매핑은 public/monggeul/index.html 의 MG_RAFFLE 상수와 동기 유지할 것.
+const MG_RAFFLE_ITEMS = {
+  1: { bio: '🦐 새우깡', earth: '🥔 포테토칩', physics: '🌽 꼬깔콘', chem: '🍿 콘소메맛팝콘', soc: '🍪 리얼초코칩쿠키', geo: '🥔 포카칩', law: '🍩 칸쵸', pol: '🍫 콘초코플러스', modern: '🥧 초코파이', classic: '🥮 달콤한호떡과자', world1: '🌭 후랑크핫도그', world2: '🌭 불맛소스핫도그', people1: '🍫 프로틴바', people2: '🍡 찹쌀떡' },
+  2: { bio: '🥛 바나나우유', earth: '🥛 초코우유', physics: '🥛 딸기우유', chem: '🥤 사이다', soc: '🥤 콜라', geo: '🧃 오렌지주스', law: '🥐 슈크림빵', pol: '🍡 찹쌀떡', modern: '🥧 초코파이', classic: '🍫 콘초코플러스', world1: '🥔 포테토칩', world2: '🥔 포카칩', people1: '🍪 리얼초코칩쿠키', people2: '🥮 달콤한호떡과자' },
+  3: { bio: '🍞 연세우유 생크림빵', earth: '🧁 크림치즈 생크림빵', physics: '🍫 초코 생크림빵', chem: '🍓 딸기샌드', soc: '🍞 연세우유 생크림빵', geo: '🧁 크림치즈 생크림빵', law: '🍫 초코 생크림빵', pol: '🍓 딸기샌드', modern: '🍞 연세우유 생크림빵', classic: '🧁 크림치즈 생크림빵', world1: '🍫 초코 생크림빵', world2: '🍓 딸기샌드', people1: '🍞 연세우유 생크림빵', people2: '🧁 크림치즈 생크림빵' }
+};
+const MG_RAFFLE_PER_SUB = { 1: 6, 2: 8, 3: 10 };
+const MG_RAFFLE_PREFIX = { 1: '', 2: 's2_', 3: 's3_' };
+
+const monggeulRaffleSchema = new mongoose.Schema({
+  grade: String,
+  name: String,
+  academyName: String,
+  season: Number,
+  subject: String,
+  itemName: String,
+  appliedAt: { type: Date, default: Date.now },
+});
+monggeulRaffleSchema.index({ grade: 1, name: 1, season: 1, subject: 1 }, { unique: true });
+const MonggeulRaffle = mongoose.model('MonggeulRaffle', monggeulRaffleSchema);
+
+// 응모 현황 조회 (도감 카드 상태 표시용)
+app.get('/api/monggeul/raffle-status', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.status(400).json({ ok: false });
+    const rows = await MonggeulRaffle.find({ grade, name }).lean();
+    res.json({ ok: true, applied: rows.map(r => `${r.season}_${r.subject}`) });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 응모하기 — 도감 완성 여부는 서버 MonggeulDex 로 직접 검증 (클라 조작 방지)
+app.post('/api/monggeul/raffle-apply', async (req, res) => {
+  try {
+    const { grade, name, season, subject } = req.body || {};
+    const s = parseInt(season, 10);
+    if (!grade || !name || ![1, 2, 3].includes(s) || !MG_RAFFLE_ITEMS[s][subject]) {
+      return res.status(400).json({ ok: false, message: '잘못된 요청' });
+    }
+    const dex = await MonggeulDex.findOne({ grade, name }).lean();
+    const counts = (dex && dex.counts) || {};
+    const per = MG_RAFFLE_PER_SUB[s];
+    const pfx = MG_RAFFLE_PREFIX[s];
+    for (let i = 0; i < per; i++) {
+      if (!counts[`${pfx}${subject}_${i}`]) {
+        return res.status(400).json({ ok: false, message: '아직 이 과목 도감을 다 모으지 않았어요' });
+      }
+    }
+    const itemName = MG_RAFFLE_ITEMS[s][subject];
+    const user = await User.findOne({ grade, name, deleted: { $ne: true } }).lean();
+    const academyName = (user && user.academyName) || '';
+    try {
+      await MonggeulRaffle.create({ grade, name, academyName, season: s, subject, itemName });
+    } catch (dupErr) {
+      if (dupErr && dupErr.code === 11000) return res.json({ ok: false, already: true, message: '이미 응모했어요' });
+      throw dupErr;
+    }
+    const subjectLabel = (typeof SUBJECT_INFO !== 'undefined' && SUBJECT_INFO[subject] && SUBJECT_INFO[subject].label) || subject;
+    // 기존 CU 응모 풀에 무료 응모(0뱃지) 1건으로 합류 → 본사 추첨 목록에 함께 노출
+    try {
+      await new SnackOrder({
+        grade, name, school: academyName,
+        items: [{ name: `🎟️ 몽글도감 응모 · ${itemName} (시즌${s} ${subjectLabel})`, price: 0, quantity: 1 }],
+        totalBadges: 0, status: 'pending',
+      }).save();
+    } catch (soErr) {
+      console.error('몽글 응모 SnackOrder 합류 실패:', soErr.message);
+    }
+    sendHQAdminNotification(name, grade, 'monggeulRaffle', { academyName, itemName, detail: `시즌${s} ${subjectLabel} 완성` }).catch(() => {});
+    console.log(`🎟️ 몽글 응모: ${academyName} ${grade} ${name} — ${itemName} (S${s} ${subject})`);
+    res.json({ ok: true, itemName });
+  } catch (e) {
+    console.error('몽글 응모 오류:', e);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
 
 // 랭킹 — 누적 MP (리셋 없음)
 const monggeulScoreSchema = new mongoose.Schema({

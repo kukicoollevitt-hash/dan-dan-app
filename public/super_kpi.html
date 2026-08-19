@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>브레인 KPI 자동관리시스템</title>
+  <!-- 카카오 SDK (미계약 리드 카톡 공유 발송용) -->
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif; background: #f4f5f7; color: #2c3e50; }
@@ -742,24 +744,246 @@
       return esc([r.academyName, r.directorName, r.region, r.purpose].filter(Boolean).join(' ').toLowerCase());
     }
 
+    // ===== 📱 미계약 리드 문자 발송 (본사 전용) =====
+    const SMS_SEL = new Set();
+    function kpiSmsToggle(id, on) {
+      if (on) SMS_SEL.add(String(id)); else SMS_SEL.delete(String(id));
+      KPI_QUICK_LAST = null;   // 수동 조작 시 배지 토글 상태 초기화 (다음 배지 클릭은 다시 '선택'으로 동작)
+      const c = document.getElementById('kpiSmsCount');
+      if (c) c.textContent = SMS_SEL.size;
+    }
+    // 🏷️ 조건 배지 자동 체크 — 화면에 보이는 체크 가능 행 중 조건에 맞는 학원만 선택 (기존 선택은 초기화)
+    const KPI_QUICK_PRED = {
+      noBriefing: r => !r.step_briefingAttend,   // 설명회 미참석
+      noMeeting:  r => !r.step_offlineMeeting,   // 오프미팅 미진행
+      noContract: r => !r.step_contract,         // 미계약 (체크 가능 행 전체)
+    };
+    let KPI_QUICK_LAST = null;   // 마지막으로 누른 배지 (같은 배지 재클릭 = 해제)
+    function kpiSmsQuickSelect(type) {
+      const pred = KPI_QUICK_PRED[type];
+      if (!pred) return;
+      const boxes = [...document.querySelectorAll('#ovAcadTable input[type=checkbox][data-smsid]')]
+        .filter(cb => { const tr = cb.closest('tr'); return tr && tr.style.display !== 'none'; });
+      // 같은 배지 2번째 클릭 → 전체 해제 (토글)
+      if (KPI_QUICK_LAST === type && SMS_SEL.size > 0) {
+        SMS_SEL.clear();
+        boxes.forEach(cb => cb.checked = false);
+        KPI_QUICK_LAST = null;
+        const c0 = document.getElementById('kpiSmsCount');
+        if (c0) c0.textContent = '0';
+        return;
+      }
+      const byId = {};
+      OV_ACADEMIES.forEach(r => { byId[String(r._id)] = r; });
+      SMS_SEL.clear();
+      let n = 0;
+      boxes.forEach(cb => {
+        const r = byId[cb.dataset.smsid];
+        const on = !!(r && pred(r));
+        cb.checked = on;
+        if (on) { SMS_SEL.add(cb.dataset.smsid); n++; }
+      });
+      KPI_QUICK_LAST = type;
+      const c = document.getElementById('kpiSmsCount');
+      if (c) c.textContent = SMS_SEL.size;
+      if (n === 0) { alert('조건에 맞는 학원이 없습니다.'); KPI_QUICK_LAST = null; }
+    }
+    // ☑️ 전체선택/해제 토글 — 화면에 보이는(검색·필터 반영) 체크 가능 행 대상
+    function kpiSmsSelectAll() {
+      const boxes = [...document.querySelectorAll('#ovAcadTable input[type=checkbox][data-smsid]')]
+        .filter(cb => { const tr = cb.closest('tr'); return tr && tr.style.display !== 'none'; });
+      if (!boxes.length) { alert('선택 가능한 학원이 없습니다. (계약 X + 연락처 보유 학원만 가능)'); return; }
+      const allSelected = boxes.every(cb => cb.checked);
+      boxes.forEach(cb => { cb.checked = !allSelected; kpiSmsToggle(cb.dataset.smsid, !allSelected); });
+    }
+    function openKpiSmsModal() {
+      if (SMS_SEL.size === 0) { alert('먼저 목록에서 문자를 보낼 학원을 체크하세요.'); return; }
+      const sel = OV_ACADEMIES.filter(r => SMS_SEL.has(String(r._id)));
+      document.getElementById('kpiSmsRecipients').innerHTML = sel.map(r =>
+        `<span style="display:inline-block;background:#eef3fb;border:1px solid #c9d8ef;border-radius:999px;padding:3px 10px;margin:2px;font-size:12px">${esc(r.academyName)} · ${esc(r.directorName || '-')} (${esc(r.phone)})</span>`).join('');
+      document.getElementById('kpiSmsOverlay').style.display = 'flex';
+      // 배지(조건 선택)로 들어온 경우 → 해당 그룹 템플릿 자동 로드
+      if (KPI_QUICK_LAST && KPI_QUICK_PRED[KPI_QUICK_LAST]) {
+        document.getElementById('kpiTplKey').value = KPI_QUICK_LAST;
+        kpiTplLoad(true);
+      }
+    }
+    function closeKpiSmsModal() { document.getElementById('kpiSmsOverlay').style.display = 'none'; }
+
+    // ===== 💾 그룹별 문자 템플릿 (문구+이미지) =====
+    let KPI_TPLS = {};           // key → {message, hasImage}
+    let KPI_TPL_ACTIVE = null;   // 불러온 템플릿 키 — 발송 시 저장 이미지 사용
+    async function kpiTplFetch() {
+      try {
+        const r = await api('/api/super/kpi/sms-templates');
+        if (r.ok) (r.templates || []).forEach(t => { KPI_TPLS[t.key] = t; });
+      } catch (e) {}
+    }
+    async function kpiTplLoad(auto) {
+      await kpiTplFetch();
+      const key = document.getElementById('kpiTplKey').value;
+      const t = KPI_TPLS[key];
+      if (!t || (!t.message && !t.hasImage)) {
+        if (!auto) alert('이 그룹에 저장된 템플릿이 아직 없습니다.\n내용 작성 후 [💾 현재 내용 저장]을 눌러 만들어 주세요.');
+        return;
+      }
+      document.getElementById('kpiSmsMsg').value = t.message || '';
+      document.getElementById('kpiSmsImage').value = '';
+      KPI_TPL_ACTIVE = t.hasImage ? key : null;
+      updateKpiImgPreview();
+      document.getElementById('kpiTplStatus').textContent = '📂 템플릿 불러옴' + (t.hasImage ? ' (저장 이미지 포함)' : '');
+    }
+    async function kpiTplSave() {
+      const key = document.getElementById('kpiTplKey').value;
+      const msg = document.getElementById('kpiSmsMsg').value.trim();
+      if (!msg) { alert('저장할 메시지를 입력하세요.'); return; }
+      const fd = new FormData();
+      fd.append('key', key);
+      fd.append('message', msg);
+      const f = document.getElementById('kpiSmsImage').files[0];
+      if (f) fd.append('image', f);
+      else if (KPI_TPL_ACTIVE === key) fd.append('keepImage', '1');   // 불러온 저장 이미지 유지
+      try {
+        const r = await fetch('/api/super/kpi/sms-template', { method: 'POST', body: fd });
+        const d = await r.json();
+        if (!d.ok) { alert('저장 실패: ' + (d.message || '')); return; }
+        await kpiTplFetch();
+        if (KPI_TPLS[key] && KPI_TPLS[key].hasImage) {
+          KPI_TPL_ACTIVE = key;
+          document.getElementById('kpiSmsImage').value = '';
+        } else if (KPI_TPL_ACTIVE === key) {
+          KPI_TPL_ACTIVE = null;
+        }
+        updateKpiImgPreview();
+        document.getElementById('kpiTplStatus').textContent = '💾 저장됨 (' + new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) + ')';
+      } catch (e) { alert('저장 오류: ' + e.message); }
+    }
+    function updateKpiImgPreview() {
+      const wrap = document.getElementById('kpiImgPreviewWrap');
+      const img = document.getElementById('kpiImgPreview');
+      const f = document.getElementById('kpiSmsImage').files[0];
+      if (f) { img.src = URL.createObjectURL(f); wrap.style.display = 'flex'; }
+      else if (KPI_TPL_ACTIVE) { img.src = '/api/super/kpi/sms-template-image/' + KPI_TPL_ACTIVE + '?t=' + Date.now(); wrap.style.display = 'flex'; }
+      else { wrap.style.display = 'none'; img.removeAttribute('src'); }
+    }
+    function kpiImgClear() {
+      document.getElementById('kpiSmsImage').value = '';
+      KPI_TPL_ACTIVE = null;
+      updateKpiImgPreview();
+    }
+    // 💬 카톡 보내기 — 카카오 공유창을 열어 담당자 카톡에서 받는 분(원장님)을 직접 선택해 전송
+    //    · 1명 선택 시 {학원명}/{원장님} 치환 적용, 여러 명이면 일반 문구로 치환
+    //    · 이미지 첨부 시 서버에 업로드해 공개 URL로 카드 이미지에 사용
+    async function kpiKakaoSend() {
+      const msgRaw = document.getElementById('kpiSmsMsg').value.trim();
+      if (!msgRaw) { alert('메시지를 입력하세요.'); return; }
+      if (!window.Kakao) { alert('카카오 SDK 로딩에 실패했습니다. 새로고침 후 다시 시도하세요.'); return; }
+      if (!Kakao.isInitialized()) Kakao.init('6ad10cc6680c7a5829a4fd7a3cbb4a7e');
+      const sel = OV_ACADEMIES.filter(r => SMS_SEL.has(String(r._id)));
+      let msg = msgRaw;
+      if (sel.length === 1) {
+        msg = msg.split('{학원명}').join(sel[0].academyName || '').split('{원장님}').join(sel[0].directorName || '원장님');
+      } else {
+        msg = msg.split('{학원명}').join('원장님의 학원').split('{원장님}').join('원장님');
+        if (sel.length > 1) alert('카톡 공유는 한 번에 한 분씩 전송됩니다.\n카카오 공유창에서 받는 분을 선택해 주세요.\n(여러 명 치환 발송이 필요하면 문자 발송을 이용하세요)');
+      }
+      msg += '\n\n감사와 성공을 함께 만드는 기업 브레인문해력';
+      const btn = document.getElementById('kpiKakaoBtn');
+      btn.disabled = true; btn.textContent = '준비 중...';
+      try {
+        let imageUrl = 'https://brainmoon.kr/images/' + encodeURIComponent('kpi자동화관리배경.jpg');
+        const f = document.getElementById('kpiSmsImage').files[0];
+        if (f) {
+          const fd = new FormData(); fd.append('image', f);
+          const r = await fetch('/api/super/kpi/kakao-image', { method: 'POST', body: fd });
+          const d = await r.json();
+          if (d.ok) imageUrl = d.url;
+          else { alert('이미지 업로드 실패: ' + (d.message || '')); btn.disabled = false; btn.textContent = '💬 카톡 보내기'; return; }
+        } else if (KPI_TPL_ACTIVE) {
+          // 저장된 템플릿 이미지 → 공개 URL로 복사해 카드 이미지로 사용
+          const r = await fetch('/api/super/kpi/kakao-image-from-template', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: KPI_TPL_ACTIVE }) });
+          const d = await r.json();
+          if (d.ok) imageUrl = d.url;
+        }
+        // 카드 제목 = 메시지 첫 줄 (잘리지 않고 크게 보이도록), 본문 = 나머지
+        const lines = msg.split('\n');
+        const cardTitle = '📢 ' + (lines[0] || '브레인문해력 안내').slice(0, 40);
+        const cardDesc = lines.slice(1).join('\n').trim() || '감사와 성공을 함께 만드는 기업 브레인문해력';
+        Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: cardTitle,
+            description: cardDesc,
+            imageUrl: imageUrl,
+            link: { mobileWebUrl: 'https://brainmoon.kr', webUrl: 'https://brainmoon.kr' }
+          },
+          buttons: [{ title: '브레인문해력 보기', link: { mobileWebUrl: 'https://brainmoon.kr', webUrl: 'https://brainmoon.kr' } }]
+        });
+      } catch (e) { alert('카톡 공유 오류: ' + e.message); }
+      btn.disabled = false; btn.textContent = '💬 카톡 보내기';
+    }
+    async function kpiSmsSend() {
+      const msg = document.getElementById('kpiSmsMsg').value.trim();
+      if (!msg) { alert('메시지를 입력하세요.'); return; }
+      if (!confirm(`${SMS_SEL.size}개 학원에 문자를 발송할까요?`)) return;
+      const btn = document.getElementById('kpiSmsSendBtn');
+      btn.disabled = true; btn.textContent = '발송 중...';
+      try {
+        const fd = new FormData();
+        fd.append('message', msg);
+        fd.append('ids', JSON.stringify([...SMS_SEL]));
+        const f = document.getElementById('kpiSmsImage').files[0];
+        if (f) fd.append('image', f);
+        else if (KPI_TPL_ACTIVE) fd.append('templateKey', KPI_TPL_ACTIVE);   // 저장된 템플릿 이미지로 MMS
+        const r = await fetch('/api/super/kpi/send-sms', { method: 'POST', body: fd });
+        const data = await r.json();
+        if (data.ok) {
+          alert(`발송 완료 — 성공 ${data.sent}건 / 실패 ${data.failed}건`);
+          SMS_SEL.clear();
+          const c = document.getElementById('kpiSmsCount'); if (c) c.textContent = '0';
+          document.querySelectorAll('#ovAcadTable input[type=checkbox]').forEach(cb => cb.checked = false);
+          document.getElementById('kpiSmsMsg').value = '';
+          document.getElementById('kpiSmsImage').value = '';
+          KPI_TPL_ACTIVE = null;
+          updateKpiImgPreview();
+          closeKpiSmsModal();
+        } else {
+          alert('발송 실패: ' + (data.message || '알 수 없는 오류'));
+        }
+      } catch (e) { alert('발송 오류: ' + e.message); }
+      btn.disabled = false; btn.textContent = '📱 발송하기';
+    }
+
     // 전체 학원 목록 (읽기전용, 소속열, 최초상담일 최신순, 이탈 필터)
     function renderOvAcademyList() {
       const base = OV_ACADEMIES.slice();
+      const isHQ = ME && ME.user && ME.user.scope === '본사';
       const barHtml = `<div class="dropoff-bar">${dropoffBarHtml(base, OV_DROPOFF_SEL, 'ovSetDropoff')}</div>`;
+      // 📱 미계약 리드 문자 발송 바 (본사 전용)
+      const smsBar = isHQ ? `<div style="margin:8px 0 4px; display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+        <button onclick="kpiSmsSelectAll()" style="background:#fff; color:#2c5aa0; border:1.5px solid #2c5aa0; border-radius:8px; padding:8px 14px; font-weight:800; cursor:pointer; font-size:13px">☑️ 전체선택</button>
+        <button onclick="kpiSmsQuickSelect('noBriefing')" style="background:#fdf3e7; color:#b46a12; border:1.5px solid #eab566; border-radius:999px; padding:7px 13px; font-weight:800; cursor:pointer; font-size:12.5px">🙋 설명회미참석자</button>
+        <button onclick="kpiSmsQuickSelect('noMeeting')" style="background:#eef6ee; color:#2e7d43; border:1.5px solid #8ec89b; border-radius:999px; padding:7px 13px; font-weight:800; cursor:pointer; font-size:12.5px">🤝 오프미팅미진행</button>
+        <button onclick="kpiSmsQuickSelect('noContract')" style="background:#fdeeee; color:#b43a3a; border:1.5px solid #e79d9d; border-radius:999px; padding:7px 13px; font-weight:800; cursor:pointer; font-size:12.5px">📝 미계약자</button>
+        <button onclick="openKpiSmsModal()" style="background:#2c5aa0; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-weight:800; cursor:pointer; font-size:13px">📱 선택한 학원에 문자 보내기 (<span id="kpiSmsCount">${SMS_SEL.size}</span>)</button>
+        <span style="font-size:12px; color:#888">계약 X + 연락처가 있는 학원만 체크할 수 있어요 · 이미지 첨부 시 MMS</span>
+      </div>` : '';
       const rows = (OV_DROPOFF_SEL.size === 0 ? base : base.filter(r => matchDropoffMulti(r, OV_DROPOFF_SEL))).sort(byDateDesc('firstConsultDate'));
-      if (!rows.length) return `<h3 style="margin:20px 0 10px;font-size:15px">📋 전체 학원 목록 (0)</h3>${barHtml}<div class="table-wrap"><div class="empty-table">해당 조건의 학원이 없습니다.</div></div>`;
+      if (!rows.length) return `<h3 style="margin:20px 0 10px;font-size:15px">📋 전체 학원 목록 (0)</h3>${barHtml}${smsBar}<div class="table-wrap"><div class="empty-table">해당 조건의 학원이 없습니다.</div></div>`;
       const ox = (r, k) => r[k] ? '<b style="color:#27ae60">O</b>' : '<b style="color:#e74c3c">X</b>';
       const stepHead = STEPS.map(s => `<th class="c2">${s.label}</th>`).join('');
       let html = `<h3 style="margin:20px 0 10px;font-size:15px">📋 전체 학원 목록 (${rows.length}) · 최초상담일 최신순</h3>${barHtml}
-        ${kpiSearchInput('ov')}
+        ${kpiSearchInput('ov')}${smsBar}
         <div class="table-wrap"><table id="ovAcadTable">
         <thead>
-          <tr><th rowspan="2">소속</th><th class="g1" colspan="7">1차 학원정보</th><th class="g2" colspan="${STEPS.length + 2}">2차 계약진행상황</th></tr>
+          <tr>${isHQ ? '<th rowspan="2">📱</th>' : ''}<th rowspan="2">소속</th><th class="g1" colspan="7">1차 학원정보</th><th class="g2" colspan="${STEPS.length + 2}">2차 계약진행상황</th></tr>
           <tr><th class="c1">유입경로</th><th class="c1">최초상담일</th><th class="c1">학원명</th><th class="c1">지역</th><th class="c1">학원장</th><th class="c1">연락처</th><th class="c1">목적</th>${stepHead}<th class="c2">보류사유</th><th class="c2">결제확정</th></tr>
         </thead><tbody>`;
       for (const r of rows) {
         const bid = r.branchId ? `'${r.branchId}'` : 'null';
+        const smsCell = isHQ ? `<td onclick="event.stopPropagation()">${(!r.step_contract && r.phone) ? `<input type="checkbox" data-smsid="${r._id}" style="width:16px;height:16px;cursor:pointer" onchange="kpiSmsToggle('${r._id}', this.checked)"${SMS_SEL.has(String(r._id)) ? ' checked' : ''}>` : ''}</td>` : '';
         html += `<tr data-search="${kpiSearchAttr(r)}" style="cursor:pointer" onclick="ovGoNode('${r.scope}',${bid},'${esc(r.ownerLabel)}','contract')">
+          ${smsCell}
           <td style="font-weight:700;color:#2c5aa0;text-align:left">${esc(r.ownerLabel)}</td>
           <td>${esc(r.inflow) || '<span class="na">-</span>'}</td>
           <td>${esc(r.firstConsultDate) || '<span class="na">-</span>'}</td>
@@ -1478,5 +1702,44 @@
 
     init().catch(e => console.error(e));
   </script>
+<!-- 📱 KPI 미계약 문자 발송 모달 (본사 전용) -->
+<div id="kpiSmsOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9000; align-items:center; justify-content:center">
+  <div style="background:#fff; border-radius:14px; width:min(560px,92vw); max-height:86vh; overflow-y:auto; padding:20px 22px; box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+      <b style="font-size:16px">📱 미계약 학원 문자 발송</b>
+      <button onclick="closeKpiSmsModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#999">&times;</button>
+    </div>
+    <div id="kpiSmsRecipients" style="margin-bottom:10px; max-height:110px; overflow-y:auto"></div>
+    <!-- 💾 그룹별 템플릿 (문구+이미지 저장/불러오기) -->
+    <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap; background:#f7f9fc; border:1px solid #e3e9f2; border-radius:10px; padding:8px 10px">
+      <span style="font-size:12.5px; font-weight:800; color:#2c5aa0">💾 템플릿</span>
+      <select id="kpiTplKey" style="padding:6px 8px; border:1px solid #d5dbe5; border-radius:8px; font-size:13px">
+        <option value="noBriefing">🙋 설명회미참석자</option>
+        <option value="noMeeting">🤝 오프미팅미진행</option>
+        <option value="noContract">📝 미계약자</option>
+      </select>
+      <button onclick="kpiTplLoad()" style="padding:6px 12px; border:1px solid #2c5aa0; background:#fff; color:#2c5aa0; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer">📂 불러오기</button>
+      <button onclick="kpiTplSave()" style="padding:6px 12px; border:none; background:#2c5aa0; color:#fff; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer">💾 현재 내용 저장</button>
+      <span id="kpiTplStatus" style="font-size:12px; color:#888"></span>
+    </div>
+    <textarea id="kpiSmsMsg" rows="6" style="width:100%; border:1px solid #d5dbe5; border-radius:10px; padding:10px; font-size:14px; box-sizing:border-box; font-family:inherit" placeholder="예) {원장님}님 안녕하세요, 브레인문해력입니다. 지난 상담 관련 안내드립니다..."></textarea>
+    <div style="font-size:12px; color:#777; margin:8px 0 10px; line-height:1.7">
+      · <b>{학원명}</b> · <b>{원장님}</b> 입력 시 수신자별로 자동 치환됩니다<br>
+      · 하단 문구 자동 추가: <b>감사와 성공을 함께 만드는 기업 브레인문해력</b><br>
+      · 이미지 첨부 시 MMS 발송 (JPG 300KB 이하로 자동 압축) · 미첨부 시 SMS/LMS 자동<br>
+      · <b>💬 카톡 보내기</b>: 카카오 공유창이 열리고 내 카톡 친구 중 받는 분을 골라 전송 (한 번에 한 분씩, 이미지·메시지가 카드 형태로 전달)
+    </div>
+    <input type="file" id="kpiSmsImage" accept="image/*" style="margin-bottom:10px; font-size:13px" onchange="updateKpiImgPreview()">
+    <div id="kpiImgPreviewWrap" style="display:none; margin:0 0 14px; align-items:center; gap:10px">
+      <img id="kpiImgPreview" style="max-height:110px; max-width:220px; border-radius:8px; border:1px solid #e3e9f2; display:block" alt="첨부 이미지 미리보기">
+      <button onclick="kpiImgClear()" style="padding:5px 10px; border:1px solid #ccc; background:#fff; border-radius:8px; font-size:12px; cursor:pointer">🗑 이미지 제거</button>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end">
+      <button onclick="closeKpiSmsModal()" style="padding:9px 16px; border:1px solid #ccc; background:#fff; border-radius:8px; cursor:pointer">취소</button>
+      <button id="kpiKakaoBtn" onclick="kpiKakaoSend()" style="padding:9px 18px; border:none; background:#FEE500; color:#191919; border-radius:8px; font-weight:800; cursor:pointer">💬 카톡 보내기</button>
+      <button id="kpiSmsSendBtn" onclick="kpiSmsSend()" style="padding:9px 18px; border:none; background:#2c5aa0; color:#fff; border-radius:8px; font-weight:800; cursor:pointer">📱 문자 발송</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

@@ -153,6 +153,19 @@
   .dexsec{margin-bottom:14px}
   .dexsech{display:flex; align-items:center; gap:8px; font-size:13px; font-weight:900; margin-bottom:7px}
   .dexsech .cnt2{font-family:var(--mono); font-size:11px; color:var(--sub); font-weight:800}
+  /* 🎟️ 과목 완성 간식 응모권 카드 — 간식이 동기부여! 크고 잘 보이게 */
+  .rafrow{display:flex; align-items:center; gap:12px; border-radius:16px; padding:10px 14px; margin-bottom:10px}
+  .raficon{font-size:34px; line-height:1; filter:drop-shadow(0 3px 5px rgba(0,0,0,.18))}
+  .rafname{font-size:15px; font-weight:900; line-height:1.25}
+  .rafsub{font-size:11.5px; font-weight:800; opacity:.85; margin-top:2px}
+  .rafright{margin-left:auto}
+  .rafrow.lock{background:#f4efe9; color:#a3937f; border:2px dashed #ddd0c0}
+  .rafrow.lock .raficon{filter:grayscale(.65) opacity(.75)}
+  .rafrow.open{background:linear-gradient(90deg,#fff3d6,#ffe7ef); color:#7a5a10; border:2px solid #ffd166; box-shadow:0 6px 18px -6px rgba(255,170,50,.55); animation:rafGlow 1.6s ease-in-out infinite alternate}
+  @keyframes rafGlow{from{box-shadow:0 6px 18px -6px rgba(255,170,50,.45)}to{box-shadow:0 6px 22px -4px rgba(255,120,90,.7)}}
+  .rafrow.done{background:#e8f8f0; color:#1f8a5f; border:2px solid #9adfc0}
+  .rafbtn{background:linear-gradient(135deg,#ffb14d,#ff7fa5); color:#fff; border:none; border-radius:999px; padding:9px 18px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 5px 12px -3px rgba(255,120,90,.65); font-family:inherit; white-space:nowrap}
+  .rafbtn:active{transform:scale(.95)}
   .dexgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:9px}
   .dexcell{background:#fff6f8; border-radius:15px; padding:8px 5px 7px; text-align:center; box-shadow:inset 0 0 0 2px #ffe6ec; position:relative}
   .dexcell.got{background:#fdfff6}
@@ -228,7 +241,7 @@
   <section class="screen on card" id="s-start" style="position:relative"><div class="pad">
     <div class="startbadges">
       <button class="badgebtn" id="rankBtn2">🏆 랭킹</button>
-      <button class="badgebtn" id="dexBtn2">📖 도감</button>
+      <button class="badgebtn" id="dexBtn2">📖 몽글 과자도감</button>
     </div>
     <div class="parade" id="parade"></div>
     <p class="lede"><b>과목 알</b>을 고르면 그 과목 교과어휘로 부화·진화해요.<br>14과목 × 6종 = <b>도감 84종</b>을 모아 보세요!</p>
@@ -278,7 +291,7 @@
 
 <!-- DEX -->
 <div class="overlay" id="dexOverlay"><div class="dexcard">
-  <div class="dexttl">📖 몽글 도감</div><div class="dexsub" id="dexprogress">0 / 84 수집</div>
+  <div class="dexttl">📖 몽글 과자도감</div><div class="dexsub" id="dexprogress">0 / 84 수집</div>
   <div class="dexmeter"><i id="dexmeterfill" style="width:0%"></i></div>
   <div id="dexbody"></div>
   <button class="btn g" id="closedex" style="margin-top:12px">닫기</button>
@@ -375,6 +388,13 @@ function hslToHex(h,s,l){ s/=100;l/=100; const k=n=>(n+h/30)%12, a=s*Math.min(l,
 function shiftHex(hex,dh,dl){ let [h,s,l]=hexToHsl(hex); h=(h+dh+360)%360; l=Math.max(8,Math.min(94,l+dl)); return hslToHex(h,s,l); }
 
 /* ══════ 시즌 설정 — 시즌1: 업 84종·선지3·완성15회 / 시즌2: 핏 112종·선지4·완성18회 ══════ */
+/* 🎟️ 과목 도감 완성 → CU 간식 응모권 (서버 MG_RAFFLE_ITEMS 와 동기 유지) */
+const MG_RAFFLE={
+ 1:{bio:'🦐 새우깡',earth:'🥔 포테토칩',physics:'🌽 꼬깔콘',chem:'🍿 콘소메맛팝콘',soc:'🍪 리얼초코칩쿠키',geo:'🥔 포카칩',law:'🍩 칸쵸',pol:'🍫 콘초코플러스',modern:'🥧 초코파이',classic:'🥮 달콤한호떡과자',world1:'🌭 후랑크핫도그',world2:'🌭 불맛소스핫도그',people1:'🍫 프로틴바',people2:'🍡 찹쌀떡'},
+ 2:{bio:'🥛 바나나우유',earth:'🥛 초코우유',physics:'🥛 딸기우유',chem:'🥤 사이다',soc:'🥤 콜라',geo:'🧃 오렌지주스',law:'🥐 슈크림빵',pol:'🍡 찹쌀떡',modern:'🥧 초코파이',classic:'🍫 콘초코플러스',world1:'🥔 포테토칩',world2:'🥔 포카칩',people1:'🍪 리얼초코칩쿠키',people2:'🥮 달콤한호떡과자'},
+ 3:{bio:'🍞 연세우유 생크림빵',earth:'🧁 크림치즈 생크림빵',physics:'🍫 초코 생크림빵',chem:'🍓 딸기샌드',soc:'🍞 연세우유 생크림빵',geo:'🧁 크림치즈 생크림빵',law:'🍫 초코 생크림빵',pol:'🍓 딸기샌드',modern:'🍞 연세우유 생크림빵',classic:'🧁 크림치즈 생크림빵',world1:'🍫 초코 생크림빵',world2:'🍓 딸기샌드',people1:'🍞 연세우유 생크림빵',people2:'🧁 크림치즈 생크림빵'}};
+let RAFFLE_APPLIED=new Set();
+
 const SEASONS={
   1:{ perSub:6,  total:84,  choices:3, hatch:3, grow:4, vocabFile:'vocab_up.json',   prefix:'',    label:'시즌1' },
   2:{ perSub:8,  total:112, choices:4, hatch:3, grow:5, vocabFile:'vocab_fit.json',  prefix:'s2_', label:'시즌2' },
@@ -797,10 +817,14 @@ function wordsOf(sub){ const s=VOCAB.subjects[sub]; if(!s)return[]; const arr=[]
 
 function rollSpecies(sub){
   const corr=G.subCorrect[sub]||0;
-  // 기본 60/30/10 · 과목 정답 30+ → 레어 보정 · 80+ → 전설 보정
-  let pl=0.10 + (corr>=80?0.10:0), pr=0.30 + (corr>=30?0.10:0);
+  const all=speciesOf(G.season).filter(s=>s.sub===sub);
+  // 👑 전설 게이트: 그 과목의 일반+레어를 전부 모아야 전설 알이 나올 수 있음 (첫 알부터 전설 방지)
+  const legendOpen=all.filter(s=>s.rar!=='l').every(s=>G.counts[s.key]);
+  // 게이트 열리면 전설 25% (+정답 80개 이상 시 35%) · 레어 30% (+정답 30개 이상 시 40%)
+  let pl=legendOpen?(0.25+(corr>=80?0.10:0)):0, pr=0.30+(corr>=30?0.10:0);
   const r=Math.random(); const rar = r<pl?'l' : r<pl+pr?'r' : 'c';
-  const pool=speciesOf(G.season).filter(s=>s.sub===sub&&s.rar===rar);
+  let pool=all.filter(s=>s.rar===rar);
+  if(!pool.length) pool=all.filter(s=>s.rar==='c');   // 안전망 (등급 종이 없는 경우)
   const un=pool.filter(s=>!G.counts[s.key]);
   return pick(un.length?un:pool);
 }
@@ -1118,7 +1142,20 @@ function openDex(seasonSel){
   $('#dexbody').innerHTML=Object.entries((VOCABS[dexSeason]||VOCAB).subjects).map(([k,s])=>{
     const fam=speciesOf(dexSeason).filter(sp=>sp.sub===k);
     const gotN=fam.filter(sp=>G.counts[sp.key]).length;
+    // 🎟️ 과목 완성 응모권 카드 (서버 모드 학생만 — 잠금 → 응모하기 → 응모완료)
+    const rfItem=(MG_RAFFLE[dexSeason]||{})[k], rfPer=SEASONS[dexSeason].perSub;
+    let rfRow='';
+    if(SERVER&&rfItem){
+      const sp2=rfItem.indexOf(' ');
+      const rfEmo=rfItem.slice(0,sp2), rfName=rfItem.slice(sp2+1);   // '🦐 새우깡' → 이모지/이름 분리
+      rfRow = RAFFLE_APPLIED.has(dexSeason+'_'+k)
+        ? `<div class="rafrow done"><span class="raficon">${rfEmo}</span><div><div class="rafname">${rfName} 응모완료! 🎟️</div><div class="rafsub">매월 1일 본사 추첨 ✨</div></div></div>`
+        : (gotN>=rfPer
+          ? `<div class="rafrow open"><span class="raficon">${rfEmo}</span><div><div class="rafname">${rfName}</div><div class="rafsub">도감 완성! 지금 응모할 수 있어요</div></div><button class="rafbtn rafright" onclick="mgRaffleApply(${dexSeason},'${k}')">🎟️ 응모하기</button></div>`
+          : `<div class="rafrow lock"><span class="raficon">${rfEmo}</span><div><div class="rafname">${rfName}</div><div class="rafsub">🔒 ${rfPer}종 모두 모으면 간식 응모권!</div></div><span class="rafright" style="font-size:12px;font-weight:900">${gotN}/${rfPer}</span></div>`);
+    }
     return `<div class="dexsec"><div class="dexsech"><span>${FAMILY[k].emo} ${s.name}</span><span class="cnt2">${gotN}/${SEASONS[dexSeason].perSub}</span></div>
+      ${rfRow}
       <div class="dexgrid">${fam.map((sp,i)=>{ const c=G.counts[sp.key]||0;
         const hasShiny=!!G.counts[sp.key+'_s'];
         const isFav=G.favorites[k]===sp.key;
@@ -1136,6 +1173,18 @@ function openDex(seasonSel){
   }).join('');
   $('#dexOverlay').classList.add('on');
 }
+/* 🎟️ 과목 도감 완성 → 간식 응모 (서버가 완성 여부 재검증) */
+async function mgRaffleApply(season, sub){
+  if(!SERVER||!USER){ dexToast('로그인 후 응모할 수 있어요'); return; }
+  try{
+    const r=await (await fetch('/api/monggeul/raffle-apply',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({grade:USER.grade,name:USER.name,season,subject:sub})})).json();
+    if(r&&r.ok){ RAFFLE_APPLIED.add(season+'_'+sub); dexToast('🎟️ '+r.itemName+' 응모 완료! 매월 1일 추첨 ✨'); confetti(); openDex(season); }
+    else if(r&&r.already){ RAFFLE_APPLIED.add(season+'_'+sub); dexToast('이미 응모했어요!'); openDex(season); }
+    else dexToast((r&&r.message)?r.message:'응모 실패 — 잠시 후 다시 시도해 주세요');
+  }catch(e){ dexToast('네트워크 오류 — 잠시 후 다시 시도해 주세요'); }
+}
+
 /* ⭐ 과목 대표 몽글이 지정 — 수집한 종 클릭 즉시 */
 function setFavorite(sub, spKey){
   if(!G.counts[spKey]) return;
@@ -1227,10 +1276,22 @@ function applyTheme(){ document.body.dataset.season=G.season; }
         }
       }
     }catch(e){ /* 서버 실패 → 로컬 모드 유지 */ }
+    // 🎟️ 간식 응모 현황 로드 (실패해도 무시 — 도감에서 잠금/응모 상태만 영향)
+    if(SERVER){ try{
+      const rr=await (await fetch(`/api/monggeul/raffle-status?grade=${encodeURIComponent(USER.grade)}&name=${encodeURIComponent(USER.name)}`)).json();
+      if(rr&&rr.ok) RAFFLE_APPLIED=new Set(rr.applied||[]);
+    }catch(e){} }
   }
   if(G.season>1){ try{ await loadVocab(G.season); }catch(e){ G.season=1; VOCAB=VOCABS[1]; } }
   applyTheme();
   renderSubjects();  // (퍼레이드는 renderSubjects 안에서 내 대표들로 렌더)
+  // 🥚 야생 알 빠른 진입 (메뉴의 알 클릭) — 키우던 몽글이가 있으면 시작화면 건너뛰고 바로 퀴즈로
+  //    아직 알을 고른 적 없으면 과목 알 선택 화면 그대로 (그게 첫 진입 흐름이므로)
+  try{
+    if(new URLSearchParams(location.search).get('quick')==='1' && G && G.species && G.sub && VOCAB.subjects[G.sub]){
+      setTimeout(()=>pickSubject(G.sub), 250);
+    }
+  }catch(e){}
 })();
 </script>
 </body>

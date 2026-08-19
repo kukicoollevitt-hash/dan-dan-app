@@ -1089,6 +1089,30 @@ body {
   .mg-launcher { left: auto; right: 12px; bottom: 250px; }
   .mg-launcher img { height: 74px; }
 }
+/* 🥚 야생 몽글 알 — 랜덤 슬롯 등장, 클릭 시 바로 어휘 퀴즈 */
+.wild-egg {
+  position: fixed;
+  z-index: 999;               /* 런처(1000)·모달들보다 아래 */
+  display: none;              /* JS가 슬롯 배정 후 표시 */
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  user-select: none;
+  animation: float-icon 2.6s ease-in-out infinite;
+  transition: transform 0.2s ease;
+}
+.wild-egg:hover { transform: scale(1.15) rotate(-6deg); animation-play-state: paused; }
+.wild-egg .egg { line-height: 1; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.25)); }
+.wild-egg .egg-tag {
+  font-size: 10.5px; font-weight: 800; color: #8a6a1a;
+  background: linear-gradient(135deg, #fff3d6, #ffe7ef);
+  border: 1.5px solid #ffd166; border-radius: 999px; padding: 2px 8px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15); white-space: nowrap;
+}
+/* ✨ 금알 (5% 확률) — SVG가 이미 금색이라 글로우만 추가 */
+.wild-egg.gold .egg { filter: drop-shadow(0 0 10px rgba(255,200,60,0.85)) drop-shadow(0 5px 8px rgba(0,0,0,0.2)); }
+.wild-egg.gold .egg-tag { background: linear-gradient(135deg, #ffe9a8, #ffd166); color: #6b4d00; border-color: #e6b93f; }
 
 @media (max-width: 900px) {
   .wb-launcher { display: none; }
@@ -7675,6 +7699,12 @@ canvas[id^="confetti-canvas"] {
   <!-- 인트로 영상 생략 — 바로 게임 팝업 (인트로 복원 시 onclick="openMonggeulWithIntro()") -->
   <div class="mg-launcher" id="mgLauncher" onclick="openMonggeul()" title="교과어휘 몽글 도감 열기">
     <img src="/images/교과어휘몽글이숨은도감찾기.png" alt="교과어휘 몽글이 숨은도감찾기">
+  </div>
+
+  <!-- 🥚 야생 몽글 알 — 매 방문마다 랜덤 슬롯에 등장, 클릭하면 바로 어휘 퀴즈 -->
+  <div class="wild-egg" id="wildEgg" onclick="clickWildEgg()" title="야생 몽글 알 발견!">
+    <span class="egg">🥚</span>
+    <span class="egg-tag">알 발견!</span>
   </div>
 
   <!-- 월드컵 안내 영상 팝업 -->
@@ -34040,7 +34070,48 @@ ${content}
     }
 
     // 몽글 도감 메인 — iframe 팝업 (월드컵과 동일 방식)
-    function openMonggeul() {
+    // 🥚 야생 몽글 알 — 매 방문 랜덤 슬롯 등장 (클릭 → quick 모드로 바로 어휘 퀴즈)
+    // 알록달록 SVG 알: 방문마다 색·무늬(물방울/물결/지그재그/별) 랜덤
+    function wildEggSVG(gold) {
+      const PALETTE = [['#ffd9e6','#ff7fa5'], ['#d6f5e8','#3fbf95'], ['#e6ddff','#9c86f0'], ['#d9ecff','#5fa0ee'], ['#fff3c4','#f0a828'], ['#ffe3d0','#ff8f55']];
+      const [c1, c2] = gold ? ['#ffe9a8', '#dfa92e'] : PALETTE[Math.floor(Math.random() * PALETTE.length)];
+      const pat = Math.floor(Math.random() * 4);
+      let deco = '';
+      if (pat === 0) deco = `<circle cx="20" cy="30" r="4.5" fill="${c2}"/><circle cx="38" cy="22" r="3.5" fill="${c2}"/><circle cx="34" cy="45" r="5" fill="${c2}"/><circle cx="18" cy="53" r="3.5" fill="${c2}"/><circle cx="42" cy="60" r="3" fill="${c2}"/>`;
+      else if (pat === 1) deco = `<path d="M2 32 Q16 24 30 32 T58 32" stroke="${c2}" stroke-width="6" fill="none"/><path d="M2 50 Q16 42 30 50 T58 50" stroke="${c2}" stroke-width="6" fill="none"/>`;
+      else if (pat === 2) deco = `<path d="M4 42 L14 32 L24 42 L34 32 L44 42 L54 32 L60 38" stroke="${c2}" stroke-width="5.5" fill="none" stroke-linejoin="round"/>`;
+      else deco = `<path d="M30 28 l2.8 5.6 6.2 .9 -4.5 4.4 1.1 6.1 -5.6 -2.9 -5.6 2.9 1.1 -6.1 -4.5 -4.4 6.2 -.9 Z" fill="${c2}"/><circle cx="17" cy="50" r="3" fill="${c2}"/><circle cx="43" cy="52" r="3" fill="${c2}"/>`;
+      return `<svg viewBox="0 0 60 76" width="46" height="58" style="display:block">
+        <defs><clipPath id="wildEggClip"><path d="M30 3 C45 3 56 25 56 46 C56 63 44 73 30 73 C16 73 4 63 4 46 C4 25 15 3 30 3 Z"/></clipPath></defs>
+        <path d="M30 3 C45 3 56 25 56 46 C56 63 44 73 30 73 C16 73 4 63 4 46 C4 25 15 3 30 3 Z" fill="${c1}" stroke="rgba(0,0,0,0.13)" stroke-width="1.5"/>
+        <g clip-path="url(#wildEggClip)">${deco}</g>
+        <ellipse cx="21" cy="19" rx="7" ry="10" fill="#fff" opacity="0.55" transform="rotate(-18 21 19)"/>
+      </svg>`;
+    }
+    function initWildEgg() {
+      const egg = document.getElementById('wildEgg');
+      if (!egg) return;
+      const small = window.matchMedia('(max-width: 1100px)').matches;
+      // 안전 슬롯: 데스크톱은 몽글 런처 위 세로 라인, 작은 태블릿은 우측 가장자리
+      const slots = small
+        ? [{ right: '16px', bottom: '345px' }, { right: '44px', bottom: '425px' }, { right: '14px', bottom: '505px' }]
+        : [{ left: '852px', bottom: '175px' }, { left: '888px', bottom: '300px' }, { left: '824px', bottom: '425px' }, { left: '896px', bottom: '540px' }];
+      const s = slots[Math.floor(Math.random() * slots.length)];
+      egg.style.left = s.left || 'auto'; egg.style.right = s.right || 'auto';
+      egg.style.top = 'auto'; egg.style.bottom = s.bottom;
+      const gold = Math.random() < 0.05;
+      if (gold) { egg.classList.add('gold'); egg.querySelector('.egg-tag').textContent = '✨ 금알 발견!'; }
+      egg.querySelector('.egg').innerHTML = wildEggSVG(gold);
+      egg.style.display = 'flex';
+    }
+    function clickWildEgg() {
+      const egg = document.getElementById('wildEgg');
+      if (egg) egg.style.display = 'none';   // 잡은 알은 사라짐 — 다음 방문 때 다른 자리에
+      openMonggeul(true);
+    }
+    document.addEventListener('DOMContentLoaded', initWildEgg);
+
+    function openMonggeul(quick) {
       const existing = document.getElementById('monggeulOverlay');
       if (existing) existing.remove();
 
@@ -34069,7 +34140,7 @@ ${content}
       closeBtn.onclick = () => overlay.remove();
 
       const iframe = document.createElement('iframe');
-      iframe.src = '/monggeul/?v=' + Date.now();
+      iframe.src = '/monggeul/?v=' + Date.now() + (quick ? '&quick=1' : '');
       iframe.style.cssText = `
         width: 100%; height: 100%; border: none; border-radius: 14px;
         background: white; box-shadow: 0 8px 32px rgba(0,0,0,0.3);

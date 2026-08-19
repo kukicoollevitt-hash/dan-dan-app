@@ -1851,9 +1851,37 @@
         </div>
       </div>
       <div class="contract-modal-footer">
+        <button class="btn-download" style="background:#64748b;" onclick="openStatusLogModal()">🕵️ 상태이력</button>
         <button class="btn-download" onclick="downloadContractPDF()">PDF 다운로드</button>
         <button class="btn-edit" onclick="editContractData()">수정</button>
         <button class="btn-save" onclick="saveContractData()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🕵️ 학생 상태변경 이력 모달 (재계약 점검용) -->
+  <div id="statusLogOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:10050; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:14px; width:min(680px, 92vw); max-height:82vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid #e5e7eb;">
+        <div>
+          <div style="font-size:16px; font-weight:800; color:#1f2937;">🕵️ 학생 상태변경 이력 <span id="statusLogCenter" style="color:#6366f1;"></span></div>
+          <div style="font-size:12px; color:#6b7280; margin-top:2px;">재계약 점검용 · <span style="color:#dc2626;">⚠️ 월말(25일~) 대기전환</span> · <span style="color:#d97706;">🔶 월초(~5일) 재승인</span> 표시</div>
+        </div>
+        <button onclick="document.getElementById('statusLogOverlay').style.display='none'" style="background:none; border:none; font-size:22px; color:#9ca3af; cursor:pointer;">&times;</button>
+      </div>
+      <div id="statusLogSummary" style="padding:10px 20px; font-size:13px; color:#374151; border-bottom:1px solid #f3f4f6;"></div>
+      <div style="overflow-y:auto; padding:8px 20px 16px;">
+        <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+          <thead>
+            <tr style="color:#6b7280; text-align:left;">
+              <th style="padding:6px 4px; border-bottom:1px solid #e5e7eb;">일시</th>
+              <th style="padding:6px 4px; border-bottom:1px solid #e5e7eb;">학생</th>
+              <th style="padding:6px 4px; border-bottom:1px solid #e5e7eb;">변경</th>
+              <th style="padding:6px 4px; border-bottom:1px solid #e5e7eb;">비고</th>
+            </tr>
+          </thead>
+          <tbody id="statusLogTbody"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -2895,6 +2923,46 @@
     // 계약 상세 모달 관련
     let currentContractSchoolId = null;
     let currentContractSchoolName = null;
+
+    // 🕵️ 학생 상태변경 이력 조회 (재계약 점검용)
+    async function openStatusLogModal() {
+      const linked = schoolData.find(s => s.name === currentContractSchoolName && s.academyName);
+      if (!linked) { alert('이 지점에 연동된 학원 계정이 없어 이력을 조회할 수 없습니다.'); return; }
+      const overlay = document.getElementById('statusLogOverlay');
+      document.getElementById('statusLogCenter').textContent = '— ' + linked.academyName;
+      document.getElementById('statusLogSummary').textContent = '불러오는 중...';
+      document.getElementById('statusLogTbody').innerHTML = '';
+      overlay.style.display = 'flex';
+      try {
+        const r = await fetch('/api/super/status-change-log?academyName=' + encodeURIComponent(linked.academyName));
+        const data = await r.json();
+        if (!data.ok) throw new Error(data.error || '조회 실패');
+        if (data.total === 0) {
+          document.getElementById('statusLogSummary').textContent = '기록된 상태변경 이력이 없습니다. (이력 기록 시작: 2026-08-19)';
+          return;
+        }
+        document.getElementById('statusLogSummary').innerHTML =
+          `총 <b>${data.total}건</b> · 의심 패턴 <b style="color:${data.suspicious > 0 ? '#dc2626' : '#059669'};">${data.suspicious}건</b>`;
+        const fmt = (d) => { const k = new Date(new Date(d).getTime() + 9*3600*1000); return k.toISOString().slice(0,16).replace('T',' '); };
+        document.getElementById('statusLogTbody').innerHTML = data.items.map(it => {
+          const toPending = it.toStatus === 'pending';
+          const chg = toPending
+            ? '<span style="color:#d97706; font-weight:700;">승인 → 대기</span>'
+            : '<span style="color:#059669; font-weight:700;">대기 → 승인</span>';
+          const note = it.edge === 'month-end-pending' ? '<span style="color:#dc2626; font-weight:700;">⚠️ 월말 임박 대기전환</span>'
+                     : it.edge === 'month-start-approve' ? '<span style="color:#d97706; font-weight:700;">🔶 월초 재승인</span>' : '';
+          const bg = it.edge ? ' background:#fef2f2;' : '';
+          return `<tr style="border-bottom:1px solid #f3f4f6;${bg}">
+            <td style="padding:6px 4px; white-space:nowrap; color:#6b7280;">${fmt(it.changedAt)}</td>
+            <td style="padding:6px 4px;">${it.grade || ''} ${it.name || ''}</td>
+            <td style="padding:6px 4px;">${chg}</td>
+            <td style="padding:6px 4px;">${note}</td>
+          </tr>`;
+        }).join('');
+      } catch (e) {
+        document.getElementById('statusLogSummary').textContent = '조회 오류: ' + e.message;
+      }
+    }
 
     function openContractModal(schoolId, schoolName) {
       currentContractSchoolId = schoolId;
