@@ -13362,8 +13362,57 @@ if (logoutConfirmBtn) {
       });
     }
 
+    // 🛡️ view-as(관리자의 학생 프리뷰) 여부 판단 — 로그아웃 오클릭 보호용
+    //    ① 현재 세션이 관리자 세션이면 view-as
+    //    ② 학생 세션이지만 화면의 학생(currentStudent)과 다르면 view-as (공용 태블릿에 다른 학생 세션)
+    async function detectViewAsForLogout() {
+      let cs = null;
+      try { cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); } catch (e) {}
+      try {
+        const r = await fetch('/api/admin/info');
+        if (r.ok) {
+          const d = await r.json();
+          if (d && d.success) return { type: 'admin' };
+        }
+      } catch (e) {}
+      try {
+        const r = await fetch('/api/session');
+        const d = await r.json();
+        if (d && d.ok && d.user && cs && cs.grade && cs.name &&
+            (d.user.grade !== cs.grade || d.user.name !== cs.name)) {
+          return { type: 'other-student' };
+        }
+      } catch (e) {}
+      return null;
+    }
+
     // ✅ 실제 로그아웃 처리 공용 함수 (헤더 버튼/뒤로가기 공용 사용)
     async function doLogoutWithAnimation() {
+      // 🛡️ view-as 중 로그아웃 클릭 → 세션 파기 없이 학생 화면만 닫고 복귀
+      //    (기존엔 선생님 관리자 세션까지 끊기고, 공용 태블릿에선 다른 학생 로그아웃 + 학부모 하원문자 오발송 위험)
+      try {
+        const vs = await detectViewAsForLogout();
+        if (vs) {
+          const ov = document.getElementById('loadingOverlay');
+          const ttl = document.querySelector('.loading-title');
+          const msg = document.querySelector('.loading-msg');
+          if (ov) {
+            ov.classList.add('show');
+            if (ttl) ttl.textContent = '학생 화면을 닫는 중...';
+            if (msg) msg.textContent = '관리자 세션은 유지됩니다 (로그아웃 아님)';
+          }
+          setTimeout(() => {
+            try { window.close(); } catch (e) {}
+            // 탭이 안 닫히면(직접 연 탭) 이전 화면 또는 학생 목록으로 복귀
+            setTimeout(() => {
+              if (history.length > 1) history.back();
+              else location.href = '/academy/branch/users';
+            }, 200);
+          }, 500);
+          return;
+        }
+      } catch (e) { /* 판단 실패 시 기존 로그아웃 흐름 진행 */ }
+
       const overlay = document.getElementById('loadingOverlay');
       const bar = document.getElementById('loadingBar');
       const percent = document.getElementById('loadingPercent');

@@ -642,6 +642,12 @@ app.use(
 //   - 학생 세션(role:student)에만 적용 · activeSessionId 없는 계정은 미적용(점진 안전 적용)
 //   - DB 오류 시 기존 세션 유지(사고 방지)
 // ============================================================
+// 🛟 학습 제출·기록 저장 API는 킥 상황에서도 요청을 통과시킴 (세션만 파기)
+//    이 API 들은 세션 없이 grade/name 파라미터로 동작하므로, 다른 기기 로그인으로
+//    밀린 순간에도 "풀어놓은 학습 내용"의 저장까지 막을 이유가 없음.
+//    세션은 파기되므로 이후 탐색/조회부터는 정상적으로 킥 처리됨.
+//    (2026-08 은평뉴타운 CS: 제출 시 로그아웃 팝업 + 학습내용 미반영 → 유실 방지)
+const SS_KICK_SAVE_PASSLIST = ['/api/unit-progress/save', '/api/log', '/api/reading-time', '/api/learning-behavior'];
 async function enforceSingleSession(req, res, next) {
   try {
     const su = req.session && req.session.user;
@@ -654,7 +660,12 @@ async function enforceSingleSession(req, res, next) {
         const u = await User.findById(su._id).select('activeSessionId').lean();
         if (!isApi) req.session._ssCheckedAt = now; // 페이지/자산만 캐시 타임스탬프 기록
         if (u && u.activeSessionId && u.activeSessionId !== req.sessionID) {
+          const passSave = SS_KICK_SAVE_PASSLIST.some(p => req.path === p || req.path.startsWith(p + '/'));
           return req.session.destroy(() => {
+            if (passSave) {
+              console.log(`🛟 [단일세션] 킥 상황이지만 학습 저장은 통과: ${req.path} (${su.grade} ${su.name})`);
+              return next();   // 저장은 완료시키고 세션만 종료 → 다음 요청부터 킥
+            }
             if (isApi) return res.status(401).json({ ok: false, kicked: true, error: 'session_superseded' });
             if (req.method === 'GET' && req.accepts('html')) return res.redirect('/?kicked=1');
             return res.status(401).end();

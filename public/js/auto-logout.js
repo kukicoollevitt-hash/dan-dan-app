@@ -100,17 +100,17 @@
   const AUTO_LOGOUT_MS = AUTO_LOGOUT_MINUTES * 60 * 1000;
   const WARNING_BEFORE_MS = 5 * 60 * 1000; // 5분 전 경고
   const STORAGE_KEY = 'lastLearningCompletedAt';
+  const OWNER_KEY = 'lastLearningCompletedOwner'; // 완료 기록의 주인(학년|이름) — 공용 태블릿 학생 교체 감지용
 
   let logoutTimer = null;
   let warningTimer = null;
   let isLoggedIn = false;
 
-  // 로그인 상태 확인
-  function checkLoginStatus() {
+  // 현재 로그인 학생 식별 (학교식 loginGrade/Name → 학원식 sessionStorage.user → localStorage.currentStudent 순)
+  function getLoginIdentity() {
     let grade = localStorage.getItem('loginGrade') || sessionStorage.getItem('loginGrade');
     let name = localStorage.getItem('loginName') || sessionStorage.getItem('loginName');
 
-    // Fallback: sessionStorage.user 객체에서 확인 (학원 로그인 방식)
     if (!grade || !name) {
       const userStr = sessionStorage.getItem('user');
       if (userStr) {
@@ -123,8 +123,19 @@
         }
       }
     }
+    if (!grade || !name) {
+      try {
+        const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+        grade = grade || cs.grade;
+        name = name || cs.name;
+      } catch (e) {}
+    }
+    return (grade && name) ? { grade, name } : null;
+  }
 
-    isLoggedIn = !!(grade && name);
+  // 로그인 상태 확인
+  function checkLoginStatus() {
+    isLoggedIn = !!getLoginIdentity();
     return isLoggedIn;
   }
 
@@ -138,6 +149,9 @@
   window.setLearningCompleted = function() {
     const now = Date.now();
     localStorage.setItem(STORAGE_KEY, now.toString());
+    // 완료 기록의 주인 저장 — 다음 로그인 학생이 다르면 이 타이머를 폐기하기 위함
+    const ident = getLoginIdentity();
+    if (ident) localStorage.setItem(OWNER_KEY, ident.grade + '|' + ident.name);
     sessionStorage.setItem('hasCompletedLearning', 'true');
     console.log('[자동 로그아웃] 학습완료 - 타임스탬프 저장:', new Date(now).toLocaleTimeString());
     startTimer();
@@ -198,6 +212,7 @@
     localStorage.removeItem('loginName');
     localStorage.removeItem('loginPhone');
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(OWNER_KEY);
     sessionStorage.removeItem('loginGrade');
     sessionStorage.removeItem('loginName');
     sessionStorage.removeItem('loginPhone');
@@ -329,6 +344,20 @@
     }
 
     console.log('[자동 로그아웃] 초기화 - 학습완료 기반 타이머 (1시간)');
+
+    // 🧹 공용 태블릿 대응: 완료 기록의 주인과 현재 로그인 학생이 다르면 이전 타이머 폐기
+    //    (앞 학생의 "완료 후 1시간" 타이머가 다음 학생 학습 도중 발화해 강제 로그아웃되던 문제)
+    //    주인 정보가 없는 옛 기록도 신뢰할 수 없으므로 함께 폐기 — 이후 완료 시부터 새로 기록됨
+    try {
+      const ident = getLoginIdentity();
+      const owner = localStorage.getItem(OWNER_KEY);
+      const hasStamp = !!localStorage.getItem(STORAGE_KEY);
+      if (ident && hasStamp && owner !== ident.grade + '|' + ident.name) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(OWNER_KEY);
+        console.log('[자동 로그아웃] 학생 교체(또는 주인 미상) 감지 — 이전 완료 타이머 초기화');
+      }
+    } catch (e) {}
 
     // localStorage 변경 감지 (다른 탭 동기화)
     window.addEventListener('storage', handleStorageChange);
