@@ -492,6 +492,23 @@
       </div>
     </div>
 
+    <!-- 과목별 교재 -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">📖</span>
+        과목별 교재
+      </div>
+      <div class="book-section">
+        <div class="book-section-header">
+          <div class="book-section-title">교재 목록 <span style="font-size:11px;color:#666;margin-left:6px;">(권당 10,000원)</span> <span style="font-size:12px;font-weight:700;color:#d9480f;background:#fff4e6;border:1px solid #ffd8a8;border-radius:6px;padding:3px 9px;margin-left:8px;display:inline-block;vertical-align:middle;">📢 출판 인쇄 특성상 최소 2권부터 짝수 단위로 주문이 가능합니다</span></div>
+          <button class="add-btn" onclick="addSubjectItem()">+ 추가</button>
+        </div>
+        <div id="subjectItems">
+          <div class="no-items">추가 버튼을 눌러 교재를 추가하세요</div>
+        </div>
+      </div>
+    </div>
+
     <!-- 주문 요약 -->
     <div class="order-summary">
       <div class="summary-title">신청 내역 요약</div>
@@ -541,6 +558,7 @@
     let critiqueItemId = 0;
     let specialItemId = 0;
     let vocabWbItemId = 0;
+    let subjectItemId = 0;
 
     // 시리즈별 호수 개수 · 브레인입문 5호 · 나머지 12호
     const BRAIN_ISSUE_COUNT = {
@@ -677,6 +695,36 @@
       updateSummary();
     }
 
+    // 과목별 교재 아이템 추가 — 등급(온/업/핏/딥) × 14과목, 권당 최소 2권 · 2권 단위
+    const SUBJECT_BOOKS = ['생물', '지구과학', '물리', '화학', '사회문화', '지리', '정치경제', '법', '현대문학', '고전문학', '세계문학1', '세계문학2', '한국인물', '세계인물'];
+    function addSubjectItem() {
+      const container = document.getElementById('subjectItems');
+      const noItems = container.querySelector('.no-items');
+      if (noItems) noItems.remove();
+
+      subjectItemId++;
+      const itemHtml = `
+        <div class="book-item" id="subject-${subjectItemId}">
+          <select onchange="updateSummary()">
+            <option value="">등급 선택</option>
+            <option value="브레인온">브레인온</option>
+            <option value="브레인업">브레인업</option>
+            <option value="브레인핏">브레인핏</option>
+            <option value="브레인딥">브레인딥</option>
+          </select>
+          <select onchange="updateSummary()">
+            <option value="">과목 선택</option>
+            ${SUBJECT_BOOKS.map((s, i) => `<option value="${i+1}">${s}</option>`).join('')}
+          </select>
+          <input type="number" min="2" step="2" value="2" placeholder="권수 (2권 단위)" onchange="updateSummary()" oninput="updateSummary()">
+          <span class="item-subtotal">10,000원</span>
+          <button class="remove-btn" onclick="removeItem('subject-${subjectItemId}')">삭제</button>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', itemHtml);
+      updateSummary();
+    }
+
     // 브레인비평 시사문해 월간 교재 아이템 추가 — 권당 최소 2권
     function addCritiqueItem() {
       const container = document.getElementById('critiqueItems');
@@ -731,6 +779,10 @@
       const vocabWbContainer = document.getElementById('vocabWbItems');
       if (vocabWbContainer && vocabWbContainer.children.length === 0) {
         vocabWbContainer.innerHTML = '<div class="no-items">추가 버튼을 눌러 교재를 추가하세요</div>';
+      }
+      const subjectContainer = document.getElementById('subjectItems');
+      if (subjectContainer && subjectContainer.children.length === 0) {
+        subjectContainer.innerHTML = '<div class="no-items">추가 버튼을 눌러 교재를 추가하세요</div>';
       }
 
       updateSummary();
@@ -881,6 +933,35 @@
         }
       });
 
+      // 과목별 교재 아이템 수집 (등급 × 14과목, 권당 최소 2권 · 2권 단위)
+      document.querySelectorAll('#subjectItems .book-item').forEach(item => {
+        const selects = item.querySelectorAll('select');
+        const input = item.querySelector('input');
+        const subtotalEl = item.querySelector('.item-subtotal');
+
+        const series = selects[0].value;
+        const subIdx = parseInt(selects[1].value) || 0;
+        const qty = parseInt(input.value) || 0;
+
+        if (series && subIdx >= 1 && subIdx <= 14 && qty >= 2 && qty % 2 === 0) {
+          const subtotal = qty * UNIT_PRICE;
+          subtotalEl.textContent = subtotal.toLocaleString() + '원';
+          items.push({
+            bookType: '과목별교재',
+            series,
+            issueNumber: subIdx,
+            subjectName: SUBJECT_BOOKS[subIdx - 1],
+            quantity: qty,
+            unitPrice: UNIT_PRICE,
+            subtotal
+          });
+          totalQty += qty;
+          totalAmt += subtotal;
+        } else {
+          subtotalEl.textContent = qty > 0 && qty < 2 ? '⚠️ 최소 2권' : (qty >= 2 && qty % 2 !== 0 ? '⚠️ 2권 단위' : '-');
+        }
+      });
+
       // 요약 테이블 업데이트
       const summaryBody = document.getElementById('summaryBody');
       if (items.length === 0) {
@@ -891,6 +972,7 @@
           if (item.bookType === '브레인비평') issueLabel = `${item.issueNumber}월호`;
           else if (item.bookType === '특강교재') issueLabel = '기본+심화 통합';
           else if (item.bookType === '문해어휘학습장') issueLabel = `${item.issueNumber}권`;
+          else if (item.bookType === '과목별교재') issueLabel = item.subjectName || '-';
           else issueLabel = `${item.issueNumber}호`;
           return `
           <tr>

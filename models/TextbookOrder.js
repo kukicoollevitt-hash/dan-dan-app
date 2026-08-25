@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const textbookItemSchema = new mongoose.Schema({
   bookType: {
     type: String,
-    enum: ['브레인문해력', '고래도서관', '브레인비평', '특강교재', '문해어휘학습장'],
+    enum: ['브레인문해력', '고래도서관', '브레인비평', '특강교재', '문해어휘학습장', '과목별교재'],
     required: true
   },
   series: {
@@ -15,12 +15,17 @@ const textbookItemSchema = new mongoose.Schema({
     // 브레인비평: BRAIN ON, BRAIN UP, BRAIN FIT, BRAIN DEEP
     // 특강교재: 한국사 (기본+심화 통합 2권 세트)
     // 문해어휘학습장: 어휘학습장 (issueNumber 1~4 = 권 번호)
+    // 과목별교재: 브레인온, 업, 핏, 딥 (issueNumber 1~14 = 과목 순번, subjectName에 과목명)
   },
   issueNumber: {
     type: Number,
     min: 1,
-    max: 12,
+    max: 14,   // 과목별교재의 과목 순번(1~14)까지 허용
     required: true
+  },
+  subjectName: {
+    type: String,
+    default: ''   // 과목별교재 전용: 생물·지구과학·물리 등 과목명
   },
   quantity: {
     type: Number,

@@ -3217,6 +3217,13 @@ function mapOrderItemToInventoryKeys(item) {
       out.push({ key: `vocabwb_${issue}`, qty });
       return { keys: out };
     }
+  } else if (item.bookType === '과목별교재') {
+    // 과목별 교재: 등급(온/업/핏/딥) × 14과목 (issueNumber 1~14 = 과목 순번)
+    const map = { '브레인온': 'on', '브레인업': 'up', '브레인핏': 'fit', '브레인딥': 'deep' };
+    const SUBJECT_BOOK_KEYS = ['bio', 'earth', 'physics', 'chem', 'soc', 'geo', 'pol', 'law', 'modern', 'classic', 'world1', 'world2', 'people1', 'people2'];
+    const s = map[item.series];
+    const subKey = SUBJECT_BOOK_KEYS[issue - 1];
+    if (s && subKey) { out.push({ key: `subject_${s}_${subKey}`, qty }); return { keys: out }; }
   }
   return { keys: out, unmapped: true, reason: `매핑 없음 (${item.bookType} / ${item.series})` };
 }
@@ -4408,7 +4415,7 @@ app.post("/api/textbook-orders", async (req, res) => {
       <tr>
         <td style="padding: 8px; border: 1px solid #ddd;">${item.bookType}</td>
         <td style="padding: 8px; border: 1px solid #ddd;">${item.series}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.issueNumber}호</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${item.bookType === '과목별교재' ? (item.subjectName || '-') : `${item.issueNumber}호`}</td>
         <td style="padding: 8px; border: 1px solid #ddd;">${item.quantity}권</td>
         <td style="padding: 8px; border: 1px solid #ddd;">${(item.quantity * item.unitPrice).toLocaleString()}원</td>
       </tr>
@@ -20691,8 +20698,8 @@ app.get("/my-learning", async (req, res) => {
                 <div class="ai-feedback-item-title">📝 어휘 점수 분석</div>
                 <div id="feedbackContent5" class="ai-feedback-item-content"></div>
               </div>
-              <!-- 하단 통합 수정/저장 버튼 -->
-              <div class="ai-feedback-bottom-actions" id="feedbackBottomActions">
+              <!-- 하단 통합 수정/저장 버튼 (공유 모드=학부모 열람에서는 미노출) -->
+              <div class="ai-feedback-bottom-actions" id="feedbackBottomActions"${isSharedMode ? ' style="display:none;"' : ''}>
                 <button class="ai-feedback-edit-all-btn" id="editAllBtn" onclick="editAllFeedback()">수정</button>
                 <div class="ai-feedback-save-actions" id="saveActions" style="display: none;">
                   <button class="ai-feedback-cancel-all-btn" onclick="cancelAllFeedback()">취소</button>
@@ -21417,6 +21424,7 @@ app.get("/my-learning", async (req, res) => {
         let originalFeedbackContent = {};
 
         function editAllFeedback() {
+          if (IS_SHARED_MODE) return;   // 공유 모드(학부모 열람)에서는 수정 불가
           const editAllBtn = document.getElementById('editAllBtn');
           const saveActions = document.getElementById('saveActions');
 
