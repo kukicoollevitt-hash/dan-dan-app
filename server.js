@@ -1577,7 +1577,8 @@ const monthlyStudentSnapshotSchema = new mongoose.Schema({
   yearMonth: { type: String, required: true }, // "2026-06"
   cycleNumber: { type: Number, required: true }, // 0=첫해
   monthEndCount: { type: Number, default: 0 },     // 그달 월말 현재인원 스냅샷
-  cumulativeAfter: { type: Number, default: 0 },   // 이 달 갱신 후 사이클 누적
+  extraCount: { type: Number, default: 0 },        // 🛟 회피 보정: 월중 5단원+ 학습했으나 월말 미승인(대기/삭제)으로 빠진 인원
+  cumulativeAfter: { type: Number, default: 0 },   // 이 달 갱신 후 사이클 누적 (monthEndCount + extraCount 반영)
   overThisMonth: { type: Number, default: 0 },     // 이 달 초과 인원 (규칙 기반)
   capturedAt: { type: Date, default: Date.now },
 });
@@ -32988,15 +32989,47 @@ async function runMonthlySnapshot(opts = {}) {
       deleted: { $ne: true }
     });
 
-    const newCum = prevCum + monthEndCount;
+    // 🛟 회피 보정: 그 달에 학습단원 5개 이상 완료했지만 월말 시점 승인 명단에서 빠진 학생 추가
+    //    월말 직전 대기 전환·삭제로 카운트를 회피해도 학습 기록(LearningLog)은 남으므로 여기서 잡힘.
+    //    정상 재원생(승인 유지)은 monthEndCount에 이미 포함되므로 중복 집계 없음. (2026-08-26)
+    let extraCount = 0;
+    try {
+      const [ty, tm] = targetYM.split('-').map(Number);
+      const mStart = new Date(Date.UTC(ty, tm - 1, 1) - 9 * 3600 * 1000);   // KST 1일 0시
+      const mEnd = new Date(Date.UTC(ty, tm, 1) - 9 * 3600 * 1000);         // KST 익월 1일 0시
+      const learners = await LearningLog.aggregate([
+        { $match: { completed: true, deleted: { $ne: true }, timestamp: { $gte: mStart, $lt: mEnd } } },
+        { $group: { _id: { grade: '$grade', name: '$name' }, cnt: { $sum: 1 } } },
+        { $match: { cnt: { $gte: 5 } } },
+      ]);
+      if (learners.length) {
+        // 이 학원(별칭 포함) 소속만 대조 — 삭제된 계정 문서도 포함해 조회 (삭제 회피 대응)
+        const asks = learners.map(l => ({ grade: l._id.grade, name: l._id.name }));
+        const us = await User.find({ academyName: { $in: countNames }, userType: 'academy', $or: asks })
+          .select('grade name status deleted').lean();
+        const byKey = {};   // 같은 학생의 문서가 여럿이면 하나라도 정상 카운트 대상이면 보정 제외
+        for (const u of us) {
+          const k = u.grade + '|' + u.name;
+          const counted = u.status === 'approved' && u.deleted !== true;
+          byKey[k] = byKey[k] === true ? true : counted;
+        }
+        extraCount = Object.values(byKey).filter(v => v !== true).length;
+        if (extraCount > 0) console.log(`🛟 [${admin.academyName}] 회피 보정 +${extraCount}명 (월중 5단원+ 학습, 월말 미승인)`);
+      }
+    } catch (exErr) {
+      console.error(`⚠️ [${admin.academyName}] 회피 보정 산정 오류:`, exErr.message);
+    }
+
+    const totalMonthCount = monthEndCount + extraCount;
+    const newCum = prevCum + totalMonthCount;
     const maxLimit = admin.maxStudentLimit || 360;
 
-    // 초과 산정 (Q1·Q2)
+    // 초과 산정 (Q1·Q2) — 보정 인원 포함 기준
     let overThisMonth = 0;
-    if (monthEndCount === 0) {
+    if (totalMonthCount === 0) {
       overThisMonth = 0;
     } else if (prevCum >= maxLimit) {
-      overThisMonth = monthEndCount;
+      overThisMonth = totalMonthCount;
     } else if (newCum > maxLimit) {
       overThisMonth = newCum - maxLimit;
     }
@@ -33004,7 +33037,7 @@ async function runMonthlySnapshot(opts = {}) {
     if (opts.dryRun) {
       results.push({
         academyName: admin.academyName, yearMonth: targetYM, cycleNumber,
-        monthEndCount, prevCum, newCum, overThisMonth, dryRun: true
+        monthEndCount, extraCount, prevCum, newCum, overThisMonth, dryRun: true
       });
       continue;
     }
@@ -33017,6 +33050,7 @@ async function runMonthlySnapshot(opts = {}) {
         yearMonth: targetYM,
         cycleNumber,
         monthEndCount,
+        extraCount,
         cumulativeAfter: newCum,
         overThisMonth,
         capturedAt: new Date()
@@ -33033,7 +33067,7 @@ async function runMonthlySnapshot(opts = {}) {
 
     results.push({
       academyName: admin.academyName, yearMonth: targetYM, cycleNumber,
-      monthEndCount, prevCum, newCum, overThisMonth
+      monthEndCount, extraCount, prevCum, newCum, overThisMonth
     });
   }
 

@@ -2235,6 +2235,9 @@
       people2: { name: '세계인물', icon: '🌐', folder: 'person' }
     };
 
+    // 📌 콘텐츠 캐시 버전 — content.js 본문/문제 수정 시 여기만 올리면 모든 로더에 반영됨
+    const CONTENT_VERSION = '20260826e';
+
     // 시리즈별 content.js 파일명 접두사
     const SERIES_PREFIX = {
       brainon: 'on_',      // on_physics_content.js
@@ -2747,7 +2750,7 @@
 
       try {
         // content.js 파일 로드 (스크립트로 주입)
-        const response = await fetch(contentFile);
+        const response = await fetch(contentFile + (contentFile.includes("?") ? "&" : "?") + "v=" + CONTENT_VERSION, { cache: "no-cache" });
         if (!response.ok) {
           containerEl.innerHTML = `<p style="color: #ef4444;">해당 시리즈의 ${subject.name} 콘텐츠가 아직 준비되지 않았습니다.</p>`;
           return;
@@ -61106,7 +61109,13 @@
         while (i < html.length) {
           if (html.startsWith('<span class="tg-key">', i)) { const e = html.indexOf('>', i) + 1; out += html.slice(i, e); i = e; inKey = true; continue; }
           if (inKey && html.startsWith('</span>', i)) { out += '</span>'; i += 7; inKey = false; continue; }
-          if (html[i] === '<') { const e = html.indexOf('>', i); out += html.slice(i, e + 1); i = e + 1; continue; }
+          if (html[i] === '<') {
+            const e = html.indexOf('>', i);
+            // 닫는 >가 없는 홑 '<' (예: 화학 부등호 "ΔH < 0") — 태그가 아니므로 일반 문자로 처리
+            // (기존엔 e=-1 → i=0 으로 되돌아가 무한루프 + 문자열 무한증식 → 탭 OOM 크래시)
+            if (e < 0) { out += html[i]; i++; continue; }
+            out += html.slice(i, e + 1); i = e + 1; continue;
+          }
           if (!inKey && html.startsWith(word, i) && (i === 0 || isBoundary(html[i - 1]) || out.endsWith('>'))) {
             out += '<span class="tg-key">' + word + '</span>' + html.slice(i + word.length);
             boxedDone.add(word);
@@ -62333,9 +62342,8 @@
       const prefix = SERIES_PREFIX[series];
       const folder = SUBJECTS[subjectKey]?.folder;
       if (!folder) return null;
-      // 캐시 무효화: 옛 버전(q3_html 등 누락)을 잡지 않도록 버전 쿼리스트링 부여
-      // 2026-07-16: world1/world2/classic/modern/people1 시리즈에 q3_html·q4_html 추가 이식 → 버전 갱신
-      const url = `/BRAINUP/${folder}/${prefix}${subjectKey}_content.js?v=20260716c`;
+      // 캐시 무효화: 옛 버전(q3_html 등 누락)을 잡지 않도록 버전 쿼리스트링 부여 (CONTENT_VERSION 상수 공용)
+      const url = `/BRAINUP/${folder}/${prefix}${subjectKey}_content.js?v=${CONTENT_VERSION}`;
 
       // 단원 자동 인식 IIFE가 location 기반으로 동작하지 않도록 미리 CUR_UNIT 지정
       window.CUR_UNIT = unitKey;
@@ -62867,10 +62875,10 @@
         'fit_chem_12': { folder: '화학12', count: 8, pattern: 'folderPrefixPng' },
         'fit_chem_13': { folder: '화학13', count: 8, pattern: 'folderPrefixPng' },
         'fit_chem_14': { folder: '화학14', count: 8, pattern: 'folderPrefixPng' },
-        'fit_chem_15': { folder: '화학15', count: 8, pattern: 'folderPrefixPng' },
-        'fit_chem_16': { folder: '화학16', count: 8, pattern: 'folderPrefixPng' },
-        'fit_chem_17': { folder: '화학17', count: 8, pattern: 'folderPrefixPng' },
-        'fit_chem_18': { folder: '화학18', count: 8, pattern: 'folderPrefixPng' },
+        'fit_chem_15': { folder: '화학15', count: 8, pattern: 'jpgOnly' },          // NN.jpg
+        'fit_chem_16': { folder: '화학16', count: 8, pattern: 'folderPrefixJpeg' }, // 화학16_NN.jpeg
+        'fit_chem_17': { folder: '화학17', count: 8, pattern: 'folderPrefixJpeg' }, // 화학17_NN.jpeg
+        'fit_chem_18': { folder: '화학18', count: 8, pattern: 'folderPrefixJpeg' }, // 화학18_NN.jpeg
         'fit_chem_19': { folder: '화학19', count: 8, pattern: 'folderPrefixJpeg' },
         'fit_chem_20': { folder: '화학20', count: 8, pattern: 'folderPrefixJpeg' },
         'fit_chem_21': { folder: '화학21', count: 8, pattern: 'pngOnly' },
@@ -63158,9 +63166,9 @@
         'deep_bio_24': { folder: '생물24', count: 7, pattern: 'pngOnly' },  // NN.png (7컷, 응용심화)
 
         // === deep_earth (브레인딥 지구과학) — fit_earth와 웹툰 공유 ===
-        'deep_earth_01': { folder: '지구과학01', count: 10, prefix: '딥지구과학', pattern: 'prefixNoSep' },  // 딥지구과학NN.jpg (10컷)
-        'deep_earth_02': { folder: '지구과학02', count: 10, prefix: '딥지구과학', pattern: 'prefixNoSep' },  // 딥지구과학NN.jpg (10컷)
-        'deep_earth_03': { folder: '지구과학03', count: 10, prefix: '딥지구과학', pattern: 'prefixNoSep' },  // 딥지구과학NN.jpg (10컷)
+        'deep_earth_01': { folder: '딥지구과학01', count: 9, pattern: 'pngOnly' },  // NN.png (9컷, 학생 페이지와 동일 버전)
+        'deep_earth_02': { folder: '딥지구과학02', count: 9, pattern: 'pngOnly' },  // NN.png (9컷, 학생 페이지와 동일 버전)
+        'deep_earth_03': { folder: '지구과학03', count: 10, prefix: '딥지구과학', pattern: 'prefixNoSep' },  // 딥 교재는 웹툰 페이지 미포함 — 이 설정은 사용되지 않음
         'deep_earth_04': { folder: '지구과학04', count: 10 },  // 지구과학04_NN.jpg (10컷)
         'deep_earth_05': { folder: '지구과학05', count: 10 },  // 지구과학05_NN.jpg (10컷)
         'deep_earth_06': { folder: '지구과학06', count: 10 },  // 지구과학06_NN.jpg (10컷)
@@ -63605,14 +63613,14 @@
         'earth_05':      { folder: '지구과학05', count: 10 },                                   // 지구과학05_NN.jpg (10컷)
         'earth_06':      { folder: '지구과학06', count: 10 },                                   // 지구과학06_NN.jpg (10컷, 그리드 최대치)
         'earth_07':      { folder: '지구과학07', count: 10 },                                   // 지구과학07_NN.jpg (10컷)
-        'earth_08':      { folder: '지구과학08', count: 10, pattern: 'jpgOnly' },               // NN.jpg (10컷, 그리드 최대치)
+        'earth_08':      { folder: '지구과학08', count: 8, pattern: 'jpgOnly' },                // NN.jpg (8컷, 9·10번 파일 없음)
         'earth_09':      { folder: '지구과학09', count: 10 },                                   // 지구과학09_NN.jpg (10컷)
         'earth_10':      { folder: '지구과학10', count: 10 },                                   // 지구과학10_NN.jpg (10컷)
         'earth_11':      { folder: '지구과학11', count: 10 },                                   // 지구과학11_NN.jpg (10컷)
         'earth_12':      { folder: '지구과학12', count: 10 },                                   // 지구과학12_NN.jpg (10컷)
         'earth_13':      { folder: '지구과학13', count: 10 },                                   // 지구과학13_NN.jpg (10컷)
         'earth_14':      { folder: '지구과학14', count: 10 },                                   // 지구과학14_NN.jpg (10컷)
-        'earth_15':      { folder: '지구과학15', count: 10, pattern: 'jpgOnly' },               // NN.jpg (10컷, 그리드 최대치)
+        'earth_15':      { folder: '지구과학15', count: 8, pattern: 'jpgOnly' },                // NN.jpg (8컷, 9·10번 파일 없음)
         'earth_16':      { folder: '지구과학16', count: 10 },                                   // 지구과학16_NN.jpg (10컷)
         'earth_17':      { folder: '지구과학17', count: 10 },                                   // 지구과학17_NN.jpg (10컷)
         'earth_18':      { folder: '지구과학18', count: 10 },                                   // 지구과학18_NN.jpg (10컷)
@@ -65385,7 +65393,7 @@
             ? 'right:130px; bottom:460px; width:300px' // BRAIN딥 P2 — 튜닝 중
             : 'right:90px; bottom:220px; width:340px'; // BRAIN온 — 메모리 룰 고정
       const _bodyBgHtml = _bodyBgImgUrl
-        ? `<img src="${_bodyBgImgUrl}" onerror="this.style.display='none'" style="position:absolute; ${_bgPos}; height:auto; z-index:0; pointer-events:none; opacity:0.7; filter:grayscale(0.1);" alt="">`
+        ? `<img src="${_bodyBgImgUrl}" onerror="this.style.display='none'" style="position:absolute; ${_bgPos}; height:auto; z-index:0; pointer-events:none; opacity:0.3; filter:grayscale(0.1);" alt="">`
         : '';
 
       return `
@@ -68810,11 +68818,31 @@
         let subjectCoverPdfs = { front: null, studyPlan: null, inner: null, back2: null, back1: null };
         let commonPdfsBytes = [];
         const subjectTocPngDataUrls = [];
-        if (series === 'brainon') {
+        // 시리즈별 표지 소스 폴더 (앞표지/학습계획표/속지/책등/뒷표지 5장 — 통합 표지 PDF 분할본)
+        const COVER_SRC = {
+          brainon:   { folder: '브레인온과목별', prefix: '브레인온' },
+          brainup:   { folder: '브레인업과목별', prefix: '브레인업' },
+          brainfit:  { folder: '브레인핏과목별', prefix: '브레인핏' },
+          braindeep: { folder: '브레인딥과목별', prefix: '브레인딥' },
+        }[series];
+        if (COVER_SRC) {
           if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>과목 표지/뒷표지 PDF 로드 중...</span>`;
-          subjectCoverPdfs = await loadSubjectCoverPdfs(realSubjectKey, COVER_NAMES);
+          try {
+            subjectCoverPdfs = await loadSubjectCoverPdfs(realSubjectKey, COVER_NAMES, COVER_SRC.folder, COVER_SRC.prefix);
+          } catch (e) {
+            console.warn('과목 표지 PDF 로드 실패 — 표지 없이 본문만 생성:', e);
+            subjectCoverPdfs = { front: null, studyPlan: null, inner: null, back2: null, back1: null };
+          }
+        }
+        // 교재공용 6장은 전 시리즈 공통 포함
+        if (COVER_SRC) {
           if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>교재 공용 PDF 6장 로드 중...</span>`;
-          commonPdfsBytes = await loadCommonPdfs();
+          try { commonPdfsBytes = await loadCommonPdfs(); }
+          catch (e) { console.warn('교재공용 PDF 로드 실패 — 제외하고 진행:', e); }
+        }
+        // 목차 — 온: PNG 2장 · 업/핏/딥: PDF 2장(통합 목차 분할본, 과목 구분 페이지는 미사용)
+        const subjectTocPdfBytesList = [];
+        if (series === 'brainon') {
           // 과목별 목차 2장 PNG 유지 (PDF 미준비)
           const tocName = TOC_NAMES[realSubjectKey];
           if (tocName) {
@@ -68823,6 +68851,17 @@
               const url = `/images/${encodeURIComponent('브레인온과목별')}/${encodeURIComponent('브레인온 과목별 목차')}/${encodeURIComponent('브레인온 ' + tocName + ' 목차' + idx)}.png`;
               try { subjectTocPngDataUrls.push(await _loadImageDataUrl(url)); }
               catch (e) { console.warn('과목별 목차 로드 실패:', url, e); }
+            }
+          }
+        } else if (COVER_SRC) {
+          // /images/{시리즈}과목별/{시리즈}-{과목}_toc_{1~2}.pdf — 목차 2장만 (toc_0 과목 구분 페이지는 미사용)
+          const tocSubjName = COVER_NAMES[realSubjectKey];
+          if (tocSubjName) {
+            for (const idx of [1, 2]) {
+              if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>과목 목차 PDF 로드 중... (${idx}/2)</span>`;
+              const url = `/images/${encodeURIComponent(COVER_SRC.folder)}/${encodeURIComponent(COVER_SRC.prefix + '-' + tocSubjName + '_toc_' + idx)}.pdf`;
+              try { subjectTocPdfBytesList.push(await _loadPdfBytes(url)); }
+              catch (e) { console.warn('과목별 목차 PDF 로드 실패:', url, e); }
             }
           }
         }
@@ -68841,8 +68880,9 @@
 
         let pageIdx = 0;
 
-        // 본문 jsPDF: 메모장 + 단원 24강 (앞부분 표지·공용·목차는 pdf-lib 병합에서 처리)
-        if (series === 'brainon') {
+        // 본문 jsPDF: 메모장 + 단원들 (앞부분 표지·공용·목차는 pdf-lib 병합에서 처리)
+        // 메모장은 온/업/핏/딥 전 시리즈 포함 — 병합 순서상 목차 2장 바로 뒤에 위치
+        {
           if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 생성 중... 메모장</span>`;
           stage.innerHTML = buildMemoGridPage();
           await new Promise(r => setTimeout(r, 30));
@@ -68921,8 +68961,10 @@
         const seriesLabelKor = isBraindeep ? '딥' : (isBrainfit ? '핏' : (isBrainup ? '업' : '온'));
         const fileName = `교재_브레인${seriesLabelKor}_${sub.label}_전체${orderedUnits.length}강_${audienceLabel}.pdf`;
 
-        // 브레인온은 pdf-lib로 무손실 병합 (앞/학/속/공용/목차/본문/뒷2/뒷1)
-        if (series === 'brainon') {
+        // 표지 자산이 있으면 pdf-lib로 무손실 병합 (앞/학/속/[공용/목차]/본문/책등/뒷표지)
+        //   온: 표지 5장 + 공용 6장 + 목차 2장 · 업/핏/딥: 표지 5장만
+        const hasCoverAssets = !!(subjectCoverPdfs.front || subjectCoverPdfs.back1 || commonPdfsBytes.length || subjectTocPngDataUrls.length || subjectTocPdfBytesList.length);
+        if (hasCoverAssets) {
           if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 병합 중...</span>`;
           const bodyJsPdfBytes = pdf.output('arraybuffer');
           const mergedBytes = await mergeSubjectFinalPdf({
@@ -68931,6 +68973,7 @@
             innerBytes: subjectCoverPdfs.inner,
             commonPdfsBytes,
             tocPngDataUrls: subjectTocPngDataUrls,
+            tocPdfBytesList: subjectTocPdfBytesList,
             bodyJsPdfBytes,
             back2Bytes: subjectCoverPdfs.back2,
             back1Bytes: subjectCoverPdfs.back1
@@ -68942,7 +68985,7 @@
           document.body.appendChild(a); a.click(); a.remove();
           URL.revokeObjectURL(url);
         } else {
-          // BRAIN업/핏/딥은 아직 과목별 표지 PDF 미준비 — 본문만 저장
+          // 표지 자산 로드 실패/미준비 시 폴백 — 본문만 저장
           pdf.save(fileName);
         }
 
@@ -69357,15 +69400,15 @@
     }
 
     // 메인: 브레인온 N권 PDF 생성 (4주차 표지 + 28강 워크북)
-    // ─── 과목별 PDF 5장 로드 (브레인온 시리즈만) ───
-    // /images/브레인온과목별/브레인온-{과목}_extract_{0~4}.pdf
-    // 매핑: 0=앞표지, 1=학습계획표, 2=속지, 3=뒷표지2(끝-1), 4=뒷표지1(끝)
-    // 화학도 통일된 "브레인온-" 접두사, world1=세계문학1, world2=세계문학2 (괄호 없음)
-    async function loadSubjectCoverPdfs(realSubjectKey, coverNameMap) {
+    // ─── 과목별 PDF 5장 로드 (온/업/핏/딥 공통) ───
+    // /images/{시리즈}과목별/{시리즈}-{과목}_extract_{0~4}.pdf
+    // 매핑: 0=앞표지, 1=학습계획표, 2=속지, 3=책등(끝-1), 4=뒷표지(끝)
+    // 화학도 통일된 접두사, world1=세계문학1, world2=세계문학2 (괄호 없음)
+    async function loadSubjectCoverPdfs(realSubjectKey, coverNameMap, coverFolder = '브레인온과목별', coverPrefix = '브레인온') {
       const subjName = coverNameMap[realSubjectKey];
       if (!subjName) return { front: null, studyPlan: null, inner: null, back2: null, back1: null };
-      const folder = encodeURIComponent('브레인온과목별');
-      const baseName = `브레인온-${subjName}`;
+      const folder = encodeURIComponent(coverFolder);
+      const baseName = `${coverPrefix}-${subjName}`;
       const url = (idx) => `/images/${folder}/${encodeURIComponent(baseName + '_extract_' + idx)}.pdf`;
       const out = {};
       out.front     = await _loadPdfBytes(url(0));
@@ -69377,7 +69420,7 @@
     }
 
     // 과목별 PDF 병합 (pdf-lib): front+studyPlan+inner+commonPdfs+tocPngs+bodyJsPdf+back2+back1
-    async function mergeSubjectFinalPdf({ frontBytes, studyPlanBytes, innerBytes, commonPdfsBytes, tocPngDataUrls, bodyJsPdfBytes, back2Bytes, back1Bytes }) {
+    async function mergeSubjectFinalPdf({ frontBytes, studyPlanBytes, innerBytes, commonPdfsBytes, tocPngDataUrls, tocPdfBytesList, bodyJsPdfBytes, back2Bytes, back1Bytes }) {
       const { PDFDocument, PageSizes } = window.PDFLib;
       const merged = await PDFDocument.create();
       const [A4_W, A4_H] = PageSizes.A4;
@@ -69413,8 +69456,9 @@
       await addFirstPageFromBytes(innerBytes);
       // 4) 교재공용 PDF 6장
       for (const b of (commonPdfsBytes || [])) await addFirstPageFromBytes(b);
-      // 5) 목차 PNG 2장
+      // 5) 목차 — 온: PNG 2장 · 업/핏/딥: PDF 2장(통합 목차 분할본, 과목 구분 페이지 제외)
       for (const p of (tocPngDataUrls || [])) await addPngPage(p);
+      for (const b of (tocPdfBytesList || [])) await addFirstPageFromBytes(b);
       // 6) 본문 jsPDF (메모장 + 단원 24강)
       await addAllPagesFromBytes(bodyJsPdfBytes);
       // 7) 뒷표지 2 PDF (끝-1)
@@ -70655,7 +70699,7 @@
         for (const [subjectKey, subject] of Object.entries(SUBJECTS)) {
           const contentFile = `/BRAINUP/${subject.folder}/${prefix}${subjectKey}_content.js`;
           try {
-            const response = await fetch(contentFile);
+            const response = await fetch(contentFile + (contentFile.includes("?") ? "&" : "?") + "v=" + CONTENT_VERSION, { cache: "no-cache" });
             if (!response.ok) continue;
 
             const scriptText = await response.text();
