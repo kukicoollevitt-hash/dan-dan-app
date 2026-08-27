@@ -2236,7 +2236,7 @@
     };
 
     // 📌 콘텐츠 캐시 버전 — content.js 본문/문제 수정 시 여기만 올리면 모든 로더에 반영됨
-    const CONTENT_VERSION = '20260826e';
+    const CONTENT_VERSION = '20260827b';
 
     // 시리즈별 content.js 파일명 접두사
     const SERIES_PREFIX = {
@@ -68840,28 +68840,30 @@
           try { commonPdfsBytes = await loadCommonPdfs(); }
           catch (e) { console.warn('교재공용 PDF 로드 실패 — 제외하고 진행:', e); }
         }
-        // 목차 — 온: PNG 2장 · 업/핏/딥: PDF 2장(통합 목차 분할본, 과목 구분 페이지는 미사용)
+        // 목차 — 전 시리즈: 과목별 목차 PDF(_toc_1·2, 무손실) 우선
+        //   · 업/핏/딥: 통합 목차 분할본 (toc_0 과목 구분 페이지는 미사용)
+        //   · 온: 목차 PDF가 준비된 과목(예: 지구과학)은 PDF, 나머지는 기존 PNG 2장 폴백
         const subjectTocPdfBytesList = [];
-        if (series === 'brainon') {
-          // 과목별 목차 2장 PNG 유지 (PDF 미준비)
-          const tocName = TOC_NAMES[realSubjectKey];
-          if (tocName) {
-            for (const idx of [1, 2]) {
-              if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>과목 목차 PNG 로드 중... (${idx}/2)</span>`;
-              const url = `/images/${encodeURIComponent('브레인온과목별')}/${encodeURIComponent('브레인온 과목별 목차')}/${encodeURIComponent('브레인온 ' + tocName + ' 목차' + idx)}.png`;
-              try { subjectTocPngDataUrls.push(await _loadImageDataUrl(url)); }
-              catch (e) { console.warn('과목별 목차 로드 실패:', url, e); }
-            }
-          }
-        } else if (COVER_SRC) {
-          // /images/{시리즈}과목별/{시리즈}-{과목}_toc_{1~2}.pdf — 목차 2장만 (toc_0 과목 구분 페이지는 미사용)
+        if (COVER_SRC) {
           const tocSubjName = COVER_NAMES[realSubjectKey];
           if (tocSubjName) {
             for (const idx of [1, 2]) {
               if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>과목 목차 PDF 로드 중... (${idx}/2)</span>`;
-              const url = `/images/${encodeURIComponent(COVER_SRC.folder)}/${encodeURIComponent(COVER_SRC.prefix + '-' + tocSubjName + '_toc_' + idx)}.pdf`;
+              const url = `/images/${encodeURIComponent(COVER_SRC.folder)}/${encodeURIComponent(COVER_SRC.prefix + '-' + tocSubjName + '_toc_' + idx)}.pdf?v=${CONTENT_VERSION}`;
               try { subjectTocPdfBytesList.push(await _loadPdfBytes(url)); }
-              catch (e) { console.warn('과목별 목차 PDF 로드 실패:', url, e); }
+              catch (e) { if (series !== 'brainon') console.warn('과목별 목차 PDF 로드 실패:', url, e); }
+            }
+          }
+        }
+        if (series === 'brainon' && subjectTocPdfBytesList.length === 0) {
+          // 온 폴백: 목차 PDF 미준비 과목은 기존 PNG 2장 사용
+          const tocName = TOC_NAMES[realSubjectKey];
+          if (tocName) {
+            for (const idx of [1, 2]) {
+              if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>과목 목차 PNG 로드 중... (${idx}/2)</span>`;
+              const url = `/images/${encodeURIComponent('브레인온과목별')}/${encodeURIComponent('브레인온 과목별 목차')}/${encodeURIComponent('브레인온 ' + tocName + ' 목차' + idx)}.png?v=${CONTENT_VERSION}`;
+              try { subjectTocPngDataUrls.push(await _loadImageDataUrl(url)); }
+              catch (e) { console.warn('과목별 목차 로드 실패:', url, e); }
             }
           }
         }
@@ -69409,7 +69411,7 @@
       if (!subjName) return { front: null, studyPlan: null, inner: null, back2: null, back1: null };
       const folder = encodeURIComponent(coverFolder);
       const baseName = `${coverPrefix}-${subjName}`;
-      const url = (idx) => `/images/${folder}/${encodeURIComponent(baseName + '_extract_' + idx)}.pdf`;
+      const url = (idx) => `/images/${folder}/${encodeURIComponent(baseName + '_extract_' + idx)}.pdf?v=${CONTENT_VERSION}`;
       const out = {};
       out.front     = await _loadPdfBytes(url(0));
       out.studyPlan = await _loadPdfBytes(url(1));
@@ -69509,7 +69511,7 @@
       const folder = encodeURIComponent('교재공용');
       const out = [];
       for (let i = 0; i < 6; i++) {
-        const url = `/images/${folder}/${encodeURIComponent('교재_구성_extract_' + i)}.pdf`;
+        const url = `/images/${folder}/${encodeURIComponent('교재_구성_extract_' + i)}.pdf?v=${CONTENT_VERSION}`;
         const bytes = await _loadPdfBytes(url);
         out.push(bytes);
       }
