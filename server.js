@@ -47183,6 +47183,48 @@ app.get("/api/creative-quiz/result", async (req, res) => {
   }
 });
 
+// ===== 📷 워크북 OCR 공용 비전 호출 (Claude 우선, OpenAI 폴백) =====
+// GPT-4o는 한글 손글씨를 문맥으로 재구성(각색)하는 문제가 있어 Claude로 전환 (2026-08-30)
+async function workbookVisionOcr({ systemPrompt, userText, dataUrl, maxTokens }) {
+  if (process.env.ANTHROPIC_API_KEY) {
+    const Anthropic = require('@anthropic-ai/sdk');
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const m = dataUrl.match(/^data:(image\/[a-z.+-]+);base64,(.+)$/s);
+    const mediaType = m ? m[1] : 'image/jpeg';
+    const b64 = m ? m[2] : dataUrl;
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-5',
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: b64 } },
+          { type: 'text', text: userText }
+        ]
+      }]
+    });
+    return { engine: 'claude', text: (response.content && response.content[0] && response.content[0].text) || '', usage: response.usage };
+  }
+  // 폴백: ANTHROPIC_API_KEY 미설정 시 기존 OpenAI 경로 유지
+  const OpenAI = require('openai');
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: [
+        { type: 'text', text: userText },
+        { type: 'image_url', image_url: { url: dataUrl, detail: 'high' } }
+      ] }
+    ],
+    temperature: 0,
+    max_tokens: maxTokens,
+    response_format: { type: 'json_object' }
+  });
+  return { engine: 'openai', text: response.choices[0].message.content, usage: response.usage };
+}
+
 // ===== 📷 BRAIN비평 워크북 OCR API (GPT-4o-mini Vision) =====
 // 학생이 종이 워크북에 손글씨로 쓴 6하 6칸 + Q1~Q3 손글씨를 자동 인식해 JSON으로 추출
 app.post("/api/critique-ocr", async (req, res) => {
@@ -47197,9 +47239,6 @@ app.post("/api/critique-ocr", async (req, res) => {
       ? imageBase64
       : `data:image/jpeg;base64,${imageBase64}`;
 
-    const OpenAI = require('openai');
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
     const systemPrompt = `당신은 한글 손글씨 OCR 전문가입니다.
 첨부된 사진은 "BRAIN비평 시사문해 워크북" 한 페이지입니다.
 
@@ -47211,15 +47250,18 @@ app.post("/api/critique-ocr", async (req, res) => {
    - 3행: 왜(Why) [왼] / 어떻게(How) [오]
 3) "✍️ 내 생각 글쓰기" 영역의 Q1(핵심 짚기) / Q2(내 생각 쓰기) / Q3(실천·적용) 세 칸
 
-== 인식 원칙 ==
+== 인식 원칙 (매우 중요) ==
+- 이것은 "받아쓰기"가 아니라 "전사(transcription)" 작업입니다. 칸 안에 손으로 쓴 글자를 **한 글자 한 글자 보이는 그대로** 옮기세요.
+- **절대 문장을 다듬거나 자연스럽게 고치지 마세요.** 학생이 쓴 문장이 어색하거나, 문법이 틀리거나, 비문이어도 그대로 두세요. 유의어로 바꾸는 것도 금지입니다.
+- **기사 내용이나 상식으로 답을 채우지 마세요.** 사진에서 읽은 글자만 쓰세요. 손글씨가 안 보이는데 "이 기사라면 이런 답이겠지"라고 생성하는 것은 최악의 오류입니다.
+- **종이 뒷면이 비쳐 보이는 희미한 글자(비침)는 절대 읽지 마세요.** 진하고 선명한 손글씨(펜/연필)만 추출 대상입니다. 흐릿한 회색 인쇄 텍스트가 겹쳐 보이면 무시하세요.
 - 칸 안에 손으로 쓴 글자만 추출하세요. 인쇄된 라벨·헤더는 무시.
-- **보이는 그대로** 충실하게 읽으세요. 임의로 단어를 바꾸거나 글자를 만들어내지 마세요.
-- 한 글자가 명백히 흐려서 도저히 구분 안 되면 그 글자만 비워두거나 가장 가까운 후보 하나만 적으세요.
+- 한 글자가 명백히 흐려서 도저히 구분 안 되면 그 글자만 비워두거나 가장 가까운 후보 하나만 적으세요. 나머지 문장을 매끄럽게 재구성하지 마세요.
 - 띄어쓰기는 학생이 쓴 대로 유지 (예: 학생이 "회 사원"이라고 띄어 썼으면 그대로).
 - 줄바꿈은 공백으로 처리.
 - 빈 칸은 빈 문자열 "".
 - 영문/숫자/특수문자는 그대로 (예: "PPT", "AI").
-- 추측이 50% 미만이면 차라리 빈 문자열로 두세요.
+- 칸 전체가 읽기 어려우면 어설프게 지어내지 말고 빈 문자열 ""로 두세요.
 
 응답은 반드시 다음 JSON 한 객체로만 (다른 설명 없이):
 {
@@ -47234,27 +47276,14 @@ app.post("/api/critique-ocr", async (req, res) => {
   "q3": "..."
 }`;
 
-    console.log("📷 [critique-ocr] GPT-4o Vision 호출 시작 (detail=high)");
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "이 워크북 사진에서 각 칸에 학생이 손으로 쓴 글자를 정확히 읽어 JSON으로 응답해주세요. 임의 추측은 하지 말고 보이는 대로 읽어주세요." },
-            { type: "image_url", image_url: { url: dataUrl, detail: "high" } }
-          ]
-        }
-      ],
-      temperature: 0,
-      max_tokens: 2500,
-      response_format: { type: "json_object" }
+    const ocr = await workbookVisionOcr({
+      systemPrompt,
+      userText: "이 워크북 사진에서 각 칸에 학생이 손으로 쓴 글자를 한 글자씩 그대로 전사해 JSON으로 응답해주세요. 문장을 다듬거나 재구성하지 말고, 뒷면 비침 글자는 무시하고, 읽을 수 없는 칸은 빈 문자열로 두세요.",
+      dataUrl,
+      maxTokens: 2500
     });
-
-    const aiResponse = response.choices[0].message.content;
-    console.log("📷 [critique-ocr] 응답 길이:", aiResponse.length);
+    const aiResponse = ocr.text;
+    console.log(`📷 [critique-ocr] engine=${ocr.engine} 응답 길이:`, aiResponse.length);
 
     let parsed;
     try {
@@ -47272,7 +47301,7 @@ app.post("/api/critique-ocr", async (req, res) => {
     res.json({
       ok: true,
       data: parsed,
-      usage: response.usage
+      usage: ocr.usage
     });
   } catch (err) {
     console.error("❌ [critique-ocr] 오류:", err);
@@ -47297,9 +47326,6 @@ app.post("/api/creative-ocr", async (req, res) => {
       ? imageBase64
       : `data:image/jpeg;base64,${imageBase64}`;
 
-    const OpenAI = require('openai');
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
     const systemPrompt = `당신은 한글 손글씨 OCR 전문가입니다.
 첨부된 사진은 "BRAIN문해력 학습실 창의활동 글쓰기 워크북" 한 페이지입니다.
 
@@ -47311,8 +47337,11 @@ app.post("/api/creative-ocr", async (req, res) => {
 
 == 인식 원칙 ==
 - 2단계 글쓰기 영역의 손글씨만 추출하세요. 1단계 Q1/Q2/Q3, 키워드 체크박스, 인쇄된 라벨·헤더는 모두 무시.
-- **보이는 그대로** 충실하게 읽으세요. 임의로 단어를 바꾸거나 글자를 만들어내지 마세요.
-- 한 글자가 명백히 흐려서 도저히 구분 안 되면 그 글자만 비워두거나 가장 가까운 후보 하나만 적으세요.
+- 이것은 "전사(transcription)" 작업입니다. **한 글자 한 글자 보이는 그대로** 옮기세요.
+- **절대 문장을 다듬거나 자연스럽게 고치지 마세요.** 학생 문장이 어색하거나 문법이 틀려도 그대로. 유의어 교체 금지.
+- **상식이나 문맥으로 안 보이는 부분을 지어내지 마세요.** 사진에서 읽은 글자만 쓰세요.
+- **종이 뒷면이 비쳐 보이는 희미한 글자(비침)는 절대 읽지 마세요.** 진한 손글씨만 추출 대상.
+- 한 글자가 명백히 흐려서 도저히 구분 안 되면 그 글자만 비워두거나 가장 가까운 후보 하나만 적으세요. 나머지를 매끄럽게 재구성하지 마세요.
 - 학생이 쓴 띄어쓰기는 그대로 유지.
 - 줄바꿈(엔터)은 그대로 유지 — 학생이 줄을 바꿔서 썼으면 \\n로 표시.
 - 마침표·쉼표 등 문장 부호는 학생이 쓴 그대로.
@@ -47323,27 +47352,14 @@ app.post("/api/creative-ocr", async (req, res) => {
 응답은 반드시 다음 JSON 한 객체로만 (다른 설명 없이):
 { "text": "..." }`;
 
-    console.log("📷 [creative-ocr] gpt-4o-mini 호출 시작");
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "이 워크북 사진에서 '2단계 글쓰기' 영역의 손글씨 본문만 정확히 읽어 JSON으로 응답해주세요. 1단계 답안과 키워드 체크박스는 무시하세요. 보이는 그대로 읽고 임의 추측은 하지 마세요." },
-            { type: "image_url", image_url: { url: dataUrl, detail: "high" } }
-          ]
-        }
-      ],
-      temperature: 0,
-      max_tokens: 1500,
-      response_format: { type: "json_object" }
+    const ocr = await workbookVisionOcr({
+      systemPrompt,
+      userText: "이 워크북 사진에서 '2단계 글쓰기' 영역의 손글씨 본문만 한 글자씩 그대로 전사해 JSON으로 응답해주세요. 1단계 답안과 키워드 체크박스는 무시하고, 문장을 다듬거나 재구성하지 마세요.",
+      dataUrl,
+      maxTokens: 1500
     });
-
-    const aiResponse = response.choices[0].message.content;
-    console.log("📷 [creative-ocr] 응답 길이:", aiResponse.length);
+    const aiResponse = ocr.text;
+    console.log(`📷 [creative-ocr] engine=${ocr.engine} 응답 길이:`, aiResponse.length);
 
     let parsed;
     try { parsed = JSON.parse(aiResponse); }
@@ -47355,7 +47371,7 @@ app.post("/api/creative-ocr", async (req, res) => {
       return res.status(500).json({ ok: false, message: "AI 응답을 파싱하지 못했습니다.", raw: aiResponse });
     }
 
-    res.json({ ok: true, text: parsed.text, usage: response.usage });
+    res.json({ ok: true, text: parsed.text, usage: ocr.usage });
   } catch (err) {
     console.error("❌ [creative-ocr] 오류:", err);
     res.status(500).json({ ok: false, message: err.message });

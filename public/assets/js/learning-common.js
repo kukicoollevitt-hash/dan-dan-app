@@ -3611,7 +3611,7 @@
     if (!file) return;
     if (!file.type.startsWith('image/')) { alert('이미지 파일만 선택할 수 있습니다.'); return; }
     try {
-      const dataUrl = await _creativeOcrResize(file, 1600, 0.85);
+      const dataUrl = await _creativeOcrResize(file, 2400, 0.9);
       _creativeOcrImageData = dataUrl;
       document.getElementById('creativeOcrPreviewImg').src = dataUrl;
       document.getElementById('creativeOcrPreview').style.display = 'block';
@@ -3628,7 +3628,7 @@
     if (!file) return;
     if (!file.type.startsWith('image/')) { alert('이미지 파일만 선택할 수 있습니다.'); return; }
     try {
-      const dataUrl = await _creativeOcrResize(file, 1600, 0.85);
+      const dataUrl = await _creativeOcrResize(file, 2400, 0.9);
       _creativeOcrImageData = dataUrl;
       document.getElementById('creativeOcrPreviewImg').src = dataUrl;
       document.getElementById('creativeOcrPreview').style.display = 'block';
