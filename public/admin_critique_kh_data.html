@@ -366,7 +366,7 @@
             <th data-sort-section="mock" data-sort="grade" style="width:70px;">학년</th>
             <th data-sort-section="mock" data-sort="name" style="width:100px;">학생명</th>
             <th style="width:130px;">학교</th>
-            <th data-sort-section="mock" data-sort="academy">센터(학원)</th>
+            <th data-sort-section="mock" data-sort="academy" style="width:130px;">센터(학원)</th>
             <th style="width:80px;text-align:center;">구분</th>
             <th data-sort-section="mock" data-sort="round" style="width:64px;text-align:center;">회차</th>
             <th data-sort-section="mock" data-sort="score" style="width:70px;text-align:center;">점수</th>
@@ -374,9 +374,10 @@
             <th style="width:80px;text-align:center;">소요시간</th>
             <th data-sort-section="mock" data-sort="date" style="width:150px;">응시일</th>
             <th style="width:110px;">결과보기</th>
+            <th style="width:150px;">다음회차 시험지</th>
           </tr>
         </thead>
-        <tbody id="mockTbody"><tr><td colspan="12" class="empty">불러오는 중…</td></tr></tbody>
+        <tbody id="mockTbody"><tr><td colspan="13" class="empty">불러오는 중…</td></tr></tbody>
       </table>
     </div>
     <div class="info-line" id="mockInfo"></div>
@@ -507,7 +508,7 @@
         <td>${esc(it.grade)}</td>
         <td><b>${esc(it.name)}</b></td>
         <td>${esc(it.school || '-')}</td>
-        <td>${esc(it.academyName || '-')}</td>
+        <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;" title="${esc(it.academyName || '-')}">${esc(it.academyName || '-')}</td>
         <td>${esc(it.date || '-')}</td>
         <td>${esc(it.category || '-')}</td>
         <td>${esc(it.title || '-')}</td>
@@ -1254,7 +1255,7 @@
   function renderMockRows(items) {
     const tbody = $('mockTbody');
     if (state.mock.offset === 0 && items.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="12" class="empty">월말 모의고사 응시 기록이 없습니다.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="13" class="empty">월말 모의고사 응시 기록이 없습니다.</td></tr>';
       return;
     }
     const html = items.map((it, idx) => {
@@ -1274,6 +1275,15 @@
         <td style="text-align:center;color:#6b7280;">${fmtDur(it.durationSec)}</td>
         <td style="font-size:12px;color:#6b7280;">${fmtDate(it.submittedAt)}</td>
         <td><button class="report-btn" onclick="openMockResult('${esc(it.id)}')">📊 결과보기</button></td>
+        <td style="white-space:nowrap;">${(() => {
+          // 다음회차 시험지 바로 다운로드 (학생 화면 진입 없이) — 초·중 공통, 12회차 완주 시 표시 없음
+          const next = (parseInt(it.round, 10) || 0) + 1;
+          if (next > 12) return '<span style="color:#9ca3af;font-size:12px;">완주 🎉</span>';
+          const base = `/monthly_exam_paper.html?level=${it.examGrade}&round=${next}`;
+          return `<span style="font-size:11px;color:#6b7280;font-weight:700;">${next}회</span>
+            <a href="${base}" target="_blank" rel="noopener" class="report-btn" style="text-decoration:none;padding:4px 8px;font-size:12px;background:#1a3d7c;">🖨 A4</a>
+            <a href="${base}&size=a3" target="_blank" rel="noopener" class="report-btn" style="text-decoration:none;padding:4px 8px;font-size:12px;background:#475569;">🖨 A3</a>`;
+        })()}</td>
       </tr>`;
     }).join('');
     if (state.mock.offset === 0) tbody.innerHTML = html;
