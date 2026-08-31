@@ -14138,7 +14138,21 @@ async function performLogout() {
               }
             }, 250);
           } else if (ao === 'wr100Report' && typeof window.openWr100Report === 'function') {
-            window.openWr100Report();
+            // 시리즈 부여 정보(sessionStorage.user)는 pageshow의 user-info 재조회로 채워지므로
+            // 즉시 열면 배포 환경에서 화이트리스트 검사가 빈 값으로 실행됨 → 채워질 때까지 폴링 (비평 리포트와 동일 패턴)
+            let wrTries = 0;
+            const wrTimer = setInterval(() => {
+              wrTries++;
+              let ready = false;
+              try {
+                const u = JSON.parse(sessionStorage.getItem('user') || '{}');
+                ready = Array.isArray(u.assignedSeries) && u.assignedSeries.length > 0;
+              } catch {}
+              if (ready || wrTries >= 40) {
+                clearInterval(wrTimer); // ~10초 내 미로드 = 부여 시리즈 없음 → 기존 안내 팝업
+                window.openWr100Report();
+              }
+            }, 250);
           }
         }, 1000);
       } catch (e) { console.warn('[autoOpen] 실패:', e); }

@@ -7719,6 +7719,30 @@
         }
       }
 
+      // 🔧 유니크 문제가 요청 수보다 적으면 요일별 테마·전체 어휘로 보충한다.
+      //    예) 브레인온(on_bio_01)과 브레인업(bio_01)처럼 같은 단원이 일반/AI 과제로
+      //    동시에 배정되면 어휘가 완전히 겹쳐 중복 제거 후 8개로 줄어든다.
+      //    서버 스키마는 vocabCount(min 15)를 요구하므로, 보충하지 않으면 문제 수가
+      //    15개 미만이 되어 저장이 500(검증 실패)으로 조용히 실패한다.
+      if (uniqueData.length < totalCount) {
+        const fillPools = [
+          (getDailyThemeData().data) || [],
+          (typeof generalQuizData !== 'undefined' ? generalQuizData : []),
+          (typeof ALL_BRAINFIT_VOCAB !== 'undefined' ? ALL_BRAINFIT_VOCAB : [])
+        ];
+        fill:
+        for (const pool of fillPools) {
+          for (const item of pool) {
+            if (uniqueData.length >= totalCount) break fill;
+            if (item && item.word && !seenWords.has(item.word)) {
+              seenWords.add(item.word);
+              uniqueData.push(item);
+            }
+          }
+        }
+        console.log(`🧩 중복 단원 보충: 최종 유니크 ${uniqueData.length}개 (요청 ${totalCount}개)`);
+      }
+
       // 오늘 이미 푼 어휘 제외
       const usedWords = getTodayUsedWords();
       const availableData = uniqueData.filter(item => !usedWords.includes(item.word));

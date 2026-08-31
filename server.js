@@ -199,16 +199,24 @@ async function sendMMS(to, text, imageBuffer, filename = 'image.jpg') {
   }
 }
 
-// 단원명 축약 함수 (90바이트 맞추기)
+// 단원명 축약 함수 (SMS 90바이트 유지 · 이모지 안전)
+// 🔧 수정: 가족 이모지(👨‍👩‍👧‍👦 등 ZWJ 결합)가 예산을 통째로 먹어 한글 이름이 사라지던 문제.
+//   ① 맨 앞 장식 이모지·공백 제거 → 한글 이름 우선 노출
+//   ② 코드포인트 단위로 순회하여 이모지(서로게이트/ZWJ) 중간 절단 방지
 function truncateUnitTitle(title, maxBytes) {
+  if (!title) return '';
+  // ① 선두 장식 이모지(ZWJ/변형선택자/스킨톤/키캡 포함)와 뒤따르는 공백 제거
+  let clean = String(title).replace(/^[\p{Extended_Pictographic}‍️⃣\u{1F3FB}-\u{1F3FF}\s]+/u, '').trim();
+  if (!clean) clean = String(title).trim(); // 이모지만 있는 제목이면 원본 유지
+  // ② 코드포인트 단위 순회로 바이트 예산 내 절단 (이모지 분리 방지)
   let result = '';
   let byteLen = 0;
-  for (let i = 0; i < title.length; i++) {
-    const charBytes = title.charCodeAt(i) > 127 ? 2 : 1;
+  for (const ch of clean) {
+    const charBytes = ch.charCodeAt(0) > 127 ? 2 : 1;
     if (byteLen + charBytes > maxBytes) {
-      return result + '...';
+      return result.replace(/[‍️]+$/u, '') + '...';
     }
-    result += title[i];
+    result += ch;
     byteLen += charBytes;
   }
   return result;
@@ -30412,6 +30420,10 @@ app.post('/api/user-progress/vocabulary-history/add', async (req, res) => {
 
     await progress.save();
 
+    // 🔥 완료여부 캐시 무효화 — 저장 즉시 '학습완료'로 반영되도록.
+    //    (안 하면 vocab-today 캐시(30초) 때문에 완료해도 최대 30초간 '미완료'로 보임)
+    cache.delete(getCacheKey('vocab-today', { grade, name }));
+
     res.json({
       ok: true,
       message: '어휘학습 이력이 저장되었습니다',
@@ -31518,20 +31530,45 @@ app.post('/api/auto-task-settings', async (req, res) => {
 
     // 설정이 변경되었으면 기존 자동부여 과제 삭제
     if (settingsChanged || settings.status === 'running') {
-      console.log(`🗑️ [${grade} ${name}] 자동과제부여 설정 변경 - 기존 자동부여 과제 삭제`);
+      console.log(`🗑️ [${grade} ${name}] 자동과제부여 설정 변경 - 미완료 자동부여 과제 삭제`);
 
-      // 학습실에서 isAutoAssigned === true인 과제만 삭제 (일반 과제는 유지)
+      // 학습실에서 isAutoAssigned === true이면서 "미완료"인 과제만 삭제
+      // (일반 과제 유지 + 완료된 자동과제도 유지 — 별표가 사라지면 센터에서 다시 해야 하는 줄 착각)
       const userProgress = await UserProgress.findOne({ grade, name });
       if (userProgress?.studyRoom?.assignedTasks) {
-        const manualTasks = userProgress.studyRoom.assignedTasks.filter(task => !task.isAutoAssigned);
-        const deletedCount = userProgress.studyRoom.assignedTasks.length - manualTasks.length;
+        // 완료 판정은 화면 별표와 동일하게 LearningLog 기준
+        const completedLogs = await LearningLog.find({ grade, name, completed: true, deleted: { $ne: true } }, { unit: 1, unitId: 1 });
+        const completedUnits = new Set();
+        const completedBase = new Set();
+        for (const log of completedLogs) {
+          const unitValue = log.unit || log.unitId;
+          if (unitValue && unitValue !== 'undefined') {
+            const match = unitValue.match(/((?:fit_|deep_|on_)?[a-z]+\d?)_(\d+)/i);
+            if (match) {
+              const code = `${match[1].toLowerCase()}_${match[2]}`;
+              completedUnits.add(code);
+              completedBase.add(code.replace(/^(fit_|on_|deep_)/, ''));
+            }
+          }
+        }
+        const isTaskCompleted = (task) => {
+          if (task.isAI) return task.status === 'completed';
+          const unitId = task.unitId || task.id || '';
+          const m = unitId.match(/([a-z0-9_]+_\d+)\.html$/i) || unitId.match(/([a-z0-9_]+_\d+)$/i);
+          const code = (m ? m[1] : unitId).toLowerCase();
+          const base = code.replace(/^(fit_|on_|deep_)/, '');
+          return completedUnits.has(code) || completedBase.has(base);
+        };
+
+        const keptTasks = userProgress.studyRoom.assignedTasks.filter(task => !task.isAutoAssigned || isTaskCompleted(task));
+        const deletedCount = userProgress.studyRoom.assignedTasks.length - keptTasks.length;
 
         await UserProgress.updateOne(
           { grade, name },
-          { $set: { 'studyRoom.assignedTasks': manualTasks } }
+          { $set: { 'studyRoom.assignedTasks': keptTasks } }
         );
 
-        console.log(`  ✅ ${deletedCount}개 자동부여 과제 삭제 완료`);
+        console.log(`  ✅ 미완료 자동부여 과제 ${deletedCount}개 삭제 (완료 과제는 유지)`);
       }
     }
 
