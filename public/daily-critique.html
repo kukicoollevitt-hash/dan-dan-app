@@ -931,10 +931,11 @@
     /* 6하 원칙 그리드 */
     .cw-six-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr; /* 3열 — 줄 간격 2배 확대분 세로 공간 확보 (한 페이지 유지) */
       gap: 10px;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
+    .cw-six-wide { grid-column: 1 / -1; } /* 무엇을·왜·어떻게 — 전체 폭 한 줄 */
     .cw-six-cell {
       background: #fff;
       border: 1.5px solid #cbd5e1;
@@ -960,11 +961,11 @@
     .cw-six-lines {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 12px;
       margin-top: 4px;
     }
     .cw-line {
-      height: 18px;
+      height: 36px; /* 줄 간격 2배 확대 (2026-09-01, 손글씨 공간 확보) */
       border-bottom: 1px solid #cbd5e1;
     }
     /* 사고 질문 */
@@ -1011,7 +1012,7 @@
     .cw-q-lines {
       display: flex;
       flex-direction: column;
-      gap: 7px;
+      gap: 14px;
       padding-left: 4px;
       margin-top: 4px;
     }
@@ -2429,19 +2430,23 @@
         ['why',   '❓ 왜 (Why)'],
         ['how',   '🛠️ 어떻게 (How)']
       ];
-      const sixCells = SIX_LABELS.map(([key, label]) => `
-        <div class="cw-six-cell">
+      // 누가/언제/어디서 = 3열 1줄(짧은 답), 무엇을/왜/어떻게 = 전체 폭 1줄(길게 쓰는 답)
+      const sixCell = ([key, label], wide) => `
+        <div class="cw-six-cell${wide ? ' cw-six-wide' : ''}">
           <div class="cw-six-label">${label}</div>
           ${withAnswers
             ? `<div class="cw-six-ans">${escCw(sixW[key] || '')}</div>`
-            : `<div class="cw-six-lines"><div class="cw-line"></div><div class="cw-line"></div><div class="cw-line"></div></div>`}
+            : `<div class="cw-six-lines"><div class="cw-line"></div></div>`}
         </div>
-      `).join('');
+      `;
+      const sixCells = SIX_LABELS.slice(0, 3).map(c => sixCell(c, false)).join('')
+                     + SIX_LABELS.slice(3).map(c => sixCell(c, true)).join('');
 
+      // 줄 간격 2배 확대에 맞춰 줄 수 축소(글쓰기 5→3줄) — 4페이지는 OCR이 한 장으로 인식하므로 반드시 한 페이지 유지
       const QUESTIONS = [
-        { no: 1, label: '핵심 짚기', q: customQs?.q1 || '이 기사에서 가장 중요한 내용은 무엇인가요? 자기 말로 한 단락으로 정리해 보세요.', key: 'q1', lines: 5 },
-        { no: 2, label: '내 생각 쓰기', q: customQs?.q2 || '나는 이 기사 내용에 대해 어떻게 생각하나요? 그 이유는?', key: 'q2', lines: 5 },
-        { no: 3, label: '실천·적용', q: customQs?.q3 || '오늘 기사에서 배운 것을 우리 생활에 어떻게 적용해 볼 수 있을까요?', key: 'q3', lines: 5 }
+        { no: 1, label: '핵심 짚기', q: customQs?.q1 || '이 기사에서 가장 중요한 내용은 무엇인가요? 자기 말로 한 단락으로 정리해 보세요.', key: 'q1', lines: 3 },
+        { no: 2, label: '내 생각 쓰기', q: customQs?.q2 || '나는 이 기사 내용에 대해 어떻게 생각하나요? 그 이유는?', key: 'q2', lines: 3 },
+        { no: 3, label: '실천·적용', q: customQs?.q3 || '오늘 기사에서 배운 것을 우리 생활에 어떻게 적용해 볼 수 있을까요?', key: 'q3', lines: 3 }
       ];
       const qHtml = QUESTIONS.map(q => {
         const body = withAnswers
@@ -3872,6 +3877,7 @@
         critiquePageNo += await _appendCritiqueContentPage(pdf, generateCritiquePage1bHTML(currentArticle, currentGrade, withAnswers), critiquePageNo);
 
         // 🆕 페이지 4: 6하 원칙 + 사고질문 글쓰기 (학생용=빈칸 / 교사용=답안 가이드)
+        //    ⚠️ OCR이 이 페이지를 한 장 사진으로 인식하므로 반드시 한 페이지 유지 (줄 간격 2배 대신 줄 수 축소)
         critiquePageNo += await _appendCritiqueContentPage(pdf, generateCritiquePage2HTML(currentArticle, currentGrade, withAnswers), critiquePageNo);
 
         // 다음 일자 렌더러가 이어받도록 최종 카운터 반환
