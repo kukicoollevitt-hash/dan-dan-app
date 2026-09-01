@@ -7773,6 +7773,8 @@ canvas[id^="confetti-canvas"] {
         <li class="series-item summer-special kh-coming-soon" data-series="BRAINKORHIST"><span>BRAIN한국사</span><span class="meta">역사특강</span></li>
         <li class="series-item" data-series="BRAINM" style="display:none;"><span>BRAIN실전</span><span class="meta">모의고사</span></li>
         <li class="series-item monthly-special" data-series="BRAINMONTHLY"><span>BRAIN모고</span><span class="meta">월말평가</span></li>
+        <!-- 🧭 국어 개념 원정대 (문법) — 김윤슬 QA 화이트리스트만 노출, 클릭 시 원정대 팝업 -->
+        <li class="series-item grammar-special" data-series="BRAINGRAMMAR" id="grammarSeriesItem" style="display:none;"><span>BRAIN문법</span><span class="meta">개념특강</span></li>
         <li class="series-item" data-series="BRAINNAESIN" style="display:none;"><span>📝 BRAIN내신</span><span class="meta">내신대비</span></li>
         <li class="series-item" data-series="BRAINSUNEUNG" style="display:none;"><span>🎯 BRAIN수능</span><span class="meta">수능대비</span></li>
       </ul>
@@ -11498,6 +11500,16 @@ if (logoutConfirmBtn) {
           return;
         }
 
+        // 🧭 BRAIN문법 국어특강 — 인트로 영상 팝업 → "국어문법원정대 출발" → 원정대 팝업 (입문·모고와 동일 흐름)
+        if (series === 'BRAINGRAMMAR') {
+          if (typeof window.showGrammarSeriesPopup === 'function') {
+            window.showGrammarSeriesPopup();
+          } else if (typeof window.openGrammarExpedition === 'function') {
+            window.openGrammarExpedition();
+          }
+          return;
+        }
+
         // 오픈되지 않은 시리즈는 준비중 팝업 표시
         if (!openedSeries.includes(series)) {
           showComingSoonPopup();
@@ -13907,6 +13919,18 @@ async function performLogout() {
             return;
           }
 
+          // 🧭 BRAIN문법 국어특강(BRAINGRAMMAR) — 김윤슬 QA 화이트리스트만 노출 (정식 오픈 시 default-on 전환)
+          if (seriesId === 'BRAINGRAMMAR') {
+            let isGrammarQa = false;
+            try {
+              const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+              isGrammarQa = (cs.grade === '초3' && cs.name === '김윤슬');
+            } catch {}
+            li.style.display = isGrammarQa ? '' : 'none';
+            if (isGrammarQa) li.classList.remove("disabled");
+            return;
+          }
+
           // 🗓 BRAIN월말/모고(BRAINMONTHLY) — 디폴트 활성. 학원 관리자가 비활성화하면 메뉴에서 숨김
           //    (비평·한국사와 동일한 default-on 방식. disabledSeries에 'BRAIN모고'가 있으면 숨김)
           if (seriesId === 'BRAINMONTHLY') {
@@ -14014,6 +14038,9 @@ async function performLogout() {
         const btn = document.getElementById('resetBio01Btn');
         if (btn && isReviewer) btn.style.display = 'inline-block';
         // 🥚 교과어휘 몽글 도감 런처 — 전체 오픈(2026-08-18), QA 화이트리스트 해제
+        // 🧭 BRAIN문법 국어특강(원정대) — 김윤슬 QA 화이트리스트만 노출 (2026-09-01)
+        const grammarItem = document.getElementById('grammarSeriesItem');
+        if (grammarItem && isReviewer) grammarItem.style.display = '';
       } catch {}
     })();
 
@@ -34231,6 +34258,148 @@ ${content}
     window.openMonggeulWithIntro = openMonggeulWithIntro;
     window.openMonggeul = openMonggeul;
 
+    // 🧭 국어 개념 원정대 (BRAIN문법 국어특강) — iframe 팝업
+    function openGrammarExpedition() {
+      const existing = document.getElementById('grammarExpeditionOverlay');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.id = 'grammarExpeditionOverlay';
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;
+        z-index: 10005;
+      `;
+
+      const container = document.createElement('div');
+      container.style.cssText = `
+        position: relative; width: 1100px; height: 92vh; max-width: 97%; max-height: 96%;
+      `;
+
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '&times;';
+      closeBtn.style.cssText = `
+        position: absolute; top: -15px; right: -15px; width: 40px; height: 40px;
+        border-radius: 50%; background: #ff4444; color: white; border: 3px solid white;
+        font-size: 28px; font-weight: bold; cursor: pointer; z-index: 10006;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      `;
+      closeBtn.onclick = () => overlay.remove();
+
+      const iframe = document.createElement('iframe');
+      iframe.src = '/gukeo-expedition.html?v=' + Date.now();
+      iframe.style.cssText = `
+        width: 100%; height: 100%; border: none; border-radius: 14px;
+        background: #08222c; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      `;
+
+      container.appendChild(iframe);
+      container.appendChild(closeBtn);
+      overlay.appendChild(container);
+      document.body.appendChild(overlay);
+    }
+    window.openGrammarExpedition = openGrammarExpedition;
+
+    // 🧭 BRAIN문법 인트로 영상 팝업 — "국어문법원정대 출발" 클릭 시 원정대 진입 (입문·모고와 동일 패턴)
+    function showGrammarSeriesPopup() {
+      const existing = document.getElementById('grammarSeriesIntroOverlay');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.id = 'grammarSeriesIntroOverlay';
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
+        z-index: 10005; backdrop-filter: blur(6px);
+      `;
+
+      const box = document.createElement('div');
+      box.style.cssText = `
+        position: relative;
+        display: inline-block;
+        background: #000;
+        border: 2px solid #4f9dd6;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+        animation: grammarIntroPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        line-height: 0;
+      `;
+
+      const styleTag = document.createElement('style');
+      styleTag.textContent = `@keyframes grammarIntroPop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }`;
+      box.appendChild(styleTag);
+
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '&times;';
+      closeBtn.title = '닫기';
+      closeBtn.style.cssText = `
+        position: absolute; top: 10px; right: 12px; z-index: 3;
+        width: 36px; height: 36px; border-radius: 50%;
+        background: rgba(0,0,0,0.55); color: #fff; border: none;
+        font-size: 22px; font-weight: 700; cursor: pointer; line-height: 1;
+        backdrop-filter: blur(6px);
+      `;
+      closeBtn.onclick = () => overlay.remove();
+
+      const video = document.createElement('video');
+      video.src = '/images/국어개념원정대/bg_popup_main.mp4';
+      video.autoplay = true;
+      video.loop = true;
+      video.muted = true;
+      video.setAttribute('playsinline', '');
+      video.style.cssText = `
+        display: block;
+        max-width: 90vw; max-height: 86vh;
+        height: auto; width: auto;
+        background: #000;
+      `;
+
+      const actions = document.createElement('div');
+      actions.style.cssText = `
+        position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+        padding: 18px 16px 16px;
+        display: flex; gap: 10px; justify-content: center; align-items: center;
+        flex-wrap: wrap; line-height: 1.2;
+        background: linear-gradient(0deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 100%);
+      `;
+
+      const enterBtn = document.createElement('button');
+      enterBtn.innerHTML = '🧭 국어문법원정대 출발';
+      enterBtn.style.cssText = `
+        padding: 14px 32px;
+        background: linear-gradient(135deg, #7ec0f0 0%, #2f6fae 100%);
+        color: #08191f; border: none; border-radius: 14px;
+        font-size: 16px; font-weight: 800; cursor: pointer;
+        box-shadow: 0 6px 16px rgba(47,111,174,0.45);
+        transition: transform 0.15s ease;
+        letter-spacing: 0.3px;
+      `;
+      enterBtn.onmouseover = () => enterBtn.style.transform = 'translateY(-2px)';
+      enterBtn.onmouseout = () => enterBtn.style.transform = '';
+      enterBtn.onclick = () => {
+        try { video.pause(); } catch {}
+        overlay.remove();
+        openGrammarExpedition();
+      };
+      actions.appendChild(enterBtn);
+
+      box.appendChild(closeBtn);
+      box.appendChild(video);
+      box.appendChild(actions);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          try { video.pause(); } catch {}
+          overlay.remove();
+        }
+      });
+    }
+    window.showGrammarSeriesPopup = showGrammarSeriesPopup;
+
     // ===== 실시간 단어배틀 =====
     // 👑 전국 문해왕 선발전 — iframe 모달 진입 (단원 카드 버튼에서 호출)
     function openLiteracyKingGame(opts) {
@@ -35454,6 +35623,23 @@ ${content}
       border-radius: 12px;
       font-weight: 700;
       box-shadow: 0 2px 6px rgba(211, 90, 26, 0.4);
+      letter-spacing: 0.3px;
+    }
+
+    /* 🧭 BRAIN문법 (국어 개념 원정대) — 우상단 배지 */
+    .grammar-special { position: relative; }
+    .grammar-special::after {
+      content: '🧭 문법특강';
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: linear-gradient(135deg, #7ec0f0 0%, #2f6fae 100%);
+      color: #fff;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(47, 111, 174, 0.4);
       letter-spacing: 0.3px;
     }
 
@@ -38566,7 +38752,7 @@ ${content}
       function showSeasonLockPopup(prevSeasonNo, done, dayTotalMap) {
         const beads = beadsInSeason(prevSeasonNo, done, dayTotalMap);
         const shortage = seasonShortageDays(prevSeasonNo, done, dayTotalMap);
-        const need = Math.max(0, 120 - beads);
+        const need = Math.max(0, 108 - beads);
         const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         const seasonName = (CHAPTERS.find(c => c.c === prevSeasonNo) || {}).name || `시즌${prevSeasonNo}`;
         const items = shortage.map(({ day, stars, done: d }) => {
@@ -38593,7 +38779,7 @@ ${content}
             <div style="background:linear-gradient(135deg,#ffe0b2,#ffcc80);padding:18px 22px;">
               <h3 style="margin:0;color:#bf360c;font-size:20px;font-weight:900;">🔒 다음 시즌은 아직 잠겨 있어요</h3>
               <div style="margin-top:6px;color:#8a5a2e;font-size:13px;line-height:1.5;">
-                <b>${esc(seasonName)}</b>의 문해구슬를 <b>모두 모아야</b> 다음 시즌이 열려요!<br>
+                <b>${esc(seasonName)}</b>의 문해구슬을 <b>108개 이상</b> 모아야 다음 시즌이 열려요!<br>
                 지금 <b>${beads}/120</b> · <b style="color:#c62828;">${need}개</b> 더 필요해요
               </div>
             </div>
@@ -38624,7 +38810,7 @@ ${content}
       }
 
       // 순차잠금 여부
-      // 시즌 첫 Day(21·41·61·81)는 이전 시즌 문해구슬 120개(20 Day 각 6개)를 모두 모아야 열림
+      // 시즌 첫 Day(21·41·61·81)는 이전 시즌 문해구슬 108개(90%) 이상 모아야 열림 (2026-09-01 120→108 완화)
       function isDayLocked(day, done, isBeta, dayTotalMap) {
         if (isBeta) return false;     // 김윤슬 우회
         if (day === 1) return false;   // Day 1 항상 열림
@@ -38632,7 +38818,7 @@ ${content}
         // 시즌 게이트 · 시즌 첫 Day (21, 41, 61, 81)
         if (day % 20 === 1 && day > 1 && dayTotalMap) {
           const prevSeason = seasonOf(day) - 1;
-          if (beadsInSeason(prevSeason, done, dayTotalMap) < 120) return true;
+          if (beadsInSeason(prevSeason, done, dayTotalMap) < 108) return true;
         }
         return false;
       }
@@ -38791,7 +38977,7 @@ ${content}
           return recs;
         } catch { return []; }
       }
-      // 재학습 대상 Day 계산 · 총 단계 평균보다 낮은 단계가 있고 최초완료 7일 경과
+      // 재학습 대상 Day 계산 · 평균보다 15%p 이상 낮은 단계가 있고 최초완료 7일 경과 (2026-09-01 완화)
       const RELEARN_DAYS_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
       function computeRelearnDaySet(records) {
         const set = new Set();
@@ -38813,7 +38999,7 @@ ${content}
           if (isNaN(t) || (now - t) < RELEARN_DAYS_THRESHOLD_MS) return;
           for (const k of keys) {
             const dayPct = (r.accuracies && r.accuracies[k]) ? (r.accuracies[k].pct || 0) : 0;
-            if (dayPct < totalPct[k]) { set.add(r.day); break; }
+            if (dayPct <= totalPct[k] - 15) { set.add(r.day); break; }
           }
         });
         return set;
@@ -39107,12 +39293,12 @@ ${content}
           const b = beadsInSeason(ch.c, done, dayTotalMap);
           if (b >= 120 && !celebratedSet.has(ch.c)) { clearToCelebrate = ch.c; break; }
         }
-        // 시즌 게이트 잠금 감지 · 이전 시즌 문해구슬 < 120이면 해당 시즌 전체 잠금
+        // 시즌 게이트 잠금 감지 · 이전 시즌 문해구슬 < 108(90%)이면 해당 시즌 전체 잠금
         const chapterSeasonLocked = new Set();
         if (!isBeta) {
           for (const ch of CHAPTERS) {
             if (ch.c === 1) continue;
-            if (beadsInSeason(ch.c - 1, done, dayTotalMap) < 120) chapterSeasonLocked.add(ch.c);
+            if (beadsInSeason(ch.c - 1, done, dayTotalMap) < 108) chapterSeasonLocked.add(ch.c);
           }
         }
         // 전체 문해구슬 카운터 (0~600) + 시즌별 증가분 감지
