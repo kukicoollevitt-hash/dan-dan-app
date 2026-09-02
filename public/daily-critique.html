@@ -4485,30 +4485,53 @@
     }
 
     // 이미지 폭을 maxWidth로 리사이즈, JPEG 압축 (서버 전송 비용·속도 ↓)
-    function _ocrResizeImage(file, maxWidth, quality) {
+    // 🔧 EXIF 회전 보정: 태블릿/폰으로 "바로 촬영"한 원본 사진은 픽셀을 옆으로 저장하고
+    //    "세워서 봐라"는 회전정보(EXIF)만 갖는다. 이를 적용하지 않으면 옆으로 누운 이미지가
+    //    OCR로 전송돼 인식률이 급락한다(카톡 전송 사진은 회전이 픽셀에 구워져 정상).
+    //    createImageBitmap({imageOrientation:'from-image'})가 EXIF 회전을 자동 적용한다.
+    //    ※ 이미 똑바른 사진은 그대로 유지되므로 기존에 잘 되던 케이스는 영향 없음.
+    function _ocrDrawToJpeg(srcW, srcH, maxWidth, quality, draw) {
+      const ratio = Math.min(1, maxWidth / srcW);
+      const w = Math.round(srcW * ratio);
+      const h = Math.round(srcH * ratio);
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      draw(ctx, w, h);
+      return canvas.toDataURL('image/jpeg', quality);
+    }
+
+    function _ocrResizeImageFallback(file, maxWidth, quality) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
           const img = new Image();
-          img.onload = () => {
-            const ratio = Math.min(1, maxWidth / img.width);
-            const w = Math.round(img.width * ratio);
-            const h = Math.round(img.height * ratio);
-            const canvas = document.createElement('canvas');
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, w, h);
-            ctx.drawImage(img, 0, 0, w, h);
-            resolve(canvas.toDataURL('image/jpeg', quality));
-          };
+          img.onload = () => resolve(
+            _ocrDrawToJpeg(img.width, img.height, maxWidth, quality, (ctx, w, h) => ctx.drawImage(img, 0, 0, w, h))
+          );
           img.onerror = () => reject(new Error('이미지를 읽을 수 없습니다.'));
           img.src = e.target.result;
         };
         reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다.'));
         reader.readAsDataURL(file);
       });
+    }
+
+    function _ocrResizeImage(file, maxWidth, quality) {
+      // 1순위: createImageBitmap이 EXIF 회전을 자동 적용 → 촬영 사진이 옆으로 눕는 문제 해결
+      if (window.createImageBitmap) {
+        return createImageBitmap(file, { imageOrientation: 'from-image' })
+          .then((bmp) => {
+            const dataUrl = _ocrDrawToJpeg(bmp.width, bmp.height, maxWidth, quality, (ctx, w, h) => ctx.drawImage(bmp, 0, 0, w, h));
+            if (bmp.close) bmp.close();
+            return dataUrl;
+          })
+          .catch(() => _ocrResizeImageFallback(file, maxWidth, quality)); // 미지원 시 기존 방식
+      }
+      return _ocrResizeImageFallback(file, maxWidth, quality);
     }
 
     async function runOcr() {

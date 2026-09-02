@@ -2946,8 +2946,8 @@
           "실시간": ["ㅅㅅㄱ"]
         };
 
-        const normIn = input.replace(/\s+/g,"").toLowerCase();
-        const normAns = ans.replace(/\s+/g,"").toLowerCase();
+        const normIn = input.replace(/\s+/g,"").replace(/[\u00B7\u318D\u30FB\uFF65]/g,"").toLowerCase();
+        const normAns = ans.replace(/\s+/g,"").replace(/[\u00B7\u318D\u30FB\uFF65]/g,"").toLowerCase();
 
         let ok = false;
         if (normIn === normAns) ok = true;
@@ -3580,29 +3580,49 @@
   }
   window.closeCreativeOcrModal = closeCreativeOcrModal;
 
-  function _creativeOcrResize(file, maxWidth, quality) {
+  // 🔧 EXIF 회전 보정 — 태블릿/폰 "바로 촬영" 사진이 옆으로 누워 OCR 인식률이 급락하던 문제.
+  //    createImageBitmap({imageOrientation:'from-image'})가 EXIF 회전을 자동 적용한다.
+  //    (이미 똑바른 사진은 그대로 유지 → 기존에 잘 되던 케이스는 영향 없음)
+  function _creativeOcrDrawToJpeg(srcW, srcH, maxWidth, quality, draw) {
+    const ratio = Math.min(1, maxWidth / srcW);
+    const w = Math.round(srcW * ratio);
+    const h = Math.round(srcH * ratio);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    draw(ctx, w, h);
+    return canvas.toDataURL('image/jpeg', quality);
+  }
+
+  function _creativeOcrResizeFallback(file, maxWidth, quality) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
-        img.onload = () => {
-          const ratio = Math.min(1, maxWidth / img.width);
-          const w = Math.round(img.width * ratio);
-          const h = Math.round(img.height * ratio);
-          const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, w, h);
-          ctx.drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', quality));
-        };
+        img.onload = () => resolve(
+          _creativeOcrDrawToJpeg(img.width, img.height, maxWidth, quality, (ctx, w, h) => ctx.drawImage(img, 0, 0, w, h))
+        );
         img.onerror = () => reject(new Error('이미지를 읽을 수 없습니다.'));
         img.src = e.target.result;
       };
       reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다.'));
       reader.readAsDataURL(file);
     });
+  }
+
+  function _creativeOcrResize(file, maxWidth, quality) {
+    if (window.createImageBitmap) {
+      return createImageBitmap(file, { imageOrientation: 'from-image' })
+        .then((bmp) => {
+          const dataUrl = _creativeOcrDrawToJpeg(bmp.width, bmp.height, maxWidth, quality, (ctx, w, h) => ctx.drawImage(bmp, 0, 0, w, h));
+          if (bmp.close) bmp.close();
+          return dataUrl;
+        })
+        .catch(() => _creativeOcrResizeFallback(file, maxWidth, quality));
+    }
+    return _creativeOcrResizeFallback(file, maxWidth, quality);
   }
 
   // 파일 불러오기 — 미리보기 후 수동 인식
