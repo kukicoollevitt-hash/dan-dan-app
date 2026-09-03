@@ -2236,7 +2236,7 @@
     };
 
     // 📌 콘텐츠 캐시 버전 — content.js 본문/문제 수정 시 여기만 올리면 모든 로더에 반영됨
-    const CONTENT_VERSION = '20260830a';
+    const CONTENT_VERSION = '20260903a';
 
     // 시리즈별 content.js 파일명 접두사
     const SERIES_PREFIX = {
@@ -68863,8 +68863,10 @@
             for (const idx of [1, 2]) {
               if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>과목 목차 PDF 로드 중... (${idx}/2)</span>`;
               const url = `/images/${encodeURIComponent(COVER_SRC.folder)}/${encodeURIComponent(COVER_SRC.prefix + '-' + tocSubjName + '_toc_' + idx)}.pdf?v=${CONTENT_VERSION}`;
-              try { subjectTocPdfBytesList.push(await _loadPdfBytes(url)); }
-              catch (e) { if (series !== 'brainon') console.warn('과목별 목차 PDF 로드 실패:', url, e); }
+              // _loadPdfBytes는 실패 시 null 반환 — null을 push하면 온 PNG 폴백(length===0)이 막히므로 성공분만 push
+              const tocBytes = await _loadPdfBytes(url);
+              if (tocBytes) subjectTocPdfBytesList.push(tocBytes);
+              else if (series !== 'brainon') console.warn('과목별 목차 PDF 로드 실패:', url);
             }
           }
         }
