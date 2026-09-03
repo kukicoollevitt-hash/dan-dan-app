@@ -34239,6 +34239,65 @@ app.get('/api/monggeul/ranking', async (req, res) => {
   } catch (err) { console.error('[monggeul/ranking]', err); res.status(500).json({ ok: false }); }
 });
 
+// ============================================================
+// 🧭 국어 개념 원정대 (BRAIN문법 국어특강) — 학생별 학습 통계 서버 보존
+//    클라이언트 localStorage(gukeo_stats_학년_이름)와 병합 동기화. 팩키별 {ok,wrong,stg,miss,land,last}
+// ============================================================
+const gukeoExpeditionSchema = new mongoose.Schema({
+  grade: { type: String, required: true },
+  name: { type: String, required: true },
+  stats: { type: Object, default: {} },
+  updatedAt: { type: Date, default: Date.now }
+}, { minimize: false });
+gukeoExpeditionSchema.index({ grade: 1, name: 1 }, { unique: true });
+const GukeoExpeditionState = mongoose.model('GukeoExpeditionState', gukeoExpeditionSchema);
+
+app.get('/api/gukeo-expedition/state', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.json({ ok: false, message: '학생 정보가 필요합니다.' });
+    const doc = await GukeoExpeditionState.findOne({ grade, name }).lean();
+    res.json({ ok: true, stats: (doc && doc.stats) || {} });
+  } catch (err) { console.error('[gukeo-expedition/state GET]', err); res.status(500).json({ ok: false }); }
+});
+
+app.post('/api/gukeo-expedition/state', async (req, res) => {
+  try {
+    const { grade, name, stats } = req.body || {};
+    if (!grade || !name || !stats || typeof stats !== 'object') return res.json({ ok: false, message: '요청 형식 오류' });
+    if (JSON.stringify(stats).length > 200 * 1024) return res.json({ ok: false, message: '데이터가 너무 큽니다.' });
+    await GukeoExpeditionState.updateOne({ grade, name }, { $set: { stats, updatedAt: new Date() } }, { upsert: true });
+    res.json({ ok: true });
+  } catch (err) { console.error('[gukeo-expedition/state POST]', err); res.status(500).json({ ok: false }); }
+});
+
+// 원정대 동행 현황 — 세계 지도의 "탐험 중" 배지 + 발자국 대열용 (완성 구조 · 순위 없음)
+//   lands: 땅별 최근 7일 내 활동한 학생 목록 / trail: 학생별 현재 도달 땅(가장 멀리 활동한 땅)
+app.get('/api/gukeo-expedition/presence', async (req, res) => {
+  try {
+    const docs = await GukeoExpeditionState.find({}, { grade: 1, name: 1, stats: 1 }).lean();
+    const now = Date.now(), ACTIVE_MS = 7 * 24 * 3600 * 1000;
+    const lands = {}, trail = [];
+    for (const d of docs) {
+      let furthest = -1, lastAct = 0;
+      const activeLands = new Set();
+      for (const k of Object.keys(d.stats || {})) {
+        const e = d.stats[k] || {};
+        const land = (typeof e.land === 'number') ? e.land : -1;
+        if (land >= 0 && land > furthest) furthest = land;
+        if (e.last) {
+          if (e.last > lastAct) lastAct = e.last;
+          if (land >= 0 && now - e.last < ACTIVE_MS) activeLands.add(land);
+        }
+      }
+      if (furthest < 0) continue;
+      activeLands.forEach(l => { (lands[l] = lands[l] || []).push({ grade: d.grade, name: d.name }); });
+      trail.push({ grade: d.grade, name: d.name, land: furthest, lastAct });
+    }
+    res.json({ ok: true, lands, trail });
+  } catch (err) { console.error('[gukeo-expedition/presence]', err); res.status(500).json({ ok: false }); }
+});
+
 // 🔧 [수동] 문해왕 월별 리셋 즉시 실행 — 정산이 누락된 달 복구용 (슈퍼관리자 전용)
 // 브라우저에서 슈퍼관리자 로그인 상태로 아래 URL 접속:
 //   /api/super/literacy-king/run-monthly-reset?confirm=RESET
@@ -47229,19 +47288,37 @@ async function workbookVisionOcr({ systemPrompt, userText, dataUrl, maxTokens })
     const m = dataUrl.match(/^data:(image\/[a-z.+-]+);base64,(.+)$/s);
     const mediaType = m ? m[1] : 'image/jpeg';
     const b64 = m ? m[2] : dataUrl;
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-5',
-      max_tokens: maxTokens,
-      system: systemPrompt,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType, data: b64 } },
-          { type: 'text', text: userText }
-        ]
-      }]
-    });
-    return { engine: 'claude', text: (response.content && response.content[0] && response.content[0].text) || '', usage: response.usage };
+    const content = [
+      { type: 'image', source: { type: 'base64', media_type: mediaType, data: b64 } },
+      { type: 'text', text: userText }
+    ];
+    // 🔁 Claude가 드물게(특히 동시요청/부하 시) 빈 텍스트를 반환 → "최초 인식 시 500, 재시도하면 정상"의 원인.
+    //    빈 응답이면 최대 3회까지 자동 재시도한다(재시도하면 정상 인식됨 — 실사용/재현으로 확인).
+    // ⭐ content 배열에서 text 블록을 뽑는다.
+    //   claude-sonnet-5가 확장 사고(extended thinking)를 켜면 응답이 [thinking, text] 2블록이 되어
+    //   content[0]은 thinking 블록(.text 없음)이다. content[0].text만 읽으면 빈 문자열 → 500.
+    //   → "최초 인식 시 500, 재시도하면 정상"의 진짜 원인. type:'text' 블록을 찾아 읽는다.
+    const extractText = (resp) => {
+      const blocks = (resp && resp.content) || [];
+      const t = blocks.find(b => b && b.type === 'text');
+      return ((t && t.text) || '').trim();
+    };
+    const MAX_TRIES = 3; // 텍스트 블록 추출로 근본 해결됨. 진짜 빈 응답 대비 안전망만 유지.
+    let last = { text: '', usage: null };
+    for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-5',
+        max_tokens: maxTokens,
+        system: systemPrompt,
+        messages: [{ role: 'user', content }]
+      });
+      const text = extractText(response);
+      if (text) return { engine: 'claude', text, usage: response.usage };
+      last = { text, usage: response.usage };
+      console.warn(`⚠️ [workbookVisionOcr] Claude text 블록 없음 (시도 ${attempt}/${MAX_TRIES}) — 재시도`);
+      if (attempt < MAX_TRIES) await new Promise(r => setTimeout(r, attempt * 400));
+    }
+    return { engine: 'claude', text: last.text, usage: last.usage };
   }
   // 폴백: ANTHROPIC_API_KEY 미설정 시 기존 OpenAI 경로 유지
   const OpenAI = require('openai');
