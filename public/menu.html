@@ -13197,8 +13197,17 @@ if (logoutConfirmBtn) {
         };
         localStorage.setItem('currentStudent', JSON.stringify(studentData));
         console.log('✅ currentStudent 저장 완료 (phone 유지:', existingPhone ? '있음' : '없음', ')');
+        // 🔒 관리자 view-as 진입 표시 — 이 탭에서는 로그아웃 버튼 숨김 (세션 꼬임 방지)
+        sessionStorage.setItem('brainAdminViewAs', '1');
       } else {
         console.log('ℹ️ URL 파라미터 없음 - 기존 localStorage 사용');
+      }
+
+      // 🔒 관리자 view-as 모드(학생 목록에서 이름·학습실 클릭 진입)면 로그아웃 버튼 숨김
+      //    sessionStorage는 탭 단위라 학생이 정상 로그인하는 기기·탭에는 영향 없음
+      if (sessionStorage.getItem('brainAdminViewAs') === '1') {
+        const viewAsLogoutBtn = document.getElementById('logoutBtn');
+        if (viewAsLogoutBtn) viewAsLogoutBtn.style.display = 'none';
       }
 
       showUserInfo();
@@ -13223,6 +13232,11 @@ if (logoutConfirmBtn) {
       let syncDebounceTimer = null;
 
       document.body.addEventListener('click', function(e) {
+        // 🚫 단원 학습 팝업이 열려 있는 동안은 폭죽 비활성
+        //    (본문학습에서 문장 클릭하다가 팝업 가장자리·바깥을 잘못 눌러도 폭죽이 안 터지게)
+        const unitModalEl = document.getElementById('unitModal');
+        if (unitModalEl && unitModalEl.classList.contains('show')) return;
+
         // 클릭한 요소가 버튼, 링크, 입력 필드 등이 아닌 경우에만 폭죽 실행
         const clickedElement = e.target;
         const isInteractiveElement = clickedElement.closest('button, a, input, select, textarea, .series-item, .domain-item, .subject-item, .unit-item');
@@ -13386,18 +13400,22 @@ if (logoutConfirmBtn) {
     }
 
     // 🛡️ view-as(관리자의 학생 프리뷰) 여부 판단 — 로그아웃 오클릭 보호용
-    //    ① 현재 세션이 관리자 세션이면 view-as
+    //    ① 학생 목록에서 클릭해 들어온 view-as 탭(brainAdminViewAs)에서 관리자 세션이면 view-as
+    //       ⚠️ 관리자 세션 존재만으로 판단하면 안 됨 — 선생님 노트북에 관리자 로그인이 남아 있으면
+    //          정상 로그인한 학생의 로그아웃까지 막히는 오탐 발생 (2026-09-04 센터 제보로 조건 축소)
     //    ② 학생 세션이지만 화면의 학생(currentStudent)과 다르면 view-as (공용 태블릿에 다른 학생 세션)
     async function detectViewAsForLogout() {
       let cs = null;
       try { cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); } catch (e) {}
-      try {
-        const r = await fetch('/api/admin/info');
-        if (r.ok) {
-          const d = await r.json();
-          if (d && d.success) return { type: 'admin' };
-        }
-      } catch (e) {}
+      if (sessionStorage.getItem('brainAdminViewAs') === '1') {
+        try {
+          const r = await fetch('/api/admin/info');
+          if (r.ok) {
+            const d = await r.json();
+            if (d && d.success) return { type: 'admin' };
+          }
+        } catch (e) {}
+      }
       try {
         const r = await fetch('/api/session');
         const d = await r.json();

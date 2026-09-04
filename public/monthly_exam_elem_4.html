@@ -644,50 +644,40 @@
     .omr-group-status.partial { background: rgba(211,90,26,0.12); color: var(--brand); }
     .omr-group-status.empty { background: rgba(0,0,0,0.05); color: var(--ink-mute); }
 
-    /* 문항 셀 그리드 - 지문당 5문항이므로 항상 5열 */
-    .omr-grid {
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px;
-    }
+    /* 문항 행 — 실제 OMR 카드처럼 번호 + 선지 전체 표시 (드로어에서 바로 마킹 가능) */
+    .omr-grid { display: flex; flex-direction: column; gap: 6px; }
     .omr-cell {
-      position: relative;
       background: linear-gradient(180deg, #fff, var(--brand-soft));
-      border: 2px solid rgba(211,90,26,0.4); border-radius: 12px;
-      padding: 8px 6px; text-align: center; cursor: pointer;
-      transition: all 0.15s;
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      border: 2px solid rgba(211,90,26,0.35); border-radius: 12px;
+      padding: 7px 10px;
+      display: flex; align-items: center; gap: 10px;
+      transition: border-color 0.15s, background 0.15s;
     }
-    /* 미응답 셀 hover — 주황 강조 심화 */
-    .omr-cell:not(.answered):hover {
-      border-color: var(--brand);
-      background: linear-gradient(180deg, #fff, #ffe4c8);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(211,90,26,0.25);
-    }
-    /* 응답 완료 — 초록 계열 */
     .omr-cell.answered {
       background: linear-gradient(180deg, #fff, #e6f6ec);
       border-color: var(--success);
     }
-    .omr-cell.answered:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(46,156,88,0.22);
-      background: linear-gradient(180deg, #fff, #d7f0dc);
-    }
     .omr-cell-num {
-      font-size: 13px; font-weight: 800; color: var(--brand);
-      line-height: 1;
+      flex: 0 0 36px; text-align: center; cursor: pointer;
+      font-size: 13.5px; font-weight: 800; color: var(--brand); line-height: 1.1;
+      border-right: 1.5px dashed rgba(0,0,0,0.15); padding-right: 8px;
+      align-self: stretch; display: flex; align-items: center; justify-content: center;
     }
+    .omr-cell-num:hover { text-decoration: underline; }
     .omr-cell.answered .omr-cell-num { color: var(--success); }
-    .omr-cell-ans {
-      font-family: 'Menlo', monospace; font-size: 15px; font-weight: 800;
-      color: var(--ink); line-height: 1;
+    .omr-bubbles { display: flex; gap: 6px; flex: 1; }
+    .omr-bubble {
+      flex: 1; max-width: 48px; height: 32px; border-radius: 16px;
+      border: 1.5px solid rgba(0,0,0,0.28); background: #fff;
+      font-size: 15px; font-weight: 700; color: var(--ink-mute);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-family: inherit; transition: all 0.12s; padding: 0; line-height: 1;
     }
-    .omr-cell.answered .omr-cell-ans { color: var(--success); }
-    .omr-cell-empty {
-      width: 14px; height: 14px; border-radius: 50%;
-      border: 2px dashed var(--brand); opacity: 0.6;
+    .omr-bubble:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
+    .omr-bubble.marked {
+      background: var(--success); border-color: var(--success); color: #fff;
+      box-shadow: 0 2px 6px rgba(46,156,88,0.35);
     }
-    .omr-cell:not(.answered):hover .omr-cell-empty { opacity: 1; }
     .btn {
       padding: 10px 22px; border: none; border-radius: 12px;
       font-size: 14px; font-weight: 800; cursor: pointer;
@@ -1561,7 +1551,6 @@
         if (g.doneInGroup === g.p.questions.length) { status = '완료'; statusCls = 'done'; }
         else if (g.doneInGroup > 0) { status = `${g.doneInGroup}/${g.p.questions.length}`; statusCls = 'partial'; }
         else { status = '미응답'; statusCls = 'empty'; }
-        const isCurrent = g.p.no === EXAM.passages[currentPassageIdx].no;
         return `
           <div class="omr-group">
             <div class="omr-group-head">
@@ -1571,27 +1560,52 @@
               <span class="omr-group-status ${statusCls}">${status}</span>
             </div>
             <div class="omr-grid">
-              ${g.cells.map(c => `
-                <button class="omr-cell ${c.user != null ? 'answered' : ''} ${isCurrent && c.q === g.p.questions.find(qq => qq.no === c.q.no) && c.q.no === (EXAM.passages[currentPassageIdx].questions[0]?.no) ? '' : ''}"
-                  data-q-no="${c.q.no}" data-p-idx="${EXAM.passages.indexOf(g.p)}"
-                  aria-label="문항 ${c.q.no}${c.user != null ? ' 답 ' + c.user + '번' : ' 미응답'}">
-                  <span class="omr-cell-num">${c.q.no}</span>
-                  ${c.user != null
-                    ? `<span class="omr-cell-ans">${CIRCLED[c.user - 1]}</span>`
-                    : `<span class="omr-cell-empty"></span>`}
-                </button>
-              `).join('')}
+              ${g.cells.map(c => {
+                const optCount = (c.q.options && c.q.options.length) || 5;
+                return `
+                <div class="omr-cell ${c.user != null ? 'answered' : ''}" data-q-no="${c.q.no}" data-p-idx="${EXAM.passages.indexOf(g.p)}">
+                  <span class="omr-cell-num" role="button" tabindex="0" title="문항으로 이동">${c.q.no}</span>
+                  <span class="omr-bubbles">
+                    ${Array.from({ length: optCount }, (_, i) => `<button type="button" class="omr-bubble ${c.user === i + 1 ? 'marked' : ''}" data-opt="${i + 1}" aria-label="문항 ${c.q.no}번 ${i + 1}번 선지${c.user === i + 1 ? ' 선택됨' : ''}">${CIRCLED[i]}</button>`).join('')}
+                  </span>
+                </div>`;
+              }).join('')}
             </div>
           </div>
         `;
       }).join('');
 
-      // 셀 클릭 → 해당 지문·문항 이동
+      // 번호 클릭 → 해당 지문·문항으로 이동 / 선지 버블 클릭 → 드로어에서 바로 마킹
+      //   (시험지로 먼저 풀고 OMR에 정답만 옮겨 적는 사용 방식 지원)
       body.querySelectorAll('.omr-cell').forEach(cell => {
-        cell.addEventListener('click', () => {
-          const pIdx = parseInt(cell.dataset.pIdx);
-          const qNo = parseInt(cell.dataset.qNo);
-          jumpToQuestion(pIdx, qNo);
+        const pIdx = parseInt(cell.dataset.pIdx);
+        const qNo = parseInt(cell.dataset.qNo);
+        const numEl = cell.querySelector('.omr-cell-num');
+        numEl.addEventListener('click', () => jumpToQuestion(pIdx, qNo));
+        numEl.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jumpToQuestion(pIdx, qNo); }
+        });
+        cell.querySelectorAll('.omr-bubble').forEach(bub => {
+          bub.addEventListener('click', () => {
+            if (graded) { jumpToQuestion(pIdx, qNo); return; }
+            userAnswers[qNo] = parseInt(bub.dataset.opt);
+            // 본문 화면의 해당 문항 선택 상태 동기화 (현재 지문에 렌더돼 있는 경우)
+            const qEl = document.querySelector(`.question[data-q-no="${qNo}"]`);
+            if (qEl) {
+              qEl.querySelectorAll('.q-opt').forEach(o => {
+                const on = parseInt(o.dataset.optNum) === userAnswers[qNo];
+                o.classList.toggle('selected', on);
+                o.setAttribute('aria-checked', on ? 'true' : 'false');
+              });
+              qEl.classList.add('answered');
+            }
+            updateProgress();
+            updateNav();
+            const drawer = body.closest('.omr-drawer') || body;
+            const st = drawer.scrollTop;
+            renderOmrDrawer();
+            drawer.scrollTop = st;
+          });
         });
       });
 
