@@ -11841,6 +11841,19 @@ if (logoutConfirmBtn) {
 
     /* 8. 단원 표시 */
     function renderUnits(seriesKey, domainObj, subObj) {
+      // 🛡️ 세부 과목 목록이 비어 있으면 먼저 복구 (레이스 방어)
+      //   상태 복원(renderSubjects)과 pageshow의 시리즈 권한 재적용(renderDomains)이
+      //   비동기로 경쟁하면서, 가끔 세부 과목 칼럼만 빈 채 단원만 렌더되던 현상 방지.
+      //   단원은 항상 세부 과목이 그려진 상태에서만 표시돼야 하므로 여기서 불변식을 강제.
+      if (subjectList && subjectList.children.length === 0 && domainObj && domainObj.subs && domainObj.subs.length) {
+        renderSubjects(seriesKey, domainObj);
+        // 복구된 세부 과목 중 현재 과목을 다시 활성화
+        document.querySelectorAll(".subject-item").forEach(li => {
+          const liOffset = li.dataset.offset ? parseInt(li.dataset.offset) : null;
+          const subOffset = subObj.offset || null;
+          li.classList.toggle("active", li.dataset.sub === subObj.id && liOffset === subOffset);
+        });
+      }
       unitList.innerHTML = "";
       document.getElementById("unitTitle").textContent =
         `${seriesInfo[seriesKey].name} / ${domainObj.label} / ${subObj.label}`;
