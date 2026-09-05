@@ -34247,6 +34247,7 @@ const gukeoExpeditionSchema = new mongoose.Schema({
   grade: { type: String, required: true },
   name: { type: String, required: true },
   stats: { type: Object, default: {} },
+  prog: { type: Object, default: {} },   // 관문별 진행 기록 {팩키: {done, step, wt, rd, fill, mcq, adv}}
   updatedAt: { type: Date, default: Date.now }
 }, { minimize: false });
 gukeoExpeditionSchema.index({ grade: 1, name: 1 }, { unique: true });
@@ -34257,16 +34258,18 @@ app.get('/api/gukeo-expedition/state', async (req, res) => {
     const { grade, name } = req.query;
     if (!grade || !name) return res.json({ ok: false, message: '학생 정보가 필요합니다.' });
     const doc = await GukeoExpeditionState.findOne({ grade, name }).lean();
-    res.json({ ok: true, stats: (doc && doc.stats) || {} });
+    res.json({ ok: true, stats: (doc && doc.stats) || {}, prog: (doc && doc.prog) || {} });
   } catch (err) { console.error('[gukeo-expedition/state GET]', err); res.status(500).json({ ok: false }); }
 });
 
 app.post('/api/gukeo-expedition/state', async (req, res) => {
   try {
-    const { grade, name, stats } = req.body || {};
+    const { grade, name, stats, prog } = req.body || {};
     if (!grade || !name || !stats || typeof stats !== 'object') return res.json({ ok: false, message: '요청 형식 오류' });
     if (JSON.stringify(stats).length > 200 * 1024) return res.json({ ok: false, message: '데이터가 너무 큽니다.' });
-    await GukeoExpeditionState.updateOne({ grade, name }, { $set: { stats, updatedAt: new Date() } }, { upsert: true });
+    const setDoc = { stats, updatedAt: new Date() };
+    if (prog && typeof prog === 'object' && JSON.stringify(prog).length <= 100 * 1024) setDoc.prog = prog;
+    await GukeoExpeditionState.updateOne({ grade, name }, { $set: setDoc }, { upsert: true });
     res.json({ ok: true });
   } catch (err) { console.error('[gukeo-expedition/state POST]', err); res.status(500).json({ ok: false }); }
 });
