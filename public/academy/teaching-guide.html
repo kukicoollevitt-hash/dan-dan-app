@@ -7,6 +7,7 @@
   <!-- PDF 생성용 라이브러리 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="/js/pdf-lib.min.js"></script>
   <!-- 벡터 PDF 병합용 (표지/공용 PDF를 무손실로 끼워 넣기) -->
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <!-- 워크북 좌측 박스용 Pretendard 폰트 -->
@@ -2155,8 +2156,8 @@
         브레인딥
       </button>
       <button class="tab-btn" data-series="korhistory">
-        <span class="icon">📜</span>
-        방학특강
+        <span class="icon">🧩</span>
+        연계특강
       </button>
     </div>
 
@@ -2213,6 +2214,913 @@
     // =============================================
     // 과목 및 시리즈 설정
     // =============================================
+    // 🧩 연계특강 하위 메뉴 전환 (한국사 / 국어문법)
+    function khSubSwitch(which){
+      document.querySelectorAll('.kh-sub-btn').forEach(b=>{
+        const on = b.dataset.sub === which;
+        b.style.border = on ? '2px solid #c47b3a' : '2px solid #ddd';
+        b.style.background = on ? 'linear-gradient(135deg,#f5e0c8,#e8c49a)' : '#fff';
+        b.style.color = on ? '#6b3a10' : '#888';
+      });
+      const area = document.getElementById('khSubArea');
+      if (!area) return;
+      if (which === 'kor') {
+        const korCards = [
+          { key: 'kh',     icon: '📜', name: '한국사',           suffix: '· 방학특강 20강' },
+          { key: 'khadv',  icon: '📚', name: '심화한국사',        suffix: '· 한국사검정 3·4급 12강' },
+          { key: 'cert5',  icon: '🥉', name: '한국사 예비검정 5급', suffix: '· 20문항 시험지' },
+          { key: 'cert4',  icon: '🥈', name: '한국사 예비검정 4급', suffix: '· 20문항 시험지' },
+          { key: 'cert3',  icon: '🥇', name: '한국사 예비검정 3급', suffix: '· 20문항 시험지' }
+        ];
+        area.innerHTML = korCards.map(c => `
+          <div class="subject-accordion" data-subject="${c.key}" data-series="korhistory">
+            <div class="subject-header" onclick="toggleSubject(this)">
+              <span class="subject-title">
+                <span class="icon">${c.icon}</span>
+                ${c.name} <small style="font-weight:normal;color:#8a5a3a;">${c.suffix}</small>
+              </span>
+              <span class="subject-arrow">▼</span>
+            </div>
+            <div class="subject-content">
+              <div class="subject-body">
+                <div class="loading"><div class="spinner"></div><p>로딩 중...</p></div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        // 🧭 국어 문법 원정대 목차 — 땅(10) → 관문 (자료는 추후 연결)
+        const GK_LANDS = [
+          { nm: '음운의 세계',        icon: '🌌', gates: ['음운','음절','자음','모음'] },
+          { nm: '문장성분의 세계(1)', icon: '🏰', gates: ['주어','서술어','목적어','보어'] },
+          { nm: '문장성분의 세계(2)', icon: '🏜️', gates: ['관형어','부사어','독립어'] },
+          { nm: '문장짜임의 세계',    icon: '🔭', gates: ['홑문장과 겹문장','이어진문장','안은문장'] },
+          { nm: '품사의 세계(1)',     icon: '🌾', gates: ['명사','대명사','수사','동사','형용사'] },
+          { nm: '품사의 세계(2)',     icon: '🌋', gates: ['관형사','부사','조사','감탄사'] },
+          { nm: '단어의 세계',        icon: '🎡', gates: ['단일어와 복합어','합성어와 파생어','유의어와 반의어','상의어와 하의어'] },
+          { nm: '문장표현의 세계',    icon: '🏯', gates: ['시간표현','높임표현','부정표현','종결표현','피동표현과 사동표현'] },
+          { nm: '형성평가(1)',        icon: '📝', gates: ['음운의 세계 형성평가','문장성분의 세계(1) 형성평가','문장성분의 세계(2) 형성평가','문장짜임의 세계 형성평가'] },
+          { nm: '형성평가(2)',        icon: '📝', gates: ['품사의 세계(1) 형성평가','품사의 세계(2) 형성평가','단어의 세계 형성평가','문장표현의 세계 형성평가'] }
+        ];
+        area.innerHTML = GK_LANDS.map((L, li) => `
+          <div class="subject-accordion" data-gk-land="${li}">
+            <div class="subject-header" onclick="gkLandToggle(this)">
+              <span class="subject-title">
+                <span class="icon">${L.icon}</span>
+                ${li + 1}. ${L.nm} <small style="font-weight:normal;color:#8a5a3a;">· ${L.gates.length}관문</small>
+              </span>
+              <span style="display:flex;gap:6px;align-items:center;flex-shrink:0;margin-left:auto;margin-right:12px;" onclick="event.stopPropagation()">
+                <button type="button" onclick="downloadGkLandPDF(${li},'student')" style="padding:5px 11px;border-radius:8px;border:1.5px solid #2f6fae;background:#e8f1fa;color:#1a3a5c;font-weight:800;font-size:11.5px;cursor:pointer;font-family:inherit;white-space:nowrap;">📄 학생용 묶음</button>
+                <button type="button" onclick="downloadGkLandPDF(${li},'teacher')" style="padding:5px 11px;border-radius:8px;border:1.5px solid #c0392b;background:#fdeef1;color:#c0392b;font-weight:800;font-size:11.5px;cursor:pointer;font-family:inherit;white-space:nowrap;">📕 교사용 묶음</button>
+              </span>
+              <span class="subject-arrow">▼</span>
+            </div>
+            <div class="subject-content">
+              <div class="subject-body">
+                ${L.gates.map((g, gi) => `
+                  <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;margin:6px 0;background:#fdf9f3;border:1px solid #ecd9bd;border-radius:10px;">
+                    <span style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#e8c49a;color:#6b3a10;font-weight:800;font-size:12.5px;">${gi + 1}</span>
+                    <span style="font-weight:700;color:#4a3520;font-size:14.5px;">${g}</span>
+                    ${(li <= 9) ? `
+                      <span style="margin-left:auto;display:flex;gap:6px;">
+                        <button type="button" onclick="downloadGkWorkbookPDF('gram_${li}_${gi}','student')" style="padding:6px 14px;border-radius:9px;border:1.5px solid #2f6fae;background:#e8f1fa;color:#1a3a5c;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;">📄 학생용</button>
+                        <button type="button" onclick="downloadGkWorkbookPDF('gram_${li}_${gi}','teacher')" style="padding:6px 14px;border-radius:9px;border:1.5px solid #c0392b;background:#fdeef1;color:#c0392b;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;">📕 교사용</button>
+                      </span>` : `
+                      <span style="margin-left:auto;font-size:11px;font-weight:700;color:#b09468;background:#f3e8d5;border-radius:10px;padding:3px 10px;">자료 준비 중</span>`}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `).join('');
+        // 맨 아래 전체(10개 땅 · 40관문) 통합 다운로드 바
+        area.innerHTML += `
+          <div style="margin-top:18px;padding:15px 18px;background:#fdf9f3;border:2px dashed #d9b98a;border-radius:14px;display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <span style="font-weight:900;color:#4a3520;font-size:15px;">📚 전체 워크북 한 권으로 <small style="font-weight:700;color:#8a5a3a;">· 10개 땅 40관문 (생성에 몇 분 걸려요)</small></span>
+              <span style="margin-left:auto;display:flex;gap:8px;">
+                <button type="button" onclick="downloadGkAllPDF('student')" style="padding:8px 18px;border-radius:10px;border:1.5px solid #2f6fae;background:#e8f1fa;color:#1a3a5c;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">📄 전체 학생용</button>
+                <button type="button" onclick="downloadGkAllPDF('teacher')" style="padding:8px 18px;border-radius:10px;border:1.5px solid #c0392b;background:#fdeef1;color:#c0392b;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">📕 전체 교사용</button>
+              </span>
+            </div>
+            <!-- 권별 다운로드 — 숨김 (필요 시 display:none 제거) -->
+            <div style="display:none;">
+              <span style="font-weight:900;color:#4a3520;font-size:15px;">📖 권별로 나눠서 <small style="font-weight:700;color:#8a5a3a;">· 1권: 1~4땅+형성평가(1) / 2권: 5~8땅+형성평가(2)</small></span>
+              <span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+                <button type="button" onclick="downloadGkVolPDF(1,'student')" style="padding:8px 14px;border-radius:10px;border:1.5px solid #2f6fae;background:#e8f1fa;color:#1a3a5c;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">📄 1권 학생용</button>
+                <button type="button" onclick="downloadGkVolPDF(1,'teacher')" style="padding:8px 14px;border-radius:10px;border:1.5px solid #c0392b;background:#fdeef1;color:#c0392b;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">📕 1권 교사용</button>
+                <button type="button" onclick="downloadGkVolPDF(2,'student')" style="padding:8px 14px;border-radius:10px;border:1.5px solid #2f6fae;background:#e8f1fa;color:#1a3a5c;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">📄 2권 학생용</button>
+                <button type="button" onclick="downloadGkVolPDF(2,'teacher')" style="padding:8px 14px;border-radius:10px;border:1.5px solid #c0392b;background:#fdeef1;color:#c0392b;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">📕 2권 교사용</button>
+              </span>
+            </div>
+            <div style="height:1px;background:#ecd9bd;"></div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <span style="font-weight:900;color:#4a3520;font-size:15px;">✂️ 형성평가 제외 <small style="font-weight:700;color:#8a5a3a;">· 1~8번 땅 32관문</small></span>
+              <span style="margin-left:auto;display:flex;gap:8px;">
+                <button type="button" onclick="downloadGkAllPDF('student', true)" style="padding:8px 18px;border-radius:10px;border:1.5px solid #2f6fae;background:#e8f1fa;color:#1a3a5c;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">📄 학생용(제외판)</button>
+                <button type="button" onclick="downloadGkAllPDF('teacher', true)" style="padding:8px 18px;border-radius:10px;border:1.5px solid #c0392b;background:#fdeef1;color:#c0392b;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">📕 교사용(제외판)</button>
+              </span>
+            </div>
+          </div>`;
+      }
+    }
+    // 국어문법 목차 아코디언 토글 (자료 로더 없이 열고 닫기만)
+    function gkLandToggle(headerEl){
+      headerEl.closest('.subject-accordion').classList.toggle('open');
+    }
+
+    // ═══════════════════════════════════════════════
+    // 🧭 국어문법(원정대) 관문 워크북 — 학생용/교사용 PDF
+    //    데이터: /BRAINUP/grammar/gk_gate_packs.js (원정대 GATE_PACKS 사본)
+    // ═══════════════════════════════════════════════
+    let GK_PACKS_CACHE = null;
+    async function loadGkPacks() {
+      if (GK_PACKS_CACHE) return GK_PACKS_CACHE;
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        // 국어문법 팩 전용 버전 — 팩 파일(어휘 줄잇기 등) 갱신 시 이 값을 올릴 것
+        const GK_PACKS_V = '20260906d';
+        s.src = '/BRAINUP/grammar/gk_gate_packs.js?v=' + GK_PACKS_V;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('gk packs load fail'));
+        document.head.appendChild(s);
+      });
+      GK_PACKS_CACHE = window.GK_GATE_PACKS || null;
+      return GK_PACKS_CACHE;
+    }
+    // 땅(세계)별 워크북 컬러 테마 — main 주색 / soft 연배경 / line 테두리 / dark 진한 글씨 / gold 해설 강조(공통)
+    const GK_LAND_THEMES = [
+      { main: '#2f6fae', soft: '#e8f1fa', line: '#bcd7ef', dark: '#1a3a5c', gold: '#d99e00' }, // 1 음운 — 남색
+      { main: '#0f9186', soft: '#e5f6f4', line: '#aee0da', dark: '#0b4f48', gold: '#d99e00' }, // 2 문장성분(1) — 청록
+      { main: '#479144', soft: '#eaf6e9', line: '#c3e3bf', dark: '#235020', gold: '#d99e00' }, // 3 문장성분(2) — 초록
+      { main: '#7a5cc4', soft: '#f1edfa', line: '#d5c9ef', dark: '#3d2a6e', gold: '#d99e00' }, // 4 문장짜임 — 보라
+      { main: '#c2417f', soft: '#fbecf3', line: '#efc3d9', dark: '#6e2247', gold: '#d99e00' }, // 5 품사(1) — 핑크마젠타
+      { main: '#e07b00', soft: '#fdf2e2', line: '#f4d4a4', dark: '#7a4300', gold: '#b45309' }, // 6 품사(2) — 주황(해설은 진갈색)
+      { main: '#8a5a2e', soft: '#f6efe7', line: '#e0cbb2', dark: '#4c3117', gold: '#d99e00' }, // 7 단어 — 브라운
+      { main: '#c5443c', soft: '#fbebea', line: '#f0c2bf', dark: '#6e211c', gold: '#d99e00' }, // 8 문장표현 — 레드
+      { main: '#5b6b7a', soft: '#eef2f5', line: '#cbd6de', dark: '#2d3a45', gold: '#d99e00' }, // 9 형성평가(1) — 슬레이트
+      { main: '#47596b', soft: '#edf1f5', line: '#c8d3dd', dark: '#22303d', gold: '#d99e00' }  // 10 형성평가(2) — 딥슬레이트
+    ];
+    let GK_THEME = GK_LAND_THEMES[0];
+    const GK_LAND_NAMES = ['음운의 세계','문장성분의 세계(1)','문장성분의 세계(2)','문장짜임의 세계','품사의 세계(1)','품사의 세계(2)','단어의 세계','문장표현의 세계','형성평가(1)','형성평가(2)'];
+    const GK_GATE_NAMES = [
+      ['음운','음절','자음','모음'],
+      ['주어','서술어','목적어','보어'],
+      ['관형어','부사어','독립어'],
+      ['홑문장과 겹문장','이어진문장','안은문장'],
+      ['명사','대명사','수사','동사','형용사'],
+      ['관형사','부사','조사','감탄사'],
+      ['단일어와 복합어','합성어와 파생어','유의어와 반의어','상의어와 하의어'],
+      ['시간표현','높임표현','부정표현','종결표현','피동표현과 사동표현'],
+      ['음운의 세계 형성평가','문장성분의 세계(1) 형성평가','문장성분의 세계(2) 형성평가','문장짜임의 세계 형성평가'],
+      ['품사의 세계(1) 형성평가','품사의 세계(2) 형성평가','단어의 세계 형성평가','문장표현의 세계 형성평가']
+    ];
+
+    function gkWbHeader(gateName, landLabel, audienceLabel, pageLabel) {
+      // 브레인온 스타일 배지 박스 헤더 — 좌측 남색 채움 박스(땅·관문) + 우측 관문명 영역 (페이지 상단 밀착)
+      const parts = String(landLabel || '').split(' · ');
+      const landName = parts[0] || '';
+      const gateNo = parts[1] || '';
+      return '<div style="margin:-50px -78px 0;position:relative;">'
+        + '<div style="display:flex;align-items:stretch;min-height:88px;">'
+        + '<div style="flex-shrink:0;background:' + GK_THEME.main + ';padding:14px 24px;text-align:center;display:flex;flex-direction:column;justify-content:center;min-width:132px;border-radius:0 0 60px 18px;box-shadow:2px 3px 8px rgba(0,0,0,0.10);">'
+        + '<div style="font-size:13px;font-weight:800;color:rgba(255,255,255,0.95);letter-spacing:0.5px;line-height:1.2;">' + landName + '</div>'
+        + '<div style="font-size:21px;font-weight:900;color:#fff;margin-top:5px;line-height:1;letter-spacing:-0.3px;">' + gateNo + '</div>'
+        + '</div>'
+        + '<div style="flex:1;min-width:0;background:' + GK_THEME.soft + ';padding:14px 26px 12px;display:flex;flex-direction:column;justify-content:center;position:relative;">'
+        + '<div style="position:absolute;top:9px;right:16px;font-size:11px;font-weight:800;color:' + GK_THEME.main + ';letter-spacing:1px;">🧭 국어 문법 원정대</div>'
+        + '<div style="font-size:25px;font-weight:900;color:#1f2937;letter-spacing:-0.3px;line-height:1.2;">' + gateName + '</div>'
+        + (pageLabel ? '<div style="font-size:13.5px;font-weight:700;color:' + GK_THEME.main + ';margin-top:5px;">' + pageLabel + '</div>' : '')
+        + '</div>'
+        + '</div>'
+        + '</div>'
+        + '<div style="height:16px;"></div>';
+    }    function gkSecTitle(t) {
+      return '<div style="font-size:16px;font-weight:900;color:' + GK_THEME.dark + ';background:' + GK_THEME.soft + ';border-left:5px solid ' + GK_THEME.main + ';border-radius:0 8px 8px 0;padding:8px 14px;margin:16px 0 10px;">' + t + '</div>';
+    }
+
+    // 페이지 1: 웹툰 (2열 × 5행)
+    function gkPageWebtoon(pack, gateName, landLabel, audienceLabel, pn) {
+      const imgs = (pack.imgs || []).slice(0, 10);
+      if (!imgs.length) return null;
+      // 이미지 캐시 버전 — 원정대 GK_ASSET_V와 동일하게 유지 (웹툰 교체 시 함께 갱신)
+      const GK_WB_IMG_V = '20260905a';
+      const cells = imgs.map((u) =>
+        '<div style="border:1.5px solid ' + GK_THEME.line + ';border-radius:8px;overflow:hidden;background:#f8fafc;">'
+        + '<img src="' + u + '?v=' + GK_WB_IMG_V + '" style="width:100%;height:176px;object-fit:cover;display:block;">'
+        + '</div>'
+      ).join('');
+      return '<div data-gk-hires="1" style="' + WB_PAGE_STYLE + '">'
+        + gkWbHeader(gateName, landLabel, audienceLabel, '🎞️ 웹툰으로 개념 만나기')
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">' + cells + '</div>'
+        + wbFooter(pn) + '</div>';
+    }
+
+    // 긴 본문 자동 페이지 분할 — 블록(섹션 단위)을 실측해 페이지 용량만큼 나눠 담는다
+    function gkPaginateBlocks(blocks, gateName, landLabel, audienceLabel, pageLabel, leadHtml) {
+      const meas = document.createElement('div');
+      // 접지 보정 후 실제 본문 폭(794-93-78=623px)과 동일 조건. overflow:hidden으로 끝 마진까지 포함 실측.
+      meas.style.cssText = 'position:fixed;left:-10000px;top:0;width:623px;overflow:hidden;background:#fff;font-family:"Noto Sans KR","Malgun Gothic",sans-serif;color:#1f2937;';
+      document.body.appendChild(meas);
+      const CAP = 1005; // 헤더(104) 아래 ~ 페이지 클리핑 한계(1123)까지 — 하단 패딩 영역도 실제로는 잘리지 않으므로 여유분 포함
+      const pageList = [];
+      let cur = [], curHtml = '';
+      if (leadHtml) { cur.push(leadHtml); curHtml = leadHtml; }
+      const flowH = (html) => { meas.innerHTML = html; return meas.scrollHeight; };
+      blocks.forEach(b => {
+        // 블록을 하나씩 합산하지 않고 이어붙인 흐름 전체를 실측 — 섹션 사이 마진 겹침까지 실제 페이지와 동일
+        if (cur.length && flowH(curHtml + b) > CAP) {
+          pageList.push(cur);
+          cur = []; curHtml = '';
+        }
+        cur.push(b); curHtml += b;
+      });
+      if (cur.length) pageList.push(cur);
+      document.body.removeChild(meas);
+      const ret = pageList.map((blks, pi) => (pn) => '<div style="' + WB_PAGE_STYLE + '">'
+        + gkWbHeader(gateName, landLabel, audienceLabel, pageLabel + (pageList.length > 1 ? ' (' + (pi + 1) + '/' + pageList.length + ')' : ''))
+        + blks.join('') + wbFooter(pn) + '</div>');
+      ret.__counts = pageList.map(a => a.length); // 페이지별 블록 수 (개념↔빈칸 분할 동기화용)
+      return ret;
+    }
+
+    // 페이지 2: 개념 본문 (sections + 확인 OX)
+    function gkPageConcept(pack, gateName, landLabel, audienceLabel, forcedGroups) {
+      const isT = audienceLabel === '교사용';
+      // 행간·간격을 파라미터로 받아, 살짝 넘칠 때 압축 재조판할 수 있게
+      const buildBlocks = (lhPara, lhTable) => {
+        const blocks = [];
+        (pack.sections || []).forEach(sec => {
+          let b = gkSecTitle('📌 ' + sec.title);
+          if (sec.type === 'table') {
+            b += '<div style="border:1.5px solid ' + GK_THEME.line + ';border-radius:10px;overflow:hidden;margin-bottom:8px;">'
+              + sec.items.map((row, ri) =>
+                (ri ? '<div style="height:1px;background:' + GK_THEME.line + ';"></div>' : '')
+                + '<div style="display:flex;">'
+                + '<div style="flex:0 0 120px;display:flex;align-items:center;justify-content:center;background:' + GK_THEME.soft + ';font-weight:800;font-size:13.5px;color:' + GK_THEME.dark + ';text-align:center;padding:6px;">' + row.label + '</div>'
+                + '<div style="flex:1;padding:9px 12px;font-size:13.5px;line-height:' + lhTable + ';color:#334155;">' + row.html + '</div>'
+                + '</div>').join('')
+              + '</div>';
+          } else {
+            b += '<div style="font-size:14.5px;line-height:' + lhPara + ';color:#334155;margin-bottom:8px;">'
+              + sec.items.map(t => '<span>' + t + '</span>').join(' ')
+              + '</div>';
+          }
+          if (sec.note) {
+            b += '<div style="font-size:12px;color:#64748b;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;padding:7px 11px;margin-bottom:8px;line-height:1.7;">' + sec.note + '</div>';
+          }
+          blocks.push(b);
+        });
+        return blocks;
+      };
+      let blocks = buildBlocks('2.0', '1.75');
+      // 빈칸 넣기가 분할된 관문 — 개념도 같은 섹션 경계로 나눠 두 페이지가 서로 대응되게
+      if (forcedGroups && forcedGroups.length > 1) {
+        const grouped = [];
+        let idx = 0;
+        forcedGroups.forEach(n => { grouped.push(blocks.slice(idx, idx + n)); idx += n; });
+        if (idx < blocks.length) grouped[grouped.length - 1] = grouped[grouped.length - 1].concat(blocks.slice(idx));
+        const pagesG = grouped.filter(g => g.length);
+        return pagesG.map((blks, pi) => (pn) => '<div style="' + WB_PAGE_STYLE + '">'
+          + gkWbHeader(gateName, landLabel, audienceLabel, '📖 개념 익히기 (' + (pi + 1) + '/' + pagesG.length + ')')
+          + blks.join('') + wbFooter(pn) + '</div>');
+      }
+      // 실측 — 한 페이지에서 12% 이내로 넘치면 행간·간격만 줄여 1쪽에 수납, 그 이상은 분할
+      const measC = document.createElement('div');
+      measC.style.cssText = 'position:fixed;left:-10000px;top:0;width:623px;overflow:hidden;background:#fff;font-family:"Noto Sans KR","Malgun Gothic",sans-serif;color:#1f2937;';
+      document.body.appendChild(measC);
+      measC.innerHTML = blocks.join('');
+      const conH = measC.scrollHeight;
+      document.body.removeChild(measC);
+      if (conH > 1005 && conH <= 1005 * 1.12) {
+        blocks = buildBlocks('1.8', '1.6');
+      }
+      return gkPaginateBlocks(blocks, gateName, landLabel, audienceLabel, '📖 개념 익히기', '');
+    }
+
+        // 페이지 3: 웹툰 확인 OX 10문항
+    function gkPageWtOx(pack, gateName, landLabel, audienceLabel, pn) {
+      const isT = audienceLabel === '교사용';
+      const list = pack.wtOx || [];
+      if (!list.length) return null;
+      const rows = list.map((w, i) => {
+        const oM = isT && w.a === true ? 'background:' + GK_THEME.main + ';color:#fff;border-color:' + GK_THEME.main + ';' : '';
+        const xM = isT && w.a === false ? 'background:#c0392b;color:#fff;border-color:#c0392b;' : '';
+        return '<div style="display:flex;align-items:center;gap:12px;padding:8px 4px;border-bottom:1px solid #f1f5f9;">'
+          + '<span style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:' + GK_THEME.soft + ';color:' + GK_THEME.dark + ';font-weight:900;font-size:12.5px;display:flex;align-items:center;justify-content:center;">' + (i + 1) + '</span>'
+          + '<span style="flex:1;font-size:14px;font-weight:600;color:#374151;line-height:1.65;">' + w.q + '</span>'
+          + '<span style="flex-shrink:0;width:30px;height:30px;border-radius:50%;border:2px solid #d1d5db;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;color:#6b7280;' + oM + '">O</span>'
+          + '<span style="flex-shrink:0;width:30px;height:30px;border-radius:50%;border:2px solid #d1d5db;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;color:#6b7280;' + xM + '">X</span>'
+          + '</div>';
+      }).join('');
+      // 어휘 줄 잇기 — 좌측 어휘 ↔ 우측 설명(고정 셔플, 학생·교사 동일 배치)
+      let matchHtml = '';
+      const mts = pack.match || [];
+      if (mts.length) {
+        // 관문 키 기반 결정적 셔플 (매번 같은 배치)
+        let seed = 0; for (const ch of gateName) seed = (seed * 31 + ch.charCodeAt(0)) % 9973;
+        const order = mts.map((_, i) => i).sort((a, b) => ((a * 7 + seed) % 11) - ((b * 7 + seed) % 11) || a - b);
+        const CIRC = ['㉠','㉡','㉢','㉣','㉤'];
+        const rightRows = order.map((oi, pos) => {
+          const ans = isT ? '<span style="color:#c0392b;font-weight:900;font-size:13px;margin-right:6px;">' + (mts.indexOf(mts[oi]) + 1) + '</span>' : '';
+          return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;min-height:52px;">'
+            + '<span style="flex-shrink:0;width:8px;height:8px;border-radius:50%;background:' + GK_THEME.main + ';"></span>'
+            + '<div style="flex:1;border:1.5px solid #e2e8f0;border-radius:9px;padding:7px 10px;font-size:12px;line-height:1.55;color:#475569;background:#fafcff;">' + ans + CIRC[pos] + ' ' + mts[oi].d + '</div>'
+            + '</div>';
+        }).join('');
+        const leftRows = mts.map((m, i) => {
+          const ans = isT ? '<span style="color:#c0392b;font-weight:900;font-size:13px;margin-left:6px;">→ ' + CIRC[order.indexOf(i)] + '</span>' : '';
+          return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;min-height:52px;">'
+            + '<div style="flex:1;border:1.5px solid ' + GK_THEME.line + ';border-radius:9px;padding:8px 10px;font-size:13.5px;font-weight:800;color:' + GK_THEME.dark + ';background:' + GK_THEME.soft + ';text-align:left;">' + (i + 1) + '. ' + m.w + ans + '</div>'
+            + '<span style="flex-shrink:0;width:8px;height:8px;border-radius:50%;background:' + GK_THEME.main + ';"></span>'
+            + '</div>';
+        }).join('');
+        matchHtml = gkSecTitle('어휘 줄 잇기')
+          + '<div style="font-size:12px;color:#64748b;margin-bottom:8px;">왼쪽 어휘와 어울리는 오른쪽 설명을 선으로 이어 보세요.</div>'
+          + '<div style="display:flex;gap:110px;align-items:flex-start;">'
+          + '<div style="flex:0 0 150px;">' + leftRows + '</div>'
+          + '<div style="flex:1;">' + rightRows + '</div>'
+          + '</div>';
+      }
+      return '<div style="' + WB_PAGE_STYLE + '">'
+        + gkWbHeader(gateName, landLabel, audienceLabel, '⭕❌ 웹툰 확인 퀴즈')
+        + '<div style="font-size:12.5px;color:#64748b;margin-bottom:8px;">웹툰에서 본 내용을 떠올리며 맞으면 O, 틀리면 X에 표시하세요.</div>'
+        + rows + matchHtml + wbFooter(pn) + '</div>';
+    }
+
+    // 페이지 4: 빈칸 넣기 — 개념 본문을 그대로 쓰되 핵심어 8개를 초성 힌트 빈칸으로
+    function gkChosung(w) {
+      const CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+      return Array.from(w).map(ch => {
+        const c = ch.charCodeAt(0) - 0xAC00;
+        return (c >= 0 && c < 11172) ? CHO[Math.floor(c / 588)] : ch;
+      }).join('');
+    }
+    function gkPageFill(pack, gateName, landLabel, audienceLabel) {
+      const isT = audienceLabel === '교사용';
+      const secs = pack.sections || [];
+      if (!secs.length) return null;
+      // 빈칸 후보: 프로그램 낱말카드(chips) 우선 + 본문 <b> 강조어(괄호·엔티티 낀 것 제외)
+      const terms = [];
+      (pack.fill && pack.fill.chips || []).forEach(t => { if (t.length >= 2 && !terms.includes(t)) terms.push(t); });
+      secs.forEach(sec => (sec.items || []).forEach(it => {
+        const str = typeof it === 'string' ? it : ((it.label || '') + (it.html || ''));
+        Array.from(str.matchAll(/<b[^>]*>([^<]{2,10})<\/b>/g)).forEach(m => {
+          const t = m[1].trim();
+          if (t.length >= 2 && !/[\[\]&\d]/.test(t) && !terms.includes(t)) terms.push(t);
+        });
+      }));
+      let quota = 8;
+      const used = {};
+      const gkBlanks = [];
+      const blankToken = (t) => { gkBlanks.push(t); return '\u0000' + (gkBlanks.length - 1) + '\u0000'; };
+      const blankSpan = (t) => {
+        const inner = isT
+          ? '<span style="color:#c0392b;font-weight:900;font-size:13px;">' + t + '</span>'
+          : '<span style="color:#a8b8c8;font-weight:800;letter-spacing:8px;padding-left:8px;">' + gkChosung(t) + '</span>';
+        return '<span style="display:inline-block;min-width:' + (isT ? Math.max(52, t.length * 15 + 22) : Math.max(88, t.length * 34 + 36)) + 'px;text-align:center;padding:' + (isT ? '1px 7px' : '6px 12px') + ';margin:0 3px;border:2px dashed ' + GK_THEME.main + ';border-radius:9px;background:' + GK_THEME.soft + ';position:relative;">'
+          + '<span style="position:absolute;top:-9px;left:-7px;width:17px;height:17px;border-radius:50%;background:' + GK_THEME.main + ';color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;">@@GKNO@@</span>'
+          + inner + '</span>';
+      };
+      const carve = (str, perItemMax) => {
+        let made = 0;
+        for (const t of terms) {
+          if (quota <= 0 || made >= perItemMax) break;
+          if ((used[t] || 0) >= 2) continue;
+          const idx = str.indexOf(t);
+          if (idx < 0) continue;
+          const before = str.slice(0, idx);
+          if (before.lastIndexOf('<') > before.lastIndexOf('>')) continue; // 태그 속성 내부 회피
+          str = str.slice(0, idx) + blankToken(t) + str.slice(idx + t.length);
+          used[t] = (used[t] || 0) + 1; quota--; made++;
+        }
+        return str;
+      };
+      // 두 패스: 1차 아이템당 1빈칸 → 남으면 2차로 추가 허용
+      const rendered = [];
+      secs.forEach(sec => {
+        const parts = [];
+        if (sec.type === 'table') {
+          (sec.items || []).forEach(row => parts.push({ row: true, label: row.label, html: carve(row.html, 1) }));
+        } else {
+          (sec.items || []).forEach(t => parts.push({ row: false, html: carve(t, 1) }));
+        }
+        rendered.push({ sec, parts });
+      });
+      if (quota > 0) rendered.forEach(r => r.parts.forEach(p => { p.html = carve(p.html, 1); }));
+      // 섹션 = 분할 블록 단위 — 행간을 파라미터로 받아, 살짝 넘칠 때 압축 재조판할 수 있게
+      const buildBlocks = (lhPara, lhTable, mbPara) => rendered.map(r => {
+        let b = gkSecTitle('📌 ' + r.sec.title);
+        if (r.sec.type === 'table') {
+          b += '<div style="border:1.5px solid ' + GK_THEME.line + ';border-radius:10px;overflow:hidden;margin-bottom:8px;">'
+            + r.parts.map((row, ri) =>
+              (ri ? '<div style="height:1px;background:' + GK_THEME.line + ';"></div>' : '')
+              + '<div style="display:flex;">'
+              + '<div style="flex:0 0 120px;display:flex;align-items:center;justify-content:center;background:' + GK_THEME.soft + ';font-weight:800;font-size:13.5px;color:' + GK_THEME.dark + ';text-align:center;padding:6px;">' + row.label + '</div>'
+              + '<div style="flex:1;padding:11px 13px;font-size:13.5px;line-height:' + lhTable + ';color:#334155;">' + row.html + '</div>'
+              + '</div>').join('')
+            + '</div>';
+        } else {
+          b += '<div style="font-size:' + (isT ? '12.5px' : '14.5px') + ';line-height:' + lhPara + ';color:#334155;margin-bottom:' + mbPara + 'px;">'
+            + r.parts.map(p => '<span>' + p.html + '</span>').join(' ')
+            + '</div>';
+        }
+        return b;
+      });
+      // 토큰 → 빈칸 HTML 전개 후 문서 위→아래 순으로 번호 재부여 (블록 순서 = 문서 순서)
+      const expand = (blocks) => {
+        let gkNo = 0;
+        return blocks.map(b => b
+          .replace(/\u0000(\d+)\u0000/g, (mm, n) => blankSpan(gkBlanks[+n]))
+          .replace(/@@GKNO@@/g, () => ++gkNo));
+      };
+      const lead = '<div style="font-size:12.5px;color:#64748b;margin-bottom:10px;">개념 본문을 떠올리며 빈칸에 알맞은 말을 써넣으세요. (빈칸 속 글자는 초성 힌트예요)</div>';
+      let finalBlocks = expand(buildBlocks(isT ? '2.1' : '2.7', '2.3', isT ? 8 : 14));
+      // 실측 — 한 페이지에서 12% 이내로 넘치면 행간만 줄여(2.7→2.35) 한 페이지에 수납
+      const measF = document.createElement('div');
+      measF.style.cssText = 'position:fixed;left:-10000px;top:0;width:623px;overflow:hidden;background:#fff;font-family:"Noto Sans KR","Malgun Gothic",sans-serif;color:#1f2937;';
+      document.body.appendChild(measF);
+      measF.innerHTML = lead + finalBlocks.join('');
+      const fillH = measF.scrollHeight;
+      document.body.removeChild(measF);
+      if (fillH > 1005 && fillH <= 1005 * 1.12) { // 12% 이내만 압축 수납 — 그 이상(수사 등)은 분할이 읽기 편함
+        finalBlocks = expand(buildBlocks(isT ? '1.9' : '2.35', '2.05', isT ? 6 : 10));
+      }
+      const retF = gkPaginateBlocks(finalBlocks, gateName, landLabel, audienceLabel, '🧩 빈칸 넣기', lead);
+      // 페이지별 섹션 수 (1쪽에는 안내문 lead가 끼어 있어 1 빼줌) — 개념 분할 동기화용
+      retF.__groups = (retF.__counts || []).slice();
+      if (retF.__groups.length) retF.__groups[0] = Math.max(1, retF.__groups[0] - 1);
+      return retF;
+    }
+
+    // 형성평가 시험지 — 표제 블록(첫 페이지) + 20문항 자동 분할 (교사용: 정답✔ + 해설)
+    function gkPageExam(pack, gateName, landLabel, audienceLabel) {
+      const isT = audienceLabel === '교사용';
+      const exam = pack.exam || [];
+      if (!exam.length) return null;
+      const CIRC = ['①', '②', '③', '④', '⑤'];
+      // 표제 블록 — 이중 테두리 시험지 머리 + 학년/반/이름/점수 기입란
+      const lead = '<div style="border:3px double ' + GK_THEME.main + ';border-radius:14px;padding:18px 22px 16px;margin-bottom:16px;background:#fff;">'
+        + '<div style="text-align:center;">'
+        + '<span style="display:inline-block;padding:4px 16px;background:' + GK_THEME.main + ';color:#fff;border-radius:999px;font-size:12px;font-weight:900;letter-spacing:3px;">형성평가</span>'
+        + '<div style="font-size:24px;font-weight:900;color:#1f2937;margin-top:9px;letter-spacing:-0.3px;">' + gateName + '</div>'
+        + '<div style="font-size:11.5px;color:#64748b;margin-top:5px;">총 ' + exam.length + '문항 · 문항당 5점 · 100점 만점</div>'
+        + '</div>'
+        + '<div style="display:flex;gap:8px;margin-top:13px;">'
+        + ['학년', '반', '이름', '점수'].map(l =>
+            '<div style="flex:1;display:flex;align-items:center;border:1.5px solid ' + GK_THEME.line + ';border-radius:9px;overflow:hidden;">'
+          + '<span style="flex-shrink:0;padding:6px 10px;background:' + GK_THEME.soft + ';font-size:11.5px;font-weight:800;color:' + GK_THEME.dark + ';">' + l + '</span>'
+          + '<span style="flex:1;min-height:26px;"></span>'
+          + '</div>').join('')
+        + '</div>'
+        + '</div>';
+      const blocks = exam.map((m, i) => {
+        let b = '<div style="margin-bottom:' + (isT ? '10px' : '15px') + ';">'
+          + '<div style="display:flex;gap:8px;align-items:flex-start;">'
+          + '<span style="flex-shrink:0;width:23px;height:23px;border-radius:7px;background:' + GK_THEME.main + ';color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;">' + (i + 1) + '</span>'
+          + '<span style="flex:1;font-size:' + (isT ? '13px' : '14.5px') + ';font-weight:700;color:#1f2937;line-height:1.55;">' + m.q + '</span>'
+          + '</div>'
+          + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin:7px 0 0 31px;">'
+          + m.c.map((o, oi) => {
+              const on = isT && oi === m.a;
+              return '<div style="font-size:' + (isT ? '12px' : '13.5px') + ';line-height:1.5;color:' + (on ? '#c0392b' : '#374151') + ';' + (on ? 'font-weight:900;' : '') + '">'
+                + CIRC[oi] + ' ' + o + (on ? ' ✔' : '') + '</div>';
+            }).join('')
+          + '</div>';
+        if (isT && m.e) {
+          b += '<div style="margin:6px 0 0 31px;font-size:10.5px;line-height:1.65;color:#7a5b12;background:#fffbeb;border:1px solid #f5dfa0;border-radius:8px;padding:5px 9px;"><b style="color:' + GK_THEME.gold + ';">해설</b> ' + m.e + '</div>';
+        }
+        b += '</div>';
+        return b;
+      });
+      return gkPaginateBlocks(blocks, gateName, landLabel, audienceLabel, '📝 ' + (isT ? '문제와 해설' : '문제지'), lead);
+    }
+
+    // 페이지 5·6: 객관식 (기본/심화 공용)
+    function gkPageMcq(list, title, pack, gateName, landLabel, audienceLabel, pn) {
+      const isT = audienceLabel === '교사용';
+      if (!list || !list.length) return null;
+      const nums = ['①','②','③','④'];
+      const items = list.map((qz, i) => {
+        let opts = '';
+        for (let c = 0; c < 4; c++) {
+          const good = isT && c === qz.a;
+          opts += '<div style="padding:' + (isT ? '3px 11px' : '6px 12px') + ';margin-bottom:' + (isT ? '2px' : '4px') + ';border-radius:8px;font-size:' + (isT ? '12px' : '14px') + ';line-height:' + (isT ? '1.5' : '1.6') + ';'
+            + (good ? 'background:#fdeef1;border:1.5px solid #c0392b;color:#c0392b;font-weight:800;' : 'color:#475569;')
+            + '">' + nums[c] + ' ' + qz.c[c] + (good ? '  ✔ 정답' : '') + '</div>';
+        }
+        const expl = (isT && qz.e)
+          ? '<div style="margin-top:4px;padding:5px 10px;background:#fdf7ee;border-left:4px solid ' + GK_THEME.gold + ';border-radius:0 8px 8px 0;font-size:10.5px;line-height:1.55;color:#7a5c1e;"><b style="color:#b8860b;">해설</b> ' + qz.e + '</div>'
+          : '';
+        return '<div style="margin-bottom:' + (isT ? '9px' : '18px') + ';">'
+          + '<div style="font-weight:800;font-size:' + (isT ? '13px' : '15px') + ';color:#1f2937;line-height:1.55;margin-bottom:' + (isT ? '5px' : '8px') + ';">Q' + (i + 1) + '. ' + qz.q + '</div>'
+          + opts + expl + '</div>';
+      }).join('');
+      return '<div style="' + WB_PAGE_STYLE + '">'
+        + gkWbHeader(gateName, landLabel, audienceLabel, title)
+        + items + wbFooter(pn) + '</div>';
+    }
+
+    // 관문 1개의 페이지 HTML 배열 조판 (pnStart부터 연속 페이지 번호 — 묶음 공용)
+    async function gkBuildGatePages(gateKey, audience, pnStart) {
+      const packs = await loadGkPacks();
+      const pack = packs && packs[gateKey];
+      if (!pack) return null;
+      const m = gateKey.match(/^gram_(\d+)_(\d+)$/);
+      const li = +m[1], gi = +m[2];
+      const gateName = (GK_GATE_NAMES[li] || [])[gi] || gateKey;
+      const landLabel = GK_LAND_NAMES[li] + ' · ' + (gi + 1) + '관문';
+      const audienceLabel = audience === 'teacher' ? '교사용' : '학생용';
+      GK_THEME = GK_LAND_THEMES[li] || GK_LAND_THEMES[0];
+      // 페이지 분할 실측 정확도를 위해 폰트를 먼저 로딩
+      if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
+      // 빈칸 넣기를 먼저 조판 — 분할됐으면 개념 익히기도 같은 섹션 경계로 분할 (짝 맞춤)
+      const fillPages = (pack.exam && pack.exam.length) ? null : gkPageFill(pack, gateName, landLabel, audienceLabel);
+      const fillGroups = fillPages ? fillPages.__groups : null;
+      const raw = (pack.exam && pack.exam.length) ? [
+        () => gkPageExam(pack, gateName, landLabel, audienceLabel)
+      ] : [
+        (p) => gkPageWebtoon(pack, gateName, landLabel, audienceLabel, p),
+        (p) => gkPageConcept(pack, gateName, landLabel, audienceLabel, fillGroups),
+        (p) => gkPageWtOx(pack, gateName, landLabel, audienceLabel, p),
+        () => fillPages,
+        (p) => gkPageMcq(pack.mcq, '✏️ 기본 문제', pack, gateName, landLabel, audienceLabel, p),
+        (p) => gkPageMcq(pack.adv, '🚀 심화 문제', pack, gateName, landLabel, audienceLabel, p)
+      ];
+      const pages = [];
+      raw.forEach(fn => {
+        const out = fn(pnStart + pages.length);
+        if (!out) return;
+        if (Array.isArray(out)) out.forEach(b => pages.push(b(pnStart + pages.length))); // 분할 페이지: 페이지번호 함수
+        else pages.push(out);
+      });
+      return { pages, gateName, li, gi };
+    }
+
+    // 페이지 배열 → PDF 렌더·저장. scale: 낱권 3 / 전체 묶음 2(용량)
+    // 표지({pdf, img}): pdf-lib가 있으면 인쇄용 PDF 원본을 벡터 그대로 병합(최고 해상도), 없으면 이미지 폴백
+    async function gkRenderPdf(pages, filename, progressCb, scale) {
+      const usePdfLib = !!(window.PDFLib && window.PDFLib.PDFDocument);
+      const frontCovers = [], backCovers = [];
+      const stage = document.createElement('div');
+      stage.style.cssText = 'position: fixed; left: -10000px; top: 0; width: 794px;';
+      document.body.appendChild(stage);
+      try {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
+        let sheetNo = 0;       // 표지를 뺀 본문 낱장 번호 (접지 보정·홀짝 기준)
+        let anyPage = false;   // jsPDF 문서에 페이지가 하나라도 들어갔는지
+        for (let i = 0; i < pages.length; i++) {
+          if (progressCb) progressCb('⏳ ' + (i + 1) + '/' + pages.length + '쪽');
+          const pg = pages[i];
+          if (pg && typeof pg === 'object') {
+            if (usePdfLib) {
+              // 표지·속지·책등 — 본문 렌더 후 pdf-lib 병합 단계에서 원본(PDF/이미지) 그대로 삽입
+              (sheetNo === 0 ? frontCovers : backCovers).push(pg);
+              continue;
+            }
+            // 폴백 — 변환해 둔 인쇄용 이미지 표지를 전면 삽입
+            const data = await new Promise((resolve, reject) => {
+              const im = new Image();
+              im.onload = () => { const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0); resolve(c.toDataURL('image/jpeg', 0.95)); };
+              im.onerror = reject;
+              im.src = pg.img;
+            });
+            if (anyPage) pdf.addPage();
+            anyPage = true;
+            pdf.addImage(data, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+            continue;
+          }
+          sheetNo++;
+          stage.innerHTML = pg;
+          await new Promise(r => setTimeout(r, 60));
+          const node = stage.firstElementChild;
+          // 책 접지 보정 — 홀수쪽 좌측 여백 확대 / 짝수쪽 우측 (표지 제외 본문 기준 연속)
+          if (node) {
+            if (sheetNo % 2 === 1) node.style.paddingLeft = '93px';
+            else node.style.paddingRight = '93px';
+          }
+          // 웹툰 페이지는 그림+작은 글씨라 묶음 배율과 무관하게 고배율·최고 품질로 (관문당 1쪽이라 용량 부담 적음)
+          const hires = pg.indexOf('data-gk-hires') >= 0;
+          const sc = hires ? Math.max(scale || 3, 3.5) : (scale || 3);
+          const canvas = await html2canvas(node, { scale: sc, useCORS: true, backgroundColor: '#ffffff', logging: false, imageTimeout: 0, letterRendering: true });
+          const img = canvas.toDataURL('image/jpeg', (hires || sc >= 3) ? 0.97 : 0.92);
+          if (anyPage) pdf.addPage();
+          anyPage = true;
+          pdf.addImage(img, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+        }
+        if (usePdfLib && (frontCovers.length || backCovers.length)) {
+          if (progressCb) progressCb('⏳ 표지 병합 중...');
+          const out = await PDFLib.PDFDocument.create();
+          const addSrc = async (bytes) => {
+            const src = await PDFLib.PDFDocument.load(bytes);
+            const ps = await out.copyPages(src, src.getPageIndices());
+            ps.forEach(p => out.addPage(p));
+          };
+          const addItem = async (o) => {
+            if (o.pdf) { await addSrc(await (await fetch(o.pdf)).arrayBuffer()); return; }
+            const bytes = await (await fetch(o.img)).arrayBuffer();
+            const im = o.img.toLowerCase().includes('.png') ? await out.embedPng(bytes) : await out.embedJpg(bytes);
+            const page = out.addPage([595.28, 841.89]); // A4(pt) 전면
+            page.drawImage(im, { x: 0, y: 0, width: 595.28, height: 841.89 });
+          };
+          for (const o of frontCovers) await addItem(o);
+          await addSrc(pdf.output('arraybuffer'));
+          for (const o of backCovers) await addItem(o);
+          const bytes = await out.save();
+          const blob = new Blob([bytes], { type: 'application/pdf' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = filename;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+        } else {
+          pdf.save(filename);
+        }
+      } finally {
+        document.body.removeChild(stage);
+      }
+    }
+
+        async function downloadGkWorkbookPDF(gateKey, audience) {
+      const btn = event?.target?.closest('button');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) { btn.disabled = true; btn.innerHTML = '⏳ 생성 중...'; }
+      try {
+        if (!window.html2canvas || !window.jspdf) { alert('PDF 라이브러리 로딩 중입니다. 잠시 후 다시 시도해 주세요.'); return; }
+        const built = await gkBuildGatePages(gateKey, audience, 1);
+        if (!built) { alert('관문 데이터를 불러오지 못했습니다.'); return; }
+        const audienceLabel = audience === 'teacher' ? '교사용' : '학생용';
+        const cleanGate = built.gateName.replace(/\s+/g, '');
+        await gkRenderPdf(built.pages, '교재_국어문법_' + (built.li + 1) + '-' + (built.gi + 1) + '_' + cleanGate + '_' + audienceLabel + '.pdf', btn ? (t) => { btn.innerHTML = t; } : null, 3);
+      } catch (err) {
+        console.error('국어문법 워크북 생성 오류:', err);
+        alert('워크북 PDF 생성 중 오류가 발생했습니다.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+      }
+    }
+
+    // 땅 표제 페이지 — 테마색 배지 중앙 배치 (묶음 교재의 땅 구분용)
+    function gkPageLandTitle(li, pn) {
+      const T = GK_LAND_THEMES[li] || GK_LAND_THEMES[0];
+      const gates = GK_GATE_NAMES[li] || [];
+      const chips = gates.map((g, gi) =>
+        '<span style="display:inline-block;padding:7px 16px;margin:4px;background:#fff;border:1.5px solid ' + T.line + ';border-radius:999px;font-size:13.5px;font-weight:800;color:' + T.dark + ';">' + (gi + 1) + '관문 · ' + g + '</span>').join('');
+      return '<div style="' + WB_PAGE_STYLE + '">'
+        + '<div style="min-height:940px;display:flex;flex-direction:column;align-items:center;justify-content:center;">'
+        + '<div style="width:520px;border:3px double ' + T.main + ';border-radius:24px;background:' + T.soft + ';padding:46px 30px;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,0.06);">'
+        + '<span style="display:inline-flex;width:64px;height:64px;border-radius:50%;background:' + T.main + ';color:#fff;font-size:28px;font-weight:900;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,0.15);">' + (li + 1) + '</span>'
+        + '<div style="font-size:15px;font-weight:800;color:' + T.main + ';letter-spacing:4px;margin-top:18px;">국어 문법 원정대</div>'
+        + '<div style="font-size:36px;font-weight:900;color:' + T.dark + ';margin-top:8px;letter-spacing:-0.5px;">' + GK_LAND_NAMES[li] + '</div>'
+        + '<div style="height:2.5px;width:84px;background:' + T.main + ';margin:20px auto;border-radius:2px;"></div>'
+        + '<div style="line-height:1.9;">' + chips + '</div>'
+        + '</div>'
+        + '</div>'
+        + wbFooter(pn) + '</div>';
+    }
+
+    // 땅 어휘장 — 관문별 핵심 어휘(줄잇기 어휘)를 박스로 나열. 길면 자동 분할.
+    function gkPageLandVocab(li, packs) {
+      const T = GK_LAND_THEMES[li] || GK_LAND_THEMES[0];
+      GK_THEME = T;
+      const gates = GK_GATE_NAMES[li] || [];
+      // 간격을 파라미터로 — 5관문 땅이 살짝 넘칠 때 압축해 1쪽 수납
+      const buildVocab = (boxMb, headPad, rowPad, bodyPad, fsW, fsD, lhD) => {
+        const bs = [];
+        gates.forEach((g, gi) => {
+          const pack = packs && packs['gram_' + li + '_' + gi];
+          if (!pack || !pack.match || !pack.match.length) return;
+          bs.push('<div style="border:1.5px solid ' + T.line + ';border-radius:12px;overflow:hidden;margin-bottom:' + boxMb + 'px;">'
+            + '<div style="display:flex;align-items:center;gap:8px;background:' + T.soft + ';padding:' + headPad + 'px 14px;">'
+            + '<span style="flex-shrink:0;width:23px;height:23px;border-radius:7px;background:' + T.main + ';color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;">' + (gi + 1) + '</span>'
+            + '<span style="font-size:14.5px;font-weight:900;color:' + T.dark + ';">' + g + '</span>'
+            + '</div>'
+            + '<div style="padding:' + bodyPad + 'px 14px ' + (bodyPad + 2) + 'px;">'
+            + pack.match.map(m =>
+                '<div style="display:flex;align-items:center;gap:10px;padding:' + rowPad + 'px 0;">'
+              + '<span style="flex-shrink:0;min-width:88px;text-align:center;padding:2.5px 9px;background:' + T.soft + ';border:1px solid ' + T.line + ';border-radius:8px;font-size:' + (fsW || 13) + 'px;font-weight:900;color:' + T.dark + ';">' + m.w + '</span>'
+              + '<span style="flex:1;font-size:' + (fsD || 12.5) + 'px;color:#475569;line-height:' + (lhD || 1.6) + ';">' + m.d + '</span>'
+              + '</div>').join('')
+            + '</div></div>');
+        });
+        return bs;
+      };
+      let blocks = buildVocab(12, 8, 4, 8);
+      if (!blocks.length) return null; // 형성평가 땅 등 어휘 없는 경우
+      // 실측 — 12% 이내 초과면 간격 압축으로 1쪽 수납
+      const measV = document.createElement('div');
+      measV.style.cssText = 'position:fixed;left:-10000px;top:0;width:623px;overflow:hidden;background:#fff;font-family:"Noto Sans KR","Malgun Gothic",sans-serif;';
+      document.body.appendChild(measV);
+      measV.innerHTML = blocks.join('');
+      const vH = measV.scrollHeight;
+      document.body.removeChild(measV);
+      if (vH > 1005 && vH <= 1005 * 1.12) {
+        blocks = buildVocab(8, 5, 2.5, 5);
+      } else if (vH > 1005 * 1.12 && vH <= 1005 * 1.30) {
+        // 5관문 땅(품사(1)·문장표현) — 간격에 더해 글씨도 한 단계 줄여 1쪽 수납
+        blocks = buildVocab(7, 4, 2, 4, 12, 11.5, 1.5);
+      }
+      return gkPaginateBlocks(blocks, '어휘 모아보기', GK_LAND_NAMES[li] + ' · 어휘장', '', '📚 관문별 핵심 어휘', '');
+    }
+
+    // 땅 묶음 — 그 땅의 모든 관문을 한 권으로 (페이지 번호 연속)
+    async function downloadGkLandPDF(li, audience) {
+      const btn = event?.target?.closest('button');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) { btn.disabled = true; btn.innerHTML = '⏳ 준비 중...'; }
+      try {
+        if (!window.html2canvas || !window.jspdf) { alert('PDF 라이브러리 로딩 중입니다. 잠시 후 다시 시도해 주세요.'); return; }
+        const gates = (GK_GATE_NAMES[li] || []).map((g, gi) => 'gram_' + li + '_' + gi);
+        const all = [];
+        // 땅 표제 + 어휘장
+        const packsL = await loadGkPacks();
+        GK_THEME = GK_LAND_THEMES[li] || GK_LAND_THEMES[0];
+        all.push(gkPageLandTitle(li, all.length + 1));
+        const vpL = gkPageLandVocab(li, packsL);
+        if (vpL) vpL.forEach(b => all.push(b(all.length + 1)));
+        for (let i = 0; i < gates.length; i++) {
+          if (btn) btn.innerHTML = '⏳ 조판 ' + (i + 1) + '/' + gates.length;
+          const built = await gkBuildGatePages(gates[i], audience, all.length + 1);
+          if (built) all.push.apply(all, built.pages);
+        }
+        if (!all.length) { alert('관문 데이터를 불러오지 못했습니다.'); return; }
+        const audienceLabel = audience === 'teacher' ? '교사용' : '학생용';
+        const cleanLand = GK_LAND_NAMES[li].replace(/\s+/g, '');
+        await gkRenderPdf(all, '교재_국어문법_' + (li + 1) + '땅_' + cleanLand + '_' + audienceLabel + '.pdf', btn ? (t) => { btn.innerHTML = t; } : null, 3);
+      } catch (err) {
+        console.error('국어문법 땅 묶음 생성 오류:', err);
+        alert('워크북 PDF 생성 중 오류가 발생했습니다.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+      }
+    }
+
+    // 묶음 목차 — 가운데 정렬 큰 판형, 항상 2쪽 (본문은 3쪽부터). 카드 실측으로 두 쪽에 균형 배치.
+    function gkPageToc(bookTitle, entries, audienceLabel) {
+      const card = (en, compact) => {
+        const T = GK_LAND_THEMES[en.li] || GK_LAND_THEMES[0];
+        const fs1 = compact ? 15 : 16.5, fs2 = compact ? 13 : 14, pv = compact ? 3 : 4.5;
+        return '<div style="border:2px solid ' + T.line + ';border-radius:14px;overflow:hidden;">'
+          + '<div style="display:flex;align-items:center;gap:10px;background:' + T.soft + ';padding:' + (compact ? 7 : 10) + 'px 18px;">'
+          + '<span style="flex-shrink:0;width:26px;height:26px;border-radius:9px;background:' + T.main + ';color:#fff;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;">' + (en.li + 1) + '</span>'
+          + '<span style="font-size:' + fs1 + 'px;font-weight:900;color:' + T.dark + ';letter-spacing:-0.3px;">' + GK_LAND_NAMES[en.li] + '</span>'
+          + '</div>'
+          + '<div style="padding:' + (compact ? 6 : 9) + 'px 18px ' + (compact ? 8 : 12) + 'px;">'
+          + en.gates.map((g, gi) =>
+              '<div style="display:flex;align-items:baseline;gap:9px;padding:' + pv + 'px 0;">'
+            + '<span style="font-size:' + fs2 + 'px;font-weight:700;color:#374151;white-space:nowrap;">' + (gi + 1) + '. ' + g.name + '</span>'
+            + '<span style="flex:1;border-bottom:1.5px dotted #cbd5e1;"></span>'
+            + '<span style="font-size:' + fs2 + 'px;font-weight:900;color:' + T.main + ';">' + g.page + '</span>'
+            + '</div>').join('')
+          + '</div></div>';
+      };
+      let cards = entries.map(en => card(en, false));
+      // 실측 — 가운데 폭 560px 기준으로 카드 높이를 재서 두 쪽에 균형 배치
+      const meas = document.createElement('div');
+      meas.style.cssText = 'position:fixed;left:-10000px;top:0;width:560px;overflow:hidden;background:#fff;font-family:"Noto Sans KR","Malgun Gothic",sans-serif;';
+      document.body.appendChild(meas);
+      const measure = (arr) => arr.map(c => { meas.innerHTML = c; return meas.scrollHeight + 16; });
+      let hs = measure(cards);
+      let totalH = hs.reduce((a, b) => a + b, 0);
+      const CAP1 = 1003 - 175; // 1쪽: 큰 표제 박스 자리 제외
+      const CAP2 = 1003 - 70;  // 2쪽: 슬림 헤더 자리 제외
+      if (totalH > CAP1 + CAP2) { // 전체판처럼 분량이 많으면 한 단계 압축해 2쪽 안에
+        cards = entries.map(en => card(en, true));
+        hs = measure(cards);
+        totalH = hs.reduce((a, b) => a + b, 0);
+      }
+      document.body.removeChild(meas);
+      let first = [], second = [], acc = 0;
+      cards.forEach((c, i) => {
+        // 목표: 두 쪽 분량이 비슷하게 — 절반을 넘기 전까지 1쪽에, 단 1쪽 용량 초과 시 즉시 2쪽으로
+        if (second.length === 0 && acc + hs[i] <= Math.min(CAP1, totalH / 2 + hs[i] / 2)) { first.push(c); acc += hs[i]; }
+        else second.push(c);
+      });
+      if (!second.length && first.length > 1) second.push(first.pop()); // 항상 2쪽 유지
+      const wrap = (inner) => '<div style="max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">' + inner.join('') + '</div>';
+      const page1 = '<div style="' + WB_PAGE_STYLE + '">'
+        + '<div style="max-width:560px;margin:0 auto 22px;border:3px double #d99e00;border-radius:18px;padding:16px 20px;text-align:center;background:#fffdf5;">'
+        + '<div style="font-size:21px;font-weight:900;color:#b45309;letter-spacing:9px;">목&nbsp;차</div>'
+        + '</div>'
+        + wrap(first)
+        + wbFooter(1) + '</div>';
+      const page2 = '<div style="' + WB_PAGE_STYLE + '">'
+        + '<div style="max-width:560px;margin:0 auto 20px;border:2px solid #ecd9bd;border-radius:14px;padding:10px;text-align:center;background:#fffdf5;">'
+        + '<span style="font-size:14.5px;font-weight:900;color:#b45309;letter-spacing:5px;">목&nbsp;차</span>'
+        + '</div>'
+        + wrap(second)
+        + wbFooter(2) + '</div>';
+      return [page1, page2];
+    }
+
+    // 권별 묶음 — 1권: 1~4땅+형성평가(1) / 2권: 5~8땅+형성평가(2)    // 권별 묶음 — 1권: 1~4땅+형성평가(1) / 2권: 5~8땅+형성평가(2)
+    // 메모 페이지 — 바둑판(모눈) 메모장. div 격자로 그려 html2canvas 렌더 호환 보장.
+    function gkPageMemo(pn) {
+      const COLS = 24, ROWS = 35; // 26px 모눈
+      let cells = '';
+      for (let i = 0; i < COLS * ROWS; i++) {
+        cells += '<div style="border-right:1px solid #e6dcc9;border-bottom:1px solid #e6dcc9;"></div>';
+      }
+      return '<div style="' + WB_PAGE_STYLE + '">'
+        + '<div style="text-align:center;margin-bottom:14px;">'
+        + '<span style="display:inline-block;padding:5px 24px;border:2px solid #d9b98a;border-radius:999px;background:#fffdf5;font-size:14px;font-weight:900;color:#b45309;letter-spacing:6px;">메&nbsp;모</span>'
+        + '</div>'
+        + '<div style="border:1.5px solid #d9c6a8;border-radius:10px;overflow:hidden;">'
+        + '<div style="display:grid;grid-template-columns:repeat(' + COLS + ',1fr);grid-auto-rows:26px;margin:0 -1px -1px 0;">' + cells + '</div>'
+        + '</div>'
+        + wbFooter(pn) + '</div>';
+    }
+
+    async function downloadGkVolPDF(vol, audience) {
+      const btn = event?.target?.closest('button');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) { btn.disabled = true; btn.innerHTML = '⏳ 준비 중...'; }
+      try {
+        if (!window.html2canvas || !window.jspdf) { alert('PDF 라이브러리 로딩 중입니다. 잠시 후 다시 시도해 주세요.'); return; }
+        const lands = vol === 1 ? [0, 1, 2, 3, 8] : [4, 5, 6, 7, 9]; // 형성평가(1)=1~4땅 범위, (2)=5~8땅 범위
+        const all = [];
+        const tocEntries = [];
+        let done = 0, total = lands.reduce((a, li) => a + GK_GATE_NAMES[li].length, 0);
+        const packsV = await loadGkPacks();
+        for (const li of lands) {
+          const en = { li, gates: [] };
+          // 땅 표제 + 어휘장 (책 앞부속 3쪽 뒤부터 시작이므로 +4)
+          GK_THEME = GK_LAND_THEMES[li] || GK_LAND_THEMES[0];
+          all.push(gkPageLandTitle(li, all.length + 4));
+          const vpV = gkPageLandVocab(li, packsV);
+          if (vpV) vpV.forEach(b => all.push(b(all.length + 4)));
+          for (let gi = 0; gi < GK_GATE_NAMES[li].length; gi++) {
+            done++;
+            if (btn) btn.innerHTML = '⏳ 조판 ' + done + '/' + total + '관문';
+            const startPn = all.length + 4; // 1~2쪽 목차 + 3쪽 메모
+            const built = await gkBuildGatePages('gram_' + li + '_' + gi, audience, startPn);
+            if (built) { all.push.apply(all, built.pages); en.gates.push({ name: built.gateName, page: startPn }); }
+          }
+          if (en.gates.length) tocEntries.push(en);
+        }
+        if (!all.length) { alert('관문 데이터를 불러오지 못했습니다.'); return; }
+        const audienceLabel = audience === 'teacher' ? '교사용' : '학생용';
+        all.unshift.apply(all, gkPageToc('국어 문법 원정대 · ' + vol + '권', tocEntries, audienceLabel).concat([gkPageMemo(3)]));
+        all.unshift({ img: '/images/국어개념원정대/앞표지바로다음.png' }); // 표지 속지
+        all.unshift({ img: '/images/국어개념원정대/앞표지뒷면.png' }); // 앞표지 뒷면
+        all.unshift({ pdf: '/images/국어개념원정대/BRAIN_현대문법_' + (vol === 1 ? 'I' : 'II') + '_인쇄용.pdf', img: '/images/국어개념원정대/표지_앞_' + vol + '권.jpg' });
+        all.push({ pdf: '/images/국어개념원정대/BRAIN_현대문법_뒷표지_인쇄용_공통.pdf', img: '/images/국어개념원정대/표지_뒤_공통.jpg' });
+        all.push({ img: '/images/국어개념원정대/책등.png' }); // 책등 — 맨 마지막
+        await gkRenderPdf(all, '교재_국어문법_' + vol + '권_' + audienceLabel + '.pdf', btn ? (t) => { btn.innerHTML = t; } : null, 2.5);
+      } catch (err) {
+        console.error('국어문법 권별 묶음 생성 오류:', err);
+        alert('워크북 PDF 생성 중 오류가 발생했습니다.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+      }
+    }
+
+    // 전체 묶음 — 10개 땅 40관문 한 권 (분량이 커서 scale 2로 용량 절약)
+    async function downloadGkAllPDF(audience, excludeExam) {
+      const btn = event?.target?.closest('button');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) { btn.disabled = true; btn.innerHTML = '⏳ 준비 중...'; }
+      try {
+        if (!window.html2canvas || !window.jspdf) { alert('PDF 라이브러리 로딩 중입니다. 잠시 후 다시 시도해 주세요.'); return; }
+        const all = [];
+        const landCount = excludeExam ? 8 : GK_GATE_NAMES.length; // 형성평가(9·10번 땅) 제외 옵션
+        const tocEntries = [];
+        let done = 0, total = GK_GATE_NAMES.slice(0, landCount).reduce((a, g) => a + g.length, 0);
+        const packsA = await loadGkPacks();
+        for (let li = 0; li < landCount; li++) {
+          const en = { li, gates: [] };
+          // 땅 표제 + 어휘장 (책 앞부속 3쪽 뒤부터 시작이므로 +4)
+          GK_THEME = GK_LAND_THEMES[li] || GK_LAND_THEMES[0];
+          all.push(gkPageLandTitle(li, all.length + 4));
+          const vpA = gkPageLandVocab(li, packsA);
+          if (vpA) vpA.forEach(b => all.push(b(all.length + 4)));
+          for (let gi = 0; gi < GK_GATE_NAMES[li].length; gi++) {
+            done++;
+            if (btn) btn.innerHTML = '⏳ 조판 ' + done + '/' + total + '관문';
+            const startPn = all.length + 4; // 1~2쪽 목차 + 3쪽 메모
+            const built = await gkBuildGatePages('gram_' + li + '_' + gi, audience, startPn);
+            if (built) { all.push.apply(all, built.pages); en.gates.push({ name: built.gateName, page: startPn }); }
+          }
+          if (en.gates.length) tocEntries.push(en);
+        }
+        if (!all.length) { alert('관문 데이터를 불러오지 못했습니다.'); return; }
+        const audienceLabel = audience === 'teacher' ? '교사용' : '학생용';
+        all.unshift.apply(all, gkPageToc('국어 문법 원정대 · 전체' + (excludeExam ? ' (형성평가 제외)' : ''), tocEntries, audienceLabel).concat([gkPageMemo(3)]));
+        all.unshift({ img: '/images/국어개념원정대/앞표지바로다음.png' }); // 표지 속지
+        all.unshift({ img: '/images/국어개념원정대/앞표지뒷면.png' }); // 앞표지 뒷면
+        all.unshift({ pdf: '/images/국어개념원정대/BRAIN_현대문법_인쇄용_앞표지공통.pdf', img: '/images/국어개념원정대/표지_앞_공통.jpg' });
+        all.push({ pdf: '/images/국어개념원정대/BRAIN_현대문법_뒷표지_인쇄용_공통.pdf', img: '/images/국어개념원정대/표지_뒤_공통.jpg' });
+        all.push({ img: '/images/국어개념원정대/책등.png' }); // 책등 — 맨 마지막
+        await gkRenderPdf(all, '교재_국어문법_전체' + (excludeExam ? '(형성평가제외)' : '') + '_' + audienceLabel + '.pdf', btn ? (t) => { btn.innerHTML = t; } : null, 2);
+      } catch (err) {
+        console.error('국어문법 전체 묶음 생성 오류:', err);
+        alert('워크북 PDF 생성 중 오류가 발생했습니다.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+      }
+    }
+
     const SUBJECTS = {
       // 과학 (4개)
       bio: { name: '생물', icon: '🧬', folder: 'science' },
@@ -2426,31 +3334,19 @@
       // 이미 렌더링 되었으면 스킵
       if (container.querySelector('.subject-accordion')) return;
 
-      // 한국사 방학특강: 5개 과목 (기본 20강 / 심화 12강 / 예비검정 5·4·3급)
+      // 연계특강: 하위 메뉴(한국사/국어문법) → 선택에 따라 과목 영역 전환
       if (series === 'korhistory') {
-        const korCards = [
-          { key: 'kh',     icon: '📜', name: '한국사',           suffix: '· 방학특강 20강' },
-          { key: 'khadv',  icon: '📚', name: '심화한국사',        suffix: '· 한국사검정 3·4급 12강' },
-          { key: 'cert5',  icon: '🥉', name: '한국사 예비검정 5급', suffix: '· 20문항 시험지' },
-          { key: 'cert4',  icon: '🥈', name: '한국사 예비검정 4급', suffix: '· 20문항 시험지' },
-          { key: 'cert3',  icon: '🥇', name: '한국사 예비검정 3급', suffix: '· 20문항 시험지' }
-        ];
-        container.innerHTML = korCards.map(c => `
-          <div class="subject-accordion" data-subject="${c.key}" data-series="korhistory">
-            <div class="subject-header" onclick="toggleSubject(this)">
-              <span class="subject-title">
-                <span class="icon">${c.icon}</span>
-                ${c.name} <small style="font-weight:normal;color:#8a5a3a;">${c.suffix}</small>
-              </span>
-              <span class="subject-arrow">▼</span>
-            </div>
-            <div class="subject-content">
-              <div class="subject-body">
-                <div class="loading"><div class="spinner"></div><p>로딩 중...</p></div>
-              </div>
-            </div>
+        if (container.querySelector('.kh-submenu')) return;
+        container.innerHTML = `
+          <div class="kh-submenu" style="display:flex;gap:10px;margin-bottom:18px;">
+            <button type="button" class="kh-sub-btn" data-sub="kor" onclick="khSubSwitch('kor')"
+              style="flex:1;max-width:220px;padding:12px 18px;border-radius:12px;border:2px solid #c47b3a;background:linear-gradient(135deg,#f5e0c8,#e8c49a);color:#6b3a10;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;">📜 한국사</button>
+            <button type="button" class="kh-sub-btn" data-sub="grammar" onclick="khSubSwitch('grammar')"
+              style="flex:1;max-width:220px;padding:12px 18px;border-radius:12px;border:2px solid #ddd;background:#fff;color:#888;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;">🧭 국어문법</button>
           </div>
-        `).join('');
+          <div id="khSubArea"></div>
+        `;
+        khSubSwitch('kor');
         return;
       }
 
