@@ -483,6 +483,7 @@ function getKstDayKey(d) {
   return `${kst.getUTCFullYear()}-${String(kst.getUTCMonth() + 1).padStart(2, '0')}-${String(kst.getUTCDate()).padStart(2, '0')}`;
 }
 const LiteracyKingRecord = require("./models/LiteracyKingRecord");
+const LiteracyKingAllTime = require("./models/LiteracyKingAllTime"); // 역대 최고 기록 영구 보존
 const LiteracyKingChampion = require("./models/LiteracyKingChampion");
 const SpeedReadingKing = require("./models/SpeedReadingKing");
 const BookOrder = require("./models/BookOrder");
@@ -33465,6 +33466,19 @@ app.post('/api/literacy-king/save', async (req, res) => {
     const dailyTotalLimitReached = attemptsAfterSave >= LK_DAILY_TOTAL_ATTEMPTS_CAP;
     const balanceExhausted = lkState.balance <= 0;
 
+    // 🗄️ 역대 기록 보관 — 월별 완전 리셋과 무관하게 역대 최고(점수 높은 쪽, 동점이면 빠른 쪽) 영구 보존
+    try {
+      const at = await LiteracyKingAllTime.findOne({ grade, name, unitId });
+      const better = !at || score > at.bestScore || (score === at.bestScore && (time || 0) < at.bestTime);
+      if (better) {
+        await LiteracyKingAllTime.updateOne(
+          { grade, name, unitId },
+          { $set: { series, unitTitle: unitTitle || '', academyName: academyName || '', bestScore: score, bestTime: time || 0, maxCombo: maxCombo || 0, updatedAt: new Date() } },
+          { upsert: true }
+        );
+      }
+    } catch (e) { console.error('⚠️ [문해왕] 역대 기록 보관 실패:', e.message); }
+
     const existing = await LiteracyKingRecord.findOne({ grade, name, unitId });
     let isNewBest = false;
     let previousAwarded = 0;
@@ -33891,6 +33905,22 @@ async function runLiteracyKingMonthlyDistribution() {
     // 새 달 시작 — 지난달 기록 전체 삭제(어휘월드컵과 동일한 완전 리셋)
     // 챔피언 스냅샷(LiteracyKingChampion)은 위에서 이미 보존했으므로 안전.
     // 순위가 bestScore 기반이라, 삭제해야 새 달 리더보드가 실제로 빈 상태로 시작한다.
+    // 🗄️ 삭제 전 역대 기록 백업 — save 시점 보관의 안전벨트 (더 좋은 기록만 반영)
+    try {
+      const toArchive = await LiteracyKingRecord.find({}).lean();
+      for (const r of toArchive) {
+        const at = await LiteracyKingAllTime.findOne({ grade: r.grade, name: r.name, unitId: r.unitId });
+        const better = !at || r.bestScore > at.bestScore || (r.bestScore === at.bestScore && r.bestTime < at.bestTime);
+        if (better) {
+          await LiteracyKingAllTime.updateOne(
+            { grade: r.grade, name: r.name, unitId: r.unitId },
+            { $set: { series: r.series, unitTitle: r.unitTitle || '', academyName: r.academyName || '', bestScore: r.bestScore, bestTime: r.bestTime || 0, maxCombo: r.maxCombo || 0, updatedAt: new Date() } },
+            { upsert: true }
+          );
+        }
+      }
+      console.log(`  🗄️ [문해왕] 역대 기록 백업 ${toArchive.length}건 점검 완료`);
+    } catch (e) { console.error('⚠️ [문해왕] 정산 전 역대 백업 실패:', e.message); }
     const delRes = await LiteracyKingRecord.deleteMany({});
     console.log(`✅ [문해왕] 월별 정산 완료. 기록 ${delRes.deletedCount}개 삭제 → 새 달 빈 리더보드로 시작`);
   } catch (err) {
