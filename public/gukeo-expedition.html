@@ -622,7 +622,7 @@
   // ── 관문 리포트 ──
   const STG_LB={ox:'\u2B55 OX 퀴즈',fill:'\uD83E\uDDE9 빈칸 넣기',mcq:'\u270F\uFE0F 문제 풀이',adv:'\uD83D\uDE80 심화 확장',exam:'\uD83D\uDCDD 형성평가'};
   function barColor(p){ return p>=0.8?'#7ad0a8':(p>=0.5?'#f6c945':'#e08a9b'); }
-  function drawRadar(cv, vals, light){
+  function drawRadar(cv, vals, light, labels){
     cv.__vals=vals;
     const ctx=cv.getContext('2d'), W=cv.width, H=cv.height, cx=W/2, cy=H/2, R=Math.min(W,H)/2-36;
     const ax=[[0,-1],[1,0],[0,1],[-1,0]];
@@ -645,16 +645,28 @@
     ctx.strokeStyle=lineC; ctx.lineWidth=2; ctx.stroke();
     ax.forEach((a,i)=>{ const v=Math.max(vals[i]||0,0.03); ctx.beginPath(); ctx.arc(cx+a[0]*R*v,cy+a[1]*R*v,3.2,0,7); ctx.fillStyle=lineC; ctx.fill(); });
     ctx.font='800 12px sans-serif'; ctx.textAlign='center'; ctx.fillStyle=lbC;
-    const lb=['OX','빈칸','문제','심화'];
+    const lb=labels||['OX','빈칸','문제','심화'];
     ctx.fillText(lb[0],cx,cy-R-12); ctx.fillText(lb[1],cx+R+22,cy+4);
     ctx.fillText(lb[2],cx,cy+R+22); ctx.fillText(lb[3],cx-R-22,cy+4);
   }
   function printGrp(ov){
     // 앱 환경에서는 정식 인쇄 사용 — 리포트 오버레이를 인쇄 영역(#printArea)으로 지정 후 인쇄 다이얼로그
-    // (아티팩트 시안 시절의 PNG 저장 우회를 대체. @media print CSS가 흑백/밝은 배경으로 변환)
     var old=document.getElementById('printArea');
     if(old&&old!==ov) old.removeAttribute('id');
     ov.id='printArea';
+    // 인쇄 전용 헤더(브랜드·학생·출력일)와 푸터 주입 — 화면에는 안 보이고 인쇄물에만 나옴
+    var grpEl=ov.querySelector('.grp');
+    if(grpEl && !grpEl.querySelector('.gk-ph')){
+      var stu={}; try{ stu=JSON.parse(localStorage.getItem('currentStudent')||'{}'); }catch(e){}
+      var d=new Date(), ds=d.getFullYear()+'. '+(d.getMonth()+1)+'. '+d.getDate()+'.';
+      var ph=document.createElement('div'); ph.className='gk-print-only gk-ph';
+      ph.innerHTML='<div class="gk-ph-brand">\uD83E\uDDED 국어 문법 원정대 <span>BRAIN문해력 \u00B7 개념특강 학습 리포트</span></div>'
+        +'<div class="gk-ph-stu">'+((stu.grade&&stu.name)?(stu.grade+' <b>'+stu.name+'</b> 학생 \u00B7 '):'')+'출력일 '+ds+'</div>';
+      grpEl.insertBefore(ph, grpEl.firstChild);
+      var pf=document.createElement('div'); pf.className='gk-print-only gk-pf';
+      pf.textContent='본 리포트는 브레인문해력 국어 문법 원정대 학습 기록을 바탕으로 자동 생성되었습니다.';
+      grpEl.appendChild(pf);
+    }
     var cleanup=function(){ ov.removeAttribute('id'); window.removeEventListener('afterprint',cleanup); };
     window.addEventListener('afterprint',cleanup);
     setTimeout(function(){ window.print(); },60);
@@ -703,6 +715,40 @@
   };
   window.__landReport=function(li,name){
     const st=landStats();
+    // 형성평가 땅(9·10번): 레이더 = 회차(관문) 4개의 평점, 하단 = 회차별 평점 목록
+    if(li>=8){
+      const gsE=gatesFor(li).map((nm,si)=>({key:'gram_'+li+'_'+si, nm:(si+1)+'. '+nm}));
+      let totE=0, okE=0; const valsE=[];
+      const rowsE=gsE.map(g2=>{
+        const v=st[g2.key], t=v?((v.ok||0)+(v.wrong||0)):0, p=t>0?v.ok/t:null;
+        totE+=t; okE+=(v?(v.ok||0):0);
+        valsE.push(p===null?0:p);
+        return `<div class="grp-gate-row grp-gate-link" data-gk="${g2.key}" data-gnm="${g2.nm}" title="형성평가 리포트 보기" role="button" tabindex="0"><span class="grp-gate-nm">${g2.nm}</span>${starsMarkup(p,'gs-mini')}<span class="grp-gate-cnt">${t===0?'기록 없음':t+'문제'}</span><span class="grp-gate-go">\uD83D\uDD0D</span></div>`;
+      }).join('');
+      const pctE=totE>0?okE/totE:null;
+      const ovE=document.createElement('div'); ovE.className='grp-ov'; ovE.id='grpOv2';
+      ovE.innerHTML=`<div class="grp">
+        <button class="grp-x" aria-label="닫기">✕</button>
+        <div class="grp-head"><div class="grp-title">\uD83D\uDD0D ${name} 종합 리포트</div>
+          <div class="grp-star">${starsMarkup(pctE,'')}</div></div>
+        <canvas id="grpRadar2" width="240" height="240" style="display:block;margin:2px auto 6px"></canvas>
+        <div class="grp-sec-t">\uD83D\uDCDD 회차별 평점</div>
+        <div class="grp-gates">${rowsE}</div>
+        <div class="grp-foot">총 ${totE}문제 풀이</div>
+        <button class="grp-print">\uD83D\uDDA8\uFE0F 인쇄하기</button>
+      </div>`;
+      document.body.appendChild(ovE);
+      ovE.addEventListener('click',ev=>{ if(ev.target===ovE) ovE.remove(); });
+      ovE.querySelector('.grp-x').addEventListener('click',()=>ovE.remove());
+      ovE.querySelector('.grp-print').addEventListener('click',()=>printGrp(ovE));
+      ovE.querySelectorAll('.grp-gate-link').forEach(r=>{
+        const open=()=>window.__gateReport(r.dataset.gk, r.dataset.gnm.replace(/^\d+\. /,''));
+        r.addEventListener('click',open);
+        r.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); open(); } });
+      });
+      drawRadar(document.getElementById('grpRadar2'), valsE, false, ['1\uD68C','2\uD68C','3\uD68C','4\uD68C']);
+      return;
+    }
     const agg={ox:{o:0,w:0},fill:{o:0,w:0},mcq:{o:0,w:0},adv:{o:0,w:0},exam:{o:0,w:0}};
     let tot=0, totOk=0;
     for(const k in st){ const v=st[k]; if(!v) continue;
@@ -934,7 +980,7 @@
         return `<button class="wm-card ${cur?'cur':''}" data-k="${k}">
           <span class="wm-img" style="background-image:url('${T[k]||''}')"></span>
           <span class="wm-num">${k+1}</span>
-          <span class="wm-name">${nm}</span>${active==='gram'?('<span class="gs-row" style="justify-content:center">'+starHTML(k)+(k<8?('<span class="gs-mag wm-mag" data-land="'+k+'" data-lname="'+nm+'" title="종합 리포트">\uD83D\uDD0D</span>'):'')+'</span>'):''}${stat}<span class="wm-crew" data-crew="${k}"></span></button>`; }).join('')}
+          <span class="wm-name">${nm}</span>${active==='gram'?('<span class="gs-row" style="justify-content:center">'+starHTML(k)+('<span class="gs-mag wm-mag" data-land="'+k+'" data-lname="'+nm+'" title="종합 리포트">\uD83D\uDD0D</span>')+'</span>'):''}${stat}<span class="wm-crew" data-crew="${k}"></span></button>`; }).join('')}
       </div></div>`;
     worldOv.classList.add('show');
     worldOv.querySelectorAll('.wm-mag').forEach(m=>m.addEventListener('click',e=>{ e.stopPropagation(); window.__landReport(+m.dataset.land, m.dataset.lname); }));
@@ -1058,6 +1104,7 @@
   .gs-row .ls-wrap{width:auto}
   .grp-print{display:block;width:100%;margin-top:8px;border:1px solid rgba(244,231,201,.3);cursor:pointer;border-radius:12px;padding:11px;font-family:inherit;font-weight:800;font-size:13.5px;background:rgba(244,231,201,.08);color:#f4e7c9}
   .grp-print:hover{background:rgba(244,231,201,.16)}
+  .gk-print-only{display:none}
   @media print{
     body *{visibility:hidden!important}
     #printArea,#printArea *{visibility:visible!important}
@@ -1074,6 +1121,17 @@
     #printArea .land-stars .ls-fill{color:#e0a800!important;text-shadow:none!important}
     #printArea .grp-x,#printArea .grp-retry,#printArea .grp-print{display:none!important}
     #printArea .grp-gate-go{display:none!important}
+    #printArea .gk-print-only{display:block!important}
+    #printArea .gk-ph{display:flex!important;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #d99e00;padding-bottom:10px;margin-bottom:18px}
+    #printArea .gk-ph-brand{font-size:19px;font-weight:900;color:#1a2b4a!important}
+    #printArea .gk-ph-brand span{font-size:11px;font-weight:700;color:#8a7430!important;margin-left:8px}
+    #printArea .gk-ph-stu{font-size:13px;color:#444!important}
+    #printArea .gk-ph-stu b{font-size:15px;color:#111!important}
+    #printArea .gk-pf{margin-top:18px;padding-top:10px;border-top:1px solid #ddd;text-align:center;font-size:10.5px;color:#999!important}
+    #printArea .grp{padding:28px 34px!important;border:4px double #d99e00!important;border-radius:14px;margin:6px}
+    @page{margin:12mm}
+    #printArea .grp-title{font-size:21px!important;margin-bottom:4px}
+    #printArea .grp-sec-t{margin-top:16px!important;padding-bottom:4px;border-bottom:1.5px solid #eee}
     #printArea *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }
 </style>
