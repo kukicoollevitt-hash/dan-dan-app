@@ -405,6 +405,7 @@ const SnackOrder = require("./models/SnackOrder");
 const SentenceRead = require("./models/SentenceRead");
 const SpeedVocabKing = require("./models/SpeedVocabKing");
 const WordBattleRecord = require("./models/WordBattleRecord");
+const WordBattleAllTime = require("./models/WordBattleAllTime"); // 역대 최고 기록 영구 보존 (월 시즌제)
 const WordBattleChampion = require("./models/WordBattleChampion");
 
 // 단어월드컵 일일 랭킹 점수 누적 (구버전 — 호환 위해 유지)
@@ -33294,13 +33295,11 @@ async function runWordBattleMonthlyDistribution() {
       console.log(`  🏅 ${rank}위 [${title}] ${winner.grade} ${winner.name} — ${winner.totalPoints}점${bonus ? ` → 보너스 ${bonus}뱃지` : ''}`);
     }
 
-    // 모든 단어배틀 기록의 awardedPoints 리셋 (새 달 시작)
-    const newMonth = getCurrentMonthKey();
-    const result = await WordBattleRecord.updateMany(
-      {},
-      { $set: { awardedPoints: 0, monthKey: newMonth } }
-    );
-    console.log(`✅ [단어배틀] 월별 정산 완료. ${result.modifiedCount}개 기록 리셋 → 새 월 ${newMonth} 시작`);
+    // 🔁 월 시즌제: 일괄 리셋하지 않는다 — 각 기록은 학생이 새 달에 처음 플레이할 때
+    // save API에서 개별 시즌 리셋(bestTime·awardedPoints·monthKey)된다.
+    // monthKey를 일괄 갱신하면 옛 기록이 새 달 순위에 편입되므로 절대 일괄 $set 금지.
+    // (역대 최고 기록은 WordBattleAllTime에 영구 보존)
+    console.log(`✅ [단어배틀] 월별 정산 완료 → 새 월 ${getCurrentMonthKey()} 시즌 시작 (기록은 첫 플레이 시 개별 리셋)`);
   } catch (err) {
     console.error('❌ [단어배틀] 월별 정산 오류:', err);
   }
@@ -43047,6 +43046,15 @@ app.post('/api/word-battle/save', async (req, res) => {
 
     const currentMonth = getCurrentMonthKey();
 
+    // 🗄️ 역대 기록 보관 — 시즌과 무관하게 역대 최고($min)는 WordBattleAllTime에 영구 보존
+    try {
+      await WordBattleAllTime.updateOne(
+        { grade, name, unitId },
+        { $min: { bestTime: time }, $set: { unitTitle: unitTitle || '', academyName: academyName || '', updatedAt: new Date() } },
+        { upsert: true }
+      );
+    } catch (e) { console.error('⚠️ [word-battle] 역대 기록 보관 실패:', e.message); }
+
     // 기존 기록 조회 + best time 갱신
     const existing = await WordBattleRecord.findOne({ grade, name, unitId });
     let isNewBest = false;
@@ -43068,7 +43076,8 @@ app.post('/api/word-battle/save', async (req, res) => {
       newBestTime = time;
       isNewBest = true;
     } else {
-      // 월이 바뀌었으면 awardedPoints 리셋 (이번 달부터 새로 부여)
+      // 🔁 월 시즌제 — 월이 바뀌면 포인트뿐 아니라 단원 기록(bestTime)도 새 시즌으로 리셋
+      // (역대 기록은 위 WordBattleAllTime에 이미 보존됨. 지난달 고인물 기록이 새 달 순위를 막지 않게)
       const monthChanged = existing.monthKey !== currentMonth;
       previousAwarded = monthChanged ? 0 : (existing.awardedPoints || 0);
 
@@ -43077,9 +43086,12 @@ app.post('/api/word-battle/save', async (req, res) => {
         $set: { lastPlayedAt: new Date(), monthKey: currentMonth }
       };
       if (monthChanged) {
-        update.$set.awardedPoints = 0; // 월 시작 시 리셋
-      }
-      if (time < existing.bestTime) {
+        update.$set.awardedPoints = 0;   // 월 시작 시 포인트 리셋
+        update.$set.bestTime = time;     // 이번 판이 새 시즌 첫 기록
+        if (unitTitle) update.$set.unitTitle = unitTitle;
+        if (academyName) update.$set.academyName = academyName;
+        isNewBest = true;
+      } else if (time < existing.bestTime) {
         update.$set.bestTime = time;
         if (unitTitle) update.$set.unitTitle = unitTitle;
         if (academyName) update.$set.academyName = academyName;
@@ -43090,7 +43102,7 @@ app.post('/api/word-battle/save', async (req, res) => {
     }
 
     // 갱신된 best time 기준 현재 등수 계산
-    const betterCount = await WordBattleRecord.countDocuments({ unitId, bestTime: { $lt: newBestTime } });
+    const betterCount = await WordBattleRecord.countDocuments({ unitId, monthKey: currentMonth, bestTime: { $lt: newBestTime } }); // 이번 달 시즌 기록만
     const currentRank = betterCount + 1;
     const currentPoints = (function(r){
       if (r === 1) return 100;
@@ -43114,7 +43126,7 @@ app.post('/api/word-battle/save', async (req, res) => {
 
     // 누적 캡 체크 (24시간 차단형) — 학생의 awardedPoints 합산 + 캡 상태 트래킹
     const allRecords = await WordBattleRecord.find(
-      { grade, name },
+      { grade, name, monthKey: currentMonth },
       { unitId: 1, awardedPoints: 1 }
     ).lean();
     const cumulative = allRecords.reduce((s, r) => s + (r.awardedPoints || 0), 0);
@@ -45611,7 +45623,7 @@ app.get('/api/word-battle/daily-status', async (req, res) => {
     if (!grade || !name) return res.status(400).json({ ok: false, message: '학생 정보 필요' });
 
     const allRecords = await WordBattleRecord.find(
-      { grade, name },
+      { grade, name, monthKey: getCurrentMonthKey() }, // 월 시즌제: 이번 달 부여분만 캡 계산
       { awardedPoints: 1 }
     ).lean();
     const cumulative = allRecords.reduce((s, r) => s + (r.awardedPoints || 0), 0);
@@ -45674,7 +45686,8 @@ app.get('/api/word-battle/ranking', async (req, res) => {
     const { unit } = req.query;
     if (!unit) return res.status(400).json({ ok: false, message: '단원이 필요합니다.' });
 
-    const ranking = await WordBattleRecord.find({ unitId: unit })
+    // 월 시즌제 — 이번 달에 플레이한 시즌 기록만 순위에 표시 (역대 기록은 WordBattleAllTime 보존)
+    const ranking = await WordBattleRecord.find({ unitId: unit, monthKey: getCurrentMonthKey() })
       .sort({ bestTime: 1 })
       .limit(100)
       .lean();
