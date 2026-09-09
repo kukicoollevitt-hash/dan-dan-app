@@ -2108,11 +2108,29 @@
         document.head.appendChild(styleEl);
       }
 
+      // 서술어형 키워드 → 단어(명사/어간) 기준으로 넓게 인식
+      //  '섭취하다' → 표시·매칭 모두 '섭취' (섭취했어요/섭취하면 전부 체크)
+      //  '꾸짖다' 등 고유 용언 → 표시는 그대로, 매칭은 어간 '꾸짖' (어간 2자 이상일 때만 — '식다'는 오인식 방지 위해 그대로)
+      //  '마그마 바다'처럼 공백 있는 명사는 변환 안 함
+      function kwForms(kw) {
+        const w = String(kw).trim();
+        if (w.indexOf(' ') === -1 && /다$/.test(w)) {
+          if (/하다$/.test(w) && w.length >= 4) {
+            const noun = w.slice(0, -2);
+            return { label: noun, match: noun };
+          }
+          const stem = w.slice(0, -1);
+          if (stem.length >= 2) return { label: w, match: stem };
+        }
+        return { label: w, match: w };
+      }
       // 칩 HTML 생성
       const chipsHtml = vocabKeywords.map(function(kw) {
+        const f = kwForms(kw);
         // 데이터 속성에 들어가니 따옴표 escape
-        const safe = String(kw).replace(/"/g, '&quot;');
-        return '<span class="kw-chip" data-kw="' + safe + '">' + safe + '</span>';
+        const safe = String(f.label).replace(/"/g, '&quot;');
+        const safeMatch = String(f.match).replace(/"/g, '&quot;');
+        return '<span class="kw-chip" data-kw="' + safeMatch + '">' + safe + '</span>';
       }).join(' ');
 
       keywordBox.innerHTML =
