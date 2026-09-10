@@ -1456,7 +1456,13 @@ const kpiAcademySchema = new mongoose.Schema({
   step_followup: { type: Boolean, default: false },       // 후속연락
   step_offlineMeeting: { type: Boolean, default: false }, // 오프미팅
   step_contract: { type: Boolean, default: false },       // 계약
-  holdReason: { type: String, default: "" },              // 계약보류사유(계약=무): 금액부담/좀더고민
+  holdReason: { type: String, default: "" },              // (레거시) 계약보류사유 — 상담내역으로 대체, 옛 데이터 표시용
+  consultLogs: [{                                          // 상담내역 방명록 (최신순 표시)
+    date: { type: String, default: "" },                   // YYYY-MM-DD
+    author: { type: String, default: "" },
+    memo: { type: String, default: "" },
+    createdAt: { type: Date, default: Date.now },
+  }],
   step_payment: { type: Boolean, default: false },        // 결제확정(계약=유)
 
   createdBy: { type: String, default: "" },
@@ -1617,7 +1623,7 @@ const monthlyExamResultSchema = new mongoose.Schema({
   studentName:  { type: String, required: true, index: true }, // 검색/조회용
   grade:        { type: String, required: true },              // 학생 학년(예: '초3','중2')
   academyName:  { type: String, default: '', index: true },    // 소속 학원 (있으면)
-  examGrade:    { type: String, enum: ['elem','mid'], required: true, index: true },
+  examGrade:    { type: String, enum: ['elem','elem34','mid'], required: true, index: true }, // elem34=초등 저학년(1~4)
   round:        { type: Number, min: 1, max: 12, required: true, index: true },
   examKey:      { type: String, required: true }, // 예: 'monthly_elem_1'
   totalScore:   { type: Number, default: 0 },
@@ -2653,6 +2659,51 @@ app.patch("/api/super/kpi/academies/:id", requireKpiUser, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error("❌ KPI 학원수정 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 상담내역(방명록) 추가
+app.post("/api/super/kpi/academies/:id/consult-log", requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    const row = await KpiAcademy.findById(req.params.id);
+    if (!row) return res.status(404).json({ ok: false, message: "학원을 찾을 수 없습니다." });
+    if (!kpiCanAccessScope(u, row.scope, row.branchId)) {
+      return res.status(403).json({ ok: false, message: "권한이 없습니다." });
+    }
+    const { date, author, memo } = req.body || {};
+    if (!memo || !String(memo).trim()) return res.status(400).json({ ok: false, message: "메모를 입력해 주세요." });
+    row.consultLogs.push({
+      date: String(date || "").slice(0, 10),
+      author: String(author || "").slice(0, 30),
+      memo: String(memo).trim().slice(0, 1000),
+      createdAt: new Date(),
+    });
+    row.updatedAt = new Date();
+    await row.save();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ KPI 상담내역 추가 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 상담내역 삭제 (오입력 정정용)
+app.delete("/api/super/kpi/academies/:id/consult-log/:logId", requireKpiUser, async (req, res) => {
+  try {
+    const u = req.session.kpiUser;
+    const row = await KpiAcademy.findById(req.params.id);
+    if (!row) return res.status(404).json({ ok: false, message: "학원을 찾을 수 없습니다." });
+    if (!kpiCanAccessScope(u, row.scope, row.branchId)) {
+      return res.status(403).json({ ok: false, message: "권한이 없습니다." });
+    }
+    row.consultLogs = row.consultLogs.filter(l => String(l._id) !== req.params.logId);
+    row.updatedAt = new Date();
+    await row.save();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ KPI 상담내역 삭제 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
@@ -6181,15 +6232,30 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
       return bDate - aDate;  // 최신순
     });
 
-    // 🔹 각 학원별 현재 학생 수 조회
+    // 🔹 각 학원별 현재 학생 수 조회 — 승인/대기 분리 집계
+    //    (표시 시 관리자의 별칭(academyAliases)까지 합산 — 지점 학생 목록과 동일 매칭)
     const studentCountByAcademy = await User.aggregate([
-      { $match: { deleted: { $ne: true }, userType: "academy", status: "approved" } },
-      { $group: { _id: "$academyName", count: { $sum: 1 } } }
+      { $match: { deleted: { $ne: true }, userType: "academy" } },
+      { $group: {
+        _id: "$academyName",
+        approved: { $sum: { $cond: [{ $eq: ["$status", "approved"] }, 1, 0] } },
+        pending:  { $sum: { $cond: [{ $eq: ["$status", "approved"] }, 0, 1] } }
+      } }
     ]);
     const studentCountMap = {};
     studentCountByAcademy.forEach(item => {
-      studentCountMap[item._id] = item.count;
+      studentCountMap[item._id] = { approved: item.approved, pending: item.pending };
     });
+    // 관리자별: 현재 학원명 + 별칭 전체 합산
+    const countForAdmin = (adm) => {
+      const names = [adm.academyName, ...(adm.academyAliases || [])].filter(Boolean);
+      let approved = 0, pending = 0;
+      new Set(names).forEach(n => {
+        const c = studentCountMap[n];
+        if (c) { approved += c.approved; pending += c.pending; }
+      });
+      return { approved, pending };
+    };
 
     let html = `
     <!DOCTYPE html>
@@ -6920,12 +6986,14 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
               const rawCumulative = a.cumulativeStudentCount || 0;
               const maxLimit = a.maxStudentLimit || 360;
               const displayCumulative = Math.min(rawCumulative, maxLimit);
-              const currentCount = studentCountMap[a.academyName] || 0;
+              const cc = countForAdmin(a);
+              const currentCount = cc.approved;
               // 초과 인원: 직전 월말 cron 결과 (월별 규칙 기반 산정)
               const overCount = a.overStudentCount || 0;
               let html = '<span style="color: #059669; font-weight: 700;">' + displayCumulative + '</span>/<span style="color: #6b7280;">' + maxLimit + '</span>';
               html += '<span style="color: #d1d5db; margin: 0 4px;">|</span>';
               html += '<span style="color: #2563eb; font-weight: 600;">' + currentCount + '</span>명';
+              if (cc.pending > 0) html += '<span style="color: #f59e0b; font-size: 11px; font-weight: 600;"> (+대기 ' + cc.pending + ')</span>';
               html += '<span style="color: #d1d5db; margin: 0 4px;">|</span>';
               const overColor = overCount > 0 ? '#dc2626' : '#9ca3af';
               html += '<span style="color: ' + overColor + '; font-weight: 700;">' + overCount + '명</span>';
@@ -28831,7 +28899,7 @@ function _requireStudentSession(req, res) {
   }
   return req.session.user;
 }
-function _validExamGrade(g) { return g === 'elem' || g === 'mid'; }
+function _validExamGrade(g) { return g === 'elem' || g === 'elem34' || g === 'mid'; }
 function _validRound(r) { return Number.isInteger(r) && r >= 1 && r <= 12; }
 
 // 결과 저장/덮어쓰기 (upsert)
@@ -44992,7 +45060,7 @@ app.get('/api/admin/monthly-exam-list', requireAdminLogin, async (req, res) => {
     else if (academy && academy.trim()) query.academyName = { $regex: academy.trim(), $options: 'i' };
     if (grade && grade.trim()) query.grade = { $regex: grade.trim(), $options: 'i' };
     if (search) query.studentName = { $regex: search.trim(), $options: 'i' };
-    if (examGrade === 'elem' || examGrade === 'mid') query.examGrade = examGrade;
+    if (examGrade === 'elem' || examGrade === 'elem34' || examGrade === 'mid') query.examGrade = examGrade;
 
     const sortObj = {};
     if (sort === 'grade') sortObj.grade = dir === 'asc' ? 1 : -1;

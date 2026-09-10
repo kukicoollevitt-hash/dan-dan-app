@@ -1002,7 +1002,7 @@
         <div class="table-wrap"><table id="ovAcadTable">
         <thead>
           <tr>${isHQ ? '<th rowspan="2">📱</th>' : ''}<th rowspan="2">소속</th><th class="g1" colspan="7">1차 학원정보</th><th class="g2" colspan="${STEPS.length + 2}">2차 계약진행상황</th></tr>
-          <tr><th class="c1">유입경로</th><th class="c1">최초상담일</th><th class="c1">학원명</th><th class="c1">지역</th><th class="c1">학원장</th><th class="c1">연락처</th><th class="c1">목적</th>${stepHead}<th class="c2">보류사유</th><th class="c2">결제확정</th></tr>
+          <tr><th class="c1">유입경로</th><th class="c1">최초상담일</th><th class="c1">학원명</th><th class="c1">지역</th><th class="c1">학원장</th><th class="c1">연락처</th><th class="c1">목적</th>${stepHead}<th class="c2">상담내역</th><th class="c2">결제확정</th></tr>
         </thead><tbody>`;
       for (const r of rows) {
         const bid = r.branchId ? `'${r.branchId}'` : 'null';
@@ -1018,7 +1018,7 @@
           <td>${esc(r.phone) || '<span class="na">-</span>'}</td>
           <td>${esc(r.purpose) || '<span class="na">-</span>'}</td>
           ${STEPS.map(s => `<td>${ox(r, s.key)}</td>`).join('')}
-          <td>${r.step_contract ? '<span class="na">—</span>' : (esc(r.holdReason) || '<span class="na">-</span>')}</td>
+          <td>${(r.consultLogs && r.consultLogs.length) ? (r.consultLogs.length + '건') : (esc(r.holdReason) || '<span class="na">-</span>')}</td>
           <td>${ox(r, 'step_payment')}</td>
         </tr>`;
       }
@@ -1164,18 +1164,14 @@
           <tr><th rowspan="2" class="chk-col"><input type="checkbox" class="row-chk" title="전체선택" onclick="toggleSelectAllC(this)"></th><th class="g1" colspan="7">1차 학원정보</th><th class="g2" colspan="${STEPS.length + 2}">2차 계약진행상황</th><th rowspan="2">수정</th></tr>
           <tr>
             <th class="c1">유입경로</th><th class="c1">최초상담일</th><th class="c1">학원명</th><th class="c1">지역</th><th class="c1">학원장</th><th class="c1">연락처</th><th class="c1">목적</th>
-            ${stepHead}<th class="c2">보류사유</th><th class="c2">결제확정</th>
+            ${stepHead}<th class="c2">상담내역</th><th class="c2">결제확정</th>
           </tr>
         </thead><tbody>`;
       for (const r of rows) {
         const tog = (key) => `<button class="toggle ${r[key] ? 'on' : 'off'}" onclick="toggleStep('${r._id}','${key}')">${r[key] ? 'O' : 'X'}</button>`;
-        // 보류사유: 계약=무일 때만
-        let holdCell;
-        if (r.step_contract) holdCell = `<span class="na">—</span>`;
-        else {
-          const opts = ['<option value="">-</option>'].concat(HOLD_REASONS.map(h => `<option${r.holdReason === h ? ' selected' : ''}>${h}</option>`)).join('');
-          holdCell = `<select class="mini-select" onchange="setHold('${r._id}', this.value)">${opts}</select>`;
-        }
+        // 상담내역: 방명록 팝업 버튼 (계약 여부 무관)
+        const cCnt = (r.consultLogs || []).length;
+        const holdCell = `<button class="mini-select" style="cursor:pointer;white-space:nowrap;" onclick="openConsultModal('${r._id}')">📋 ${cCnt}건</button>`;
         // 결제확정: 항상 O/X 선택 가능
         const payCell = `<button class="toggle ${r.step_payment ? 'on' : 'off'}" onclick="toggleStep('${r._id}','step_payment')">${r.step_payment ? 'O' : 'X'}</button>`;
         html += `<tr data-search="${kpiSearchAttr(r)}">
@@ -1656,7 +1652,89 @@
       const r = ROWS.find(x => x._id === id); if (!r) return;
       patchRow(id, { [key]: !r[key] });
     }
-    function setHold(id, val) { patchRow(id, { holdReason: val }); }
+    function setHold(id, val) { patchRow(id, { holdReason: val }); } // (레거시 — 미사용)
+
+    /* ===== 상담내역 방명록 모달 ===== */
+    let CONSULT_ID = null;
+    function ensureConsultModal() {
+      if (document.getElementById('consultOv')) return;
+      const ov = document.createElement('div');
+      ov.id = 'consultOv';
+      ov.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:900;align-items:center;justify-content:center;padding:20px;';
+      ov.innerHTML = `
+        <div style="background:#fff;border-radius:16px;width:480px;max-width:100%;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #e2e8f0;">
+            <div id="consultTitle" style="font-weight:800;font-size:15px;color:#1e293b;">📋 상담내역</div>
+            <button onclick="document.getElementById('consultOv').style.display='none'" style="border:none;background:none;font-size:18px;cursor:pointer;color:#94a3b8;">✕</button>
+          </div>
+          <div style="padding:14px 20px;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <input type="date" id="consultDate" style="flex:0 0 140px;padding:7px 9px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;font-family:inherit;">
+              <input type="text" id="consultAuthor" placeholder="작성자" style="flex:1;min-width:0;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;font-family:inherit;">
+            </div>
+            <div style="display:flex;gap:8px;">
+              <textarea id="consultMemo" placeholder="상담 메모를 입력하세요" rows="2" style="flex:1;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>
+              <button onclick="addConsultLog()" style="flex-shrink:0;align-self:stretch;padding:0 18px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;">등록</button>
+            </div>
+          </div>
+          <div id="consultList" style="overflow-y:auto;padding:12px 20px;flex:1;"></div>
+        </div>`;
+      ov.addEventListener('click', e => { if (e.target === ov) ov.style.display = 'none'; });
+      document.body.appendChild(ov);
+    }
+    function openConsultModal(id) {
+      ensureConsultModal();
+      CONSULT_ID = id;
+      const r = ROWS.find(x => x._id === id); if (!r) return;
+      document.getElementById('consultTitle').textContent = '📋 상담내역 — ' + (r.academyName || '');
+      const d = new Date();
+      document.getElementById('consultDate').value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      document.getElementById('consultAuthor').value = localStorage.getItem('kpiConsultAuthor') || '';
+      document.getElementById('consultMemo').value = '';
+      renderConsultList(r);
+      document.getElementById('consultOv').style.display = 'flex';
+    }
+    function renderConsultList(r) {
+      // 최신순 (날짜 내림차순 → 같은 날짜는 등록순 역순)
+      const logs = (r.consultLogs || []).slice().sort((a, b) =>
+        String(b.date || '').localeCompare(String(a.date || '')) || (new Date(b.createdAt || 0) - new Date(a.createdAt || 0)));
+      const items = logs.map(l => `
+        <div style="border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;margin-bottom:8px;background:#fff;">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#64748b;margin-bottom:4px;">
+            <b style="color:#1e293b;">${esc(l.date || '')}</b> · ${esc(l.author || '작성자 미상')}
+            <button onclick="delConsultLog('${l._id}')" style="margin-left:auto;border:none;background:none;color:#cbd5e1;cursor:pointer;font-size:13px;" title="삭제">✕</button>
+          </div>
+          <div style="font-size:13px;color:#334155;line-height:1.6;white-space:pre-wrap;">${esc(l.memo || '')}</div>
+        </div>`).join('');
+      const legacy = (!logs.length && r.holdReason)
+        ? `<div style="font-size:12px;color:#94a3b8;text-align:center;padding:4px 0 8px;">이전 보류사유: ${esc(r.holdReason)}</div>` : '';
+      document.getElementById('consultList').innerHTML =
+        (items || '<div style="color:#94a3b8;text-align:center;padding:18px 0;font-size:13px;">아직 상담 기록이 없습니다.</div>') + legacy;
+    }
+    async function addConsultLog() {
+      const date = document.getElementById('consultDate').value;
+      const author = document.getElementById('consultAuthor').value.trim();
+      const memo = document.getElementById('consultMemo').value;
+      if (!memo.trim()) { alert('메모를 입력해 주세요.'); return; }
+      if (author) localStorage.setItem('kpiConsultAuthor', author);
+      const data = await api(`/api/super/kpi/academies/${CONSULT_ID}/consult-log`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, author, memo })
+      });
+      if (!data.ok) { alert(data.message || '저장 실패'); return; }
+      await loadActiveTab();
+      const r = ROWS.find(x => x._id === CONSULT_ID);
+      if (r) renderConsultList(r);
+      document.getElementById('consultMemo').value = '';
+    }
+    async function delConsultLog(logId) {
+      if (!confirm('이 상담 기록을 삭제할까요?')) return;
+      const data = await api(`/api/super/kpi/academies/${CONSULT_ID}/consult-log/${logId}`, { method: 'DELETE' });
+      if (!data.ok) { alert(data.message || '삭제 실패'); return; }
+      await loadActiveTab();
+      const r = ROWS.find(x => x._id === CONSULT_ID);
+      if (r) renderConsultList(r);
+    }
     async function delRow(id, name) {
       if (!confirm(`'${name}' 학원을 삭제할까요?`)) return;
       const data = await api(`/api/super/kpi/academies/${id}`, { method:'DELETE' });

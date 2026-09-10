@@ -1371,6 +1371,39 @@
           }
           try { localStorage.setItem(ownerKey, curOwner); } catch (e) {}
         }
+        // 🔁 유실 복구 — 같은 학생이고 로컬에는 있는데 서버에 없는 회차는 재전송
+        //    (응시 순간 서버 재시작·네트워크 순단으로 저장 요청만 실패한 경우의 안전망)
+        if (prevOwner === curOwner && cs.grade && cs.name) {
+          const serverRounds = new Set(data.results.map(x => x.round));
+          for (let rr = 1; rr <= TOTAL_ROUNDS; rr++) {
+            if (serverRounds.has(rr)) continue;
+            let localRaw = null;
+            try { localRaw = localStorage.getItem(`monthly_${GRADE}_${rr}_result`); } catch (e) {}
+            if (!localRaw) continue;
+            try {
+              const pl = JSON.parse(localRaw);
+              // 한 번 서버 저장에 성공했던 기록(_synced)이 서버에 없다 = 관리자가 삭제한 것
+              // → 학생 화면(로컬)에서도 지워서 양쪽을 일치시킨다
+              if (pl && pl._synced) {
+                try { localStorage.removeItem(`monthly_${GRADE}_${rr}_result`); } catch (e) {}
+                continue;
+              }
+              // (한시적 정리) 2026-09-10 파일럿 테스트 기록 — 플래그 도입 전 저장분이라 수동 매칭으로 제거
+              if (pl && String(pl.submittedAt || '').slice(0, 10) === '2026-09-10') {
+                try { localStorage.removeItem(`monthly_${GRADE}_${rr}_result`); } catch (e) {}
+                continue;
+              }
+              fetch('/api/monthly-exam/result', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(Object.assign({}, pl, {
+                  examGrade: GRADE, round: rr,
+                  studentName: cs.name || '', studentGrade: cs.grade || ''
+                }))
+              }).then(r2 => { if (r2 && r2.ok) console.log('[monthly-exam] 유실 회차 재전송 완료:', rr); }).catch(() => {});
+            } catch (e) {}
+          }
+        }
         data.results.forEach(row => {
           const round = row.round;
           if (!round) return;
