@@ -44244,6 +44244,25 @@ app.post('/api/writing100/save-progress', async (req, res) => {
   }
 });
 
+// 단원별 진도 조회 (이어하기 복원용 · 학생이 중간 이탈 후 재진입 시 사용)
+app.get('/api/writing100/progress', async (req, res) => {
+  try {
+    const { grade, name, unit } = req.query;
+    if (!grade || !name || !unit) {
+      return res.status(400).json({ ok: false, message: '학생/단원 정보 필요' });
+    }
+    const doc = await Writing100Submission.findOne({ grade, name, unit }, {
+      day: 1, unit: 1, stagesDone: 1, readingElapsedMs: 1,
+      accuracies: 1, wrongAnswers: 1, writing: 1, composed: 1,
+      firstCompletedAt: 1, updatedAt: 1
+    }).lean();
+    res.json({ ok: true, progress: doc || null });
+  } catch (err) {
+    console.error('[writing100] progress:', err && err.message);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
 // 학생별 100day 전체 조회 (리포트용)
 app.get('/api/writing100/report', async (req, res) => {
   try {

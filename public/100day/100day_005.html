@@ -1548,7 +1548,7 @@ function loadSavedStage() {
     const v = parseInt(sessionStorage.getItem(STAGE_STORAGE_KEY), 10);
     if (Number.isFinite(v) && v >= 1 && v <= 7) return v;
   } catch {}
-  return 1;
+  return null;
 }
 
 function goStage(n) {
@@ -2977,6 +2977,15 @@ function renderStage7(card) {
   card.querySelectorAll('.q-input').forEach(ta => {
     ta.addEventListener('input', updateAiBtnState);
   });
+  // 이어하기 복원 · 저장된 글쓰기 답안 프리필 (lead 그대로가 아닌 실제 작성분만)
+  if (Array.isArray(STATE.savedWriting)) {
+    STATE.savedWriting.forEach((sw, i) => {
+      const ta = document.getElementById(`qInput${i}`);
+      const lead = ((w.questions[i] || {}).lead || '').trim();
+      const a = ((sw && sw.a) || '').trim();
+      if (ta && a && a !== lead) ta.value = sw.a;
+    });
+  }
   updateAiBtnState();
   // AI 완성 버튼
   document.getElementById('aiBtn').addEventListener('click', doAiCompose);
@@ -3435,13 +3444,66 @@ function closeUnit() {
 /* ===================================================================
    init
    =================================================================== */
-(function initApp() {
-  const saved = loadSavedStage();
-  STATE.currentStage = saved;
+/* 서버에 저장된 진도 → STATE 복원 (중간 이탈 후 재진입 이어하기)
+   · 7단계 전부 완료된 Day는 재학습 취지로 복원 없이 처음부터
+   · 서버 실패 시 localStorage 백업(writing100:{unit}) 폴백 */
+async function restoreProgressFromServer() {
+  const unit = `100day_${String(DATA.day).padStart(3, '0')}`;
+  let p = null;
+  try {
+    const student = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+    if (student.grade && student.name) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 4000);
+      const params = new URLSearchParams({ grade: student.grade, name: student.name, unit });
+      const res = await fetch(`/api/writing100/progress?${params}`, { signal: ctrl.signal });
+      clearTimeout(timer);
+      const j = await res.json();
+      if (j && j.ok) p = j.progress;
+    }
+  } catch (e) { console.warn('진도 조회 실패, localStorage 백업 사용:', e); }
+  if (!p) {
+    try { p = JSON.parse(localStorage.getItem(`writing100:${unit}`) || 'null'); } catch {}
+  }
+  if (!p || !Array.isArray(p.stagesDone)) return false;
+  const done = p.stagesDone.slice(0, 7).map(Boolean);
+  while (done.length < 7) done.push(false);
+  if (done.every(Boolean)) return false;   // 완료된 Day → 재학습 (처음부터)
+  if (!done.some(Boolean)) return false;   // 완료된 단계 없음 → 처음부터
+  STATE.stageDone = done;
+  if (p.accuracies) {
+    for (const k of ACC_KEYS) {
+      const a = p.accuracies[k];
+      if (a) STATE.stageAccuracy[k] = { correct: Number(a.correct) || 0, attempts: Number(a.attempts) || 0 };
+    }
+  }
+  if (p.wrongAnswers) {
+    for (const k of ACC_KEYS) {
+      if (Array.isArray(p.wrongAnswers[k])) STATE.wrongAnswers[k] = p.wrongAnswers[k].slice();
+    }
+  }
+  STATE.readingElapsedMs = Number(p.readingElapsedMs) || 0;
+  // 글쓰기 답안은 7단계 렌더 시 프리필
+  if (Array.isArray(p.writing)) STATE.savedWriting = p.writing;
+  return true;
+}
+
+(async function initApp() {
+  let restored = false;
+  try { restored = await restoreProgressFromServer(); } catch {}
+  const sessionStage = loadSavedStage();   // 같은 탭 새로고침이면 그 위치 우선
+  let startStage = 1;
+  if (sessionStage) {
+    startStage = sessionStage;
+  } else if (restored) {
+    startStage = STATE.stageDone.findIndex(d => !d) + 1;   // 첫 미완료 단계부터 재개
+    if (startStage < 1) startStage = 1;
+  }
+  STATE.currentStage = startStage;
   renderProgress();
-  renderStage(saved);
-  // 어휘학습 인트로 모달은 1단계 첫 진입 때만 노출 (새로고침으로 돌아온 경우 스킵)
-  if (saved === 1) openVocabIntro();
+  renderStage(startStage);
+  // 어휘학습 인트로 모달은 진짜 처음 시작할 때만 노출 (이어하기·새로고침은 스킵)
+  if (startStage === 1 && !restored && !sessionStage) openVocabIntro();
 })();
 </script>
 </body>
