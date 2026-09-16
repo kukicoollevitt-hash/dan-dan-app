@@ -35736,6 +35736,194 @@ app.delete("/api/academy-notice/:id", requireAdminLogin, async (req, res) => {
   }
 });
 
+// ====================================================
+// 🤖 센터 상담 챗봇 지식베이스 (ChatbotQa)
+//   - 등록/수정/삭제: '브레인문해원_테스트'만 (canWriteAcademyNotice 재사용)
+//   - 검색/조회: 모든 센터 관리자
+//   - 이미지: 기존 /api/academy-notice/upload-image 재사용
+//   - 하이브리드 검색: 의미검색(임베딩) + 키워드 가중합
+// ====================================================
+const ChatbotQa = require('./models/ChatbotQa');
+const QA_EMBEDDING_MODEL = 'text-embedding-3-small';
+
+// HTML/URL 제거 후 임베딩·키워드 대상 순수 텍스트 추출
+function qaPlainText(s) {
+  return String(s || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/https?:\/\/\S+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// 임베딩 생성 (실패 시 null → 키워드 검색만으로 폴백)
+async function generateQaEmbedding(text) {
+  const input = qaPlainText(text).slice(0, 8000);
+  if (!input) return null;
+  if (!process.env.OPENAI_API_KEY) return null;
+  try {
+    const resp = await openai.embeddings.create({ model: QA_EMBEDDING_MODEL, input });
+    return (resp && resp.data && resp.data[0] && resp.data[0].embedding) || null;
+  } catch (e) {
+    console.error('[chatbot-qa] 임베딩 생성 실패:', e && e.message);
+    return null;
+  }
+}
+
+function qaCosineSim(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length === 0 || a.length !== b.length) return 0;
+  let dot = 0, na = 0, nb = 0;
+  for (let i = 0; i < a.length; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
+  if (na === 0 || nb === 0) return 0;
+  return dot / (Math.sqrt(na) * Math.sqrt(nb));
+}
+
+// 2글자 이상 토큰 추출 (한글/영문/숫자)
+function qaTokenize(s) {
+  const t = qaPlainText(s).toLowerCase();
+  const raw = t.match(/[가-힣a-z0-9]+/g) || [];
+  const out = new Set();
+  for (const w of raw) { if (w.length >= 2) out.add(w); }
+  return out;
+}
+
+// 키워드 점수(A): 쿼리 토큰이 (keywords + question)에 얼마나 겹치는지 (0~1)
+function qaKeywordScore(queryTokens, doc) {
+  if (!queryTokens.size) return 0;
+  const kwText = (Array.isArray(doc.keywords) ? doc.keywords.join(' ') : '') + ' ' + (doc.question || '');
+  const docTokens = qaTokenize(kwText);
+  if (!docTokens.size) return 0;
+  let hit = 0;
+  for (const q of queryTokens) if (docTokens.has(q)) hit++;
+  return hit / queryTokens.size;
+}
+
+// 목록 조회 — 모든 관리자 (관리 가능 여부 함께 반환)
+app.get("/api/chatbot-qa", requireAdminLogin, async (req, res) => {
+  try {
+    const docs = await ChatbotQa.find({ deleted: { $ne: true } })
+      .select('question answer images keywords category author createdBy createdAt updatedAt')
+      .sort({ updatedAt: -1 })
+      .lean();
+    res.json({ ok: true, items: docs, canManage: canWriteAcademyNotice(req) });
+  } catch (err) {
+    console.error("[GET /api/chatbot-qa] 오류:", err);
+    res.status(500).json({ ok: false, message: "목록 조회 실패" });
+  }
+});
+
+// 등록 — '브레인문해원_테스트'만
+app.post("/api/chatbot-qa", requireAdminLogin, async (req, res) => {
+  try {
+    if (!canWriteAcademyNotice(req)) return res.status(403).json({ ok: false, message: "등록 권한이 없습니다." });
+    const { question, answer, images, keywords, category } = req.body || {};
+    if (!question || !question.trim()) return res.status(400).json({ ok: false, message: "질문을 입력해주세요." });
+    if (!answer || !answer.trim()) return res.status(400).json({ ok: false, message: "답변을 입력해주세요." });
+    const q = question.trim().slice(0, 1000);
+    const a = answer.trim().slice(0, 20000);
+    const kw = Array.isArray(keywords) ? keywords.map(k => String(k).trim()).filter(Boolean).slice(0, 50) : [];
+    const embeddingText = qaPlainText(q + ' ' + a);
+    const embedding = await generateQaEmbedding(embeddingText);
+    const created = await ChatbotQa.create({
+      question: q,
+      answer: a,
+      images: Array.isArray(images) ? images.filter(u => typeof u === 'string').slice(0, 20) : [],
+      keywords: kw,
+      category: (category || '').toString().trim().slice(0, 40),
+      embedding: embedding || [],
+      embeddingText: embedding ? embeddingText : '',
+      embeddingModel: embedding ? QA_EMBEDDING_MODEL : '',
+      createdBy: getAdminAcademyName(req)
+    });
+    res.json({ ok: true, item: created, embedded: !!embedding });
+  } catch (err) {
+    console.error("[POST /api/chatbot-qa] 오류:", err);
+    res.status(500).json({ ok: false, message: "등록 실패" });
+  }
+});
+
+// 수정 — '브레인문해원_테스트'만 (질문/답변 변경 시 임베딩 재생성)
+app.put("/api/chatbot-qa/:id", requireAdminLogin, async (req, res) => {
+  try {
+    if (!canWriteAcademyNotice(req)) return res.status(403).json({ ok: false, message: "수정 권한이 없습니다." });
+    const doc = await ChatbotQa.findById(req.params.id);
+    if (!doc || doc.deleted) return res.status(404).json({ ok: false, message: "항목을 찾을 수 없습니다." });
+    const { question, answer, images, keywords, category } = req.body || {};
+    if (typeof question === 'string' && question.trim()) doc.question = question.trim().slice(0, 1000);
+    if (typeof answer === 'string' && answer.trim()) doc.answer = answer.trim().slice(0, 20000);
+    if (Array.isArray(images)) doc.images = images.filter(u => typeof u === 'string').slice(0, 20);
+    if (Array.isArray(keywords)) doc.keywords = keywords.map(k => String(k).trim()).filter(Boolean).slice(0, 50);
+    if (typeof category === 'string') doc.category = category.trim().slice(0, 40);
+    // 질문/답변이 바뀌었으면 임베딩 재생성
+    const newText = qaPlainText(doc.question + ' ' + doc.answer);
+    if (newText !== doc.embeddingText) {
+      const emb = await generateQaEmbedding(newText);
+      if (emb) { doc.embedding = emb; doc.embeddingText = newText; doc.embeddingModel = QA_EMBEDDING_MODEL; }
+    }
+    await doc.save();
+    res.json({ ok: true, item: doc });
+  } catch (err) {
+    console.error("[PUT /api/chatbot-qa] 오류:", err);
+    res.status(500).json({ ok: false, message: "수정 실패" });
+  }
+});
+
+// 삭제 (소프트) — '브레인문해원_테스트'만
+app.delete("/api/chatbot-qa/:id", requireAdminLogin, async (req, res) => {
+  try {
+    if (!canWriteAcademyNotice(req)) return res.status(403).json({ ok: false, message: "삭제 권한이 없습니다." });
+    const result = await ChatbotQa.findByIdAndUpdate(req.params.id, { deleted: true }, { new: true });
+    if (!result) return res.status(404).json({ ok: false, message: "항목을 찾을 수 없습니다." });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[DELETE /api/chatbot-qa] 오류:", err);
+    res.status(500).json({ ok: false, message: "삭제 실패" });
+  }
+});
+
+// 검색 (하이브리드) — 모든 센터 관리자 · 추천 답변 여러 개 반환
+app.post("/api/chatbot-qa/search", requireAdminLogin, async (req, res) => {
+  try {
+    const query = ((req.body || {}).query || '').toString().trim();
+    if (!query) return res.status(400).json({ ok: false, message: "질문을 입력해주세요." });
+    const limit = Math.min(Math.max(parseInt((req.body || {}).limit, 10) || 5, 1), 10);
+
+    const docs = await ChatbotQa.find({ deleted: { $ne: true } })
+      .select('question answer images keywords category embedding')
+      .lean();
+    if (!docs.length) return res.json({ ok: true, results: [], mode: 'empty' });
+
+    const queryTokens = qaTokenize(query);
+    const queryEmbedding = await generateQaEmbedding(query);
+    const useSemantic = Array.isArray(queryEmbedding) && queryEmbedding.length > 0;
+
+    const scored = docs.map(d => {
+      const kwScore = qaKeywordScore(queryTokens, d);
+      const semScore = (useSemantic && Array.isArray(d.embedding) && d.embedding.length)
+        ? qaCosineSim(queryEmbedding, d.embedding) : 0;
+      // 하이브리드: 의미검색 가능하면 0.7*의미 + 0.3*키워드, 아니면 키워드만
+      const score = useSemantic ? (0.7 * semScore + 0.3 * kwScore) : kwScore;
+      return { d, score, semScore, kwScore };
+    })
+    .filter(x => x.score > 0.05)          // 무관 항목 제거
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+
+    const results = scored.map(x => ({
+      _id: x.d._id,
+      question: x.d.question,
+      answer: x.d.answer,
+      images: x.d.images || [],
+      category: x.d.category || '',
+      score: Math.round(x.score * 1000) / 1000,
+      matchPct: Math.round(x.score * 100)
+    }));
+    res.json({ ok: true, results, mode: useSemantic ? 'hybrid' : 'keyword' });
+  } catch (err) {
+    console.error("[POST /api/chatbot-qa/search] 오류:", err);
+    res.status(500).json({ ok: false, message: "검색 실패" });
+  }
+});
+
 // 학생 추가 API (브랜치 관리자용)
 app.post("/api/admin/branch/add-student", async (req, res) => {
   try {

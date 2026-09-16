@@ -1077,7 +1077,7 @@
     <div class="card">
       <p class="section-title">📋 비평 및 특강 데이터</p>
       <p class="desc">
-        내 학원 학생별 <b>BRAIN비평</b>·<b>BRAIN한국사</b>·<b>BRAIN입문 쓰기문해</b>·<b>BRAIN모고</b> 제출 내역을 한눈에 보고,
+        내 학원 학생별 <b>BRAIN비평</b>·<b>BRAIN한국사</b>·<b>BRAIN입문 쓰기문해</b>·<b>BRAIN모고</b>·<b>BRAIN문법</b> 제출 내역을 한눈에 보고,
         학생별 <b>종합 리포트를 인쇄·PDF</b>로 받을 수 있습니다.
       </p>
       <div class="btn-row">
@@ -1085,8 +1085,31 @@
         <a class="btn primary" href="/admin/critique-kh-data?tab=kh">🇰🇷 한국사 데이터 보기</a>
         <a class="btn primary" href="/admin/critique-kh-data?tab=wr100">✍️ 쓰기문해 데이터 보기</a>
         <a class="btn primary" href="/admin/critique-kh-data?tab=mock">📊 모의고사 데이터 보기</a>
+        <a class="btn primary" href="javascript:void(0)" onclick="showGrammarSoon()">🧭 문법 데이터 보기</a>
       </div>
     </div>
+    <script>
+      // 🧭 문법 데이터 — 오픈 준비 중 안내 팝업
+      function showGrammarSoon() {
+        let ov = document.getElementById('grammarSoonOverlay');
+        if (!ov) {
+          ov = document.createElement('div');
+          ov.id = 'grammarSoonOverlay';
+          ov.style.cssText = 'position:fixed;inset:0;z-index:99500;background:rgba(15,23,42,0.55);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px;';
+          ov.innerHTML = `
+            <div style="background:#fff;border-radius:20px;padding:34px 30px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 70px -12px rgba(15,23,42,0.5);">
+              <div style="font-size:52px;margin-bottom:6px;">🧭</div>
+              <h3 style="margin:0 0 10px;font-size:19px;font-weight:800;color:#1e293b;">오픈 준비 중입니다</h3>
+              <p style="margin:0 0 22px;font-size:14px;color:#64748b;line-height:1.65;"><b style="color:#4a90d9;">문법 데이터</b> 화면을 준비하고 있어요.<br>조금만 기다려 주세요!</p>
+              <button onclick="document.getElementById('grammarSoonOverlay').style.display='none'"
+                style="background:linear-gradient(135deg,#4a90d9,#00BCD4);color:#fff;border:none;border-radius:12px;padding:12px 26px;font-size:14px;font-weight:700;cursor:pointer;width:100%;">확인</button>
+            </div>`;
+          ov.addEventListener('click', (e) => { if (e.target === ov) ov.style.display = 'none'; });
+          document.body.appendChild(ov);
+        }
+        ov.style.display = 'flex';
+      }
+    </script>
 
     <div class="card">
       <p class="section-title">📩 문의 및 수정 요청</p>
@@ -2297,6 +2320,349 @@
       }
     }
     window.addEventListener('DOMContentLoaded', updateAcademyNoticeBadge);
+  </script>
+
+  <!-- ==================== 🤖 상담 챗봇 위젯 (우측 하단) ==================== -->
+  <style>
+    #cbqFab {
+      position: fixed; right: 24px; bottom: 24px; z-index: 99000;
+      background: linear-gradient(135deg, #4a90d9 0%, #00BCD4 100%);
+      color: #fff; border: none; border-radius: 50px;
+      padding: 14px 20px; font-size: 15px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 10px 30px -6px rgba(74,144,217,0.55), 0 0 0 1px rgba(255,255,255,0.12) inset;
+      display: flex; align-items: center; gap: 8px;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    #cbqFab:hover { transform: translateY(-2px); box-shadow: 0 14px 36px -6px rgba(74,144,217,0.65); }
+    #cbqFab .cbq-fab-emoji { font-size: 18px; }
+
+    #cbqPanel {
+      position: fixed; right: 24px; bottom: 24px; z-index: 99001;
+      width: 400px; max-width: calc(100vw - 32px); height: 620px; max-height: calc(100vh - 48px);
+      background: #fff; border-radius: 18px; overflow: hidden;
+      box-shadow: 0 24px 70px -12px rgba(15,23,42,0.45), 0 0 0 1px rgba(15,23,42,0.06);
+      display: none; flex-direction: column;
+    }
+    #cbqPanel.open { display: flex; }
+    .cbq-head {
+      background: linear-gradient(135deg, #4a90d9 0%, #00BCD4 100%); color: #fff;
+      padding: 15px 16px; display: flex; align-items: center; gap: 10px;
+    }
+    .cbq-head h3 { margin: 0; font-size: 15px; font-weight: 800; flex: 1; }
+    .cbq-head .cbq-sub { font-size: 11px; opacity: .85; font-weight: 500; margin-top: 2px; }
+    .cbq-head button {
+      background: rgba(255,255,255,0.18); border: none; color: #fff; cursor: pointer;
+      width: 30px; height: 30px; border-radius: 8px; font-size: 15px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cbq-head button:hover { background: rgba(255,255,255,0.3); }
+    .cbq-body { flex: 1; overflow-y: auto; padding: 14px; background: #f7f9fc; }
+    .cbq-foot { padding: 12px; border-top: 1px solid #eef1f6; background: #fff; }
+    .cbq-inrow { display: flex; gap: 8px; }
+    .cbq-inrow textarea {
+      flex: 1; resize: none; border: 1.5px solid #dfe5ee; border-radius: 12px;
+      padding: 10px 12px; font-size: 14px; font-family: inherit; line-height: 1.4; height: 44px; max-height: 110px;
+    }
+    .cbq-inrow textarea:focus { outline: none; border-color: #4a90d9; }
+    .cbq-send {
+      background: #4a90d9; color: #fff; border: none; border-radius: 12px;
+      padding: 0 16px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap;
+    }
+    .cbq-send:disabled { opacity: .5; cursor: default; }
+
+    .cbq-hint { text-align: center; color: #8a95a6; font-size: 13px; margin-top: 40px; line-height: 1.7; }
+    .cbq-hint .cbq-hint-emoji { font-size: 34px; display: block; margin-bottom: 10px; }
+
+    .cbq-q-echo { text-align: right; margin: 6px 0 14px; }
+    .cbq-q-echo span { display: inline-block; background: #4a90d9; color: #fff; padding: 8px 13px; border-radius: 14px 14px 3px 14px; font-size: 13px; max-width: 85%; }
+
+    .cbq-card { background: #fff; border: 1px solid #e8edf4; border-radius: 14px; padding: 13px 14px; margin-bottom: 11px; box-shadow: 0 2px 8px rgba(15,23,42,0.04); }
+    .cbq-card-top { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+    .cbq-card-q { font-weight: 800; font-size: 13.5px; color: #1e293b; flex: 1; line-height: 1.35; }
+    .cbq-badge { font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 20px; white-space: nowrap; }
+    .cbq-badge.hi { background: #e7f7ee; color: #1a9d5a; }
+    .cbq-badge.mid { background: #fef3e0; color: #d98419; }
+    .cbq-badge.lo { background: #eef1f6; color: #7a8698; }
+    .cbq-cat { font-size: 10px; color: #94a3b8; background:#f1f5f9; padding:2px 6px; border-radius:6px; }
+    .cbq-card-a { font-size: 13.5px; color: #334155; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+    .cbq-card-a img, .cbq-imgs img { max-width: 100%; border-radius: 10px; margin-top: 8px; display:block; cursor: zoom-in; }
+    .cbq-nores { text-align:center; color:#94a3b8; font-size:13px; margin-top:30px; }
+
+    /* 관리 뷰 */
+    .cbq-manage-btn { background: rgba(255,255,255,0.18); border:none; color:#fff; cursor:pointer; font-size:10px; font-weight:600; padding:4px 8px; border-radius:7px; white-space:nowrap; letter-spacing:-0.2px; }
+    .cbq-manage-btn:hover { background: rgba(255,255,255,0.3); }
+    .cbq-form label { display:block; font-size:12px; font-weight:700; color:#475569; margin:10px 0 4px; }
+    .cbq-form input[type=text], .cbq-form textarea {
+      width:100%; box-sizing:border-box; border:1.5px solid #dfe5ee; border-radius:10px; padding:9px 11px; font-size:13.5px; font-family:inherit;
+    }
+    .cbq-form textarea { resize:vertical; min-height:90px; line-height:1.5; }
+    .cbq-form input:focus, .cbq-form textarea:focus { outline:none; border-color:#4a90d9; }
+    .cbq-form-actions { display:flex; gap:8px; margin-top:14px; }
+    .cbq-btn { border:none; border-radius:10px; padding:10px 14px; font-weight:700; font-size:13px; cursor:pointer; }
+    .cbq-btn.primary { background:#4a90d9; color:#fff; flex:1; }
+    .cbq-btn.ghost { background:#eef1f6; color:#475569; }
+    .cbq-img-thumbs { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+    .cbq-img-thumbs .cbq-thumb { position:relative; }
+    .cbq-img-thumbs img { width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0; }
+    .cbq-img-thumbs .cbq-thumb button { position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:#ef4444; color:#fff; border:none; font-size:12px; cursor:pointer; line-height:1; }
+    .cbq-list-item { background:#fff; border:1px solid #e8edf4; border-radius:12px; padding:11px 12px; margin-bottom:9px; }
+    .cbq-list-item .cbq-li-q { font-weight:700; font-size:13px; color:#1e293b; margin-bottom:5px; }
+    .cbq-list-item .cbq-li-actions { display:flex; gap:6px; margin-top:6px; }
+    .cbq-list-item .cbq-li-actions button { font-size:11px; padding:4px 9px; border-radius:7px; border:none; cursor:pointer; font-weight:700; }
+    .cbq-edit-btn { background:#eef2ff; color:#4a5bd9; }
+    .cbq-del-btn { background:#fef2f2; color:#ef4444; }
+    .cbq-loading { text-align:center; color:#94a3b8; font-size:13px; margin-top:30px; }
+    .cbq-spin { display:inline-block; width:16px; height:16px; border:2px solid #cbd5e1; border-top-color:#4a90d9; border-radius:50%; animation:cbqspin .7s linear infinite; vertical-align:middle; }
+    @keyframes cbqspin { to { transform:rotate(360deg); } }
+  </style>
+
+  <button id="cbqFab" onclick="cbqOpen()"><span class="cbq-fab-emoji">🐳</span> 운영 고래 매니저</button>
+  <div id="cbqPanel" role="dialog" aria-label="운영 고래 매니저">
+    <div class="cbq-head">
+      <div style="flex:1;">
+        <h3>🐳 운영 고래 매니저</h3>
+        <div class="cbq-sub" id="cbqSubtitle">궁금한 점을 물어보세요</div>
+      </div>
+      <button id="cbqManageToggle" class="cbq-manage-btn" style="display:none;" onclick="cbqToggleManage()">＋ 지식관리</button>
+      <button onclick="cbqClose()" aria-label="닫기">×</button>
+    </div>
+
+    <!-- 검색(질문) 뷰 -->
+    <div id="cbqSearchView" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+      <div class="cbq-body" id="cbqResults">
+        <div class="cbq-hint"><span class="cbq-hint-emoji">🐳</span>궁금한 점을 편하게 물어보세요.<br>비슷한 상담 답변을 찾아드려요.</div>
+      </div>
+      <div class="cbq-foot">
+        <div class="cbq-inrow">
+          <textarea id="cbqInput" placeholder="예) 교재 주문은 어떻게 하나요?" rows="1"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();cbqSearch();}"
+            oninput="this.style.height='44px';this.style.height=Math.min(this.scrollHeight,110)+'px';"></textarea>
+          <button class="cbq-send" id="cbqSendBtn" onclick="cbqSearch()">검색</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 관리 뷰 (테스트 계정만) -->
+    <div id="cbqManageView" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+      <div class="cbq-body" id="cbqManageBody"></div>
+    </div>
+  </div>
+
+  <script>
+    let _cbqCanManage = false;
+    let _cbqManageMode = false;   // 관리 뷰 on/off
+    let _cbqEditId = null;
+    let _cbqPendingImages = [];   // 등록/수정 중 첨부 이미지 URL
+
+    function cbqEsc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    // 접근 권한 확인 (목록 API가 canManage 내려줌) — 최초 1회, 결과 캐시
+    let _cbqManageChecked = false;
+    async function cbqCheckManage() {
+      if (_cbqManageChecked) return _cbqCanManage;
+      try {
+        const res = await fetch('/api/chatbot-qa');
+        const j = await res.json();
+        _cbqCanManage = !!(j && j.canManage);
+        _cbqManageChecked = true;
+      } catch (e) { _cbqCanManage = false; }
+      return _cbqCanManage;
+    }
+    async function cbqOpen() {
+      // 🐳 현재는 테스트 센터(브레인문해원_테스트)만 사용 · 그 외 센터는 오픈 예정 안내
+      const allowed = await cbqCheckManage();
+      if (!allowed) { cbqShowComingSoon(); return; }
+      document.getElementById('cbqManageToggle').style.display = 'inline-flex';
+      document.getElementById('cbqPanel').classList.add('open');
+      document.getElementById('cbqFab').style.display = 'none';
+      setTimeout(() => { const i = document.getElementById('cbqInput'); if (i) i.focus(); }, 100);
+    }
+    function cbqClose() {
+      document.getElementById('cbqPanel').classList.remove('open');
+      document.getElementById('cbqFab').style.display = 'flex';
+    }
+    // 곧 오픈 예정 안내 팝업 (테스트 센터 외)
+    function cbqShowComingSoon() {
+      let ov = document.getElementById('cbqSoonOverlay');
+      if (!ov) {
+        ov = document.createElement('div');
+        ov.id = 'cbqSoonOverlay';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:99500;background:rgba(15,23,42,0.55);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px;';
+        ov.innerHTML = `
+          <div style="background:#fff;border-radius:20px;padding:34px 30px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 70px -12px rgba(15,23,42,0.5);">
+            <div style="font-size:52px;margin-bottom:6px;">🐳</div>
+            <h3 style="margin:0 0 10px;font-size:19px;font-weight:800;color:#1e293b;">곧 오픈 예정이에요</h3>
+            <p style="margin:0 0 22px;font-size:14px;color:#64748b;line-height:1.65;"><b style="color:#4a90d9;">운영 고래 매니저</b>가 센터 운영 질문에<br>바로 답해드릴 수 있도록 준비 중이에요.<br>조금만 기다려 주세요!</p>
+            <button onclick="document.getElementById('cbqSoonOverlay').style.display='none'"
+              style="background:linear-gradient(135deg,#4a90d9,#00BCD4);color:#fff;border:none;border-radius:12px;padding:12px 26px;font-size:14px;font-weight:700;cursor:pointer;width:100%;">확인</button>
+          </div>`;
+        ov.addEventListener('click', (e) => { if (e.target === ov) ov.style.display = 'none'; });
+        document.body.appendChild(ov);
+      }
+      ov.style.display = 'flex';
+    }
+
+    async function cbqSearch() {
+      const input = document.getElementById('cbqInput');
+      const q = (input.value || '').trim();
+      if (!q) return;
+      const btn = document.getElementById('cbqSendBtn');
+      const box = document.getElementById('cbqResults');
+      btn.disabled = true;
+      box.innerHTML = `<div class="cbq-q-echo"><span>${cbqEsc(q)}</span></div><div class="cbq-loading"><span class="cbq-spin"></span> 답변을 찾는 중...</div>`;
+      box.scrollTop = box.scrollHeight;
+      try {
+        const res = await fetch('/api/chatbot-qa/search', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: q })
+        });
+        const j = await res.json();
+        let html = `<div class="cbq-q-echo"><span>${cbqEsc(q)}</span></div>`;
+        if (!j.ok || !j.results || !j.results.length) {
+          html += `<div class="cbq-nores">🔍 아직 딱 맞는 답변이 없어요.<br>본사에 문의해 주세요.</div>`;
+        } else {
+          html += j.results.map((r, i) => {
+            const pct = r.matchPct || 0;
+            const cls = pct >= 60 ? 'hi' : (pct >= 30 ? 'mid' : 'lo');
+            const imgs = (r.images || []).map(u => `<img src="${cbqEsc(u)}" onclick="cbqZoom('${cbqEsc(u)}')" alt="첨부">`).join('');
+            const cat = r.category ? `<span class="cbq-cat">${cbqEsc(r.category)}</span>` : '';
+            return `<div class="cbq-card">
+              <div class="cbq-card-top">
+                <div class="cbq-card-q">${i===0?'⭐ ':''}${cbqEsc(r.question)}</div>
+                ${cat}<span class="cbq-badge ${cls}">${pct}%</span>
+              </div>
+              <div class="cbq-card-a">${cbqEsc(r.answer)}</div>
+              <div class="cbq-imgs">${imgs}</div>
+            </div>`;
+          }).join('');
+          html += `<div style="text-align:center;color:#b0b9c6;font-size:11px;margin:4px 0 8px;">추천 답변 ${j.results.length}개 · ${j.mode==='hybrid'?'의미+키워드':'키워드'} 검색</div>`;
+        }
+        box.innerHTML = html;
+        box.scrollTop = 0;
+      } catch (e) {
+        box.innerHTML += `<div class="cbq-nores">검색 중 오류가 발생했어요.</div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function cbqZoom(url) { window.open(url, '_blank'); }
+
+    // ===== 관리 뷰 =====
+    function cbqToggleManage() {
+      _cbqManageMode = !_cbqManageMode;
+      document.getElementById('cbqSearchView').style.display = _cbqManageMode ? 'none' : 'flex';
+      document.getElementById('cbqManageView').style.display = _cbqManageMode ? 'flex' : 'none';
+      document.getElementById('cbqManageToggle').textContent = _cbqManageMode ? '← 검색으로' : '＋ 지식관리';
+      document.getElementById('cbqSubtitle').textContent = _cbqManageMode ? '지식 등록·수정·삭제' : '궁금한 점을 물어보세요';
+      if (_cbqManageMode) cbqRenderManageList();
+    }
+
+    async function cbqRenderManageList() {
+      const body = document.getElementById('cbqManageBody');
+      body.innerHTML = '<div class="cbq-loading"><span class="cbq-spin"></span> 불러오는 중...</div>';
+      try {
+        const res = await fetch('/api/chatbot-qa');
+        const j = await res.json();
+        const items = (j && j.items) || [];
+        let html = `<button class="cbq-btn primary" style="width:100%;margin-bottom:12px;" onclick="cbqOpenForm()">＋ 새 Q&A 등록</button>`;
+        html += `<div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">등록된 지식 ${items.length}개</div>`;
+        html += items.map(it => `
+          <div class="cbq-list-item">
+            <div class="cbq-li-q">${cbqEsc(it.question)}</div>
+            <div style="font-size:12px;color:#64748b;line-height:1.4;max-height:36px;overflow:hidden;">${cbqEsc((it.answer||'').slice(0,80))}${(it.answer||'').length>80?'…':''}</div>
+            ${(it.images&&it.images.length)?`<div style="font-size:11px;color:#94a3b8;margin-top:3px;">🖼️ 이미지 ${it.images.length}장</div>`:''}
+            <div class="cbq-li-actions">
+              <button class="cbq-edit-btn" onclick='cbqOpenForm(${JSON.stringify(it)})'>수정</button>
+              <button class="cbq-del-btn" onclick="cbqDelete('${it._id}')">삭제</button>
+            </div>
+          </div>`).join('');
+        body.innerHTML = html;
+      } catch (e) {
+        body.innerHTML = '<div class="cbq-nores">목록을 불러오지 못했어요.</div>';
+      }
+    }
+
+    function cbqOpenForm(item) {
+      _cbqEditId = item && item._id ? item._id : null;
+      _cbqPendingImages = (item && Array.isArray(item.images)) ? item.images.slice() : [];
+      const body = document.getElementById('cbqManageBody');
+      body.innerHTML = `
+        <div class="cbq-form">
+          <div style="font-weight:800;font-size:14px;color:#1e293b;margin-bottom:4px;">${_cbqEditId ? '✏️ Q&A 수정' : '➕ 새 Q&A 등록'}</div>
+          <label>질문 <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="cbqfQ" placeholder="원장님들이 물어볼 만한 질문" value="${item ? cbqEsc(item.question) : ''}">
+          <label>답변 <span style="color:#ef4444;">*</span></label>
+          <textarea id="cbqfA" placeholder="답변 내용을 입력하세요">${item ? cbqEsc(item.answer) : ''}</textarea>
+          <label>이미지 (선택 · 여러 장 가능)</label>
+          <input type="file" id="cbqfImg" accept="image/*" multiple onchange="cbqUploadImages(this)">
+          <div class="cbq-img-thumbs" id="cbqfThumbs"></div>
+          <label>키워드 (선택 · 쉼표로 구분)</label>
+          <input type="text" id="cbqfKw" placeholder="예) 교재, 주문, 발송" value="${item && item.keywords ? cbqEsc(item.keywords.join(', ')) : ''}">
+          <label>분류 (선택)</label>
+          <input type="text" id="cbqfCat" placeholder="예) 교재 / 정산 / 학습 / 시스템" value="${item && item.category ? cbqEsc(item.category) : ''}">
+          <div class="cbq-form-actions">
+            <button class="cbq-btn primary" id="cbqfSave" onclick="cbqSave()">${_cbqEditId ? '수정 저장' : '등록'}</button>
+            <button class="cbq-btn ghost" onclick="cbqRenderManageList()">취소</button>
+          </div>
+        </div>`;
+      cbqRenderThumbs();
+    }
+
+    function cbqRenderThumbs() {
+      const wrap = document.getElementById('cbqfThumbs');
+      if (!wrap) return;
+      wrap.innerHTML = _cbqPendingImages.map((u, i) => `
+        <div class="cbq-thumb"><img src="${cbqEsc(u)}" alt="첨부"><button onclick="cbqRemoveImg(${i})">×</button></div>`).join('');
+    }
+    function cbqRemoveImg(i) { _cbqPendingImages.splice(i, 1); cbqRenderThumbs(); }
+
+    async function cbqUploadImages(input) {
+      const files = Array.from(input.files || []);
+      input.value = '';
+      for (const file of files) {
+        const form = new FormData();
+        form.append('image', file);
+        try {
+          const res = await fetch('/api/academy-notice/upload-image', { method: 'POST', body: form });
+          const j = await res.json();
+          if (j && j.ok && j.imageUrl) _cbqPendingImages.push(j.imageUrl);
+          else alert(j.message || '이미지 업로드 실패');
+        } catch (e) { alert('이미지 업로드 오류'); }
+      }
+      cbqRenderThumbs();
+    }
+
+    async function cbqSave() {
+      const question = (document.getElementById('cbqfQ').value || '').trim();
+      const answer = (document.getElementById('cbqfA').value || '').trim();
+      if (!question) { alert('질문을 입력해주세요.'); return; }
+      if (!answer) { alert('답변을 입력해주세요.'); return; }
+      const keywords = (document.getElementById('cbqfKw').value || '').split(',').map(s => s.trim()).filter(Boolean);
+      const category = (document.getElementById('cbqfCat').value || '').trim();
+      const payload = { question, answer, images: _cbqPendingImages, keywords, category };
+      const btn = document.getElementById('cbqfSave');
+      btn.disabled = true; btn.textContent = '저장 중...';
+      try {
+        const url = _cbqEditId ? `/api/chatbot-qa/${_cbqEditId}` : '/api/chatbot-qa';
+        const method = _cbqEditId ? 'PUT' : 'POST';
+        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const j = await res.json();
+        if (j && j.ok) { cbqRenderManageList(); }
+        else { alert(j.message || '저장 실패'); btn.disabled = false; btn.textContent = _cbqEditId ? '수정 저장' : '등록'; }
+      } catch (e) { alert('저장 오류'); btn.disabled = false; btn.textContent = _cbqEditId ? '수정 저장' : '등록'; }
+    }
+
+    async function cbqDelete(id) {
+      if (!confirm('이 Q&A를 삭제할까요?')) return;
+      try {
+        const res = await fetch(`/api/chatbot-qa/${id}`, { method: 'DELETE' });
+        const j = await res.json();
+        if (j && j.ok) cbqRenderManageList();
+        else alert(j.message || '삭제 실패');
+      } catch (e) { alert('삭제 오류'); }
+    }
   </script>
 </body>
 </html>
