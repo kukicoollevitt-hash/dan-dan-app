@@ -17186,17 +17186,8 @@ async function performLogout() {
         closeUnitBtn.addEventListener('click', window.closeUnitModal);
       }
 
-      // 배경 클릭 시 모달 닫기
-      if (unitModal) {
-        unitModal.addEventListener('click', function(e) {
-          if (e.target === unitModal) {
-            // BRAIN입문 쓰기문해(100day)는 실수 터치로 학습이 닫히지 않도록 배경 클릭 닫기 제외 (X 버튼으로만 닫기)
-            const openUnit = sessionStorage.getItem('currentOpenUnit') || '';
-            if (openUnit.includes('100day/')) return;
-            window.closeUnitModal();
-          }
-        });
-      }
+      // 배경 클릭 닫기 제거 — 학습 중 실수 터치로 팝업이 닫히는 불편(센터 제보)
+      // 모든 단원 학습 팝업은 X 버튼으로만 닫는다 (기존 100day 예외를 전체로 확대)
 
       // 페이지 로드 시 이전에 열려있던 모달 복원
       restoreUnitModal();
@@ -19742,12 +19733,7 @@ async function performLogout() {
       const closeBtn = document.getElementById('closeCritiqueModal');
       const modal = document.getElementById('critiqueModal');
       if (closeBtn) closeBtn.addEventListener('click', closeCritiqueWriteModal);
-      if (modal) {
-        modal.addEventListener('click', (e) => {
-          // 배경(모달 자체) 클릭 시만 닫기 (콘텐츠 내부 클릭은 무시)
-          if (e.target === modal) closeCritiqueWriteModal();
-        });
-      }
+      // 배경 클릭 닫기 제거 — 작성 중 실수 터치로 글이 날아가는 불편(센터 제보). X 버튼으로만 닫기
     });
 
     // 📰 오늘의 비평 시사문해 — 시사 제목 + 학생 제출 여부 로드
@@ -44892,18 +44878,14 @@ ${content}
           _critState.currentLevel = data.defaultGrade;
           _critState.currentMonth = currentMonthKey();
 
-          // 🎯 김윤슬 학생 검토 모드 — 7월 미리보기 + 월 이동 활성
+          // 🎯 월 이동 전체 개방 (2026-09) — 지난 달 기록 열람·월간 PDF 출력용. 시작은 항상 현재 달
+          // 김윤슬 검토 모드는 미래 월 미리보기만 추가 허용 (__critMonthShift에서 범위 제한)
           const studentName = (data.user && data.user.name) || (typeof getCurrentStudent === 'function' && getCurrentStudent()?.name) || '';
           const isReviewer = (studentName === '김윤슬');
           _critState.isReviewer = isReviewer;
-          if (isReviewer) {
-            _critState.currentMonth = '2026-07';
-            document.getElementById('critMonthPrev').style.display = 'inline-block';
-            document.getElementById('critMonthNext').style.display = 'inline-block';
-          } else {
-            document.getElementById('critMonthPrev').style.display = 'none';
-            document.getElementById('critMonthNext').style.display = 'none';
-          }
+          _critState.initMonth = _critState.currentMonth; // 실제 이번 달 (평균 표시 보정용)
+          document.getElementById('critMonthPrev').style.display = 'inline-block';
+          document.getElementById('critMonthNext').style.display = 'inline-block';
 
           _critState.monthlyAvgStars = (typeof data.monthlyAvgStars === 'number') ? data.monthlyAvgStars : null;
           _critState.monthlyCount = data.monthlyCount || 0;
@@ -45163,7 +45145,14 @@ ${content}
             meta.innerHTML = `${_critState.currentMonth} · 총 <strong>0</strong>건`;
             return;
           }
-          const avg = _critState.monthlyAvgStars;
+          // 평균: 이번 달은 서버 계산값, 지난 달 열람 시엔 해당 월 제출본으로 직접 계산
+          let avg = _critState.monthlyAvgStars;
+          if (month !== (_critState.initMonth || month)) {
+            const graded = entries.filter(e => e.grading && typeof e.grading.stars === 'number');
+            avg = graded.length > 0
+              ? Math.round((graded.reduce((s, e) => s + e.grading.stars, 0) / graded.length) * 10) / 10
+              : null;
+          }
           const avgHtml = (typeof avg === 'number') ? `<strong style="color:#d97706;">${(avg * 2).toFixed(1)}</strong><span style="font-size:11px;color:#a16207;font-weight:600;"> / 10</span>` : '';
           meta.innerHTML = `${_critState.currentMonth} · 총 <strong>${entries.length}</strong>건 · 평균 ${avgHtml}`;
           // 최신순 정렬
@@ -45907,15 +45896,17 @@ ${content}
         document.getElementById('critMonthLabel').textContent = `${y}. ${parseInt(mm)}월`;
       }
 
-      // 🎯 검토 모드 월 이동 (김윤슬 학생 전용)
+      // 🎯 월 이동 (전체 학생) — 과거는 2026-06(서비스 시작)까지, 미래는 이번 달까지(검토 모드만 미리보기 허용)
       window.__critMonthShift = function(delta) {
-        if (!_critState.isReviewer) return;
         const [y, m] = _critState.currentMonth.split('-').map(Number);
         let nm = m + delta;
         let ny = y;
         if (nm < 1) { nm = 12; ny--; }
         if (nm > 12) { nm = 1; ny++; }
-        _critState.currentMonth = `${ny}-${String(nm).padStart(2,'0')}`;
+        const target = `${ny}-${String(nm).padStart(2,'0')}`;
+        if (target < '2026-06') return;
+        if (!_critState.isReviewer && target > (_critState.initMonth || currentMonthKey())) return;
+        _critState.currentMonth = target;
         renderLevelToggle();   // 월 라벨 + 등급 버튼 갱신
         renderCalendar();
       };
