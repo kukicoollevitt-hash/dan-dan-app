@@ -985,7 +985,8 @@
 
     <div id="activeArea">
       <!-- 시리즈별 포디움 -->
-      <div class="wb-podium-card" id="wbPodiumCard" style="display:none;" onclick="openWbTopModal()">
+      <div class="wb-podium-card" id="wbPodiumCard" style="display:none; position:relative;" onclick="openWbTopModal()">
+        <div class="fx-fireworks" id="wbPodiumFx" style="height:100%"></div>
         <div class="wb-podium-header">
           <span class="wb-podium-title">🏆 문해왕 종합 순위</span>
           <span class="wb-podium-link">TOP 10 전체 보기 →</span>
@@ -1102,7 +1103,8 @@
 
 <!-- TOP 10 모달 -->
 <div class="wb-top-modal" id="wbTopModal" onclick="if(event.target===this)closeWbTopModal()">
-  <div class="wb-top-box">
+  <div class="wb-top-box" style="position:relative;">
+    <div class="fx-fireworks" id="wbTopFx"></div>
     <button class="wb-top-close" onclick="closeWbTopModal()">&times;</button>
     <div class="wb-top-title">🏆 문해왕 종합 순위 TOP 10</div>
     <div class="wb-top-list" id="wbTopList"></div>
@@ -1596,8 +1598,12 @@
       myRowEl.classList.remove('empty');
     } else { myRowEl.classList.add('empty'); myRowEl.innerHTML = ''; }
     document.getElementById('wbTopModal').classList.add('show');
+    if (window.startFireworks) startFireworks(document.getElementById('wbTopFx'));
   }
-  function closeWbTopModal() { document.getElementById('wbTopModal').classList.remove('show'); }
+  function closeWbTopModal() {
+    document.getElementById('wbTopModal').classList.remove('show');
+    if (window.stopFireworks) stopFireworks(document.getElementById('wbTopFx'));
+  }
   window.openWbTopModal = openWbTopModal;
   window.closeWbTopModal = closeWbTopModal;
 
@@ -2135,5 +2141,71 @@
 
   init();
 </script>
+<!-- 🎆 공용 폭죽 효과 (순위 모달용) -->
+<style>
+  .fx-fireworks { position:absolute; top:0; left:0; right:0; height:340px; overflow:hidden; pointer-events:none; z-index:60; }
+  .fx-fireworks .fx-p { position:absolute; width:9px; height:9px; border-radius:50%; opacity:1; transition: transform 1.05s cubic-bezier(.12,.62,.35,1), opacity 1.05s ease-out; box-shadow:0 0 6px currentColor; }
+  .fx-fireworks .fx-s { position:absolute; font-size:18px; opacity:1; transition: transform 1s ease-out, opacity 1s ease-out; }
+  @media (prefers-reduced-motion: reduce) { .fx-fireworks { display:none; } }
+</style>
+<script>
+(function(){
+  if (window.startFireworks) return;
+  var COLORS=['#fbbf24','#f59e0b','#ef4444','#3b82f6','#22c55e','#a855f7','#ec4899','#fde047'];
+  var timers=new WeakMap();
+  function burst(host){
+    var W=host.clientWidth||700, H=host.clientHeight||340;
+    var cx=W*(0.12+0.76*Math.random()), cy=H*(0.10+0.35*Math.random());
+    var n=24, off=Math.floor(Math.random()*COLORS.length), i;
+    for(i=0;i<n;i++){
+      var p=document.createElement('div'); p.className='fx-p';
+      var a=(Math.PI*2)*(i/n)+Math.random()*0.25, d=55+Math.random()*80, c=COLORS[(i+off)%COLORS.length];
+      p.style.left=cx+'px'; p.style.top=cy+'px'; p.style.background=c; p.style.color=c;
+      host.appendChild(p);
+      (function(el,ang,dist){ requestAnimationFrame(function(){ el.style.transform='translate('+(Math.cos(ang)*dist)+'px,'+(Math.sin(ang)*dist+30)+'px) scale(.35)'; el.style.opacity='0'; }); setTimeout(function(){ el.remove(); },1150); })(p,a,d);
+    }
+    var s=document.createElement('div'); s.className='fx-s'; s.textContent=['🎉','✨','🎊','⭐'][off%4];
+    s.style.left=(cx-9)+'px'; s.style.top=(cy-9)+'px'; host.appendChild(s);
+    requestAnimationFrame(function(){ s.style.transform='translateY(-24px) scale(1.6)'; s.style.opacity='0'; });
+    setTimeout(function(){ s.remove(); },1000);
+  }
+  window.startFireworks=function(host){
+    if(!host) return;
+    if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if(timers.get(host)) return;
+    burst(host);
+    var t=setInterval(function(){ burst(host); if(Math.random()<0.5) setTimeout(function(){ burst(host); },300); },1400);
+    timers.set(host,t);
+  };
+  window.stopFireworks=function(host){
+    if(!host) return;
+    var t=timers.get(host); if(t){ clearInterval(t); timers.delete(host); }
+    host.innerHTML='';
+  };
+})();
+</script>
+
+<!-- 🎆 포디움(시상대) 폭죽 — 화면에 보일 때만 발사 -->
+<script>
+(function(){
+  function initPodiumFx(){
+    var card=document.getElementById('wbPodiumCard');
+    var fx=document.getElementById('wbPodiumFx');
+    if(!card||!fx||!window.startFireworks){ setTimeout(initPodiumFx,500); return; }
+    try{
+      var io=new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if(e.isIntersecting && getComputedStyle(card).display!=='none') startFireworks(fx);
+          else stopFireworks(fx);
+        });
+      }, {threshold:0.25});
+      io.observe(card);
+    }catch(err){ /* IO 미지원 → 조용히 무시 */ }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initPodiumFx);
+  else initPodiumFx();
+})();
+</script>
+
 </body>
 </html>

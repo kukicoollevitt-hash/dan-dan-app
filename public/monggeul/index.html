@@ -298,7 +298,8 @@
 </div></div>
 
 <!-- RANKING -->
-<div class="overlay" id="rankOverlay"><div class="dexcard">
+<div class="overlay" id="rankOverlay"><div class="dexcard" style="position:relative;">
+  <div class="fx-fireworks" id="rankFx"></div>
   <div class="dexttl">🏆 몽글 랭킹</div><div class="dexsub" id="rankmonth">누적 몽글 포인트 (리셋 없음)</div>
   <div id="rankmine" style="text-align:center; font-weight:900; font-size:14px; color:#c98f00; margin-bottom:10px"></div>
   <div id="ranklist" style="display:flex; flex-direction:column; gap:6px"></div>
@@ -1217,6 +1218,7 @@ $('#goHome').onclick=()=>{ if(G){save(); G.combo=0; endFever();} renderSubjects(
 /* ---- 랭킹 (이번 달 몽글 포인트) ---- */
 async function openRank(){
   $('#rankOverlay').classList.add('on');
+  if(window.startFireworks) startFireworks(document.getElementById('rankFx'));
   $('#ranklist').innerHTML='<div class="loading">불러오는 중…</div>'; $('#rankmine').textContent=''; $('#rankchamps').innerHTML='';
   const q=USER?`?grade=${encodeURIComponent(USER.grade)}&name=${encodeURIComponent(USER.name)}`:'';
   let r=null; try{ r=await (await fetch('/api/monggeul/ranking'+q)).json(); }catch(e){}
@@ -1231,9 +1233,10 @@ async function openRank(){
     : '<div class="loading">아직 기록이 없어요 — 첫 주인공이 되어 보세요!</div>';
   $('#rankchamps').innerHTML='<div style="text-align:center;font-size:11px;color:#c9b8ab;font-weight:700">🏆 = 도감 84종 완성 마스터</div>';
 }
-$('#openrank').onclick=openRank; $('#closerank').onclick=()=>$('#rankOverlay').classList.remove('on');
+function _closeRank(){ $('#rankOverlay').classList.remove('on'); if(window.stopFireworks) stopFireworks(document.getElementById('rankFx')); }
+$('#openrank').onclick=openRank; $('#closerank').onclick=_closeRank;
 $('#rankBtn2').onclick=openRank; $('#dexBtn2').onclick=openDex;  // 시작화면 버튼
-$('#rankOverlay').onclick=e=>{ if(e.target.id==='rankOverlay') $('#rankOverlay').classList.remove('on'); };
+$('#rankOverlay').onclick=e=>{ if(e.target.id==='rankOverlay') _closeRank(); };
 
 /* ---- 배경 파티클 ---- */
 const cv=$('#ambient'),ctx=cv.getContext('2d'); let W,H,ps;
@@ -1294,5 +1297,49 @@ function applyTheme(){ document.body.dataset.season=G.season; }
   }catch(e){}
 })();
 </script>
+<!-- 🎆 공용 폭죽 효과 (순위 모달용) -->
+<style>
+  .fx-fireworks { position:absolute; top:0; left:0; right:0; height:340px; overflow:hidden; pointer-events:none; z-index:60; }
+  .fx-fireworks .fx-p { position:absolute; width:9px; height:9px; border-radius:50%; opacity:1; transition: transform 1.05s cubic-bezier(.12,.62,.35,1), opacity 1.05s ease-out; box-shadow:0 0 6px currentColor; }
+  .fx-fireworks .fx-s { position:absolute; font-size:18px; opacity:1; transition: transform 1s ease-out, opacity 1s ease-out; }
+  @media (prefers-reduced-motion: reduce) { .fx-fireworks { display:none; } }
+</style>
+<script>
+(function(){
+  if (window.startFireworks) return;
+  var COLORS=['#fbbf24','#f59e0b','#ef4444','#3b82f6','#22c55e','#a855f7','#ec4899','#fde047'];
+  var timers=new WeakMap();
+  function burst(host){
+    var W=host.clientWidth||700, H=host.clientHeight||340;
+    var cx=W*(0.12+0.76*Math.random()), cy=H*(0.10+0.35*Math.random());
+    var n=24, off=Math.floor(Math.random()*COLORS.length), i;
+    for(i=0;i<n;i++){
+      var p=document.createElement('div'); p.className='fx-p';
+      var a=(Math.PI*2)*(i/n)+Math.random()*0.25, d=55+Math.random()*80, c=COLORS[(i+off)%COLORS.length];
+      p.style.left=cx+'px'; p.style.top=cy+'px'; p.style.background=c; p.style.color=c;
+      host.appendChild(p);
+      (function(el,ang,dist){ requestAnimationFrame(function(){ el.style.transform='translate('+(Math.cos(ang)*dist)+'px,'+(Math.sin(ang)*dist+30)+'px) scale(.35)'; el.style.opacity='0'; }); setTimeout(function(){ el.remove(); },1150); })(p,a,d);
+    }
+    var s=document.createElement('div'); s.className='fx-s'; s.textContent=['🎉','✨','🎊','⭐'][off%4];
+    s.style.left=(cx-9)+'px'; s.style.top=(cy-9)+'px'; host.appendChild(s);
+    requestAnimationFrame(function(){ s.style.transform='translateY(-24px) scale(1.6)'; s.style.opacity='0'; });
+    setTimeout(function(){ s.remove(); },1000);
+  }
+  window.startFireworks=function(host){
+    if(!host) return;
+    if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if(timers.get(host)) return;
+    burst(host);
+    var t=setInterval(function(){ burst(host); if(Math.random()<0.5) setTimeout(function(){ burst(host); },300); },1400);
+    timers.set(host,t);
+  };
+  window.stopFireworks=function(host){
+    if(!host) return;
+    var t=timers.get(host); if(t){ clearInterval(t); timers.delete(host); }
+    host.innerHTML='';
+  };
+})();
+</script>
+
 </body>
 </html>
