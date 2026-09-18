@@ -44254,6 +44254,82 @@ ${content}
     }
     .crit-best-slot.rank-3 .crit-best-rank { color: #92400e; }
 
+    /* ✨✨ 수상 박스 영광 효과 — 당첨된 슬롯에만 (빈 슬롯은 그대로) ✨✨ */
+    .crit-best-slot:not(.empty) { overflow: hidden; }
+    /* 빛이 스윽 지나가는 샤인 */
+    .crit-best-slot:not(.empty)::before {
+      content: '';
+      position: absolute; top: 0; left: -130%;
+      width: 55%; height: 100%;
+      background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.85) 50%, transparent 100%);
+      transform: skewX(-20deg);
+      animation: critShine 3.4s ease-in-out infinite;
+      pointer-events: none; z-index: 3;
+    }
+    @keyframes critShine { 0%, 55% { left: -130%; } 100% { left: 140%; } }
+    /* 메달 둥실 + 살짝 회전 */
+    .crit-best-slot:not(.empty) .crit-best-medal {
+      animation: critMedalFloat 2.6s ease-in-out infinite;
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.25));
+    }
+    @keyframes critMedalFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-5px) rotate(-7deg); }
+    }
+    /* 등급색 글로우 맥박 */
+    .crit-best-slot.rank-1:not(.empty) { animation: critGlowGold 2.1s ease-in-out infinite; }
+    @keyframes critGlowGold {
+      0%, 100% { box-shadow: 0 8px 22px rgba(245,158,11,0.35); }
+      50% { box-shadow: 0 10px 34px rgba(245,158,11,0.75), 0 0 22px rgba(251,191,36,0.65); }
+    }
+    .crit-best-slot.rank-2:not(.empty) { animation: critGlowSilver 2.4s ease-in-out infinite; }
+    @keyframes critGlowSilver {
+      0%, 100% { box-shadow: 0 6px 16px rgba(148,163,184,0.3); }
+      50% { box-shadow: 0 8px 26px rgba(148,163,184,0.65), 0 0 16px rgba(226,232,240,0.8); }
+    }
+    .crit-best-slot.rank-3:not(.empty) { animation: critGlowBronze 2.7s ease-in-out infinite; }
+    @keyframes critGlowBronze {
+      0%, 100% { box-shadow: 0 6px 16px rgba(217,119,6,0.3); }
+      50% { box-shadow: 0 8px 26px rgba(217,119,6,0.6), 0 0 16px rgba(253,230,138,0.8); }
+    }
+    /* 대상(1위) — 반짝이 + 왕관 뱃지 + 이름 골드 강조 */
+    .crit-best-slot.rank-1:not(.empty)::after {
+      content: '✨';
+      position: absolute; top: 8px; right: 12px;
+      font-size: 17px;
+      animation: critTwinkle 1.5s ease-in-out infinite;
+      pointer-events: none; z-index: 4;
+    }
+    @keyframes critTwinkle {
+      0%, 100% { opacity: 0.35; transform: scale(0.8) rotate(0deg); }
+      50% { opacity: 1; transform: scale(1.25) rotate(15deg); }
+    }
+    .crit-best-slot.rank-1:not(.empty) .crit-best-medal { font-size: 52px; }
+    .crit-best-slot:not(.empty) .crit-best-body > div > div:first-child { position: relative; z-index: 2; }
+    /* 접근성 — 모션 최소화 설정 시 애니메이션 정지 */
+    @media (prefers-reduced-motion: reduce) {
+      .crit-best-slot:not(.empty),
+      .crit-best-slot:not(.empty)::before,
+      .crit-best-slot:not(.empty)::after,
+      .crit-best-slot:not(.empty) .crit-best-medal { animation: none !important; }
+    }
+
+    /* 🎆 폭죽 효과 레이어 */
+    #critBestFx {
+      position: absolute; top: 0; left: 0; right: 0; height: 340px;
+      overflow: hidden; pointer-events: none; z-index: 30;
+    }
+    #critBestFx .cb-firework {
+      position: absolute; width: 9px; height: 9px; border-radius: 50%;
+      opacity: 1;
+      transition: transform 1.05s cubic-bezier(.12,.62,.35,1), opacity 1.05s ease-out;
+      box-shadow: 0 0 6px currentColor;
+    }
+    #critBestFx .cb-spark {
+      position: absolute; font-size: 18px; opacity: 1;
+      transition: transform 1s ease-out, opacity 1s ease-out;
+    }
+
     /* 4~10위 실시간 순위표 */
     .crit-best-ranklist {
       margin-top: 18px;
@@ -44830,6 +44906,7 @@ ${content}
   <!-- 🏆 BEST 기자상 모달 -->
   <div id="critBestModalOverlay" class="crit-best-modal-overlay" role="dialog" aria-modal="true" onclick="if(event.target===this) closeCritBestModal()">
     <div class="crit-best-modal-card">
+      <div id="critBestFx" aria-hidden="true"></div>
       <button class="crit-best-close" onclick="closeCritBestModal()" aria-label="닫기">×</button>
       <div class="crit-best-modal-title">🏆 BEST 기자상</div>
       <div class="crit-best-month-nav" style="display:flex; align-items:center; justify-content:center; gap:10px; margin:2px 0 6px;">
@@ -45071,6 +45148,55 @@ ${content}
       function _critBestEscHtml(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
       }
+      // 🎆 폭죽 효과 — 모달 열려 있는 동안 계속 터짐 (닫으면 멈춤)
+      let _critFxTimer = null;
+      const _CRIT_FX_COLORS = ['#fbbf24','#f59e0b','#ef4444','#3b82f6','#22c55e','#a855f7','#ec4899','#fde047'];
+      function _critBestOneBurst() {
+        const host = document.getElementById('critBestFx');
+        if (!host) return;
+        const W = host.clientWidth || 700, H = host.clientHeight || 320;
+        const cx = W * (0.12 + 0.76 * Math.random());
+        const cy = H * (0.12 + 0.4 * Math.random());
+        const n = 24, off = Math.floor(Math.random() * _CRIT_FX_COLORS.length);
+        for (let i = 0; i < n; i++) {
+          const p = document.createElement('div');
+          p.className = 'cb-firework';
+          const ang = (Math.PI * 2) * (i / n) + Math.random() * 0.25;
+          const dist = 55 + Math.random() * 80;
+          const color = _CRIT_FX_COLORS[(i + off) % _CRIT_FX_COLORS.length];
+          p.style.left = cx + 'px'; p.style.top = cy + 'px';
+          p.style.background = color; p.style.color = color;
+          host.appendChild(p);
+          requestAnimationFrame(() => {
+            p.style.transform = `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist + 30}px) scale(0.35)`;
+            p.style.opacity = '0';
+          });
+          setTimeout(() => p.remove(), 1150);
+        }
+        // 가운데 반짝 스파크
+        const spark = document.createElement('div');
+        spark.className = 'cb-spark';
+        spark.textContent = ['🎉','✨','🎊','⭐'][off % 4];
+        spark.style.left = (cx - 9) + 'px'; spark.style.top = (cy - 9) + 'px';
+        host.appendChild(spark);
+        requestAnimationFrame(() => { spark.style.transform = 'translateY(-24px) scale(1.6)'; spark.style.opacity = '0'; });
+        setTimeout(() => spark.remove(), 1000);
+      }
+      function critBestFireworksStart() {
+        // 모션 최소화 설정 존중
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (_critFxTimer) return;   // 이미 실행 중
+        _critBestOneBurst();        // 즉시 첫 발
+        _critFxTimer = setInterval(() => {
+          _critBestOneBurst();
+          if (Math.random() < 0.5) setTimeout(_critBestOneBurst, 300);  // 가끔 연발
+        }, 1400);
+      }
+      function critBestFireworksStop() {
+        if (_critFxTimer) { clearInterval(_critFxTimer); _critFxTimer = null; }
+        const host = document.getElementById('critBestFx');
+        if (host) host.innerHTML = '';
+      }
       // 기자상 팝업 자체의 월 상태 (달력과 독립 · 과거 달 조회용)
       const CRIT_BEST_MIN_MONTH = '2026-06';   // 비평 시작 월 (그 이전은 데이터 없음)
       let _critBestMonth = null;
@@ -45145,6 +45271,9 @@ ${content}
             list.innerHTML = '';
           }
         }
+        // 🎆 수상자가 있으면 축포 지속 · 없으면 중지
+        if (winners.length > 0) critBestFireworksStart();
+        else critBestFireworksStop();
       }
       function openCritBestModal() {
         const el = document.getElementById('critBestModalOverlay');
@@ -45163,6 +45292,7 @@ ${content}
         if (!el) return;
         el.classList.remove('show');
         document.removeEventListener('keydown', _critBestEsc);
+        critBestFireworksStop();   // 폭죽 중지
       }
       function _critBestEsc(e) {
         if (e.key === 'Escape') closeCritBestModal();
