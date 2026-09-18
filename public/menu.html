@@ -2779,6 +2779,24 @@ body:has(.wb-live-banner:hover) .wb-launcher {
   background: #f3f4f6;
 }
 
+/* 세부과목 토글 스위치 */
+.atk-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex: 0 0 auto; }
+.atk-switch input { opacity: 0; width: 0; height: 0; }
+.atk-slider { position: absolute; cursor: pointer; inset: 0; background: #d6cbb8; border-radius: 24px; transition: .2s; }
+.atk-slider::before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.atk-switch input:checked + .atk-slider { background: #d35a1a; }
+.atk-switch input:checked + .atk-slider::before { transform: translateX(20px); }
+
+/* 세부과목 그룹·칩 */
+.subject-group { margin-bottom: 10px; }
+.subject-group-title { font-size: 11px; font-weight: 700; color: #a8926f; margin-bottom: 5px; }
+.subject-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.subject-chip { padding: 6px 12px; border-radius: 8px; border: 1.5px solid #e5d8c3; background: #fff; color: #6b5a41; font-size: 12px; font-weight: 600; cursor: pointer; transition: .15s; }
+.subject-chip:hover { border-color: #d35a1a; }
+.subject-chip.selected { background: #d35a1a; border-color: #d35a1a; color: #fff; }
+/* 세부과목 모드일 때 분야 버튼 비활성 느낌 */
+#domainBtnGroup.dimmed { opacity: 0.4; pointer-events: none; }
+
 .task-count-input {
   display: flex;
   align-items: center;
@@ -18238,9 +18256,19 @@ async function performLogout() {
       series: [],          // 선택된 시리즈 ('up', 'fit')
       days: [],            // 선택된 요일 (0=일, 1=월, ..., 6=토, 'everyday')
       domains: ['all'],    // 선택된 분야 배열 ('all', 'science', 'social', 'korlit', 'worldlit', 'person')
+      subjects: [],        // 세부과목 배열 (['physics','chem'] 등) · 있으면 과목별 taskCount 부여 (온/업/핏/딥 전용)
       taskCount: 1,        // 과제 개수
       status: 'stopped'    // 'running', 'paused', 'stopped'
     };
+
+    // 세부과목 그룹 (온/업/핏/딥 공통) — 서버 DOMAIN_SUBJECTS와 동일 코드
+    const AUTO_TASK_SUBJECT_GROUPS = [
+      { domain: '과학', subs: [{ id: 'bio', label: '생물' }, { id: 'earth', label: '지구과학' }, { id: 'physics', label: '물리' }, { id: 'chem', label: '화학' }] },
+      { domain: '사회', subs: [{ id: 'soc', label: '사회문화' }, { id: 'geo', label: '지리' }, { id: 'law', label: '법' }, { id: 'pol', label: '정치경제' }] },
+      { domain: '한국문학', subs: [{ id: 'modern', label: '현대문학' }, { id: 'classic', label: '고전문학' }] },
+      { domain: '세계문학', subs: [{ id: 'world1', label: '세계문학(1)' }, { id: 'world2', label: '세계문학(2)' }] },
+      { domain: '인물', subs: [{ id: 'people1', label: '한국인물' }, { id: 'people2', label: '세계인물' }] }
+    ];
 
     // 과목 우선순위 순서
     const SUBJECT_PRIORITY = ['bio', 'chem', 'physics', 'earth', 'geo', 'soc', 'law', 'pol', 'econ', 'classic', 'modern', 'world1', 'world2', 'people1', 'people2'];
@@ -18397,9 +18425,61 @@ async function performLogout() {
       });
       autoTaskSettings.domains = selectedDomains;
 
+      // 세부과목 (토글 ON 시에만 수집 · OFF면 항상 빈 배열)
+      const subjToggle = document.getElementById('subjectToggle');
+      if (subjToggle && subjToggle.checked) {
+        const selectedSubjects = [];
+        document.querySelectorAll('#subjectGroupWrap .subject-chip.selected').forEach(chip => {
+          selectedSubjects.push(chip.dataset.subject);
+        });
+        autoTaskSettings.subjects = selectedSubjects;
+      } else {
+        autoTaskSettings.subjects = [];
+      }
+
       // 과제 개수
       const countInput = document.getElementById('autoTaskCount');
       autoTaskSettings.taskCount = parseInt(countInput?.value) || 1;
+    }
+
+    // 세부과목 칩 렌더 (선택 상태 유지)
+    function renderSubjectChips() {
+      const wrap = document.getElementById('subjectGroupWrap');
+      if (!wrap) return;
+      const selected = new Set(autoTaskSettings.subjects || []);
+      wrap.innerHTML = AUTO_TASK_SUBJECT_GROUPS.map(g => `
+        <div class="subject-group">
+          <div class="subject-group-title">${g.domain}</div>
+          <div class="subject-chips">
+            ${g.subs.map(s => `<button type="button" class="subject-chip${selected.has(s.id) ? ' selected' : ''}" data-subject="${s.id}">${s.label}</button>`).join('')}
+          </div>
+        </div>`).join('');
+      wrap.querySelectorAll('.subject-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          chip.classList.toggle('selected');
+          updateAutoTaskSettings();
+        });
+      });
+    }
+
+    // 세부과목 토글 ON/OFF
+    function onSubjectToggle() {
+      const on = document.getElementById('subjectToggle')?.checked;
+      const wrap = document.getElementById('subjectGroupWrap');
+      const hint = document.getElementById('subjectHint');
+      const domainGroup = document.getElementById('domainBtnGroup');
+      if (on) {
+        renderSubjectChips();
+        if (wrap) wrap.style.display = 'block';
+        if (hint) hint.style.display = 'block';
+        if (domainGroup) domainGroup.classList.add('dimmed');   // 과목모드에선 분야 무시
+      } else {
+        if (wrap) wrap.style.display = 'none';
+        if (hint) hint.style.display = 'none';
+        if (domainGroup) domainGroup.classList.remove('dimmed');
+        autoTaskSettings.subjects = [];
+      }
+      updateAutoTaskSettings();
     }
 
     // 학원에서 부여한 시리즈 → 자동과제부여 data-series 코드 매핑
@@ -18431,6 +18511,7 @@ async function performLogout() {
       autoTaskSettings.series = adminSeries;
       autoTaskSettings.days = ['everyday'];
       autoTaskSettings.domains = ['all'];
+      autoTaskSettings.subjects = [];
       autoTaskSettings.taskCount = 1;
       applySettingsToUI();
       console.log('🔧 자동과제부여 기본값 적용 (학원 부여 기준):', adminSeries);
@@ -18497,6 +18578,26 @@ async function performLogout() {
           btn.classList.add('selected');
         }
       });
+
+      // 세부과목 토글·칩 복원 (subjects 있으면 과목모드 ON)
+      const subjToggle = document.getElementById('subjectToggle');
+      const hasSubjects = Array.isArray(autoTaskSettings.subjects) && autoTaskSettings.subjects.length > 0;
+      if (subjToggle) {
+        subjToggle.checked = hasSubjects;
+        const wrap = document.getElementById('subjectGroupWrap');
+        const hint = document.getElementById('subjectHint');
+        const domainGroup = document.getElementById('domainBtnGroup');
+        if (hasSubjects) {
+          renderSubjectChips();
+          if (wrap) wrap.style.display = 'block';
+          if (hint) hint.style.display = 'block';
+          if (domainGroup) domainGroup.classList.add('dimmed');
+        } else {
+          if (wrap) wrap.style.display = 'none';
+          if (hint) hint.style.display = 'none';
+          if (domainGroup) domainGroup.classList.remove('dimmed');
+        }
+      }
 
       // 과제 개수
       const countInput = document.getElementById('autoTaskCount');
@@ -18837,6 +18938,7 @@ async function performLogout() {
       autoTaskSettings.series = [];
       autoTaskSettings.days = [];
       autoTaskSettings.domains = ['all'];
+      autoTaskSettings.subjects = [];
       autoTaskSettings.taskCount = 1;
       autoTaskSettings.status = 'stopped';
 
@@ -25767,6 +25869,19 @@ ${content}
                     <button class="domain-btn" data-domain="worldlit">세계문학</button>
                     <button class="domain-btn" data-domain="person">인물</button>
                   </div>
+                </div>
+
+                <!-- 세부 과목 선택 (온/업/핏/딥 전용 · 토글 ON 시 과목별로 개수 부여) -->
+                <div class="auto-task-section">
+                  <div class="auto-task-section-title" style="display:flex; align-items:center; gap:10px; justify-content:space-between;">
+                    <span>📑 세부 과목까지 선택</span>
+                    <label class="atk-switch">
+                      <input type="checkbox" id="subjectToggle" onchange="onSubjectToggle()">
+                      <span class="atk-slider"></span>
+                    </label>
+                  </div>
+                  <div id="subjectGroupWrap" style="display:none; margin-top:8px;"></div>
+                  <div id="subjectHint" style="display:none; font-size:11px; color:#9a8b74; margin-top:6px;">선택한 <b>과목마다</b> 위 개수만큼 과제가 부여돼요. (분야 선택은 무시됩니다)</div>
                 </div>
 
                 <!-- 과제 개수 -->

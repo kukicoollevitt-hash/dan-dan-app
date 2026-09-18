@@ -31556,6 +31556,7 @@ const autoTaskSettingsSchema = new mongoose.Schema({
   series: [{ type: String }],        // 선택된 시리즈 ('up', 'fit')
   days: [{ type: String }],          // 선택된 요일 (0~6, 'everyday')
   domains: [{ type: String }], // 선택된 분야 배열 (['all'], ['science', 'social'], etc.)
+  subjects: [{ type: String }], // 세부과목 배열 (['physics','chem'] 등) · 있으면 과목별 taskCount 부여, 온/업/핏/딥 전용
   taskCount: { type: Number, default: 3 }, // 과제 개수
   status: { type: String, enum: ['running', 'paused', 'stopped'], default: 'stopped' },
   createdAt: { type: Date, default: Date.now },
@@ -31595,6 +31596,8 @@ app.post('/api/auto-task-settings', async (req, res) => {
     const settingsChanged = existingSettings && (
       JSON.stringify(existingSettings.series?.sort()) !== JSON.stringify(settings.series?.sort()) ||
       JSON.stringify(existingSettings.days?.sort()) !== JSON.stringify(settings.days?.sort()) ||
+      JSON.stringify((existingSettings.domains || []).slice().sort()) !== JSON.stringify((settings.domains || []).slice().sort()) ||
+      JSON.stringify((existingSettings.subjects || []).slice().sort()) !== JSON.stringify((settings.subjects || []).slice().sort()) ||
       existingSettings.taskCount !== settings.taskCount
     );
 
@@ -34459,6 +34462,27 @@ const DOMAIN_SUBJECTS = {
   person: ['people1', 'people2']
 };
 
+// 자동과제 부여 버킷 구성
+//  - 세부과목 모드(setting.subjects 비어있지 않음): 선택 과목마다 1버킷 → 과목별 taskCount 부여 (온/업/핏/딥 전용)
+//  - 기본(분야 모드): 선택 분야마다 1버킷 → 분야별 taskCount 부여 (기존 동작 그대로)
+// 각 버킷의 subjects는 AUTO_TASK_SUBJECT_PRIORITY 순서로 정렬되어 반환.
+function buildAutoTaskBuckets(setting, selectedDomains) {
+  const picked = Array.isArray(setting.subjects)
+    ? setting.subjects.filter(s => AUTO_TASK_SUBJECT_PRIORITY.includes(s))
+    : [];
+  if (picked.length > 0) {
+    return AUTO_TASK_SUBJECT_PRIORITY
+      .filter(s => picked.includes(s))
+      .map(s => ({ kind: '과목', label: s, subjects: [s] }));
+  }
+  const domains = (selectedDomains && selectedDomains.length) ? selectedDomains : ['all'];
+  return domains.map(d => ({
+    kind: '분야',
+    label: d,
+    subjects: AUTO_TASK_SUBJECT_PRIORITY.filter(s => (DOMAIN_SUBJECTS[d] || DOMAIN_SUBJECTS.all).includes(s))
+  }));
+}
+
 // 개별 학생별 자동과제부여 중복 실행 방지용 락
 const studentAutoTaskLocks = new Map();
 
@@ -34564,13 +34588,13 @@ async function executeAutoTaskForStudent(grade, name, setting) {
         seriesName = 'BRAIN업';
       }
 
-      // 분야별로 각각 taskCount개씩 부여
-      for (const domain of selectedDomains) {
-        console.log(`    📂 분야: ${domain}`);
+      // 세부과목 모드면 과목별, 아니면 분야별로 각각 taskCount개씩 부여
+      const assignBuckets = buildAutoTaskBuckets(setting, selectedDomains);
+      for (const bucket of assignBuckets) {
+        console.log(`    📂 ${bucket.kind}: ${bucket.label}`);
         let domainTaskCount = 0;
 
-        const domainSubjects = DOMAIN_SUBJECTS[domain] || DOMAIN_SUBJECTS.all;
-        const filteredSubjects = AUTO_TASK_SUBJECT_PRIORITY.filter(s => domainSubjects.includes(s));
+        const filteredSubjects = bucket.subjects;
 
         const maxUnitNum = 30;
 
@@ -34847,14 +34871,14 @@ async function executeAutoTaskAssignment() {
             seriesName = 'BRAIN업';
           }
 
-          // ★ 분야별로 각각 taskCount개씩 부여
-          for (const domain of selectedDomains) {
-            console.log(`    📂 분야: ${domain}`);
+          // ★ 세부과목 모드면 과목별, 아니면 분야별로 각각 taskCount개씩 부여
+          const assignBuckets = buildAutoTaskBuckets(setting, selectedDomains);
+          for (const bucket of assignBuckets) {
+            console.log(`    📂 ${bucket.kind}: ${bucket.label}`);
             let domainTaskCount = 0;
 
-            // 해당 분야의 과목만 필터링
-            const domainSubjects = DOMAIN_SUBJECTS[domain] || DOMAIN_SUBJECTS.all;
-            const filteredSubjects = AUTO_TASK_SUBJECT_PRIORITY.filter(s => domainSubjects.includes(s));
+            // 이 버킷에 해당하는 과목만 (과목모드=단일과목, 분야모드=분야 내 과목들)
+            const filteredSubjects = bucket.subjects;
 
             const maxUnitNum = 30;  // 가장 큰 단원 수 (현대/고전문학)
 
