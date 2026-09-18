@@ -44254,6 +44254,40 @@ ${content}
     }
     .crit-best-slot.rank-3 .crit-best-rank { color: #92400e; }
 
+    /* 4~10위 실시간 순위표 */
+    .crit-best-ranklist {
+      margin-top: 18px;
+      display: flex; flex-direction: column; gap: 5px;
+      max-height: 260px; overflow-y: auto;
+    }
+    .crit-best-ranklist:empty { display: none; }
+    .crit-best-rank-row {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid #f5e6c8;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .crit-best-rank-row .rr-rank {
+      flex: 0 0 auto; min-width: 30px;
+      font-weight: 800; color: #b45309; font-size: 13px;
+    }
+    .crit-best-rank-row .rr-name {
+      flex: 1 1 auto; min-width: 0;
+      font-weight: 700; color: #1e293b;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .crit-best-rank-row .rr-name .rr-grade { color: #b45309; font-weight: 700; margin-right: 4px; }
+    .crit-best-rank-row .rr-academy { color: #94a3b8; font-weight: 500; font-size: 11px; margin-left: 4px; }
+    .crit-best-rank-row .rr-score {
+      flex: 0 0 auto; font-weight: 800; color: #d97706; font-size: 13px;
+    }
+    .crit-best-ranklist-title {
+      text-align: center; font-size: 12px; font-weight: 700; color: #a8886a;
+      margin: 6px 0 2px;
+    }
+
     @media (max-width: 520px) {
       .crit-best-podium { grid-template-columns: 1fr; gap: 10px; }
       .crit-best-slot.rank-1 { transform: none; order: -1; }
@@ -44797,31 +44831,40 @@ ${content}
   <div id="critBestModalOverlay" class="crit-best-modal-overlay" role="dialog" aria-modal="true" onclick="if(event.target===this) closeCritBestModal()">
     <div class="crit-best-modal-card">
       <button class="crit-best-close" onclick="closeCritBestModal()" aria-label="닫기">×</button>
-      <div class="crit-best-modal-title">🏆 이 달의 BEST 기자상</div>
-      <div class="crit-best-modal-sub" id="critBestModalSub">이번 달 우수 비평 학생을 만나 보세요</div>
+      <div class="crit-best-modal-title">🏆 BEST 기자상</div>
+      <div class="crit-best-month-nav" style="display:flex; align-items:center; justify-content:center; gap:10px; margin:2px 0 6px;">
+        <button type="button" id="critBestPrev" onclick="critBestShiftMonth(-1)" aria-label="이전 달"
+          style="background:#fef3c7; border:1px solid #f5d27e; color:#b45309; width:28px; height:28px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:800;">◀</button>
+        <span id="critBestMonthLabel" style="font-size:15px; font-weight:800; color:#92400e; min-width:92px; text-align:center;">2026. 9월</span>
+        <button type="button" id="critBestNext" onclick="critBestShiftMonth(1)" aria-label="다음 달"
+          style="background:#fef3c7; border:1px solid #f5d27e; color:#b45309; width:28px; height:28px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:800;">▶</button>
+      </div>
+      <div class="crit-best-modal-sub" id="critBestModalSub">우수 비평 기자를 만나 보세요</div>
       <div class="crit-best-podium">
         <!-- 최우수상 (왼쪽) -->
         <div class="crit-best-slot rank-2 empty" id="critBestSlot2">
           <span class="crit-best-medal">🥈</span>
           <div class="crit-best-rank">최우수상</div>
-          <div class="crit-best-prize">🎁 베스킨라빈스 쿼터</div>
+          <div class="crit-best-prize">🎁 베스킨라빈스 싱글킹</div>
           <div class="crit-best-body">아직 선정 전이에요</div>
         </div>
         <!-- 대상 (가운데, 가장 큼) -->
         <div class="crit-best-slot rank-1 empty" id="critBestSlot1">
           <span class="crit-best-medal">🥇</span>
           <div class="crit-best-rank">대&nbsp;&nbsp;상</div>
-          <div class="crit-best-prize">🎁 베스킨라빈스 패밀리</div>
+          <div class="crit-best-prize">🎁 베스킨라빈스 쿼터</div>
           <div class="crit-best-body">아직 선정 전이에요</div>
         </div>
         <!-- 우수상 (오른쪽) -->
         <div class="crit-best-slot rank-3 empty" id="critBestSlot3">
           <span class="crit-best-medal">🥉</span>
           <div class="crit-best-rank">우수상</div>
-          <div class="crit-best-prize">🎁 베스킨라빈스 싱글킹</div>
+          <div class="crit-best-prize">🎁 베스킨라빈스 레귤러</div>
           <div class="crit-best-body">아직 선정 전이에요</div>
         </div>
       </div>
+      <!-- 4~10위 실시간 순위표 -->
+      <div class="crit-best-ranklist" id="critBestRankList"></div>
     </div>
   </div>
 
@@ -45025,17 +45068,95 @@ ${content}
       window.closeCritiqueModal = closeCritiqueModal;
 
       // 🏆 BEST 기자상 모달 — 빈 슬롯(1단계). 향후 학생 데이터 채울 자리 마련됨
+      function _critBestEscHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+      // 기자상 팝업 자체의 월 상태 (달력과 독립 · 과거 달 조회용)
+      const CRIT_BEST_MIN_MONTH = '2026-06';   // 비평 시작 월 (그 이전은 데이터 없음)
+      let _critBestMonth = null;
+      function _critBestFmtLabel(mk) {
+        const [y, m] = mk.split('-');
+        return `${y}. ${parseInt(m, 10)}월`;
+      }
+      function _critBestSyncNav() {
+        const label = document.getElementById('critBestMonthLabel');
+        if (label) label.textContent = _critBestFmtLabel(_critBestMonth);
+        const prev = document.getElementById('critBestPrev');
+        const next = document.getElementById('critBestNext');
+        const maxMonth = currentMonthKey();   // 미래 달은 데이터 없음 → 이번 달까지만
+        if (prev) prev.style.visibility = (_critBestMonth <= CRIT_BEST_MIN_MONTH) ? 'hidden' : 'visible';
+        if (next) next.style.visibility = (_critBestMonth >= maxMonth) ? 'hidden' : 'visible';
+      }
+      function critBestShiftMonth(delta) {
+        if (!_critBestMonth) return;
+        const [y, m] = _critBestMonth.split('-').map(Number);
+        let nm = m + delta, ny = y;
+        if (nm < 1) { nm = 12; ny--; }
+        if (nm > 12) { nm = 1; ny++; }
+        const target = `${ny}-${String(nm).padStart(2, '0')}`;
+        if (target < CRIT_BEST_MIN_MONTH || target > currentMonthKey()) return;
+        _critBestMonth = target;
+        _critBestSyncNav();
+        renderCritBest(_critBestMonth);
+      }
+      window.critBestShiftMonth = critBestShiftMonth;
+      // 🏆 실시간 순위 렌더 (전 등급 통합 · 전국 · 상위 3명)
+      async function renderCritBest(month) {
+        const slotEls = { 1: document.getElementById('critBestSlot1'), 2: document.getElementById('critBestSlot2'), 3: document.getElementById('critBestSlot3') };
+        [1,2,3].forEach(r => { const b = slotEls[r] && slotEls[r].querySelector('.crit-best-body'); if (b) b.textContent = '집계 중…'; });
+        let winners = [];
+        try {
+          const res = await fetch('/api/critique/best?month=' + encodeURIComponent(month));
+          const j = await res.json();
+          if (j && j.ok) winners = j.winners || [];
+        } catch (e) { /* 네트워크 오류 → 빈 슬롯 */ }
+        // winners[0]=대상(slot1), [1]=최우수(slot2), [2]=우수(slot3)
+        const byRank = { 1: winners[0], 2: winners[1], 3: winners[2] };
+        [1,2,3].forEach(rank => {
+          const slot = slotEls[rank]; if (!slot) return;
+          const body = slot.querySelector('.crit-best-body'); if (!body) return;
+          const w = byRank[rank];
+          if (w) {
+            slot.classList.remove('empty');
+            body.innerHTML = `<div style="text-align:center;">
+              <div style="font-weight:800; font-size:15px; color:#1e293b;">${w.grade ? `<span style="font-weight:700; color:#b45309;">${_critBestEscHtml(w.grade)}</span> ` : ''}${_critBestEscHtml(w.name)}</div>
+              ${w.academyName ? `<div style="font-size:11px; color:#78716c; margin-top:2px;">${_critBestEscHtml(w.academyName)}</div>` : ''}
+              <div style="font-size:13px; color:#b45309; font-weight:800; margin-top:3px;">총점 ${w.totalPoints}점</div>
+              <div style="font-size:11px; color:#78716c; margin-top:1px;">평균 ${w.avgScore} · ${w.count}편</div>
+            </div>`;
+          } else {
+            slot.classList.add('empty');
+            body.textContent = '아직 선정 전이에요';
+          }
+        });
+        // 4~10위 실시간 순위표
+        const list = document.getElementById('critBestRankList');
+        if (list) {
+          const rest = winners.slice(3, 10);   // 4위 ~ 10위
+          if (rest.length) {
+            list.innerHTML = `<div class="crit-best-ranklist-title">🔥 실시간 순위 (4위~10위)</div>` +
+              rest.map((w, i) => `
+                <div class="crit-best-rank-row">
+                  <span class="rr-rank">${i + 4}위</span>
+                  <span class="rr-name"><span class="rr-grade">${_critBestEscHtml(w.grade || '')}</span>${_critBestEscHtml(w.name)}${w.academyName ? `<span class="rr-academy">${_critBestEscHtml(w.academyName)}</span>` : ''}</span>
+                  <span class="rr-score">${w.totalPoints}점</span>
+                </div>`).join('');
+          } else {
+            list.innerHTML = '';
+          }
+        }
+      }
       function openCritBestModal() {
         const el = document.getElementById('critBestModalOverlay');
         if (!el) return;
-        // 월 정보를 부제에 반영
-        const monthLabel = document.getElementById('critMonthLabel');
-        const sub = document.getElementById('critBestModalSub');
-        if (sub && monthLabel) {
-          sub.textContent = `${monthLabel.textContent.trim()} — 이 달의 우수 비평 기자`;
-        }
+        // 팝업 진입 시 현재 보고 있는 달로 시작 (이후 ◀▶로 과거 달 조회 가능)
+        _critBestMonth = (_critState && _critState.currentMonth) ? _critState.currentMonth : currentMonthKey();
+        if (_critBestMonth > currentMonthKey()) _critBestMonth = currentMonthKey();
+        if (_critBestMonth < CRIT_BEST_MIN_MONTH) _critBestMonth = CRIT_BEST_MIN_MONTH;
+        _critBestSyncNav();
         el.classList.add('show');
         document.addEventListener('keydown', _critBestEsc);
+        renderCritBest(_critBestMonth);
       }
       function closeCritBestModal() {
         const el = document.getElementById('critBestModalOverlay');
@@ -46107,10 +46228,12 @@ ${content}
           });
         });
 
-        // 진행률
-        const totalForLevel = Object.keys(articles).filter(k => k.startsWith(_critState.currentMonth)).length;
-        const doneForLevel = completedDatesForLevel.size;
-        document.getElementById('critProgress').innerHTML = `완료 <strong>${doneForLevel}/${totalForLevel}</strong>`;
+        // 진행률 — 해당 연도 기준 누적 완료 / 365 (1년 매일 목표)
+        const yearPrefix = _critState.currentMonth.slice(0, 4);   // 보고 있는 달의 연도
+        const doneForYear = new Set(
+          completedForLevel.filter(c => (c.date || '').startsWith(yearPrefix)).map(c => c.date)
+        ).size;
+        document.getElementById('critProgress').innerHTML = `완료 <strong>${doneForYear}/365</strong>`;
       }
 
       function openCritiqueDay(date, contentGrade) {

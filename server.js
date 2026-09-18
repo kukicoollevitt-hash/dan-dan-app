@@ -44126,6 +44126,44 @@ app.get('/api/critique/load', async (req, res) => {
   }
 });
 
+// 🏆 이 달의 BEST 기자상 — 월별 실시간 순위 (전 등급 통합 · 전국 · 상위 3명)
+//   집계: 학생별(grade+name+academyName) · 총점 = 평균평점 × 작성글수 (= 점수 총합)
+//   정렬: 총점 desc → 작성글수 desc → 평균점수 desc
+const CRIT_BEST_MIN_SUBMISSIONS = 3;   // 후보 자격: 그 달 최소 제출 편수
+app.get('/api/critique/best', async (req, res) => {
+  try {
+    const month = String(req.query.month || '').trim();   // "YYYY-MM"
+    if (!/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({ ok: false, message: 'month(YYYY-MM) 형식 필요' });
+    }
+    const rows = await CritiqueSubmission.aggregate([
+      // date는 "YYYY-MM-DD" 문자열 · 인덱스 활용 위해 사전식 범위 매칭
+      { $match: { date: { $gte: `${month}-01`, $lte: `${month}-31` }, 'grading.totalScore': { $ne: null } } },
+      { $group: {
+          _id: { grade: '$grade', name: '$name', academyName: '$academyName' },
+          count: { $sum: 1 },
+          sumScore: { $sum: '$grading.totalScore' }
+      } },
+      { $match: { count: { $gte: CRIT_BEST_MIN_SUBMISSIONS } } },
+      { $project: {
+          _id: 0,
+          grade: '$_id.grade',
+          name: '$_id.name',
+          academyName: '$_id.academyName',
+          count: 1,
+          avgScore: { $round: [{ $divide: ['$sumScore', '$count'] }, 1] },
+          totalPoints: { $round: ['$sumScore', 0] }   // 총점 = 평균평점 × 작성글수 (= 점수 총합)
+      } },
+      { $sort: { totalPoints: -1, count: -1, avgScore: -1 } },
+      { $limit: 10 }
+    ]);
+    res.json({ ok: true, month, minSubmissions: CRIT_BEST_MIN_SUBMISSIONS, winners: rows });
+  } catch (err) {
+    console.error('[비평] best 순위 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
+
 // ===================== BRAIN한국사 API =====================
 // 본문학습 저장 (radar + readingTime)
 app.post('/api/kh/save-passage', async (req, res) => {
