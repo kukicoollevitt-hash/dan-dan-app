@@ -7745,7 +7745,7 @@ canvas[id^="confetti-canvas"] {
         <source src="/images/브레인어휘월드컵영상(수정).mp4" type="video/mp4">
       </video>
       <div class="wb-video-actions">
-        <button class="wb-video-btn wb-video-btn-skip" onclick="hideTodayWbVideo()">오늘 하루 보지 않기</button>
+        <button class="wb-video-btn wb-video-btn-skip" onclick="hideTodayWbVideo()">일주일 동안 보지 않기</button>
         <button class="wb-video-btn wb-video-btn-go" onclick="closeWbVideo(); openWordBattle({fromLauncher: true});">⚡ 월드컵 도전하러 가기</button>
       </div>
     </div>
@@ -33622,8 +33622,9 @@ ${content}
 
     // 스피드 어휘왕 참가 모달 열기
     // ===== 월드컵 안내 영상 팝업 =====
-    // - "오늘 하루 보지 않기" 누른 학생 → 24시간 차단 (wbVideoHiddenUntil)
-    // - X 닫기 또는 영상 끝까지 봐도 → 다음 새로고침에 또 뜸 (10초 짧은 영상)
+    // - 어떤 방식으로 닫아도(X·배경·버튼·도전하러가기) 일주일간 자동 노출 안 함 (통일)
+    //   → wbVideoHiddenUntil 에 7일 뒤 타임스탬프 저장
+    const WB_HIDE_MS = 7 * 24 * 60 * 60 * 1000;   // 일주일
     function shouldShowWbVideoAuto() {
       const until = parseInt(localStorage.getItem('wbVideoHiddenUntil') || '0', 10);
       if (until && Date.now() < until) return false;
@@ -33645,12 +33646,14 @@ ${content}
     function closeWbVideo() {
       const overlay = document.getElementById('wbVideoOverlay');
       if (!overlay) return;
+      // 어떤 방식으로 닫아도 일주일간 자동 노출 안 함 (통일)
+      try { localStorage.setItem('wbVideoHiddenUntil', String(Date.now() + WB_HIDE_MS)); } catch(e) {}
       const v = document.getElementById('wbVideoPlayer');
       if (v) { try { v.pause(); } catch(e) {} }
       overlay.classList.remove('show');
     }
     function hideTodayWbVideo() {
-      localStorage.setItem('wbVideoHiddenUntil', String(Date.now() + 24 * 60 * 60 * 1000));
+      // 버튼(일주일 동안 보지 않기) — closeWbVideo 가 동일하게 7일 차단 처리
       closeWbVideo();
     }
     // 페이지 로드 시 자동 표시 (조건 통과 학생만)
@@ -33954,15 +33957,16 @@ ${content}
       else openLiteracyKing(true); // 배지 메뉴 진입 — 닫을 때 배지 메뉴 복귀
     }
 
-    // ===== 전국 문해왕 선발전 · 로그인 시 자동 팝업 (하루 1회) =====
+    // ===== 전국 문해왕 선발전 · 로그인 시 자동 팝업 (일주일 1회) =====
+    // 노출 순간 표시(mark-on-show) → 어떤 방식으로 닫아도 일주일간 자동 노출 안 함 (월드컵과 통일)
     // 어휘 월드컵 팝업(wbVideoOverlay)이 이미 열려있으면 그 팝업이 닫힌 뒤에 표시
+    const LK_HIDE_MS = 7 * 24 * 60 * 60 * 1000;   // 일주일
     function shouldShowLkAuto() {
-      const today = new Date().toISOString().slice(0, 10);
-      return localStorage.getItem('lkAutoShownAt') !== today;
+      const until = parseInt(localStorage.getItem('lkAutoHiddenUntil') || '0', 10);
+      return !(until && Date.now() < until);
     }
     function markLkAutoShown() {
-      const today = new Date().toISOString().slice(0, 10);
-      localStorage.setItem('lkAutoShownAt', today);
+      localStorage.setItem('lkAutoHiddenUntil', String(Date.now() + LK_HIDE_MS));
     }
     function tryOpenLkAuto() {
       if (!shouldShowLkAuto()) return;
