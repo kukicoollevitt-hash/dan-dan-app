@@ -45981,6 +45981,109 @@ app.get('/api/admin/kh-exam-list', requireAdminLogin, async (req, res) => {
 app.get('/admin/critique-kh-data', requireAdminLogin, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin_critique_kh_data.html'));
 });
+
+// 🧭 BRAIN문법(국어 개념 원정대) — 관문(소단원)별 완료 목록 · 대단원/소단원 이름 매핑
+//   gukeo-expedition.html의 UNITS.gram / GATES.gram 과 동일 (동기화 필요 시 함께 수정)
+const GRAMMAR_LANDS = ['음운의 세계','문장성분의 세계(1)','문장성분의 세계(2)','문장짜임의 세계','품사의 세계(1)','품사의 세계(2)','단어의 세계','문장표현의 세계','형성평가(1)','형성평가(2)'];
+const GRAMMAR_GATES = [
+  ['음운','음절','자음','모음'],
+  ['주어','서술어','목적어','보어'],
+  ['관형어','부사어','독립어'],
+  ['홑문장과 겹문장','이어진문장','안은문장'],
+  ['명사','대명사','수사','동사','형용사'],
+  ['관형사','부사','조사','감탄사'],
+  ['단일어와 복합어','합성어와 파생어','유의어와 반의어','상의어와 하의어'],
+  ['시간표현','높임표현','부정표현','종결표현','피동표현과 사동표현'],
+  ['음운의 세계 형성평가','문장성분의 세계(1) 형성평가','문장성분의 세계(2) 형성평가','문장짜임의 세계 형성평가'],
+  ['품사의 세계(1) 형성평가','품사의 세계(2) 형성평가','단어의 세계 형성평가','문장표현의 세계 형성평가']
+];
+
+// 관문(소단원) 단위 완료 목록 — 심화확장까지 완주(prog.done)한 소단원만 (학생 × 소단원) 행으로
+app.get('/api/admin/grammar-list', requireAdminLogin, async (req, res) => {
+  try {
+    const acFilter = await getAdminAcademyFilter(req);
+    if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
+
+    const { search = '', grade = '', academy = '', sort = 'date', dir = 'desc', limit = 10, offset = 0 } = req.query;
+
+    // 완료(done) 관문이 하나라도 있는 학생 상태 전체 로드 (문법은 소규모 롤아웃)
+    const states = await GukeoExpeditionState.find({}, { grade: 1, name: 1, prog: 1, stats: 1 }).lean();
+
+    // 학생 → 학원/학교 조인
+    const keys = [...new Set(states.map(s => `${s.grade}|${s.name}`))];
+    const users = keys.length ? await User.find({
+      $or: keys.map(k => { const [g, n] = k.split('|'); return { grade: g, name: n }; })
+    }, { grade: 1, name: 1, academyName: 1, school: 1 }).lean() : [];
+    const uMap = {};
+    users.forEach(u => { uMap[`${u.grade}|${u.name}`] = { academyName: u.academyName || '', school: u.school || '' }; });
+
+    // 학원 스코프 판정
+    let allow;
+    if (acFilter === null) {
+      const ac = academy.trim();
+      allow = ac ? (a => new RegExp(ac.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(a || '')) : (() => true);
+    } else {
+      const an = acFilter.academyName;
+      const names = new Set((an && an.$in) ? an.$in : [an]);
+      allow = (a => names.has(a));
+    }
+
+    // (학생 × 완료 소단원) 행 펼치기
+    let rows = [];
+    for (const st of states) {
+      const info = uMap[`${st.grade}|${st.name}`] || { academyName: '', school: '' };
+      if (!allow(info.academyName)) continue;
+      if (grade.trim() && !new RegExp(grade.trim(), 'i').test(st.grade || '')) continue;
+      if (search.trim() && !new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(st.name || '')) continue;
+      const prog = st.prog || {}, stats = st.stats || {};
+      for (const key of Object.keys(prog)) {
+        const pg = prog[key];
+        if (!pg || !pg.done) continue;   // ✅ 심화확장까지 완주한 소단원만
+        const m = /^gram_(\d+)_(\d+)$/.exec(key);
+        if (!m) continue;
+        const land = +m[1], step = +m[2];
+        const s = stats[key] || {};
+        const ok = s.ok || 0, wrong = s.wrong || 0, total = ok + wrong;
+        rows.push({
+          grade: st.grade, name: st.name,
+          academyName: info.academyName, school: info.school,
+          land, landName: GRAMMAR_LANDS[land] || `${land + 1}단원`,
+          step, gateName: (GRAMMAR_GATES[land] && GRAMMAR_GATES[land][step]) || `${step + 1}관문`,
+          gateKey: key,
+          ok, wrong, total,
+          pct: total > 0 ? Math.round((ok / total) * 100) : null,
+          completedAt: pg.t || s.last || null
+        });
+      }
+    }
+
+    // 정렬
+    const d = dir === 'asc' ? 1 : -1;
+    rows.sort((a, b) => {
+      if (sort === 'grade') return d * String(a.grade).localeCompare(String(b.grade));
+      if (sort === 'name') return d * String(a.name).localeCompare(String(b.name));
+      if (sort === 'academy') return d * String(a.academyName).localeCompare(String(b.academyName));
+      if (sort === 'unit') return d * ((a.land * 100 + a.step) - (b.land * 100 + b.step));
+      return d * ((a.completedAt || 0) - (b.completedAt || 0));   // 기본: 완료일
+    });
+
+    const total = rows.length;
+    const off = Math.max(parseInt(offset) || 0, 0);
+    const lim = Math.min(parseInt(limit) || 10, 200);
+    const paged = rows.slice(off, off + lim);
+
+    // 필터 옵션
+    const academies = acFilter
+      ? [...new Set(rows.map(r => r.academyName).filter(Boolean))].sort()
+      : [...new Set(rows.map(r => r.academyName).filter(Boolean))].sort();
+    const grades = [...new Set(rows.map(r => r.grade).filter(Boolean))].sort();
+
+    res.json({ ok: true, items: paged, total, filters: { academies, grades } });
+  } catch (err) {
+    console.error('[admin/grammar-list] 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류' });
+  }
+});
 // ===================== /비평 및 특강 데이터 API =====================
 
 // 누적 캡 상태 조회 (24h 차단형) — 게임 시작 전 캡 도달 여부 확인

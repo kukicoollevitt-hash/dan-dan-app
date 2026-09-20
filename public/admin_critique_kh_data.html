@@ -102,6 +102,7 @@
     <button class="tab-btn" data-tab="kh">🇰🇷 BRAIN한국사 <span class="badge-count" id="tabKhCount">0</span></button>
     <button class="tab-btn" data-tab="wr100">✍️ BRAIN입문 쓰기문해 <span class="badge-count" id="tabWr100Count">0</span></button>
     <button class="tab-btn" data-tab="mock">📊 BRAIN모고 <span class="badge-count" id="tabMockCount">0</span></button>
+    <button class="tab-btn" data-tab="grammar">🧭 BRAIN문법 <span class="badge-count" id="tabGrammarCount">0</span></button>
   </div>
   <!-- 비평 섹션 -->
   <div class="section active" id="sectionCrit">
@@ -383,6 +384,50 @@
     </div>
     <div class="info-line" id="mockInfo"></div>
     <div class="more-bar"><button class="more-btn" id="mockMoreBtn" style="display:none;">더보기 (+10)</button></div>
+  </div>
+
+  <!-- BRAIN문법 (국어 개념 원정대) 소단원별 완료 기록 -->
+  <div class="section" id="sectionGrammar">
+    <h2 class="section-title">
+      🧭 BRAIN문법 (국어 개념 원정대) 소단원별 완료 기록
+      <span class="count" id="grammarCount">0건</span>
+    </h2>
+    <p style="margin:-4px 0 12px;font-size:12.5px;color:#64748b;">심화확장 문제까지 완주한 소단원만 표시됩니다. 우측 리포트 버튼을 누르면 해당 소단원 리포트로 바로 이동해요.</p>
+    <div class="filter-row">
+      <input type="text" id="grammarSearchName" placeholder="👤 이름 검색" />
+      <input type="text" id="grammarGrade" placeholder="🎓 학년 검색 (예: 중2)" />
+      <input type="text" id="grammarAcademy" placeholder="🏫 센터(학원) 검색" />
+      <select id="grammarSort">
+        <option value="date-desc">최근 완료 순</option>
+        <option value="date-asc">오래된 순</option>
+        <option value="unit-asc">단원 순서</option>
+        <option value="grade-asc">학년 오름차순</option>
+        <option value="name-asc">이름 가나다순</option>
+      </select>
+      <button class="reset-btn" onclick="resetGrammarFilter()">초기화</button>
+    </div>
+    <div class="table-wrap" style="overflow-x:auto;">
+      <table style="min-width:1000px;table-layout:fixed;">
+        <thead>
+          <tr>
+            <th style="width:44px;">#</th>
+            <th data-sort-section="grammar" data-sort="grade" style="width:60px;">학년</th>
+            <th data-sort-section="grammar" data-sort="name" style="width:90px;">학생명</th>
+            <th data-sort-section="grammar" data-sort="academy" style="width:160px;">센터(학원)</th>
+            <th data-sort-section="grammar" data-sort="unit" style="width:170px;">대단원</th>
+            <th style="width:150px;">소단원</th>
+            <th style="width:90px;text-align:center;">정답률</th>
+            <th data-sort-section="grammar" data-sort="date" style="width:130px;">완료일</th>
+            <th style="width:100px;">리포트</th>
+          </tr>
+        </thead>
+        <tbody id="grammarTbody">
+          <tr><td colspan="9" class="empty">불러오는 중…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="info-line" id="grammarInfo"></div>
+    <div class="more-bar"><button class="more-btn" id="grammarMoreBtn" style="display:none;">더보기 (+10)</button></div>
   </div>
 </div>
 
@@ -838,7 +883,7 @@
   function switchTab(t) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    const _secMap = { crit: 'sectionCrit', kh: 'sectionKh', wr100: 'sectionWr100', mock: 'sectionMock' };
+    const _secMap = { crit: 'sectionCrit', kh: 'sectionKh', wr100: 'sectionWr100', mock: 'sectionMock', grammar: 'sectionGrammar' };
     const targetId = _secMap[t] || 'sectionCrit';
     const target = document.getElementById(targetId);
     if (target) target.classList.add('active');
@@ -850,7 +895,7 @@
   try {
     const params = new URLSearchParams(location.search);
     const initialTab = params.get('tab');
-    if (['kh', 'crit', 'wr100', 'mock'].includes(initialTab)) switchTab(initialTab);
+    if (['kh', 'crit', 'wr100', 'mock', 'grammar'].includes(initialTab)) switchTab(initialTab);
   } catch {}
 
   // 카운트 동기화 — 섹션 count → 탭 배지
@@ -863,6 +908,9 @@
   _critObs.observe(_origCritCount, { childList: true, characterData: true, subtree: true });
   _khObs.observe(_origKhCount, { childList: true, characterData: true, subtree: true });
   _wr100Obs.observe(_origWr100Count, { childList: true, characterData: true, subtree: true });
+  const _origGrammarCount = document.getElementById('grammarCount');
+  const _grammarObs = new MutationObserver(() => { document.getElementById('tabGrammarCount').textContent = _origGrammarCount.textContent.replace('건','').trim() || '0'; });
+  _grammarObs.observe(_origGrammarCount, { childList: true, characterData: true, subtree: true });
 
   // ===== 쓰기문해 (writing100) 로드 =====
   state.wr100 = { sort: 'date', dir: 'desc', offset: 0, total: 0, searchTimer: null };
@@ -1106,6 +1154,90 @@
     }
     _origOpenReport(type, grade, name);
   };
+
+  // ===== 🧭 BRAIN문법 (국어 개념 원정대) 소단원 완료 로드 =====
+  state.grammar = { sort: 'date', dir: 'desc', offset: 0, total: 0 };
+  async function loadGrammar(reset) {
+    const st = state.grammar;
+    if (reset) { st.offset = 0; $('grammarTbody').innerHTML = ''; }
+    document.querySelectorAll(`th[data-sort-section="grammar"]`).forEach(th => {
+      th.classList.remove('sorted-asc','sorted-desc');
+      if (th.dataset.sort === st.sort) th.classList.add(st.dir==='asc'?'sorted-asc':'sorted-desc');
+    });
+    const params = new URLSearchParams({
+      search: $('grammarSearchName').value.trim(),
+      grade: $('grammarGrade').value.trim(),
+      academy: $('grammarAcademy').value.trim(),
+      sort: st.sort, dir: st.dir, limit: PAGE_SIZE, offset: st.offset
+    });
+    try {
+      const res = await fetch(`/api/admin/grammar-list?${params}`);
+      const data = await res.json();
+      if (!data.ok) {
+        $('grammarTbody').innerHTML = `<tr><td colspan="9" class="empty" style="color:#c00;">${esc(data.message || '오류')}</td></tr>`;
+        return;
+      }
+      st.total = data.total;
+      $('grammarCount').textContent = `${data.total}건`;
+      $('grammarInfo').textContent = `총 ${data.total}건 중 ${st.offset + data.items.length}건 표시`;
+      renderGrammarRows(data.items);
+      st.offset += data.items.length;
+      $('grammarMoreBtn').style.display = st.offset < st.total ? 'inline-block' : 'none';
+    } catch (err) {
+      console.error(err);
+      $('grammarTbody').innerHTML = '<tr><td colspan="9" class="empty" style="color:#c00;">네트워크 오류</td></tr>';
+    }
+  }
+  function renderGrammarRows(items) {
+    const tbody = $('grammarTbody');
+    if (state.grammar.offset === 0 && items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="empty">완료한 문법 소단원 기록이 없습니다.</td></tr>';
+      return;
+    }
+    const html = items.map((it, idx) => `<tr>
+      <td class="num">${state.grammar.offset + idx + 1}</td>
+      <td style="white-space:nowrap;">${esc(it.grade)}</td>
+      <td style="white-space:nowrap;"><b>${esc(it.name)}</b></td>
+      <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(it.academyName || '-')}</td>
+      <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(it.landName || '-')}</td>
+      <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;color:#4f46e5;">${esc(it.gateName || '-')}</td>
+      <td style="text-align:center;">${fmtPct(it.pct)}</td>
+      <td style="font-size:12px;color:#6b7280;white-space:nowrap;">${fmtDate(it.completedAt)}</td>
+      <td><button class="report-btn" style="white-space:nowrap;" onclick="openGrammarReport('${esc(it.grade)}','${esc(it.name)}','${esc(it.gateKey)}','${esc(it.gateName)}')">📋 리포트</button></td>
+    </tr>`).join('');
+    if (state.grammar.offset === 0) tbody.innerHTML = html;
+    else tbody.insertAdjacentHTML('beforeend', html);
+  }
+  // 소단원(관문) 리포트 — 학생 메뉴 view-as로 원정대 열고 해당 관문 리포트 자동 오픈
+  window.openGrammarReport = function(grade, name, gateKey, gateName) {
+    window.open(`/menu?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(name)}&autoOpen=grammarGate&gateKey=${encodeURIComponent(gateKey)}&gateName=${encodeURIComponent(gateName || '')}`, '_blank');
+  };
+  function bindGrammarControls() {
+    $('grammarSearchName').oninput = debounce('grammar', () => loadGrammar(true));
+    $('grammarGrade').oninput      = debounce('grammar', () => loadGrammar(true));
+    $('grammarAcademy').oninput    = debounce('grammar', () => loadGrammar(true));
+    $('grammarSort').onchange = () => {
+      const [s, d] = $('grammarSort').value.split('-');
+      state.grammar.sort = s; state.grammar.dir = d;
+      loadGrammar(true);
+    };
+    $('grammarMoreBtn').onclick = () => loadGrammar(false);
+  }
+  window.resetGrammarFilter = function() {
+    $('grammarSearchName').value = ''; $('grammarGrade').value = ''; $('grammarAcademy').value = ''; $('grammarSort').value = 'date-desc';
+    state.grammar.sort = 'date'; state.grammar.dir = 'desc';
+    loadGrammar(true);
+  };
+  document.querySelectorAll('th[data-sort-section="grammar"]').forEach(th => {
+    th.onclick = () => {
+      const key = th.dataset.sort;
+      const st = state.grammar;
+      if (st.sort === key) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
+      else { st.sort = key; st.dir = 'desc'; }
+      st.offset = 0;
+      loadGrammar(true);
+    };
+  });
 
   // ===== BRAIN모고 (초·중 월말 모의고사) 로드 =====
   state.mock = { sort: 'date', dir: 'desc', offset: 0, total: 0, searchTimer: null };
@@ -1459,12 +1591,14 @@
   bindKhCertControls();
   bindWr100Controls();
   bindMockControls();
+  bindGrammarControls();
   loadCrit(true);
   loadKh(true);
   loadKhExam(true);
   loadKhCert(true);
   loadWr100(true);
   loadMock(true);
+  loadGrammar(true);
 </script>
 </body>
 </html>

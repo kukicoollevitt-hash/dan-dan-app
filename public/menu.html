@@ -14250,6 +14250,11 @@ async function performLogout() {
                 window.openWr100Report();
               }
             }, 250);
+          } else if (ao === 'grammarGate' && typeof window.openGrammarExpedition === 'function') {
+            // 🧭 문법 소단원(관문) 리포트 — 관리자 데이터에서 리포트 버튼 클릭 시
+            const gateKey = params.get('gateKey') || '';
+            const gateName = params.get('gateName') || '';
+            if (gateKey) window.openGrammarExpedition({ reportGate: gateKey, reportName: gateName });
           }
         }, 1000);
       } catch (e) { console.warn('[autoOpen] 실패:', e); }
@@ -34419,7 +34424,8 @@ ${content}
     window.openMonggeul = openMonggeul;
 
     // 🧭 국어 개념 원정대 (BRAIN문법 국어특강) — iframe 팝업
-    function openGrammarExpedition() {
+    // opts.reportGate 있으면 해당 소단원(관문) 리포트를 바로 여는 리포트 모드
+    function openGrammarExpedition(opts) {
       const existing = document.getElementById('grammarExpeditionOverlay');
       if (existing) existing.remove();
 
@@ -34448,7 +34454,11 @@ ${content}
       closeBtn.onclick = () => overlay.remove();
 
       const iframe = document.createElement('iframe');
-      iframe.src = '/gukeo-expedition.html?v=' + Date.now();
+      let _gkSrc = '/gukeo-expedition.html?v=' + Date.now();
+      if (opts && opts.reportGate) {
+        _gkSrc += '&reportGate=' + encodeURIComponent(opts.reportGate) + '&reportName=' + encodeURIComponent(opts.reportName || '');
+      }
+      iframe.src = _gkSrc;
       iframe.style.cssText = `
         width: 100%; height: 100%; border: none; border-radius: 14px;
         background: #08222c; box-shadow: 0 8px 32px rgba(0,0,0,0.3);

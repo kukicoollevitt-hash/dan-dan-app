@@ -187,8 +187,25 @@
   @keyframes puff{to{transform:translate(var(--dx),-14px) scale(.4); opacity:0}}
 
   /* 이미지 모드 (문법: 주신 일러스트를 섬/배경으로) */
-  .land-photo{position:absolute; inset:0; z-index:0; background-size:cover; background-position:center}
+  .land-photo{position:absolute; inset:0; z-index:0; background-size:cover; background-position:center; transition:filter .6s ease}
   .land-photo video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; pointer-events:none}
+  /* 🔦 미완료 땅: 아주 어둡게(궁금하게). 현재·완료 소단원 주변만 진짜 배경이 드러남 */
+  .land-photo.dimmed{filter:brightness(.1) saturate(.3) contrast(.9)}
+  /* 어둠 위 은은한 안개 베일 (더 신비롭게) · 완료 비율만큼 옅어짐(--veilOp) */
+  .land-photo.dimmed::after{content:'';position:absolute;inset:0;opacity:var(--veilOp,1);transition:opacity .5s ease;background:radial-gradient(ellipse at 50% 45%, rgba(6,18,24,.22), rgba(4,12,17,.72) 90%)}
+  /* 배경이 드러나는 레이어 (밝은 원본 · 마스크 원으로만 보임) */
+  .land-reveal{position:absolute; inset:0; z-index:1; background-size:cover; background-position:center; pointer-events:none}
+  .land-reveal video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; pointer-events:none}
+  /* 🎆 관문 통과 축포 */
+  .gk-fx{position:fixed; inset:0; z-index:100000; pointer-events:none; overflow:hidden}
+  .gk-fx-p{position:absolute; width:11px; height:11px; border-radius:50%; opacity:1; box-shadow:0 0 8px currentColor;
+    transition:transform 1.1s cubic-bezier(.12,.62,.35,1), opacity 1.1s ease-out}
+  .gk-fx-s{position:absolute; font-size:26px; opacity:1; transition:transform 1s ease-out, opacity 1s ease-out}
+  /* 잠금 안내 토스트 */
+  .gk-lock-toast{position:fixed; left:50%; bottom:64px; transform:translateX(-50%) translateY(12px); z-index:99999;
+    background:rgba(20,10,4,.92); color:#ffe9c2; font-size:13.5px; font-weight:700; padding:11px 18px; border-radius:12px;
+    border:1px solid rgba(246,201,69,.4); box-shadow:0 8px 24px rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; max-width:80%}
+  .gk-lock-toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
   .hero.flat{transform:translate(-50%,-100%)}
   .pin{position:absolute; z-index:4; transform:translate(-50%,-100%); display:flex; flex-direction:column; align-items:center; gap:3px; border:none;background:none;padding:0;color:inherit;font-family:inherit;cursor:default}
   .pin .pshadow{position:absolute; left:50%; bottom:-6px; transform:translateX(-50%); width:28px;height:8px;border-radius:50%; background:rgba(0,0,0,.4); filter:blur(2px); z-index:-1}
@@ -306,6 +323,10 @@
   .wm-st.done{color:#7ad0a8}
   .wm-st.cur{color:var(--gold)}
   .wm-card.cur{border-color:rgba(246,201,69,.55);box-shadow:0 0 0 3px rgba(246,201,69,.15)}
+  .wm-card.wmlocked{opacity:.94;filter:grayscale(.12) brightness(.9)}
+  .wm-card.wmlocked:hover{transform:translateY(-3px);border-color:rgba(246,201,69,.35);box-shadow:0 12px 28px rgba(0,0,0,.45)}
+  .wm-card.wmlocked::after{content:'🔒';position:absolute;inset:0;display:grid;place-items:center;font-size:44px;
+    background:radial-gradient(circle at 50% 42%, rgba(6,16,22,.12), rgba(6,16,22,.34) 80%);z-index:3;pointer-events:none;text-shadow:0 3px 10px rgba(0,0,0,.75)}
   @media (prefers-reduced-motion:reduce){ .soon-book,.soon-spark,.fx-aura,.island-svg,.float,.isle-shadow,.hero .fig,.member .mfig,.stop.current .bldg,.cloud{animation:none} .hero,.scene-inner,.xpbar i{transition:none} }
 </style>
 
@@ -340,6 +361,8 @@
   <div class="modal-body" id="mBody"></div><div class="modal-foot"><button class="modal-do" id="mDo">관문 통과 ✓</button></div>
 </div></div>
 
+<!-- 관문 해설(교사용 e) — 오답노트 해설 표시용. defer로 배경 로드 (리포트 열 때쯤 준비됨) -->
+<script defer src="/BRAINUP/grammar/gk_gate_packs.js?v=20260920b"></script>
 <script>window.__THEME_IMGS=["/images/국어개념원정대/국어개념원장대_문법테마01.jpg","/images/국어개념원정대/국어개념원장대_문법테마02.jpg","/images/국어개념원정대/국어개념원장대_문법테마03.jpg","/images/국어개념원정대/국어개념원장대_문법테마04.jpg","/images/국어개념원정대/국어개념원장대_문법테마05.jpg","/images/국어개념원정대/국어개념원장대_문법테마06.jpg","/images/국어개념원정대/국어개념원장대_문법테마07.jpg","/images/국어개념원정대/국어개념원장대_문법테마08.jpg","/images/국어개념원정대/국어개념원장대_문법테마09.jpg","/images/국어개념원정대/국어개념원장대_문법테마10.jpg"];</script>
 <script>
 (() => {
@@ -492,8 +515,39 @@
   let active='gram', view=0;
   const inner=document.getElementById('sceneInner'), dotsEl=document.getElementById('dots'), goBtn=document.getElementById('goBtn');
   const N=10;
-  function stopState(li,s){ const st=state[active]; if(li<st.cur) return 'done'; if(li>st.cur) return 'locked'; return s<st.step?'done':(s===st.step?(st.step<gateCount(li)?'current':'done'):'locked'); }
-  function landComplete(li){ const st=state[active]; return li<st.cur || (li===st.cur && st.step>=gateCount(li)); }
+  // 🔒 문법: 저장된 완료기록(prog.done) 기반 순차 잠금·진행 (세션 아님)
+  function gateDoneG(li,s){ const p=__gkProg('gram_'+li+'_'+s); return !!(p&&p.done); }
+  function landDoneG(li){ const arr=GATES.gram[li]||[]; if(!arr.length) return false; for(let s=0;s<arr.length;s++) if(!gateDoneG(li,s)) return false; return true; }
+  function landUnlockedG(li){ return li===0 || landDoneG(li-1); }   // 앞 땅 전부 완료해야 다음 땅 해금
+  function syncStateFromProg(){
+    if(active!=='gram') return;
+    for(let li=0; li<N; li++){
+      if(!landDoneG(li)){
+        let step=0; const arr=GATES.gram[li]||[];
+        for(let s=0;s<arr.length;s++){ if(gateDoneG(li,s)) step=s+1; else break; }
+        state.gram.cur=li; state.gram.step=step; return;
+      }
+    }
+    state.gram.cur=N-1; state.gram.step=(GATES.gram[N-1]||[]).length; // 전부 완료
+  }
+  function stopState(li,s){
+    const st=state[active];
+    if(active==='gram'){
+      if(!landUnlockedG(li)) return 'locked';           // 잠긴 땅 = 전부 locked
+      if(gateDoneG(li,s)) return 'done';                // 완료한 소단원
+      for(let t=0;t<s;t++) if(!gateDoneG(li,t)) return 'locked';  // 앞 소단원 미완료면 locked
+      return 'current';                                 // 이 땅의 첫 미완료 소단원 = 현재
+    }
+    if(li<st.cur) return 'done'; if(li>st.cur) return 'locked'; return s<st.step?'done':(s===st.step?(st.step<gateCount(li)?'current':'done'):'locked');
+  }
+  function landComplete(li){ if(active==='gram') return landDoneG(li); const st=state[active]; return li<st.cur || (li===st.cur && st.step>=gateCount(li)); }
+  // 잠금 안내 토스트
+  function lockToast(msg){
+    let t=document.getElementById('gkLockToast');
+    if(!t){ t=document.createElement('div'); t.id='gkLockToast'; t.className='gk-lock-toast'; document.body.appendChild(t); }
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('show'), 2200);
+  }
   const depthScale=y=>(0.82+(y-40)/(62-40)*0.3).toFixed(3);
 
   // 학생별 통계 키 — 학원 태블릿은 여러 학생이 공유하므로 학생 식별자를 키에 포함
@@ -574,12 +628,55 @@
         Object.keys(lp).forEach(function(k){ if (progScore(lp[k]) > progScore(mp[k])) mp[k] = lp[k]; });
         localStorage.setItem(__GK_PROG_KEY, JSON.stringify(mp));
         if (window.__refreshStars) window.__refreshStars();
+        // 서버 진행기록 반영 → 잠금·밝기·진행 위치 재계산 후 현재 땅으로 재렌더
+        try {
+          if (active==='gram' && typeof syncStateFromProg==='function' && typeof render==='function') {
+            syncStateFromProg(); view = state.gram.cur; render();
+            if (typeof dialogueForLand==='function') dialogueForLand();
+          }
+        } catch(e) {}
         __gkSyncToServer();
       }).catch(function(){});
+  })();
+  // 🔍 관리자 리포트 모드 — URL ?reportGate= 있으면 상태 로드 후 해당 소단원 리포트 자동 열기
+  (function(){
+    try{
+      var rp = new URLSearchParams(location.search);
+      var rg = rp.get('reportGate');
+      if(!rg) return;
+      var rn = rp.get('reportName') || '';
+      var tries = 0;
+      var timer = setInterval(function(){
+        tries++;
+        var st = {}; try{ st = JSON.parse(localStorage.getItem(__GK_KEY)||'{}'); }catch(e){}
+        var loaded = st && Object.keys(st).length > 0;
+        if((loaded || tries>=40) && typeof window.__gateReport==='function'){
+          clearInterval(timer);
+          window.__gateReport(rg, rn);
+        }
+      }, 200);
+    }catch(e){}
   })();
   // ── 땅별 정답률 별점 (별 반 개 = 10%) ──
   function landStats(){ try{ return JSON.parse(localStorage.getItem(__GK_KEY)||'{}'); }catch(e){ return {}; } }
   window.landStats = landStats;
+  // 관문별 문제 해설(교사용 e) 매핑 — 오답노트에 해설 표시용. 질문 앞 60자로 키 매칭(오답 저장키와 동일)
+  function gkExplainMap(key){
+    const p=(window.GK_GATE_PACKS||{})[key]; if(!p) return {};
+    const map={};
+    ['mcq','adv','exam'].forEach(t=>{ (p[t]||[]).forEach(it=>{ if(it&&it.q&&it.e) map[String(it.q).slice(0,60)]=it.e; }); });
+    (p.wtOx||[]).forEach(it=>{ if(it&&it.q&&it.e) map[String(it.q).slice(0,60)]=it.e; });          // 웹툰 OX 해설
+    (p.sections||[]).forEach(s=>{ if(s&&s.ox&&s.ox.q&&s.ox.e) map[String(s.ox.q).slice(0,60)]=s.ox.e; }); // 구간 OX 해설
+    return map;
+  }
+  // OX형(웹툰OX·구간OX) 정답 매핑 — 오답노트에서 올바른 ⭕/❌로 표시 (저장값이 '정답/오답'이라 보정)
+  function gkOxAnswerMap(key){
+    const p=(window.GK_GATE_PACKS||{})[key]; if(!p) return {};
+    const map={};
+    (p.wtOx||[]).forEach(it=>{ if(it&&it.q) map[String(it.q).slice(0,60)]=it.a?'⭕ (맞는 설명)':'❌ (틀린 설명)'; });
+    (p.sections||[]).forEach(s=>{ if(s&&s.ox&&s.ox.q) map[String(s.ox.q).slice(0,60)]=s.ox.a?'⭕ (맞는 설명)':'❌ (틀린 설명)'; });
+    return map;
+  }
   function pctOf(ok,wrong){ return (ok+wrong)>0 ? ok/(ok+wrong) : null; }
   function starsMarkup(pct,cls){
     const fill=pct===null?0:Math.round(pct*10)*10;
@@ -686,8 +783,14 @@
         <span class="grp-bar-val">${t===0?'-':(g.o+'/'+t+' ('+Math.round(p*100)+'%)')}</span></div>`;
     });
     let missItems=Object.values(e.miss||{}).sort((a,b)=>b.n-a.n).slice(0,8);
-    let missHtml=missItems.length?missItems.map(m=>
-      `<div class="grp-miss ${m.n>=2?'hot':''}"><div class="grp-miss-q">${m.q}</div><div class="grp-miss-a">정답: <b>${m.a}</b> · 틀린 횟수 ${m.n}회</div></div>`).join('')
+    const exMap=gkExplainMap(key);   // 문제 해설(mcq/심화/평가 교사용 e)
+    const oxMap=gkOxAnswerMap(key);  // OX 정답 보정(웹툰OX가 '정답/오답'으로 저장되는 버그 대응)
+    let missHtml=missItems.length?missItems.map(m=>{
+        const k60=String(m.q).slice(0,60);
+        const ex=exMap[k60]||'';
+        const ans=oxMap[k60]||m.a;   // OX면 올바른 ⭕/❌로 표시
+        return `<div class="grp-miss ${m.n>=2?'hot':''}"><div class="grp-miss-q">${m.q}</div><div class="grp-miss-a">정답: <b>${ans}</b> · 틀린 횟수 ${m.n}회</div>${ex?`<div class="grp-miss-e">💡 ${ex}</div>`:''}</div>`;
+      }).join('')
       :'<div style="color:#8ea1ab;font-size:12.5px;text-align:center;padding:8px 0">틀린 문제가 없어요! \uD83D\uDC4F</div>';
     const lastTxt=e.last?new Date(e.last).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})+' '+new Date(e.last).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'-';
     const ov=document.createElement('div'); ov.className='grp-ov'; ov.id='grpOv';
@@ -806,6 +909,7 @@
   };
 
   function render(){
+    syncStateFromProg();   // 저장된 완료기록으로 진행상태 동기화 (잠금·밝기 판정 기준)
     const i=view, st=state[active], tier=evoTier(lvlOf(player.xp));
     const img=IMAGES[active][i], vid=(VIDEOS[active]||{})[i]||null, bg=img||vid;
     let doneUpto=-1; for(let s=0;s<gateCount(i);s++) if(stopState(i,s)==='done') doneUpto=s;
@@ -815,9 +919,37 @@
     const plates=`<div class="nameplate"><div class="u">단원 ${i+1} / 10</div><div class="n">${UNITS[active][i]}</div>${active==='gram'?('<div style="margin-top:4px">'+starHTML(i)+'</div>'):''}</div>
       <div class="quest">🎯 <b>퀘스트</b> · ${questTxt}</div>
       <div class="win ${landComplete(i)&&view===st.cur ? 'show':''}"><div class="medal">🏅</div><h2>${UNITS[active][i]} 정복!</h2><div class="reward">${TREASURE[i][0]} ${TREASURE[i][1]} 획득</div><div class="sub">${gateCount(i)}개 관문을 모두 돌파했다.</div><button class="btn primary" id="nextLand">${st.cur>=N-1?'🎉 원정 완료':'다음 땅으로 출발 ▶'}</button></div>`;
+    // 🔦 밝기: 땅 전부 완료면 환하게, 아니면 어둡게(dimmed) + 완료·현재 소단원 주변에 빛 웅덩이(glow)
+    //   진입 시 현재(해야 할) 소단원 주변이 밝아지고, 완료할수록 밝은 영역이 늘어남. 잠긴(미래) 소단원은 깜깜.
+    const landLit = (active==='gram') ? landComplete(i) : true;
+    // 🔦 어두운 땅 위에서 현재·완료 소단원 주변만 "진짜 배경이 드러나는" 반경(랜턴/안개 걷힘)
+    //   마스크 원(검정=보임)을 소단원 좌표마다 만들고, 밝은 배경 복제 레이어를 그 원들로만 노출
+    let revealLayer='';
+    if(active==='gram' && !landLit && !editMode && bg){
+      const holes=gatesFor(i).map((nm,si)=>({si,stt:stopState(i,si)}))
+        .filter(g=>g.stt==='done'||g.stt==='current')
+        .map(g=>{ const [gx,gy]=pos[g.si]; const R=g.stt==='current'?135:100, C=g.stt==='current'?72:54;
+          return `radial-gradient(circle ${R}px at ${gx}% ${gy}%, #000 0, #000 ${C}px, transparent ${R}px)`; });
+      if(holes.length){
+        const m=holes.join(',');
+        const maskCss=`-webkit-mask:${m};mask:${m};-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;`;
+        revealLayer=`<div class="land-reveal" style="${img?`background-image:url('${img}');`:''}${maskCss}">${vid?`<video src="${vid}" autoplay muted loop playsinline></video>`:''}</div>`;
+      }
+    }
+    // 🔅 전체 배경 음영: 소단원 완료 비율만큼 점진적으로 밝아짐 (0개=아주 어둠 → 늘수록 전체가 밝아짐)
+    let dimStyle='';
+    if(active==='gram' && !landLit){
+      const gcD=gatesFor(i).length||1; let doneN=0; for(let s=0;s<gcD;s++) if(stopState(i,s)==='done') doneN++;
+      const ratio=doneN/gcD;
+      const bright=(0.14 + ratio*0.62).toFixed(3);   // 0완료 .14(어둠) → 거의완료 ~.7
+      const sat=(0.35 + ratio*0.5).toFixed(2);
+      dimStyle=`filter:brightness(${bright}) saturate(${sat}) contrast(.92);--veilOp:${(1-ratio*0.75).toFixed(2)};`;
+    }
     if(bg){
+      const photoStyle = (img||dimStyle) ? ` style="${img?("background-image:url('"+img+"');"):''}${dimStyle}"` : '';
       inner.innerHTML=`
-        <div class="land-photo"${img?" style=\"background-image:url('"+img+"')\"":""}>${vid?'<video src="'+vid+'" autoplay muted loop playsinline></video>':''}</div>
+        <div class="land-photo${landLit?'':' dimmed'}"${photoStyle}>${vid?'<video src="'+vid+'" autoplay muted loop playsinline></video>':''}</div>
+        ${revealLayer}
         ${gatesFor(i).map((nm,si)=>{ const stt=stopState(i,si),[x,y]=pos[si], c=(!editMode&&stt==='done')?'✓':(si+1);
           return `<button class="pin ${stt} ${editMode?'editing':''}" data-s="${si}" style="left:${x}%;top:${y}%"><span class="pshadow"></span><span class="pflag">${c}</span><span class="pcap">${si+1}. ${nm}</span>${active==='gram'?('<span class="gs-row">'+gateStarHTML('gram_'+i+'_'+si)+'<span class="gs-mag" data-gkey="gram_'+i+'_'+si+'" data-gname="'+(si+1)+'. '+nm+'" title="리포트 보기">\uD83D\uDD0D</span></span>'):''}</button>`; }).join('')}
         ${(curStop>=0 && !editMode) ? partyHTML(pos[curStop][0]+6,pos[curStop][1]-8,tier,true):''}
@@ -835,7 +967,9 @@
     inner.querySelectorAll('.gs-mag').forEach(m=>m.addEventListener('click',e=>{ e.stopPropagation(); window.__gateReport(m.dataset.gkey, m.dataset.gname); }));
     inner.querySelectorAll('.stop,.pin').forEach(b=>{
       if(editMode && b.classList.contains('pin')){ b.addEventListener('pointerdown',e=>startPinDrag(e,+b.dataset.s)); return; }
-      b.addEventListener('click',()=>{ const s=+b.dataset.s, stt=stopState(i,s); if(stt==='current') openStage(i,s,'do'); else openStage(i,s,'review'); });
+      b.addEventListener('click',()=>{ const s=+b.dataset.s, stt=stopState(i,s);
+        if(stt==='locked'){ lockToast('🔒 앞 소단원을 먼저 완료해야 열려요'); return; }
+        if(stt==='current') openStage(i,s,'do'); else openStage(i,s,'review'); });
     });
     if(editMode) updateEditPanel();
     const nl=inner.querySelector('#nextLand'); if(nl) nl.addEventListener('click',nextLand);
@@ -852,7 +986,9 @@
     loot.innerHTML = fc>0 ? FRIENDS.slice(0,fc).map(fr=>`<span title="${fr.name}">${critterSVG(fr.kind,22)}</span>`).join('') : '<span class="loot-empty">레벨업하면 합류!</span>'; }
 
   window.__expGo=function(k){ go(k); };
-  function go(k,dir){ if(k===view){ render(); return; } const d=dir||(k>view?'left':'right'); inner.classList.add(d==='left'?'out-left':'out-right'); setTimeout(()=>{ view=k; render(); inner.classList.remove('out-left','out-right'); dialogueForLand(); }, reduce?0:280); }
+  function go(k,dir){
+    if(active==='gram' && !landUnlockedG(k)){ lockToast('🔒 앞 땅의 소단원을 모두 완료하면 열려요'); return; }
+    if(k===view){ render(); return; } const d=dir||(k>view?'left':'right'); inner.classList.add(d==='left'?'out-left':'out-right'); setTimeout(()=>{ view=k; render(); inner.classList.remove('out-left','out-right'); dialogueForLand(); }, reduce?0:280); }
   function nextLand(){ const st=state[active]; if(st.cur>=N-1){ setDialogue('국어 개념 대륙을 완전히 정복했다! 자네는 이제 전설의 원정대장이야.'); return; } st.cur++; st.step=0; go(st.cur,'left'); }
 
   // 발자국 소리 (Web Audio 합성 · 캐릭터 이동할 때만)
@@ -896,6 +1032,29 @@
 
   function sparkleAt(px,py){ if(reduce) return; const c=['✨','⭐','🌟'],sc=document.getElementById('scene'); for(let k=0;k<10;k++){ const s=document.createElement('div'); s.className='spark'; s.textContent=c[k%3]; s.style.left=px+'%'; s.style.top=py+'%'; s.style.transform=`translate(${(Math.random()-.5)*80}px,0)`; s.style.animation=`rise ${850+Math.random()*650}ms ease-out forwards`; sc.appendChild(s); setTimeout(()=>s.remove(),1600);} }
   function floatXP(px,py,txt){ const sc=document.getElementById('scene'); const el=document.createElement('div'); el.className='floatxp'; el.textContent=txt; el.style.left=px+'%'; el.style.top=py+'%'; el.style.animation=`floaty ${reduce?1:1100}ms ease-out forwards`; sc.appendChild(el); setTimeout(()=>el.remove(),1200); }
+  // 🎆 관문 통과 축포 (소단원 마지막 심화확장 완료 순간 · 1회성 다연발)
+  function gkFireworks(){
+    if(reduce) return;
+    const host=document.createElement('div'); host.className='gk-fx'; document.body.appendChild(host);
+    const COLORS=['#fbbf24','#f59e0b','#ef4444','#3b82f6','#22c55e','#a855f7','#ec4899','#fde047'];
+    const W=window.innerWidth, H=window.innerHeight;
+    const boom=(cx,cy,delay)=>setTimeout(()=>{
+      const n=28, off=Math.floor(Math.random()*COLORS.length);
+      for(let i=0;i<n;i++){
+        const pc=document.createElement('div'); pc.className='gk-fx-p';
+        const a=(Math.PI*2)*(i/n)+Math.random()*0.3, d=75+Math.random()*95, c=COLORS[(i+off)%COLORS.length];
+        pc.style.left=cx+'px'; pc.style.top=cy+'px'; pc.style.background=c; pc.style.color=c;
+        host.appendChild(pc);
+        requestAnimationFrame(()=>{ pc.style.transform='translate('+(Math.cos(a)*d)+'px,'+(Math.sin(a)*d+40)+'px) scale(.3)'; pc.style.opacity='0'; });
+      }
+      const s=document.createElement('div'); s.className='gk-fx-s'; s.textContent=['🎉','✨','🎊','⭐','🏆'][off%5];
+      s.style.left=(cx-14)+'px'; s.style.top=(cy-14)+'px'; host.appendChild(s);
+      requestAnimationFrame(()=>{ s.style.transform='translateY(-30px) scale(1.7)'; s.style.opacity='0'; });
+    }, delay);
+    boom(W*0.3,H*0.34,0); boom(W*0.7,H*0.30,240); boom(W*0.5,H*0.44,470); boom(W*0.4,H*0.26,730); boom(W*0.63,H*0.46,980);
+    setTimeout(()=>host.remove(), 2600);
+  }
+  window.gkFireworks=gkFireworks;
   let typing=null; function setDialogue(text){ const el=document.getElementById('dlgText'); if(typing) clearInterval(typing); if(reduce){ el.textContent=text; return; } el.textContent=''; let k=0; const cur=document.createElement('span'); cur.className='cursor'; cur.innerHTML='&nbsp;'; typing=setInterval(()=>{ el.textContent=text.slice(0,++k); el.appendChild(cur); if(k>=text.length){ clearInterval(typing); cur.remove(); } }, 22); }
   function dialogueForLand(){ const st=state[active], i=view;
     if(view<st.cur){ setDialogue(`이미 정복한 「${UNITS[active][i]}」 섬이군. 다시 둘러보며 복습해도 좋아.`); return; }
@@ -975,9 +1134,9 @@
       <div class="wm-head"><h2>🧭 국어 문법 원정대</h2><p>순서대로 문법 세계여행을 떠나자!</p></div>
       <div class="wm-trail" id="wmTrail" style="display:none"></div>
       <div class="wm-grid">${UNITS[active].map((nm,k)=>{
-        const done=landComplete(k), cur=(k===st.cur&&!done);
-        const stat=done?'<span class="wm-st done">✓ 정복 완료</span>':(cur?'<span class="wm-st cur">▶ 원정 중</span>':'<span class="wm-st">미탐험</span>');
-        return `<button class="wm-card ${cur?'cur':''}" data-k="${k}">
+        const done=landComplete(k), unlocked=(active!=='gram')||landUnlockedG(k), cur=(k===st.cur&&!done);
+        const stat=done?'<span class="wm-st done">✓ 정복 완료</span>':(cur?'<span class="wm-st cur">▶ 원정 중</span>':(unlocked?'<span class="wm-st">미탐험</span>':'<span class="wm-st">🔒 잠김</span>'));
+        return `<button class="wm-card ${cur?'cur':''} ${unlocked?'':'wmlocked'}" data-k="${k}">
           <span class="wm-img" style="background-image:url('${T[k]||''}')"></span>
           <span class="wm-num">${k+1}</span>
           <span class="wm-name">${nm}</span>${active==='gram'?('<span class="gs-row" style="justify-content:center">'+starHTML(k)+('<span class="gs-mag wm-mag" data-land="'+k+'" data-lname="'+nm+'" title="종합 리포트">\uD83D\uDD0D</span>')+'</span>'):''}${stat}<span class="wm-crew" data-crew="${k}"></span></button>`; }).join('')}
@@ -985,11 +1144,28 @@
     worldOv.classList.add('show');
     worldOv.querySelectorAll('.wm-mag').forEach(m=>m.addEventListener('click',e=>{ e.stopPropagation(); window.__landReport(+m.dataset.land, m.dataset.lname); }));
     worldOv.querySelectorAll('.wm-card').forEach(c=>c.addEventListener('click',()=>{
-      worldOv.classList.remove('show');
       const k=+c.dataset.k;
+      if(active==='gram' && !landUnlockedG(k)){ openLandLockPopup(k); return; }  // 🔒 잠긴 땅 → 안내 팝업 (월드맵 유지)
+      worldOv.classList.remove('show');
       if(k===view){ render(); dialogueForLand(); } else go(k);
     }));
     loadPresence();
+  }
+  // 🔒 잠긴 땅 클릭 안내 팝업
+  function openLandLockPopup(k){
+    const prev = (k>0) ? (UNITS[active][k-1]||'') : '';
+    const ov=document.createElement('div'); ov.className='soon-ov'; ov.id='landLockOv';
+    ov.innerHTML=`<div class="soon-card" role="dialog" aria-modal="true" aria-label="잠긴 땅 안내">
+      <div style="font-size:54px;margin-bottom:8px">🔒</div>
+      <div class="soon-badge">LOCKED</div>
+      <h3>${k+1}번 땅은 아직 잠겨 있어요</h3>
+      <p>${prev?('「<b style="color:#f6c945">'+prev+'</b>」의'):'앞 땅의'} 소단원을<br><b style="color:#f6c945">모두 완료</b>하면 열려요!</p>
+      <button class="soon-ok" type="button">알겠어요 ✨</button>
+    </div>`;
+    const close=()=>{ ov.classList.add('bye'); setTimeout(()=>ov.remove(),260); };
+    ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
+    ov.querySelector('.soon-ok').addEventListener('click',close);
+    document.body.appendChild(ov);
   }
 
   // ── 원정대 동행 현황 — 카드 "탐험 중" 배지 + 발자국 대열 (완성 구조 · 순위 없음) ──
@@ -1008,8 +1184,13 @@
       el.innerHTML='🏕️ <b>'+head+'</b>'+(names.length>2?' 외 '+(names.length-2)+'명':'')+' 탐험 중';
     });
     const tr=document.getElementById('wmTrail');
-    if(tr && d.trail && d.trail.length){
-      const byLand={}; d.trail.forEach(s=>{ (byLand[s.land]=byLand[s.land]||[]).push(s); });
+    if(tr){
+      // 동행(서버 presence) + 뷰어 본인 현재 위치를 항상 트레일에 표시
+      const trail=(d.trail||[]).slice();
+      if(me && !trail.some(s=>s.grade===me.grade&&s.name===me.name)){
+        trail.push({grade:me.grade, name:me.name, land: (state[active]&&state[active].cur)||0});
+      }
+      const byLand={}; trail.forEach(s=>{ (byLand[s.land]=byLand[s.land]||[]).push(s); });
       tr.innerHTML='<div class="wm-trail-title">🐾 함께 걷는 원정길 — 지금 우리 원정대는 여기까지 왔어요</div><div class="wm-path">'+
         UNITS[active].map((nm,k)=>{
           const ss=meFirst(byLand[k]||[]);
@@ -1031,7 +1212,7 @@
   }
   document.getElementById('worldBtn').addEventListener('click',showWorldMap);
 
-  view=state[active].cur; render(); dialogueForLand();
+  syncStateFromProg(); view=state[active].cur; render(); dialogueForLand();
   showWorldMap();
   if(window.__expBootDone) window.__expBootDone();
 })();
@@ -1090,6 +1271,7 @@
   .grp-miss-q{font-size:12.5px;line-height:1.5;margin-bottom:3px}
   .grp-miss-a{font-size:14.5px;color:#9fb6c0}
   .grp-miss-a b{color:#7ad0a8}
+  .grp-miss-e{margin-top:6px;font-size:12.5px;line-height:1.55;color:#d9c9a3;background:rgba(246,201,69,.08);border-left:3px solid rgba(246,201,69,.55);border-radius:6px;padding:6px 9px}
   .grp-foot{margin-top:12px;text-align:center;font-size:11.5px;color:#8ea1ab}
   .grp-retry{display:block;width:100%;margin-top:10px;border:none;cursor:pointer;border-radius:12px;padding:12px;font-family:inherit;font-weight:800;font-size:14px;background:linear-gradient(135deg,#ffb679,#ff8a3d);color:#3a1c04}
   .grp-gates{display:flex;flex-direction:column;gap:6px}
@@ -1116,6 +1298,7 @@
     #printArea .grp-bar-track{background:#eee!important}
     #printArea .grp-miss{background:#f7f7f7!important;border-color:#ddd!important;color:#222!important}
     #printArea .grp-miss.hot{background:#fdeef1!important;border-color:#e0a0ae!important}
+    #printArea .grp-miss-e{background:#fdf6e3!important;border-left-color:#d4a72c!important;color:#5a4a1e!important}
     #printArea .grp-gate-row{background:#f7f7f7!important;border-color:#ddd!important;color:#222!important}
     #printArea .land-stars{color:#ddd!important}
     #printArea .land-stars .ls-fill{color:#e0a800!important;text-shadow:none!important}
@@ -3677,6 +3860,7 @@
       if(i+1<GP.pack.exam.length){ window.umunToast('\uD83C\uDF89 정답!'); setTimeout(function(){ window.umunExamShow(i+1); },700); }
       else{
         if(!GP.ro) __gkProgSave(GP.key,{done:1,exam:1});
+        if(!GP.ro && window.gkFireworks) gkFireworks();   // 🎆 형성평가 완주 축포
         setTimeout(function(){
           var qv=document.getElementById('umunMcq');
           if(qv) qv.innerHTML='<div style="text-align:center;padding:26px 0"><div style="font-size:46px;margin-bottom:10px">\uD83C\uDFC6</div><div style="font-weight:900;font-size:18px;color:#f6c945;margin-bottom:6px">형성평가 20문항 완주!</div><div style="color:#9fb6c0;font-size:13px">아래 버튼으로 관문을 통과하세요</div></div>';
@@ -3722,6 +3906,7 @@
       if(i+1<GP.pack.adv.length){ window.umunToast('\uD83C\uDF89 정답!'); setTimeout(function(){ window.umunAdvShow(i+1); },800); }
       else{
         if(!GP.ro) __gkProgSave(GP.key,{done:1,step:4+GP.nSec});
+        if(!GP.ro && window.gkFireworks) gkFireworks();   // 🎆 소단원(심화확장) 통과 축포
         window.umunStep(GP.advStep,'ok');
         setTimeout(function(){
           var qv=document.getElementById('umunMcq');
