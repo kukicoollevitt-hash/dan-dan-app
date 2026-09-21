@@ -2796,6 +2796,8 @@ body:has(.wb-live-banner:hover) .wb-launcher {
 .subject-chip.selected { background: #d35a1a; border-color: #d35a1a; color: #fff; }
 /* 세부과목 모드일 때 분야 버튼 비활성 느낌 */
 #domainBtnGroup.dimmed { opacity: 0.4; pointer-events: none; }
+/* 세부과목 모드에선 시작 호수(권)도 비활성 — 권은 전 과목 묶음 개념이라 과목별 모드와 안 맞음 */
+#startVolSection.dimmed { opacity: 0.4; pointer-events: none; }
 
 .task-count-input {
   display: flex;
@@ -18439,9 +18441,14 @@ async function performLogout() {
       });
       autoTaskSettings.domains = selectedDomains;
 
-      // 시작 호수(권) — 단일 선택
-      const selVol = document.querySelector('#startVolBtnGroup .startvol-btn.selected');
-      autoTaskSettings.startVol = selVol ? (parseInt(selVol.dataset.vol, 10) || 1) : 1;
+      // 시작 호수(권) — 단일 선택 (세부과목 모드에선 항상 1권 고정 · 권=전 과목 묶음 개념)
+      const subjToggleForVol = document.getElementById('subjectToggle');
+      if (subjToggleForVol && subjToggleForVol.checked) {
+        autoTaskSettings.startVol = 1;
+      } else {
+        const selVol = document.querySelector('#startVolBtnGroup .startvol-btn.selected');
+        autoTaskSettings.startVol = selVol ? (parseInt(selVol.dataset.vol, 10) || 1) : 1;
+      }
 
       // 세부과목 (토글 ON 시에만 수집 · OFF면 항상 빈 배열)
       const subjToggle = document.getElementById('subjectToggle');
@@ -18486,15 +18493,20 @@ async function performLogout() {
       const wrap = document.getElementById('subjectGroupWrap');
       const hint = document.getElementById('subjectHint');
       const domainGroup = document.getElementById('domainBtnGroup');
+      const startVolSection = document.getElementById('startVolSection');
       if (on) {
         renderSubjectChips();
         if (wrap) wrap.style.display = 'block';
         if (hint) hint.style.display = 'block';
         if (domainGroup) domainGroup.classList.add('dimmed');   // 과목모드에선 분야 무시
+        // 과목모드에선 시작 호수(권)도 비활성 + 01권으로 리셋 (권=전 과목 묶음 개념)
+        if (startVolSection) startVolSection.classList.add('dimmed');
+        document.querySelectorAll('#startVolBtnGroup .startvol-btn').forEach(b => b.classList.toggle('selected', b.dataset.vol === '1'));
       } else {
         if (wrap) wrap.style.display = 'none';
         if (hint) hint.style.display = 'none';
         if (domainGroup) domainGroup.classList.remove('dimmed');
+        if (startVolSection) startVolSection.classList.remove('dimmed');
         autoTaskSettings.subjects = [];
       }
       updateAutoTaskSettings();
@@ -18612,15 +18624,18 @@ async function performLogout() {
         const wrap = document.getElementById('subjectGroupWrap');
         const hint = document.getElementById('subjectHint');
         const domainGroup = document.getElementById('domainBtnGroup');
+        const startVolSectionEl = document.getElementById('startVolSection');
         if (hasSubjects) {
           renderSubjectChips();
           if (wrap) wrap.style.display = 'block';
           if (hint) hint.style.display = 'block';
           if (domainGroup) domainGroup.classList.add('dimmed');
+          if (startVolSectionEl) startVolSectionEl.classList.add('dimmed');   // 과목모드 = 권 선택 비활성
         } else {
           if (wrap) wrap.style.display = 'none';
           if (hint) hint.style.display = 'none';
           if (domainGroup) domainGroup.classList.remove('dimmed');
+          if (startVolSectionEl) startVolSectionEl.classList.remove('dimmed');
         }
       }
 
@@ -25899,7 +25914,7 @@ ${content}
                 </div>
 
                 <!-- 시작 호수(권) 선택 — 월간교재 권 순서 기준 시작점 (1권=01단원 · 5권=09단원 · 9권=17단원) -->
-                <div class="auto-task-section">
+                <div class="auto-task-section" id="startVolSection">
                   <div class="auto-task-section-title">🔖 시작 호수(권) 선택</div>
                   <div class="auto-task-btn-group" id="startVolBtnGroup">
                     <button class="startvol-btn selected" data-vol="1">01권부터</button>
