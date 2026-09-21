@@ -168,6 +168,19 @@
     }
     .score-bar .seg { position: relative; }
     .score-bar .seg.current { z-index: 2; }
+    /* 🔖 세그먼트 안 시작 호수(권) 표기 — 자동과제부여 시작점(하=01권·중=05권·상=09권)과 연결 */
+    .score-bar { height: 44px; }                     /* 2줄(권+등급) 여유 높이 */
+    .score-bar .seg { flex-direction: column; gap: 2px; font-size: 13px; }  /* 등급 글씨 확대 */
+    .score-bar .seg .seg-vol {
+      font-size: 9px; font-weight: 800;
+      line-height: 1;
+      color: rgba(255,255,255,0.95);
+      background: rgba(0,0,0,0.24);
+      border-radius: 5px;
+      padding: 2px 6px;
+      white-space: nowrap;
+      letter-spacing: 0;
+    }
     /* inset box-shadow 는 html2canvas 캡처 시 배경을 흰색으로 덮어씌우는 문제가 있어
        가상 요소 오버레이로 동일 시각 효과(흰 링 + 어두운 외곽)를 재현 */
     .score-bar .seg.current::after {
@@ -1801,9 +1814,11 @@
 
       // 막대 세그먼트 (균등 폭) + 마커
       const segWidth = 100 / segs.length;          // 각 구간 균등 폭 (%)
+      // 🔖 시작 호수(권) 표기 — 자동과제부여 시작점과 연결: (하)=01권 · (중)=05권 · (상)=09권 (딥 단일=01권)
+      const volOf = (label) => label.includes('(하)') ? '01권' : label.includes('(중)') ? '05권' : label.includes('(상)') ? '09권' : '01권';
       const segHtml = segs.map(([start, end, label, color], idx) => {
         const isCurrent = (score >= start && score <= end);
-        return `<div class="seg ${isCurrent ? 'current' : ''}" style="width:${segWidth}%; background:${color};" title="${label} (${start}~${end}점)">${label}</div>`;
+        return `<div class="seg ${isCurrent ? 'current' : ''}" style="width:${segWidth}%; background:${color};" title="${label} (${start}~${end}점) · 자동과제 ${volOf(label)}부터 추천"><span class="seg-vol">${volOf(label)}</span>${label}</div>`;
       }).join('');
 
       // 현재 점수 마커: 해당 구간의 중앙에 표시 (정확한 점수 위치 아님)

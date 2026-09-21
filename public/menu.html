@@ -2750,7 +2750,7 @@ body:has(.wb-live-banner:hover) .wb-launcher {
   gap: 8px;
 }
 
-.series-btn, .day-btn, .domain-btn {
+.series-btn, .day-btn, .domain-btn, .startvol-btn {
   padding: 8px 14px;
   border: 2px solid #e5e7eb;
   border-radius: 8px;
@@ -2762,18 +2762,18 @@ body:has(.wb-live-banner:hover) .wb-launcher {
   color: #374151;
 }
 
-.series-btn:hover:not(:disabled), .day-btn:hover:not(:disabled), .domain-btn:hover:not(:disabled) {
+.series-btn:hover:not(:disabled), .day-btn:hover:not(:disabled), .domain-btn:hover:not(:disabled), .startvol-btn:hover:not(:disabled) {
   border-color: #667eea;
   color: #667eea;
 }
 
-.series-btn.selected, .day-btn.selected, .domain-btn.selected {
+.series-btn.selected, .day-btn.selected, .domain-btn.selected, .startvol-btn.selected {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-color: #667eea;
   color: white;
 }
 
-.series-btn:disabled, .day-btn:disabled, .domain-btn:disabled {
+.series-btn:disabled, .day-btn:disabled, .domain-btn:disabled, .startvol-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
   background: #f3f4f6;
@@ -18262,6 +18262,7 @@ async function performLogout() {
       days: [],            // 선택된 요일 (0=일, 1=월, ..., 6=토, 'everyday')
       domains: ['all'],    // 선택된 분야 배열 ('all', 'science', 'social', 'korlit', 'worldlit', 'person')
       subjects: [],        // 세부과목 배열 (['physics','chem'] 등) · 있으면 과목별 taskCount 부여 (온/업/핏/딥 전용)
+      startVol: 1,         // 시작 호수(권) — 1/5/9 (월간교재 권 순서 기준 시작점)
       taskCount: 1,        // 과제 개수
       status: 'stopped'    // 'running', 'paused', 'stopped'
     };
@@ -18373,6 +18374,14 @@ async function performLogout() {
           updateAutoTaskSettings();
         });
       });
+      // 🔖 시작 호수(권) 버튼 — 단일 선택
+      document.querySelectorAll('#startVolBtnGroup .startvol-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('#startVolBtnGroup .startvol-btn').forEach(b => b.classList.remove('selected'));
+          this.classList.add('selected');
+          updateAutoTaskSettings();
+        });
+      });
     }
 
     // 과제 개수 입력 핸들러
@@ -18429,6 +18438,10 @@ async function performLogout() {
         selectedDomains.push(btn.dataset.domain);
       });
       autoTaskSettings.domains = selectedDomains;
+
+      // 시작 호수(권) — 단일 선택
+      const selVol = document.querySelector('#startVolBtnGroup .startvol-btn.selected');
+      autoTaskSettings.startVol = selVol ? (parseInt(selVol.dataset.vol, 10) || 1) : 1;
 
       // 세부과목 (토글 ON 시에만 수집 · OFF면 항상 빈 배열)
       const subjToggle = document.getElementById('subjectToggle');
@@ -18517,6 +18530,7 @@ async function performLogout() {
       autoTaskSettings.days = ['everyday'];
       autoTaskSettings.domains = ['all'];
       autoTaskSettings.subjects = [];
+      autoTaskSettings.startVol = 1;
       autoTaskSettings.taskCount = 1;
       applySettingsToUI();
       console.log('🔧 자동과제부여 기본값 적용 (학원 부여 기준):', adminSeries);
@@ -18582,6 +18596,12 @@ async function performLogout() {
         if (domains.includes(btn.dataset.domain)) {
           btn.classList.add('selected');
         }
+      });
+
+      // 시작 호수(권) 복원
+      const savedVol = autoTaskSettings.startVol || 1;
+      document.querySelectorAll('#startVolBtnGroup .startvol-btn').forEach(btn => {
+        btn.classList.toggle('selected', parseInt(btn.dataset.vol, 10) === savedVol);
       });
 
       // 세부과목 토글·칩 복원 (subjects 있으면 과목모드 ON)
@@ -18757,7 +18777,8 @@ async function performLogout() {
           const domainTextMap = { all: '전체', science: '과학', social: '사회', korlit: '한국문학', worldlit: '세계문학', person: '인물' };
           const domainsArr = autoTaskSettings.domains || ['all'];
           const domainText = domainsArr.includes('all') ? '전체' : domainsArr.map(d => domainTextMap[d] || d).join(', ') || '미선택';
-          statusEl.innerHTML = `▶️ 자동과제부여 실행 중<br><small style="opacity: 0.8;">${seriesText} / ${daysText} / ${domainText} / ${autoTaskSettings.taskCount}개</small>`;
+          const volText = (autoTaskSettings.startVol && autoTaskSettings.startVol > 1) ? ` / ${String(autoTaskSettings.startVol).padStart(2,'0')}권부터` : '';
+          statusEl.innerHTML = `▶️ 자동과제부여 실행 중<br><small style="opacity: 0.8;">${seriesText} / ${daysText} / ${domainText}${volText} / ${autoTaskSettings.taskCount}개</small>`;
           break;
         case 'paused':
           statusEl.classList.add('paused');
@@ -18944,6 +18965,7 @@ async function performLogout() {
       autoTaskSettings.days = [];
       autoTaskSettings.domains = ['all'];
       autoTaskSettings.subjects = [];
+      autoTaskSettings.startVol = 1;
       autoTaskSettings.taskCount = 1;
       autoTaskSettings.status = 'stopped';
 
@@ -25874,6 +25896,17 @@ ${content}
                     <button class="domain-btn" data-domain="worldlit">세계문학</button>
                     <button class="domain-btn" data-domain="person">인물</button>
                   </div>
+                </div>
+
+                <!-- 시작 호수(권) 선택 — 월간교재 권 순서 기준 시작점 (1권=01단원 · 5권=09단원 · 9권=17단원) -->
+                <div class="auto-task-section">
+                  <div class="auto-task-section-title">🔖 시작 호수(권) 선택</div>
+                  <div class="auto-task-btn-group" id="startVolBtnGroup">
+                    <button class="startvol-btn selected" data-vol="1">01권부터</button>
+                    <button class="startvol-btn" data-vol="5">05권부터</button>
+                    <button class="startvol-btn" data-vol="9">09권부터</button>
+                  </div>
+                  <div style="font-size:11px; color:#9a8b74; margin-top:6px;">각 등급 (하) : 01권부터 / (중) : 05권부터 / (상) : 09권부터 추천</div>
                 </div>
 
                 <!-- 세부 과목 선택 (온/업/핏/딥 전용 · 토글 ON 시 과목별로 개수 부여) -->

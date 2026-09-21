@@ -17769,7 +17769,10 @@ function isMonthlyReportBeta(grade, name) {
 const MOBILE_CARD_BETA_TESTERS = [
   { grade: '초3', name: '김윤슬' }
 ];
+// 📱 모바일 카드 레이아웃 전체 오픈 (2026-09-21) — 문제 시 false로 바꾸면 김윤슬 베타로 즉시 복귀
+const MOBILE_CARD_ALL_OPEN = true;
 function isMobileCardBeta(grade, name) {
+  if (MOBILE_CARD_ALL_OPEN) return true;
   return MOBILE_CARD_BETA_TESTERS.some(t => t.grade === grade && t.name === name);
 }
 
@@ -31557,6 +31560,7 @@ const autoTaskSettingsSchema = new mongoose.Schema({
   days: [{ type: String }],          // 선택된 요일 (0~6, 'everyday')
   domains: [{ type: String }], // 선택된 분야 배열 (['all'], ['science', 'social'], etc.)
   subjects: [{ type: String }], // 세부과목 배열 (['physics','chem'] 등) · 있으면 과목별 taskCount 부여, 온/업/핏/딥 전용
+  startVol: { type: Number, default: 1 }, // 시작 호수(권) — 1/5/9 · 시작단원 = (권-1)*2+1 (월간교재 권 순서와 동일)
   taskCount: { type: Number, default: 3 }, // 과제 개수
   status: { type: String, enum: ['running', 'paused', 'stopped'], default: 'stopped' },
   createdAt: { type: Date, default: Date.now },
@@ -31598,6 +31602,7 @@ app.post('/api/auto-task-settings', async (req, res) => {
       JSON.stringify(existingSettings.days?.sort()) !== JSON.stringify(settings.days?.sort()) ||
       JSON.stringify((existingSettings.domains || []).slice().sort()) !== JSON.stringify((settings.domains || []).slice().sort()) ||
       JSON.stringify((existingSettings.subjects || []).slice().sort()) !== JSON.stringify((settings.subjects || []).slice().sort()) ||
+      (existingSettings.startVol || 1) !== (settings.startVol || 1) ||
       existingSettings.taskCount !== settings.taskCount
     );
 
@@ -34590,6 +34595,8 @@ async function executeAutoTaskForStudent(grade, name, setting) {
 
       // 세부과목 모드면 과목별, 아니면 분야별로 각각 taskCount개씩 부여
       const assignBuckets = buildAutoTaskBuckets(setting, selectedDomains);
+      // 🔖 시작 호수(권): 시작단원 = (권-1)*2+1 — 1권=01, 5권=09, 9권=17 (월간교재 권 순서)
+      const startUnitNum = Math.max(1, ((parseInt(setting.startVol, 10) || 1) - 1) * 2 + 1);
       for (const bucket of assignBuckets) {
         console.log(`    📂 ${bucket.kind}: ${bucket.label}`);
         let domainTaskCount = 0;
@@ -34599,7 +34606,7 @@ async function executeAutoTaskForStudent(grade, name, setting) {
         const maxUnitNum = 30;
 
         domainLoop:
-        for (let unitNum = 1; unitNum <= maxUnitNum; unitNum++) {
+        for (let unitNum = startUnitNum; unitNum <= maxUnitNum; unitNum++) {
           if (domainTaskCount >= setting.taskCount) break;
 
           const unitNo = String(unitNum).padStart(2, '0');
@@ -34873,6 +34880,8 @@ async function executeAutoTaskAssignment() {
 
           // ★ 세부과목 모드면 과목별, 아니면 분야별로 각각 taskCount개씩 부여
           const assignBuckets = buildAutoTaskBuckets(setting, selectedDomains);
+          // 🔖 시작 호수(권): 시작단원 = (권-1)*2+1 — 1권=01, 5권=09, 9권=17
+          const startUnitNum = Math.max(1, ((parseInt(setting.startVol, 10) || 1) - 1) * 2 + 1);
           for (const bucket of assignBuckets) {
             console.log(`    📂 ${bucket.kind}: ${bucket.label}`);
             let domainTaskCount = 0;
@@ -34883,7 +34892,7 @@ async function executeAutoTaskAssignment() {
             const maxUnitNum = 30;  // 가장 큰 단원 수 (현대/고전문학)
 
             domainLoop:
-            for (let unitNum = 1; unitNum <= maxUnitNum; unitNum++) {
+            for (let unitNum = startUnitNum; unitNum <= maxUnitNum; unitNum++) {
               if (domainTaskCount >= setting.taskCount) break;
 
               const unitNo = String(unitNum).padStart(2, '0');

@@ -39,6 +39,92 @@
   })();
 
   /* =========================================================
+     📖 본문학습 지문/문제 독립 스크롤 (모의고사와 동일 UX)
+     - 대상: .learning-layout(#tab-reading) — 전 문해단원 공통 구조 (지문 58% / 문제 42%)
+     - 901px 초과 화면에서만 발동 (900px 이하는 기존 세로 스택 유지 → 모바일 무영향)
+     - 롤백: READING_SPLIT_ON = false 로 바꾸면 배포 즉시 전체 원복 (이 파일은 no-cache 서빙)
+     - PDF 캡처 대비: window.__lcReadingSplitPause()/Resume() 제공 —
+       html2canvas 등으로 #capture-reading 캡처 시 반드시 Pause 후 캡처, 끝나면 Resume
+       (현재 PDF 저장은 전역 비활성 상태지만 재활성화 시 필수)
+  ========================================================= */
+  (function readingSplitScroll() {
+    var READING_SPLIT_ON = true;   // ⛔ 문제 시 false → 즉시 전체 원복
+    if (!READING_SPLIT_ON) return;
+
+    var STYLE_ID = 'lc-reading-split-style';
+    var CLS = 'lc-split-reading';
+    var MIN_W = 901;      // 이 폭 초과에서만 분할 스크롤 (단원 CSS의 세로 스택 기준과 동일)
+    var MIN_H = 480;      // 화면이 너무 낮으면 발동 안 함 (칸이 지나치게 좁아지는 것 방지)
+
+    function injectStyle() {
+      if (document.getElementById(STYLE_ID)) return;
+      var st = document.createElement('style');
+      st.id = STYLE_ID;
+      st.textContent =
+        /* 페이지 자체 스크롤 대신 각 칸이 스크롤 */
+        'html.' + CLS + ' #tab-reading .learning-layout{' +
+          'height:calc(100vh - var(--lc-split-top,120px));' +
+          'overflow:hidden;align-items:stretch;}' +
+        'html.' + CLS + ' #tab-reading .left-passage,' +
+        'html.' + CLS + ' #tab-reading .right-quiz{' +
+          'overflow-y:auto;height:100%;min-height:0;' +
+          'overscroll-behavior:contain;-webkit-overflow-scrolling:touch;' +
+          'scrollbar-width:thin;}' +
+        /* 스크롤바 시인성 (웹킷) */
+        'html.' + CLS + ' #tab-reading .left-passage::-webkit-scrollbar,' +
+        'html.' + CLS + ' #tab-reading .right-quiz::-webkit-scrollbar{width:8px;}' +
+        'html.' + CLS + ' #tab-reading .left-passage::-webkit-scrollbar-thumb,' +
+        'html.' + CLS + ' #tab-reading .right-quiz::-webkit-scrollbar-thumb{' +
+          'background:rgba(120,120,120,.45);border-radius:8px;}' +
+        'html.' + CLS + ' #tab-reading .right-quiz{padding-bottom:60px;}';
+      (document.head || document.documentElement).appendChild(st);
+    }
+
+    function layoutEl() {
+      var tab = document.getElementById('tab-reading');
+      return tab ? tab.querySelector('.learning-layout') : null;
+    }
+
+    var paused = false;
+    function apply() {
+      var el = layoutEl();
+      var root = document.documentElement;
+      if (!el || paused || window.innerWidth < MIN_W || window.innerHeight < MIN_H) {
+        root.classList.remove(CLS);
+        return;
+      }
+      injectStyle();
+      /* 레이아웃 상단의 문서 기준 위치 → 뷰포트에 딱 맞는 높이 계산 */
+      root.classList.remove(CLS);            // 원래 흐름 기준으로 측정
+      var top = el.getBoundingClientRect().top + window.scrollY;
+      root.style.setProperty('--lc-split-top', Math.max(0, Math.round(top)) + 'px');
+      root.classList.add(CLS);
+      window.scrollTo(0, 0);                 // 페이지 스크롤은 0 고정 (칸 스크롤만 사용)
+    }
+
+    /* PDF/이미지 캡처용 일시정지 API — 캡처 전 Pause, 끝나면 Resume */
+    window.__lcReadingSplitPause = function () { paused = true; document.documentElement.classList.remove(CLS); };
+    window.__lcReadingSplitResume = function () { paused = false; apply(); };
+
+    var t = null;
+    function onResize() { clearTimeout(t); t = setTimeout(apply, 150); }
+
+    function init() {
+      if (!layoutEl()) return;               // 본문학습 구조 없는 페이지는 무시
+      apply();
+      window.addEventListener('resize', onResize);
+      window.addEventListener('orientationchange', onResize);
+      // 다른 탭에 있다가 본문학습 탭으로 돌아올 때 재적용 (페이지 스크롤 0 복귀 포함)
+      document.addEventListener('click', function (e) {
+        var btn = e.target && e.target.closest ? e.target.closest('.tab-btn[data-tab="reading"]') : null;
+        if (btn) setTimeout(apply, 50);
+      });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  })();
+
+  /* =========================================================
      아이패드 핀치 줌 방지 (화면 깨짐 방지)
   ========================================================= */
   (function disablePinchZoom() {
@@ -2243,6 +2329,8 @@
       return;
 
       try {
+        // 📖 분할 스크롤 일시 해제 — 고정높이+overflow 상태로 캡처하면 화면 밖 내용이 잘림
+        if (window.__lcReadingSplitPause) window.__lcReadingSplitPause();
         window.scrollTo(0,0);
         const target = document.getElementById(elementId);
         if (!target) return;
@@ -2296,6 +2384,9 @@
       } catch (e) {
         console.error(e);
         alert("PDF 만드는 중에 이미지 때문에 캡처가 막혔어. BRAINON.png를 빼거나 같은 경로로 옮겨줘!");
+      } finally {
+        // 📖 분할 스크롤 복원 (캡처 가드 해제)
+        if (window.__lcReadingSplitResume) window.__lcReadingSplitResume();
       }
     }
 
