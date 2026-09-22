@@ -76,7 +76,12 @@
         'html.' + CLS + ' #tab-reading .left-passage::-webkit-scrollbar-thumb,' +
         'html.' + CLS + ' #tab-reading .right-quiz::-webkit-scrollbar-thumb{' +
           'background:rgba(120,120,120,.45);border-radius:8px;}' +
-        'html.' + CLS + ' #tab-reading .right-quiz{padding-bottom:60px;}';
+        'html.' + CLS + ' #tab-reading .right-quiz{padding-bottom:60px;}' +
+        /* 채점·제출 버튼: 공용 CSS가 absolute bottom:18px(전체 컬럼 기준)인데, 분할 모드에선
+           .right-quiz가 화면높이 칸이 되어 버튼이 콘텐츠 위에 떠서 스크롤과 함께 움직임 →
+           일반 흐름으로 되돌려 문제 맨 아래(Q5 다음)에 위치시킴 */
+        'html.' + CLS + ' #tab-reading .right-quiz .grade-area{' +
+          'position:static;width:auto;margin-top:24px;justify-content:flex-end;}';
       (document.head || document.documentElement).appendChild(st);
     }
 
