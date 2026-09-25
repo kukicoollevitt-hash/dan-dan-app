@@ -12493,7 +12493,7 @@ app.post("/admin/assign-series", async (req, res) => {
     // 🔹 disabledSeries 처리 — 비평/한국사처럼 디폴트 활성 시리즈를 학원이 명시적으로 끈 경우 저장
     //    payload에 들어있을 때만 갱신 (기존 동작 보존)
     if (hasDisabledPayload) {
-      const VALID_DISABLED_VALUES = new Set(['BRAIN비평', 'BRAIN한국사', 'BRAIN모고']);
+      const VALID_DISABLED_VALUES = new Set(['BRAIN비평', 'BRAIN한국사', 'BRAIN모고', 'BRAIN문법']);
       user.disabledSeries = disabledSeries.filter(v => VALID_DISABLED_VALUES.has(v));
     }
     await user.save();
