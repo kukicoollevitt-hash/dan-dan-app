@@ -593,7 +593,15 @@
   var __gkSyncT = null;
   // 🛡️ 관리자 view-as 탭에서는 서버 저장 금지 — 선생님이 학생 화면을 보다가 플레이해도
   //    그 학생 이름으로 기록이 오염되지 않게 (조회·복기는 허용, 저장만 차단)
-  var __GK_VIEWAS = (function(){ try { return sessionStorage.getItem('brainAdminViewAs') === '1'; } catch (e) { return false; } })();
+  //    🧪 예외: 초3 김윤슬(QA·시연 테스트 계정)은 view-as로 들어가도 저장 허용 —
+  //       관리자가 학생 목록에서 클릭해 문법 시연 데이터를 쌓을 수 있게
+  var __GK_VIEWAS = (function(){
+    try {
+      if (sessionStorage.getItem('brainAdminViewAs') !== '1') return false;
+      if (__GK_STU && __GK_STU.grade === '초3' && __GK_STU.name === '김윤슬') return false; // 테스트 계정 예외
+      return true;
+    } catch (e) { return false; }
+  })();
   function __gkSyncToServer(){
     if (!__GK_STU || __GK_VIEWAS) return;
     clearTimeout(__gkSyncT);
