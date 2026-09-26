@@ -3740,14 +3740,14 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "기울기",
     "question": "<span class=\"word-highlight\">기울기</span>의 뜻은?",
-    "hint": "기울어짐",
+    "hint": "한쪽으로 비스듬히 기울어진...",
     "correctAnswer": 1,
-    "meaning": "기울어짐",
+    "meaning": "한쪽으로 비스듬히 기울어진 정도",
     "subject": "chem",
     "fieldLabel": "화학",
     "koreanLevel": 5,
-    "explanation": "\"기울기\"은(는) 기울어짐을(를) 의미합니다.",
-    "example": "나무가 바람에 기울기 시작했다."
+    "explanation": "\"기울기\"는 '한쪽으로 비스듬히 기울어진 정도'라는 뜻입니다.",
+    "example": "이 언덕은 기울기가 가팔라서 오르기 힘들다."
   },
   {
     "word": "융해",
@@ -4556,13 +4556,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "라부아지에",
     "question": "<span class=\"word-highlight\">라부아지에</span>의 뜻은?",
-    "hint": "라부아지애",
+    "hint": "산소의 정체를 밝히고 질량...",
     "correctAnswer": 1,
-    "meaning": "라부아지애",
+    "meaning": "산소의 정체를 밝히고 질량 보존 법칙을 증명한 프랑스의 화학자",
     "subject": "chem",
     "fieldLabel": "화학",
     "koreanLevel": 5,
-    "explanation": "\"라부아지에\"은(는) 라부아지애을(를) 의미합니다.",
+    "explanation": "\"라부아지에\"는 '산소의 정체를 밝히고 질량 보존 법칙을 증명한 프랑스의 화학자'라는 뜻입니다.",
     "example": "라부아지에는 화학 연구에 큰 기여를 했다."
   },
   {
@@ -6224,14 +6224,14 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "끌어당기다",
     "question": "<span class=\"word-highlight\">끌어당기다</span>의 뜻은?",
-    "hint": "끌어당김",
+    "hint": "자기 쪽으로 힘을 주어 잡...",
     "correctAnswer": 1,
-    "meaning": "끌어당김",
+    "meaning": "자기 쪽으로 힘을 주어 잡아당기다",
     "subject": "physics",
     "fieldLabel": "물리",
     "koreanLevel": 5,
-    "explanation": "\"끌어당기다\"은(는) 끌어당김을(를) 의미합니다.",
-    "example": "그의 매력은 사람들을 끌어당기다."
+    "explanation": "\"끌어당기다\"는 '자기 쪽으로 힘을 주어 잡아당기다'라는 뜻입니다.",
+    "example": "자석은 쇠붙이를 끌어당긴다."
   },
   {
     "word": "방해하다",
@@ -6752,13 +6752,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "지렛대원리",
     "question": "<span class=\"word-highlight\">지렛대원리</span>의 뜻은?",
-    "hint": "지렛대의 원리",
+    "hint": "받침점을 이용해 작은 힘으...",
     "correctAnswer": 1,
-    "meaning": "지렛대의 원리",
+    "meaning": "받침점을 이용해 작은 힘으로 무거운 물체를 움직일 수 있다는 원리",
     "subject": "physics",
     "fieldLabel": "물리",
     "koreanLevel": 5,
-    "explanation": "\"지렛대원리\"은(는) 지렛대의 원리을(를) 의미합니다.",
+    "explanation": "\"지렛대원리\"는 '받침점을 이용해 작은 힘으로 무거운 물체를 움직일 수 있다는 원리'라는 뜻입니다.",
     "example": "지렛대원리 덕분에 힘을 적게 썼다."
   },
   {
@@ -8444,13 +8444,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "아르키메데스의원리",
     "question": "<span class=\"word-highlight\">아르키메데스의원리</span>의 뜻은?",
-    "hint": "아르키메데스 원리",
+    "hint": "물에 잠긴 물체는 밀어낸 ...",
     "correctAnswer": 1,
-    "meaning": "아르키메데스 원리",
+    "meaning": "물에 잠긴 물체는 밀어낸 물의 무게만큼 뜨는 힘을 받는다는 원리",
     "subject": "physics",
     "fieldLabel": "물리",
     "koreanLevel": 5,
-    "explanation": "\"아르키메데스의원리\"은(는) 아르키메데스 원리을(를) 의미합니다.",
+    "explanation": "\"아르키메데스의원리\"는 '물에 잠긴 물체는 밀어낸 물의 무게만큼 뜨는 힘을 받는다는 원리'라는 뜻입니다.",
     "example": "아르키메데스의 원리는 물리학의 기본 개념 중 하나이다."
   },
   {
@@ -11830,15 +11830,15 @@ const BRAINFIT_VOCAB_DATA = {
     "example": "방위표를 확인하고 길 찾기를 시작했다."
   },
   {
-    "word": "완만",
-    "question": "<span class=\"word-highlight\">완만</span>의 뜻은?",
-    "hint": "완만하다",
+    "word": "완만하다",
+    "question": "<span class=\"word-highlight\">완만하다</span>의 뜻은?",
+    "hint": "경사가 급하지 않고 부드럽다",
     "correctAnswer": 1,
-    "meaning": "완만하다",
+    "meaning": "경사가 급하지 않고 부드럽다",
     "subject": "geo",
     "fieldLabel": "지리",
     "koreanLevel": 5,
-    "explanation": "\"완만\"은(는) 완만하다을(를) 의미합니다.",
+    "explanation": "\"완만하다\"는 '경사가 급하지 않고 부드럽다'라는 뜻입니다.",
     "example": "이 길은 완만하게 이어져 있어 편리하다."
   },
   {
@@ -15096,13 +15096,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "자연스럽게",
     "question": "<span class=\"word-highlight\">자연스럽게</span>의 뜻은?",
-    "hint": "자연스레",
+    "hint": "억지스럽지 않고 물 흐르듯...",
     "correctAnswer": 1,
-    "meaning": "자연스레",
+    "meaning": "억지스럽지 않고 물 흐르듯 순조롭게",
     "subject": "law",
     "fieldLabel": "법",
     "koreanLevel": 5,
-    "explanation": "\"자연스럽게\"은(는) 자연스레을(를) 의미합니다.",
+    "explanation": "\"자연스럽게\"는 '억지스럽지 않고 물 흐르듯 순조롭게'라는 뜻입니다.",
     "example": "그녀의 행동은 자연스럽게 주변을 감동시켰다."
   },
   {
@@ -24364,13 +24364,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "부임",
     "question": "<span class=\"word-highlight\">부임</span>의 뜻은?",
-    "hint": "부임하게",
+    "hint": "새 근무지나 직책을 받아 ...",
     "correctAnswer": 1,
-    "meaning": "부임하게",
+    "meaning": "새 근무지나 직책을 받아 그곳으로 일하러 감",
     "subject": "classic",
     "fieldLabel": "고전문학",
     "koreanLevel": 5,
-    "explanation": "\"부임\"은(는) 부임하게을(를) 의미합니다.",
+    "explanation": "\"부임\"은 '새 근무지나 직책을 받아 그곳으로 일하러 감'이라는 뜻입니다.",
     "example": "그는 새로운 직장에 부임하게 되어 설렌다."
   },
   {
@@ -24856,13 +24856,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "구출",
     "question": "<span class=\"word-highlight\">구출</span>의 뜻은?",
-    "hint": "구출하다",
+    "hint": "위험에 빠진 사람을 구해 냄",
     "correctAnswer": 1,
-    "meaning": "구출하다",
+    "meaning": "위험에 빠진 사람을 구해 냄",
     "subject": "classic",
     "fieldLabel": "고전문학",
     "koreanLevel": 5,
-    "explanation": "\"구출\"은(는) 구출하다을(를) 의미합니다.",
+    "explanation": "\"구출\"은 '위험에 빠진 사람을 구해 냄'이라는 뜻입니다.",
     "example": "오늘 비행기 사고에서 사람들을 구출했다."
   },
   {
@@ -25372,13 +25372,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "강직",
     "question": "<span class=\"word-highlight\">강직</span>의 뜻은?",
-    "hint": "강직하다",
+    "hint": "마음이 곧고 굳세어 쉽게 ...",
     "correctAnswer": 1,
-    "meaning": "강직하다",
+    "meaning": "마음이 곧고 굳세어 쉽게 흔들리지 않음",
     "subject": "classic",
     "fieldLabel": "고전문학",
     "koreanLevel": 5,
-    "explanation": "\"강직\"은(는) 강직하다을(를) 의미합니다.",
+    "explanation": "\"강직\"은 '마음이 곧고 굳세어 쉽게 흔들리지 않음'이라는 뜻입니다.",
     "example": "그 친구는 강직한 성격으로 유명하다."
   },
   {
@@ -26270,27 +26270,27 @@ const BRAINFIT_VOCAB_DATA = {
     "example": "공(空)의 개념은 불교에서 아주 중요하다."
   },
   {
-    "word": "덧없",
-    "question": "<span class=\"word-highlight\">덧없</span>의 뜻은?",
-    "hint": "덧없다",
+    "word": "덧없다",
+    "question": "<span class=\"word-highlight\">덧없다</span>의 뜻은?",
+    "hint": "보람이나 쓸모가 없어 헛되...",
     "correctAnswer": 1,
-    "meaning": "덧없다",
+    "meaning": "보람이나 쓸모가 없어 헛되고 허무하다",
     "subject": "classic",
     "fieldLabel": "고전문학",
     "koreanLevel": 5,
-    "explanation": "\"덧없\"은(는) 덧없다을(를) 의미합니다.",
+    "explanation": "\"덧없다\"는 '보람이나 쓸모가 없어 헛되고 허무하다'라는 뜻입니다.",
     "example": "그 여자는 덧없는 사랑에 슬퍼하고 있다."
   },
   {
-    "word": "꾸짖",
-    "question": "<span class=\"word-highlight\">꾸짖</span>의 뜻은?",
-    "hint": "꾸짖고",
+    "word": "꾸짖다",
+    "question": "<span class=\"word-highlight\">꾸짖다</span>의 뜻은?",
+    "hint": "윗사람이 아랫사람의 잘못을...",
     "correctAnswer": 1,
-    "meaning": "꾸짖고",
+    "meaning": "윗사람이 아랫사람의 잘못을 엄하게 나무라다",
     "subject": "classic",
     "fieldLabel": "고전문학",
     "koreanLevel": 5,
-    "explanation": "\"꾸짖\"은(는) 꾸짖고을(를) 의미합니다.",
+    "explanation": "\"꾸짖다\"는 '윗사람이 아랫사람의 잘못을 엄하게 나무라다'라는 뜻입니다.",
     "example": "꾸짖는 소리에 아이는 크게 놀랐다."
   },
   {
@@ -26426,15 +26426,15 @@ const BRAINFIT_VOCAB_DATA = {
     "example": "할머니는 덕 있는 분이셨다."
   },
   {
-    "word": "쫓겨나",
-    "question": "<span class=\"word-highlight\">쫓겨나</span>의 뜻은?",
-    "hint": "쫓겨나다",
+    "word": "쫓겨나다",
+    "question": "<span class=\"word-highlight\">쫓겨나다</span>의 뜻은?",
+    "hint": "있던 곳에서 강제로 내보내...",
     "correctAnswer": 1,
-    "meaning": "쫓겨나다",
+    "meaning": "있던 곳에서 강제로 내보내지다",
     "subject": "classic",
     "fieldLabel": "고전문학",
     "koreanLevel": 5,
-    "explanation": "\"쫓겨나\"은(는) 쫓겨나다을(를) 의미합니다.",
+    "explanation": "\"쫓겨나다\"는 '있던 곳에서 강제로 내보내지다'라는 뜻입니다.",
     "example": "그는 친구 집에서 쫓겨나 답답한 마음을 토로했다."
   },
   {
@@ -26558,16 +26558,16 @@ const BRAINFIT_VOCAB_DATA = {
     "example": "도리는 항상 지켜야 한다."
   },
   {
-    "word": "뉘우치",
-    "question": "<span class=\"word-highlight\">뉘우치</span>의 뜻은?",
-    "hint": "뉘우치고",
+    "word": "뉘우치다",
+    "question": "<span class=\"word-highlight\">뉘우치다</span>의 뜻은?",
+    "hint": "자신의 잘못을 깨닫고 반성...",
     "correctAnswer": 1,
-    "meaning": "뉘우치고",
+    "meaning": "자신의 잘못을 깨닫고 반성하다",
     "subject": "classic",
     "fieldLabel": "고전문학",
     "koreanLevel": 5,
-    "explanation": "\"뉘우치\"은(는) 뉘우치고을(를) 의미합니다.",
-    "example": "도와주셔서 정말 뉘우치고 있습니다."
+    "explanation": "\"뉘우치다\"는 '자신의 잘못을 깨닫고 반성하다'라는 뜻입니다.",
+    "example": "잘못을 뉘우치고 친구에게 진심으로 사과했다."
   },
   {
     "word": "임진왜란",
@@ -27962,15 +27962,15 @@ const BRAINFIT_VOCAB_DATA = {
     "example": "나도 선행을 많이 해서 친구들에게 사랑받고 싶어."
   },
   {
-    "word": "어수룩하",
-    "question": "<span class=\"word-highlight\">어수룩하</span>의 뜻은?",
-    "hint": "어수룩",
+    "word": "어수룩하다",
+    "question": "<span class=\"word-highlight\">어수룩하다</span>의 뜻은?",
+    "hint": "말이나 행동이 순진하고 조...",
     "correctAnswer": 1,
-    "meaning": "어수룩",
+    "meaning": "말이나 행동이 순진하고 조금 어설프다",
     "subject": "classic",
     "fieldLabel": "고전문학",
     "koreanLevel": 5,
-    "explanation": "\"어수룩하\"은(는) 어수룩을(를) 의미합니다.",
+    "explanation": "\"어수룩하다\"는 '말이나 행동이 순진하고 조금 어설프다'라는 뜻입니다.",
     "example": "그는 어수룩하긴 하지만 마음이 따뜻한 친구다."
   },
   {
@@ -28120,13 +28120,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "어리석다",
     "question": "<span class=\"word-highlight\">어리석다</span>의 뜻은?",
-    "hint": "어리석",
+    "hint": "슬기롭지 못하고 판단력이 ...",
     "correctAnswer": 1,
-    "meaning": "어리석",
+    "meaning": "슬기롭지 못하고 판단력이 모자라다",
     "subject": "classic",
     "fieldLabel": "고전문학",
     "koreanLevel": 5,
-    "explanation": "\"어리석다\"은(는) 어리석을(를) 의미합니다.",
+    "explanation": "\"어리석다\"는 '슬기롭지 못하고 판단력이 모자라다'라는 뜻입니다.",
     "example": "그의 행동은 정말 어리석다."
   },
   {
@@ -29500,49 +29500,49 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "은은히",
     "question": "<span class=\"word-highlight\">은은히</span>의 뜻은?",
-    "hint": "은은하게",
+    "hint": "겉으로 뚜렷이 드러나지 않...",
     "correctAnswer": 1,
-    "meaning": "은은하게",
+    "meaning": "겉으로 뚜렷이 드러나지 않고 희미하고 부드럽게",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"은은히\"은(는) 은은하게을(를) 의미합니다.",
+    "explanation": "\"은은히\"는 '겉으로 뚜렷이 드러나지 않고 희미하고 부드럽게'라는 뜻입니다.",
     "example": "은은히 퍼지는 향기가 너무 좋아."
   },
   {
-    "word": "헛디뎌",
-    "question": "<span class=\"word-highlight\">헛디뎌</span>의 뜻은?",
-    "hint": "헛디디어",
+    "word": "헛디디다",
+    "question": "<span class=\"word-highlight\">헛디디다</span>의 뜻은?",
+    "hint": "발을 잘못 디디다",
     "correctAnswer": 1,
-    "meaning": "헛디디어",
+    "meaning": "발을 잘못 디디다",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"헛디뎌\"은(는) 헛디디어을(를) 의미합니다.",
+    "explanation": "\"헛디디다\"는 '발을 잘못 디디다'라는 뜻입니다.",
     "example": "헛디뎌서 넘어질 뻔했지만 괜찮아."
   },
   {
-    "word": "쫓겨나",
-    "question": "<span class=\"word-highlight\">쫓겨나</span>의 뜻은?",
-    "hint": "쫓겨나서",
+    "word": "쫓겨나다",
+    "question": "<span class=\"word-highlight\">쫓겨나다</span>의 뜻은?",
+    "hint": "있던 곳에서 강제로 내보내...",
     "correctAnswer": 1,
-    "meaning": "쫓겨나서",
+    "meaning": "있던 곳에서 강제로 내보내지다",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"쫓겨나\"은(는) 쫓겨나서을(를) 의미합니다.",
+    "explanation": "\"쫓겨나다\"는 '있던 곳에서 강제로 내보내지다'라는 뜻입니다.",
     "example": "그는 쫓겨나서 새로운 길을 찾아 나섰어."
   },
   {
-    "word": "머뭇거렸다",
-    "question": "<span class=\"word-highlight\">머뭇거렸다</span>의 뜻은?",
-    "hint": "머뭇거린다",
+    "word": "머뭇거리다",
+    "question": "<span class=\"word-highlight\">머뭇거리다</span>의 뜻은?",
+    "hint": "선뜻 행동하지 못하고 자꾸...",
     "correctAnswer": 1,
-    "meaning": "머뭇거린다",
+    "meaning": "선뜻 행동하지 못하고 자꾸 망설이다",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"머뭇거렸다\"은(는) 머뭇거린다을(를) 의미합니다.",
+    "explanation": "\"머뭇거리다\"는 '선뜻 행동하지 못하고 자꾸 망설이다'라는 뜻입니다.",
     "example": "그는 긴장한 나머지 머뭇거렸다."
   },
   {
@@ -29920,38 +29920,38 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "싸늘하다",
     "question": "<span class=\"word-highlight\">싸늘하다</span>의 뜻은?",
-    "hint": "싸늘하게",
+    "hint": "공기나 물체가 꽤 차갑다",
     "correctAnswer": 1,
-    "meaning": "싸늘하게",
+    "meaning": "공기나 물체가 꽤 차갑다",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"싸늘하다\"은(는) 싸늘하게을(를) 의미합니다.",
+    "explanation": "\"싸늘하다\"는 '공기나 물체가 꽤 차갑다'라는 뜻입니다.",
     "example": "밤공기가 싸늘하다 보니 따뜻한 옷을 입고 나왔다."
   },
   {
-    "word": "비극적인",
-    "question": "<span class=\"word-highlight\">비극적인</span>의 뜻은?",
-    "hint": "비극적",
+    "word": "비극적",
+    "question": "<span class=\"word-highlight\">비극적</span>의 뜻은?",
+    "hint": "몹시 슬프고 불행한 것",
     "correctAnswer": 1,
-    "meaning": "비극적",
+    "meaning": "몹시 슬프고 불행한 것",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"비극적인\"은(는) 비극적을(를) 의미합니다.",
+    "explanation": "\"비극적\"은 '몹시 슬프고 불행한 것'이라는 뜻입니다.",
     "example": "그 영화는 정말 비극적인 결말을 가졌어."
   },
   {
     "word": "울부짖다",
     "question": "<span class=\"word-highlight\">울부짖다</span>의 뜻은?",
-    "hint": "울부짖었다",
+    "hint": "큰 소리로 마구 울면서 부...",
     "correctAnswer": 1,
-    "meaning": "울부짖었다",
+    "meaning": "큰 소리로 마구 울면서 부르짖다",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"울부짖다\"은(는) 울부짖었다을(를) 의미합니다.",
-    "example": "그는 슬픔에 잠겨 울부짖다 결국 눈물을 흘렸다."
+    "explanation": "\"울부짖다\"는 '큰 소리로 마구 울면서 부르짖다'라는 뜻입니다.",
+    "example": "그는 슬픔에 잠겨 크게 울부짖었다."
   },
   {
     "word": "순박하다",
@@ -30124,13 +30124,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "알싸하다",
     "question": "<span class=\"word-highlight\">알싸하다</span>의 뜻은?",
-    "hint": "알싸한",
+    "hint": "매운맛이나 독한 냄새로 혀...",
     "correctAnswer": 1,
-    "meaning": "알싸한",
+    "meaning": "매운맛이나 독한 냄새로 혀나 코가 알알하다",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"알싸하다\"은(는) 알싸한을(를) 의미합니다.",
+    "explanation": "\"알싸하다\"는 '매운맛이나 독한 냄새로 혀나 코가 알알하다'라는 뜻입니다.",
     "example": "이 음식은 매콤하면서도 알싸하다."
   },
   {
@@ -30290,15 +30290,15 @@ const BRAINFIT_VOCAB_DATA = {
     "example": "가끔은 여러 사람 속에서도 외롭다."
   },
   {
-    "word": "흐느끼는",
-    "question": "<span class=\"word-highlight\">흐느끼는</span>의 뜻은?",
-    "hint": "흐느끼다",
+    "word": "흐느끼다",
+    "question": "<span class=\"word-highlight\">흐느끼다</span>의 뜻은?",
+    "hint": "몹시 서럽게 훌쩍이며 울다",
     "correctAnswer": 1,
-    "meaning": "흐느끼다",
+    "meaning": "몹시 서럽게 훌쩍이며 울다",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"흐느끼는\"은(는) 흐느끼다을(를) 의미합니다.",
+    "explanation": "\"흐느끼다\"는 '몹시 서럽게 훌쩍이며 울다'라는 뜻입니다.",
     "example": "비가 와서 아이가 흐느끼는 소리가 들렸다."
   },
   {
@@ -30424,14 +30424,14 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "순박하다",
     "question": "<span class=\"word-highlight\">순박하다</span>의 뜻은?",
-    "hint": "순박한",
+    "hint": "꾸밈이 없이 순수하고 인정...",
     "correctAnswer": 1,
-    "meaning": "순박한",
+    "meaning": "꾸밈이 없이 순수하고 인정이 많다",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"순박하다\"은(는) 순박한을(를) 의미합니다.",
-    "example": "그는 항상 순박하다며 사람들을 돕는 데 진심이다."
+    "explanation": "\"순박하다\"는 '꾸밈이 없이 순수하고 인정이 많다'라는 뜻입니다.",
+    "example": "시골 마을 사람들은 순박하고 정이 많다."
   },
   {
     "word": "탕진하다",
@@ -30460,13 +30460,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "합리화하다",
     "question": "<span class=\"word-highlight\">합리화하다</span>의 뜻은?",
-    "hint": "합리화했다",
+    "hint": "잘못된 행동을 그럴듯한 이...",
     "correctAnswer": 1,
-    "meaning": "합리화했다",
+    "meaning": "잘못된 행동을 그럴듯한 이유를 들어 옳은 것처럼 꾸미다",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"합리화하다\"은(는) 합리화했다을(를) 의미합니다.",
+    "explanation": "\"합리화하다\"는 '잘못된 행동을 그럴듯한 이유를 들어 옳은 것처럼 꾸미다'라는 뜻입니다.",
     "example": "그는 자신의 행동을 합리화하다 보니 점점 더 혼란스러워졌다."
   },
   {
@@ -30796,13 +30796,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "창백하다",
     "question": "<span class=\"word-highlight\">창백하다</span>의 뜻은?",
-    "hint": "창백한",
+    "hint": "얼굴에 핏기가 없이 해쓱하다",
     "correctAnswer": 1,
-    "meaning": "창백한",
+    "meaning": "얼굴에 핏기가 없이 해쓱하다",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"창백하다\"은(는) 창백한을(를) 의미합니다.",
+    "explanation": "\"창백하다\"는 '얼굴에 핏기가 없이 해쓱하다'라는 뜻입니다.",
     "example": "그녀의 얼굴은 걱정으로 인해 매우 창백하다."
   },
   {
@@ -31082,15 +31082,15 @@ const BRAINFIT_VOCAB_DATA = {
     "example": "부산은 유명한 항구도시로 알려져 있다."
   },
   {
-    "word": "쫓겨나",
-    "question": "<span class=\"word-highlight\">쫓겨나</span>의 뜻은?",
-    "hint": "쫓겨나서",
+    "word": "쫓겨나다",
+    "question": "<span class=\"word-highlight\">쫓겨나다</span>의 뜻은?",
+    "hint": "있던 곳에서 강제로 내보내...",
     "correctAnswer": 1,
-    "meaning": "쫓겨나서",
+    "meaning": "있던 곳에서 강제로 내보내지다",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"쫓겨나\"은(는) 쫓겨나서을(를) 의미합니다.",
+    "explanation": "\"쫓겨나다\"는 '있던 곳에서 강제로 내보내지다'라는 뜻입니다.",
     "example": "그는 팀에서 쫓겨나서 새로운 시작을 해야 했다."
   },
   {
@@ -31358,15 +31358,15 @@ const BRAINFIT_VOCAB_DATA = {
     "example": "그녀는 반에서 전형적인 인기 선수야."
   },
   {
-    "word": "축내",
-    "question": "<span class=\"word-highlight\">축내</span>의 뜻은?",
-    "hint": "축내는",
+    "word": "축내다",
+    "question": "<span class=\"word-highlight\">축내다</span>의 뜻은?",
+    "hint": "돈이나 물건을 조금씩 써서...",
     "correctAnswer": 1,
-    "meaning": "축내는",
+    "meaning": "돈이나 물건을 조금씩 써서 줄어들게 하다",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"축내\"은(는) 축내는을(를) 의미합니다.",
+    "explanation": "\"축내다\"는 '돈이나 물건을 조금씩 써서 줄어들게 하다'라는 뜻입니다.",
     "example": "그 회사는 불필요한 비용을 축내고 있어."
   },
   {
@@ -31492,13 +31492,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "객관적",
     "question": "<span class=\"word-highlight\">객관적</span>의 뜻은?",
-    "hint": "객관적으로",
+    "hint": "자기 생각이나 감정에 치우...",
     "correctAnswer": 1,
-    "meaning": "객관적으로",
+    "meaning": "자기 생각이나 감정에 치우치지 않고 사실 그대로 보는 것",
     "subject": "modern",
     "fieldLabel": "현대문학",
     "koreanLevel": 5,
-    "explanation": "\"객관적\"은(는) 객관적으로을(를) 의미합니다.",
+    "explanation": "\"객관적\"은 '자기 생각이나 감정에 치우치지 않고 사실 그대로 보는 것'이라는 뜻입니다.",
     "example": "그의 의견은 객관적으로 들린다."
   },
   {
@@ -34880,13 +34880,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "망설이다",
     "question": "<span class=\"word-highlight\">망설이다</span>의 뜻은?",
-    "hint": "망설임",
+    "hint": "이러지도 저러지도 못하고 ...",
     "correctAnswer": 1,
-    "meaning": "망설임",
+    "meaning": "이러지도 저러지도 못하고 마음을 정하지 못하다",
     "subject": "world1",
     "fieldLabel": "세계문학(1)",
     "koreanLevel": 5,
-    "explanation": "\"망설이다\"은(는) 망설임을(를) 의미합니다.",
+    "explanation": "\"망설이다\"는 '이러지도 저러지도 못하고 마음을 정하지 못하다'라는 뜻입니다.",
     "example": "나는 그 기회를 망설이다 놓쳐버렸다."
   },
   {
@@ -35444,13 +35444,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "길들이다",
     "question": "<span class=\"word-highlight\">길들이다</span>의 뜻은?",
-    "hint": "길들임",
+    "hint": "동물이나 사람을 잘 따르고...",
     "correctAnswer": 1,
-    "meaning": "길들임",
+    "meaning": "동물이나 사람을 잘 따르고 익숙해지게 만들다",
     "subject": "world1",
     "fieldLabel": "세계문학(1)",
     "koreanLevel": 5,
-    "explanation": "\"길들이다\"은(는) 길들임을(를) 의미합니다.",
+    "explanation": "\"길들이다\"는 '동물이나 사람을 잘 따르고 익숙해지게 만들다'라는 뜻입니다.",
     "example": "강아지를 잘 길들이다 보니 이제는 아주 순해졌다."
   },
   {
@@ -39932,13 +39932,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "꾸준히",
     "question": "<span class=\"word-highlight\">꾸준히</span>의 뜻은?",
-    "hint": "꾸준함",
+    "hint": "한결같이 부지런하고 끈기 ...",
     "correctAnswer": 1,
-    "meaning": "꾸준함",
+    "meaning": "한결같이 부지런하고 끈기 있게",
     "subject": "world1",
     "fieldLabel": "세계문학(1)",
     "koreanLevel": 5,
-    "explanation": "\"꾸준히\"은(는) 꾸준함을(를) 의미합니다.",
+    "explanation": "\"꾸준히\"는 '한결같이 부지런하고 끈기 있게'라는 뜻입니다.",
     "example": "매일 꾸준히 운동하는 습관이 중요하다."
   },
   {
@@ -42044,13 +42044,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "회오리바람",
     "question": "<span class=\"word-highlight\">회오리바람</span>의 뜻은?",
-    "hint": "회오리",
+    "hint": "나선 모양으로 빙빙 돌며 ...",
     "correctAnswer": 1,
-    "meaning": "회오리",
+    "meaning": "나선 모양으로 빙빙 돌며 세차게 부는 바람",
     "subject": "world2",
     "fieldLabel": "세계문학(2)",
     "koreanLevel": 5,
-    "explanation": "\"회오리바람\"은(는) 회오리을(를) 의미합니다.",
+    "explanation": "\"회오리바람\"은 '나선 모양으로 빙빙 돌며 세차게 부는 바람'이라는 뜻입니다.",
     "example": "여름밤에 회오리바람이 불었다."
   },
   {
@@ -44934,15 +44934,15 @@ const BRAINFIT_VOCAB_DATA = {
     "example": "모든 사람에게 공정한 기회를 제공해야 한다."
   },
   {
-    "word": "선량",
-    "question": "<span class=\"word-highlight\">선량</span>의 뜻은?",
-    "hint": "선량한",
+    "word": "선량하다",
+    "question": "<span class=\"word-highlight\">선량하다</span>의 뜻은?",
+    "hint": "마음이 착하고 어질다",
     "correctAnswer": 1,
-    "meaning": "선량한",
+    "meaning": "마음이 착하고 어질다",
     "subject": "world2",
     "fieldLabel": "세계문학(2)",
     "koreanLevel": 5,
-    "explanation": "\"선량\"은(는) 선량한을(를) 의미합니다.",
+    "explanation": "\"선량하다\"는 '마음이 착하고 어질다'라는 뜻입니다.",
     "example": "그는 진정으로 선량한 사람이다."
   },
   {
@@ -47784,13 +47784,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "정확도",
     "question": "<span class=\"word-highlight\">정확도</span>의 뜻은?",
-    "hint": "정확한 정도",
+    "hint": "측정이나 계산이 실제 값과...",
     "correctAnswer": 1,
-    "meaning": "정확한 정도",
+    "meaning": "측정이나 계산이 실제 값과 얼마나 가까운지를 나타내는 정도",
     "subject": "people1",
     "fieldLabel": "한국인물",
     "koreanLevel": 5,
-    "explanation": "\"정확도\"은(는) 정확한 정도을(를) 의미합니다.",
+    "explanation": "\"정확도\"는 '측정이나 계산이 실제 값과 얼마나 가까운지를 나타내는 정도'라는 뜻입니다.",
     "example": "이 실험의 정확도를 높이기 위해 재료를 다시 측정했다."
   },
   {
@@ -51000,13 +51000,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "목화씨",
     "question": "<span class=\"word-highlight\">목화씨</span>의 뜻은?",
-    "hint": "목화의 씨앗",
+    "hint": "솜을 얻는 식물인 목화 열...",
     "correctAnswer": 1,
-    "meaning": "목화의 씨앗",
+    "meaning": "솜을 얻는 식물인 목화 열매 속에 든 씨앗",
     "subject": "people1",
     "fieldLabel": "한국인물",
     "koreanLevel": 5,
-    "explanation": "\"목화씨\"은(는) 목화의 씨앗을(를) 의미합니다.",
+    "explanation": "\"목화씨\"는 '솜을 얻는 식물인 목화 열매 속에 든 씨앗'이라는 뜻입니다.",
     "example": "목화씨로부터 솜을 만들 수 있다."
   },
   {
@@ -51552,25 +51552,25 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "완성",
     "question": "<span class=\"word-highlight\">완성</span>의 뜻은?",
-    "hint": "완성하다",
+    "hint": "어떤 일이나 작품을 다 이...",
     "correctAnswer": 1,
-    "meaning": "완성하다",
+    "meaning": "어떤 일이나 작품을 다 이루어 완전하게 끝냄",
     "subject": "people1",
     "fieldLabel": "한국인물",
     "koreanLevel": 5,
-    "explanation": "\"완성\"은(는) 완성하다을(를) 의미합니다.",
+    "explanation": "\"완성\"은 '어떤 일이나 작품을 다 이루어 완전하게 끝냄'이라는 뜻입니다.",
     "example": "그림을 완성해서 전시회에 출품했다."
   },
   {
     "word": "신비롭다",
     "question": "<span class=\"word-highlight\">신비롭다</span>의 뜻은?",
-    "hint": "신비롭",
+    "hint": "쉽게 설명할 수 없을 만큼...",
     "correctAnswer": 1,
-    "meaning": "신비롭",
+    "meaning": "쉽게 설명할 수 없을 만큼 놀랍고 신기한 느낌이 있다",
     "subject": "people1",
     "fieldLabel": "한국인물",
     "koreanLevel": 5,
-    "explanation": "\"신비롭다\"은(는) 신비롭을(를) 의미합니다.",
+    "explanation": "\"신비롭다\"는 '쉽게 설명할 수 없을 만큼 놀랍고 신기한 느낌이 있다'라는 뜻입니다.",
     "example": "그 고성의 분위기는 정말 신비롭다."
   },
   {
