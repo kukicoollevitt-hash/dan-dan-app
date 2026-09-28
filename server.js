@@ -34379,6 +34379,36 @@ app.post('/api/gukeo-expedition/state', async (req, res) => {
   } catch (err) { console.error('[gukeo-expedition/state POST]', err); res.status(500).json({ ok: false }); }
 });
 
+// ══════════ 👑 BRAIN최상위(수능 최상위과정) — 학생별 진도·오답노트·서술글 저장 ══════════
+//   state.units = { '분야|단원idx': { done:[7단계 bool], wrong:{오답노트}, wtext:[서술형 5문장] } }
+const suneungStateSchema = new mongoose.Schema({
+  grade: { type: String, required: true },
+  name: { type: String, required: true },
+  state: { type: Object, default: {} },
+  updatedAt: { type: Date, default: Date.now }
+}, { minimize: false });
+suneungStateSchema.index({ grade: 1, name: 1 }, { unique: true });
+const SuneungState = mongoose.model('SuneungState', suneungStateSchema);
+
+app.get('/api/brain-suneung/state', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.json({ ok: false, message: '학생 정보가 필요합니다.' });
+    const doc = await SuneungState.findOne({ grade, name }).lean();
+    res.json({ ok: true, state: (doc && doc.state) || { units: {} } });
+  } catch (err) { console.error('[brain-suneung/state GET]', err); res.status(500).json({ ok: false }); }
+});
+
+app.post('/api/brain-suneung/state', async (req, res) => {
+  try {
+    const { grade, name, state } = req.body || {};
+    if (!grade || !name || !state || typeof state !== 'object') return res.json({ ok: false, message: '요청 형식 오류' });
+    if (JSON.stringify(state).length > 300 * 1024) return res.json({ ok: false, message: '데이터가 너무 큽니다.' });
+    await SuneungState.updateOne({ grade, name }, { $set: { state, updatedAt: new Date() } }, { upsert: true });
+    res.json({ ok: true });
+  } catch (err) { console.error('[brain-suneung/state POST]', err); res.status(500).json({ ok: false }); }
+});
+
 // 원정대 동행 현황 — 세계 지도의 "탐험 중" 배지 + 발자국 대열용 (완성 구조 · 순위 없음)
 //   lands: 땅별 최근 7일 내 활동한 학생 목록 / trail: 학생별 현재 도달 땅(가장 멀리 활동한 땅)
 app.get('/api/gukeo-expedition/presence', async (req, res) => {

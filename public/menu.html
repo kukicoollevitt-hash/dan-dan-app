@@ -7795,6 +7795,8 @@ canvas[id^="confetti-canvas"] {
         <li class="series-item monthly-special" data-series="BRAINMONTHLY"><span>BRAIN모고</span><span class="meta">월말평가</span></li>
         <!-- 🧭 국어 개념 원정대 (문법) — 김윤슬 QA 화이트리스트만 노출, 클릭 시 원정대 팝업 -->
         <li class="series-item grammar-special" data-series="BRAINGRAMMAR" id="grammarSeriesItem" style="display:none;"><span>BRAIN문법</span><span class="meta">개념특강</span></li>
+        <!-- 👑 BRAIN최상위(수능 최상위과정) — 초3 김윤슬 QA 화이트리스트만 노출, 클릭 시 수능 과정 페이지 -->
+        <li class="series-item top-special" data-series="BRAINTOP" id="topSeriesItem" style="display:none;"><span>BRAIN최상위</span><span class="meta">수능특강</span></li>
         <li class="series-item" data-series="BRAINNAESIN" style="display:none;"><span>📝 BRAIN내신</span><span class="meta">내신대비</span></li>
         <li class="series-item" data-series="BRAINSUNEUNG" style="display:none;"><span>🎯 BRAIN수능</span><span class="meta">수능대비</span></li>
       </ul>
@@ -11452,6 +11454,21 @@ if (logoutConfirmBtn) {
           return;
         }
 
+        // 👑 BRAINTOP (BRAIN최상위 · 수능 최상위과정) — 초3 김윤슬 전용, 인트로 영상 팝업 → "1등급 도전 시작"
+        if (series === 'BRAINTOP') {
+          try {
+            const u = JSON.parse(sessionStorage.getItem('user') || '{}');
+            const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+            const g = cs.grade || u.grade, n = cs.name || u.name;
+            if (g !== '초3' || n !== '김윤슬') {
+              alert('BRAIN최상위는 현재 테스트 학생(초3 김윤슬)에게만 열려 있어요.');
+              return;
+            }
+          } catch { return; }
+          if (typeof window.showTopSeriesPopup === 'function') window.showTopSeriesPopup();
+          return;
+        }
+
         // BRAINKORHIST(방학특강 한국사) — 영상 인트로 팝업
         // 정식 오픈일(2026-06-15) 또는 베타 테스터 → "학습하기" 버튼 활성, 그 외 → "오픈 예정"
         if (series === 'BRAINKORHIST') {
@@ -14003,6 +14020,16 @@ async function performLogout() {
             return;
           }
 
+          // 👑 BRAIN최상위(BRAINTOP · 수능 최상위과정) — 초3 김윤슬 테스트계정에만 노출
+          if (seriesId === 'BRAINTOP') {
+            let g = user.grade, n = user.name;
+            try { const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); if (cs.grade) g = cs.grade; if (cs.name) n = cs.name; } catch {}
+            const isYunseul = (g === '초3' && n === '김윤슬');
+            li.style.display = isYunseul ? '' : 'none';
+            if (isYunseul) li.classList.remove('disabled');
+            return;
+          }
+
           // 🗓 BRAIN월말/모고(BRAINMONTHLY) — 디폴트 활성. 학원 관리자가 비활성화하면 메뉴에서 숨김
           //    (비평·한국사와 동일한 default-on 방식. disabledSeries에 'BRAIN모고'가 있으면 숨김)
           if (seriesId === 'BRAINMONTHLY') {
@@ -14109,6 +14136,9 @@ async function performLogout() {
         const isReviewer = (cs.grade === '초3' && cs.name === '김윤슬');
         const btn = document.getElementById('resetBio01Btn');
         if (btn && isReviewer) btn.style.display = 'inline-block';
+        // 👑 BRAIN최상위(수능 최상위과정) — 초3 김윤슬 테스트계정에만 노출
+        const topItem = document.getElementById('topSeriesItem');
+        if (topItem && isReviewer) topItem.style.display = '';
         // 🥚 교과어휘 몽글 도감 런처 — 전체 오픈(2026-08-18), QA 화이트리스트 해제
         // 🧭 BRAIN문법(원정대) — 전체 센터 오픈(2026-09-26): grammarSeriesItem 표시는
         //    applySeriesRestrictions의 BRAINGRAMMAR default-on 게이트가 처리 (여기서 별도 처리 불필요)
@@ -34617,6 +34647,83 @@ ${content}
     }
     window.showGrammarSeriesPopup = showGrammarSeriesPopup;
 
+    // 👑 BRAIN최상위(수능 최상위과정) 인트로 영상 팝업 — "1등급 도전 시작" 클릭 시 수능 과정 진입 (문법·모고와 동일 패턴)
+    function showTopSeriesPopup() {
+      const existing = document.getElementById('topSeriesIntroOverlay');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.id = 'topSeriesIntroOverlay';
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
+        z-index: 10005; backdrop-filter: blur(6px);
+      `;
+
+      const box = document.createElement('div');
+      box.style.cssText = `
+        position: relative; display: inline-block; background: #000;
+        border: 2px solid #c9992f; border-radius: 16px; overflow: hidden;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+        animation: grammarIntroPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); line-height: 0;
+      `;
+
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '&times;';
+      closeBtn.title = '닫기';
+      closeBtn.style.cssText = `
+        position: absolute; top: 10px; right: 12px; z-index: 3;
+        width: 36px; height: 36px; border-radius: 50%;
+        background: rgba(0,0,0,0.55); color: #fff; border: none;
+        font-size: 22px; font-weight: 700; cursor: pointer; line-height: 1; backdrop-filter: blur(6px);
+      `;
+      closeBtn.onclick = () => overlay.remove();
+
+      const video = document.createElement('video');
+      video.src = '/images/BRAIN수능/브레인수능진입영상.mp4?v=20260928';
+      video.autoplay = true; video.loop = true; video.muted = true;
+      video.setAttribute('playsinline', '');
+      video.style.cssText = `display: block; max-width: 90vw; max-height: 86vh; height: auto; width: auto; background: #000;`;
+
+      const actions = document.createElement('div');
+      actions.style.cssText = `
+        position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+        padding: 18px 16px 16px; display: flex; gap: 10px; justify-content: center; align-items: center;
+        flex-wrap: wrap; line-height: 1.2;
+        background: linear-gradient(0deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 100%);
+      `;
+
+      const enterBtn = document.createElement('button');
+      enterBtn.innerHTML = '👑 1등급 도전 시작';
+      enterBtn.style.cssText = `
+        padding: 14px 32px;
+        background: linear-gradient(135deg, #ff8a3d 0%, #ff2d78 100%);
+        color: #fff; border: none; border-radius: 14px;
+        font-size: 16px; font-weight: 800; cursor: pointer;
+        box-shadow: 0 6px 16px rgba(255,45,120,0.45);
+        transition: transform 0.15s ease; letter-spacing: 0.3px;
+      `;
+      enterBtn.onmouseover = () => enterBtn.style.transform = 'translateY(-2px)';
+      enterBtn.onmouseout = () => enterBtn.style.transform = '';
+      enterBtn.onclick = () => {
+        try { video.pause(); } catch {}
+        overlay.remove();
+        window.location.href = '/brain-suneung.html';
+      };
+      actions.appendChild(enterBtn);
+
+      box.appendChild(closeBtn);
+      box.appendChild(video);
+      box.appendChild(actions);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) { try { video.pause(); } catch {} overlay.remove(); }
+      });
+    }
+    window.showTopSeriesPopup = showTopSeriesPopup;
+
     // ===== 실시간 단어배틀 =====
     // 👑 전국 문해왕 선발전 — iframe 모달 진입 (단원 카드 버튼에서 호출)
     function openLiteracyKingGame(opts) {
@@ -35844,6 +35951,21 @@ ${content}
     }
 
     /* 🧭 BRAIN문법 (국어 개념 원정대) — 우상단 배지 */
+    .top-special { position: relative; }
+    .top-special::after {
+      content: '👑 수능완성';
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: linear-gradient(135deg, #ff8a3d 0%, #ff2d78 100%);
+      color: #fff;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(255, 45, 120, 0.5);
+      letter-spacing: 0.3px;
+    }
     .grammar-special { position: relative; }
     .grammar-special::after {
       content: '🧭 문법특강';
