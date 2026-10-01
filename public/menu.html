@@ -45162,6 +45162,11 @@ ${content}
           <div class="crit-weekday sat">SAT</div>
         </div>
         <div class="crit-calendar" id="critCalendar"></div>
+        <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+          <button type="button" id="critPrintBtn" onclick="window.__critPrintCalendar()"
+            style="background:#fff; border:1px solid #d1d5db; color:#6b7280; font-size:11px; font-weight:600; padding:4px 10px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;"
+            title="이 달의 비평 달력을 인쇄합니다">🖨️ 달력 인쇄</button>
+        </div>
       </div>
     </div>
   </div>
@@ -46458,6 +46463,126 @@ ${content}
         _critState.currentMonth = target;
         renderLevelToggle();   // 월 라벨 + 등급 버튼 갱신
         renderCalendar();
+      };
+
+      // 🖨️ 비평 달력 인쇄 — 보고 있는 달을 A4 가로 한 장에 신문 테마로 출력
+      window.__critPrintCalendar = function() {
+        const articles = _critState.articles?.articles || {};
+        const [y, mm] = _critState.currentMonth.split('-');
+        const year = parseInt(y), month = parseInt(mm);
+        const startWeekday = new Date(year, month - 1, 1).getDay();
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const rows = Math.ceil((startWeekday + daysInMonth) / 7);
+        const today = todayKey();
+
+        const completedForLevel = _critState.completed.filter(c => c.contentGrade === _critState.currentLevel);
+        const completedDates = new Set(completedForLevel.map(c => c.date));
+        const starsByDate = {};
+        completedForLevel.forEach(c => { if (c.grading && typeof c.grading.stars === 'number') starsByDate[c.date] = c.grading.stars; });
+
+        const stu = getStudent() || {};
+        const levelLabel = { elem34: '온 (초1~4)', elem56: '업 (초5~6)', mid12: '핏 (중1~2)', mid3high1: '딥 (중3~고1)' }[_critState.currentLevel] || '';
+        const monthDates = Object.keys(articles).filter(k => k.startsWith(_critState.currentMonth));
+        const doneThisMonth = [...completedDates].filter(d => d.startsWith(_critState.currentMonth)).length;
+
+        // 썸네일 크기: 6주 달력이면 살짝 축소해 한 장 유지
+        const thumbH = rows >= 6 ? 9 : 12;
+
+        let cells = '';
+        for (let i = 0; i < startWeekday; i++) cells += '<div class="cell empty"></div>';
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dateKey = `${y}-${mm}-${String(d).padStart(2,'0')}`;
+          const art = articles[dateKey];
+          const weekday = (startWeekday + d - 1) % 7;
+          const wkCls = weekday === 0 ? ' sun' : (weekday === 6 ? ' sat' : '');
+          const isCompleted = completedDates.has(dateKey);
+          const isFuture = dateKey > today;
+          const stars = (isCompleted && typeof starsByDate[dateKey] === 'number')
+            ? '<div class="stars">' + '★'.repeat(Math.max(1, Math.round(starsByDate[dateKey]))) + '</div>' : '';
+          const cat = art?.category ? pickCategoryBadge(art.category) : null;
+          const catHtml = cat ? `<span class="cat" style="color:${cat.color};">${cat.emoji} ${escapeHtml(cat.label)}</span>` : '';
+          const thumb = art?.image ? `<div class="thumb"><img src="${art.image}" alt=""></div>` : '';
+          cells += `
+            <div class="cell${wkCls}${isCompleted ? ' done' : ''}${isFuture ? ' future' : ''}">
+              <div class="top"><span class="num">${d}</span>${isCompleted ? '<span class="check">✔</span>' : ''}</div>
+              ${art ? `${catHtml}${thumb}<div class="title">${escapeHtml(art.title || '')}</div>` : ''}
+              ${stars}
+            </div>`;
+        }
+
+        const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>BRAIN비평 달력 ${year}년 ${month}월</title>
+<style>
+  @page { size: A4 landscape; margin: 9mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'Noto Sans KR', sans-serif; color: #1a1a1a; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 2.5px solid #1a1a1a; padding-bottom: 3mm; margin-bottom: 3mm; }
+  .head h1 { font-family: 'Noto Serif KR', serif; font-size: 17pt; font-weight: 800; }
+  .head h1 .mo { color: #b45309; }
+  .head .meta { font-size: 9pt; color: #6b7280; text-align: right; line-height: 1.5; }
+  .head .meta b { color: #1a1a1a; }
+  .wk { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1.2mm; margin-bottom: 1.2mm; }
+  .wk div { text-align: center; font-size: 7.5pt; font-weight: 700; color: #8a7f6c; letter-spacing: 1px; padding: 1mm 0; border-bottom: 1px solid #d4c5a9; }
+  .wk .sun { color: #dc2626; } .wk .sat { color: #2563eb; }
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1.2mm; }
+  .cell { border: 1px solid #d4c5a9; border-radius: 2mm; padding: 1.2mm 1.5mm; min-height: ${rows >= 6 ? 24 : 29}mm; background: #fffdf8; overflow: hidden; }
+  .cell.empty { border: none; background: none; }
+  .cell.done { background: #fdf6e3; border-color: #d4a017; }
+  .cell.future { opacity: 0.55; }
+  .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .num { font-family: 'Noto Serif KR', serif; font-size: 10pt; font-weight: 700; }
+  .cell.sun .num { color: #dc2626; } .cell.sat .num { color: #2563eb; }
+  .check { font-size: 8pt; color: #b45309; font-weight: 700; }
+  .cat { font-size: 6pt; font-weight: 700; display: block; margin: 0.4mm 0; }
+  .thumb { height: ${thumbH}mm; border-radius: 1.2mm; overflow: hidden; margin: 0.4mm 0; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .title { font-size: 6.5pt; line-height: 1.3; color: #333; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .stars { font-size: 7pt; color: #d4a017; margin-top: 0.4mm; letter-spacing: 1px; }
+  .foot { margin-top: 2.5mm; text-align: center; font-size: 7.5pt; color: #8a7f6c; border-top: 1px solid #d4c5a9; padding-top: 1.5mm; }
+</style></head><body>
+  <div class="head">
+    <h1>📰 BRAIN비평 시사문해 달력 <span class="mo">${year}년 ${month}월</span></h1>
+    <div class="meta">
+      ${stu.grade && stu.name ? `<b>${escapeHtml(stu.grade)} ${escapeHtml(stu.name)}</b> · ` : ''}${levelLabel}<br>
+      이 달 완료 <b>${doneThisMonth}</b> / 기사 ${monthDates.length}편
+    </div>
+  </div>
+  <div class="wk"><div class="sun">SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div class="sat">SAT</div></div>
+  <div class="grid">${cells}</div>
+  <div class="foot">매일 한 편의 시사 기사, 매일 자라는 비평력 — 브레인문해원</div>
+</body></html>`;
+
+        // 숨김 iframe에 그려 이미지 로드 완료 후 인쇄
+        const old = document.getElementById('critPrintFrame');
+        if (old) old.remove();
+        const frame = document.createElement('iframe');
+        frame.id = 'critPrintFrame';
+        frame.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0; visibility:hidden;';
+        document.body.appendChild(frame);
+        const doc = frame.contentDocument || frame.contentWindow.document;
+        doc.open(); doc.write(html); doc.close();
+
+        const btn = document.getElementById('critPrintBtn');
+        if (btn) { btn.disabled = true; btn.textContent = '준비 중...'; }
+        let printed = false;
+        const doPrint = () => {
+          if (printed) return;
+          printed = true;
+          if (btn) { btn.disabled = false; btn.innerHTML = '🖨️ 달력 인쇄'; }
+          try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (e) { console.error('[비평] 달력 인쇄 실패:', e); }
+          setTimeout(() => { try { frame.remove(); } catch (e) {} }, 60000);
+        };
+        // 이미지 전부 로드되면 인쇄, 늦어도 3초 후 인쇄
+        const imgs = Array.from(doc.images || []);
+        let left = imgs.length;
+        if (left === 0) { setTimeout(doPrint, 150); }
+        else {
+          imgs.forEach(img => {
+            const done = () => { if (--left <= 0) doPrint(); };
+            if (img.complete) done();
+            else { img.onload = done; img.onerror = done; }
+          });
+          setTimeout(doPrint, 3000);
+        }
       };
 
       function renderCalendar() {
