@@ -45487,8 +45487,12 @@ ${content}
       function renderMonthlyAvg() {
         const el = document.getElementById('critAvgStars');
         if (!el) return;
-        const avg = _critState.monthlyAvgStars;
-        const cnt = _critState.monthlyCount;
+        // 보고 있는 달 기준으로 직접 계산 — 서버값(monthlyAvgStars)은 접속 시점의 이번 달만 내려주므로
+        // 월 이동 시에도 해당 월의 평균·건수·리포트가 나오도록 completed(전체 이력)에서 산출
+        const _vm = _critState.currentMonth || currentMonthKey();
+        const _graded = (_critState.completed || []).filter(c => (c.date || '').startsWith(_vm) && c.grading && typeof c.grading.stars === 'number');
+        const cnt = _graded.length;
+        const avg = cnt > 0 ? Math.round((_graded.reduce((s, c) => s + c.grading.stars, 0) / cnt) * 10) / 10 : null;
         if (typeof avg !== 'number' || cnt === 0) {
           el.innerHTML = `<span class="crit-avg-empty">평균 평가 없음</span>`;
           el.dataset.empty = '1';
@@ -46462,6 +46466,7 @@ ${content}
         if (!_critState.isReviewer && target > (_critState.initMonth || currentMonthKey())) return;
         _critState.currentMonth = target;
         renderLevelToggle();   // 월 라벨 + 등급 버튼 갱신
+        renderMonthlyAvg();    // 보고 있는 달 평균·건수 갱신
         renderCalendar();
       };
 
