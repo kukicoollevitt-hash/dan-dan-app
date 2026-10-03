@@ -35809,6 +35809,41 @@ app.delete("/api/academy-notice/:id", requireAdminLogin, async (req, res) => {
 const ChatbotQa = require('./models/ChatbotQa');
 const QA_EMBEDDING_MODEL = 'text-embedding-3-small';
 
+// 🐳 챗봇 질문 로그 — 미해결 질문 수집·피드백 루프 (지식베이스 개선 재료)
+const chatbotQueryLogSchema = new mongoose.Schema({
+  query: { type: String, required: true },
+  academyName: { type: String, default: '' },
+  topScore: { type: Number, default: 0 },
+  resultCount: { type: Number, default: 0 },
+  answered: { type: Boolean, default: false },    // 유효 매칭(기준 점수 이상) 존재 여부
+  aiAnswered: { type: Boolean, default: false },  // AI 종합 답변 생성 여부
+  feedback: { type: String, enum: ['up', 'down', null], default: null },
+  createdAt: { type: Date, default: Date.now }
+});
+chatbotQueryLogSchema.index({ createdAt: -1 });
+const ChatbotQueryLog = mongoose.model('ChatbotQueryLog', chatbotQueryLogSchema);
+
+// 🤖 AI 종합 답변 — 상위 매칭 Q&A를 근거로 한 문단 답변 생성 (실패 시 null → 카드만 표시)
+async function generateQaSynthesis(query, results) {
+  if (!process.env.ANTHROPIC_API_KEY || !results.length) return null;
+  try {
+    const Anthropic = require('@anthropic-ai/sdk');
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const context = results.slice(0, 8).map((r, i) => '[' + (i + 1) + '] Q: ' + r.question + '\nA: ' + r.answer).join('\n\n');
+    const response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 700,
+      system: '당신은 브레인문해력 센터 원장님을 돕는 상담 챗봇 "운영 고래 매니저"입니다. 제공된 참고 지식만 근거로 질문에 답하세요. 규칙: ① 참고 지식에 없는 내용은 절대 지어내지 말 것 ② 따뜻한 존댓말로 간결하게(1~3문단, 절차는 번호 목록 가능) ③ 참고 지식이 질문과 맞지 않으면 "등록된 답변 중에는 딱 맞는 내용이 없네요. 본사 단톡방에 문의해 주세요!"라고만 답할 것 ④ 계약·요금·정산 관련 질문이면 구체적 수치 언급 없이 본사 경영지원팀 문의를 안내할 것 ⑤ 인사말 없이 바로 본론부터.',
+      messages: [{ role: 'user', content: '원장님 질문: ' + query + '\n\n참고 지식:\n' + context }]
+    });
+    const text = (response.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+    return text || null;
+  } catch (e) {
+    console.error('[chatbot-qa] AI 종합 답변 실패:', e && e.message);
+    return null;
+  }
+}
+
 // HTML/URL 제거 후 임베딩·키워드 대상 순수 텍스트 추출
 function qaPlainText(s) {
   return String(s || '')
@@ -35980,10 +36015,61 @@ app.post("/api/chatbot-qa/search", requireAdminLogin, async (req, res) => {
       score: Math.round(x.score * 1000) / 1000,
       matchPct: Math.round(x.score * 100)
     }));
-    res.json({ ok: true, results, mode: useSemantic ? 'hybrid' : 'keyword' });
+
+    // 🤖 AI 종합 답변 (상위 매칭이 충분할 때만) + 질문 로그
+    const topScore = scored.length ? scored[0].score : 0;
+    const answered = topScore >= 0.15;
+    let aiAnswer = null;
+    if (results.length && topScore >= 0.12) {
+      aiAnswer = await generateQaSynthesis(query, results);
+    }
+    let logId = null;
+    try {
+      const log = await ChatbotQueryLog.create({
+        query: query.slice(0, 500),
+        academyName: getAdminAcademyName(req) || '',
+        topScore: Math.round(topScore * 1000) / 1000,
+        resultCount: results.length,
+        answered,
+        aiAnswered: !!aiAnswer
+      });
+      logId = log._id;
+    } catch (logErr) { console.error('[chatbot-qa] 질문 로그 저장 실패:', logErr.message); }
+
+    res.json({ ok: true, results, aiAnswer, logId, mode: useSemantic ? 'hybrid' : 'keyword' });
   } catch (err) {
     console.error("[POST /api/chatbot-qa/search] 오류:", err);
     res.status(500).json({ ok: false, message: "검색 실패" });
+  }
+});
+
+// 챗봇 답변 피드백 (👍👎) — 모든 센터 관리자
+app.post("/api/chatbot-qa/feedback", requireAdminLogin, async (req, res) => {
+  try {
+    const { logId, feedback } = req.body || {};
+    if (!logId || !['up', 'down'].includes(feedback)) {
+      return res.status(400).json({ ok: false, message: "잘못된 요청입니다." });
+    }
+    await ChatbotQueryLog.findByIdAndUpdate(logId, { feedback });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[POST /api/chatbot-qa/feedback] 오류:", err);
+    res.status(500).json({ ok: false, message: "피드백 저장 실패" });
+  }
+});
+
+// 챗봇 질문 로그 조회 — 지식관리 권한자만 (미해결·부정 피드백 질문이 지식베이스 개선 재료)
+app.get("/api/chatbot-qa/query-log", requireAdminLogin, async (req, res) => {
+  try {
+    if (!canWriteAcademyNotice(req)) return res.status(403).json({ ok: false, message: "조회 권한이 없습니다." });
+    const logs = await ChatbotQueryLog.find({})
+      .sort({ createdAt: -1 })
+      .limit(150)
+      .lean();
+    res.json({ ok: true, logs });
+  } catch (err) {
+    console.error("[GET /api/chatbot-qa/query-log] 오류:", err);
+    res.status(500).json({ ok: false, message: "로그 조회 실패" });
   }
 });
 

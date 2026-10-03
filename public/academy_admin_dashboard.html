@@ -2302,6 +2302,23 @@
 
   <!-- ==================== 🤖 상담 챗봇 위젯 (우측 하단) ==================== -->
   <style>
+    /* 🤖 AI 종합 답변 말풍선 */
+    .cbq-ai { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 6px; }
+    .cbq-ai-icon { font-size: 22px; flex: none; margin-top: 2px; }
+    .cbq-ai-bubble { background: linear-gradient(135deg, #eef6ff 0%, #e6f0fb 100%); border: 1px solid #c9ddf2; border-radius: 4px 14px 14px 14px; padding: 11px 13px; font-size: 13.5px; line-height: 1.65; color: #1e293b; white-space: pre-wrap; }
+    .cbq-fb { display: flex; gap: 6px; align-items: center; margin: 4px 0 10px 30px; }
+    .cbq-fb span { font-size: 11px; color: #94a3b8; }
+    .cbq-fb button { background: #fff; border: 1px solid #dbe3ec; border-radius: 14px; padding: 3px 10px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+    .cbq-fb button:hover { background: #f1f5f9; }
+    .cbq-fb button.sel { background: #e0edff; border-color: #4a90d9; }
+    .cbq-fb button:disabled { cursor: default; opacity: 0.75; }
+    .cbq-src-label { font-size: 11px; color: #94a3b8; font-weight: 700; margin: 8px 0 4px; letter-spacing: 0.02em; }
+    /* 질문 로그 */
+    .cbq-log-row { padding: 8px 10px; border-bottom: 1px solid #eef2f7; font-size: 12.5px; }
+    .cbq-log-q { color: #1e293b; font-weight: 600; line-height: 1.4; }
+    .cbq-log-meta { display: flex; gap: 8px; color: #94a3b8; font-size: 11px; margin-top: 3px; flex-wrap: wrap; }
+    .cbq-log-row.unanswered { background: #fff7f5; }
+    .cbq-log-row.down { background: #fffbe9; }
     #cbqFab {
       position: fixed; right: 24px; bottom: 24px; z-index: 99000;
       background: linear-gradient(135deg, #4a90d9 0%, #00BCD4 100%);
@@ -2448,10 +2465,9 @@
       return _cbqCanManage;
     }
     async function cbqOpen() {
-      // 🐳 현재는 테스트 센터(브레인문해원_테스트)만 사용 · 그 외 센터는 오픈 예정 안내
-      const allowed = await cbqCheckManage();
-      if (!allowed) { cbqShowComingSoon(); return; }
-      document.getElementById('cbqManageToggle').style.display = 'inline-flex';
+      // 🐳 전체 센터 오픈 (2026-10-04) — 검색·AI답변·피드백은 전 센터, 지식관리·질문로그는 권한자만
+      const canManage = await cbqCheckManage();
+      document.getElementById('cbqManageToggle').style.display = canManage ? 'inline-flex' : 'none';
       document.getElementById('cbqPanel').classList.add('open');
       document.getElementById('cbqFab').style.display = 'none';
       setTimeout(() => { const i = document.getElementById('cbqInput'); if (i) i.focus(); }, 100);
@@ -2493,13 +2509,24 @@
       try {
         const res = await fetch('/api/chatbot-qa/search', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: q })
+          body: JSON.stringify({ query: q, limit: 8 })
         });
         const j = await res.json();
+        if (j && Array.isArray(j.results)) j.results = j.results.slice(0, 5); // 카드는 상위 5개만 (AI 종합은 8개 참고)
         let html = `<div class="cbq-q-echo"><span>${cbqEsc(q)}</span></div>`;
+        // 🤖 AI 종합 답변 말풍선 (+ 피드백)
+        if (j.aiAnswer) {
+          html += `<div class="cbq-ai"><div class="cbq-ai-icon">🐳</div><div class="cbq-ai-bubble">${cbqEsc(j.aiAnswer)}</div></div>`;
+          if (j.logId) {
+            html += `<div class="cbq-fb" id="cbqFb_${cbqEsc(String(j.logId))}"><span>답변이 도움됐나요?</span>
+              <button onclick="cbqFeedback('${cbqEsc(String(j.logId))}','up',this)">👍 도움돼요</button>
+              <button onclick="cbqFeedback('${cbqEsc(String(j.logId))}','down',this)">👎 아쉬워요</button></div>`;
+          }
+        }
         if (!j.ok || !j.results || !j.results.length) {
-          html += `<div class="cbq-nores">🔍 아직 딱 맞는 답변이 없어요.<br>본사에 문의해 주세요.</div>`;
+          html += `<div class="cbq-nores">🔍 아직 딱 맞는 답변이 없어요.<br>질문은 기록되어 지식베이스 개선에 활용돼요.<br>급하시면 본사 단톡방에 문의해 주세요!</div>`;
         } else {
+          if (j.aiAnswer) html += `<div class="cbq-src-label">📎 참고한 Q&A</div>`;
           html += j.results.map((r, i) => {
             const pct = r.matchPct || 0;
             const cls = pct >= 60 ? 'hi' : (pct >= 30 ? 'mid' : 'lo');
@@ -2527,6 +2554,53 @@
 
     function cbqZoom(url) { window.open(url, '_blank'); }
 
+    // 👍👎 답변 피드백 — 부정 피드백은 지식베이스 개선 재료로 수집
+    async function cbqFeedback(logId, fb, btn) {
+      try {
+        await fetch('/api/chatbot-qa/feedback', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ logId, feedback: fb })
+        });
+      } catch (e) {}
+      const wrap = document.getElementById('cbqFb_' + logId);
+      if (wrap) {
+        wrap.querySelectorAll('button').forEach(b => { b.disabled = true; b.classList.remove('sel'); });
+        btn.classList.add('sel');
+        const label = wrap.querySelector('span');
+        if (label) label.textContent = fb === 'up' ? '감사합니다! 🐳' : '의견 감사해요, 더 나은 답변을 준비할게요 🙏';
+      }
+    }
+
+    // 📋 질문 로그 — 원장들이 실제 물은 질문·미해결·부정 피드백 확인 (지식베이스 개선 재료)
+    async function cbqRenderQueryLog() {
+      const body = document.getElementById('cbqManageBody');
+      body.innerHTML = '<div class="cbq-loading"><span class="cbq-spin"></span> 질문 로그 불러오는 중...</div>';
+      try {
+        const res = await fetch('/api/chatbot-qa/query-log');
+        const j = await res.json();
+        const logs = (j && j.logs) || [];
+        let html = `<button class="cbq-btn" style="width:100%;margin-bottom:12px;background:#f1f5f9;border:1px solid #dbe3ec;" onclick="cbqRenderManageList()">← 지식 목록으로</button>`;
+        const un = logs.filter(l => !l.answered).length;
+        const down = logs.filter(l => l.feedback === 'down').length;
+        html += `<div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">최근 질문 ${logs.length}건 · ❓미해결 ${un}건 · 👎 ${down}건 — 미해결·부정 피드백 질문을 지식으로 등록하면 챗봇이 똑똑해져요</div>`;
+        if (!logs.length) html += '<div class="cbq-hint">아직 기록된 질문이 없어요.</div>';
+        html += logs.map(l => {
+          const dt = new Date(l.createdAt);
+          const when = (dt.getMonth()+1) + '/' + dt.getDate() + ' ' + String(dt.getHours()).padStart(2,'0') + ':' + String(dt.getMinutes()).padStart(2,'0');
+          const cls = l.feedback === 'down' ? ' down' : (!l.answered ? ' unanswered' : '');
+          const badge = !l.answered ? '❓미해결' : (l.aiAnswered ? '🤖답변' : '카드만');
+          const fb = l.feedback === 'up' ? '👍' : (l.feedback === 'down' ? '👎' : '');
+          return `<div class="cbq-log-row${cls}">
+            <div class="cbq-log-q">${cbqEsc(l.query)}</div>
+            <div class="cbq-log-meta"><span>${when}</span><span>${cbqEsc(l.academyName||'')}</span><span>매칭 ${Math.round((l.topScore||0)*100)}%</span><span>${badge}</span><span>${fb}</span></div>
+          </div>`;
+        }).join('');
+        body.innerHTML = html;
+      } catch (e) {
+        body.innerHTML = '<div class="cbq-nores">질문 로그를 불러오지 못했어요.</div>';
+      }
+    }
+
     // ===== 관리 뷰 =====
     function cbqToggleManage() {
       _cbqManageMode = !_cbqManageMode;
@@ -2545,6 +2619,7 @@
         const j = await res.json();
         const items = (j && j.items) || [];
         let html = `<button class="cbq-btn primary" style="width:100%;margin-bottom:12px;" onclick="cbqOpenForm()">＋ 새 Q&A 등록</button>`;
+        html += `<button class="cbq-btn" style="width:100%;margin-bottom:12px;background:#f1f5f9;border:1px solid #dbe3ec;" onclick="cbqRenderQueryLog()">📋 질문 로그 (미해결·피드백 확인)</button>`;
         html += `<div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">등록된 지식 ${items.length}개</div>`;
         html += items.map(it => `
           <div class="cbq-list-item">
