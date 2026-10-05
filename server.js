@@ -4284,17 +4284,23 @@ app.get("/api/super/snack-orders", requireSuperAdmin, async (req, res) => {
   try {
     const orders = await SnackOrder.find()
       .sort({ createdAt: -1 })
-      .limit(100)
+      .limit(2000)
       .lean();
 
-    // User 정보에서 학교명 가져오기 (고래뱃지 목록과 동일한 방식)
-    const ordersWithSchool = await Promise.all(orders.map(async (order) => {
-      const userInfo = await User.findOne({ grade: order.grade, name: order.name }).lean();
+    // User 정보에서 학교명 가져오기 — 이름 묶음 일괄 조회로 N+1 제거
+    const uniqNames = [...new Set(orders.map(o => o.name).filter(Boolean))];
+    const users = uniqNames.length
+      ? await User.find({ name: { $in: uniqNames } }).lean()
+      : [];
+    const userMap = {};
+    users.forEach(u => { userMap[(u.grade || '') + '|' + (u.name || '')] = u; });
+    const ordersWithSchool = orders.map((order) => {
+      const userInfo = userMap[(order.grade || '') + '|' + (order.name || '')];
       return {
         ...order,
         school: userInfo?.school || userInfo?.academyName || order.school || '-'
       };
-    }));
+    });
 
     res.json({ ok: true, orders: ordersWithSchool });
   } catch (err) {
