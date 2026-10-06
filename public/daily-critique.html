@@ -4540,10 +4540,36 @@
         document.getElementById('ocrPreviewImg').src = resizedDataUrl;
         document.getElementById('ocrPreview').style.display = 'block';
         document.getElementById('ocrSubmitBtn').disabled = false;
+        _ocrShowMeta(file); // 📐 원본 해상도 표시 (저해상도 기기 진단)
       } catch (err) {
         console.error('[OCR 리사이즈]', err);
         alert('이미지 처리 중 오류가 발생했습니다: ' + err.message);
       }
+    }
+
+    // 📐 원본 해상도·용량 표시 + 저해상도 경고 (브라우저 내 촬영이 저화질 파일을 반환하는 기기 진단)
+    function _ocrIsLowRes() {
+      const m = window._ocrLastMeta;
+      return !!(m && Math.min(m.srcW || 0, m.srcH || 0) > 0 && Math.min(m.srcW, m.srcH) < 1500);
+    }
+    function _ocrShowMeta(file) {
+      const preview = document.getElementById('ocrPreview');
+      if (!preview) return;
+      let info = document.getElementById('ocrMetaInfo');
+      if (!info) {
+        info = document.createElement('div');
+        info.id = 'ocrMetaInfo';
+        info.style.cssText = 'margin-top:6px;font-size:11.5px;color:#8a7f6c;text-align:center;line-height:1.5;';
+        preview.appendChild(info);
+      }
+      const m = window._ocrLastMeta || {};
+      const mb = file && file.size ? (file.size / 1024 / 1024).toFixed(1) + 'MB' : '';
+      let html = '원본 ' + (m.srcW || '?') + '×' + (m.srcH || '?') + (mb ? ' · ' + mb : '');
+      if (_ocrIsLowRes()) {
+        html += '<br><span style="color:#b45309;font-weight:700;">⚠️ 사진 해상도가 낮아 인식률이 떨어질 수 있어요.<br>카메라 앱으로 촬영한 뒤 [파일 불러오기]를 이용해 보세요.</span>';
+      }
+      info.innerHTML = html;
+      console.log('[OCR 진단] 원본', m.srcW + 'x' + m.srcH, mb);
     }
 
     // 📸 직접 촬영 후 자동 인식 (태블릿/모바일 카메라)
@@ -4558,8 +4584,11 @@
         document.getElementById('ocrPreviewImg').src = resizedDataUrl;
         document.getElementById('ocrPreview').style.display = 'block';
         document.getElementById('ocrSubmitBtn').disabled = false;
-        // 촬영 직후 자동으로 인식 시작 (학생이 추가 클릭 안 해도 됨)
-        setTimeout(() => runOcr(), 100);
+        _ocrShowMeta(file); // 📐 원본 해상도 표시
+        // 촬영 직후 자동 인식 — 단, 기기가 저해상도 파일을 반환했으면 보류하고 경고를 읽게 함
+        if (!_ocrIsLowRes()) {
+          setTimeout(() => runOcr(), 100);
+        }
       } catch (err) {
         console.error('[OCR 촬영 리사이즈]', err);
         alert('이미지 처리 중 오류가 발생했습니다: ' + err.message);
@@ -4591,9 +4620,10 @@
         const reader = new FileReader();
         reader.onload = (e) => {
           const img = new Image();
-          img.onload = () => resolve(
-            _ocrDrawToJpeg(img.width, img.height, maxWidth, quality, (ctx, w, h) => ctx.drawImage(img, 0, 0, w, h))
-          );
+          img.onload = () => {
+            window._ocrLastMeta = { srcW: img.width, srcH: img.height }; // 📐 원본 해상도 진단용
+            resolve(_ocrDrawToJpeg(img.width, img.height, maxWidth, quality, (ctx, w, h) => ctx.drawImage(img, 0, 0, w, h)));
+          };
           img.onerror = () => reject(new Error('이미지를 읽을 수 없습니다.'));
           img.src = e.target.result;
         };
@@ -4607,6 +4637,7 @@
       if (window.createImageBitmap) {
         return createImageBitmap(file, { imageOrientation: 'from-image' })
           .then((bmp) => {
+            window._ocrLastMeta = { srcW: bmp.width, srcH: bmp.height }; // 📐 원본 해상도 진단용
             const dataUrl = _ocrDrawToJpeg(bmp.width, bmp.height, maxWidth, quality, (ctx, w, h) => ctx.drawImage(bmp, 0, 0, w, h));
             if (bmp.close) bmp.close();
             return dataUrl;

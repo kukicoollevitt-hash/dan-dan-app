@@ -2220,7 +2220,28 @@
       showQuestion();
     }
 
+
+    // ── 📱 시험 중 화면 꺼짐 방지 (Wake Lock) ──
+    // 저사양 태블릿에서 지문을 읽는 동안 화면이 꺼지면 시스템이 브라우저를 강제 종료해
+    // 시험이 날아가는 문제 방지. 미지원 브라우저는 조용히 무시되어 기존과 동일 동작.
+    let _wakeLock = null;
+    async function acquireWakeLock() {
+      try {
+        if (!('wakeLock' in navigator)) return;
+        _wakeLock = await navigator.wakeLock.request('screen');
+        console.log('🔆 화면 꺼짐 방지 활성화');
+      } catch (e) { console.warn('wakeLock 실패(무시):', e && e.message); }
+    }
+    function releaseWakeLock() {
+      try { if (_wakeLock) { _wakeLock.release(); _wakeLock = null; console.log('🔅 화면 꺼짐 방지 해제'); } } catch (e) {}
+    }
+    // 홈 전환 등으로 잠금이 풀렸다가 돌아오면 자동 재획득 (시험 진행 중일 때만)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && typeof timerInterval !== 'undefined' && timerInterval) acquireWakeLock();
+    });
+
     function startTimer() {
+      acquireWakeLock(); // 시험 시작 — 화면 꺼짐 방지
       updateTimerDisplay();
       timerInterval = setInterval(() => {
         timeRemaining--;
@@ -2427,6 +2448,7 @@
     let finalDuration = ''; // 소요 시간 저장용
 
     function showResult() {
+      releaseWakeLock(); // 시험 종료 — 화면 꺼짐 방지 해제
       testCompleted = true; // 테스트 완료 표시
 
       // 점수 계산 (항상 최신 답안으로 재계산)
