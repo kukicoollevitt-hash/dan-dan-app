@@ -3528,6 +3528,28 @@ app.get("/academy/behavior-data", requireAdminLogin, (req, res) => {
 });
 
 // ✅ 학원 관리자: 관문 통과 기록 API (학원명 필터) - 최적화 버전
+// 관문 상세 인쇄 완료 표시/해제 — 출력 확인 기반 기록 (센터 내 모든 선생님·기기에서 공유)
+app.post("/api/academy/gate-pass-printed", requireAdminLogin, async (req, res) => {
+  try {
+    const { id, printed } = req.body || {};
+    if (!id) return res.status(400).json({ ok: false, message: "id가 필요합니다." });
+    const GatePassModel = mongoose.model("GatePass");
+    const gp = await GatePassModel.findById(id).lean();
+    if (!gp) return res.status(404).json({ ok: false, message: "기록을 찾을 수 없습니다." });
+    // 본인 학원(별칭 포함) 학생 기록만 수정 가능
+    const sessionAdmin = req.session.viewingBranch || req.session.admin;
+    const academyNames = getAdminAcademyNames(sessionAdmin);
+    const isMine = await User.exists({ academyName: { $in: academyNames }, grade: gp.grade, name: gp.name });
+    if (!isMine) return res.status(403).json({ ok: false, message: "권한이 없습니다." });
+    const printedAt = printed ? new Date() : null;
+    await GatePassModel.findByIdAndUpdate(id, { printedAt });
+    res.json({ ok: true, printedAt });
+  } catch (err) {
+    console.error("[POST /api/academy/gate-pass-printed] 오류:", err);
+    res.status(500).json({ ok: false, message: "저장 실패" });
+  }
+});
+
 app.get("/api/academy/gate-passes", requireAdminLogin, async (req, res) => {
   try {
     const sessionAdmin = req.session.viewingBranch || req.session.admin;
@@ -38523,7 +38545,8 @@ const gatePassSchema = new mongoose.Schema({
   name: String,
   gate: Number,           // 관문 레벨 (1, 2, 3, ...)
   passedAt: { type: Date, default: Date.now },
-  units: [String]         // 해당 관문에 포함된 단원들
+  units: [String],        // 해당 관문에 포함된 단원들
+  printedAt: { type: Date, default: null } // 관문 상세 인쇄 완료 시각 — 센터 '출력 완료' 확인 시 기록
 });
 const GatePass = mongoose.model("GatePass", gatePassSchema);
 

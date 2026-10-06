@@ -320,6 +320,15 @@
       background: #fff3cd;
       font-weight: 600;
     }
+    /* 🖨️ 인쇄 완료 추적 */
+    .gate-badge.printed { background: #e2e8f0 !important; color: #94a3b8 !important; }
+    .print-chip { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 10px; background: #eef2ff; color: #5a67d8; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .print-chip:hover { background: #e0e7ff; }
+    .unprinted-only-label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #475569; margin-left: 12px; cursor: pointer; white-space: nowrap; user-select: none; }
+    .unprinted-only-label input { accent-color: #667eea; width: 15px; height: 15px; }
+    #gatePrintConfirm { position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 100005; display: none; align-items: center; justify-content: center; padding: 20px; }
+    #gatePrintConfirm .gpc-card { background: #fff; border-radius: 16px; padding: 24px 26px; text-align: center; max-width: 320px; width: 100%; box-shadow: 0 20px 55px rgba(15,23,42,0.4); }
+
     /* 관문 상세 모달 스타일 */
     .detail-section {
       margin-bottom: 24px;
@@ -429,6 +438,7 @@
     }
     /* 🖨️ 인쇄 — 관문 상세 모달만 출력 (사이드바/헤더 등 숨김) */
     @media print {
+      #gatePrintConfirm, #gatePrintStatus { display: none !important; }
       body * { visibility: hidden !important; }
       #gateModal.show, #gateModal.show * { visibility: visible !important; }
       #gateModal.show {
@@ -679,6 +689,7 @@
         <div class="search-box">
           <input type="text" id="gateSearchInput" placeholder="이름으로 검색..." />
         </div>
+        <label class="unprinted-only-label"><input type="checkbox" id="gateUnprintedOnly"> 🖨️ 미인쇄만 보기</label>
         <div class="count-info">
           전체: <strong id="gateTotalCount">0</strong>개
         </div>
@@ -829,6 +840,19 @@
     </div>
   </div>
 
+  <!-- 🖨️ 출력 완료 확인 -->
+  <div id="gatePrintConfirm">
+    <div class="gpc-card">
+      <div style="font-size:36px;margin-bottom:8px;">🖨️</div>
+      <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:6px;">출력까지 완료하셨나요?</div>
+      <div style="font-size:12.5px;color:#64748b;line-height:1.5;margin-bottom:16px;">완료로 표시하면 목록에서<br>인쇄한 관문평가가 구분돼요.</div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button onclick="gatePrintConfirmAnswer(true)" style="flex:1;padding:11px 0;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#5a67d8);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">✅ 네, 출력했어요</button>
+        <button onclick="gatePrintConfirmAnswer(false)" style="flex:1;padding:11px 0;border:1px solid #d7dce5;border-radius:10px;background:#fff;color:#64748b;font-weight:700;font-size:13px;cursor:pointer;">아니요</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 관문 상세 모달 -->
   <div class="modal-overlay" id="gateModal">
     <div class="modal-content">
@@ -839,7 +863,8 @@
       <div class="modal-body" id="gateModalBody">
         <div class="loading">데이터를 불러오는 중...</div>
       </div>
-      <div class="modal-footer" id="gateModalFooter" style="padding:14px 20px;border-top:1px solid #e5e7eb;display:flex;gap:10px;justify-content:flex-end;background:#fafafa;">
+      <div class="modal-footer" id="gateModalFooter" style="padding:14px 20px;border-top:1px solid #e5e7eb;display:flex;gap:10px;justify-content:flex-end;align-items:center;background:#fafafa;">
+        <span id="gatePrintStatus" style="font-size:12px;color:#64748b;margin-right:auto;"></span>
         <button onclick="gateDetailPrint()" style="padding:10px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#5a67d8);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">🖨️ 인쇄</button>
         <button onclick="gateDetailPdf(this)" style="padding:10px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">📥 PDF 다운</button>
         <button onclick="gateDetailKakao()" style="padding:10px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#fee500,#fde047);color:#3c2c00;font-weight:700;font-size:13px;cursor:pointer;">💬 카카오톡 공유</button>
@@ -983,6 +1008,20 @@
     }
 
     // 관문 테이블 렌더링
+    // 검색어 + 미인쇄만 보기 조건을 함께 적용
+    function applyGateFilters() {
+      const query = (document.getElementById('gateSearchInput').value || '').toLowerCase().trim();
+      const unprintedOnly = !!(document.getElementById('gateUnprintedOnly') || {}).checked;
+      gateFilteredData = gateAllData.filter(item => {
+        if (query && !(item.name || '').toLowerCase().includes(query)) return false;
+        if (unprintedOnly && item.printedAt) return false;
+        return true;
+      });
+      gateDisplayCount = 10;
+      renderGateTable();
+      updateGateCounts();
+    }
+
     function renderGateTable() {
       const tbody = document.getElementById('gateTableBody');
 
@@ -1008,7 +1047,7 @@
             <td>${index + 1}</td>
             <td>${item.grade || '-'}</td>
             <td>${item.name || '-'}</td>
-            <td><span class="gate-badge" style="cursor:pointer;" onclick="openGateModal('${item._id}')">관문 ${item.gate}</span></td>
+            <td><span class="gate-badge ${item.printedAt ? 'printed' : ''}" style="cursor:pointer;" onclick="openGateModal('${item._id}')">관문 ${item.gate}</span>${item.printedAt ? `<span class="print-chip" title="${fmtPrintDate(item.printedAt)} 인쇄 완료 — 클릭하면 미인쇄로 되돌립니다" onclick="toggleGatePrinted('${item._id}', false)">🖨️ ${fmtPrintDate(item.printedAt)}</span>` : ''}</td>
             <td class="date-cell">${passedDate}</td>
           </tr>
         `;
@@ -1237,21 +1276,11 @@
 
     // 검색 리스너
     function setupSearchListeners() {
-      // 관문 검색
+      // 관문 검색 + 미인쇄 필터 (통합)
       const gateSearchInput = document.getElementById('gateSearchInput');
-      gateSearchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase().trim();
-        if (query) {
-          gateFilteredData = gateAllData.filter(item =>
-            (item.name || '').toLowerCase().includes(query)
-          );
-        } else {
-          gateFilteredData = [...gateAllData];
-        }
-        gateDisplayCount = 10;
-        renderGateTable();
-        updateGateCounts();
-      });
+      gateSearchInput.addEventListener('input', applyGateFilters);
+      const gateUnprintedOnly = document.getElementById('gateUnprintedOnly');
+      if (gateUnprintedOnly) gateUnprintedOnly.addEventListener('change', applyGateFilters);
 
       // 본문학습 행동 검색
       const behaviorSearchInput = document.getElementById('behaviorSearchInput');
@@ -1498,7 +1527,60 @@
 
     // ===== 인쇄 / PDF / 카카오톡 공유 (관문 상세) =====
     let _gateDetailCtx = { grade: '', name: '', gate: '' };
-    window.gateDetailPrint = function () { window.print(); };
+    // ── 🖨️ 인쇄 완료 추적 ──
+    let _gateCurrentItemId = null;
+
+    function fmtPrintDate(d) {
+      const dt = new Date(d);
+      return (dt.getMonth() + 1) + '/' + dt.getDate();
+    }
+
+    function updateGatePrintStatus(item) {
+      const el = document.getElementById('gatePrintStatus');
+      if (!el) return;
+      if (!item) { el.innerHTML = ''; return; }
+      if (item.printedAt) {
+        el.innerHTML = '🖨️ ' + fmtPrintDate(item.printedAt) + ' 인쇄 완료 · <a style="color:#5a67d8;cursor:pointer;text-decoration:underline;" onclick="toggleGatePrinted(\'' + item._id + '\', false)">해제</a>';
+      } else {
+        el.innerHTML = '아직 인쇄 전 · <a style="color:#5a67d8;cursor:pointer;text-decoration:underline;" onclick="toggleGatePrinted(\'' + item._id + '\', true)">인쇄됨으로 표시</a>';
+      }
+    }
+
+    // 인쇄창이 닫힌 뒤 "출력 완료" 확인을 받아야만 기록 (취소·프린터 오류 오기록 방지)
+    window.gateDetailPrint = function () {
+      const item = gateAllData.find(d => d._id === _gateCurrentItemId);
+      const onAfter = () => {
+        window.removeEventListener('afterprint', onAfter);
+        if (!item || item.printedAt) return; // 이미 기록된 건 재확인 불필요
+        setTimeout(() => { document.getElementById('gatePrintConfirm').style.display = 'flex'; }, 200);
+      };
+      window.addEventListener('afterprint', onAfter);
+      window.print();
+    };
+
+    window.gatePrintConfirmAnswer = function (yes) {
+      document.getElementById('gatePrintConfirm').style.display = 'none';
+      if (yes && _gateCurrentItemId) toggleGatePrinted(_gateCurrentItemId, true);
+    };
+
+    window.toggleGatePrinted = async function (id, printed) {
+      if (!printed && !confirm('인쇄 기록을 해제할까요? (미인쇄 상태로 돌아갑니다)')) return;
+      try {
+        const res = await fetch('/api/academy/gate-pass-printed', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, printed })
+        });
+        const j = await res.json();
+        if (!j.ok) { showToast(j.message || '저장에 실패했습니다.'); return; }
+        const item = gateAllData.find(d => d._id === id);
+        if (item) item.printedAt = j.printedAt;
+        applyGateFilters();
+        if (_gateCurrentItemId === id) updateGatePrintStatus(item);
+        showToast(printed ? '🖨️ 인쇄 완료로 표시했습니다.' : '미인쇄로 되돌렸습니다.');
+      } catch (e) {
+        showToast('저장 중 오류가 발생했습니다.');
+      }
+    };
     window.gateDetailPdf = async function (btn) {
       if (!window.html2canvas || !window.jspdf) { alert('PDF 라이브러리 로딩 중'); return; }
       const content = document.getElementById('gateModalBody');
@@ -1825,6 +1907,8 @@
 
       // 인쇄/PDF/카카오톡 컨텍스트 저장
       _gateDetailCtx = { grade: item.grade, name: item.name, gate: item.gate };
+      _gateCurrentItemId = itemId;
+      updateGatePrintStatus(item);
 
       const modal = document.getElementById('gateModal');
       const modalTitle = document.getElementById('gateModalTitle');
