@@ -331,6 +331,39 @@
     .unprinted-only-label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #475569; margin-left: 12px; cursor: pointer; white-space: nowrap; user-select: none; }
     .unprinted-only-label input { accent-color: #667eea; width: 15px; height: 15px; }
 
+    /* 🎓 관문 리포트 표지 */
+    .gate-cover {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.78) 100%),
+        url('/images/고요한 흑백 시험 교실.jpg') center / cover no-repeat;
+      border-radius: 16px; padding: 40px 24px 34px; text-align: center; color: #1e293b; margin-bottom: 18px; position: relative; overflow: hidden;
+    }
+    .gate-cover .gc-brand { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #4c51bf; margin-bottom: 14px; }
+    .gate-cover .gc-gate { display: inline-block; padding: 7px 20px; border-radius: 999px; background: rgba(255,255,255,0.85); border: 1.5px solid #5a67d8; color: #4c51bf; font-size: 14px; font-weight: 800; margin-bottom: 14px; }
+    .gate-cover .gc-title { font-size: 24px; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.5px; color: #0f172a; }
+    .gate-cover .gc-student { font-size: 32px; font-weight: 800; margin-bottom: 6px; color: #4c51bf; text-shadow: 0 1px 0 rgba(255,255,255,0.8); }
+    .gate-cover .gc-meta { font-size: 12.5px; color: #475569; }
+    .gate-cover .gc-academy { margin-top: 18px; font-size: 12px; font-weight: 700; color: #4c51bf; letter-spacing: 0.5px; }
+    @media print {
+      /* 전 페이지 여백 0 통일 (페이지별 여백 차이는 크롬에서 우측 잘림 유발) — 상세 내용은 자체 여백 */
+      @page { margin: 0; }
+      /* 흑백 교실 사진 배경 유지 (밝은 톤 — 잉크 부담 적음) */
+      .gate-cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; page-break-after: always; border-radius: 0; box-sizing: border-box; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; margin: 0; }
+      .gate-cover .gc-brand { font-size: 18px; letter-spacing: 3px; margin-bottom: 20px; }
+      .gate-cover .gc-gate { font-size: 24px; padding: 10px 30px; margin-bottom: 22px; }
+      .gate-cover .gc-title { font-size: 46px; margin-bottom: 30px; }
+      .gate-cover .gc-student { font-size: 64px; margin-bottom: 12px; }
+      .gate-cover .gc-meta { font-size: 20px; }
+      .gate-cover .gc-academy { font-size: 20px; margin-top: 26px; }
+      /* 상세 요약 영역 컴팩트 — 라벨·값 한 줄, 간격 축소 */
+      .detail-section { margin-bottom: 10px !important; }
+      .detail-section-title { margin-bottom: 6px !important; padding-bottom: 4px !important; }
+      .detail-grid { gap: 6px !important; }
+      .detail-item { padding: 6px 12px !important; border-radius: 8px !important; display: flex !important; align-items: baseline !important; justify-content: space-between !important; gap: 10px; }
+      .detail-label { margin-bottom: 0 !important; font-size: 11.5px !important; }
+      .detail-value { font-size: 14px !important; }
+    }
+
     /* 관문 상세 모달 스타일 */
     .detail-section {
       margin-bottom: 24px;
@@ -441,7 +474,11 @@
     /* 🖨️ 인쇄 — 관문 상세 모달만 출력 (사이드바/헤더 등 숨김) */
     @media print {
       #gatePrintConfirm { display: none !important; }
+      #gateModal.show .modal-header { display: none !important; }
       body * { visibility: hidden !important; }
+      /* visibility:hidden은 공간을 차지해 뒤에 빈 페이지가 생김 — 모달 외 본문은 레이아웃에서 제거 */
+      body > *:not(#gateModal) { display: none !important; }
+      html, body { height: auto !important; overflow: visible !important; }
       #gateModal.show, #gateModal.show * { visibility: visible !important; }
       #gateModal.show {
         position: absolute !important;
@@ -454,6 +491,7 @@
       }
       #gateModal .modal-content {
         box-shadow: none !important;
+        width: 100% !important;
         max-width: 100% !important;
         max-height: none !important;
         border-radius: 0 !important;
@@ -462,7 +500,11 @@
       #gateModal .modal-body {
         max-height: none !important;
         overflow: visible !important;
+        padding: 0 !important; /* 표지 풀블리드 — 상세 섹션은 아래 자체 여백 */
       }
+      #gateModal .modal-body .detail-section { margin-left: 12mm !important; margin-right: 12mm !important; }
+      .gate-cover + .detail-section { padding-top: 10mm; }
+      #gateModal .modal-body .detail-section:last-child { padding-bottom: 10mm; }
       #gateModal .modal-close,
       #gateModal #gateModalFooter { display: none !important; }
       #gateModal .modal-header {
@@ -1541,8 +1583,14 @@
     let _gateCurrentItemId = null;
     window.gateDetailPrint = function () {
       const item = gateAllData.find(d => d._id === _gateCurrentItemId);
+      // 🏷️ 브라우저 'PDF로 저장' 파일명 = 문서 제목 → 인쇄 동안만 센터_학년이름_관문N으로 교체
+      const prevTitle = document.title;
+      const c = _gateDetailCtx || {};
+      const parts = [_academyNameForCover, (c.grade || '') + (c.name || ''), '관문' + (c.gate || '') + ' 상세리포트'].filter(Boolean);
+      document.title = parts.join('_');
       const onAfter = () => {
         window.removeEventListener('afterprint', onAfter);
+        document.title = prevTitle; // 제목 원복
         if (!item || item.printedAt) return; // 이미 기록된 건 재확인 불필요
         setTimeout(() => { document.getElementById('gatePrintConfirm').style.display = 'flex'; }, 200);
       };
@@ -1644,7 +1692,7 @@
             off = cutAt; pc++;
           }
         }
-        const safe = `${c.grade || ''}_${c.name || 'student'}_관문${c.gate || ''}`.replace(/[\\/:*?"<>|]/g, '_');
+        const safe = `${_academyNameForCover ? _academyNameForCover + '_' : ''}${c.grade || ''}_${c.name || 'student'}_관문${c.gate || ''}`.replace(/[\\/:*?"<>|]/g, '_');
         const now = new Date();
         const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
         pdf.save(`관문통과상세_${safe}_${ts}.pdf`);
@@ -1921,6 +1969,16 @@
       }
     }
 
+    // 표지용 센터명 (1회 조회)
+    let _academyNameForCover = '';
+    (async () => {
+      try {
+        const r = await fetch('/api/admin/info');
+        const d = await r.json();
+        if (d && (d.academyName || d.primaryAcademyName)) _academyNameForCover = d.academyName || d.primaryAcademyName;
+      } catch (e) {}
+    })();
+
     function renderGateDetailModal(data, gate) {
       const modalBody = document.getElementById('gateModalBody');
 
@@ -2052,9 +2110,19 @@
         `;
       }
 
+      const _ctx = _gateDetailCtx || {};
+      const _coverDate = data.passedAt ? new Date(data.passedAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
       modalBody.innerHTML = `
+        <div class="gate-cover">
+          <div class="gc-brand">🐳 BRAIN LITERACY · 문해행동 리포트</div>
+          <div><span class="gc-gate">관문 ${gate} 통과</span></div>
+          <div class="gc-title">관문평가 상세 리포트</div>
+          <div class="gc-student">${_ctx.grade || ''} ${_ctx.name || ''}</div>
+          <div class="gc-meta">${_coverDate ? '통과일 · ' + _coverDate : ''}</div>
+          ${_academyNameForCover ? `<div class="gc-academy">${_academyNameForCover}</div>` : ''}
+        </div>
         <div class="detail-section">
-          <div class="detail-section-title">요약 정보</div>
+          <div class="detail-section-title" style="display:flex; justify-content:space-between; align-items:baseline;"><span>요약 정보</span><span style="font-size:12px; font-weight:600; color:#868e96;">통과 ${passedDate}</span></div>
           <div class="detail-grid">
             <div class="detail-item">
               <div class="detail-label">재도전 횟수</div>
@@ -2093,9 +2161,10 @@
 
         ${questionDetailsHtml}
 
-        <div class="detail-section" style="text-align: center; padding-top: 16px; border-top: 1px solid #e9ecef;">
-          <div style="font-size: 12px; color: #868e96; margin-bottom: 4px;">통과 날짜</div>
-          <div style="font-size: 14px; font-weight: 600; color: var(--accent-dark);">${passedDate}</div>
+        <div class="detail-section gate-report-footer" style="text-align:center; padding-top:18px; border-top:1px solid #e9ecef;">
+          <div style="font-size:14.5px; font-weight:700; color:#4c51bf; margin-bottom:8px;">🎉 ${_ctx.name || '우리'} 학생, 관문 ${gate}을 멋지게 통과했어요! 꾸준함이 문해력을 만듭니다 🐳</div>
+          <div style="font-size:12.5px; color:#64748b; margin-bottom:14px;">⚠️ 가장 미흡한 문항은 중간평가 때에 다시 출제되어 꼼꼼하게 관리됩니다.</div>
+          <div style="font-size:11px; font-weight:800; letter-spacing:2.5px; color:#94a3b8;">BRAIN LITERACY CENTER</div>
         </div>
       `;
     }
