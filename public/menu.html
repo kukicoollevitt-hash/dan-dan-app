@@ -17965,7 +17965,14 @@ async function performLogout() {
             console.log('iframe.contentWindow:', learningIframe.contentWindow);
             if (learningIframe && learningIframe.contentWindow) {
               console.log('💬 iframe에 메시지 전송 중...');
-              learningIframe.contentWindow.postMessage({ action: 'downloadPDF' }, '*');
+              let academyName = '';
+              try {
+                const u = JSON.parse(sessionStorage.getItem('user') || '{}');
+                if (u && u.userType === 'academy' && u.academyName) academyName = u.academyName;
+              } catch (e) {}
+              const now = new Date();
+              const dateStr = now.getFullYear() + '.' + String(now.getMonth() + 1).padStart(2, '0') + '.' + String(now.getDate()).padStart(2, '0');
+              learningIframe.contentWindow.postMessage({ action: 'downloadPDF', cover: { academyName: academyName, dateStr: dateStr } }, '*');
             } else {
               console.error('❌ iframe.contentWindow를 찾을 수 없습니다');
               alert('페이지를 먼저 로드해주세요.');
@@ -17973,6 +17980,25 @@ async function performLogout() {
           });
         } else {
           console.error('❌ 다운로드 버튼을 찾을 수 없습니다');
+        }
+
+        // 🖨️ 인쇄 버튼 — PDF 다운로드와 동일한 캡처 파이프라인에 표지를 붙여 인쇄 (리포트 페이지가 처리)
+        const printLearningBtn = document.getElementById('printLearningBtn');
+        if (printLearningBtn) {
+          printLearningBtn.addEventListener('click', function() {
+            if (!learningIframe || !learningIframe.contentWindow) {
+              alert('리포트가 아직 로드되지 않았습니다. 잠시 후 다시 시도해 주세요.');
+              return;
+            }
+            let academyName = '';
+            try {
+              const u = JSON.parse(sessionStorage.getItem('user') || '{}');
+              if (u && u.userType === 'academy' && u.academyName) academyName = u.academyName;
+            } catch (e) {}
+            const now = new Date();
+            const dateStr = now.getFullYear() + '.' + String(now.getMonth() + 1).padStart(2, '0') + '.' + String(now.getDate()).padStart(2, '0');
+            learningIframe.contentWindow.postMessage({ action: 'printPDF', cover: { academyName: academyName, dateStr: dateStr } }, '*');
+          });
         }
       }
     });
@@ -25829,6 +25855,14 @@ ${content}
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
           </svg>
           다운로드
+        </button>
+        <button class="learning-action-btn print-btn" id="printLearningBtn" style="background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%); color: white;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"/>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          인쇄
         </button>
       </div>
     </div>

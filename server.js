@@ -26890,7 +26890,9 @@ app.get("/my-learning", async (req, res) => {
         window.addEventListener('message', async function(event) {
           console.log('📨 메시지 수신:', event.data);
 
-          if (event.data && event.data.action === 'downloadPDF') {
+          if (event.data && (event.data.action === 'downloadPDF' || event.data.action === 'printPDF')) {
+            const isPrint = event.data.action === 'printPDF';
+            const coverInfo = event.data.cover || {};
             console.log('✅ PDF 다운로드 시작');
 
             try {
@@ -26905,7 +26907,7 @@ app.get("/my-learning", async (req, res) => {
 
               console.log('📦 컨테이너 요소 찾음:', target);
 
-              const filename = \`학습분석_${grade}_${name}_\${new Date().toISOString().split('T')[0]}.pdf\`;
+              const filename = (((event.data.cover && event.data.cover.academyName) ? event.data.cover.academyName + '_' : '') + '${grade}_${name}_학습분석.pdf').replace(/[\\/:*?"<>|]/g, '');
               console.log('📁 파일명:', filename);
 
               // 캡처 전에 스크롤 영역 높이 자동 조정
@@ -26922,13 +26924,21 @@ app.get("/my-learning", async (req, res) => {
               body.style.overflow = 'visible';
               html.style.overflow = 'visible';
 
+              // 🧹 캡처용 정리: 드롭다운·화살표·토글·수정 버튼 등 화면 조작용 요소 숨김
+              const cleanStyle = document.createElement('style');
+              cleanStyle.id = '__pdfCaptureClean';
+              cleanStyle.textContent = '.series-selector, .nav-arrow-btn, .slider-arrow, .today-radar-toggle-wrap, .ai-feedback-bottom-actions, #toggleRadarBtn { display: none !important; } .container { box-shadow: none !important; }';
+              document.head.appendChild(cleanStyle);
+
               // 페이지 자르기 안전 분기점 수집 (DOM 좌표) - 큰 섹션·카드·헤딩·행
               const targetRect = target.getBoundingClientRect();
               const breakNodes = target.querySelectorAll(
                 '.today-section, .record-section, .progress-section, .ai-feedback-section, ' +
                 '.subject-bar-section, .today-radar-section, .index-trend-section, ' +
                 '.vocab-score-section, .field-progress-card, .total-progress-card, ' +
-                '.ai-feedback-item, h1, h2, h3, tr, thead, .today-table tbody tr'
+                '.ai-feedback-item, h1, h2, h3, tr, thead, .today-table tbody tr, ' +
+                '.radar-card, .vocab-bar-row, .index-trend-chart-container, ' +
+                '.subject-bar-chart-container, .vocab-score-chart-container, .section-header'
               );
               const safeBreaksDom = new Set([0, target.offsetHeight]);
               breakNodes.forEach(n => {
@@ -26954,6 +26964,8 @@ app.get("/my-learning", async (req, res) => {
               body.style.overflow = originalBodyOverflow;
               html.style.overflow = originalHtmlOverflow;
 
+              cleanStyle.remove();
+
               console.log('✅ 캔버스 생성 완료:', canvas.width, 'x', canvas.height);
 
               // jsPDF로 PDF 생성
@@ -26961,6 +26973,28 @@ app.get("/my-learning", async (req, res) => {
               const pdf = new jsPDF('p', 'mm', 'a4');
               const pdfW = pdf.internal.pageSize.getWidth();
               const pdfH = pdf.internal.pageSize.getHeight();
+
+              // 🎓 표지 페이지(미니멀 성장 리포트 템플릿) — 인쇄·다운로드 공통 1페이지
+              {
+                const coverEl = document.createElement('div');
+                coverEl.style.cssText = 'position:fixed;left:-99999px;top:0;width:794px;height:1123px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;text-align:center;padding:30px;font-family:' + (getComputedStyle(document.body).fontFamily || 'sans-serif') + ';background:linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.25) 45%, rgba(255,255,255,0.08) 80%, rgba(255,255,255,0.04)), url(' + encodeURI('/images/미니멀 성장 리포트 템플릿.jpg') + ') center / cover no-repeat;';
+                const coverEsc = function(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+                // 학습 기간: 리포트가 보고 있는 월 (이동한 달 그대로 반영)
+                let coverPeriod = '';
+                try { const msD = getMonthStart(selectedMonthStart); coverPeriod = msD.getFullYear() + '년 ' + (msD.getMonth() + 1) + '월'; }
+                catch (e) { const nowD = new Date(); coverPeriod = nowD.getFullYear() + '년 ' + (nowD.getMonth() + 1) + '월'; }
+                coverEl.innerHTML =
+                  '<div style="font-size:20px;font-weight:800;letter-spacing:3px;color:#4f46e5;margin-bottom:24px;">✦ BRAIN 문해력 · AI 학습 분석 ✦</div>' +
+                  '<div style="margin:0 auto 20px;"><span style="display:inline-block;padding:12px 34px;border-radius:999px;background:rgba(255,255,255,0.88);border:1.5px solid #4f46e5;color:#4338ca;font-size:26px;font-weight:800;">나의 AI 학습 분석</span></div>' +
+                  '<div style="font-size:54px;font-weight:900;color:#1a1a1a;margin-bottom:34px;">성장 리포트</div>' +
+                  '<div style="font-size:72px;font-weight:900;color:#4338ca;">${grade} ${name}</div>' +
+                  '<div style="font-size:20px;color:#555;margin-top:20px;">학습 기간 · ' + coverPeriod + '</div>' +
+                  (coverInfo.academyName ? '<div style="font-size:22px;font-weight:800;color:#4f46e5;margin-top:30px;letter-spacing:0.5px;">' + coverEsc(coverInfo.academyName) + '</div>' : '');
+                document.body.appendChild(coverEl);
+                const coverCanvas = await html2canvas(coverEl, { scale: 1.5, useCORS: true, backgroundColor: '#ffffff' });
+                coverEl.remove();
+                pdf.addImage(coverCanvas.toDataURL('image/jpeg', 0.8), 'JPEG', 0, 0, pdfW, pdfH);
+              }
 
               // 한 페이지가 차지하는 캔버스 픽셀 높이
               const pageHpx = canvas.width * (pdfH / pdfW);
@@ -26974,37 +27008,56 @@ app.get("/my-learning", async (req, res) => {
 
               console.log('📄 PDF 생성 중... (페이지당 캔버스 ' + Math.round(pageHpx) + 'px, 안전 분기점 ' + safeBreaks.length + '개)');
 
+              // 📦 청크 패킹: 분기점 사이 구간(카드·행·차트)을 통째로 페이지에 배치.
+              //    페이지에 안 들어가면 흰 여백을 남기고 다음 페이지로 넘김 — 학습량 증감에도 중간 잘림 없음
+              const bounds = Array.from(new Set([0].concat(safeBreaks).concat([canvas.height]))).sort(function(a, b) { return a - b; });
+              const chunks = [];
+              for (let bi = 0; bi < bounds.length - 1; bi++) {
+                if (bounds[bi + 1] - bounds[bi] > 2) chunks.push({ y: bounds[bi], end: bounds[bi + 1] });
+              }
               let off = 0;
               let pageCount = 0;
-              while (off < canvas.height) {
-                if (pageCount > 0) pdf.addPage();
-                const maxEnd = Math.min(off + pageHpx, canvas.height);
-                // off보다 크고 maxEnd 이하인 가장 큰 안전 분기점에서 자르기
-                let cutAt = maxEnd;
-                for (let i = safeBreaks.length - 1; i >= 0; i--) {
-                  if (safeBreaks[i] > off + 10 && safeBreaks[i] <= maxEnd) {
-                    cutAt = safeBreaks[i];
-                    break;
-                  }
+              let ci = 0;
+              while (off < canvas.height && ci < chunks.length) {
+                pdf.addPage();   // 1페이지는 항상 표지
+                // 이번 페이지에 통째로 들어가는 연속 청크 범위 계산
+                let end = off;
+                let cj = ci;
+                while (cj < chunks.length && chunks[cj].end - off <= pageHpx) {
+                  end = chunks[cj].end;
+                  cj++;
                 }
-                if (cutAt <= off) cutAt = maxEnd;
-
-                const slice = cutAt - off;
+                if (end <= off) {
+                  // 단일 청크가 페이지보다 큼 → 페이지 높이만큼만 하드 컷
+                  end = Math.min(off + pageHpx, chunks[ci].end);
+                  cj = (end >= chunks[ci].end) ? ci + 1 : ci;
+                }
+                const slice = end - off;
                 const tc = document.createElement('canvas');
                 tc.width = canvas.width;
-                tc.height = slice;
-                tc.getContext('2d', { willReadFrequently: true })
-                  .drawImage(canvas, 0, off, canvas.width, slice, 0, 0, canvas.width, slice);
-
-                const sliceImgH = slice * (pdfW / canvas.width);
-                pdf.addImage(tc.toDataURL('image/jpeg', 0.5), 'JPEG', 0, 0, pdfW, sliceImgH);
-
-                off = cutAt;
+                tc.height = Math.round(pageHpx);
+                const tctx = tc.getContext('2d', { willReadFrequently: true });
+                tctx.fillStyle = '#ffffff';
+                tctx.fillRect(0, 0, tc.width, tc.height);
+                tctx.drawImage(canvas, 0, off, canvas.width, slice, 0, 0, canvas.width, slice);
+                pdf.addImage(tc.toDataURL('image/jpeg', 0.5), 'JPEG', 0, 0, pdfW, pdfH);
+                off = end;
+                ci = cj;
                 pageCount++;
               }
 
-              // PDF 저장
-              pdf.save(filename);
+              // PDF 저장 또는 인쇄
+              if (isPrint) {
+                pdf.autoPrint();
+                const blobUrl = pdf.output('bloburl');
+                const pf = document.createElement('iframe');
+                pf.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;';
+                pf.src = blobUrl;
+                document.body.appendChild(pf);
+                console.log('🖨️ 인쇄 대화상자 요청 완료');
+              } else {
+                pdf.save(filename);
+              }
               console.log('✅ PDF 다운로드 완료! (' + pageCount + ' 페이지)');
 
             } catch (error) {
