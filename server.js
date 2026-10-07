@@ -3611,6 +3611,7 @@ app.get("/api/academy/gate-passes", requireAdminLogin, async (req, res) => {
         name: gp.name,
         gate: gp.gate,
         passedAt: gp.passedAt,
+        printedAt: gp.printedAt || null, // 🖨️ 인쇄 완료 표시 (새로고침 후에도 유지)
         units: units
       };
     });
