@@ -454,7 +454,7 @@
 
     const STEPS = [
       { key: 'step_firstConsult', label: '최초상담' },
-      { key: 'step_briefingAttend', label: '설명회참석' },
+      { key: 'step_briefingAttend', label: '설명회영상' },
       { key: 'step_followup', label: '후속연락' },
       { key: 'step_offlineMeeting', label: '오프미팅' },
       { key: 'step_contract', label: '계약' },
@@ -463,7 +463,7 @@
 
     // 이탈 단계 필터 (계약 기준 역순 누적: 미계약 → +오프미팅✕ → +후속연락✕ → …)
     const DROPOFF_ORDER = ['step_contract', 'step_offlineMeeting', 'step_followup', 'step_briefingAttend', 'step_firstConsult'];
-    const DROPOFF_LABELS = ['미계약', '오프미팅✕', '후속연락✕', '설명회참석✕', '최초상담✕'];
+    const DROPOFF_LABELS = ['미계약', '오프미팅✕', '후속연락✕', '설명회영상✕', '최초상담✕'];
     let DROPOFF_SEL = new Set();     // 노드 상세 테이블 필터 (빈 Set=전체) · 독립 다중선택 AND
     let OV_DROPOFF_SEL = new Set();  // 종합 전체목록 필터 (빈 Set=전체)
     // 선택한 모든 단계를 '안 함'으로 만족(AND)
@@ -687,7 +687,7 @@
       const seq = [
         { label: '전체', v: n },
         { label: '최초상담', v: cnt.step_firstConsult },
-        { label: '설명회참석', v: cnt.step_briefingAttend },
+        { label: '설명회영상', v: cnt.step_briefingAttend },
         { label: '후속연락', v: cnt.step_followup },
         { label: '오프미팅', v: cnt.step_offlineMeeting },
         { label: '계약', v: cnt.step_contract },
@@ -1039,8 +1039,19 @@
         const roiCls = n.manage.roi >= 0 ? 'pos' : 'neg';
         mRows += `<tr>${ovNodeCell(n, 'manage')}<td>${n.manage.centers}</td><td>${n.manage.students.toLocaleString('ko-KR')}</td><td>${usage}% <span class="acct">(${n.manage.used}/${n.manage.total})</span></td><td class="money">${fmtMoney(n.manage.revenue)}</td><td class="money ${roiCls}">${fmtMoney(n.manage.roi)}</td></tr>`;
       });
+      // 🏢 총 기업 매출 = 계약금 합산 (스탠다드 180만원 / 프리미엄 420만원)
+      const corpStd = OV_CENTERS.filter(c => c.contractType === '스탠다드').length;
+      const corpPrem = OV_CENTERS.filter(c => c.contractType === '프리미엄').length;
+      const corpRevenue = OV_CENTERS.reduce((s, c) => s + centerDerived(c).amount, 0);
+      const corpHtml =
+        `<div style="margin:4px 0 14px; padding:14px 20px; background:linear-gradient(135deg,#1e3a5f,#2c5282); border-radius:12px; color:#fff; display:flex; align-items:baseline; gap:18px; flex-wrap:wrap">
+           <div style="font-size:13.5px; font-weight:800">🏢 총 기업 매출</div>
+           <div style="font-size:24px; font-weight:900">${fmtMoney(corpRevenue)}</div>
+           <div style="font-size:12px; opacity:.85">스탠다드 ${corpStd}곳 × 180만원 + 프리미엄 ${corpPrem}곳 × 420만원</div>
+         </div>`;
       const summary =
         `<div class="overview"><h3>💰 센터 KPI 종합 <span class="live">실시간</span></h3>
+         ${corpHtml}
          ${centerSummaryHtml(OV_CENTERS)}
          <table class="ov-table" style="margin-top:6px"><thead><tr><th>부서·지사</th><th>센터</th><th>학생</th><th>누적사용/총계정</th><th>매출</th><th>투자대비수익</th></tr></thead>
          <tbody>${mRows}<tr class="sum"><td style="text-align:left">합계</td><td>${mt.centers}</td><td>${mt.students.toLocaleString('ko-KR')}</td><td>${musage}% (${mt.used}/${mt.total})</td><td class="money">${fmtMoney(mt.revenue)}</td><td class="money ${mroiCls}">${fmtMoney(mt.roi)}</td></tr></tbody></table></div>`;

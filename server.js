@@ -942,6 +942,114 @@ app.post("/api/lyricist/submit", async (req, res) => {
   }
 });
 
+// 🎃 할로윈 삼행시 이벤트 — 본사 이메일 전송 (마감: 2026-10-30 22:30 KST)
+app.post("/api/halloween/submit", async (req, res) => {
+  try {
+    if (Date.now() > new Date("2026-10-30T22:30:00+09:00").getTime()) {
+      return res.json({ ok: false, message: "이벤트가 마감되었어요. 참여해 줘서 고마워요! 🎃" });
+    }
+    const { name, grade, center, line1, line2, line3 } = req.body || {};
+    if (!name || !grade || !line1 || !line2 || !line3) {
+      return res.json({ ok: false, message: "삼행시 세 줄을 모두 입력해 주세요." });
+    }
+    const safe = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    const lineRow = (chip, text, bg) => `
+          <tr>
+            <td style="padding:12px;width:60px;text-align:center;border-bottom:1px solid #fde8c8;background:${bg};">
+              <span style="display:inline-block;width:38px;height:38px;line-height:38px;border-radius:50%;background:#f57c00;color:#fff;font-size:18px;font-weight:bold;">${chip}</span>
+            </td>
+            <td style="padding:12px;border-bottom:1px solid #fde8c8;font-size:15px;line-height:1.7;">${safe(text)}</td>
+          </tr>`;
+    const mailOptions = {
+      from: process.env.NAVER_EMAIL,
+      to: "kukikukilove@naver.com",
+      subject: `[🎃 할로윈 삼행시] ${center || '센터 미확인'} · ${grade} ${name}`,
+      html: `
+        <h2>🎃 브레인문해력 할로윈 삼행시 이벤트 접수</h2>
+        <table style="border-collapse:collapse;width:100%;max-width:640px;font-family:'Noto Sans KR',sans-serif;">
+          <tr style="background:#f5f5f5;">
+            <td style="padding:10px;font-weight:bold;width:120px;border-bottom:1px solid #e0e0e0;">센터</td>
+            <td style="padding:10px;border-bottom:1px solid #e0e0e0;">${safe(center) || '<span style="color:#999;">미확인</span>'}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;font-weight:bold;border-bottom:1px solid #e0e0e0;">학년</td>
+            <td style="padding:10px;border-bottom:1px solid #e0e0e0;">${safe(grade)}</td>
+          </tr>
+          <tr style="background:#f5f5f5;">
+            <td style="padding:10px;font-weight:bold;border-bottom:1px solid #e0e0e0;">이름</td>
+            <td style="padding:10px;border-bottom:1px solid #e0e0e0;font-weight:bold;">${safe(name)}</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding:10px;font-weight:bold;background:#fff3e0;color:#e65100;">🎃 삼행시</td>
+          </tr>
+          ${lineRow('할', line1, '#fffdf8')}
+          ${lineRow('로', line2, '#fffaf0')}
+          ${lineRow('윈', line3, '#fffdf8')}
+          <tr style="background:#fafafa;">
+            <td style="padding:10px;font-weight:bold;border-top:1px solid #e0e0e0;">접수 일시</td>
+            <td style="padding:10px;border-top:1px solid #e0e0e0;">${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</td>
+          </tr>
+        </table>
+      `
+    };
+    await transporter.sendMail(mailOptions);
+    console.log(`📧 [할로윈 삼행시] 접수: ${center || '-'} · ${grade} ${name}`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ [/api/halloween/submit] 오류:", err);
+    res.status(500).json({ ok: false, message: "접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." });
+  }
+});
+
+// 💡 브레인 아이디어 공모 LAB — 선생님 대시보드에서 아이디어 접수, 본사 이메일 전송
+app.post("/api/idea-lab/submit", async (req, res) => {
+  try {
+    const { center, name, title, content } = req.body || {};
+    if (!center || !name || !title || !content) {
+      return res.json({ ok: false, message: "센터명·성함·제목·내용을 모두 입력해 주세요." });
+    }
+    const safe = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    const mailOptions = {
+      from: process.env.NAVER_EMAIL,
+      to: "kukikukilove@naver.com",
+      subject: `[💡 브레인 아이디어 LAB] ${center} · ${name} — ${title}`,
+      html: `
+        <h2>💡 브레인 아이디어 공모 LAB 접수</h2>
+        <table style="border-collapse:collapse;width:100%;max-width:680px;font-family:'Noto Sans KR',sans-serif;">
+          <tr style="background:#f5f5f5;">
+            <td style="padding:10px;font-weight:bold;width:120px;border-bottom:1px solid #e0e0e0;">센터</td>
+            <td style="padding:10px;border-bottom:1px solid #e0e0e0;">${safe(center)}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;font-weight:bold;border-bottom:1px solid #e0e0e0;">성함</td>
+            <td style="padding:10px;border-bottom:1px solid #e0e0e0;">${safe(name)}</td>
+          </tr>
+          <tr style="background:#f5f5f5;">
+            <td style="padding:10px;font-weight:bold;border-bottom:1px solid #e0e0e0;">제목</td>
+            <td style="padding:10px;border-bottom:1px solid #e0e0e0;font-weight:bold;color:#1565c0;">${safe(title)}</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding:10px;font-weight:bold;background:#e3f2fd;color:#0d47a1;">💡 아이디어 내용</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding:14px;border:1px solid #bbdefb;background:#fff;line-height:1.8;white-space:pre-wrap;">${safe(content)}</td>
+          </tr>
+          <tr style="background:#fafafa;">
+            <td style="padding:10px;font-weight:bold;border-top:1px solid #e0e0e0;">접수 일시</td>
+            <td style="padding:10px;border-top:1px solid #e0e0e0;">${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</td>
+          </tr>
+        </table>
+      `
+    };
+    await transporter.sendMail(mailOptions);
+    console.log(`📧 [아이디어LAB] 접수: ${center} · ${name} — ${title}`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ [/api/idea-lab/submit] 오류:", err);
+    res.status(500).json({ ok: false, message: "접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." });
+  }
+});
+
 app.get("/signup", (req, res) => {
   console.log("✅ [GET] /signup -> 메인으로 이동");
   return res.redirect("/");   // ❗ 쿼리 없이 루트로만 보내기
@@ -1452,7 +1560,7 @@ const kpiAcademySchema = new mongoose.Schema({
   // 2차 계약진행상황 (유/무)
   step_firstConsult: { type: Boolean, default: false },   // 최초상담
   step_briefingApply: { type: Boolean, default: false },  // 설명회신청
-  step_briefingAttend: { type: Boolean, default: false }, // 설명회참석
+  step_briefingAttend: { type: Boolean, default: false }, // 설명회영상
   step_followup: { type: Boolean, default: false },       // 후속연락
   step_offlineMeeting: { type: Boolean, default: false }, // 오프미팅
   step_contract: { type: Boolean, default: false },       // 계약
@@ -1529,6 +1637,44 @@ const kpiCenterSchema = new mongoose.Schema({
 });
 kpiCenterSchema.index({ scope: 1, branchId: 1, createdAt: -1 });
 const KpiCenter = mongoose.model("KpiCenter", kpiCenterSchema);
+
+// 📱 KPI 계약종료 임박 알림 발송 이력 — 중복 발송 방지 (센터+계약일+D-임계값 당 1회)
+const kpiContractAlertLogSchema = new mongoose.Schema({
+  centerName: { type: String, required: true },
+  contractDate: { type: String, default: "" },
+  days: { type: Number, required: true },
+  sentAt: { type: Date, default: Date.now },
+});
+kpiContractAlertLogSchema.index({ centerName: 1, contractDate: 1, days: 1 });
+const KpiContractAlertLog = mongoose.model("KpiContractAlertLog", kpiContractAlertLogSchema);
+
+// 계약종료(계약일+1년) D-100/60/30/10 시점에 본사로 문자 알림
+async function runKpiContractExpiryAlerts() {
+  const THRESHOLDS = [100, 60, 30, 10];
+  const centers = await KpiCenter.find({}).lean();
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let sent = 0;
+  for (const c of centers) {
+    if (!c.contractDate || !/^\d{4}-\d{2}-\d{2}$/.test(c.contractDate)) continue;
+    const end = new Date(c.contractDate + "T00:00:00");
+    end.setFullYear(end.getFullYear() + 1);
+    const remain = Math.floor((end - today) / 86400000);
+    if (!THRESHOLDS.includes(remain)) continue;
+    const dup = await KpiContractAlertLog.findOne({ centerName: c.centerName, contractDate: c.contractDate, days: remain });
+    if (dup) continue;
+    const endStr = end.toISOString().slice(0, 10);
+    const msg = ("[계약관리] " + c.centerName + " 계약종료 D-" + remain + " (" + endStr + ") " + (c.directorName || "") + " " + (c.phone || "")).trim();
+    for (const hqPhone of HQ_ADMIN_PHONES) {
+      try { await sendSMS(hqPhone, msg); }
+      catch (e) { console.error("📱 [계약종료 알림] 발송 오류:", e.message); }
+    }
+    await KpiContractAlertLog.create({ centerName: c.centerName, contractDate: c.contractDate, days: remain });
+    console.log("📱 [계약종료 알림] " + c.centerName + " D-" + remain + " 발송 완료");
+    sent++;
+  }
+  if (sent) console.log("📱 [계약종료 알림] 총 " + sent + "건 발송");
+  return sent;
+}
 
 // 🔐 비밀번호 해시/검증 (Node 내장 crypto scrypt — 외부 의존성 없음)
 function hashKpiPassword(password) {
@@ -2539,7 +2685,7 @@ app.get("/api/super/kpi/academies/export", requireKpiUser, async (req, res) => {
       { header: "목적", key: "purpose", width: 14 },
       { header: "최초상담", key: "s1", width: 9 },
       { header: "설명회신청", key: "s2", width: 10 },
-      { header: "설명회참석", key: "s3", width: 10 },
+      { header: "설명회영상", key: "s3", width: 10 },
       { header: "후속연락", key: "s4", width: 9 },
       { header: "오프미팅", key: "s5", width: 9 },
       { header: "계약", key: "s6", width: 7 },
@@ -33351,6 +33497,11 @@ async function runStudyRoomDedupSweep() {
   }
 }
 cron.schedule('0 3 * * *', runStudyRoomDedupSweep, { timezone: 'Asia/Seoul' });
+
+// 📱 KPI 계약종료 임박 알림 — 매일 아침 9시(KST) D-100/60/30/10 센터를 본사로 문자
+cron.schedule('0 9 * * *', () => {
+  runKpiContractExpiryAlerts().catch(e => console.error('❌ 계약종료 알림 크론 오류:', e.message));
+}, { timezone: 'Asia/Seoul' });
 console.log('✅ 학습실 일반과제 중복 청소 스케줄러 등록 완료 (매일 03:00 KST)');
 
 // ========== 독서 감상문 월간 리셋 ==========
