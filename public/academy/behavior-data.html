@@ -326,6 +326,8 @@
     .print-chip.on:hover { background: #e0e7ff; }
     .print-chip.off { background: #f8fafc; color: #94a3b8; border: 1px dashed #cbd5e1; }
     .print-chip.off:hover { background: #f1f5f9; color: #64748b; }
+    #gatePrintConfirm { position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 100005; display: none; align-items: center; justify-content: center; padding: 20px; }
+    #gatePrintConfirm .gpc-card { background: #fff; border-radius: 16px; padding: 24px 26px; text-align: center; max-width: 320px; width: 100%; box-shadow: 0 20px 55px rgba(15,23,42,0.4); }
     .unprinted-only-label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #475569; margin-left: 12px; cursor: pointer; white-space: nowrap; user-select: none; }
     .unprinted-only-label input { accent-color: #667eea; width: 15px; height: 15px; }
 
@@ -438,6 +440,7 @@
     }
     /* 🖨️ 인쇄 — 관문 상세 모달만 출력 (사이드바/헤더 등 숨김) */
     @media print {
+      #gatePrintConfirm { display: none !important; }
       body * { visibility: hidden !important; }
       #gateModal.show, #gateModal.show * { visibility: visible !important; }
       #gateModal.show {
@@ -836,6 +839,19 @@
       </div>
       <div class="modal-body" id="problemModalBody">
         <div class="loading">데이터를 불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🖨️ 출력 완료 확인 -->
+  <div id="gatePrintConfirm">
+    <div class="gpc-card">
+      <div style="font-size:36px;margin-bottom:8px;">🖨️</div>
+      <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:6px;">출력까지 완료하셨나요?</div>
+      <div style="font-size:12.5px;color:#64748b;line-height:1.5;margin-bottom:16px;">완료로 표시하면 목록 인쇄 칼럼에<br>🖨️ 날짜로 기록돼요.</div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button onclick="gatePrintConfirmAnswer(true)" style="flex:1;padding:11px 0;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#5a67d8);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">✅ 네, 출력했어요</button>
+        <button onclick="gatePrintConfirmAnswer(false)" style="flex:1;padding:11px 0;border:1px solid #d7dce5;border-radius:10px;background:#fff;color:#64748b;font-weight:700;font-size:13px;cursor:pointer;">아니요</button>
       </div>
     </div>
   </div>
@@ -1522,7 +1538,21 @@
       return (dt.getMonth() + 1) + '/' + dt.getDate();
     }
 
-    window.gateDetailPrint = function () { window.print(); };
+    let _gateCurrentItemId = null;
+    window.gateDetailPrint = function () {
+      const item = gateAllData.find(d => d._id === _gateCurrentItemId);
+      const onAfter = () => {
+        window.removeEventListener('afterprint', onAfter);
+        if (!item || item.printedAt) return; // 이미 기록된 건 재확인 불필요
+        setTimeout(() => { document.getElementById('gatePrintConfirm').style.display = 'flex'; }, 200);
+      };
+      window.addEventListener('afterprint', onAfter);
+      window.print();
+    };
+    window.gatePrintConfirmAnswer = function (yes) {
+      document.getElementById('gatePrintConfirm').style.display = 'none';
+      if (yes && _gateCurrentItemId) toggleGatePrinted(_gateCurrentItemId, true);
+    };
 
     window.toggleGatePrinted = async function (id, printed) {
       try {
@@ -1866,6 +1896,7 @@
 
       // 인쇄/PDF/카카오톡 컨텍스트 저장
       _gateDetailCtx = { grade: item.grade, name: item.name, gate: item.gate };
+      _gateCurrentItemId = itemId;
 
       const modal = document.getElementById('gateModal');
       const modalTitle = document.getElementById('gateModalTitle');
