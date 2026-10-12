@@ -176,7 +176,8 @@
     }
     tbody tr:hover {
       background: #f0fdf4;
-      transform: scale(1.001);
+      /* transform 제거 (2026-10-12): 행별 transform은 윈도우 크롬에서 sticky 헤더와 겹칠 때
+         스크롤/호버 해제 시 목록이 하얗게 비는 리페인트 글리치를 유발 */
       box-shadow: 0 2px 8px rgba(5, 150, 105, 0.05);
     }
     tr.empty-row td {
@@ -1486,8 +1487,12 @@
       });
     });
 
-    async function fetchBranchStudents(q = "", sort = "", _retry = 0) {
+    // 🛡️ 요청 순서 토큰 — 늦게 도착한 이전 응답이 최신 목록을 덮어쓰지 못하게 함
+    let _fetchSeq = 0;
+    async function fetchBranchStudents(q = "", sort = "", _retry = 0, _seq = null) {
       const MAX_RETRY = 2;   // 검색어 없는 전체목록이 일시적으로 비면 자동 재시도 (새로고침 대체)
+      const mySeq = _seq !== null ? _seq : ++_fetchSeq;  // 재시도는 원 요청의 토큰 유지
+      if (mySeq !== _fetchSeq) return;  // 낡은 재시도가 최신 화면을 "불러오는 중"으로 덮지 않게
       const tbody = document.getElementById("student-tbody");
       const errorBox = document.getElementById("error-box");
       errorBox.style.display = "none";
@@ -1513,19 +1518,23 @@
         const data = await res.json();
         const list = data.students || data.users || [];
 
+        // 이 응답이 도착하기 전에 새 검색/새로고침이 시작됐으면 그리지 않음 (최신 요청이 담당)
+        if (mySeq !== _fetchSeq) return;
+
         // 🔁 전체 목록(검색어 없음)인데 비어있으면 일시적 응답 가능성 → 자동 재시도
         //    (학생이 있는데 "표시할 학생이 없습니다"가 뜨고 새로고침해야 되던 현상 보완)
         if (list.length === 0 && !q && _retry < MAX_RETRY) {
           await new Promise(r => setTimeout(r, 500 + _retry * 400));
-          return fetchBranchStudents(q, sort, _retry + 1);
+          return fetchBranchStudents(q, sort, _retry + 1, mySeq);
         }
 
         renderTable(list);
       } catch (err) {
+        if (mySeq !== _fetchSeq) return; // 이미 새 요청이 진행 중이면 오류 표시도 생략
         // 네트워크/일시 오류도 전체목록 로드면 자동 재시도
         if (!q && _retry < MAX_RETRY) {
           await new Promise(r => setTimeout(r, 500 + _retry * 400));
-          return fetchBranchStudents(q, sort, _retry + 1);
+          return fetchBranchStudents(q, sort, _retry + 1, mySeq);
         }
         tbody.innerHTML = `
           <tr class="empty-row">
@@ -1939,12 +1948,24 @@
       });
 
       // 실시간 자동 필터링 (300ms 디바운스 — 타이핑 끝나면 자동 검색)
+      // 🛡️ 한글 IME 가드: 조합 중(isComposing)에는 검색 보류 — 윈도우에서 흰 공간 클릭 시
+      //    조합 확정 input 이벤트가 미완성 자음("ㄱ" 등)으로 검색해 목록을 비우던 문제 방지
       let _searchDebounceTimer = null;
-      input.addEventListener("input", () => {
+      let _lastSearchedQ = null;
+      const _runSearch = () => {
+        const q = input.value.trim();
+        if (q === _lastSearchedQ) return; // 직전 검색어와 같으면 재검색 생략
+        _lastSearchedQ = q;
+        fetchBranchStudents(q);
+      };
+      input.addEventListener("input", (e) => {
+        if (e.isComposing) return; // 한글 조합 중에는 보류 (조합 확정 시 compositionend에서 처리)
         if (_searchDebounceTimer) clearTimeout(_searchDebounceTimer);
-        _searchDebounceTimer = setTimeout(() => {
-          fetchBranchStudents(input.value.trim());
-        }, 300);
+        _searchDebounceTimer = setTimeout(_runSearch, 300);
+      });
+      input.addEventListener("compositionend", () => {
+        if (_searchDebounceTimer) clearTimeout(_searchDebounceTimer);
+        _searchDebounceTimer = setTimeout(_runSearch, 300);
       });
 
       btnRefresh.addEventListener("click", () => {

@@ -3503,6 +3503,12 @@ function mapOrderItemToInventoryKeys(item) {
       out.push({ key: `vocabwb_${issue}`, qty });
       return { keys: out };
     }
+  } else if (item.bookType === '(신)문해어휘학습장') {
+    // 신 어휘학습장: 3권 분할 — 단원 8개 단위, 자동과제 시작호수(1/5/9) 매칭 (issueNumber 1~3)
+    if (issue >= 1 && issue <= 3) {
+      out.push({ key: `vocabwb_n${issue}`, qty });
+      return { keys: out };
+    }
   } else if (item.bookType === '과목별교재') {
     // 과목별 교재: 등급(온/업/핏/딥) × 14과목 (issueNumber 1~14 = 과목 순번)
     const map = { '브레인온': 'on', '브레인업': 'up', '브레인핏': 'fit', '브레인딥': 'deep' };
@@ -3602,7 +3608,7 @@ app.put("/api/super/textbook-inventory", requireSuperOrTextbook, async (req, res
   try {
     const incoming = (req.body && req.body.quantities) || {};
     // 유효 키만 통과 (위변조 방지)
-    const validKey = /^(brain|creative|daily)_(on|up|fit|deep)_(?:[1-9]|1[0-2])$|^korhistory_(basic|advanced)$|^vocabwb_[1-4]$/;
+    const validKey = /^(brain|creative|daily)_(on|up|fit|deep)_(?:[1-9]|1[0-2])$|^korhistory_(basic|advanced)$|^vocabwb_[1-4]$|^vocabwb_n[1-3]$/;
     const cleaned = {};
     for (const [k, v] of Object.entries(incoming)) {
       if (!validKey.test(k)) continue;

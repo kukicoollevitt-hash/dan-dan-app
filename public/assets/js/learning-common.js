@@ -1731,6 +1731,10 @@
           if (typeof loadVocabState === 'function') {
             loadVocabState();
           }
+          // 채점 전 입력 초안 복원 (빈 칸에만 — 채점 상태가 있으면 내부에서 무시)
+          if (typeof window.restoreVocabDraft === 'function') {
+            setTimeout(window.restoreVocabDraft, 80);
+          }
         }
       }
     }
@@ -2952,6 +2956,9 @@
 
       localStorage.setItem(stateKey, JSON.stringify(vocabStateData));
       console.log('[saveVocabState] localStorage 저장 완료:', stateKey);
+
+      // 정식 저장이 완료됐으니 채점 전 입력 초안은 제거
+      if (typeof window.clearVocabDraft === 'function') window.clearVocabDraft();
 
       // ★ 서버에도 저장
       if (typeof saveUnitProgressToServer === 'function') {
@@ -4459,6 +4466,9 @@
       inp.disabled = false;
     });
 
+    // 어휘 입력 초안도 함께 제거 (전체 초기화 시 이전 입력이 되살아나지 않게)
+    if (typeof window.clearVocabDraft === 'function') window.clearVocabDraft();
+
     // 창의활동 초기화
     const creativeTextarea = document.querySelector('.creative-input');
     if (creativeTextarea) {
@@ -4620,4 +4630,142 @@
   }, true); // capture phase — 개별 passageBox 리스너보다 먼저 실행
 
   console.log('[learning-common.js] 본문 순차 읽기 강제 리스너 등록 완료');
+})();
+
+/* ===== 📝 어휘학습 입력 초안 자동 저장 + 다시풀기 확인 팝업 (2026-10-12) =====
+   - 채점 전 입력값을 localStorage에 자동 저장(디바운스), 재진입 시 "빈 칸에만" 복원
+   - 채점된 상태(disabled/correct/wrong)가 있으면 초안을 절대 덮어쓰지 않음 — 기존 저장·복원 로직 우선
+   - 다시풀기 클릭 시 입력값이 있으면 확인 팝업 (캡처 단계 가로채기 — 공통/개별 페이지 핸들러 모두 커버)
+   - 기존 코드를 수정하지 않는 순수 추가 모듈 */
+(function () {
+  // 학생 키 — 기존 buildStudentKey/getCurrentStudent와 동일 로직 (닫힌 스코프라 자체 내장)
+  function _draftStudentKey() {
+    let saved = null;
+    try { saved = localStorage.getItem('currentStudent'); } catch (e) {}
+    if (!saved && window.parent && window.parent !== window) {
+      try { saved = window.parent.localStorage.getItem('currentStudent'); } catch (e) {}
+    }
+    if (!saved) return null;
+    try {
+      const stu = JSON.parse(saved);
+      const cleanName = (stu.name || '').trim();
+      const cleanGrade = (stu.grade || '').trim().replace('학년', '');
+      if (!cleanName) return null;
+      return cleanGrade + '학년_' + cleanName;
+    } catch (e) { return null; }
+  }
+  function _draftKey() {
+    const stuKey = _draftStudentKey();
+    if (!stuKey) return null;
+    return 'vocab-draft:' + stuKey + ':' + (window.CUR_UNIT || 'unknown');
+  }
+
+  let _draftTimer = null;
+  function saveVocabDraft() {
+    const key = _draftKey();
+    if (!key) return;
+    const inputs = document.querySelectorAll('#tab-vocab .blank-input');
+    if (!inputs.length) return;
+    // 채점 완료 상태(disabled)면 초안 저장 안 함 — 정식 저장(vocab-state)이 담당
+    if (Array.prototype.some.call(inputs, function (i) { return i.disabled; })) return;
+    const values = Array.prototype.map.call(inputs, function (i) { return i.value || ''; });
+    try { localStorage.setItem(key, JSON.stringify({ v: values, t: Date.now() })); } catch (e) {}
+  }
+  function clearVocabDraft() {
+    const key = _draftKey();
+    if (key) { try { localStorage.removeItem(key); } catch (e) {} }
+  }
+  function restoreVocabDraft() {
+    const key = _draftKey();
+    if (!key) return;
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
+    if (!saved || !Array.isArray(saved.v)) return;
+    const blanks = document.querySelectorAll('#tab-vocab .blank-wrap');
+    if (!blanks.length) return;
+    // 채점 흔적이 있으면 초안 무시 (서버/정식 복원 우선)
+    const graded = Array.prototype.some.call(blanks, function (bw) {
+      return bw.classList.contains('correct') || bw.classList.contains('wrong');
+    });
+    if (graded) return;
+    blanks.forEach(function (bw, idx) {
+      const input = bw.querySelector('.blank-input');
+      if (!input || input.disabled) return;
+      if (input.value && input.value.trim()) return; // 이미 값 있으면 보존
+      if (typeof saved.v[idx] === 'string' && saved.v[idx]) input.value = saved.v[idx];
+    });
+    console.log('[vocabDraft] 채점 전 입력 초안 복원:', key);
+  }
+  window.saveVocabDraft = saveVocabDraft;
+  window.restoreVocabDraft = restoreVocabDraft;
+  window.clearVocabDraft = clearVocabDraft;
+
+  // 입력 감지(위임) — 0.4초 디바운스 저장
+  document.addEventListener('input', function (e) {
+    const t = e.target;
+    if (!t || !t.classList || !t.classList.contains('blank-input')) return;
+    if (!t.closest || !t.closest('#tab-vocab')) return;
+    clearTimeout(_draftTimer);
+    _draftTimer = setTimeout(saveVocabDraft, 400);
+  }, true);
+
+  // 어휘 탭 활성화 감지 — 렌더·정식 복원 뒤에 초안 복원 (빈 칸에만)
+  document.addEventListener('click', function (e) {
+    const tabBtn = e.target && e.target.closest ? e.target.closest('[data-tab="vocab"], .tab-vocab-btn') : null;
+    if (!tabBtn) return;
+    setTimeout(restoreVocabDraft, 120);
+  }, true);
+  // 최초 로드 시에도 한 번 (어휘 탭이 기본 활성인 페이지 대비)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { setTimeout(restoreVocabDraft, 600); });
+  } else {
+    setTimeout(restoreVocabDraft, 600);
+  }
+
+  // ===== 🎨 다시풀기 확인 팝업 (이쁜 커스텀) =====
+  function showVocabResetConfirm(onOk) {
+    let ov = document.getElementById('vocabResetConfirmOverlay');
+    if (ov) ov.remove();
+    ov = document.createElement('div');
+    ov.id = 'vocabResetConfirmOverlay';
+    ov.style.cssText = 'position:fixed; inset:0; z-index:999999; background:rgba(60,35,10,0.45); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; padding:20px;';
+    ov.innerHTML =
+      '<div style="max-width:340px; width:100%; background:linear-gradient(165deg,#fff8ef,#ffffff 55%); border-radius:20px; padding:28px 22px 22px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.35); border:1.5px solid #f3d9b0; animation:vrcPop 0.3s cubic-bezier(0.34,1.56,0.64,1);">' +
+        '<div style="font-size:46px; line-height:1; margin-bottom:12px;">🧹</div>' +
+        '<div style="font-size:18px; font-weight:900; color:#7a3d00; margin-bottom:8px;">다시 풀기 전에 확인해요!</div>' +
+        '<div style="font-size:14px; color:#6b5b4a; line-height:1.7; margin-bottom:18px;">지금까지 입력한 답이<br><b style="color:#d35a1a;">모두 지워져요.</b> 정말 다시 풀까요?</div>' +
+        '<div style="display:flex; gap:10px;">' +
+          '<button id="vrcCancel" style="flex:1; padding:12px 0; border:1.5px solid #e5d5c1; border-radius:12px; background:#fff; color:#8a7a66; font-size:14.5px; font-weight:800; cursor:pointer;">취소</button>' +
+          '<button id="vrcOk" style="flex:1; padding:12px 0; border:none; border-radius:12px; background:linear-gradient(135deg,#f39c39,#d35a1a); color:#fff; font-size:14.5px; font-weight:900; cursor:pointer; box-shadow:0 6px 14px rgba(211,90,26,0.35);">다시 풀기</button>' +
+        '</div>' +
+      '</div>';
+    if (!document.getElementById('vrcPopStyle')) {
+      const st = document.createElement('style');
+      st.id = 'vrcPopStyle';
+      st.textContent = '@keyframes vrcPop { from { transform: scale(0.75); opacity: 0; } to { transform: scale(1); opacity: 1; } }';
+      document.head.appendChild(st);
+    }
+    document.body.appendChild(ov);
+    ov.querySelector('#vrcCancel').addEventListener('click', function () { ov.remove(); });
+    ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+    ov.querySelector('#vrcOk').addEventListener('click', function () { ov.remove(); onOk(); });
+  }
+
+  // 다시풀기 클릭 가로채기 — 입력값 있을 때만 확인 (캡처 단계: 인라인 onclick·공통 핸들러 모두 선행 차단)
+  document.addEventListener('click', function (e) {
+    const btn = e.target && e.target.closest ? e.target.closest('#vocab-reset') : null;
+    if (!btn) return;
+    if (btn.dataset.vdConfirmed === '1') { delete btn.dataset.vdConfirmed; clearVocabDraft(); return; }
+    const hasInput = Array.prototype.some.call(
+      document.querySelectorAll('#tab-vocab .blank-input'),
+      function (i) { return (i.value || '').trim(); }
+    );
+    if (!hasInput) return; // 빈 상태면 바로 진행
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    showVocabResetConfirm(function () {
+      btn.dataset.vdConfirmed = '1';
+      btn.click();
+    });
+  }, true);
 })();
