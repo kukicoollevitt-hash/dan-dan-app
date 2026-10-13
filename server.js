@@ -1014,9 +1014,10 @@ app.post("/api/halloween/submit", async (req, res) => {
         </table>
       `
     };
-    try { await transporter.sendMail(mailOptions); }
-    catch (mailErr) { console.error("❌ [할로윈 삼행시] 메일 발송 실패(기록은 저장됨):", mailErr.message); }
-    console.log(`📧 [할로윈 삼행시] 접수: ${center || '-'} · ${grade} ${name}`);
+    // 📧 메일 발송 중단 (2026-10-13 원장님 지시) — DB 기록만 사용, 슈퍼관리자 확성기 관리에서 조회·엑셀
+    // try { await transporter.sendMail(mailOptions); }
+    // catch (mailErr) { console.error("❌ [할로윈 삼행시] 메일 발송 실패(기록은 저장됨):", mailErr.message); }
+    console.log(`🎃 [할로윈 삼행시] 접수(DB 저장): ${center || '-'} · ${grade} ${name}`);
     res.json({ ok: true });
   } catch (err) {
     console.error("❌ [/api/halloween/submit] 오류:", err);
@@ -36446,6 +36447,30 @@ app.post("/api/admin/branch/add-student", async (req, res) => {
   } catch (error) {
     console.error("학생 추가 오류:", error);
     res.status(500).json({ success: false, message: "학생 추가 중 오류가 발생했습니다." });
+  }
+});
+
+// 📱 학생 추가 전 전화번호 중복 사전 확인 (입력 중 실시간 피드백용)
+//    add-student의 중복 검사와 동일 조건(전체 DB, deleted 포함)으로 조회해 결과가 어긋나지 않게 함
+app.get("/api/admin/academy/check-student-phone", requireAdminLogin, async (req, res) => {
+  try {
+    const phone = String(req.query.phone || "").replace(/[^0-9]/g, "");
+    if (phone.length !== 11) return res.json({ ok: true, valid: false });
+    const existing = await User.findOne({ phone }).select("grade name academyName deleted").lean();
+    if (!existing) return res.json({ ok: true, valid: true, exists: false });
+    // 같은 센터(별칭 포함) 학생이면 누구인지 알려주고, 타 센터 학생이면 개인정보 비노출
+    let mine = null;
+    try {
+      const adm = await Admin.findById(req.session.admin.id).select("academyName academyAliases").lean();
+      const names = adm ? [adm.academyName, ...(adm.academyAliases || [])].filter(Boolean) : [];
+      if (names.includes(existing.academyName)) {
+        mine = { grade: existing.grade || "", name: existing.name || "", deleted: !!existing.deleted };
+      }
+    } catch (e) { /* 센터 판별 실패 시 타 센터 취급 */ }
+    res.json({ ok: true, valid: true, exists: true, mine });
+  } catch (err) {
+    console.error("❌ [check-student-phone] 오류:", err);
+    res.status(500).json({ ok: false });
   }
 });
 

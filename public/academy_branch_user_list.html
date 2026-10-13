@@ -1175,12 +1175,13 @@
         </div>
         <div style="margin-bottom: 24px;">
           <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #333;">전화번호 *</label>
-          <input type="tel" id="add-number" placeholder="010-0000-0000" maxlength="13" required style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;" oninput="formatPhoneNumber(this)">
+          <input type="tel" id="add-number" placeholder="010-0000-0000" maxlength="13" required style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;" oninput="formatPhoneNumber(this); checkPhoneDuplicate();">
           <div style="margin-top: 6px; font-size: 12px; color: #888;">* 비밀번호(ID)로 사용됩니다</div>
+          <div id="add-number-status" style="margin-top: 6px; font-size: 12.5px; font-weight: 700; display: none;"></div>
         </div>
         <div style="display: flex; gap: 12px; justify-content: flex-end;">
           <button type="button" onclick="closeAddStudentModal()" style="padding: 10px 20px; border: 2px solid #e5e7eb; border-radius: 8px; background: #fff; color: #666; font-weight: 600; cursor: pointer;">취소</button>
-          <button type="submit" style="padding: 10px 20px; border: none; border-radius: 8px; background: #059669; color: #fff; font-weight: 600; cursor: pointer;">추가하기</button>
+          <button type="submit" id="add-submit-btn" style="padding: 10px 20px; border: none; border-radius: 8px; background: #059669; color: #fff; font-weight: 600; cursor: pointer;">추가하기</button>
         </div>
       </form>
     </div>
@@ -2554,9 +2555,56 @@
       document.getElementById('add-name').value = '';
       document.getElementById('add-number').value = '';
 
+      // 중복 상태 초기화
+      const st = document.getElementById('add-number-status');
+      if (st) st.style.display = 'none';
+      const sb = document.getElementById('add-submit-btn');
+      if (sb) { sb.disabled = false; sb.style.opacity = ''; }
+
       // 학원명 자동 표시
       const academy = currentAcademyName || '(학원 정보 없음)';
       document.getElementById('add-info-display').textContent = academy;
+    }
+
+    // 📱 전화번호 실시간 중복 확인 — 11자리 완성 시 서버 조회 (가입 거절 조건과 동일 기준)
+    let _phoneCheckTimer = null;
+    let _phoneCheckSeq = 0;
+    function checkPhoneDuplicate() {
+      const st = document.getElementById('add-number-status');
+      const sb = document.getElementById('add-submit-btn');
+      if (!st || !sb) return;
+      const digits = document.getElementById('add-number').value.replace(/[^0-9]/g, '');
+      clearTimeout(_phoneCheckTimer);
+      if (digits.length !== 11) {
+        st.style.display = 'none';
+        sb.disabled = false; sb.style.opacity = '';
+        return;
+      }
+      _phoneCheckTimer = setTimeout(async () => {
+        const mySeq = ++_phoneCheckSeq;
+        try {
+          const r = await fetch('/api/admin/academy/check-student-phone?phone=' + digits, { credentials: 'include' });
+          const d = await r.json();
+          if (mySeq !== _phoneCheckSeq) return; // 이후 입력으로 재조회됐으면 무시
+          if (!d.ok || !d.valid) { st.style.display = 'none'; return; }
+          st.style.display = 'block';
+          if (d.exists) {
+            st.style.color = '#dc2626';
+            st.textContent = d.mine
+              ? `⚠️ 이미 등록된 번호예요 — 우리 센터 ${[d.mine.grade, d.mine.name].filter(Boolean).join(' ')} 학생이 사용 중${d.mine.deleted ? ' (휴지 상태)' : ''}`
+              : '⚠️ 이미 등록된 번호예요 (다른 센터에서 사용 중인 번호)';
+            sb.disabled = true; sb.style.opacity = '0.5';
+          } else {
+            st.style.color = '#059669';
+            st.textContent = '✅ 사용 가능한 번호예요';
+            sb.disabled = false; sb.style.opacity = '';
+          }
+        } catch (e) {
+          // 조회 실패 시 입력을 막지 않음 — 최종 검증은 서버 등록 단계에서 수행
+          st.style.display = 'none';
+          sb.disabled = false; sb.style.opacity = '';
+        }
+      }, 350);
     }
 
     function closeAddStudentModal() {
