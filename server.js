@@ -12444,7 +12444,7 @@ app.get("/admin/user-edit", async (req, res) => {
     }
 
     // 학원용/학교용에 따라 다른 폼 필드 생성
-    const gradeOptions = ['초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
+    const gradeOptions = ['초1', '초2', '초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
     const gradeSelectOptions = gradeOptions.map(g =>
       `<option value="${g}" ${user.grade === g ? 'selected' : ''}>${g}</option>`
     ).join('');
@@ -12605,7 +12605,9 @@ app.post("/admin/user-edit", async (req, res) => {
     // 🔹 기존 학년/이름 저장 (학습 기록 업데이트용)
     const oldGrade = user.grade || "";
     const oldName = user.name || "";
-    const newGrade = grade || "";
+    // 🛡️ 학년이 빈 값으로 오면 기존 학년 유지 — 수정 폼 옵션 누락 등으로
+    //    학년이 지워지던 사고 방지 (봉선센터 초1·초2 학년 소실 건, 2026-10-14)
+    const newGrade = (grade || "").trim() || oldGrade;
     const newName = name || "";
 
     // 필드 업데이트 - 학원용/학교용 분기

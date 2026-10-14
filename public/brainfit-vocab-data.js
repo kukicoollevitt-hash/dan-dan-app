@@ -11662,16 +11662,16 @@ const BRAINFIT_VOCAB_DATA = {
     "example": "나의 생활권은 학교와 집 주변이다."
   },
   {
-    "word": "네비게이션",
-    "question": "<span class=\"word-highlight\">네비게이션</span>의 뜻은?",
-    "hint": "내비게이션",
+    "word": "내비게이션",
+    "question": "<span class=\"word-highlight\">내비게이션</span>의 뜻은?",
+    "hint": "목적지까지 길을 안내해 주...",
     "correctAnswer": 1,
-    "meaning": "내비게이션",
+    "meaning": "목적지까지 길을 안내해 주는 장치나 프로그램.",
     "subject": "geo",
     "fieldLabel": "지리",
     "koreanLevel": 5,
-    "explanation": "\"네비게이션\"은(는) 내비게이션을(를) 의미합니다.",
-    "example": "내 네비게이션이 경로를 안내해줬다."
+    "explanation": "\"내비게이션\"은(는) 목적지까지 길을 안내해 주는 장치나 프로그램을(를) 의미합니다.",
+    "example": "내 내비게이션이 경로를 안내해 줬다."
   },
   {
     "word": "지도",
@@ -13776,13 +13776,13 @@ const BRAINFIT_VOCAB_DATA = {
   {
     "word": "내비게이션",
     "question": "<span class=\"word-highlight\">내비게이션</span>의 뜻은?",
-    "hint": "네비게이션",
+    "hint": "목적지까지 길을 안내해 주...",
     "correctAnswer": 1,
-    "meaning": "네비게이션",
+    "meaning": "목적지까지 길을 안내해 주는 장치나 프로그램.",
     "subject": "geo",
     "fieldLabel": "지리",
     "koreanLevel": 5,
-    "explanation": "\"내비게이션\"은(는) 네비게이션을(를) 의미합니다.",
+    "explanation": "\"내비게이션\"은(는) 목적지까지 길을 안내해 주는 장치나 프로그램을(를) 의미합니다.",
     "example": "내비게이션 앱으로 빠른 길을 찾았다."
   },
   {
