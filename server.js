@@ -573,6 +573,51 @@ function clearCacheByPrefix(prefix) {
 
 const app = express();
 app.use(compression());
+
+/* ============================================================
+   ⏱️ 성능 측정 (A안, 2026-10-15 승인) — 메모리 집계만, 외부 전송·파일 기록 없음
+   - 개인정보 비기록: 쿼리스트링 제거·ID 치환·파일경로 접두 버킷팅, Mongo는 연산명:컬렉션만
+   - 전 구간 try-catch: 측정 실패가 요청 처리에 영향 주지 않음 (기존 로직 무변경, 순수 추가)
+   - 메모리 상한: 라우트/쿼리 각 500키, 초과분 '(other)' 합산. 서버 재시작 시 초기화됨
+   ============================================================ */
+const __perf = {
+  startedAt: Date.now(),
+  routes: new Map(),
+  mongo: new Map(),
+  BUCKETS: [50, 100, 200, 300, 500, 800, 1200, 2000, 5000],
+  MAX_KEYS: 500,
+};
+function __perfRecord(map, key, ms) {
+  try {
+    let s = map.get(key);
+    if (!s) {
+      if (map.size >= __perf.MAX_KEYS) key = '(other)';
+      s = map.get(key) || { count: 0, sumMs: 0, maxMs: 0, buckets: new Array(__perf.BUCKETS.length + 1).fill(0) };
+      map.set(key, s);
+    }
+    s.count++; s.sumMs += ms; if (ms > s.maxMs) s.maxMs = ms;
+    let b = __perf.BUCKETS.findIndex(u => ms <= u);
+    if (b === -1) b = __perf.BUCKETS.length;
+    s.buckets[b]++;
+  } catch (e) { /* 집계 실패 무시 */ }
+}
+// 파일 서빙류는 경로에 파일명(한글 등)이 들어가므로 접두 버킷으로만 기록 (개인정보·키 폭증 방지)
+const __PERF_PREFIX_BUCKETS = ['/images/', '/uploads/', '/temp-uploads/', '/BRAINUP/', '/creative-book/', '/audio/', '/videos/'];
+app.use((req, res, next) => {
+  let t0;
+  try { t0 = process.hrtime.bigint(); } catch (e) { return next(); }
+  res.on('finish', () => {
+    try {
+      const ms = Number(process.hrtime.bigint() - t0) / 1e6;
+      let p = req.path || '/';
+      const pre = __PERF_PREFIX_BUCKETS.find(x => p.startsWith(x));
+      if (pre) p = pre + '*';
+      else p = p.replace(/[0-9a-f]{24}/gi, ':id').replace(/\/\d+(\/|$)/g, '/:n$1').slice(0, 120);
+      __perfRecord(__perf.routes, req.method + ' ' + p + ' [' + res.statusCode + ']', ms);
+    } catch (e) { /* 무시 */ }
+  });
+  next();
+});
 const ADMIN_KEY = process.env.ADMIN_KEY ? process.env.ADMIN_KEY.trim() : "";
 
 const PORT = process.env.PORT || 3000;
@@ -1966,6 +2011,39 @@ function requireAdminLogin(req, res, next) {
  * ✅ 슈퍼관리자 전용 미들웨어
  * ==================================== */
 const SUPER_ADMIN_PIN = "284600"; // 슈퍼관리자 PIN
+
+/* ⏱️ 성능 측정(A안) 조회 — 슈퍼관리자 세션 필수. 통계 키는 정규화된 경로/연산명뿐(개인정보 없음) */
+app.get('/api/super/perf-stats', requireSuperAdmin, (req, res) => {
+  try {
+    const pct = (s, p) => {
+      const target = s.count * p; let acc = 0;
+      for (let i = 0; i < s.buckets.length; i++) {
+        acc += s.buckets[i];
+        if (acc >= target) return i < __perf.BUCKETS.length ? __perf.BUCKETS[i] : 9999;
+      }
+      return 9999;
+    };
+    const dump = (map) => [...map.entries()]
+      .map(([k, s]) => ({ key: k, count: s.count, avgMs: +(s.sumMs / s.count).toFixed(1), p50: pct(s, 0.5), p90: pct(s, 0.9), p99: pct(s, 0.99), maxMs: +s.maxMs.toFixed(0) }))
+      .sort((a, b) => b.count - a.count);
+    res.json({
+      ok: true,
+      sinceMin: Math.round((Date.now() - __perf.startedAt) / 60000),
+      note: '버킷 근사 백분위(상한값 표기, 9999=5초 초과) · 서버 재시작 시 초기화 · 인스턴스 메모리 집계',
+      routes: dump(__perf.routes).slice(0, 100),
+      mongo: dump(__perf.mongo).slice(0, 80),
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, message: e.message });
+  }
+});
+// 초기화는 GET에서 분리 — 슈퍼관리자 세션 + POST로만
+app.post('/api/super/perf-stats/reset', requireSuperAdmin, (req, res) => {
+  try {
+    __perf.routes.clear(); __perf.mongo.clear(); __perf.startedAt = Date.now();
+    res.json({ ok: true, reset: true });
+  } catch (e) { res.status(500).json({ ok: false, message: e.message }); }
+});
 
 function requireSuperAdmin(req, res, next) {
   if (!req.session.admin || !req.session.admin.isSuper) {
@@ -47272,9 +47350,31 @@ mongoose
     maxPoolSize: 50,                   // 최대 50개 연결
     serverSelectionTimeoutMS: 5000,    // 서버 선택 타임아웃 5초
     socketTimeoutMS: 45000,            // 소켓 타임아웃 45초
+    monitorCommands: true,             // ⏱️ 성능 측정(A안): 연산별 소요시간 이벤트 — 동작 변화 없음
   })
   .then(async () => {
     console.log("✅ MongoDB Atlas 연결 성공");
+
+    // ⏱️ 성능 측정(A안): Mongo 연산 시간 집계 — 연산명:컬렉션과 소요ms만 기록, 필터값(이름·정답 등) 미기록
+    try {
+      const __client = mongoose.connection.getClient();
+      const __cmdColl = new Map();
+      __client.on('commandStarted', (e) => {
+        try {
+          if (__cmdColl.size > 5000) __cmdColl.clear();
+          const coll = typeof e.command[e.commandName] === 'string' ? e.command[e.commandName] : '';
+          __cmdColl.set(e.requestId, e.commandName + ':' + coll);
+        } catch (err) {}
+      });
+      __client.on('commandSucceeded', (e) => {
+        try {
+          const key = __cmdColl.get(e.requestId); __cmdColl.delete(e.requestId);
+          if (key) __perfRecord(__perf.mongo, key, e.duration);
+        } catch (err) {}
+      });
+      __client.on('commandFailed', (e) => { try { __cmdColl.delete(e.requestId); } catch (err) {} });
+      console.log('⏱️ [perf] Mongo 연산 모니터링 활성');
+    } catch (e) { console.error('⏱️ [perf] Mongo 모니터링 미작동(서비스 무영향):', e.message); }
 
     // 인덱스 동기화 (성능 최적화)
     try {
