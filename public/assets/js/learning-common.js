@@ -3067,8 +3067,8 @@
           "실시간": ["ㅅㅅㄱ"]
         };
 
-        const normIn = input.replace(/\s+/g,"").replace(/[\u00B7\u318D\u30FB\uFF65]/g,"").toLowerCase();
-        const normAns = ans.replace(/\s+/g,"").replace(/[\u00B7\u318D\u30FB\uFF65]/g,"").toLowerCase();
+        const normIn = input.replace(/\s+/g,"").replace(/[\u00B7\u318D\u30FB\uFF65\u2022\u2219\u2027\u3002]/g,"").toLowerCase();
+        const normAns = ans.replace(/\s+/g,"").replace(/[\u00B7\u318D\u30FB\uFF65\u2022\u2219\u2027\u3002]/g,"").toLowerCase();
 
         let ok = false;
         if (normIn === normAns) ok = true;
