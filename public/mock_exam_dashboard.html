@@ -1042,6 +1042,31 @@
         }
 
         /* 강의 시청하기 버튼 */
+        /* 🖨 시험지 인쇄 (A4/A3) — 시험시작 버튼 바로 아래 2열 */
+        .card-print-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .btn-print {
+            flex: 1;
+            padding: 10px 0;
+            background: #fff;
+            color: #475569;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-print:hover {
+            border-color: #6366f1;
+            color: #6366f1;
+            background: #f5f6ff;
+            transform: translateY(-1px);
+        }
+
         .btn-lecture {
             width: 100%;
             padding: 12px;
@@ -5353,6 +5378,16 @@
             'korean_mock_12': ''
         };
 
+        // 🖨 시험지 인쇄 가능한 최대 회차 (구축 완료 기준 — 9회차 이후 완성 시 숫자만 올리면 됨)
+        const PRINT_READY_MAX_ROUND = 8;
+
+        // 시험지 인쇄 — 새 탭에서 인쇄 모드(?print=a4|a3)로 열면 자동으로 인쇄창이 뜸
+        function openExamPrint(examId, size) {
+            const url = getExamUrl(examId);
+            const sep = url.includes('?') ? '&' : '?';
+            window.open(url + sep + 'print=' + size, '_blank', 'noopener');
+        }
+
         // 모의고사 목록 (서버에서 가져올 예정, 일단 하드코딩)
         const examList = [
             { id: 'korean_mock_1', round: 1, title: '브레인 모의고사 1회차' },
@@ -6012,6 +6047,13 @@
                 }
             }
 
+            // 🖨 시험지 인쇄 버튼 — 구축 완료된 회차만 (PRINT_READY_MAX_ROUND까지)
+            const printRow = exam.round <= PRINT_READY_MAX_ROUND ? `
+                        <div class="card-print-row">
+                            <button class="btn-print" onclick="event.stopPropagation(); openExamPrint('${exam.id}', 'a4')">🖨 시험지 A4</button>
+                            <button class="btn-print" onclick="event.stopPropagation(); openExamPrint('${exam.id}', 'a3')">🖨 시험지 A3</button>
+                        </div>` : '';
+
             return `
                 <div class="exam-card">
                     <div class="card-clickable-area" onclick="handleCardClick('${exam.id}', '${progress.status}')">
@@ -6028,6 +6070,7 @@
                     <div class="card-buttons-area">
                         ${areaContent}
                         ${buttons}
+                        ${printRow}
                         ${lectureButton}
                         ${wrongReviewButton}
                     </div>
