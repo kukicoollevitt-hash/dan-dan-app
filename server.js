@@ -47404,12 +47404,40 @@ mongoose
 // ============================================
 // 📢 활동 피드 API (롤링 배너용)
 // ============================================
+// 🗂️ 센터별 폴링 응답 캐시 (activity-feed·megaphone 전용) — 2026-10-17 승인분
+//    TTL + single-flight(동시 요청 1회 조회로 병합) + 키 상한 100(LRU성 제거) + 실패 시 직접 조회 폴백
+//    응답은 academy 파라미터로만 결정됨(개인화·권한 분기 없음)을 확인하고 적용
+const __pollCache = { store: new Map(), pending: new Map(), MAX_KEYS: 100 };
+async function pollCached(bucket, key, ttlMs, computeFn) {
+  const full = bucket + '::' + key;
+  try {
+    const hit = __pollCache.store.get(full);
+    if (hit && Date.now() - hit.t < ttlMs) return hit.v;
+    if (__pollCache.pending.has(full)) return await __pollCache.pending.get(full);
+    const p = (async () => {
+      const v = await computeFn();
+      if (__pollCache.store.size >= __pollCache.MAX_KEYS) {
+        let oldK = null, oldT = Infinity;
+        for (const [k, s] of __pollCache.store) if (s.t < oldT) { oldT = s.t; oldK = k; }
+        if (oldK) __pollCache.store.delete(oldK);
+      }
+      __pollCache.store.set(full, { v, t: Date.now() });
+      return v;
+    })();
+    __pollCache.pending.set(full, p);
+    try { return await p; } finally { __pollCache.pending.delete(full); }
+  } catch (e) {
+    console.error('[pollCache] 캐시 계층 오류 — 직접 조회 폴백:', e.message);
+    return computeFn();
+  }
+}
+
 app.get("/api/activity-feed", async (req, res) => {
   try {
-    const feeds = [];
-
-    // 학원 학생인 경우 같은 학원 학생만, 아니면 학교 학생들만 노출 (학원 학생 활동은 격리)
     const academy = (req.query.academy || '').trim();
+    // 센터별 60초 캐시 + single-flight — 내부 조회 로직은 기존 그대로
+    const cachedFeeds = await pollCached('feed', academy, 60000, async () => {
+    const feeds = [];
     let allowedKeys = null; // null = 필터 없음 / Set = "grade::name" 화이트리스트
     if (academy) {
       const academyUsers = await User.find({
@@ -47489,8 +47517,10 @@ app.get("/api/activity-feed", async (req, res) => {
 
     // 시간순 정렬 (무제한)
     feeds.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    return feeds;
+    });
 
-    res.json({ success: true, feeds });
+    res.json({ success: true, feeds: cachedFeeds });
   } catch (err) {
     console.error("활동 피드 조회 오류:", err);
     res.status(500).json({ success: false, error: err.message });
@@ -47868,6 +47898,9 @@ app.post("/api/megaphone/send", async (req, res) => {
 // 활성 확성기 메시지 조회 (Live 배너용)
 app.get("/api/megaphone/active", async (req, res) => {
   try {
+    const academyKey = (req.query.academy || '').trim();
+    // 센터별 30초 캐시 + single-flight — 내부 조회 로직은 기존 그대로
+    const cachedFeeds = await pollCached('mega', academyKey, 30000, async () => {
     // 24시간 이내 생성된 메시지 조회 (최신 1개만)
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
@@ -47896,7 +47929,10 @@ app.get("/api/megaphone/active", async (req, res) => {
       };
     });
 
-    res.json({ success: true, feeds });
+    return feeds;
+    });
+
+    res.json({ success: true, feeds: cachedFeeds });
   } catch (err) {
     console.error("확성기 메시지 조회 오류:", err);
     res.status(500).json({ success: false, error: err.message });
