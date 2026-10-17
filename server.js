@@ -5262,11 +5262,16 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
         sortOption = { lastLogin: -1, name: 1 };
     }
 
-    // 세 쿼리를 병렬로 실행 (슈퍼관리자와 동일한 방식)
-    const [usersResult, allProgress, allLearningLogs] = await Promise.all([
-      User.find(filter).sort(sortOption).lean(),
-      UserProgress.find({}, { grade: 1, name: 1, school: 1, 'studyRoom.autoTaskSchedules': 1, 'studyRoom.assignedTasks': 1 }).lean(),
-      LearningLog.find({ completed: true, deleted: { $ne: true } }, { grade: 1, name: 1, unit: 1, school: 1 }).lean()
+    // 🔧 2026-10-18 승인(성능 2차): 진도·완료로그를 전체 DB가 아니라 "센터 학생 이름" 기준으로 범위 축소
+    //    기존: UserProgress 전체(52.8MB)+LearningLog 완료분 전체를 매 요청 스캔 → 전체 DB 규모 비례 2~5초
+    //    이름 기준인 이유: 진급 학생의 옛 학년 기록(grade 불일치)을 school|name·name 폴백으로 잇는
+    //    아래 매핑 로직이 전부 "name 일치"를 전제로 하므로, name 범위 조회는 기존 출력과 수학적으로 동일
+    const usersResult = await User.find(filter).sort(sortOption).lean();
+    const centerNames = [...new Set(usersResult.map(u => u.name).filter(Boolean))];
+    const nameScope = centerNames.length ? { name: { $in: centerNames } } : { name: '__해당없음__' };
+    const [allProgress, allLearningLogs] = await Promise.all([
+      UserProgress.find(nameScope, { grade: 1, name: 1, school: 1, 'studyRoom.autoTaskSchedules': 1, 'studyRoom.assignedTasks': 1 }).lean(),
+      LearningLog.find({ completed: true, deleted: { $ne: true }, ...nameScope }, { grade: 1, name: 1, unit: 1, school: 1 }).lean()
     ]);
     let users = usersResult;
 
