@@ -709,11 +709,13 @@ async function enforceSingleSession(req, res, next) {
     if (su && su._id && su.role === 'student') {
       const isApi = req.path.startsWith('/api/');
       const now = Date.now();
-      let doCheck = isApi;
-      if (!isApi && (now - (req.session._ssCheckedAt || 0) > 15000)) doCheck = true;
+      // 🔧 2026-10-18 승인(성능 1차): API에도 페이지와 동일한 15초 캐시 적용
+      //    기존엔 API 매 요청마다 DB 검사 = 학생 API 호출당 +123ms(Oregon↔서울 왕복) 고정 비용.
+      //    영향: 다른 기기 로그인 킥 반영이 최대 15초 지연될 뿐, 세션 유효성 검증은 기존 그대로.
+      const doCheck = (now - (req.session._ssCheckedAt || 0) > 15000);
       if (doCheck) {
         const u = await User.findById(su._id).select('activeSessionId').lean();
-        if (!isApi) req.session._ssCheckedAt = now; // 페이지/자산만 캐시 타임스탬프 기록
+        req.session._ssCheckedAt = now; // API·페이지 공통 캐시 타임스탬프
         if (u && u.activeSessionId && u.activeSessionId !== req.sessionID) {
           const passSave = SS_KICK_SAVE_PASSLIST.some(p => req.path === p || req.path.startsWith(p + '/'));
           return req.session.destroy(() => {
