@@ -246,16 +246,50 @@ async function sendParentNotification(studentName, parentPhone, type, additional
       // 리포트 링크 생성 (grade 정보가 있으면 포함)
       const grade = additionalInfo.grade || '';
       let reportUrl;
-      // 🖋️ 쓰기문해 사용자 → 쓰기문해 전용 리포트 URL (통합 아님)
-      if (typeof isWr100User === 'function' && isWr100User(grade, studentName)) {
-        reportUrl = `https://brainmoon.kr/wr100-report.html?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&shared=true`;
+      // 🖋️ 입문(쓰기문해) 학생 판별 — DB 기반으로 전환 (2026-10-19)
+      //    기존: 하드코딩 명단(테스트 1명)만 매칭 → 실제 입문 학생(화명 문규린 등)이
+      //    문해단원 0건짜리 빈 종합리포트를 받던 버그. assignedSeries의 BRAIN입문으로 판별.
+      let isWr100Student = false;
+      try {
+        const stuDoc = await User.findOne({ grade, name: studentName, deleted: { $ne: true } }).select('assignedSeries').lean();
+        isWr100Student = !!(stuDoc && (stuDoc.assignedSeries || []).includes('BRAIN입문'));
+      } catch (e) { /* 조회 실패 시 아래 기존 명단 폴백으로 */ }
+      if (!isWr100Student && typeof isWr100User === 'function' && isWr100User(grade, studentName)) {
+        isWr100Student = true;
+      }
+
+      // 리포트 URL 준비 (쓰기문해 / 종합)
+      const wrReportUrl = `https://brainmoon.kr/wr100-report.html?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&shared=true`;
+      let mainReportUrl;
       // 🧪 종합리포트 월간 뷰 베타 — 화이트리스트 학생만 월간 URL 발송
-      } else if (typeof isMonthlyReportBeta === 'function' && isMonthlyReportBeta(grade, studentName)) {
+      if (typeof isMonthlyReportBeta === 'function' && isMonthlyReportBeta(grade, studentName)) {
         const monthStart = getMonthStartKey();
-        reportUrl = `https://brainmoon.kr/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&monthly=true&monthStart=${monthStart}&shared=true`;
+        mainReportUrl = `https://brainmoon.kr/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&monthly=true&monthStart=${monthStart}&shared=true`;
       } else {
         const weekStart = getWeekStart();
-        reportUrl = `https://brainmoon.kr/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&weekly=true&weekStart=${weekStart}&shared=true`;
+        mainReportUrl = `https://brainmoon.kr/my-learning?grade=${encodeURIComponent(grade)}&name=${encodeURIComponent(studentName)}&weekly=true&weekStart=${weekStart}&shared=true`;
+      }
+
+      // 🔀 입문 학생은 "오늘 실제로 한 학습" 기준으로 리포트 선택 (2026-10-19 B안)
+      //    쓰기만 한 날=쓰기 리포트 / 문해단원만 한 날=종합 리포트 / 둘 다=링크 2개 / 둘 다 없음=쓰기(입문 기본)
+      if (isWr100Student) {
+        let wrToday = false, litToday = false;
+        try {
+          const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+          const [wrCnt, litCnt] = await Promise.all([
+            Writing100Submission.countDocuments({ grade, name: studentName, updatedAt: { $gte: dayStart } }),
+            LearningLog.countDocuments({ grade, name: studentName, completed: true, deleted: { $ne: true }, timestamp: { $gte: dayStart } })
+          ]);
+          wrToday = wrCnt > 0; litToday = litCnt > 0;
+        } catch (e) { /* 조회 실패 시 쓰기 리포트 기본 */ }
+
+        if (wrToday && litToday) {
+          message = `\n\n[브레인문해력] ${studentName} 학생이 학습을 완료하였어요! 많이 칭찬 해주세요!\n링크를 클릭하면 학습 리포트를 볼 수 있어요!\n✍️ 쓰기문해: ${wrReportUrl}\n📚 문해학습: ${mainReportUrl}`;
+          break;
+        }
+        reportUrl = (!wrToday && litToday) ? mainReportUrl : wrReportUrl;
+      } else {
+        reportUrl = mainReportUrl;
       }
 
       // URL 단축 없이 원본 URL 사용 (LMS 발송이라 장문 OK)
