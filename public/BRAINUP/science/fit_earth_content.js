@@ -2350,7 +2350,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     paragraphMain: [
       '지구 자원의 한계와 분포의 치우침',
       '희토류와 핵심 광물이 가진 산업적 의미',
-      '심해 자원과 미래 에너지의 가능성',
+      '심해 자원과 미래 에너지의 가능성, 채굴 전 환경 영향 조사라는 국제적 합의',
       '자원 회수 기술과 지속 가능한 이용'
     ],
     passage: [
