@@ -362,6 +362,59 @@
     .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16,185,129,0.4); }
     .submit-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
 
+    /* 하단 고정 신청 내역 독 */
+    body { padding-bottom: 110px; }
+    .order-dock {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 500;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      box-shadow: 0 -6px 24px rgba(0,0,0,0.22);
+    }
+    .dock-inner { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+    .dock-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      cursor: pointer;
+      color: white;
+      user-select: none;
+    }
+    .dock-info { font-size: 15px; font-weight: 600; }
+    .dock-info b { font-size: 19px; font-weight: 800; }
+    .dock-vat { font-size: 12px; color: rgba(255,255,255,0.8); }
+    .dock-info.pulse { animation: dockPulse 0.5s ease; }
+    @keyframes dockPulse {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.06); text-shadow: 0 0 12px rgba(255,255,255,0.9); }
+      100% { transform: scale(1); }
+    }
+    .dock-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+    .dock-toggle { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9); white-space: nowrap; }
+    .submit-btn.dock-submit {
+      width: auto;
+      margin-top: 0;
+      padding: 12px 28px;
+      font-size: 16px;
+      border-radius: 10px;
+    }
+    .dock-detail {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .order-dock.open .dock-detail { max-height: 45vh; overflow-y: auto; }
+    .order-dock.open .dock-detail .order-summary { border-radius: 0; padding: 4px 0 20px; }
+    @media (max-width: 640px) {
+      .dock-vat { display: none; }
+      .dock-info { font-size: 13px; }
+      .dock-info b { font-size: 16px; }
+      .submit-btn.dock-submit { padding: 10px 18px; font-size: 14px; }
+      .dock-toggle { font-size: 12px; }
+    }
+
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -484,6 +537,20 @@
     <!-- 카테고리별 홍보물 -->
     <div id="categorySections"></div>
 
+    <a href="javascript:history.back()" class="back-link" style="display:block;text-align:center;margin-top:20px;color:#666;text-decoration:none;font-size:14px;">← 뒤로가기</a>
+  </div>
+
+  <!-- 하단 고정 신청 내역 독 -->
+  <div class="order-dock" id="orderDock">
+    <div class="dock-inner">
+      <div class="dock-header" onclick="toggleDock()">
+        <div class="dock-info" id="dockInfo">📋 신청 내역 <b id="dockQty">0</b>개 · 총 <b id="dockTotal">0</b>원 <span class="dock-vat">(VAT 포함)</span></div>
+        <div class="dock-actions">
+          <span class="dock-toggle" id="dockToggle">내역 보기 ▲</span>
+          <button class="submit-btn dock-submit" id="submitBtn" onclick="event.stopPropagation(); submitOrder()">신청하기</button>
+        </div>
+      </div>
+      <div class="dock-detail" id="dockDetail">
     <!-- 신청 내역 요약 -->
     <div class="order-summary">
       <div class="summary-title">📋 신청 내역</div>
@@ -514,15 +581,18 @@
           <span>부가세 (10%)</span>
           <span><span id="vatAmount">0</span>원</span>
         </div>
+        <div class="summary-line">
+          <span>배송비</span>
+          <span><span id="shippingAmount">0</span>원</span>
+        </div>
         <div class="summary-line total">
           <span>총 <span id="totalQuantity">0</span>개</span>
           <span><span id="totalAmount">0</span>원 <span style="font-size:12px; color:rgba(255,255,255,0.8);">(VAT 포함)</span></span>
         </div>
       </div>
     </div>
-
-    <button class="submit-btn" id="submitBtn" onclick="submitOrder()">신청하기</button>
-    <a href="javascript:history.back()" class="back-link" style="display:block;text-align:center;margin-top:20px;color:#666;text-decoration:none;font-size:14px;">← 뒤로가기</a>
+      </div>
+    </div>
   </div>
 
   <!-- 성공 모달 -->
@@ -722,14 +792,31 @@
       renderSummary();
     }
 
+    function toggleDock() {
+      const dock = document.getElementById('orderDock');
+      dock.classList.toggle('open');
+      document.getElementById('dockToggle').textContent = dock.classList.contains('open') ? '내역 접기 ▼' : '내역 보기 ▲';
+    }
+
+    function updateDock(qty, total) {
+      document.getElementById('dockQty').textContent = qty;
+      document.getElementById('dockTotal').textContent = total.toLocaleString();
+      const info = document.getElementById('dockInfo');
+      info.classList.remove('pulse');
+      void info.offsetWidth; // 애니메이션 재시작
+      info.classList.add('pulse');
+    }
+
     function renderSummary() {
       const tbody = document.getElementById('summaryBody');
       if (cart.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:rgba(255,255,255,0.7); padding:20px;">위에서 홍보물을 선택해 확인 버튼을 눌러주세요</td></tr>`;
         document.getElementById('subtotalAmount').textContent = '0';
         document.getElementById('vatAmount').textContent = '0';
+        document.getElementById('shippingAmount').textContent = '0';
         document.getElementById('totalAmount').textContent = '0';
         document.getElementById('totalQuantity').textContent = '0';
+        updateDock(0, 0);
         return;
       }
 
@@ -743,15 +830,18 @@
         </tr>
       `).join('');
 
+      const SHIPPING_FEE = 3000;
       const subtotal = cart.reduce((s, c) => s + c.quantity * c.unitPrice, 0);
       const vat = Math.round(subtotal * 0.1);
-      const total = subtotal + vat;
+      const total = subtotal + vat + SHIPPING_FEE;
       const qty = cart.reduce((s, c) => s + c.quantity, 0);
 
       document.getElementById('subtotalAmount').textContent = subtotal.toLocaleString();
       document.getElementById('vatAmount').textContent = vat.toLocaleString();
+      document.getElementById('shippingAmount').textContent = SHIPPING_FEE.toLocaleString();
       document.getElementById('totalAmount').textContent = total.toLocaleString();
       document.getElementById('totalQuantity').textContent = qty;
+      updateDock(qty, total);
     }
 
     // 다음(카카오) 우편번호 검색 팝업

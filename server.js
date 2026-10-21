@@ -4860,7 +4860,8 @@ app.post("/api/textbook-orders", async (req, res) => {
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
     const subtotalAmount = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     const vatAmount = Math.round(subtotalAmount * 0.1);
-    const totalAmount = subtotalAmount + vatAmount;
+    const shippingFee = 3000;
+    const totalAmount = subtotalAmount + vatAmount + shippingFee;
 
     const mailOptions = {
       from: process.env.NAVER_EMAIL,
@@ -4910,6 +4911,7 @@ app.post("/api/textbook-orders", async (req, res) => {
         <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
           <div>공급가액: ${subtotalAmount.toLocaleString()}원</div>
           <div>부가세(10%): ${vatAmount.toLocaleString()}원</div>
+          <div>배송비: ${shippingFee.toLocaleString()}원</div>
           <div style="margin-top: 8px; font-size: 16px;"><strong>총 ${totalQuantity}권 / ${totalAmount.toLocaleString()}원 (VAT 포함)</strong></div>
         </div>
 
@@ -5084,7 +5086,8 @@ app.post("/api/promotion-orders", async (req, res) => {
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
     const subtotalAmount = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     const vatAmount = Math.round(subtotalAmount * 0.1);
-    const totalAmount = subtotalAmount + vatAmount;
+    const shippingFee = 3000;
+    const totalAmount = subtotalAmount + vatAmount + shippingFee;
 
     const mailOptions = {
       from: process.env.NAVER_EMAIL,
@@ -5132,6 +5135,7 @@ app.post("/api/promotion-orders", async (req, res) => {
         <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
           <div>공급가액: ${subtotalAmount.toLocaleString()}원</div>
           <div>부가세(10%): ${vatAmount.toLocaleString()}원</div>
+          <div>배송비: ${shippingFee.toLocaleString()}원</div>
           <div style="margin-top: 8px; font-size: 16px;"><strong>총 ${totalQuantity}개 / ${totalAmount.toLocaleString()}원 (VAT 포함)</strong></div>
         </div>
 
