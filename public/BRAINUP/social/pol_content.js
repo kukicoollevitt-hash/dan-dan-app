@@ -352,7 +352,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '생각이나 의견을 한자어로 (      )라고 한다.', answer: '의사', initials: 'ㅇㅅ', aliases: ['의사'] },
         { no: 3, text: '더 많은 사람의 의견을 따라 결정하는 방식을 (      )이라 한다.', answer: '다수결', initials: 'ㄷㅅㄱ', aliases: ['다수결'] },
         { no: 4, text: '전체 중 적은 사람이 가진 의견을 (        )이라 한다.', answer: '소수 의견', initials: 'ㅅㅅ ㅇㄱ', aliases: ['소수의견'] },
-        { no: 5, text: '서로 양보하여 중간 지점을 찾는 것을 (      )라고 한다.', answer: '타협', initials: 'ㅌㅎ', aliases: ['타협'] },
+        { no: 5, text: '서로 양보하여 중간 지점을 찾는 것을 (      )이라고 한다.', answer: '타협', initials: 'ㅌㅎ', aliases: ['타협'] },
         { no: 6, text: '다른 사람의 의견과 차이를 존중하는 태도를 (      )이라고 한다.', answer: '관용', initials: 'ㄱㅇ', aliases: ['관용'] },
         { no: 7, text: '국민이 주인이 되어 의사결정에 참여하는 정치 방식을 (      )라 한다.', answer: '민주주의', initials: 'ㅁㅈㅈㅇ', aliases: ['민주주의'] },
         { no: 8, text: '서로의 생각을 말하고 듣는 과정을 (      )이라 한다.', answer: '토론', initials: 'ㅌㄹ', aliases: ['토론'] }
@@ -617,11 +617,11 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '지역 주민이 지역의 일을 스스로 결정하고 처리하는 제도를 (        )라고 해요.', answer: '지방자치', initials: 'ㅈㅂㅈㅊ', aliases: ['지방자치'] },
         { no: 2, text: '가장 가까운 지역 공동체에서 시작하는 민주주의를 (            )라고 해요.', answer: '풀뿌리 민주주의', initials: 'ㅍㅃㄹ ㅁㅈㅈㅇ', aliases: ['풀뿌리민주주의','풀뿌리 민주주의'] },
         { no: 3, text: '지역의 조례를 만들고 예산을 심의하는 기관을 (        )라고 해요.', answer: '지방의회', initials: 'ㅈㅂㅇㅎ', aliases: ['지방의회'] },
-        { no: 4, text: '시장, 군수, 구청장 등 지역 행정을 이끄는 대표를 (            )라고 해요.', answer: '지방자치단체장', initials: 'ㅈㅂㅈㅊㄷㅊㅈ', aliases: ['지방자치단체장'] },
+        { no: 4, text: '시장, 군수, 구청장 등 지역 행정을 이끄는 대표를 (            )이라고 해요.', answer: '지방자치단체장', initials: 'ㅈㅂㅈㅊㄷㅊㅈ', aliases: ['지방자치단체장'] },
         { no: 5, text: '지방자치단체가 정하는 지역의 규칙을 (      )라고 해요.', answer: '조례', initials: 'ㅈㄹ', aliases: ['조례'] },
-        { no: 6, text: '주민이 지방의회에 특정 사안 검토를 요청하는 제도를 (        )라고 해요.', answer: '주민 청원', initials: 'ㅈㅁ ㅊㅇ', aliases: ['주민청원','주민 청원'] },
+        { no: 6, text: '주민이 지방의회에 특정 사안 검토를 요청하는 제도를 (        )이라고 해요.', answer: '주민 청원', initials: 'ㅈㅁ ㅊㅇ', aliases: ['주민청원','주민 청원'] },
         { no: 7, text: '지역의 중요 사안을 주민이 직접 결정하는 투표를 (        )라고 해요.', answer: '주민 투표', initials: 'ㅈㅁ ㅌㅍ', aliases: ['주민투표','주민 투표'] },
-        { no: 8, text: '직무를 다하지 못한 대표를 주민이 물러나게 하는 제도를 (        )라고 해요.', answer: '주민 소환', initials: 'ㅈㅁ ㅅㅎ', aliases: ['주민소환','주민 소환'] }
+        { no: 8, text: '직무를 다하지 못한 대표를 주민이 물러나게 하는 제도를 (        )이라고 해요.', answer: '주민 소환', initials: 'ㅈㅁ ㅅㅎ', aliases: ['주민소환','주민 소환'] }
       ]
     },
     quiz: {
@@ -790,13 +790,13 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '',
       items: [
         { no: 1, text: '국가들이 공동 문제를 해결하기 위해 만든 조직을 (        )라고 해요.', answer: '국제기구', initials: 'ㄱㅈㄱㄱ', aliases: ['국제기구'] },
-        { no: 2, text: '세계 평화와 안전을 위해 설립된 국제기구를 (      )라고 해요.', answer: '국제연합', initials: 'ㄱㅈㅇㅎ', aliases: ['국제연합','UN'] },
+        { no: 2, text: '세계 평화와 안전을 위해 설립된 국제기구를 (      )이라고 해요.', answer: '국제연합', initials: 'ㄱㅈㅇㅎ', aliases: ['국제연합','UN'] },
         { no: 3, text: '국가 간 무역 규칙을 정하는 국제기구를 (          )라고 해요.', answer: '세계무역기구', initials: 'ㅅㄱㅁㅇㄱㄱ', aliases: ['세계무역기구','WTO'] },
         { no: 4, text: '전 세계 보건 문제를 다루는 국제기구를 (          )라고 해요.', answer: '세계보건기구', initials: 'ㅅㄱㅂㄱㄱㄱ', aliases: ['세계보건기구','WHO'] },
         { no: 5, text: '선진국이 개발도상국을 돕는 경제 지원을 (            )라고 해요.', answer: '공적개발원조', initials: 'ㄱㅈㄱㅂㅇㅈ', aliases: ['공적개발원조','ODA'] },
         { no: 6, text: '교육, 과학, 문화 분야의 UN 전문기구를 (        )라고 해요.', answer: '유네스코', initials: 'ㅇㄴㅅㅋ', aliases: ['유네스코','UNESCO'] },
         { no: 7, text: '국가 간 대화와 협상으로 문제를 해결하는 활동을 (      )라고 해요.', answer: '외교', initials: 'ㅇㄱ', aliases: ['외교'] },
-        { no: 8, text: '국가 간 관계를 규율하는 법을 (      )라고 해요.', answer: '국제법', initials: 'ㄱㅈㅂ', aliases: ['국제법'] }
+        { no: 8, text: '국가 간 관계를 규율하는 법을 (      )이라고 해요.', answer: '국제법', initials: 'ㄱㅈㅂ', aliases: ['국제법'] }
       ]
     },
     quiz: {
@@ -1229,7 +1229,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '은행, 증권 회사 등을 통틀어 (        )이라고 해요.', answer: '금융 기관', initials: 'ㄱㅇ ㄱㄱ', aliases: ['금융기관', '금융 기관'] },
         { no: 6, text: '이익을 얻기 위해 돈을 넣는 것을 (      )라고 해요.', answer: '투자', initials: 'ㅌㅈ', aliases: ['투자'] },
         { no: 7, text: '물건을 사고파는 돈의 역할을 (        )이라고 해요.', answer: '교환의 수단', initials: 'ㄱㅎㅇ ㅅㄷ', aliases: ['교환의수단', '교환의 수단'] },
-        { no: 8, text: '물건의 가격을 나타내는 돈의 역할을 (        )이라고 해요.', answer: '가치의 척도', initials: 'ㄱㅊㅇ ㅊㄷ', aliases: ['가치의척도', '가치의 척도'] }
+        { no: 8, text: '물건의 가격을 나타내는 돈의 역할을 (        )라고 해요.', answer: '가치의 척도', initials: 'ㄱㅊㅇ ㅊㄷ', aliases: ['가치의척도', '가치의 척도'] }
       ]
     },
     quiz: {
@@ -1315,7 +1315,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '필요한 것을 현명하게 사는 것을 (        )라고 해요.', answer: '합리적 소비', initials: 'ㅎㄹㅈ ㅅㅂ', aliases: ['합리적소비', '합리적 소비'] },
         { no: 6, text: '갑자기 사고 싶어서 필요 없는 것을 사는 것을 (        )라고 해요.', answer: '충동 소비', initials: 'ㅊㄷ ㅅㅂ', aliases: ['충동소비', '충동 소비'] },
         { no: 7, text: '환경과 사회를 생각하며 물건을 사는 것을 (        )라고 해요.', answer: '착한 소비', initials: 'ㅊㅎ ㅅㅂ', aliases: ['착한소비', '착한 소비'] },
-        { no: 8, text: '사용할 수 있는 돈의 범위를 (      )라고 해요.', answer: '예산', initials: 'ㅇㅅ', aliases: ['예산'] }
+        { no: 8, text: '사용할 수 있는 돈의 범위를 (      )이라고 해요.', answer: '예산', initials: 'ㅇㅅ', aliases: ['예산'] }
       ]
     },
     quiz: {
@@ -1574,7 +1574,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '소득이 많을수록 세율이 높아지는 방식을 (      )라고 해요.', answer: '누진세', initials: 'ㄴㅈㅅ', aliases: ['누진세'] },
         { no: 6, text: '정부가 모든 국민에게 제공하는 서비스를 (      )라고 해요.', answer: '공공재', initials: 'ㄱㄱㅈ', aliases: ['공공재'] },
         { no: 7, text: '국민의 생활을 돕는 정책이나 제도를 (      )라고 해요.', answer: '복지', initials: 'ㅂㅈ', aliases: ['복지'] },
-        { no: 8, text: '정부가 한 해 동안 수입과 지출을 정한 계획을 (      )라고 해요.', answer: '예산', initials: 'ㅇㅅ', aliases: ['예산'] }
+        { no: 8, text: '정부가 한 해 동안 수입과 지출을 정한 계획을 (      )이라고 해요.', answer: '예산', initials: 'ㅇㅅ', aliases: ['예산'] }
       ]
     },
     quiz: {
@@ -1660,7 +1660,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '나라 간 관세를 낮추는 약속을 (          )이라고 해요.', answer: '자유 무역 협정', initials: 'ㅈㅇ ㅁㅇ ㅎㅈ', aliases: ['자유무역협정', '자유 무역 협정', 'FTA'] },
         { no: 6, text: '세계 무역 규칙을 정하는 기구를 (          )라고 해요.', answer: '세계 무역 기구', initials: 'ㅅㄱ ㅁㅇ ㄱㄱ', aliases: ['세계무역기구', '세계 무역 기구', 'WTO'] },
         { no: 7, text: '세계가 하나로 연결되는 현상을 (      )라고 해요.', answer: '세계화', initials: 'ㅅㄱㅎ', aliases: ['세계화'] },
-        { no: 8, text: '나라들이 서로 의지하는 것을 (        )라고 해요.', answer: '상호 의존', initials: 'ㅅㅎ ㅇㅈ', aliases: ['상호의존', '상호 의존'] }
+        { no: 8, text: '나라들이 서로 의지하는 것을 (        )이라고 해요.', answer: '상호 의존', initials: 'ㅅㅎ ㅇㅈ', aliases: ['상호의존', '상호 의존'] }
       ]
     },
     quiz: {
@@ -1741,8 +1741,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '사람처럼 생각하고 판단하는 컴퓨터 기술을 (        )이라고 해요.', answer: '인공지능', initials: 'ㅇㄱㅈㄴ', aliases: ['인공지능', 'AI'] },
         { no: 2, text: 'AI, 로봇 등으로 일어나는 산업 변화를 (          )이라고 해요.', answer: '4차 산업 혁명', initials: '4ㅊ ㅅㅇ ㅎㅁ', aliases: ['4차산업혁명', '4차 산업 혁명'] },
         { no: 3, text: '미래 세대도 쓸 수 있게 발전하는 것을 (            )이라고 해요.', answer: '지속 가능한 발전', initials: 'ㅈㅅ ㄱㄴㅎ ㅂㅈ', aliases: ['지속가능한발전', '지속 가능한 발전'] },
-        { no: 4, text: '환경을 오염시키지 않는 에너지를 (          )이라고 해요.', answer: '친환경 에너지', initials: 'ㅊㅎㄱ ㅇㄴㅈ', aliases: ['친환경에너지', '친환경 에너지'] },
-        { no: 5, text: '탄소 배출과 흡수를 같게 하는 것을 (        )라고 해요.', answer: '탄소 중립', initials: 'ㅌㅅ ㅈㄹ', aliases: ['탄소중립', '탄소 중립'] },
+        { no: 4, text: '환경을 오염시키지 않는 에너지를 (          )라고 해요.', answer: '친환경 에너지', initials: 'ㅊㅎㄱ ㅇㄴㅈ', aliases: ['친환경에너지', '친환경 에너지'] },
+        { no: 5, text: '탄소 배출과 흡수를 같게 하는 것을 (        )이라고 해요.', answer: '탄소 중립', initials: 'ㅌㅅ ㅈㄹ', aliases: ['탄소중립', '탄소 중립'] },
         { no: 6, text: '환경, 사회, 지배구조를 고려하는 경영을 (        )이라고 해요.', answer: 'ESG 경영', initials: 'ESG ㄱㅇ', aliases: ['ESG경영', 'ESG 경영'] },
         { no: 7, text: '다 쓴 물건을 다시 사용하는 것을 (      )이라고 해요.', answer: '재활용', initials: 'ㅈㅎㅇ', aliases: ['재활용'] },
         { no: 8, text: '앞으로 태어날 사람들을 (        )라고 해요.', answer: '미래 세대', initials: 'ㅁㄹ ㅅㄷ', aliases: ['미래세대', '미래 세대'] }

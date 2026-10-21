@@ -658,7 +658,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '지구를 둘러싼 넓은 바다를 (   )이라고 해요.', answer: '해양', initials: 'ㅎㅇ', aliases: ['해양'] },
         { no: 3, text: '세계에서 가장 큰 대륙으로 우리나라가 속한 곳은 (     )예요.', answer: '아시아', initials: 'ㅇㅅㅇ', aliases: ['아시아'] },
         { no: 4, text: '두 번째로 큰 대륙으로 다양한 야생 동물이 사는 곳은 (      )예요.', answer: '아프리카', initials: 'ㅇㅍㄹㅋ', aliases: ['아프리카'] },
-        { no: 5, text: '역사적으로 많은 문화를 발전시킨 대륙은 (   )예요.', answer: '유럽', initials: 'ㅇㄹ', aliases: ['유럽'] },
+        { no: 5, text: '역사적으로 많은 문화를 발전시킨 대륙은 (   )이에요.', answer: '유럽', initials: 'ㅇㄹ', aliases: ['유럽'] },
         { no: 6, text: '호주와 태평양 섬들로 이루어진 대륙은 (      )예요.', answer: '오세아니아', initials: 'ㅇㅅㅇㄴㅇ', aliases: ['오세아니아'] },
         { no: 7, text: '지구에서 가장 큰 바다는 (    )이에요.', answer: '태평양', initials: 'ㅌㅍㅇ', aliases: ['태평양'] },
         { no: 8, text: '유럽·아프리카와 아메리카 사이에 있는 바다는 (    )이에요.', answer: '대서양', initials: 'ㄷㅅㅇ', aliases: ['대서양'] }
@@ -1172,7 +1172,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '도시에서 농촌으로 돌아가는 것을 (        )이라고 해요.', answer: '귀농 귀촌', initials: 'ㄱㄴ ㄱㅊ', aliases: ['귀농귀촌', '귀농·귀촌', '귀농 귀촌', '귀촌', '귀농'] },
         { no: 6, text: '나라 간 인구 이동을 (        )이라고 해요.', answer: '국제 이동', initials: 'ㄱㅈ ㅇㄷ', aliases: ['국제이동', '국제 이동'] },
         { no: 7, text: '인구가 빠져나가 지역이 비어 가는 현상을 (        )라고 해요.', answer: '인구 공동화', initials: 'ㅇㄱ ㄱㄷㅎ', aliases: ['인구공동화', '인구 공동화'] },
-        { no: 8, text: '인구가 너무 많이 집중된 상태를 (        )라고 해요.', answer: '인구 과밀', initials: 'ㅇㄱ ㄱㅁ', aliases: ['인구과밀', '인구 과밀'] }
+        { no: 8, text: '인구가 너무 많이 집중된 상태를 (        )이라고 해요.', answer: '인구 과밀', initials: 'ㅇㄱ ㄱㅁ', aliases: ['인구과밀', '인구 과밀'] }
       ]
     },
     quiz: {
@@ -1673,8 +1673,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[해양 자원] 다음 빈칸에 알맞은 어휘를 쓰세요.',
       items: [
-        { no: 1, text: '바다에서 얻는 물고기, 조개, 해조류 등을 (      )라고 한다.', answer: '수산 자원', initials: 'ㅅㅅ ㅈㅇ', aliases: ['수산자원', '수산 자원'] },
-        { no: 2, text: '한류와 난류가 만나 좋은 어장이 되는 곳을 (      )라고 한다.', answer: '조경 수역', initials: 'ㅈㄱ ㅅㅇ', aliases: ['조경수역', '조경 수역'] },
+        { no: 1, text: '바다에서 얻는 물고기, 조개, 해조류 등을 (      )이라고 한다.', answer: '수산 자원', initials: 'ㅅㅅ ㅈㅇ', aliases: ['수산자원', '수산 자원'] },
+        { no: 2, text: '한류와 난류가 만나 좋은 어장이 되는 곳을 (      )이라고 한다.', answer: '조경 수역', initials: 'ㅈㄱ ㅅㅇ', aliases: ['조경수역', '조경 수역'] },
         { no: 3, text: '바다 밑에 있는 석유, 천연가스 등을 (      )이라고 한다.', answer: '해저 자원', initials: 'ㅎㅈ ㅈㅇ', aliases: ['해저자원', '해저 자원'] },
         { no: 4, text: '바다에서 물고기를 잡거나 기르는 산업을 (    )이라 한다.', answer: '수산업', initials: 'ㅅㅅㅇ', aliases: ['수산업'] },
         { no: 5, text: '물고기나 해조류를 인공으로 기르는 것을 (    )이라고 한다.', answer: '양식업', initials: 'ㅇㅅㅇ', aliases: ['양식업'] },
@@ -1781,7 +1781,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '해저 지진으로 발생한 거대한 파도를 (    )라고 한다.', answer: '쓰나미', initials: 'ㅆㄴㅁ', aliases: ['쓰나미'] },
         { no: 6, text: '폭우로 강물이 넘쳐 주변이 잠기는 것을 (   )라고 한다.', answer: '홍수', initials: 'ㅎㅅ', aliases: ['홍수'] },
         { no: 7, text: '오랫동안 비가 오지 않아 물이 부족한 현상을 (   )이라 한다.', answer: '가뭄', initials: 'ㄱㅁ', aliases: ['가뭄'] },
-        { no: 8, text: '자연재해에 대비하고 피해를 줄이는 활동을 (   )이라고 한다.', answer: '방재', initials: 'ㅂㅈ', aliases: ['방재'] }
+        { no: 8, text: '자연재해에 대비하고 피해를 줄이는 활동을 (   )라고 한다.', answer: '방재', initials: 'ㅂㅈ', aliases: ['방재'] }
       ]
     },
     quiz: {
@@ -1877,7 +1877,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '교통과 통신의 발달로 세계가 하나로 연결되는 현상을 (    )라고 한다.', answer: '세계화', initials: 'ㅅㄱㅎ', aliases: ['세계화'] },
         { no: 2, text: '자기 지역의 고유한 문화를 지키려는 움직임을 (    )라고 한다.', answer: '지역화', initials: 'ㅈㅇㅎ', aliases: ['지역화'] },
-        { no: 3, text: '여러 나라에서 활동하는 큰 기업을 (      )라고 한다.', answer: '다국적 기업', initials: 'ㄷㄱㅈ ㄱㅇ', aliases: ['다국적기업', '다국적 기업'] },
+        { no: 3, text: '여러 나라에서 활동하는 큰 기업을 (      )이라고 한다.', answer: '다국적 기업', initials: 'ㄷㄱㅈ ㄱㅇ', aliases: ['다국적기업', '다국적 기업'] },
         { no: 4, text: '다양한 문화가 비슷해지는 현상을 (       )라고 한다.', answer: '문화 획일화', initials: 'ㅁㅎ ㅎㅇㅎ', aliases: ['문화획일화', '문화 획일화'] },
         { no: 5, text: '다양한 문화를 가진 사람들이 함께 사는 사회를 (       )라고 한다.', answer: '다문화 사회', initials: 'ㄷㅁㅎ ㅅㅎ', aliases: ['다문화사회', '다문화 사회'] },
         { no: 6, text: '다른 나라로 이동해 온 사람을 (    )이라고 한다.', answer: '이주민', initials: 'ㅇㅈㅁ', aliases: ['이주민'] },

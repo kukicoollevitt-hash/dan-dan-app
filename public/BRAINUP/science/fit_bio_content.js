@@ -678,7 +678,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[식물의 구조와 생존 전략 어휘]',
       items: [
         { no: 1, text: '물과 양분을 흡수하고 식물을 지탱하는 부분을 (      )라고 한다.', answer: '뿌리', initials: 'ㅃㄹ', aliases: ['뿌리'] },
-        { no: 2, text: '뿌리 끝의 가는 털로 흡수 면적을 넓히는 것을 (      )라고 한다.', answer: '뿌리털', initials: 'ㅃㄹㅌ', aliases: ['뿌리털'] },
+        { no: 2, text: '뿌리 끝의 가는 털로 흡수 면적을 넓히는 것을 (      )이라고 한다.', answer: '뿌리털', initials: 'ㅃㄹㅌ', aliases: ['뿌리털'] },
         { no: 3, text: '식물을 지탱하고 물과 양분을 운반하는 부분을 (      )라고 한다.', answer: '줄기', initials: 'ㅈㄱ', aliases: ['줄기'] },
         { no: 4, text: '물을 위로 운반하는 관을 (      )이라 한다.', answer: '물관', initials: 'ㅁㄱ', aliases: ['물관'] },
         { no: 5, text: '양분을 아래로 운반하는 관을 (      )이라 한다.', answer: '체관', initials: 'ㅊㄱ', aliases: ['체관'] },
@@ -783,7 +783,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '빛을 흡수하는 초록색 색소를 (      )라고 한다.', answer: '엽록소', initials: 'ㅇㄹㅅ', aliases: ['엽록소'] },
         { no: 4, text: '광합성의 재료가 되는 기체를 (        )라고 한다.', answer: '이산화탄소', initials: 'ㅇㅅㅎㅌㅅ', aliases: ['이산화탄소'] },
         { no: 5, text: '광합성의 재료 중 뿌리에서 흡수하는 것을 (      )이라 한다.', answer: '물', initials: 'ㅁ', aliases: ['물'] },
-        { no: 6, text: '광합성으로 만들어지는 양분을 (      )라고 한다.', answer: '포도당', initials: 'ㅍㄷㄷ', aliases: ['포도당'] },
+        { no: 6, text: '광합성으로 만들어지는 양분을 (      )이라고 한다.', answer: '포도당', initials: 'ㅍㄷㄷ', aliases: ['포도당'] },
         { no: 7, text: '광합성의 부산물로 나오는 기체를 (      )라고 한다.', answer: '산소', initials: 'ㅅㅅ', aliases: ['산소'] },
         { no: 8, text: '잎에서 기체 교환이 일어나는 구멍을 (      )이라 한다.', answer: '기공', initials: 'ㄱㄱ', aliases: ['기공'] },
         { no: 9, text: '포도당이 저장되는 형태를 (      )이라 한다.', answer: '녹말', initials: 'ㄴㅁ', aliases: ['녹말'] },
@@ -1191,7 +1191,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 7, text: '동맥과 정맥을 연결하는 매우 가는 혈관을 (        )이라 한다.', answer: '모세 혈관', initials: 'ㅁㅅ ㅎㄱ', aliases: ['모세혈관','모세 혈관'] },
         { no: 8, text: '심장에서 온몸을 돌고 심장으로 돌아오는 순환을 (        )이라 한다.', answer: '온몸 순환', initials: 'ㅇㅁ ㅅㅎ', aliases: ['온몸순환','온몸 순환','체순환'] },
         { no: 9, text: '심장에서 폐를 거쳐 심장으로 돌아오는 순환을 (      )이라 한다.', answer: '폐순환', initials: 'ㅍㅅㅎ', aliases: ['폐순환'] },
-        { no: 10, text: '산소를 운반하는 붉은색 혈액 세포를 (      )이라 한다.', answer: '적혈구', initials: 'ㅈㅎㄱ', aliases: ['적혈구'] }
+        { no: 10, text: '산소를 운반하는 붉은색 혈액 세포를 (      )라 한다.', answer: '적혈구', initials: 'ㅈㅎㄱ', aliases: ['적혈구'] }
       ]
     },
     quiz: {
@@ -1787,9 +1787,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '생물과 환경이 서로 영향을 주고받는 체계를 (      )라고 한다.', answer: '생태계', initials: 'ㅅㅌㄱ', aliases: ['생태계'] },
         { no: 6, text: '쓰고 버린 물건을 다시 사용하는 것을 (      )이라 한다.', answer: '재활용', initials: 'ㅈㅎㅇ', aliases: ['재활용'] },
         { no: 7, text: '환경을 오염시키지 않는 태양열, 풍력 등의 에너지를 (          )라고 한다.', answer: '친환경 에너지', initials: 'ㅊㅎㄱ ㅇㄴㅈ', aliases: ['친환경에너지','친환경 에너지'] },
-        { no: 8, text: '사라질 위험에 처한 생물을 (          )라고 한다.', answer: '멸종 위기종', initials: 'ㅁㅈ ㅇㄱㅈ', aliases: ['멸종위기종','멸종 위기종'] },
+        { no: 8, text: '사라질 위험에 처한 생물을 (          )이라고 한다.', answer: '멸종 위기종', initials: 'ㅁㅈ ㅇㄱㅈ', aliases: ['멸종위기종','멸종 위기종'] },
         { no: 9, text: '생태계를 보호하기 위해 지정된 구역을 (            )이라 한다.', answer: '자연 보호 구역', initials: 'ㅈㅇ ㅂㅎ ㄱㅇ', aliases: ['자연보호구역','자연 보호 구역'] },
-        { no: 10, text: '재활용을 위해 쓰레기를 종류별로 나누어 버리는 것을 (      )이라 한다.', answer: '분리수거', initials: 'ㅂㄹㅅㄱ', aliases: ['분리수거'] }
+        { no: 10, text: '재활용을 위해 쓰레기를 종류별로 나누어 버리는 것을 (      )라 한다.', answer: '분리수거', initials: 'ㅂㄹㅅㄱ', aliases: ['분리수거'] }
       ]
     },
     quiz: {
@@ -2080,7 +2080,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '질병을 예방하기 위해 몸에 면역을 만들어 주는 약을 (      )이라 한다.', answer: '백신', initials: 'ㅂㅅ', aliases: ['백신'] },
         { no: 6, text: '유전 정보를 이용해 면역 반응을 유도하는 백신을 (        )이라 한다.', answer: 'mRNA 백신', initials: 'mRNA ㅂㅅ', aliases: ['mRNA백신','mRNA 백신'] },
         { no: 7, text: '옳고 그름에 대한 도덕적 고민을 (        )라고 한다.', answer: '윤리적 문제', initials: 'ㅇㄹㅈ ㅁㅈ', aliases: ['윤리적문제','윤리적 문제'] },
-        { no: 8, text: '사람들 사이의 차별적 차이를 (      )라고 한다.', answer: '불평등', initials: 'ㅂㅍㄷ', aliases: ['불평등'] },
+        { no: 8, text: '사람들 사이의 차별적 차이를 (      )이라고 한다.', answer: '불평등', initials: 'ㅂㅍㄷ', aliases: ['불평등'] },
         { no: 9, text: '법이나 규칙으로 제한하는 것을 (      )라고 한다.', answer: '규제', initials: 'ㄱㅈ', aliases: ['규제'] },      ]
     },
     quiz: {

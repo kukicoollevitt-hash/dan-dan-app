@@ -83,13 +83,13 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '특정 주제를 중심으로 제작된 지도를 (    )라고 한다.', answer: '주제도', initials: 'ㅈㅈㄷ', aliases: ['주제도'] },
         { no: 6, text: '같은 값을 가진 지점을 선으로 연결한 지도를 (    )라고 한다.', answer: '등치선도', initials: 'ㄷㅊㅅㄷ', aliases: ['등치선도'] },
         { no: 7, text: '통계 값을 색상 농담으로 구분한 지도를 (    )라고 한다.', answer: '단계구분도', initials: 'ㄷㄱㄱㅂㄷ', aliases: ['단계구분도'] },
-        { no: 8, text: '지리 정보를 수집·저장·분석·출력하는 시스템을 (        )라고 한다.', answer: '지리정보시스템', initials: 'ㅈㄹㅈㅂㅅㅅㅌ', aliases: ['지리정보시스템', 'GIS'] },
+        { no: 8, text: '지리 정보를 수집·저장·분석·출력하는 시스템을 (        )이라고 한다.', answer: '지리정보시스템', initials: 'ㅈㄹㅈㅂㅅㅅㅌ', aliases: ['지리정보시스템', 'GIS'] },
         { no: 9, text: '위성이나 항공기로 지표면 정보를 수집하는 기술을 (    )라고 한다.', answer: '원격탐사', initials: 'ㅇㄱㅌㅅ', aliases: ['원격탐사'] },
         { no: 10, text: '위성 신호로 위치를 측정하는 시스템을 (    )라고 한다.', answer: 'GPS', initials: 'GPS', aliases: ['GPS', '지피에스'] },
         { no: 11, text: '지도에서 정보를 겹쳐 표현하는 층을 (    )라고 한다.', answer: '레이어', initials: 'ㄹㅇㅇ', aliases: ['레이어'] },
         { no: 12, text: '화살표로 이동 방향과 양을 표시한 지도를 (    )라고 한다.', answer: '유선도', initials: 'ㅇㅅㄷ', aliases: ['유선도'] },
         { no: 13, text: '원이나 막대 크기로 수량을 표현한 지도를 (    )라고 한다.', answer: '도형표현도', initials: 'ㄷㅎㅍㅎㄷ', aliases: ['도형표현도'] },
-        { no: 14, text: '구형 지구를 평면에 옮기는 방법을 (      )라고 한다.', answer: '지도투영법', initials: 'ㅈㄷㅌㅇㅂ', aliases: ['지도투영법', '지도 투영법'] },
+        { no: 14, text: '구형 지구를 평면에 옮기는 방법을 (      )이라고 한다.', answer: '지도투영법', initials: 'ㅈㄷㅌㅇㅂ', aliases: ['지도투영법', '지도 투영법'] },
         { no: 15, text: '정보의 출처와 의도를 분석하는 사고력을 (      )라고 한다.', answer: '비판적사고', initials: 'ㅂㅍㅈㅅㄱ', aliases: ['비판적사고', '비판적 사고'] }
       ]
     },
@@ -203,7 +203,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '유럽과 아시아가 연결된 세계 최대의 대륙은 (      )이다.', answer: '유라시아 대륙', initials: 'ㅇㄹㅅㅇ ㄷㄹ', aliases: ['유라시아대륙'] },
         { no: 11, text: '위도 30°~60° 사이의 온대 기후 지역을 (      )라고 한다.', answer: '중위도', initials: 'ㅈㅇㄷ', aliases: ['중위도'] },
         { no: 12, text: '태평양을 둘러싼 국가들의 경제권을 (      )이라 한다.', answer: '환태평양', initials: 'ㅎㅌㅍㅇ', aliases: ['환태평양'] },
-        { no: 13, text: '동해를 둘러싼 국가들의 경제 협력 지역을 (      )이라 한다.', answer: '환동해', initials: 'ㅎㄷㅎ', aliases: ['환동해'] },
+        { no: 13, text: '동해를 둘러싼 국가들의 경제 협력 지역을 (      )라 한다.', answer: '환동해', initials: 'ㅎㄷㅎ', aliases: ['환동해'] },
         { no: 14, text: '국가 이익을 위한 대외 관계 수립 방침을 (      )이라 한다.', answer: '외교 전략', initials: 'ㅇㄱ ㅈㄹ', aliases: ['외교전략'] },
         { no: 15, text: '하나의 민족이 두 개 이상의 국가로 나뉜 상태를 (      )라고 한다.', answer: '분단 국가', initials: 'ㅂㄷ ㄱㄱ', aliases: ['분단국가'] }
       ]
@@ -310,9 +310,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '한쪽이 솟고 다른 쪽이 낮아지는 비대칭적 지각 변동을 (      )이라 한다.', answer: '경동성 요곡 운동', initials: 'ㄱㄷㅅ ㅇㄱ ㅇㄷ', aliases: ['경동성요곡운동'] },
         { no: 3, text: '해발 고도가 높은 산지에 남아 있는 평평한 옛 지표면을 (      )이라 한다.', answer: '고위 평탄면', initials: 'ㄱㅇ ㅍㅌㅁ', aliases: ['고위평탄면'] },
         { no: 4, text: '물, 바람 등에 의해 지표면이 깎여 나가는 현상을 (      )이라 한다.', answer: '침식', initials: 'ㅊㅅ', aliases: ['침식'] },
-        { no: 5, text: '암석이 기후 요소에 의해 부서지거나 분해되는 과정을 (      )이라 한다.', answer: '풍화', initials: 'ㅍㅎ', aliases: ['풍화'] },
+        { no: 5, text: '암석이 기후 요소에 의해 부서지거나 분해되는 과정을 (      )라 한다.', answer: '풍화', initials: 'ㅍㅎ', aliases: ['풍화'] },
         { no: 6, text: '화산 폭발 후 분화구에 물이 고여 형성된 호수를 (      )라 한다.', answer: '칼데라호', initials: 'ㅋㄷㄹㅎ', aliases: ['칼데라호'] },
-        { no: 7, text: '지각 변동에 의해 직접 형성된 주요 산맥을 (      )라 한다.', answer: '1차 산맥', initials: '1ㅊ ㅅㅁ', aliases: ['1차산맥'] },
+        { no: 7, text: '지각 변동에 의해 직접 형성된 주요 산맥을 (      )이라 한다.', answer: '1차 산맥', initials: '1ㅊ ㅅㅁ', aliases: ['1차산맥'] },
         { no: 8, text: '동쪽이 높고 서쪽이 낮은 한반도의 지형 특징을 (      )라 한다.', answer: '동고서저', initials: 'ㄷㄱㅅㅈ', aliases: ['동고서저'] },
         { no: 9, text: '하천이 운반한 퇴적물이 쌓여 형성된 평야를 (      )라 한다.', answer: '충적 평야', initials: 'ㅊㅈ ㅍㅇ', aliases: ['충적평야'] },
         { no: 10, text: '하천 침식 골짜기가 침수되어 형성된 복잡한 해안을 (      )이라 한다.', answer: '리아스식 해안', initials: 'ㄹㅇㅅㅅ ㅎㅇ', aliases: ['리아스식해안'] },
@@ -320,7 +320,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 12, text: '조수 간만의 차로 드러나는 해안의 퇴적 지형을 (      )이라 한다.', answer: '갯벌', initials: 'ㄱㅂ', aliases: ['갯벌'] },
         { no: 13, text: '물이 다른 방향으로 흘러가는 경계가 되는 산등성이를 (      )이라 한다.', answer: '분수령', initials: 'ㅂㅅㄹ', aliases: ['분수령'] },
         { no: 14, text: '지각 변동으로 산맥이 형성되는 과정을 (      )이라 한다.', answer: '조산 운동', initials: 'ㅈㅅ ㅇㄷ', aliases: ['조산운동'] },
-        { no: 15, text: '1차 산맥에서 갈라져 나온 지맥을 (      )라 한다.', answer: '2차 산맥', initials: '2ㅊ ㅅㅁ', aliases: ['2차산맥'] }
+        { no: 15, text: '1차 산맥에서 갈라져 나온 지맥을 (      )이라 한다.', answer: '2차 산맥', initials: '2ㅊ ㅅㅁ', aliases: ['2차산맥'] }
       ]
     },
     quiz: {
@@ -537,7 +537,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '특정 지역에서 오랜 기간에 걸쳐 나타나는 평균적인 대기 상태를 (      )라 한다.', answer: '기후', initials: 'ㄱㅎ', aliases: ['기후'] },
         { no: 2, text: '기온, 강수량, 바람, 습도 등 기후를 구성하는 요소를 (      )라 한다.', answer: '기후 요소', initials: 'ㄱㅎ ㅇㅅ', aliases: ['기후요소'] },
-        { no: 3, text: '위도, 수륙 분포, 해발 고도 등 기후 요소에 영향을 주는 조건을 (      )라 한다.', answer: '기후 요인', initials: 'ㄱㅎ ㅇㅇ', aliases: ['기후요인'] },
+        { no: 3, text: '위도, 수륙 분포, 해발 고도 등 기후 요소에 영향을 주는 조건을 (      )이라 한다.', answer: '기후 요인', initials: 'ㄱㅎ ㅇㅇ', aliases: ['기후요인'] },
         { no: 4, text: '대기의 온도를 (      )이라 한다.', answer: '기온', initials: 'ㄱㅇ', aliases: ['기온'] },
         { no: 5, text: '일정 기간 동안 내린 비나 눈의 양을 (      )이라 한다.', answer: '강수량', initials: 'ㄱㅅㄹ', aliases: ['강수량'] },
         { no: 6, text: '연중 가장 더운 달과 가장 추운 달의 평균 기온 차이를 (      )라 한다.', answer: '기온의 연교차', initials: 'ㄱㅇㅇ ㅇㄱㅊ', aliases: ['기온의연교차'] },
@@ -547,7 +547,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '여름철 정체 전선의 영향으로 비가 오래 내리는 현상을 (      )라 한다.', answer: '장마', initials: 'ㅈㅁ', aliases: ['장마'] },
         { no: 11, text: '열대 해상에서 발생한 강한 폭풍을 (      )이라 한다.', answer: '태풍', initials: 'ㅌㅍ', aliases: ['태풍'] },
         { no: 12, text: '바다와 육지의 분포 상태를 (      )라 한다.', answer: '수륙 분포', initials: 'ㅅㄹ ㅂㅍ', aliases: ['수륙분포'] },
-        { no: 13, text: '식생을 기준으로 세계 기후를 체계적으로 분류한 방법을 (      )라 한다.', answer: '쾨펜의 기후 구분', initials: 'ㅋㅍㅇ ㄱㅎ ㄱㅂ', aliases: ['쾨펜의기후구분'] },
+        { no: 13, text: '식생을 기준으로 세계 기후를 체계적으로 분류한 방법을 (      )이라 한다.', answer: '쾨펜의 기후 구분', initials: 'ㅋㅍㅇ ㄱㅎ ㄱㅂ', aliases: ['쾨펜의기후구분'] },
         { no: 14, text: '장기간에 걸친 기후 패턴의 변화를 (      )라 한다.', answer: '기후 변화', initials: 'ㄱㅎ ㅂㅎ', aliases: ['기후변화'] },
         { no: 15, text: '적도를 기준으로 한 남북 위치를 (      )라 한다.', answer: '위도', initials: 'ㅇㄷ', aliases: ['위도'] }
       ]
@@ -651,7 +651,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '일정 지역에 인구가 퍼져 있는 상태를 (      )라 한다.', answer: '인구 분포', initials: 'ㅇㄱ ㅂㅍ', aliases: ['인구분포'] },
         { no: 2, text: '단위 면적당 거주하는 인구수를 (      )라 한다.', answer: '인구 밀도', initials: 'ㅇㄱ ㅁㄷ', aliases: ['인구밀도'] },
-        { no: 3, text: '사람들이 거주지를 다른 지역으로 옮기는 현상을 (      )라 한다.', answer: '인구 이동', initials: 'ㅇㄱ ㅇㄷ', aliases: ['인구이동'] },
+        { no: 3, text: '사람들이 거주지를 다른 지역으로 옮기는 현상을 (      )이라 한다.', answer: '인구 이동', initials: 'ㅇㄱ ㅇㄷ', aliases: ['인구이동'] },
         { no: 4, text: '농촌에서 도시로 인구가 이동하는 현상을 (      )라 한다.', answer: '이촌향도', initials: 'ㅇㅊㅎㄷ', aliases: ['이촌향도'] },
         { no: 5, text: '도시에서 농촌이나 교외로 인구가 이동하는 현상을 (      )라 한다.', answer: '역도시화', initials: 'ㅇㄷㅅㅎ', aliases: ['역도시화'] },
         { no: 6, text: '기존 거주지를 떠나게 하는 부정적 조건을 (      )이라 한다.', answer: '배출 요인', initials: 'ㅂㅊ ㅇㅇ', aliases: ['배출요인'] },
@@ -764,7 +764,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[도시화와 도시 문제 어휘]',
       items: [
         { no: 1, text: '도시 인구 비율이 증가하고 도시적 생활 양식이 확산되는 현상을 (      )라 한다.', answer: '도시화', initials: 'ㄷㅅㅎ', aliases: ['도시화'] },
-        { no: 2, text: '전체 인구 중 도시 인구가 차지하는 비율을 (      )라 한다.', answer: '도시화율', initials: 'ㄷㅅㅎㄹ', aliases: ['도시화율'] },
+        { no: 2, text: '전체 인구 중 도시 인구가 차지하는 비율을 (      )이라 한다.', answer: '도시화율', initials: 'ㄷㅅㅎㄹ', aliases: ['도시화율'] },
         { no: 3, text: '도시 인구가 교외나 농촌으로 이동하는 현상을 (      )라 한다.', answer: '역도시화', initials: 'ㅇㄷㅅㅎ', aliases: ['역도시화'] },
         { no: 4, text: '도심의 상주 인구가 줄어드는 현상을 (      )라 한다.', answer: '인구 공동화', initials: 'ㅇㄱ ㄱㄷㅎ', aliases: ['인구공동화'] },
         { no: 5, text: '도시 기능과 인구가 외곽으로 확산되는 현상을 (      )라 한다.', answer: '교외화', initials: 'ㄱㅇㅎ', aliases: ['교외화'] },
@@ -775,7 +775,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: 'ICT 기술을 활용해 도시 문제를 효율적으로 해결하는 도시를 (      )라 한다.', answer: '스마트 시티', initials: 'ㅅㅁㅌ ㅅㅌ', aliases: ['스마트시티'] },
         { no: 11, text: '환경적으로 지속 가능하게 설계된 도시를 (      )라 한다.', answer: '생태 도시', initials: 'ㅅㅌ ㄷㅅ', aliases: ['생태도시'] },
         { no: 12, text: '교통량을 줄이기 위한 정책을 (      )라 한다.', answer: '교통 수요 관리', initials: 'ㄱㅌ ㅅㅇ ㄱㄹ', aliases: ['교통수요관리'] },
-        { no: 13, text: '정부가 저렴하게 공급하는 주택을 (      )라 한다.', answer: '공공 임대 주택', initials: 'ㄱㄱ ㅇㄷ ㅈㅌ', aliases: ['공공임대주택'] },
+        { no: 13, text: '정부가 저렴하게 공급하는 주택을 (      )이라 한다.', answer: '공공 임대 주택', initials: 'ㄱㄱ ㅇㄷ ㅈㅌ', aliases: ['공공임대주택'] },
         { no: 14, text: '미래 세대를 고려한 환경 친화적 발전을 (      )이라 한다.', answer: '지속 가능한 발전', initials: 'ㅈㅅ ㄱㄴㅎ ㅂㅈ', aliases: ['지속가능한발전'] },
         { no: 15, text: '개인이나 집단의 생활 수준과 행복 정도를 (      )이라 한다.', answer: '삶의 질', initials: 'ㅅㅇ ㅈ', aliases: ['삶의질'] }
       ]
@@ -875,7 +875,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '어업이 주된 경제 활동인 촌락을 (    )이라고 한다.', answer: '어촌', initials: 'ㅇㅊ', aliases: ['어촌'] },
         { no: 5, text: '인구가 급격히 줄어 지역 기능이 약화되는 현상을 (    )라고 한다.', answer: '과소화', initials: 'ㄱㅅㅎ', aliases: ['과소화'] },
         { no: 6, text: '고령 인구 비율이 20%를 넘는 사회를 (      )라고 한다.', answer: '초고령사회', initials: 'ㅊㄱㄹㅅㅎ', aliases: ['초고령사회'] },
-        { no: 7, text: '인구 감소로 마을 소멸 위험에 처한 지역을 (        )라고 한다.', answer: '소멸위험지역', initials: 'ㅅㅁㅇㅎㅈㅇ', aliases: ['소멸위험지역'] },        { no: 8, text: '농업에 종사하는 청년 세대를 (    )이라고 한다.', answer: '청년농', initials: 'ㅊㄴㄴ', aliases: ['청년농'] },        { no: 9, text: 'ICT 기술을 활용한 첨단 농업 시설을 (      )이라고 한다.', answer: '스마트팜', initials: 'ㅅㅁㅌㅍ', aliases: ['스마트팜'] },      ]
+        { no: 7, text: '인구 감소로 마을 소멸 위험에 처한 지역을 (        )이라고 한다.', answer: '소멸위험지역', initials: 'ㅅㅁㅇㅎㅈㅇ', aliases: ['소멸위험지역'] },        { no: 8, text: '농업에 종사하는 청년 세대를 (    )이라고 한다.', answer: '청년농', initials: 'ㅊㄴㄴ', aliases: ['청년농'] },        { no: 9, text: 'ICT 기술을 활용한 첨단 농업 시설을 (      )이라고 한다.', answer: '스마트팜', initials: 'ㅅㅁㅌㅍ', aliases: ['스마트팜'] },      ]
     },
     quiz: {
       q1_text: '다음 중 글의 내용과 일치하지 않는 것은?',
@@ -1233,7 +1233,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '시속 200km 이상으로 운행하는 철도를 (      )라고 한다.', answer: '고속철도', initials: 'ㄱㅅㅊㄷ', aliases: ['고속철도', 'KTX'] },        { no: 3, text: '정보를 전달하고 교환하는 수단을 (    )이라고 한다.', answer: '통신', initials: 'ㅌㅅ', aliases: ['통신'] },        { no: 4, text: '인터넷을 통해 상품과 서비스를 사고파는 활동을 (        )라고 한다.', answer: '전자상거래', initials: 'ㅈㅈㅅㄱㄹ', aliases: ['전자상거래'] },        { no: 5, text: '도심 인구가 외곽 지역으로 이동하는 현상을 (    )라고 한다.', answer: '교외화', initials: 'ㄱㅇㅎ', aliases: ['교외화'] },
         { no: 6, text: '특정 장소에 도달할 수 있는 용이성을 (    )이라고 한다.', answer: '접근성', initials: 'ㅈㄱㅅ', aliases: ['접근성'] },
         { no: 7, text: '운전자 없이 스스로 주행하는 자동차를 (        )라고 한다.', answer: '자율주행차', initials: 'ㅈㅇㅈㅎㅊ', aliases: ['자율주행차', '자율주행 자동차'] },
-        { no: 8, text: '도심 내 수직 이착륙 항공기 이동 체계를 (          )라고 한다.', answer: '도심항공교통', initials: 'ㄷㅅㅎㄱㄱㅌ', aliases: ['도심항공교통', 'UAM'] },
+        { no: 8, text: '도심 내 수직 이착륙 항공기 이동 체계를 (          )이라고 한다.', answer: '도심항공교통', initials: 'ㄷㅅㅎㄱㄱㅌ', aliases: ['도심항공교통', 'UAM'] },
         { no: 9, text: '가상현실에서 사회·경제 활동이 이루어지는 공간을 (      )라고 한다.', answer: '메타버스', initials: 'ㅁㅌㅂㅅ', aliases: ['메타버스'] }
       ]
     },
@@ -1426,7 +1426,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '인구가 적게 분포하는 지역을 (            )이라고 한다.', answer: '인구 희박 지역', initials: 'ㅇㄱ ㅎㅂ ㅈㅇ', aliases: ['인구희박지역', '인구 희박 지역'] },
         { no: 7, text: '출생률이 낮아 인구 증가가 둔화되는 현상을 (      )이라고 한다.', answer: '저출산', initials: 'ㅈㅊㅅ', aliases: ['저출산'] },
         { no: 8, text: '전체 인구 중 노인 인구 비율이 높아지는 현상을 (      )라고 한다.', answer: '고령화', initials: 'ㄱㄹㅎ', aliases: ['고령화'] },
-        { no: 9, text: '인구가 지역의 수용 능력을 초과하는 상태를 (        )라고 한다.', answer: '인구 과잉', initials: 'ㅇㄱ ㄱㅇ', aliases: ['인구과잉', '인구 과잉'] },
+        { no: 9, text: '인구가 지역의 수용 능력을 초과하는 상태를 (        )이라고 한다.', answer: '인구 과잉', initials: 'ㅇㄱ ㄱㅇ', aliases: ['인구과잉', '인구 과잉'] },
         { no: 10, text: '인구 문제 해결을 위해 국가가 시행하는 정책을 (        )이라고 한다.', answer: '인구 정책', initials: 'ㅇㄱ ㅈㅊ', aliases: ['인구정책', '인구 정책'] },
         { no: 11, text: '외국인의 입국과 거주를 관리하는 정책을 (        )이라고 한다.', answer: '이민 정책', initials: 'ㅇㅁ ㅈㅊ', aliases: ['이민정책', '이민 정책'] },
         { no: 12, text: '연령별, 성별 인구의 구성 비율을 (        )라고 한다.', answer: '인구 구조', initials: 'ㅇㄱ ㄱㅈ', aliases: ['인구구조', '인구 구조'] },
@@ -1536,7 +1536,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '전체 인구 중 도시에 거주하는 인구의 비율을 (        )이라고 한다.', answer: '도시화율', initials: 'ㄷㅅㅎㄹ', aliases: ['도시화율'] },
         { no: 3, text: '도시화로 인해 발생하는 주택, 교통, 환경 등의 문제를 (        )라고 한다.', answer: '도시 문제', initials: 'ㄷㅅ ㅁㅈ', aliases: ['도시문제', '도시 문제'] },
         { no: 4, text: '도시의 중심부로 상업·업무 기능이 집중된 지역을 (    )이라고 한다.', answer: '도심', initials: 'ㄷㅅ', aliases: ['도심'] },
-        { no: 5, text: '도심 지역의 상주 인구가 감소하는 현상을 (          )이라고 한다.', answer: '도심 공동화', initials: 'ㄷㅅ ㄱㄷㅎ', aliases: ['도심공동화', '도심 공동화'] },
+        { no: 5, text: '도심 지역의 상주 인구가 감소하는 현상을 (          )라고 한다.', answer: '도심 공동화', initials: 'ㄷㅅ ㄱㄷㅎ', aliases: ['도심공동화', '도심 공동화'] },
         { no: 6, text: '도시 인구가 도시 외곽 지역으로 이동하는 현상을 (      )라고 한다.', answer: '교외화', initials: 'ㄱㅇㅎ', aliases: ['교외화'] },
         { no: 7, text: '중심 도시와 주변 지역이 기능적으로 연결된 광역 도시 지역을 (        )이라고 한다.', answer: '대도시권', initials: 'ㄷㄷㅅㄱ', aliases: ['대도시권'] },
         { no: 8, text: '인구 1,000만 명 이상의 거대 도시를 (        )라고 한다.', answer: '메가시티', initials: 'ㅁㄱㅅㅌ', aliases: ['메가시티'] },
@@ -1770,8 +1770,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 8, text: '중동 여러 국가에 분산되어 거주하는 민족을 (      )이라고 한다.', answer: '쿠르드족', initials: 'ㅋㄹㄷㅈ', aliases: ['쿠르드족'] },
         { no: 9, text: '인도와 파키스탄 간의 영토 및 종교 갈등을 (          )이라고 한다.', answer: '카슈미르 분쟁', initials: 'ㅋㅅㅁㄹ ㅂㅈ', aliases: ['카슈미르분쟁', '카슈미르 분쟁'] },
         { no: 10, text: '세계 평화와 안전을 위한 국제기구를 (      )이라고 한다.', answer: '국제연합', initials: 'ㄱㅈㅇㅎ', aliases: ['국제연합', 'UN'] },
-        { no: 11, text: '국가 간 분쟁을 법적으로 해결하는 국제 재판소를 (            )이라고 한다.', answer: '국제사법재판소', initials: 'ㄱㅈㅅㅂㅈㅍㅅ', aliases: ['국제사법재판소', 'ICJ'] },
-        { no: 12, text: '분쟁 지역의 평화 유지를 위해 파견되는 군대를 (        )라고 한다.', answer: '평화유지군', initials: 'ㅍㅎㅇㅈㄱ', aliases: ['평화유지군'] },
+        { no: 11, text: '국가 간 분쟁을 법적으로 해결하는 국제 재판소를 (            )라고 한다.', answer: '국제사법재판소', initials: 'ㄱㅈㅅㅂㅈㅍㅅ', aliases: ['국제사법재판소', 'ICJ'] },
+        { no: 12, text: '분쟁 지역의 평화 유지를 위해 파견되는 군대를 (        )이라고 한다.', answer: '평화유지군', initials: 'ㅍㅎㅇㅈㄱ', aliases: ['평화유지군'] },
         { no: 13, text: '특정 지역 국가들이 협력을 위해 구성한 기구를 (          )라고 한다.', answer: '지역 협력체', initials: 'ㅈㅇ ㅎㄹㅊ', aliases: ['지역협력체', '지역 협력체'] },
         { no: 14, text: '전쟁, 박해 등을 피해 다른 나라로 피난한 사람을 (    )이라고 한다.', answer: '난민', initials: 'ㄴㅁ', aliases: ['난민'] },
         { no: 15, text: '다양한 문화를 존중하고 이해하기 위한 교육을 (              )이라고 한다.', answer: '다문화 이해 교육', initials: 'ㄷㅁㅎ ㅇㅎ ㄱㅇ', aliases: ['다문화이해교육', '다문화 이해 교육'] }
@@ -1882,7 +1882,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '지구 대기를 온난하게 하는 이산화탄소 등의 기체를 (      )라고 한다.', answer: '온실가스', initials: 'ㅇㅅㄱㅅ', aliases: ['온실가스'] },
         { no: 7, text: '온실가스 증가로 지구 평균 기온이 상승하는 현상을 (          )라고 한다.', answer: '지구 온난화', initials: 'ㅈㄱ ㅇㄴㅎ', aliases: ['지구온난화', '지구 온난화'] },
         { no: 8, text: '기후 변화나 인간 활동으로 사막이 확대되는 현상을 (      )라고 한다.', answer: '사막화', initials: 'ㅅㅁㅎ', aliases: ['사막화'] },
-        { no: 9, text: '생태계 내 다양한 생물 종의 존재를 (          )라고 한다.', answer: '생물 다양성', initials: 'ㅅㅁ ㄷㅇㅅ', aliases: ['생물다양성', '생물 다양성'] },
+        { no: 9, text: '생태계 내 다양한 생물 종의 존재를 (          )이라고 한다.', answer: '생물 다양성', initials: 'ㅅㅁ ㄷㅇㅅ', aliases: ['생물다양성', '생물 다양성'] },
         { no: 10, text: '미래 세대의 필요를 해치지 않으면서 현재의 필요를 충족하는 발전을 (              )이라고 한다.', answer: '지속 가능한 발전', initials: 'ㅈㅅ ㄱㄴㅎ ㅂㅈ', aliases: ['지속가능한발전', '지속 가능한 발전'] },
         { no: 11, text: '기후 변화 대응을 위한 국제 협약을 (        )이라고 한다.', answer: '파리 협정', initials: 'ㅍㄹ ㅎㅈ', aliases: ['파리협정', '파리 협정'] },
         { no: 12, text: '온실가스 배출량과 흡수량의 균형을 이루는 것을 (        )이라고 한다.', answer: '탄소 중립', initials: 'ㅌㅅ ㅈㄹ', aliases: ['탄소중립', '탄소 중립'] },
@@ -1988,7 +1988,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[자원과 에너지 어휘]',
       items: [
-        { no: 1, text: '에너지를 생산하기 위해 사용되는 자원을 (          )라고 한다.', answer: '에너지 자원', initials: 'ㅇㄴㅈ ㅈㅇ', aliases: ['에너지자원', '에너지 자원'] },
+        { no: 1, text: '에너지를 생산하기 위해 사용되는 자원을 (          )이라고 한다.', answer: '에너지 자원', initials: 'ㅇㄴㅈ ㅈㅇ', aliases: ['에너지자원', '에너지 자원'] },
         { no: 2, text: '석탄, 석유, 천연가스 등 생물 유해가 변성되어 형성된 에너지원을 (          )라고 한다.', answer: '화석 에너지', initials: 'ㅎㅅ ㅇㄴㅈ', aliases: ['화석에너지', '화석 에너지'] },
         { no: 3, text: '태양광, 풍력 등 재생 가능하고 친환경적인 에너지를 (            )라고 한다.', answer: '신재생 에너지', initials: 'ㅅㅈㅅ ㅇㄴㅈ', aliases: ['신재생에너지', '신재생 에너지'] },
         { no: 4, text: '지하에서 채굴하는 액체 상태의 화석 연료를 (    )라고 한다.', answer: '석유', initials: 'ㅅㅇ', aliases: ['석유'] },
@@ -2318,7 +2318,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '공급망 통제 외교 환경을 (                )이라 한다.', answer: '공급망 지정학', initials: 'ㄱㄱㅁ ㅈㅈㅎ', aliases: ['공급망 지정학','공급망지정학'] },
         { no: 3, text: 'EU 핵심 분야 의존도 관리 개념을 (              )이라 한다.', answer: '전략적 자율성', initials: 'ㅈㄹㅈ ㅈㅇㅅ', aliases: ['전략적 자율성','전략적자율성'] },
         { no: 4, text: '한국 2023년 공급망 법률을 (                                      )이라 한다.', answer: '공급망 안정화 지원 기본법', initials: 'ㄱㄱㅁ ㅇㅈㅎ ㅈㅇ ㄱㅂㅂ', aliases: ['공급망 안정화 지원 기본법','공급망안정화지원기본법'] },
-        { no: 5, text: '자원 공급 조정으로 정치 영향을 주는 행위를 (          )이라 한다.', answer: '석유 무기화', initials: 'ㅅㅇ ㅁㄱㅎ', aliases: ['석유 무기화','석유무기화'] },
+        { no: 5, text: '자원 공급 조정으로 정치 영향을 주는 행위를 (          )라 한다.', answer: '석유 무기화', initials: 'ㅅㅇ ㅁㄱㅎ', aliases: ['석유 무기화','석유무기화'] },
         { no: 6, text: '석유 수출국 기구를 (      )이라 한다.', answer: 'OPEC', initials: 'OPEC', aliases: ['OPEC','opec'] },
         { no: 7, text: '핵심 광물 동맹국 체계를 (    )라 한다.', answer: 'MSP', initials: 'MSP', aliases: ['MSP','msp','광물 안보 파트너십','광물안보파트너십'] },
         { no: 8, text: '동맹국 중심 공급망 재편을 (            )이라 한다.', answer: '프렌드쇼어링', initials: 'ㅍㄹㄷㅅㅇㄹ', aliases: ['프렌드쇼어링'] },

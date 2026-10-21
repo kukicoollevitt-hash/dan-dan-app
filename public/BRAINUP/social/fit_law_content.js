@@ -273,7 +273,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '',
       items: [        { no: 1, text: '돈이나 물건 같은 소유한 것을 (      )이라고 해요.', answer: '재물', initials: 'ㅈㅁ', aliases: ['재물'] },
         { no: 2, text: '사람이 인간답게 살아가기 위해 보장되어야 하는 권리를 (      )이라고 해요.', answer: '인권', initials: 'ㅇㄱ', aliases: ['인권'] },        { no: 3, text: '공정하지 못하게 다르게 대하는 일을 (      )이라고 해요.', answer: '차별', initials: 'ㅊㅂ', aliases: ['차별'] },
-        { no: 4, text: '눈이 불편해 보기가 어려운 상태를 (        )이라고 해요.', answer: '시각 장애', initials: 'ㅅㄱ ㅈㅇ', aliases: ['시각장애','시각 장애'] },
+        { no: 4, text: '눈이 불편해 보기가 어려운 상태를 (        )라고 해요.', answer: '시각 장애', initials: 'ㅅㄱ ㅈㅇ', aliases: ['시각장애','시각 장애'] },
         { no: 5, text: '일하며 생활을 꾸려 가는 사람을 (        )라고 해요.', answer: '노동자', initials: 'ㄴㄷㅈ', aliases: ['노동자'] },
         { no: 6, text: '특정한 일을 맡아 처리하는 곳을 (      )이라고 해요.', answer: '기관', initials: 'ㄱㄱ', aliases: ['기관'] },
         { no: 7, text: '다른 사람을 생각하고 도와주려는 마음을 (      )라고 해요.', answer: '배려', initials: 'ㅂㄹ', aliases: ['배려'] }
@@ -987,7 +987,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 7, text: '의도적으로 특정 학생을 집단에서 소외시키는 행위를 (        )이라고 한다.', answer: '따돌림', initials: 'ㄸㄷㄹ', aliases: ['따돌림'] },
         { no: 8, text: '인터넷이나 SNS에서 이루어지는 폭력 행위를 (          )이라고 한다.', answer: '사이버 폭력', initials: 'ㅅㅇㅂ ㅍㄹ', aliases: ['사이버폭력', '사이버 폭력'] },
         { no: 9, text: '학교폭력 사건을 심의하고 조치를 결정하는 기구를 (                  )라고 한다.', answer: '학교폭력대책심의위원회', initials: 'ㅎㄱㅍㄹㄷㅊㅅㅇㅇㅇㅎ', aliases: ['학교폭력대책심의위원회', '학폭위'] },
-        { no: 10, text: '자신에게 영향을 미치는 일에 의견을 말할 권리를 (      )라고 한다.', answer: '참여권', initials: 'ㅊㅇㄱ', aliases: ['참여권'] }
+        { no: 10, text: '자신에게 영향을 미치는 일에 의견을 말할 권리를 (      )이라고 한다.', answer: '참여권', initials: 'ㅊㅇㄱ', aliases: ['참여권'] }
       ]
     },
     quiz: {
@@ -1494,7 +1494,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 7, text: '생명, 자유, 평등 등 인간의 핵심 권리를 (       )이라 한다.', answer: '기본적 인권', initials: 'ㄱㅂㅈ ㅇㄱ', aliases: ['기본적인권'] },
         { no: 8, text: '전쟁이나 박해를 피해 다른 나라로 간 사람을 (   )이라 한다.', answer: '난민', initials: 'ㄴㅁ', aliases: ['난민'] },
         { no: 9, text: '국경을 넘어 인류 공동체의 일원으로 사는 사람을 (      )이라 한다.', answer: '세계 시민', initials: 'ㅅㄱ ㅅㅁ', aliases: ['세계시민'] },
-        { no: 10, text: '나라 간 법적 분쟁을 재판하는 유엔 기관을 (        )이라 한다.', answer: '국제사법재판소', initials: 'ㄱㅈㅅㅂㅈㅍㅅ', aliases: ['국제사법재판소', 'ICJ'] }
+        { no: 10, text: '나라 간 법적 분쟁을 재판하는 유엔 기관을 (        )라 한다.', answer: '국제사법재판소', initials: 'ㄱㅈㅅㅂㅈㅍㅅ', aliases: ['국제사법재판소', 'ICJ'] }
       ]
     },
     quiz: {
@@ -1991,9 +1991,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '',
       items: [
         { no: 1, text: '옳고 바르며 공정한 것을 (   )라 한다.', answer: '정의', initials: 'ㅈㅇ', aliases: ['정의'] },
-        { no: 2, text: '법이 모든 사람에게 공평하게 적용되는 것을 (        )라 한다.', answer: '법 앞의 평등', initials: 'ㅂ ㅇㅇ ㅍㄷ', aliases: ['법앞의평등', '법 앞의 평등'] },
+        { no: 2, text: '법이 모든 사람에게 공평하게 적용되는 것을 (        )이라 한다.', answer: '법 앞의 평등', initials: 'ㅂ ㅇㅇ ㅍㄷ', aliases: ['법앞의평등', '법 앞의 평등'] },
         { no: 3, text: '법에 따라 국가를 운영하는 원칙을 (     )라 한다.', answer: '법치주의', initials: 'ㅂㅊㅈㅇ', aliases: ['법치주의'] },
-        { no: 4, text: '사회 구성원으로서 해야 할 일을 (       )라 한다.', answer: '시민의 역할', initials: 'ㅅㅁㅇ ㅇㅎ', aliases: ['시민의역할'] },
+        { no: 4, text: '사회 구성원으로서 해야 할 일을 (       )이라 한다.', answer: '시민의 역할', initials: 'ㅅㅁㅇ ㅇㅎ', aliases: ['시민의역할'] },
         { no: 5, text: '서로 지키기로 한 것을 (   )이라 한다.', answer: '약속', initials: 'ㅇㅅ', aliases: ['약속'] },
         { no: 6, text: '한쪽으로 치우치지 않고 올바른 것을 (   )이라 한다.', answer: '공정', initials: 'ㄱㅈ', aliases: ['공정'] },
         { no: 7, text: '정당하게 요구할 수 있는 힘을 (   )라 한다.', answer: '권리', initials: 'ㄱㄹ', aliases: ['권리'] },

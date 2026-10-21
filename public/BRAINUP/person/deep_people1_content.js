@@ -1753,10 +1753,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 9, text: '왜구의 대규모 (      )가 금강 하구로 침입해 왔습니다.', answer: '함대', initials: 'ㅎㄷ', aliases: ['함대'] },
         { no: 10, text: '고려 함대는 왜구 함대 500척을 (      )시켰습니다.', answer: '전멸', initials: 'ㅈㅁ', aliases: ['전멸'] },
         { no: 11, text: '최무선은 나라를 지키기 위해 (      )을 제조하기로 결심했습니다.', answer: '화약', initials: 'ㅎㅇ', aliases: ['화약'] },
-        { no: 12, text: '최무선의 업적은 우리나라 군사 과학의 (      )으로 평가받습니다.', answer: '선구자', initials: 'ㅅㄱㅈ', aliases: ['선구자'] },
-        { no: 13, text: '최무선은 화약 무기인 (      )을 개발하여 왜구를 물리쳤습니다.', answer: '화포', initials: 'ㅎㅍ', aliases: ['화포'] },
+        { no: 12, text: '최무선의 업적은 우리나라 군사 과학의 (      )로 평가받습니다.', answer: '선구자', initials: 'ㅅㄱㅈ', aliases: ['선구자'] },
+        { no: 13, text: '최무선은 화약 무기인 (      )를 개발하여 왜구를 물리쳤습니다.', answer: '화포', initials: 'ㅎㅍ', aliases: ['화포'] },
         { no: 14, text: '진포대첩은 금강 (      )에서 벌어진 해전입니다.', answer: '하구', initials: 'ㅎㄱ', aliases: ['하구'] },
-        { no: 15, text: '최무선은 (      )와 실패를 거듭하며 화약 제조에 성공했습니다.', answer: '실험', initials: 'ㅅㅎ', aliases: ['실험'] }
+        { no: 15, text: '최무선은 (      )과 실패를 거듭하며 화약 제조에 성공했습니다.', answer: '실험', initials: 'ㅅㅎ', aliases: ['실험'] }
       ]
     },
     quiz: {
@@ -1866,7 +1866,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 11, text: '정몽주는 고려의 (      )이자 외교관으로 활약했습니다.', answer: '학자', initials: 'ㅎㅈ', aliases: ['학자'] },
         { no: 12, text: '이방원이 정몽주의 마음을 떠보기 위해 지은 시는 (      )입니다.', answer: '하여가', initials: 'ㅎㅇㄱ', aliases: ['하여가'] },
         { no: 13, text: '정몽주는 (      )에서 암살당했습니다.', answer: '선죽교', initials: 'ㅅㅈㄱ', aliases: ['선죽교'] },
-        { no: 14, text: '정몽주는 고려를 끝까지 지키려는 (      )을 보여주었습니다.', answer: '의리', initials: 'ㅇㄹ', aliases: ['의리'] },
+        { no: 14, text: '정몽주는 고려를 끝까지 지키려는 (      )를 보여주었습니다.', answer: '의리', initials: 'ㅇㄹ', aliases: ['의리'] },
         { no: 15, text: '정몽주는 새 (      ) 건국에 반대했습니다.', answer: '왕조', initials: 'ㅇㅈ', aliases: ['왕조'] }
       ]
     },
@@ -3737,7 +3737,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 12, text: '연개소문은 고구려의 (      )을 장악했습니다.', answer: '실권', initials: 'ㅅㄱ', aliases: ['실권'] },
         { no: 13, text: '당 태종은 천하통일의 (      )을 품었습니다.', answer: '야망', initials: 'ㅇㅁ', aliases: ['야망'] },
         { no: 14, text: '연개소문은 뛰어난 군사 (      )으로 당군에 맞섰습니다.', answer: '전략', initials: 'ㅈㄹ', aliases: ['전략'] },
-        { no: 15, text: '연개소문은 권력을 빼앗은 (       )으로 비판받기도 합니다.', answer: '찬탈자', initials: 'ㅊㅌㅈ', aliases: ['찬탈자'] }
+        { no: 15, text: '연개소문은 권력을 빼앗은 (       )로 비판받기도 합니다.', answer: '찬탈자', initials: 'ㅊㅌㅈ', aliases: ['찬탈자'] }
       ]
     },
     quiz: {
@@ -4067,7 +4067,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '행주대첩은 국민 모두가 나라를 지킨 (      ) 사례입니다.', answer: '모범', initials: 'ㅁㅂ', aliases: ['모범'] },
         { no: 11, text: '권율은 문과에 (      )했지만 무예에 더 뛰어났습니다.', answer: '급제', initials: 'ㄱㅈ', aliases: ['급제'] },
         { no: 12, text: '권율은 전라도에서 (      )하며 승리했습니다.', answer: '북상', initials: 'ㅂㅅ', aliases: ['북상'] },
-        { no: 13, text: '권율은 병사들의 (      )으로 대승을 거두었습니다.', answer: '단결', initials: 'ㄷㄱ', aliases: ['단결'] },
+        { no: 13, text: '권율은 병사들의 (      )로 대승을 거두었습니다.', answer: '단결', initials: 'ㄷㄱ', aliases: ['단결'] },
         { no: 14, text: '행주대첩은 임진왜란 3대 (      ) 중 하나입니다.', answer: '대첩', initials: 'ㄷㅊ', aliases: ['대첩'] },
         { no: 15, text: '권율은 행주산성의 (      )에 모셔져 있습니다.', answer: '사당', initials: 'ㅅㄷ', aliases: ['사당'] }
       ]
@@ -4565,8 +4565,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 42]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4589,8 +4589,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 43]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4613,8 +4613,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 44]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4637,8 +4637,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 45]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4661,8 +4661,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 46]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4685,8 +4685,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 47]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4709,8 +4709,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 48]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4733,8 +4733,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 49]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4757,8 +4757,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 50]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4781,8 +4781,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 51]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4805,8 +4805,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 52]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4829,8 +4829,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 53]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4853,8 +4853,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 54]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4877,8 +4877,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 55]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4901,8 +4901,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 56]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4925,8 +4925,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 57]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4949,8 +4949,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 58]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4973,8 +4973,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 59]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -4997,8 +4997,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 60]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5021,8 +5021,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 61]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5045,8 +5045,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 62]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5069,8 +5069,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 63]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5093,8 +5093,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 64]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5117,8 +5117,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 65]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5141,8 +5141,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 66]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5165,8 +5165,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 67]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5189,8 +5189,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 68]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5213,8 +5213,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 69]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5237,8 +5237,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 70]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5261,8 +5261,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 71]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5285,8 +5285,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 72]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5309,8 +5309,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 73]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5333,8 +5333,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 74]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5357,8 +5357,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 75]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5381,8 +5381,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 76]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5405,8 +5405,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 77]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5427,8 +5427,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 78]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5449,8 +5449,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 79]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},
@@ -5471,8 +5471,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[인물 80]', items: [
       {no:1,text:'사람을 (   )이라 한다.',answer:'인물',initials:'ㅇㅁ',aliases:['인물']},
       {no:2,text:'이룬 일을 (   )이라 한다.',answer:'업적',initials:'ㅇㅈ',aliases:['업적']},
-      {no:3,text:'지난 일을 (   )이라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
-      {no:4,text:'중요함을 (   )이라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
+      {no:3,text:'지난 일을 (   )라 한다.',answer:'역사',initials:'ㅇㅅ',aliases:['역사']},
+      {no:4,text:'중요함을 (   )라 한다.',answer:'가치',initials:'ㄱㅊ',aliases:['가치']},
       {no:5,text:'이바지를 (   )이라 한다.',answer:'공헌',initials:'ㄱㅎ',aliases:['공헌']},
       {no:6,text:'미침을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']},
       {no:7,text:'지도력을 (     )이라 한다.',answer:'리더십',initials:'ㄹㄷㅅ',aliases:['리더십']},

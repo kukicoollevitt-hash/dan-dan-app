@@ -67,10 +67,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[윌리엄 텔 어휘]',
       items: [
-        { no: 1, text: '어떤 일에 대해 깊이 생각하는 것을 (      )라고 해요.', answer: '궁리', initials: 'ㄱㄹ', aliases: ['궁리'] },        { no: 2, text: '일을 잘 해결할 수 있는 좋은 생각이나 방법을 (      )라고 해요.', answer: '묘안', initials: 'ㅁㅇ', aliases: ['묘안'] },
+        { no: 1, text: '어떤 일에 대해 깊이 생각하는 것을 (      )라고 해요.', answer: '궁리', initials: 'ㄱㄹ', aliases: ['궁리'] },        { no: 2, text: '일을 잘 해결할 수 있는 좋은 생각이나 방법을 (      )이라고 해요.', answer: '묘안', initials: 'ㅁㅇ', aliases: ['묘안'] },
         { no: 3, text: '활을 다루는 기술이나 능력을 (        )라고 해요.', answer: '활 솜씨', initials: 'ㅎ ㅅㅆ', aliases: ['활솜씨','활 솜씨'] },
-        { no: 4, text: '어떤 의견이나 조건을 내놓는 것을 (      )라고 해요.', answer: '제안', initials: 'ㅈㅇ', aliases: ['제안'] },
-        { no: 5, text: '겁내지 않고 맞서는 용기나 담력을 (      )라고 해요.', answer: '배짱', initials: 'ㅂㅉ', aliases: ['배짱'] },        { no: 6, text: '힘에 눌려 복종하는 것을 (      )이라고 해요.', answer: '굴복', initials: 'ㄱㅂ', aliases: ['굴복'] },
+        { no: 4, text: '어떤 의견이나 조건을 내놓는 것을 (      )이라고 해요.', answer: '제안', initials: 'ㅈㅇ', aliases: ['제안'] },
+        { no: 5, text: '겁내지 않고 맞서는 용기나 담력을 (      )이라고 해요.', answer: '배짱', initials: 'ㅂㅉ', aliases: ['배짱'] },        { no: 6, text: '힘에 눌려 복종하는 것을 (      )이라고 해요.', answer: '굴복', initials: 'ㄱㅂ', aliases: ['굴복'] },
         { no: 7, text: '억압 없이 스스로 행동할 수 있는 상태를 (      )라고 해요.', answer: '자유', initials: 'ㅈㅇ', aliases: ['자유'] }
       ]
     },
@@ -956,7 +956,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '장난을 좋아하는 아이를 (      )라고 해요.', answer: '개구쟁이', initials: 'ㄱㄱㅈㅇ', aliases: ['개구쟁이'] },
         { no: 2, text: '어려운 상황을 벗어나기 위한 좋은 생각을 (      )라고 해요.', answer: '꾀', initials: 'ㄲ', aliases: ['꾀'] },        { no: 3, text: '굳게 약속하는 것을 (      )라고 해요.', answer: '맹세', initials: 'ㅁㅅ', aliases: ['맹세'] },
-        { no: 4, text: '잘못한 일이 마음에 걸리는 것을 (          )라고 해요.', answer: '양심의 가책', initials: 'ㅇㅅㅇ ㄱㅊ', aliases: ['양심의가책','양심의 가책'] },
+        { no: 4, text: '잘못한 일이 마음에 걸리는 것을 (          )이라고 해요.', answer: '양심의 가책', initials: 'ㅇㅅㅇ ㄱㅊ', aliases: ['양심의가책','양심의 가책'] },
         { no: 5, text: '당한 것을 앙갚음하는 것을 (      )라고 해요.', answer: '복수', initials: 'ㅂㅅ', aliases: ['복수'] },
         { no: 6, text: '알려지지 않은 곳을 찾아다니며 살피는 것을 (      )이라고 해요.', answer: '탐험', initials: 'ㅌㅎ', aliases: ['탐험'] },
         { no: 7, text: '매우 귀중한 물건을 (      )이라고 해요.', answer: '보물', initials: 'ㅂㅁ', aliases: ['보물'] },
@@ -1462,14 +1462,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[작은 아씨들 어휘]',
       items: [
-        { no: 1, text: '꼭 필요한 것만 쓰며 사치하지 않는 것을 (      )이라고 해요.', answer: '검소', initials: 'ㄱㅅ', aliases: ['검소'] },
+        { no: 1, text: '꼭 필요한 것만 쓰며 사치하지 않는 것을 (      )라고 해요.', answer: '검소', initials: 'ㄱㅅ', aliases: ['검소'] },
         { no: 2, text: '이야기나 글을 쓰는 것을 직업으로 하는 사람을 (      )라고 해요.', answer: '작가', initials: 'ㅈㄱ', aliases: ['작가'] },
         { no: 3, text: '외국에 가서 공부하는 것을 (      )이라고 해요.', answer: '유학', initials: 'ㅇㅎ', aliases: ['유학'] },
         { no: 4, text: '몸이나 마음이 자라고 발전하는 것을 (      )이라고 해요.', answer: '성장', initials: 'ㅅㅈ', aliases: ['성장'] },
         { no: 5, text: '큰 목표를 이루려는 강한 욕심을 (      )이라고 해요.', answer: '야심', initials: 'ㅇㅅ', aliases: ['야심'] },        { no: 6, text: '부끄러워하며 내성적인 성격을 (      )이라고 해요.', answer: '수줍음', initials: 'ㅅㅈㅇ', aliases: ['수줍음'] },
         { no: 7, text: '부모와 자녀 등으로 이루어진 사람들의 모임을 (      )이라고 해요.', answer: '가족', initials: 'ㄱㅈ', aliases: ['가족'] },
         { no: 8, text: '자유로운 행동을 막는 조건을 (      )이라고 해요.', answer: '제약', initials: 'ㅈㅇ', aliases: ['제약'] },
-        { no: 9, text: '자신을 돌보지 않고 남을 위하는 것을 (        )라고 해요.', answer: '헌신적인', initials: 'ㅎㅅㅈㅇ', aliases: ['헌신적인','헌신적','헌신'] }
+        { no: 9, text: '자신을 돌보지 않고 남을 위하는 것을 (        )이라고 해요.', answer: '헌신적인', initials: 'ㅎㅅㅈㅇ', aliases: ['헌신적인','헌신적','헌신'] }
       ]
     },
     quiz: {

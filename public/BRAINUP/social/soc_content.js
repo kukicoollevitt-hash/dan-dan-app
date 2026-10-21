@@ -168,7 +168,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '부모 중 한 명이 자녀를 돌보는 가족을 (      )이라고 한다.', answer: '한부모 가족', initials: 'ㅎㅂㅁ ㄱㅈ', aliases: ['한부모가족','한부모 가족'] },
         { no: 5, text: '서로 다른 나라 출신 부모가 이루는 가족을 (      )이라고 한다.', answer: '다문화 가족', initials: 'ㄷㅁㅎ ㄱㅈ', aliases: ['다문화가족','다문화 가족'] },
         { no: 6, text: '한곳에서 다른 곳으로 옮겨 가는 일을 (      )이라 한다.', answer: '이동', initials: 'ㅇㄷ', aliases: ['이동'] },
-        { no: 7, text: '산업이 발달하고 생활 방식이 바뀌는 과정을 (      )이라 한다.', answer: '산업화', initials: 'ㅅㅇㅎ', aliases: ['산업화'] },
+        { no: 7, text: '산업이 발달하고 생활 방식이 바뀌는 과정을 (      )라 한다.', answer: '산업화', initials: 'ㅅㅇㅎ', aliases: ['산업화'] },
         { no: 8, text: '한집에서 함께 사는 사람들의 집단을 (      )라고 한다.', answer: '가구', initials: 'ㄱㄱ', aliases: ['가구'] }
       ]
     },
@@ -618,10 +618,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '생각이나 감정을 서로 주고받는 것을 (      )이라고 한다.', answer: '소통', initials: 'ㅅㅌ', aliases: ['소통'] },
         { no: 3, text: '사람과 사람 사이의 사회적 연결을 (        )라고 한다.', answer: '인간관계', initials: 'ㅇㄱㄱㄱ', aliases: ['인간관계'] },
         { no: 4, text: '다른 사람과 비교해서 느끼는 부족함이나 불만을 (           )이라고 한다.', answer: '상대적 박탈감', initials: 'ㅅㄷㅈ ㅂㅌㄱ', aliases: ['상대적박탈감','상대적 박탈감'] },
-        { no: 5, text: '다른 사람에게 인정받고 싶은 마음을 (        )이라고 한다.', answer: '인정 욕구', initials: 'ㅇㅈ ㅇㄱ', aliases: ['인정욕구','인정 욕구'] },
+        { no: 5, text: '다른 사람에게 인정받고 싶은 마음을 (        )라고 한다.', answer: '인정 욕구', initials: 'ㅇㅈ ㅇㄱ', aliases: ['인정욕구','인정 욕구'] },
         { no: 6, text: '겉만 보고 깊이가 없는 것을 (        )이라고 한다.', answer: '피상적', initials: 'ㅍㅅㅈ', aliases: ['피상적'] },
         { no: 7, text: '혼자라는 느낌이나 사람들과 단절된 감정을 (        )이라고 한다.', answer: '외로움', initials: 'ㅇㄹㅇ', aliases: ['외로움'] },
-        { no: 8, text: '디지털 기기와 정보를 올바르게 이해하고 활용하는 능력을 (            )이라고 한다.', answer: '디지털 리터러시', initials: 'ㄷㅈㅌ ㄹㅌㄹㅅ', aliases: ['디지털리터러시','디지털 리터러시'] },
+        { no: 8, text: '디지털 기기와 정보를 올바르게 이해하고 활용하는 능력을 (            )라고 한다.', answer: '디지털 리터러시', initials: 'ㄷㅈㅌ ㄹㅌㄹㅅ', aliases: ['디지털리터러시','디지털 리터러시'] },
         { no: 9, text: '믿고 의지할 수 있다고 여기는 마음을 (      )라고 한다.', answer: '신뢰', initials: 'ㅅㄹ', aliases: ['신뢰'] }
       ]
     },
@@ -1253,8 +1253,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '옳고 바른 도리, 공정하고 올바른 것을 (      )라고 한다.', answer: '정의', initials: 'ㅈㅇ', aliases: ['정의'] },
         { no: 2, text: '한쪽으로 치우치지 않고 올바른 것을 (      )이라고 한다.', answer: '공정', initials: 'ㄱㅈ', aliases: ['공정'] },
-        { no: 3, text: '각자의 기여나 필요에 맞게 자원을 나누는 정의를 (        )이라고 한다.', answer: '분배적 정의', initials: 'ㅂㅂㅈ ㅈㅇ', aliases: ['분배적정의', '분배적 정의'] },
-        { no: 4, text: '잘못에 대해 처벌하고 피해를 보상하는 정의를 (        )이라고 한다.', answer: '교정적 정의', initials: 'ㄱㅈㅈ ㅈㅇ', aliases: ['교정적정의', '교정적 정의'] },
+        { no: 3, text: '각자의 기여나 필요에 맞게 자원을 나누는 정의를 (        )라고 한다.', answer: '분배적 정의', initials: 'ㅂㅂㅈ ㅈㅇ', aliases: ['분배적정의', '분배적 정의'] },
+        { no: 4, text: '잘못에 대해 처벌하고 피해를 보상하는 정의를 (        )라고 한다.', answer: '교정적 정의', initials: 'ㄱㅈㅈ ㅈㅇ', aliases: ['교정적정의', '교정적 정의'] },
         { no: 5, text: '개인의 능력과 노력에 따라 보상이 결정되어야 한다는 생각을 (        )라고 한다.', answer: '능력주의', initials: 'ㄴㄹㅈㅇ', aliases: ['능력주의'] },
         { no: 6, text: '모든 사람에게 동등한 기회가 주어지는 것을 (        )이라고 한다.', answer: '기회의 평등', initials: 'ㄱㅎㅇ ㅍㄷ', aliases: ['기회의평등', '기회의 평등'] },
         { no: 7, text: '사회 구성원 간의 불공정한 차이를 (        )이라고 한다.', answer: '사회 불평등', initials: 'ㅅㅎ ㅂㅍㄷ', aliases: ['사회불평등', '사회 불평등'] },
@@ -1347,7 +1347,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '온실가스 배출량과 흡수량을 같게 하여 순 배출량을 0으로 만드는 것을 (        )이라고 한다.', answer: '탄소 중립', initials: 'ㅌㅅ ㅈㄹ', aliases: ['탄소중립', '탄소 중립'] },
         { no: 5, text: '한 번 쓰고 버리는 물건을 (        )이라고 한다.', answer: '일회용품', initials: 'ㅇㅎㅇㅍ', aliases: ['일회용품'] },
         { no: 6, text: '기후 위기 대응을 요구하며 시위하는 행동을 (        )이라고 한다.', answer: '기후 파업', initials: 'ㄱㅎ ㅍㅇ', aliases: ['기후파업', '기후 파업'] },
-        { no: 7, text: '현재 세대와 미래 세대 간의 공정한 책임을 (          )이라고 한다.', answer: '세대 간 정의', initials: 'ㅅㄷ ㄱ ㅈㅇ', aliases: ['세대간정의', '세대 간 정의'] },
+        { no: 7, text: '현재 세대와 미래 세대 간의 공정한 책임을 (          )라고 한다.', answer: '세대 간 정의', initials: 'ㅅㄷ ㄱ ㅈㅇ', aliases: ['세대간정의', '세대 간 정의'] },
         { no: 8, text: '미래 세대의 필요를 해치지 않으면서 현재의 필요를 충족하는 발전을 (            )이라고 한다.', answer: '지속 가능한 발전', initials: 'ㅈㅅ ㄱㄴㅎ ㅂㅈ', aliases: ['지속가능한발전', '지속 가능한 발전'] },
         { no: 9, text: '생물과 환경이 서로 영향을 주고받는 시스템을 (        )라고 한다.', answer: '생태계', initials: 'ㅅㅌㄱ', aliases: ['생태계'] }
       ]
@@ -1433,7 +1433,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '세계가 하나로 연결되어 교류가 활발해지는 현상을 (    )라고 해요.', answer: '세계화', initials: 'ㅅㄱㅎ', aliases: ['세계화'] },
         { no: 2, text: '하나의 마을처럼 가까워진 세계를 (    )이라고 해요.', answer: '지구촌', initials: 'ㅈㄱㅊ', aliases: ['지구촌'] },
         { no: 3, text: '공동의 목표를 위해 함께 힘을 합치는 것을 (   )이라고 해요.', answer: '협력', initials: 'ㅎㄹ', aliases: ['협력'] },
-        { no: 4, text: '지구의 평균 기온이 변화하는 현상을 (      )이라고 해요.', answer: '기후 변화', initials: 'ㄱㅎ ㅂㅎ', aliases: ['기후변화', '기후 변화'] },
+        { no: 4, text: '지구의 평균 기온이 변화하는 현상을 (      )라고 해요.', answer: '기후 변화', initials: 'ㄱㅎ ㅂㅎ', aliases: ['기후변화', '기후 변화'] },
         { no: 5, text: '전쟁이나 박해를 피해 다른 나라로 떠난 사람들을 (   )이라고 해요.', answer: '난민', initials: 'ㄴㅁ', aliases: ['난민'] },
         { no: 6, text: '생활에 필요한 것이 부족한 가난한 상태를 (   )이라고 해요.', answer: '빈곤', initials: 'ㅂㄱ', aliases: ['빈곤'] },
         { no: 7, text: '여러 나라가 함께 만든 국제적인 조직을 (     )라고 해요.', answer: '국제기구', initials: 'ㄱㅈㄱㄱ', aliases: ['국제기구'] },
@@ -1611,7 +1611,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '국민의 건강하고 행복한 삶을 위해 국가가 제공하는 서비스를 (     )라고 해요.', answer: '사회복지', initials: 'ㅅㅎㅂㅈ', aliases: ['사회복지'] },
         { no: 2, text: '위험에 대비해 미리 돈을 모아 두었다가 사용하는 제도를 (     )이라고 해요.', answer: '사회보험', initials: 'ㅅㅎㅂㅎ', aliases: ['사회보험'] },
         { no: 3, text: '생활이 어려운 사람에게 국가가 최소한의 생활을 지원하는 제도를 (     )라고 해요.', answer: '공공부조', initials: 'ㄱㄱㅂㅈ', aliases: ['공공부조'] },
-        { no: 4, text: '생활이 어려운 사람에게 기본적인 생활비를 지원하는 제도를 (       )라고 해요.', answer: '기초생활보장', initials: 'ㄱㅊㅅㅎㅂㅈ', aliases: ['기초생활보장'] },
+        { no: 4, text: '생활이 어려운 사람에게 기본적인 생활비를 지원하는 제도를 (       )이라고 해요.', answer: '기초생활보장', initials: 'ㄱㅊㅅㅎㅂㅈ', aliases: ['기초생활보장'] },
         { no: 5, text: '돌봄, 교육, 의료 등 필요한 서비스를 제공하는 것을 (      )라고 해요.', answer: '사회서비스', initials: 'ㅅㅎㅅㅂㅅ', aliases: ['사회서비스'] },
         { no: 6, text: '국가 운영을 위해 국민이 내는 돈을 (   )이라고 해요.', answer: '세금', initials: 'ㅅㄱ', aliases: ['세금'] },
         { no: 7, text: '부유한 사람과 가난한 사람의 차이가 점점 커지는 현상을 (    )라고 해요.', answer: '양극화', initials: 'ㅇㄱㅎ', aliases: ['양극화'] },
@@ -1699,7 +1699,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '화석연료를 태울 때 발생하는 온실가스의 주요 성분을 (   )라고 해요.', answer: '탄소', initials: 'ㅌㅅ', aliases: ['탄소'] },
         { no: 2, text: '환경을 보전하면서 현재와 미래 세대의 필요를 충족시키는 발전을 (         )이라고 해요.', answer: '지속가능한 발전', initials: 'ㅈㅅㄱㄴㅎ ㅂㅈ', aliases: ['지속가능한발전', '지속가능한 발전'] },
-        { no: 3, text: '유엔이 정한 17가지 전 세계 공동 목표를 (         )이라고 해요.', answer: '지속가능발전목표', initials: 'ㅈㅅㄱㄴㅂㅈㅁㅍ', aliases: ['지속가능발전목표', 'SDGs'] },
+        { no: 3, text: '유엔이 정한 17가지 전 세계 공동 목표를 (         )라고 해요.', answer: '지속가능발전목표', initials: 'ㅈㅅㄱㄴㅂㅈㅁㅍ', aliases: ['지속가능발전목표', 'SDGs'] },
         { no: 4, text: '환경에 미치는 영향을 고려하여 물건을 구매하는 것을 (       )라고 해요.', answer: '친환경 소비', initials: 'ㅊㅎㄱ ㅅㅂ', aliases: ['친환경소비', '친환경 소비'] },
         { no: 5, text: '개인이나 단체의 활동으로 발생하는 탄소 배출량을 (       )이라고 해요.', answer: '탄소발자국', initials: 'ㅌㅅㅂㅈㄱ', aliases: ['탄소발자국'] },
         { no: 6, text: '버려지는 물건을 새롭고 가치 있는 제품으로 재탄생시키는 것을 (      )이라고 해요.', answer: '업사이클링', initials: 'ㅇㅅㅇㅋㄹ', aliases: ['업사이클링'] },

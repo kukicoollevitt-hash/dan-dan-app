@@ -253,7 +253,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '서로에게 공평하지 못한 상태를 (        )이라고 해요.', answer: '불평등', initials: 'ㅂㅍㄷ', aliases: ['불평등'] },
         { no: 5, text: '힘이 약하거나 보호가 필요한 사람을 (      )라고 해요.', answer: '약자', initials: 'ㅇㅈ', aliases: ['약자'] },
         { no: 6, text: '공정하지 못하게 다르게 대하는 일을 (      )이라고 해요.', answer: '차별', initials: 'ㅊㅂ', aliases: ['차별'] },
-        { no: 7, text: '눈이 불편해 보기가 어려운 상태를 (        )이라고 해요.', answer: '시각 장애', initials: 'ㅅㄱ ㅈㅇ', aliases: ['시각장애','시각 장애'] },
+        { no: 7, text: '눈이 불편해 보기가 어려운 상태를 (        )라고 해요.', answer: '시각 장애', initials: 'ㅅㄱ ㅈㅇ', aliases: ['시각장애','시각 장애'] },
         { no: 8, text: '일하며 생활을 꾸려 가는 사람을 (        )라고 해요.', answer: '노동자', initials: 'ㄴㄷㅈ', aliases: ['노동자'] }
       ]
     },
@@ -1881,9 +1881,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '',
       items: [
         { no: 1, text: '옳고 바르며 공정한 것을 (   )라 한다.', answer: '정의', initials: 'ㅈㅇ', aliases: ['정의'] },
-        { no: 2, text: '법이 모든 사람에게 공평하게 적용되는 것을 (        )라 한다.', answer: '법 앞의 평등', initials: 'ㅂ ㅇㅇ ㅍㄷ', aliases: ['법앞의평등', '법 앞의 평등'] },
+        { no: 2, text: '법이 모든 사람에게 공평하게 적용되는 것을 (        )이라 한다.', answer: '법 앞의 평등', initials: 'ㅂ ㅇㅇ ㅍㄷ', aliases: ['법앞의평등', '법 앞의 평등'] },
         { no: 3, text: '법에 따라 국가를 운영하는 원칙을 (     )라 한다.', answer: '법치주의', initials: 'ㅂㅊㅈㅇ', aliases: ['법치주의'] },
-        { no: 4, text: '사회 구성원으로서 해야 할 일을 (       )라 한다.', answer: '시민의 역할', initials: 'ㅅㅁㅇ ㅇㅎ', aliases: ['시민의역할'] },
+        { no: 4, text: '사회 구성원으로서 해야 할 일을 (       )이라 한다.', answer: '시민의 역할', initials: 'ㅅㅁㅇ ㅇㅎ', aliases: ['시민의역할'] },
         { no: 5, text: '서로 지키기로 한 것을 (   )이라 한다.', answer: '약속', initials: 'ㅇㅅ', aliases: ['약속'] },
         { no: 6, text: '한쪽으로 치우치지 않고 올바른 것을 (   )이라 한다.', answer: '공정', initials: 'ㄱㅈ', aliases: ['공정'] },
         { no: 7, text: '정당하게 요구할 수 있는 힘을 (   )라 한다.', answer: '권리', initials: 'ㄱㄹ', aliases: ['권리'] },

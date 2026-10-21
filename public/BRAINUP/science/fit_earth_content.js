@@ -1289,8 +1289,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '주변보다 기압이 낮은 곳을 (      )이라 한다.', answer: '저기압', initials: 'ㅈㄱㅇ', aliases: ['저기압'] },
         { no: 4, text: '기압 차이로 공기가 이동하는 현상을 (      )이라 한다.', answer: '바람', initials: 'ㅂㄹ', aliases: ['바람'] },
         { no: 5, text: '기압이 같은 지점을 연결한 선을 (      )이라 한다.', answer: '등압선', initials: 'ㄷㅇㅅ', aliases: ['등압선'] },
-        { no: 6, text: '공기가 위로 올라가는 흐름을 (        )이라 한다.', answer: '상승 기류', initials: 'ㅅㅅ ㄱㄹ', aliases: ['상승기류', '상승 기류'] },
-        { no: 7, text: '공기가 아래로 내려오는 흐름을 (        )이라 한다.', answer: '하강 기류', initials: 'ㅎㄱ ㄱㄹ', aliases: ['하강기류', '하강 기류'] },
+        { no: 6, text: '공기가 위로 올라가는 흐름을 (        )라 한다.', answer: '상승 기류', initials: 'ㅅㅅ ㄱㄹ', aliases: ['상승기류', '상승 기류'] },
+        { no: 7, text: '공기가 아래로 내려오는 흐름을 (        )라 한다.', answer: '하강 기류', initials: 'ㅎㄱ ㄱㄹ', aliases: ['하강기류', '하강 기류'] },
         { no: 8, text: '기압을 측정하는 기구를 (      )라고 한다.', answer: '기압계', initials: 'ㄱㅇㄱ', aliases: ['기압계'] },
         { no: 9, text: '기압과 날씨를 나타낸 지도를 (      )라고 한다.', answer: '일기도', initials: 'ㅇㄱㄷ', aliases: ['일기도'] },
         { no: 10, text: '매우 강한 저기압을 (      )이라 한다.', answer: '태풍', initials: 'ㅌㅍ', aliases: ['태풍'] }
@@ -1975,7 +1975,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       { no: 5, text: '열대 바다에서 발생하는 강한 저기압을 (   )이라 한다.', answer: '태풍', initials: 'ㅌㅍ', aliases: ['태풍'] },
       { no: 6, text: '비가 많이 와서 물이 넘치는 것을 (   )라고 한다.', answer: '홍수', initials: 'ㅎㅅ', aliases: ['홍수'] },
       { no: 7, text: '마그마가 분출하는 산을 (   )이라 한다.', answer: '화산', initials: 'ㅎㅅ', aliases: ['화산'] },
-      { no: 8, text: '재해를 예방하고 피해를 줄이는 활동을 (   )이라 한다.', answer: '방재', initials: 'ㅂㅈ', aliases: ['방재'] },
+      { no: 8, text: '재해를 예방하고 피해를 줄이는 활동을 (   )라 한다.', answer: '방재', initials: 'ㅂㅈ', aliases: ['방재'] },
       { no: 9, text: '위험을 피해 안전한 곳으로 이동하는 것을 (   )라고 한다.', answer: '대피', initials: 'ㄷㅍ', aliases: ['대피'] },
       { no: 10, text: '위험을 미리 알리는 신호를 (   )라고 한다.', answer: '경보', initials: 'ㄱㅂ', aliases: ['경보'] }
     ]},

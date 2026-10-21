@@ -568,7 +568,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '특정 집단을 불공평하게 대우하는 것을 (      )이라 한다.', answer: '차별', initials: 'ㅊㅂ', aliases: ['차별'] },
         { no: 3, text: '폭력을 사용하지 않는 것을 (      )이라 한다.', answer: '비폭력', initials: 'ㅂㅍㄹ', aliases: ['비폭력'] },
         { no: 4, text: '부당한 명령이나 법에 따르지 않는 것을 (      )이라 한다.', answer: '불복종', initials: 'ㅂㅂㅈ', aliases: ['불복종'] },
-        { no: 5, text: '다른 나라가 한 나라를 지배하는 것을 (        )이라 한다.', answer: '식민 지배', initials: 'ㅅㅁ ㅈㅂ', aliases: ['식민지배'] },
+        { no: 5, text: '다른 나라가 한 나라를 지배하는 것을 (        )라 한다.', answer: '식민 지배', initials: 'ㅅㅁ ㅈㅂ', aliases: ['식민지배'] },
         { no: 6, text: '다툼이나 전쟁이 없는 상태를 (      )라고 한다.', answer: '평화', initials: 'ㅍㅎ', aliases: ['평화'] },
         { no: 7, text: '다른 나라의 지배에서 벗어나 스스로 나라를 다스리는 것을 (      )이라 한다.', answer: '독립', initials: 'ㄷㄹ', aliases: ['독립'] },
         { no: 8, text: '삶과 세상에 대한 생각이나 믿음을 (      )이라 한다.', answer: '사상', initials: 'ㅅㅅ', aliases: ['사상'] }
@@ -916,7 +916,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '하늘이 내린 사명, 해야 할 일을 (      )이라 한다.', answer: '소명', initials: 'ㅅㅁ', aliases: ['소명'] },
         { no: 3, text: '자신을 바쳐 힘쓰는 것을 (      )이라 한다.', answer: '헌신', initials: 'ㅎㅅ', aliases: ['헌신'] },
         { no: 4, text: '건강을 위해 깨끗이 하는 것을 (      )이라 한다.', answer: '위생', initials: 'ㅇㅅ', aliases: ['위생'] },
-        { no: 5, text: '아픈 사람을 돌보는 일을 (      )이라 한다.', answer: '간호', initials: 'ㄱㅎ', aliases: ['간호'] },
+        { no: 5, text: '아픈 사람을 돌보는 일을 (      )라 한다.', answer: '간호', initials: 'ㄱㅎ', aliases: ['간호'] },
         { no: 6, text: '숫자로 정리한 자료를 (      )라고 한다.', answer: '통계', initials: 'ㅌㄱ', aliases: ['통계'] },
         { no: 7, text: '특정 분야에 깊은 지식이 있는 것을 (      )이라 한다.', answer: '전문', initials: 'ㅈㅁ', aliases: ['전문'] },
         { no: 8, text: '이루어 낸 훌륭한 일을 (      )이라 한다.', answer: '업적', initials: 'ㅇㅈ', aliases: ['업적'] }
@@ -1609,7 +1609,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[찰리 채플린 관련 어휘]',
       items: [
         { no: 1, text: '부모 없는 아이들이 사는 곳을 (      )이라 한다.', answer: '고아원', initials: 'ㄱㅇㅇ', aliases: ['고아원'] },
-        { no: 2, text: '소리 없이 영상만 있는 영화를 (      )이라 한다.', answer: '무성영화', initials: 'ㅁㅅㅇㅎ', aliases: ['무성영화'] },
+        { no: 2, text: '소리 없이 영상만 있는 영화를 (      )라 한다.', answer: '무성영화', initials: 'ㅁㅅㅇㅎ', aliases: ['무성영화'] },
         { no: 3, text: '작품 속 등장인물이나 그 특징을 (      )라고 한다.', answer: '캐릭터', initials: 'ㅋㄹㅌ', aliases: ['캐릭터'] },
         { no: 4, text: '마음이 아프고 서러운 감정을 (      )이라 한다.', answer: '슬픔', initials: 'ㅅㅍ', aliases: ['슬픔'] },
         { no: 5, text: '잘못된 점을 지적하고 따지는 것을 (      )이라 한다.', answer: '비판', initials: 'ㅂㅍ', aliases: ['비판'] },
@@ -2046,7 +2046,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '병을 치료하는 사람을 (      )라고 한다.', answer: '의사', initials: 'ㅇㅅ', aliases: ['의사'] },
         { no: 2, text: '세균이나 바이러스가 몸에 들어가는 것을 (      )이라 한다.', answer: '감염', initials: 'ㄱㅇ', aliases: ['감염'] },
         { no: 3, text: '눈에 보이지 않는 아주 작은 생물을 (      )이라 한다.', answer: '세균', initials: 'ㅅㄱ', aliases: ['세균'] },
-        { no: 4, text: '세균을 키우는 납작한 그릇을 (      )이라 한다.', answer: '배양 접시', initials: 'ㅂㅇㅈㅅ', aliases: ['배양 접시','배양접시'] },
+        { no: 4, text: '세균을 키우는 납작한 그릇을 (      )라 한다.', answer: '배양 접시', initials: 'ㅂㅇㅈㅅ', aliases: ['배양 접시','배양접시'] },
         { no: 5, text: '습한 곳에서 자라는 미생물을 (      )라고 한다.', answer: '곰팡이', initials: 'ㄱㅍㅇ', aliases: ['곰팡이'] },
         { no: 6, text: '플레밍이 발견한 최초의 항생제를 (      )이라 한다.', answer: '페니실린', initials: 'ㅍㄴㅅㄹ', aliases: ['페니실린'] },
         { no: 7, text: '세균을 죽이는 약을 (      )라고 한다.', answer: '항생제', initials: 'ㅎㅅㅈ', aliases: ['항생제'] },
@@ -2833,7 +2833,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '환경에 적응한 개체가 살아남는 현상을 (      )이라 한다.', answer: '자연선택', initials: 'ㅈㅇㅅㅌ', aliases: ['자연선택'] },
         { no: 6, text: '생물이 오랜 시간에 걸쳐 변화하는 것을 (      )라고 한다.', answer: '진화', initials: 'ㅈㅎ', aliases: ['진화'] },
         { no: 7, text: '기초가 되는 바탕을 (      )라고 한다.', answer: '토대', initials: 'ㅌㄷ', aliases: ['토대'] },
-        { no: 8, text: '영국 런던에 있는 유명한 교회를 (      )라고 한다.', answer: '웨스트민스터 사원', initials: 'ㅇㅅㅌㅁㅅㅌㅅㅇ', aliases: ['웨스트민스터 사원','웨스트민스터사원'] }
+        { no: 8, text: '영국 런던에 있는 유명한 교회를 (      )이라고 한다.', answer: '웨스트민스터 사원', initials: 'ㅇㅅㅌㅁㅅㅌㅅㅇ', aliases: ['웨스트민스터 사원','웨스트민스터사원'] }
       ]
     },
     quiz: {
@@ -3006,7 +3006,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '컴퓨터를 관리하는 기본 소프트웨어를 (      )라고 한다.', answer: '운영체제', initials: 'ㅇㅇㅊㅈ', aliases: ['운영체제'] },
         { no: 5, text: '마이크로소프트가 만든 운영체제를 (      )라고 한다.', answer: '윈도우', initials: 'ㅇㄷㅇ', aliases: ['윈도우'] },
         { no: 6, text: '가장 많은 재산을 가진 사람을 (      )라고 한다.', answer: '최고 부자', initials: 'ㅊㄱㅂㅈ', aliases: ['최고 부자','최고부자'] },
-        { no: 7, text: '어려운 사람을 돕는 일을 (      )라고 한다.', answer: '자선 활동', initials: 'ㅈㅅㅎㄷ', aliases: ['자선 활동','자선활동'] },
+        { no: 7, text: '어려운 사람을 돕는 일을 (      )이라고 한다.', answer: '자선 활동', initials: 'ㅈㅅㅎㄷ', aliases: ['자선 활동','자선활동'] },
         { no: 8, text: '돈이나 물건을 대가 없이 주는 것을 (      )라고 한다.', answer: '기부', initials: 'ㄱㅂ', aliases: ['기부'] }
       ]
     },
@@ -3262,12 +3262,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[투탕카멘 관련 어휘]',
       items: [
         { no: 1, text: '고대 이집트의 왕을 (      )라고 한다.', answer: '파라오', initials: 'ㅍㄹㅇ', aliases: ['파라오'] },
-        { no: 2, text: '투탕카멘의 아버지이자 종교 개혁을 한 파라오를 (      )라고 한다.', answer: '아케나텐', initials: 'ㅇㅋㄴㅌ', aliases: ['아케나텐'] },
+        { no: 2, text: '투탕카멘의 아버지이자 종교 개혁을 한 파라오를 (      )이라고 한다.', answer: '아케나텐', initials: 'ㅇㅋㄴㅌ', aliases: ['아케나텐'] },
         { no: 3, text: '신이나 높은 존재를 공경하는 것을 (      )라고 한다.', answer: '숭배', initials: 'ㅅㅂ', aliases: ['숭배'] },
         { no: 4, text: '무덤에서 물건을 훔치는 것을 (      )이라 한다.', answer: '도굴', initials: 'ㄷㄱ', aliases: ['도굴'] },
         { no: 5, text: '옛날 유물이나 유적을 연구하는 사람을 (      )라고 한다.', answer: '고고학자', initials: 'ㄱㄱㅎㅈ', aliases: ['고고학자'] },
         { no: 6, text: '옛날 사람이 남긴 물건을 (      )이라 한다.', answer: '유물', initials: 'ㅇㅁ', aliases: ['유물'] },
-        { no: 7, text: '투탕카멘의 순금 얼굴 가면을 (      )이라 한다.', answer: '황금 마스크', initials: 'ㅎㄱㅁㅅㅋ', aliases: ['황금 마스크','황금마스크'] },
+        { no: 7, text: '투탕카멘의 순금 얼굴 가면을 (      )라 한다.', answer: '황금 마스크', initials: 'ㅎㄱㅁㅅㅋ', aliases: ['황금 마스크','황금마스크'] },
         { no: 8, text: '불행을 빌거나 해를 끼치려는 것을 (      )라고 한다.', answer: '저주', initials: 'ㅈㅈ', aliases: ['저주'] }
       ]
     },

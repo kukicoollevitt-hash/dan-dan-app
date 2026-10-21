@@ -829,7 +829,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '고등 교육을 받은 지식인을 (      )라고 한다.', answer: '인텔리', initials: 'ㅇㅌㄹ', aliases: ['인텔리'] },
         { no: 2, text: '자신에 대해 스스로 자랑스럽게 여기는 마음을 (      )이라고 한다.', answer: '자부심', initials: 'ㅈㅂㅅ', aliases: ['자부심'] },
-        { no: 3, text: '일자리를 구하거나 알선해 주는 곳을 (      )이라고 한다.', answer: '직업소개소', initials: 'ㅈㅇㅅㄱㅅ', aliases: ['직업소개소'] },
+        { no: 3, text: '일자리를 구하거나 알선해 주는 곳을 (      )라고 한다.', answer: '직업소개소', initials: 'ㅈㅇㅅㄱㅅ', aliases: ['직업소개소'] },
         { no: 4, text: '인력거를 끌어 손님을 태워 나르는 사람을 (      )이라고 한다.', answer: '인력거꾼', initials: 'ㅇㄹㄱㄲ', aliases: ['인력거꾼'] },
         { no: 5, text: '남에게 굽히지 않으려는 스스로의 품위를 (      )이라고 한다.', answer: '자존심', initials: 'ㅈㅈㅅ', aliases: ['자존심'] },
         { no: 6, text: '자기 자신을 비웃거나 조롱하는 것을 (      )라고 한다.', answer: '자조', initials: 'ㅈㅈ', aliases: ['자조'] },

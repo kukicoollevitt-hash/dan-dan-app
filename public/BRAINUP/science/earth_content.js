@@ -577,7 +577,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '지표로 분출된 마그마를 (      )이라고 한다.', answer: '용암', initials: 'ㅇㅇ', aliases: ['용암'] },
         { no: 7, text: '화산 폭발 시 나오는 잔 입자를 (      )라고 한다.', answer: '화산재', initials: 'ㅎㅅㅈ', aliases: ['화산재'] },
         { no: 8, text: '지진이 처음 시작된 지표면의 지점을 (      )이라 한다.', answer: '진앙', initials: 'ㅈㅇ', aliases: ['진앙'] },
-        { no: 9, text: '태평양 주변의 지진·화산 다발 지역을 (            )이라 한다.', answer: '환태평양 화산대', initials: 'ㅎㅌㅍㅇ ㅎㅅㄷ', aliases: ['환태평양화산대','불의 고리'] }
+        { no: 9, text: '태평양 주변의 지진·화산 다발 지역을 (            )라 한다.', answer: '환태평양 화산대', initials: 'ㅎㅌㅍㅇ ㅎㅅㄷ', aliases: ['환태평양화산대','불의 고리'] }
       ]
     },
     quiz: {
@@ -1205,8 +1205,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '주변보다 기압이 낮은 곳을 (      )이라 한다.', answer: '저기압', initials: 'ㅈㄱㅇ', aliases: ['저기압'] },
         { no: 4, text: '기압 차이로 공기가 이동하는 현상을 (      )이라 한다.', answer: '바람', initials: 'ㅂㄹ', aliases: ['바람'] },
         { no: 5, text: '기압이 같은 지점을 연결한 선을 (      )이라 한다.', answer: '등압선', initials: 'ㄷㅇㅅ', aliases: ['등압선'] },
-        { no: 6, text: '공기가 위로 올라가는 흐름을 (        )이라 한다.', answer: '상승 기류', initials: 'ㅅㅅ ㄱㄹ', aliases: ['상승기류', '상승 기류'] },
-        { no: 7, text: '공기가 아래로 내려오는 흐름을 (        )이라 한다.', answer: '하강 기류', initials: 'ㅎㄱ ㄱㄹ', aliases: ['하강기류', '하강 기류'] },
+        { no: 6, text: '공기가 위로 올라가는 흐름을 (        )라 한다.', answer: '상승 기류', initials: 'ㅅㅅ ㄱㄹ', aliases: ['상승기류', '상승 기류'] },
+        { no: 7, text: '공기가 아래로 내려오는 흐름을 (        )라 한다.', answer: '하강 기류', initials: 'ㅎㄱ ㄱㄹ', aliases: ['하강기류', '하강 기류'] },
         { no: 8, text: '기압을 측정하는 기구를 (      )라고 한다.', answer: '기압계', initials: 'ㄱㅇㄱ', aliases: ['기압계'] },
         { no: 9, text: '기압과 날씨를 나타낸 지도를 (      )라고 한다.', answer: '일기도', initials: 'ㅇㄱㄷ', aliases: ['일기도'] }
       ]
@@ -1784,7 +1784,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       {no:5,text:'강한 저기압을 (   )이라 한다.',answer:'태풍',initials:'ㅌㅍ',aliases:['태풍']},
       {no:6,text:'물이 넘치는 것을 (   )라고 한다.',answer:'홍수',initials:'ㅎㅅ',aliases:['홍수']},
       {no:7,text:'마그마 분출 산을 (   )이라 한다.',answer:'화산',initials:'ㅎㅅ',aliases:['화산']},
-      {no:8,text:'재해 예방 활동을 (   )이라 한다.',answer:'방재',initials:'ㅂㅈ',aliases:['방재']},
+      {no:8,text:'재해 예방 활동을 (   )라 한다.',answer:'방재',initials:'ㅂㅈ',aliases:['방재']},
       {no:9,text:'안전한 곳으로 이동을 (   )라고 한다.',answer:'대피',initials:'ㄷㅍ',aliases:['대피']}
     ]},
     quiz: {

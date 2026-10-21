@@ -1160,7 +1160,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '뭉게뭉게 솟은 구름을 (      )이라 한다.', answer: '적운', initials: 'ㅈㅇ', aliases: ['적운', '뭉게구름'] },
         { no: 7, text: '비와 번개를 동반하는 큰 구름을 (      )이라 한다.', answer: '적란운', initials: 'ㅈㄹㅇ', aliases: ['적란운', '소나기구름'] },
         { no: 8, text: '물이 응결하여 작은 방울로 된 것을 (      )이라 한다.', answer: '물방울', initials: 'ㅁㅂㅇ', aliases: ['물방울'] },
-        { no: 9, text: '수증기가 얼어서 생긴 작은 알갱이를 (        )이라 한다.', answer: '얼음 알갱이', initials: 'ㅇㅇ ㅇㄱㅇ', aliases: ['얼음알갱이'] }
+        { no: 9, text: '수증기가 얼어서 생긴 작은 알갱이를 (        )라 한다.', answer: '얼음 알갱이', initials: 'ㅇㅇ ㅇㄱㅇ', aliases: ['얼음알갱이'] }
       ]
     },
     quiz: {
@@ -1658,7 +1658,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       { no: 9, text: '물고기가 많이 모이는 바다를 (   )이라 한다.', answer: '어장', initials: 'ㅇㅈ', aliases: ['어장'] },
       { no: 10, text: '썰물 때 드러나는 바닷가 진흙땅을 (   )이라 한다.', answer: '갯벌', initials: 'ㄱㅂ', aliases: ['갯벌'] },
       { no: 11, text: '난류와 한류가 만나는 바다 지역을 (      )이라 한다.', answer: '조경 수역', initials: 'ㅈㄱ ㅅㅇ', aliases: ['조경수역'] },
-      { no: 12, text: '조석의 힘으로 전기를 만드는 시설을 (        )이라 한다.', answer: '조력 발전소', initials: 'ㅈㄹ ㅂㅈㅅ', aliases: ['조력발전소'] }
+      { no: 12, text: '조석의 힘으로 전기를 만드는 시설을 (        )라 한다.', answer: '조력 발전소', initials: 'ㅈㄹ ㅂㅈㅅ', aliases: ['조력발전소'] }
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하지 않는 것은?',
@@ -1954,7 +1954,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       { no: 5, text: '열대 바다에서 발생하는 강한 저기압을 (   )이라 한다.', answer: '태풍', initials: 'ㅌㅍ', aliases: ['태풍'] },
       { no: 6, text: '비가 많이 와서 물이 넘치는 것을 (   )라고 한다.', answer: '홍수', initials: 'ㅎㅅ', aliases: ['홍수'] },
       { no: 7, text: '마그마가 분출하는 산을 (   )이라 한다.', answer: '화산', initials: 'ㅎㅅ', aliases: ['화산'] },
-      { no: 8, text: '재해를 예방하고 피해를 줄이는 활동을 (   )이라 한다.', answer: '방재', initials: 'ㅂㅈ', aliases: ['방재'] },
+      { no: 8, text: '재해를 예방하고 피해를 줄이는 활동을 (   )라 한다.', answer: '방재', initials: 'ㅂㅈ', aliases: ['방재'] },
       { no: 9, text: '위험을 피해 안전한 곳으로 이동하는 것을 (   )라고 한다.', answer: '대피', initials: 'ㄷㅍ', aliases: ['대피'] },
       { no: 10, text: '위험을 미리 알리는 신호를 (   )라고 한다.', answer: '경보', initials: 'ㄱㅂ', aliases: ['경보'] },
       { no: 11, text: '바다 밑 지진으로 일어나는 거대한 파도를 (      )이라 한다.', answer: '지진 해일', initials: 'ㅈㅈ ㅎㅇ', aliases: ['지진해일', '쓰나미'] },

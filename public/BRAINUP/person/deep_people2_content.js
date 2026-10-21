@@ -175,7 +175,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '건물의 천장에 그린 그림을 (       )라고 해요.', answer: '천장화', initials: 'ㅊㅈㅎ', aliases: ['천장화'] },
         { no: 7, text: '높은 곳에서 일하기 위해 세우는 임시 구조물을 (      )라고 해요.', answer: '비계', initials: 'ㅂㄱ', aliases: ['비계'] },
         { no: 8, text: '어렵고 힘든 시련을 (      )이라고 해요.', answer: '고난', initials: 'ㄱㄴ', aliases: ['고난'] },
-        { no: 9, text: '어려움을 참고 견디는 힘을 (      )이라고 해요.', answer: '인내', initials: 'ㅇㄴ', aliases: ['인내'] },
+        { no: 9, text: '어려움을 참고 견디는 힘을 (      )라고 해요.', answer: '인내', initials: 'ㅇㄴ', aliases: ['인내'] },
         { no: 10, text: '어떤 일에 뜨겁게 쏟는 마음을 (      )이라고 해요.', answer: '열정', initials: 'ㅇㅈ', aliases: ['열정'] },
         { no: 11, text: '온 힘을 다하는 것을 (      )이라고 해요.', answer: '혼신', initials: 'ㅎㅅ', aliases: ['혼신'] },
         { no: 12, text: '매우 뛰어난 예술 작품을 (      )이라고 해요.', answer: '걸작', initials: 'ㄱㅈ', aliases: ['걸작'] },
@@ -294,7 +294,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 7, text: '무대에서 배우들이 이야기를 표현하는 공연 예술을 (      )이라 한다.', answer: '연극', initials: 'ㅇㄱ', aliases: ['연극'] },
         { no: 8, text: '연극에서 배우가 말할 내용을 적은 글을 (      )이라 한다.', answer: '대본', initials: 'ㄷㅂ', aliases: ['대본'] },
         { no: 9, text: '기쁨이나 감탄을 크게 외치는 것을 (      )라고 한다.', answer: '환호', initials: 'ㅎㅎ', aliases: ['환호'] },
-        { no: 10, text: '셰익스피어의 작품이 공연된 유명한 극장을 (       )이라 한다.', answer: '글로브', initials: 'ㄱㄹㅂ', aliases: ['글로브'] },
+        { no: 10, text: '셰익스피어의 작품이 공연된 유명한 극장을 (       )라 한다.', answer: '글로브', initials: 'ㄱㄹㅂ', aliases: ['글로브'] },
         { no: 11, text: '건물이나 물건의 짜임새를 (      )라고 한다.', answer: '구조', initials: 'ㄱㅈ', aliases: ['구조'] },
         { no: 12, text: '슬픈 결말을 가진 이야기를 (      )이라 한다.', answer: '비극', initials: 'ㅂㄱ', aliases: ['비극'] },
         { no: 13, text: '연극으로 공연하기 위해 쓴 글을 (      )이라 한다.', answer: '희곡', initials: 'ㅎㄱ', aliases: ['희곡'] },
@@ -758,13 +758,13 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '특정 집단을 불공평하게 대우하는 것을 (      )이라 한다.', answer: '차별', initials: 'ㅊㅂ', aliases: ['차별'] },
         { no: 4, text: '폭력을 사용하지 않는 것을 (      )이라 한다.', answer: '비폭력', initials: 'ㅂㅍㄹ', aliases: ['비폭력'] },
         { no: 5, text: '부당한 명령이나 법에 따르지 않는 것을 (      )이라 한다.', answer: '불복종', initials: 'ㅂㅂㅈ', aliases: ['불복종'] },
-        { no: 6, text: '다른 나라가 한 나라를 지배하는 것을 (        )이라 한다.', answer: '식민 지배', initials: 'ㅅㅁ ㅈㅂ', aliases: ['식민지배'] },
+        { no: 6, text: '다른 나라가 한 나라를 지배하는 것을 (        )라 한다.', answer: '식민 지배', initials: 'ㅅㅁ ㅈㅂ', aliases: ['식민지배'] },
         { no: 7, text: '실을 잣는 데 쓰는 도구를 (      )라고 한다.', answer: '물레', initials: 'ㅁㄹ', aliases: ['물레'] },
         { no: 8, text: '나라에 내는 돈을 (      )이라 한다.', answer: '세금', initials: 'ㅅㄱ', aliases: ['세금'] },
         { no: 9, text: '다툼이나 전쟁이 없는 상태를 (      )라고 한다.', answer: '평화', initials: 'ㅍㅎ', aliases: ['평화'] },
         { no: 10, text: '다른 나라의 지배에서 벗어나 스스로 나라를 다스리는 것을 (      )이라 한다.', answer: '독립', initials: 'ㄷㄹ', aliases: ['독립'] },
         { no: 11, text: '먹지 않고 버티는 것을 (      )이라 한다.', answer: '단식', initials: 'ㄷㅅ', aliases: ['단식'] },
-        { no: 12, text: '사치하지 않고 꼭 필요한 것만 쓰는 것을 (      )이라 한다.', answer: '검소', initials: 'ㄱㅅ', aliases: ['검소'] },
+        { no: 12, text: '사치하지 않고 꼭 필요한 것만 쓰는 것을 (      )라 한다.', answer: '검소', initials: 'ㄱㅅ', aliases: ['검소'] },
         { no: 13, text: '극단적인 생각을 가진 사람을 (        )라고 한다.', answer: '극단주의자', initials: 'ㄱㄷㅈㅇㅈ', aliases: ['극단주의자'] },
         { no: 14, text: '삶과 세상에 대한 생각이나 믿음을 (      )이라 한다.', answer: '사상', initials: 'ㅅㅅ', aliases: ['사상'] },
         { no: 15, text: '사회적으로 올바르고 공정한 도리를 (      )라 한다.', answer: '정의', initials: 'ㅈㅇ', aliases: ['정의'] }
@@ -999,7 +999,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '어떤 일에 뜨겁게 몰두하는 마음을 (      )이라 한다.', answer: '열정', initials: 'ㅇㅈ', aliases: ['열정'] },
         { no: 11, text: '시각장애인이 손가락으로 읽는 글자를 (      )라고 한다.', answer: '점자', initials: 'ㅈㅈ', aliases: ['점자'] },
         { no: 12, text: '어떤 목표를 위해 힘을 쓰는 것을 (      )이라 한다.', answer: '노력', initials: 'ㄴㄹ', aliases: ['노력'] },
-        { no: 13, text: '어려움을 참고 꾸준히 해내는 힘을 (      )이라 한다.', answer: '끈기', initials: 'ㄲㄱ', aliases: ['끈기'] },
+        { no: 13, text: '어려움을 참고 꾸준히 해내는 힘을 (      )라 한다.', answer: '끈기', initials: 'ㄲㄱ', aliases: ['끈기'] },
         { no: 14, text: '다른 언어로 옮겨 쓰는 것을 (      )이라 한다.', answer: '번역', initials: 'ㅂㅇ', aliases: ['번역'] },
         { no: 15, text: '자신을 돌보지 않고 다른 사람을 위해 힘쓰는 것을 (      )이라 한다.', answer: '헌신', initials: 'ㅎㅅ', aliases: ['헌신'] }
       ]
@@ -1225,16 +1225,16 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '하늘이 내린 사명, 해야 할 일을 (      )이라 한다.', answer: '소명', initials: 'ㅅㅁ', aliases: ['소명'] },
         { no: 3, text: '자신을 바쳐 힘쓰는 것을 (      )이라 한다.', answer: '헌신', initials: 'ㅎㅅ', aliases: ['헌신'] },
         { no: 4, text: '건강을 위해 깨끗이 하는 것을 (      )이라 한다.', answer: '위생', initials: 'ㅇㅅ', aliases: ['위생'] },
-        { no: 5, text: '아픈 사람을 돌보는 일을 (      )이라 한다.', answer: '간호', initials: 'ㄱㅎ', aliases: ['간호'] },
+        { no: 5, text: '아픈 사람을 돌보는 일을 (      )라 한다.', answer: '간호', initials: 'ㄱㅎ', aliases: ['간호'] },
         { no: 6, text: '숫자로 정리한 자료를 (      )라고 한다.', answer: '통계', initials: 'ㅌㄱ', aliases: ['통계'] },
         { no: 7, text: '특정 분야에 깊은 지식이 있는 것을 (      )이라 한다.', answer: '전문', initials: 'ㅈㅁ', aliases: ['전문'] },
         { no: 8, text: '이루어 낸 훌륭한 일을 (      )이라 한다.', answer: '업적', initials: 'ㅇㅈ', aliases: ['업적'] },
         { no: 9, text: '병원균이 몸에 들어가 병이 생기는 것을 (      )이라 한다.', answer: '감염', initials: 'ㄱㅇ', aliases: ['감염'] },
         { no: 10, text: '어떤 분야를 먼저 개척한 사람을 (       )라 한다.', answer: '선구자', initials: 'ㅅㄱㅈ', aliases: ['선구자'] },
         { no: 11, text: '지식이나 기술을 가르치는 것을 (      )이라 한다.', answer: '교육', initials: 'ㄱㅇ', aliases: ['교육'] },
-        { no: 12, text: '일이나 조직을 체계적으로 운영하는 것을 (      )이라 한다.', answer: '관리', initials: 'ㄱㄹ', aliases: ['관리'] },
+        { no: 12, text: '일이나 조직을 체계적으로 운영하는 것을 (      )라 한다.', answer: '관리', initials: 'ㄱㄹ', aliases: ['관리'] },
         { no: 13, text: '여러 사람이 모여 만든 단체를 (      )이라 한다.', answer: '조직', initials: 'ㅈㅈ', aliases: ['조직'] },
-        { no: 14, text: '맡아서 하는 일을 (      )이라 한다.', answer: '업무', initials: 'ㅇㅁ', aliases: ['업무'] },
+        { no: 14, text: '맡아서 하는 일을 (      )라 한다.', answer: '업무', initials: 'ㅇㅁ', aliases: ['업무'] },
         { no: 15, text: '체계적으로 짜여진 학습 프로그램을 (        )이라 한다.', answer: '교육과정', initials: 'ㄱㅇㄱㅈ', aliases: ['교육과정'] }
       ]
     },
@@ -1816,7 +1816,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 8, text: '어려운 일에 맞서 시도하는 것을 (      )이라 한다.', answer: '도전', initials: 'ㄷㅈ', aliases: ['도전'] },
         { no: 9, text: '매우 뛰어난 작품을 (      )이라 한다.', answer: '명작', initials: 'ㅁㅈ', aliases: ['명작'] },
         { no: 10, text: '새로운 것을 생각해내는 능력을 (       )이라 한다.', answer: '창의력', initials: 'ㅊㅇㄹ', aliases: ['창의력'] },
-        { no: 11, text: '그림이나 인형을 조금씩 움직여 만든 영화를 (         )라고 한다.', answer: '애니메이션', initials: 'ㅇㄴㅁㅇㅅ', aliases: ['애니메이션'] },
+        { no: 11, text: '그림이나 인형을 조금씩 움직여 만든 영화를 (         )이라고 한다.', answer: '애니메이션', initials: 'ㅇㄴㅁㅇㅅ', aliases: ['애니메이션'] },
         { no: 12, text: '새롭게 바꾸어 발전시키는 것을 (      )이라 한다.', answer: '혁신', initials: 'ㅎㅅ', aliases: ['혁신'] },
         { no: 13, text: '위험을 무릅쓰고 새로운 일에 도전하는 것을 (      )이라 한다.', answer: '모험', initials: 'ㅍㅎ', aliases: ['모험'] },
         { no: 14, text: '재산을 모두 잃고 빚만 남는 것을 (      )이라 한다.', answer: '파산', initials: 'ㅍㅅ', aliases: ['파산'] },
@@ -1936,7 +1936,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 11, text: '한 가지 일에 깊이 빠져 집중하는 것을 (      )라고 한다.', answer: '몰두', initials: 'ㅁㄷ', aliases: ['몰두'] },
         { no: 12, text: '이상하거나 불분명하여 의심하는 마음을 (      )이라 한다.', answer: '의문', initials: 'ㅇㅁ', aliases: ['의문'] },
         { no: 13, text: '특정한 목적을 위해 만든 기구나 설비를 (      )라고 한다.', answer: '장치', initials: 'ㅈㅊ', aliases: ['장치'] },
-        { no: 14, text: '사물이 생기거나 움직이는 근본 법칙을 (      )이라 한다.', answer: '원리', initials: 'ㅇㄹ', aliases: ['원리'] },
+        { no: 14, text: '사물이 생기거나 움직이는 근본 법칙을 (      )라 한다.', answer: '원리', initials: 'ㅇㄹ', aliases: ['원리'] },
         { no: 15, text: '세균이 병의 원인이라는 이론을 (      )이라 한다.', answer: '세균설', initials: 'ㅅㄱㅅ', aliases: ['세균설'] }
       ]
     },
@@ -2162,7 +2162,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[찰리 채플린 관련 어휘]',
       items: [
         { no: 1, text: '부모 없는 아이들이 사는 곳을 (      )이라 한다.', answer: '고아원', initials: 'ㄱㅇㅇ', aliases: ['고아원'] },
-        { no: 2, text: '소리 없이 영상만 있는 영화를 (      )이라 한다.', answer: '무성영화', initials: 'ㅁㅅㅇㅎ', aliases: ['무성영화'] },
+        { no: 2, text: '소리 없이 영상만 있는 영화를 (      )라 한다.', answer: '무성영화', initials: 'ㅁㅅㅇㅎ', aliases: ['무성영화'] },
         { no: 3, text: '작품 속 등장인물이나 그 특징을 (      )라고 한다.', answer: '캐릭터', initials: 'ㅋㄹㅌ', aliases: ['캐릭터'] },
         { no: 4, text: '마음이 아프고 서러운 감정을 (      )이라 한다.', answer: '슬픔', initials: 'ㅅㅍ', aliases: ['슬픔'] },
         { no: 5, text: '잘못된 점을 지적하고 따지는 것을 (      )이라 한다.', answer: '비판', initials: 'ㅂㅍ', aliases: ['비판'] },
@@ -2171,7 +2171,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 8, text: '앞으로 좋은 일이 있을 거라는 기대를 (      )이라 한다.', answer: '희망', initials: 'ㅎㅁ', aliases: ['희망'] },
         { no: 9, text: '잘못된 것을 웃음으로 꼬집어 비판하는 것을 (      )라고 한다.', answer: '풍자', initials: 'ㅍㅈ', aliases: ['풍자'] },
         { no: 10, text: '타고난 뛰어난 능력을 (      )이라 한다.', answer: '재능', initials: 'ㅈㄴ', aliases: ['재능'] },
-        { no: 11, text: '가난한 사람들이 모여 사는 지역을 (      )이라 한다.', answer: '빈민가', initials: 'ㅂㅁㄱ', aliases: ['빈민가'] },
+        { no: 11, text: '가난한 사람들이 모여 사는 지역을 (      )라 한다.', answer: '빈민가', initials: 'ㅂㅁㄱ', aliases: ['빈민가'] },
         { no: 12, text: '재미있고 웃음을 주는 것을 (      )라고 한다.', answer: '유머', initials: 'ㅇㅁ', aliases: ['유머'] },
         { no: 13, text: '근본이 되는 바탕을 (      )이라 한다.', answer: '원천', initials: 'ㅇㅊ', aliases: ['원천'] },
         { no: 14, text: '정치적 이유로 다른 나라로 피신하는 것을 (      )이라 한다.', answer: '망명', initials: 'ㅁㅁ', aliases: ['망명'] },
@@ -2293,7 +2293,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '여러 가지 중에서 골라 정하는 것을 (      )이라 한다.', answer: '선택', initials: 'ㅅㅌ', aliases: ['선택'] },
         { no: 11, text: '인간이 만들지 않은 본래의 세계를 (      )이라 한다.', answer: '자연', initials: 'ㅈㅇ', aliases: ['자연'] },
         { no: 12, text: '깊이 있게 조사하고 공부하는 것을 (      )라고 한다.', answer: '연구', initials: 'ㅇㄱ', aliases: ['연구'] },
-        { no: 13, text: '어려움을 참고 견디는 것을 (      )이라 한다.', answer: '인내', initials: 'ㅇㄴ', aliases: ['인내'] },
+        { no: 13, text: '어려움을 참고 견디는 것을 (      )라 한다.', answer: '인내', initials: 'ㅇㄴ', aliases: ['인내'] },
         { no: 14, text: '우리를 둘러싼 주위의 모든 것을 (      )이라 한다.', answer: '환경', initials: 'ㅎㄱ', aliases: ['환경'] },
         { no: 15, text: '잘못된 점을 지적하고 따지는 것을 (      )이라 한다.', answer: '비판', initials: 'ㅂㅍ', aliases: ['비판'] }
       
@@ -2738,7 +2738,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '세균이나 바이러스가 몸에 들어가는 것을 (      )이라 한다.', answer: '감염', initials: 'ㄱㅇ', aliases: ['감염'] },
         { no: 5, text: '눈에 보이지 않는 아주 작은 생물을 (      )이라 한다.', answer: '세균', initials: 'ㅅㄱ', aliases: ['세균'] },
         { no: 6, text: '마음을 단단히 먹고 정하는 것을 (      )이라 한다.', answer: '결심', initials: 'ㄱㅅ', aliases: ['결심'] },
-        { no: 7, text: '세균을 키우는 납작한 그릇을 (      )이라 한다.', answer: '배양 접시', initials: 'ㅂㅇ ㅈㅅ', aliases: ['배양 접시','배양접시'] },
+        { no: 7, text: '세균을 키우는 납작한 그릇을 (      )라 한다.', answer: '배양 접시', initials: 'ㅂㅇ ㅈㅅ', aliases: ['배양 접시','배양접시'] },
         { no: 8, text: '습한 곳에서 자라는 미생물을 (      )라고 한다.', answer: '곰팡이', initials: 'ㄱㅍㅇ', aliases: ['곰팡이'] },
         { no: 9, text: '어떤 현상을 설명하기 위해 가정한 이론을 (      )이라 한다.', answer: '가설', initials: 'ㄱㅅ', aliases: ['가설'] },
         { no: 10, text: '뜻하지 않게 일어나는 일을 (      )이라 한다.', answer: '우연', initials: 'ㅇㅇ', aliases: ['우연'] },
@@ -3410,8 +3410,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '신이나 영웅에 대한 옛이야기를 (      )라고 한다.', answer: '신화', initials: 'ㅅㅎ', aliases: ['신화'] },
         { no: 11, text: '예술, 학문, 생활 방식 등의 총칭을 (      )라고 한다.', answer: '문화', initials: 'ㅁㅎ', aliases: ['문화'] },
         { no: 12, text: '몰래 사람을 죽이는 것을 (      )이라 한다.', answer: '암살', initials: 'ㅇㅅ', aliases: ['암살'] },
-        { no: 13, text: '어려움을 두려워하지 않는 씩씩한 기운을 (      )이라 한다.', answer: '용기', initials: 'ㅇㄱ', aliases: ['용기'] },
-        { no: 14, text: '집단을 이끄는 능력을 (      )라고 한다.', answer: '리더십', initials: 'ㄹㄷㅅ', aliases: ['리더십'] },
+        { no: 13, text: '어려움을 두려워하지 않는 씩씩한 기운을 (      )라 한다.', answer: '용기', initials: 'ㅇㄱ', aliases: ['용기'] },
+        { no: 14, text: '집단을 이끄는 능력을 (      )이라고 한다.', answer: '리더십', initials: 'ㄹㄷㅅ', aliases: ['리더십'] },
         { no: 15, text: '이루어 놓은 훌륭한 공적을 (      )이라 한다.', answer: '업적', initials: 'ㅇㅈ', aliases: ['업적'] }
       ]
     },
@@ -3512,7 +3512,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '한 가문이 대대로 왕위를 이어가는 것을 (      )라고 한다.', answer: '왕조', initials: 'ㅇㅈ', aliases: ['왕조'] },
         { no: 2, text: '왕의 딸을 (      )라고 한다.', answer: '공주', initials: 'ㄱㅈ', aliases: ['공주'] },
         { no: 3, text: '말과 글로 생각을 전달하는 수단을 (      )라고 한다.', answer: '언어', initials: 'ㅇㅇ', aliases: ['언어'] },
-        { no: 4, text: '말을 막힘없이 잘하는 것을 (      )라고 한다.', answer: '유창', initials: 'ㅇㅊ', aliases: ['유창'] },
+        { no: 4, text: '말을 막힘없이 잘하는 것을 (      )이라고 한다.', answer: '유창', initials: 'ㅇㅊ', aliases: ['유창'] },
         { no: 5, text: '청중 앞에서 설득력 있게 말하는 것을 (      )이라 한다.', answer: '웅변', initials: 'ㅇㅂ', aliases: ['웅변'] },
         { no: 6, text: '둘 이상이 함께 나라를 다스리는 것을 (      )라고 한다.', answer: '공동 통치', initials: 'ㄱㄷ ㅌㅊ', aliases: ['공동 통치','공동통치'] },
         { no: 7, text: '왕을 대신하여 나라를 다스리는 것을 (      )이라 한다.', answer: '섭정', initials: 'ㅅㅈ', aliases: ['섭정'] },
@@ -3745,7 +3745,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 12, text: '새로운 것을 처음 만들어 내는 것을 (      )라고 한다.', answer: '창조', initials: 'ㅊㅈ', aliases: ['창조'] },
         { no: 13, text: '생물이 오랜 시간에 걸쳐 변화하는 것을 (      )라고 한다.', answer: '진화', initials: 'ㅈㅎ', aliases: ['진화'] },
         { no: 14, text: '기초가 되는 바탕을 (      )라고 한다.', answer: '토대', initials: 'ㅌㄷ', aliases: ['토대'] },
-        { no: 15, text: '영국 런던에 있는 유명한 교회를 (      )라고 한다.', answer: '웨스트민스터 사원', initials: 'ㅇㅅㅌㅁㅅㅌ ㅅㅇ', aliases: ['웨스트민스터 사원','웨스트민스터사원'] }
+        { no: 15, text: '영국 런던에 있는 유명한 교회를 (      )이라고 한다.', answer: '웨스트민스터 사원', initials: 'ㅇㅅㅌㅁㅅㅌ ㅅㅇ', aliases: ['웨스트민스터 사원','웨스트민스터사원'] }
       ]
     },
     quiz: {
@@ -3966,7 +3966,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 11, text: '마이크로소프트가 만든 운영체제를 (      )라고 한다.', answer: '윈도우', initials: 'ㅇㄷㅇ', aliases: ['윈도우'] },
         { no: 12, text: '낡은 것을 새롭게 바꾸는 것을 (      )이라 한다.', answer: '혁신', initials: 'ㅎㅅ', aliases: ['혁신'] },
         { no: 13, text: '가장 많은 재산을 가진 사람을 (      )라고 한다.', answer: '최고 부자', initials: 'ㅊㄱ ㅂㅈ', aliases: ['최고 부자','최고부자'] },
-        { no: 14, text: '어려운 사람을 돕는 일을 (      )라고 한다.', answer: '자선 활동', initials: 'ㅈㅅ ㅎㄷ', aliases: ['자선 활동','자선활동'] },
+        { no: 14, text: '어려운 사람을 돕는 일을 (      )이라고 한다.', answer: '자선 활동', initials: 'ㅈㅅ ㅎㄷ', aliases: ['자선 활동','자선활동'] },
         { no: 15, text: '돈이나 물건을 대가 없이 주는 것을 (      )라고 한다.', answer: '기부', initials: 'ㄱㅂ', aliases: ['기부'] }
       ]
     },
@@ -4076,9 +4076,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '농구에서 공을 던지는 것을 (      )이라 한다.', answer: '슛', initials: 'ㅅ', aliases: ['슛'] },
         { no: 11, text: '이기고 싶어 하는 강한 욕구를 (      )이라 한다.', answer: '승부욕', initials: 'ㅅㅂㅇ', aliases: ['승부욕'] },
         { no: 12, text: '결과를 가르는 매우 중요한 것을 (      )(이)라 한다.', answer: '결정적', initials: 'ㄱㅈㅈ', aliases: ['결정적'] },
-        { no: 13, text: '팀을 이끄는 지도력을 (      )라고 한다.', answer: '리더십', initials: 'ㄹㄷㅅ', aliases: ['리더십'] },
+        { no: 13, text: '팀을 이끄는 지도력을 (      )이라고 한다.', answer: '리더십', initials: 'ㄹㄷㅅ', aliases: ['리더십'] },
         { no: 14, text: '본래 이름 대신 부르는 이름을 (      )이라 한다.', answer: '별명', initials: 'ㅂㅁ', aliases: ['별명'] },
-        { no: 15, text: '공을 바스켓에 넣어 점수를 겨루는 운동을 (      )이라 한다.', answer: '농구', initials: 'ㄴㄱ', aliases: ['농구'] }
+        { no: 15, text: '공을 바스켓에 넣어 점수를 겨루는 운동을 (      )라 한다.', answer: '농구', initials: 'ㄴㄱ', aliases: ['농구'] }
       ]
     },
     quiz: {
@@ -4288,7 +4288,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '고대 이집트의 왕을 (      )라고 한다.', answer: '파라오', initials: 'ㅍㄹㅇ', aliases: ['파라오'] },
         { no: 2, text: '나일강 유역의 고대 문명 국가를 (      )라고 한다.', answer: '이집트', initials: 'ㅇㅈㅌ', aliases: ['이집트'] },
-        { no: 3, text: '왕의 가계가 이어지는 계통을 (      )이라 한다.', answer: '왕조', initials: 'ㅇㅈ', aliases: ['왕조'] },
+        { no: 3, text: '왕의 가계가 이어지는 계통을 (      )라 한다.', answer: '왕조', initials: 'ㅇㅈ', aliases: ['왕조'] },
         { no: 4, text: '나라나 지역을 다스리는 것을 (      )라고 한다.', answer: '통치', initials: 'ㅌㅊ', aliases: ['통치'] },
         { no: 5, text: '투탕카멘의 아버지이며 종교 개혁을 한 파라오를 (      )이라 한다.', answer: '아케나텐', initials: 'ㅇㅋㄴㅌ', aliases: ['아케나텐'] },
         { no: 6, text: '신이나 높은 존재를 공경하는 것을 (      )라고 한다.', answer: '숭배', initials: 'ㅅㅂ', aliases: ['숭배'] },
@@ -4298,7 +4298,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '무덤에서 물건을 훔치는 것을 (      )이라 한다.', answer: '도굴', initials: 'ㄷㄱ', aliases: ['도굴'] },
         { no: 11, text: '옛날 유물이나 유적을 연구하는 사람을 (      )라고 한다.', answer: '고고학자', initials: 'ㄱㄱㅎㅈ', aliases: ['고고학자'] },
         { no: 12, text: '옛날 사람이 남긴 물건을 (      )이라 한다.', answer: '유물', initials: 'ㅇㅁ', aliases: ['유물'] },
-        { no: 13, text: '투탕카멘의 순금 얼굴 가면을 (      )이라 한다.', answer: '황금 마스크', initials: 'ㅎㄱ ㅁㅅㅋ', aliases: ['황금 마스크','황금마스크'] },
+        { no: 13, text: '투탕카멘의 순금 얼굴 가면을 (      )라 한다.', answer: '황금 마스크', initials: 'ㅎㄱ ㅁㅅㅋ', aliases: ['황금 마스크','황금마스크'] },
         { no: 14, text: '불행을 빌거나 해를 끼치려는 것을 (      )라고 한다.', answer: '저주', initials: 'ㅈㅈ', aliases: ['저주'] },
         { no: 15, text: '유물이나 예술품을 전시하는 곳을 (      )이라 한다.', answer: '박물관', initials: 'ㅂㅁㄱ', aliases: ['박물관'] }
       ]
@@ -4511,7 +4511,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '보거나 들은 것을 떠올리는 능력을 (      )이라 한다.', answer: '기억력', initials: 'ㄱㅇㄹ', aliases: ['기억력'] },
         { no: 2, text: '과학 원리를 실제 기술에 적용하는 학문을 (      )이라 한다.', answer: '공학', initials: 'ㄱㅎ', aliases: ['공학'] },
         { no: 3, text: '뛰어난 재능을 타고난 사람을 (      )라고 한다.', answer: '천재', initials: 'ㅊㅈ', aliases: ['천재'] },
-        { no: 4, text: '전구를 발명한 미국의 발명가를 (      )라고 한다.', answer: '에디슨', initials: 'ㅇㄷㅅ', aliases: ['에디슨'] },
+        { no: 4, text: '전구를 발명한 미국의 발명가를 (      )이라고 한다.', answer: '에디슨', initials: 'ㅇㄷㅅ', aliases: ['에디슨'] },
         { no: 5, text: '전기가 방향을 바꾸며 흐르는 것을 (      )라고 한다.', answer: '교류', initials: 'ㄱㄹ', aliases: ['교류'] },
         { no: 6, text: '전기가 한 방향으로만 흐르는 것을 (      )라고 한다.', answer: '직류', initials: 'ㅈㄹ', aliases: ['직류'] },
         { no: 7, text: '교류와 직류 중 어느 것이 더 나은지 다툰 경쟁을 (      )이라 한다.', answer: '전류 전쟁', initials: 'ㅈㄹ ㅈㅈ', aliases: ['전류 전쟁','전류전쟁'] },

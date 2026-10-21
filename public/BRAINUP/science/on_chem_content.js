@@ -954,7 +954,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '수산화 이온을 내놓으며 쓴맛과 미끈거림이 있는 물질을 (      )라 한다.', answer: '염기', initials: 'ㅇㄱ', aliases: ['염기'] },
         { no: 3, text: '산성과 염기성의 정도를 0~14로 나타낸 척도를 (    )라 한다.', answer: 'pH', initials: 'pH', aliases: ['pH', 'ph', '피에이치'] },
         { no: 4, text: 'pH가 7로 산성도 염기성도 아닌 상태를 (      )이라 한다.', answer: '중성', initials: 'ㅈㅅ', aliases: ['중성'] },
-        { no: 5, text: '산과 염기에 따라 색이 변하는 물질을 (      )라고 한다.', answer: '지시약', initials: 'ㅈㅅㅇ', aliases: ['지시약'] },
+        { no: 5, text: '산과 염기에 따라 색이 변하는 물질을 (      )이라고 한다.', answer: '지시약', initials: 'ㅈㅅㅇ', aliases: ['지시약'] },
         { no: 6, text: '산성과 염기성을 색 변화로 구별하는 종이를 (          )라 한다.', answer: '리트머스 종이', initials: 'ㄹㅌㅁㅅ ㅈㅇ', aliases: ['리트머스종이', '리트머스 종이'] },
         { no: 7, text: '산과 염기가 반응하여 물과 염을 생성하는 반응을 (        )이라 한다.', answer: '중화 반응', initials: 'ㅈㅎ ㅂㅇ', aliases: ['중화반응', '중화 반응'] },
         { no: 8, text: '중화 반응에서 물과 함께 생성되는 물질을 (    )이라 한다.', answer: '염', initials: 'ㅇ', aliases: ['염'] },
@@ -1743,7 +1743,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       {no:5,text:'자외선을 막아주는 물질을 (       )라고 한다.',answer:'자외선 차단제',initials:'ㅈㅇㅅ ㅊㄷㅈ',aliases:['자외선차단제']},
       {no:6,text:'미생물 번식을 막는 물질을 (   )라고 한다.',answer:'방부제',initials:'ㅂㅂㅈ',aliases:['방부제']},
       {no:7,text:'물과 기름을 섞이게 해서 크림을 만드는 물질을 (   )라고 한다.',answer:'유화제',initials:'ㅇㅎㅈ',aliases:['유화제']},
-      {no:8,text:'식품의 맛·색·향을 개선하는 물질을 (      )라고 한다.',answer:'식품 첨가물',initials:'ㅅㅍ ㅊㄱㅁ',aliases:['식품첨가물']},
+      {no:8,text:'식품의 맛·색·향을 개선하는 물질을 (      )이라고 한다.',answer:'식품 첨가물',initials:'ㅅㅍ ㅊㄱㅁ',aliases:['식품첨가물']},
       {no:9,text:'단맛을 내는 첨가물을 (   )라고 한다.',answer:'감미료',initials:'ㄱㅁㄹ',aliases:['감미료']},
       {no:10,text:'식품에 색깔을 내는 첨가물을 (   )라고 한다.',answer:'색소',initials:'ㅅㅅ',aliases:['색소']}
     ]},

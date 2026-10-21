@@ -86,12 +86,12 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[원자와 분자 관련 어휘]',
       items: [
         { no: 1, text: '물질을 이루는 가장 작은 단위를 (    )라 한다.', answer: '원자', initials: 'ㅇㅈ', aliases: ['원자'] },
-        { no: 2, text: '양성자와 중성자로 이루어진 원자의 중심부를 (      )라 한다.', answer: '원자핵', initials: 'ㅇㅈㅎ', aliases: ['원자핵'] },
+        { no: 2, text: '양성자와 중성자로 이루어진 원자의 중심부를 (      )이라 한다.', answer: '원자핵', initials: 'ㅇㅈㅎ', aliases: ['원자핵'] },
         { no: 3, text: '원자핵 주위를 도는 음전하 입자를 (    )라 한다.', answer: '전자', initials: 'ㅈㅈ', aliases: ['전자'] },
         { no: 4, text: '원자핵 속 양성자의 개수를 (        )라 한다.', answer: '원자 번호', initials: 'ㅇㅈ ㅂㅎ', aliases: ['원자번호', '원자 번호'] },
         { no: 5, text: '원자의 종류를 (    )라 한다.', answer: '원소', initials: 'ㅇㅅ', aliases: ['원소'] },
         { no: 6, text: '두 개 이상의 원자가 화학 결합으로 연결된 것을 (    )라 한다.', answer: '분자', initials: 'ㅂㅈ', aliases: ['분자'] },
-        { no: 7, text: '분자를 이루는 원자의 종류와 개수를 나타낸 식을 (      )라 한다.', answer: '분자식', initials: 'ㅂㅈㅅ', aliases: ['분자식'] },
+        { no: 7, text: '분자를 이루는 원자의 종류와 개수를 나타낸 식을 (      )이라 한다.', answer: '분자식', initials: 'ㅂㅈㅅ', aliases: ['분자식'] },
         { no: 8, text: '두 원자가 전자를 공유하여 만드는 결합을 (        )이라 한다.', answer: '공유 결합', initials: 'ㄱㅇ ㄱㅎ', aliases: ['공유결합', '공유 결합'] },
         { no: 9, text: '양이온과 음이온 사이의 정전기적 인력을 (        )이라 한다.', answer: '이온 결합', initials: 'ㅇㅇ ㄱㅎ', aliases: ['이온결합', '이온 결합'] },
         { no: 10, text: '전자를 잃어 양전하를 띤 이온을 (      )이라 한다.', answer: '양이온', initials: 'ㅇㅇㅇ', aliases: ['양이온'] },
@@ -760,7 +760,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[산화-환원 반응 관련 어휘]',
       items: [
         { no: 1, text: '원자나 이온이 전자를 잃는 반응을 (    )라고 한다.', answer: '산화', initials: 'ㅅㅎ', aliases: ['산화'] },
-        { no: 2, text: '원자나 이온이 전자를 얻는 반응을 (    )라고 한다.', answer: '환원', initials: 'ㅎㅇ', aliases: ['환원'] },
+        { no: 2, text: '원자나 이온이 전자를 얻는 반응을 (    )이라고 한다.', answer: '환원', initials: 'ㅎㅇ', aliases: ['환원'] },
         { no: 3, text: '산화와 환원이 동시에 일어나는 반응을 (          )이라 한다.', answer: '산화-환원 반응', initials: 'ㅅㅎ-ㅎㅇ ㅂㅇ', aliases: ['산화환원반응', '산화-환원 반응', '산화환원 반응'] },
         { no: 4, text: '화합물 내에서 원자가 잃거나 얻은 전자 수를 나타내는 값을 (      )라고 한다.', answer: '산화수', initials: 'ㅅㅎㅅ', aliases: ['산화수'] },
         { no: 5, text: '다른 물질을 산화시키고 자신은 환원되는 물질을 (      )라고 한다.', answer: '산화제', initials: 'ㅅㅎㅈ', aliases: ['산화제'] },
@@ -871,7 +871,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[전기화학과 전지 관련 어휘]',
       items: [
         { no: 1, text: '화학 반응과 전기 에너지의 상호 변환을 연구하는 분야를 (      )이라 한다.', answer: '전기화학', initials: 'ㅈㄱㅎㅎ', aliases: ['전기화학'] },
-        { no: 2, text: '화학 에너지를 전기 에너지로 변환하는 장치를 (        )이라 한다.', answer: '화학 전지', initials: 'ㅎㅎ ㅈㅈ', aliases: ['화학전지', '화학 전지'] },
+        { no: 2, text: '화학 에너지를 전기 에너지로 변환하는 장치를 (        )라 한다.', answer: '화학 전지', initials: 'ㅎㅎ ㅈㅈ', aliases: ['화학전지', '화학 전지'] },
         { no: 3, text: '전기 에너지로 비자발적 화학 반응을 일으키는 장치를 (        )라 한다.', answer: '전해 전지', initials: 'ㅈㅎ ㅈㅈ', aliases: ['전해전지', '전해 전지'] },
         { no: 4, text: '아연판과 구리판을 이용한 최초의 화학 전지를 (        )라 한다.', answer: '볼타 전지', initials: 'ㅂㅌ ㅈㅈ', aliases: ['볼타전지', '볼타 전지'] },
         { no: 5, text: '염다리를 사용하여 분극 현상을 방지한 전지를 (          )라 한다.', answer: '다니엘 전지', initials: 'ㄷㄴㅇ ㅈㅈ', aliases: ['다니엘전지', '다니엘 전지'] },
@@ -879,7 +879,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 7, text: '환원 반응이 일어나고 전자를 받는 전극을 (    )이라 한다.', answer: '양극', initials: 'ㅇㄱ', aliases: ['양극'] },
         { no: 8, text: '전극 표면에 생성물이 축적되어 기전력이 감소하는 현상을 (        )이라 한다.', answer: '분극 현상', initials: 'ㅂㄱ ㅎㅅ', aliases: ['분극현상', '분극 현상'] },
         { no: 9, text: '두 반쪽 전지의 이온 이동을 가능하게 하는 장치를 (      )라 한다.', answer: '염다리', initials: 'ㅇㄷㄹ', aliases: ['염다리'] },
-        { no: 10, text: '표준 상태에서 전지가 생성하는 전위차를 (          )라 한다.', answer: '표준 기전력', initials: 'ㅍㅈ ㄱㅈㄹ', aliases: ['표준기전력', '표준 기전력'] },
+        { no: 10, text: '표준 상태에서 전지가 생성하는 전위차를 (          )이라 한다.', answer: '표준 기전력', initials: 'ㅍㅈ ㄱㅈㄹ', aliases: ['표준기전력', '표준 기전력'] },
         { no: 11, text: '방전만 가능하고 충전이 불가능한 전지를 (        )라 한다.', answer: '1차 전지', initials: '1ㅊ ㅈㅈ', aliases: ['1차전지', '1차 전지', '일차 전지', '일차전지'] },
         { no: 12, text: '충전과 방전을 반복할 수 있는 전지를 (        )라 한다.', answer: '2차 전지', initials: '2ㅊ ㅈㅈ', aliases: ['2차전지', '2차 전지', '이차 전지', '이차전지'] },
         { no: 13, text: '고에너지 밀도로 스마트폰 등에 사용되는 전지를 (            )라 한다.', answer: '리튬 이온 전지', initials: 'ㄹㅌ ㅇㅇ ㅈㅈ', aliases: ['리튬이온전지', '리튬 이온 전지'] },
@@ -1102,7 +1102,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 12, text: '황산을 제조하는 공업적 방법을 (      )이라 한다.', answer: '접촉법', initials: 'ㅈㅊㅂ', aliases: ['접촉법'] },
         { no: 13, text: '암모니아로 질산을 합성하는 공업적 방법을 (            )이라 한다.', answer: '오스트발트 공정', initials: 'ㅇㅅㅌㅂㅌ ㄱㅈ', aliases: ['오스트발트공정', '오스트발트 공정'] },
         { no: 14, text: '혈액에서 산소를 운반하는 단백질을 (        )이라 한다.', answer: '헤모글로빈', initials: 'ㅎㅁㄱㄹㅂ', aliases: ['헤모글로빈'] },
-        { no: 15, text: '이론적 생성량 대비 실제 생성량의 비율을 (    )라 한다.', answer: '수율', initials: 'ㅅㅇ', aliases: ['수율'] }
+        { no: 15, text: '이론적 생성량 대비 실제 생성량의 비율을 (    )이라 한다.', answer: '수율', initials: 'ㅅㅇ', aliases: ['수율'] }
       ]
     },
     quiz: {
@@ -1204,14 +1204,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '일정한 압력에서 측정한 반응열을 (          )라 한다.', answer: '엔탈피 변화', initials: 'ㅇㅌㅍ ㅂㅎ', aliases: ['엔탈피변화', '엔탈피 변화'] },
         { no: 4, text: '열을 방출하는 반응을 (        )이라 한다.', answer: '발열 반응', initials: 'ㅂㅇ ㅂㅇ', aliases: ['발열반응', '발열 반응'] },
         { no: 5, text: '열을 흡수하는 반응을 (        )이라 한다.', answer: '흡열 반응', initials: 'ㅎㅇ ㅂㅇ', aliases: ['흡열반응', '흡열 반응'] },
-        { no: 6, text: '반응의 에너지 변화를 시각적으로 나타낸 그래프를 (              )라 한다.', answer: '에너지 다이어그램', initials: 'ㅇㄴㅈ ㄷㅇㅇㄱㄹ', aliases: ['에너지다이어그램', '에너지 다이어그램'] },
+        { no: 6, text: '반응의 에너지 변화를 시각적으로 나타낸 그래프를 (              )이라 한다.', answer: '에너지 다이어그램', initials: 'ㅇㄴㅈ ㄷㅇㅇㄱㄹ', aliases: ['에너지다이어그램', '에너지 다이어그램'] },
         { no: 7, text: '엔탈피 변화가 반응 경로와 무관하다는 법칙을 (          )이라 한다.', answer: '헤스의 법칙', initials: 'ㅎㅅㅇ ㅂㅊ', aliases: ['헤스의법칙', '헤스의 법칙'] },
         { no: 8, text: '표준 상태에서 원소로부터 화합물 1몰이 생성될 때의 엔탈피 변화를 (              )라 한다.', answer: '표준 생성 엔탈피', initials: 'ㅍㅈ ㅅㅅ ㅇㅌㅍ', aliases: ['표준생성엔탈피', '표준 생성 엔탈피'] },
         { no: 9, text: '기체 분자에서 특정 결합 1몰을 끊는 데 필요한 에너지를 (          )라 한다.', answer: '결합 에너지', initials: 'ㄱㅎ ㅇㄴㅈ', aliases: ['결합에너지', '결합 에너지'] },
-        { no: 10, text: '물질 1몰이 완전 연소할 때의 엔탈피 변화를 (      )라 한다.', answer: '연소열', initials: 'ㅇㅅㅇ', aliases: ['연소열'] },
+        { no: 10, text: '물질 1몰이 완전 연소할 때의 엔탈피 변화를 (      )이라 한다.', answer: '연소열', initials: 'ㅇㅅㅇ', aliases: ['연소열'] },
         { no: 11, text: '반응열을 측정하는 장치를 (      )라 한다.', answer: '열량계', initials: 'ㅇㄹㄱ', aliases: ['열량계'] },
         { no: 12, text: '경로와 무관하게 상태에만 의존하는 물리량을 (        )라 한다.', answer: '상태 함수', initials: 'ㅅㅌ ㅎㅅ', aliases: ['상태함수', '상태 함수'] },        { no: 13, text: '열량의 단위로 4.184J에 해당하는 것을 (      )라 한다.', answer: '칼로리', initials: 'ㅋㄹㄹ', aliases: ['칼로리'] },
-        { no: 14, text: '열량의 SI 단위를 (      )라 한다.', answer: '킬로줄', initials: 'ㅋㄹㅈ', aliases: ['킬로줄'] }
+        { no: 14, text: '열량의 SI 단위를 (      )이라 한다.', answer: '킬로줄', initials: 'ㅋㄹㅈ', aliases: ['킬로줄'] }
       ]
     },
     quiz: {
@@ -1421,7 +1421,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '탄소를 포함하는 화합물을 연구하는 화학 분야를 (      )이라 한다.', answer: '유기화학', initials: 'ㅇㄱㅎㅎ', aliases: ['유기화학'] },
         { no: 2, text: '탄소를 포함하는 화합물을 (        )이라 한다.', answer: '유기화합물', initials: 'ㅇㄱㅎㅎㅁ', aliases: ['유기화합물'] },
-        { no: 3, text: '탄소와 수소만으로 이루어진 유기화합물을 (      )이라 한다.', answer: '탄화수소', initials: 'ㅌㅎㅅㅅ', aliases: ['탄화수소'] },
+        { no: 3, text: '탄소와 수소만으로 이루어진 유기화합물을 (      )라 한다.', answer: '탄화수소', initials: 'ㅌㅎㅅㅅ', aliases: ['탄화수소'] },
         { no: 4, text: '탄소 사이에 단일 결합만 있는 포화 탄화수소를 (      )이라 한다.', answer: '알케인', initials: 'ㅇㅋㅇ', aliases: ['알케인', '알칸'] },
         { no: 5, text: '탄소 사이에 이중 결합이 있는 불포화 탄화수소를 (    )이라 한다.', answer: '알켄', initials: 'ㅇㅋ', aliases: ['알켄'] },
         { no: 6, text: '탄소 사이에 삼중 결합이 있는 불포화 탄화수소를 (      )이라 한다.', answer: '알카인', initials: 'ㅇㅋㅇ', aliases: ['알카인', '알킨'] },
@@ -1537,7 +1537,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '작은 분자가 빠져나가며 단위체가 결합하는 중합 반응을 (        )이라 한다.', answer: '축합 중합', initials: 'ㅊㅎ ㅈㅎ', aliases: ['축합중합', '축합 중합'] },
         { no: 6, text: '에틸렌의 첨가 중합으로 만들어지는 고분자를 (        )이라 한다.', answer: '폴리에틸렌', initials: 'ㅍㄹㅇㅌㄹ', aliases: ['폴리에틸렌'] },
         { no: 7, text: '아마이드 결합으로 이루어진 대표적인 합성 섬유를 (      )이라 한다.', answer: '나일론', initials: 'ㄴㅇㄹ', aliases: ['나일론'] },
-        { no: 8, text: '에스터 결합으로 이루어진 합성 섬유를 (        )이라 한다.', answer: '폴리에스터', initials: 'ㅍㄹㅇㅅㅌ', aliases: ['폴리에스터', 'PET'] },
+        { no: 8, text: '에스터 결합으로 이루어진 합성 섬유를 (        )라 한다.', answer: '폴리에스터', initials: 'ㅍㄹㅇㅅㅌ', aliases: ['폴리에스터', 'PET'] },
         { no: 9, text: '카복시기와 아미노기 반응으로 형성되는 -CO-NH- 결합을 (        )이라 한다.', answer: '아마이드 결합', initials: 'ㅇㅁㅇㄷ ㄱㅎ', aliases: ['아마이드결합', '아마이드 결합'] },
         { no: 10, text: '가열하면 부드러워지고 냉각하면 굳어지는 재활용 가능한 고분자를 (          )라 한다.', answer: '열가소성 수지', initials: 'ㅇㄱㅅㅅ ㅅㅈ', aliases: ['열가소성수지', '열가소성 수지'] },
         { no: 11, text: '한 번 굳으면 다시 가열해도 녹지 않는 3차원 구조 고분자를 (          )라 한다.', answer: '열경화성 수지', initials: 'ㅇㄱㅎㅅ ㅅㅈ', aliases: ['열경화성수지', '열경화성 수지'] },
@@ -1754,8 +1754,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       {no:9,text:'환경 영향을 최소화하는 화학 제품·공정 설계 분야를 (        )이라 한다.',answer:'녹색 화학',initials:'ㄴㅅ ㅎㅎ',aliases:['녹색화학', '녹색 화학']},
       {no:10,text:'태양, 풍력, 수소 등 고갈되지 않는 에너지원을 (        )라 한다.',answer:'재생 에너지',initials:'ㅈㅅ ㅇㄴㅈ',aliases:['재생에너지', '재생 에너지']},
       {no:11,text:'대기 중 쉽게 증발하는 유기화합물을 (            )이라 한다.',answer:'휘발성 유기화합물',initials:'ㅎㅂㅅ ㅇㄱㅎㅎㅁ',aliases:['휘발성유기화합물', '휘발성 유기화합물', 'VOCs']},
-      {no:12,text:'CFCs 사용을 규제한 국제 협약을 (          )이라 한다.',answer:'몬트리올 의정서',initials:'ㅁㅌㄹㅇ ㅇㅈㅅ',aliases:['몬트리올의정서', '몬트리올 의정서']},
-      {no:13,text:'반응물의 원자가 생성물에 최대한 포함되는 정도를 (        )라 한다.',answer:'원자 경제성',initials:'ㅇㅈ ㄱㅈㅅ',aliases:['원자경제성', '원자 경제성']},
+      {no:12,text:'CFCs 사용을 규제한 국제 협약을 (          )라 한다.',answer:'몬트리올 의정서',initials:'ㅁㅌㄹㅇ ㅇㅈㅅ',aliases:['몬트리올의정서', '몬트리올 의정서']},
+      {no:13,text:'반응물의 원자가 생성물에 최대한 포함되는 정도를 (        )이라 한다.',answer:'원자 경제성',initials:'ㅇㅈ ㄱㅈㅅ',aliases:['원자경제성', '원자 경제성']},
       {no:14,text:'미생물에 의해 분해되는 성질을 (        )이라 한다.',answer:'생분해성',initials:'ㅅㅂㅎㅅ',aliases:['생분해성']},    ]},
     quiz: {
       q1_text: '다음 중 글의 내용과 일치하지 않는 것은?',
@@ -1853,7 +1853,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       {no:3,text:'시료에 포함된 물질의 양이나 농도를 측정하는 분석을 (        )이라 한다.',answer:'정량 분석',initials:'ㅈㄹ ㅂㅅ',aliases:['정량분석', '정량 분석']},
       {no:4,text:'표준 용액으로 시료의 농도를 구하는 정량 분석법을 (      )이라 한다.',answer:'적정',initials:'ㅈㅈ',aliases:['적정', '중화적정', '산염기적정']},
       {no:5,text:'적정에서 반응이 완결되는 점을 (      )이라 한다.',answer:'당량점',initials:'ㄷㄹㅈ',aliases:['당량점']},
-      {no:6,text:'반응의 종말점을 색 변화로 나타내는 물질을 (      )라 한다.',answer:'지시약',initials:'ㅈㅅㅇ',aliases:['지시약']},
+      {no:6,text:'반응의 종말점을 색 변화로 나타내는 물질을 (      )이라 한다.',answer:'지시약',initials:'ㅈㅅㅇ',aliases:['지시약']},
       {no:7,text:'물질과 빛의 상호작용을 이용한 분석법을 (      )이라 한다.',answer:'분광법',initials:'ㅂㄱㅂ',aliases:['분광법']},
       {no:8,text:'흡광도가 농도와 경로 길이에 비례하는 법칙을 (            )이라 한다.',answer:'비어-람베르트 법칙',initials:'ㅂㅇ ㄹㅂㄹㅌ ㅂㅊ',aliases:['비어람베르트법칙', '비어-람베르트 법칙', '비어법칙']},
       {no:9,text:'혼합물을 이동상과 고정상으로 분리하는 기술을 (            )라 한다.',answer:'크로마토그래피',initials:'ㅋㄹㅁㅌㄱㄹㅍ',aliases:['크로마토그래피']},
@@ -2031,7 +2031,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       {no:7,text:'산소에 의한 산화 반응을 막는 물질을 (        )라 한다.',answer:'산화방지제',initials:'ㅅㅎㅂㅈㅈ',aliases:['산화방지제', '항산화제']},
       {no:8,text:'살리실산의 아세틸화물로 된 해열진통제를 (        )이라 한다.',answer:'아스피린',initials:'ㅇㅅㅍㄹ',aliases:['아스피린']},
       {no:9,text:'세균의 생장을 억제하거나 죽이는 약물을 (      )라 한다.',answer:'항생제',initials:'ㅎㅅㅈ',aliases:['항생제']},
-      {no:10,text:'항생제에 저항성을 가지게 된 세균을 (          )라 한다.',answer:'항생제 내성균',initials:'ㅎㅅㅈ ㄴㅅㄱ',aliases:['항생제내성균', '항생제 내성균', '내성균']},
+      {no:10,text:'항생제에 저항성을 가지게 된 세균을 (          )이라 한다.',answer:'항생제 내성균',initials:'ㅎㅅㅈ ㄴㅅㄱ',aliases:['항생제내성균', '항생제 내성균', '내성균']},
       {no:11,text:'식품의 제조, 가공, 보존에 사용되는 물질을 (        )이라 한다.',answer:'식품 첨가물',initials:'ㅅㅍ ㅊㄱㅁ',aliases:['식품첨가물', '식품 첨가물']},
       {no:12,text:'평생 매일 섭취해도 안전한 1일 최대 섭취량을 (          )이라 한다.',answer:'일일섭취허용량',initials:'ㅇㅇㅅㅊㅎㅇㄹ',aliases:['일일섭취허용량', 'ADI']},
       {no:13,text:'아미노산과 당이 반응하여 갈색과 향미를 만드는 반응을 (          )이라 한다.',answer:'마이야르 반응',initials:'ㅁㅇㅇㄹ ㅂㅇ',aliases:['마이야르반응', '마이야르 반응']},
@@ -2118,7 +2118,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       {no:7,text:'고체 전해질을 사용하는 차세대 배터리를 (        )라 한다.',answer:'전고체 전지',initials:'ㅈㄱㅊ ㅈㅈ',aliases:['전고체전지', '전고체 전지']},
       {no:8,text:'수소와 산소의 반응으로 전기를 생산하는 장치를 (          )라 한다.',answer:'수소 연료 전지',initials:'ㅅㅅ ㅇㄹ ㅈㅈ',aliases:['수소연료전지', '수소 연료 전지']},
       {no:9,text:'광전 효과로 빛을 전기로 변환하는 장치를 (        )라 한다.',answer:'태양 전지',initials:'ㅌㅇ ㅈㅈ',aliases:['태양전지', '태양 전지']},
-      {no:10,text:'특정 세포나 조직만 선택적으로 치료하는 방법을 (        )이라 한다.',answer:'표적 치료',initials:'ㅍㅈ ㅊㄹ',aliases:['표적치료', '표적 치료']},
+      {no:10,text:'특정 세포나 조직만 선택적으로 치료하는 방법을 (        )라 한다.',answer:'표적 치료',initials:'ㅍㅈ ㅊㄹ',aliases:['표적치료', '표적 치료']},
       {no:11,text:'인체와 부작용 없이 상호작용하는 성질을 (        )이라 한다.',answer:'생체적합성',initials:'ㅅㅊㅈㅎㅅ',aliases:['생체적합성']},
       {no:12,text:'특정 온도에서 원래 형상으로 돌아가는 합금을 (          )이라 한다.',answer:'형상 기억 합금',initials:'ㅎㅅ ㄱㅇ ㅎㄱ',aliases:['형상기억합금', '형상 기억 합금']},
       {no:13,text:'외부 자극에 반응하여 성질이 변하는 물질을 (        )라 한다.',answer:'스마트 소재',initials:'ㅅㅁㅌ ㅅㅈ',aliases:['스마트소재', '스마트 소재']},
@@ -2399,7 +2399,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[전기화학과 에너지 저장 어휘]',
       items: [
         { no: 1, text: '반쪽 반응의 환원 경향 지표를 (              )라 한다.', answer: '표준 전극 전위', initials: 'ㅍㅈ ㅈㄱ ㅈㅇ', aliases: ['표준 전극 전위','표준전극전위'] },
-        { no: 2, text: '전극 전위 기준 전극을 (                )라 한다.', answer: '수소 전극', initials: 'ㅅㅅ ㅈㄱ', aliases: ['수소 전극','SHE','she','수소전극'] },
+        { no: 2, text: '전극 전위 기준 전극을 (                )이라 한다.', answer: '수소 전극', initials: 'ㅅㅅ ㅈㄱ', aliases: ['수소 전극','SHE','she','수소전극'] },
         { no: 3, text: '전지의 전압을 (    )이라 한다.', answer: '기전력', initials: 'ㄱㅈㄹ', aliases: ['기전력','EMF','emf'] },
         { no: 4, text: '비표준 조건 보정식을 (          )이라 한다.', answer: '네른스트 식', initials: 'ㄴㄹㅅㅌ ㅅ', aliases: ['네른스트 식','네른스트식'] },
         { no: 5, text: '자발적 반응으로 전기를 만드는 전지를 (          )라 한다.', answer: '갈바니 전지', initials: 'ㄱㅂㄴ ㅈㅈ', aliases: ['갈바니 전지','갈바니전지'] },

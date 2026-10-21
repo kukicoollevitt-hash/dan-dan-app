@@ -269,7 +269,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '서울 도심 좌표 표기는 대략 37° (  ) , 127° (  ) 이다.', answer: 'N/E', initials: 'ㅂ/ㄷ', aliases: ['N,E','북/동','북위/동경','N / E'] },
         { no: 5, text: '지도를 일정 간격으로 나눈 선들의 모음을 (      )라고 한다.', answer: '격자', initials: 'ㄱㅈ', aliases: ['격자','grid'] },
         { no: 6, text: '위도·경도 두 값이 교차하는 (  )이 곧 한 장소를 정확히 지정한다.', answer: '한 점', initials: 'ㅎ ㅈ', aliases: ['한점','한 지점','점'] },
-        { no: 7, text: '경도 0°는 (        )을, 위도 0°는 적도를 의미한다.', answer: '본초 자오선/적도', initials: 'ㅂㅊ ㅈㅇㅅ ', aliases: ['본초자오선'] }
+        { no: 7, text: '경도 0°는 (        )를, 위도 0°는 적도를 의미한다.', answer: '본초 자오선/적도', initials: 'ㅂㅊ ㅈㅇㅅ ', aliases: ['본초자오선'] }
       ]
     },
     quiz: {
@@ -328,7 +328,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '바다나 강에서 고기를 잡는 마을을 (      )이라 한다.', answer: '어촌', initials: 'ㅇㅊ', aliases: ['어촌'] },
         { no: 4, text: '산속이나 산 근처에 있는 마을을 (      )이라 한다.', answer: '산촌', initials: 'ㅅㅊ', aliases: ['산촌'] },
         { no: 5, text: '넓고 평평한 땅을 (      )라고 한다.', answer: '평야', initials: 'ㅍㅇ', aliases: ['평야'] },
-        { no: 6, text: '물고기나 조개 등을 인공적으로 키우는 산업을 (      )라고 한다.', answer: '양식업', initials: 'ㅇㅅㅇ', aliases: ['양식업'] },
+        { no: 6, text: '물고기나 조개 등을 인공적으로 키우는 산업을 (      )이라고 한다.', answer: '양식업', initials: 'ㅇㅅㅇ', aliases: ['양식업'] },
         { no: 7, text: '나무를 심고 가꾸어 이용하는 산업을 (      )이라 한다.', answer: '임업', initials: 'ㅇㅇ', aliases: ['임업'] },
         { no: 8, text: '살아가는 데 필요한 수단이나 방법을 (      )라고 한다.', answer: '생계', initials: 'ㅅㄱ', aliases: ['생계'] },
         { no: 9, text: '다른 것에 기대어 의지하는 것을 (      )이라고 한다.', answer: '의존', initials: 'ㅇㅈ', aliases: ['의존'] }
@@ -443,8 +443,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '사람들이 살아가는 방법을 (        )이라 한다.', answer: '생활 방식', initials: 'ㅅㅎ ㅂㅅ', aliases: ['생활방식'] },
         { no: 6, text: '지구의 중심을 가로지르는 가상의 선을 (      )라 한다.', answer: '적도', initials: 'ㅈㄷ', aliases: ['적도'] },
         { no: 7, text: '여러 나라를 이해하고 존중하는 태도를 (        )라 한다.', answer: '국제 이해', initials: 'ㄱㅈ ㅇㅎ', aliases: ['국제이해'] },
-        { no: 8, text: '지구를 이루는 큰 땅덩어리를 (      )라고 한다.', answer: '대륙', initials: 'ㄷㄹ', aliases: ['대륙'] },
-        { no: 9, text: '지구를 둘러싼 넓은 바다를 (      )라고 한다.', answer: '해양', initials: 'ㅎㅇ', aliases: ['해양'] }
+        { no: 8, text: '지구를 이루는 큰 땅덩어리를 (      )이라고 한다.', answer: '대륙', initials: 'ㄷㄹ', aliases: ['대륙'] },
+        { no: 9, text: '지구를 둘러싼 넓은 바다를 (      )이라고 한다.', answer: '해양', initials: 'ㅎㅇ', aliases: ['해양'] }
       ]
     },
     quiz: {
@@ -497,7 +497,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '산이 많은 땅의 모양을 (        )이라 한다.', answer: '산악 지형', initials: 'ㅅㅇ ㅈㅎ', aliases: ['산악지형'] },
         { no: 6, text: '넓고 평평한 땅을 (      )라고 한다.', answer: '평야', initials: 'ㅍㅇ', aliases: ['평야'] },
         { no: 7, text: '봄, 여름, 가을, 겨울을 (      )이라 한다.', answer: '사계절', initials: 'ㅅㄱㅈ', aliases: ['사계절'] },
-        { no: 8, text: '산과 산 사이의 골짜기를 (      )라고 한다.', answer: '계곡', initials: 'ㄱㄱ', aliases: ['계곡'] },
+        { no: 8, text: '산과 산 사이의 골짜기를 (      )이라고 한다.', answer: '계곡', initials: 'ㄱㄱ', aliases: ['계곡'] },
         { no: 9, text: '주위가 산으로 둘러싸인 평지를 (      )라고 한다.', answer: '분지', initials: 'ㅂㅈ', aliases: ['분지'] }
       ]
     },
@@ -550,7 +550,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '물이 넘쳐 피해를 주는 현상을 (      )라고 한다.', answer: '홍수', initials: 'ㅎㅅ', aliases: ['홍수'] },
         { no: 5, text: '오랫동안 비가 오지 않는 현상을 (      )이라 한다.', answer: '가뭄', initials: 'ㄱㅁ', aliases: ['가뭄'] },
         { no: 6, text: '미리 준비하는 것을 (      )라고 한다.', answer: '대비', initials: 'ㄷㅂ', aliases: ['대비'] },
-        { no: 7, text: '상황에 맞게 행동하는 것을 (      )라고 한다.', answer: '대응', initials: 'ㄷㅇ', aliases: ['대응'] },
+        { no: 7, text: '상황에 맞게 행동하는 것을 (      )이라고 한다.', answer: '대응', initials: 'ㄷㅇ', aliases: ['대응'] },
         { no: 8, text: '재해를 미리 알려주는 기술을 (            )이라 한다.', answer: '재해 예측 시스템', initials: 'ㅈㅎ ㅇㅊ ㅅㅅㅌ', aliases: ['재해예측시스템'] },
         { no: 9, text: '위험 상황에서 안전하게 피하는 연습을 (        )이라 한다.', answer: '대피 훈련', initials: 'ㄷㅍ ㅎㄹ', aliases: ['대피훈련'] }
       ]
@@ -599,7 +599,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[환경과 발전 어휘]',
       items: [
         { no: 1, text: '공기, 물, 토양이 더러워지는 것을 (        )이라 한다.', answer: '환경 오염', initials: 'ㅎㄱ ㅇㅇ', aliases: ['환경오염'] },
-        { no: 2, text: '지구의 평균 기온이 높아지는 현상을 (          )이라 한다.', answer: '지구 온난화', initials: 'ㅈㄱ ㅇㄴㅎ', aliases: ['지구온난화'] },
+        { no: 2, text: '지구의 평균 기온이 높아지는 현상을 (          )라 한다.', answer: '지구 온난화', initials: 'ㅈㄱ ㅇㄴㅎ', aliases: ['지구온난화'] },
         { no: 3, text: '여러 종류의 생물이 존재하는 것을 (          )이라 한다.', answer: '생물 다양성', initials: 'ㅅㅁ ㄷㅇㅅ', aliases: ['생물다양성'] },
         { no: 4, text: '다시 만들어 쓸 수 있는 에너지를 (        )라 한다.', answer: '재생 에너지', initials: 'ㅈㅅ ㅇㄴㅈ', aliases: ['재생에너지'] },
         { no: 5, text: '쓴 물건을 다시 사용하는 것을 (      )이라 한다.', answer: '재활용', initials: 'ㅈㅎㅇ', aliases: ['재활용'] },
@@ -663,7 +663,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       {no:2,text:'정보 전달을 (   )이라 한다.',answer:'통신',initials:'ㅌㅅ',aliases:['통신']},
       {no:3,text:'발전하여 나아감을 (   )이라 한다.',answer:'발달',initials:'ㅂㄷ',aliases:['발달']},
       {no:4,text:'이어 붙임을 (   )이라 한다.',answer:'연결',initials:'ㅇㄱ',aliases:['연결']},
-      {no:5,text:'알아야 할 내용을 (   )이라 한다.',answer:'정보',initials:'ㅈㅂ',aliases:['정보']},
+      {no:5,text:'알아야 할 내용을 (   )라 한다.',answer:'정보',initials:'ㅈㅂ',aliases:['정보']},
       {no:6,text:'방법이나 도구를 (   )이라 한다.',answer:'수단',initials:'ㅅㄷ',aliases:['수단']},
       {no:7,text:'연결망을 (     )라고 한다.',answer:'네트워크',initials:'ㄴㅌㅇㅋ',aliases:['네트워크']},
       {no:8,text:'과학적 방법을 (   )이라 한다.',answer:'기술',initials:'ㄱㅅ',aliases:['기술']},
@@ -708,9 +708,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       {no:3,text:'물건 사고파는 일을 (   )이라 한다.',answer:'상업',initials:'ㅅㅇ',aliases:['상업']},
       {no:4,text:'성장하여 발전함을 (   )이라 한다.',answer:'발달',initials:'ㅂㄷ',aliases:['발달']},
       {no:5,text:'재화와 서비스를 (   )라고 한다.',answer:'경제',initials:'ㄱㅈ',aliases:['경제']},
-      {no:6,text:'특정한 장소를 (   )라고 한다.',answer:'지역',initials:'ㅈㅇ',aliases:['지역']},
+      {no:6,text:'특정한 장소를 (   )이라고 한다.',answer:'지역',initials:'ㅈㅇ',aliases:['지역']},
       {no:7,text:'커지고 발전함을 (   )이라 한다.',answer:'성장',initials:'ㅅㅈ',aliases:['성장']},
-      {no:8,text:'자연 훼손을 (      )이라 한다.',answer:'환경 문제',initials:'ㅎㄱ ㅁㅈ',aliases:['환경문제']},
+      {no:8,text:'자연 훼손을 (      )라 한다.',answer:'환경 문제',initials:'ㅎㄱ ㅁㅈ',aliases:['환경문제']},
       {no:9,text:'골고루 발전을 (      )이라 한다.',answer:'균형 발전',initials:'ㄱㅎ ㅂㅈ',aliases:['균형발전']}
     ]},
     quiz: {q1_text:'산업 발달의 긍정적 영향은?',q1_opts:['경제 성장','환경 파괴','인구 감소','후퇴'],q2_text:'산업 발달의 문제점은?',q2_opts:['환경 오염','발전 없음','인구 증가','기술 퇴보'],q3_1_ph:'ㅅㅇ',q3_2_ph:'ㄱㅇ',q4_1_ph:'ㄱㅈ',q4_2_ph:'ㅎㄱ',q5_text:'산업 발달이 지역에 미친 변화를 설명해 보세요.'},
@@ -730,7 +730,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       {no:3,text:'따뜻한 지역을 (   )라고 한다.',answer:'온대',initials:'ㅇㄷ',aliases:['온대']},
       {no:4,text:'매우 추운 지역을 (   )라고 한다.',answer:'한대',initials:'ㅎㄷ',aliases:['한대']},
       {no:5,text:'기후 구분 영역을 (    )라고 한다.',answer:'기후대',initials:'ㄱㅎㄷ',aliases:['기후대']},
-      {no:6,text:'비 오는 양을 (    )라고 한다.',answer:'강수량',initials:'ㄱㅅㄹ',aliases:['강수량']},
+      {no:6,text:'비 오는 양을 (    )이라고 한다.',answer:'강수량',initials:'ㄱㅅㄹ',aliases:['강수량']},
       {no:7,text:'공기의 온도를 (   )이라 한다.',answer:'기온',initials:'ㄱㅇ',aliases:['기온']},
       {no:8,text:'시간에 따른 날씨 변화를 (   )이라 한다.',answer:'계절',initials:'ㄱㅈ',aliases:['계절']},
       {no:9,text:'결과에 미치는 힘을 (   )이라 한다.',answer:'영향',initials:'ㅇㅎ',aliases:['영향']}
@@ -769,14 +769,14 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     passage: ['지리적 환경은 문화 형성에 영향을 줍니다.','산지, 해안, 평야 등에 따라 다른 문화가 발달합니다.','문화는 지역의 정체성을 만듭니다.'],
     vocab: [['문화','생활 양식'],['지리적','땅과 관련된'],['환경','주변 조건'],['정체성','고유한 특성'],['전통','옛것을 이어옴'],['풍습','관습과 습관'],['의식주','옷,음식,집'],['다양성','여러 가지'],['공존','함께 존재']],
     vocabFill: { instructions: '[문화와 지리]', items: [
-      {no:1,text:'생활 양식을 (   )이라 한다.',answer:'문화',initials:'ㅁㅎ',aliases:['문화']},
+      {no:1,text:'생활 양식을 (   )라 한다.',answer:'문화',initials:'ㅁㅎ',aliases:['문화']},
       {no:2,text:'땅과 관련된 것을 (    )이라고 한다.',answer:'지리적',initials:'ㅈㄹㅈ',aliases:['지리적']},
       {no:3,text:'주변 조건을 (   )이라 한다.',answer:'환경',initials:'ㅎㄱ',aliases:['환경']},
       {no:4,text:'고유한 특성을 (    )이라 한다.',answer:'정체성',initials:'ㅈㅊㅅ',aliases:['정체성']},
       {no:5,text:'옛것을 이어옴을 (   )이라 한다.',answer:'전통',initials:'ㅈㅌ',aliases:['전통']},
       {no:6,text:'관습과 습관을 (   )이라 한다.',answer:'풍습',initials:'ㅍㅅ',aliases:['풍습']},
       {no:7,text:'옷,음식,집을 (    )라고 한다.',answer:'의식주',initials:'ㅇㅅㅈ',aliases:['의식주']},
-      {no:8,text:'여러 가지를 (    )라고 한다.',answer:'다양성',initials:'ㄷㅇㅅ',aliases:['다양성']},
+      {no:8,text:'여러 가지를 (    )이라고 한다.',answer:'다양성',initials:'ㄷㅇㅅ',aliases:['다양성']},
       {no:9,text:'함께 존재함을 (   )이라 한다.',answer:'공존',initials:'ㄱㅈ',aliases:['공존']}
     ]},
     quiz: {q1_text:'지리적 환경이 문화에 미치는 영향은?',q1_opts:['생활 방식 결정','영향 없음','언어만 결정','색깔만 결정'],q2_text:'문화 다양성의 의미는?',q2_opts:['여러 문화 존중','한 가지만','무시함','통일'],q3_1_ph:'ㅁㅎ',q3_2_ph:'ㅈㄹㅈ',q4_1_ph:'ㅈㅊㅅ',q4_2_ph:'ㄷㅇㅅ',q5_text:'지리적 환경이 문화 형성에 어떤 영향을 주는지 설명해 보세요.'},
@@ -791,15 +791,15 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     passage: ['국가 간 물건을 사고파는 것을 무역이라 합니다.','무역은 경제 발전에 도움을 줍니다.','국제 협력으로 함께 발전할 수 있습니다.'],
     vocab: [['무역','국가 간 거래'],['수출','물건 팔기'],['수입','물건 사기'],['경제','재화와 서비스'],['협력','함께 도움'],['국제','나라 사이'],['발전','성장함'],['교류','주고받음'],['상호 의존','서로 의지']],
     vocabFill: { instructions: '[국제 무역]', items: [
-      {no:1,text:'국가 간 거래를 (   )라고 한다.',answer:'무역',initials:'ㅁㅇ',aliases:['무역']},
-      {no:2,text:'물건 팔기를 (   )라고 한다.',answer:'수출',initials:'ㅅㅊ',aliases:['수출']},
-      {no:3,text:'물건 사기를 (   )라고 한다.',answer:'수입',initials:'ㅅㅇ',aliases:['수입']},
+      {no:1,text:'국가 간 거래를 (   )이라고 한다.',answer:'무역',initials:'ㅁㅇ',aliases:['무역']},
+      {no:2,text:'물건 팔기를 (   )이라고 한다.',answer:'수출',initials:'ㅅㅊ',aliases:['수출']},
+      {no:3,text:'물건 사기를 (   )이라고 한다.',answer:'수입',initials:'ㅅㅇ',aliases:['수입']},
       {no:4,text:'재화와 서비스를 (   )라고 한다.',answer:'경제',initials:'ㄱㅈ',aliases:['경제']},
       {no:5,text:'함께 도움을 (   )이라 한다.',answer:'협력',initials:'ㅎㄹ',aliases:['협력']},
       {no:6,text:'나라 사이를 (   )라고 한다.',answer:'국제',initials:'ㄱㅈ',aliases:['국제']},
       {no:7,text:'성장함을 (   )이라 한다.',answer:'발전',initials:'ㅂㅈ',aliases:['발전']},
-      {no:8,text:'주고받음을 (   )이라 한다.',answer:'교류',initials:'ㄱㄹ',aliases:['교류']},
-      {no:9,text:'서로 의지함을 (      )라고 한다.',answer:'상호 의존',initials:'ㅅㅎ ㅇㅈ',aliases:['상호의존']}
+      {no:8,text:'주고받음을 (   )라 한다.',answer:'교류',initials:'ㄱㄹ',aliases:['교류']},
+      {no:9,text:'서로 의지함을 (      )이라고 한다.',answer:'상호 의존',initials:'ㅅㅎ ㅇㅈ',aliases:['상호의존']}
     ]},
     quiz: {q1_text:'무역의 장점은?',q1_opts:['경제 성장','고립','감소','중단'],q2_text:'국제 협력이 중요한 이유는?',q2_opts:['함께 발전','경쟁만','단절','무시'],q3_1_ph:'ㅁㅇ',q3_2_ph:'ㅅㅊ',q4_1_ph:'ㅎㄹ',q4_2_ph:'ㄱㅈ',q5_text:'국제 무역이 경제에 미치는 영향을 설명해 보세요.'},
     answerKey: {q1:'1',q2:'1',q3_1:['무역'],q3_2:['수출'],q4_1:['협력'],q4_2:['국제']},
@@ -813,8 +813,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     passage: ['지구촌은 전 세계가 하나로 연결된 것입니다.','환경, 빈곤, 전쟁 등 공동 문제가 있습니다.','협력하여 함께 해결해야 합니다.'],
     vocab: [['지구촌','세계가 하나로'],['환경 문제','자연 훼손'],['빈곤','가난한 상태'],['전쟁','무력 충돌'],['해결','문제 풀기'],['협력','함께 도움'],['공동','함께 하는'],['지속 가능','미래도 유지'],['연대','함께 뭉침']],
     vocabFill: { instructions: '[지구촌 문제]', items: [
-      {no:1,text:'세계가 하나로 연결된 것을 (    )라고 한다.',answer:'지구촌',initials:'ㅈㄱㅊ',aliases:['지구촌']},
-      {no:2,text:'자연 훼손을 (      )이라 한다.',answer:'환경 문제',initials:'ㅎㄱ ㅁㅈ',aliases:['환경문제']},
+      {no:1,text:'세계가 하나로 연결된 것을 (    )이라고 한다.',answer:'지구촌',initials:'ㅈㄱㅊ',aliases:['지구촌']},
+      {no:2,text:'자연 훼손을 (      )라 한다.',answer:'환경 문제',initials:'ㅎㄱ ㅁㅈ',aliases:['환경문제']},
       {no:3,text:'가난한 상태를 (   )이라 한다.',answer:'빈곤',initials:'ㅂㄱ',aliases:['빈곤']},
       {no:4,text:'무력 충돌을 (   )이라 한다.',answer:'전쟁',initials:'ㅈㅈ',aliases:['전쟁']},
       {no:5,text:'문제 풀기를 (   )이라 한다.',answer:'해결',initials:'ㅎㄱ',aliases:['해결']},
@@ -837,9 +837,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: { instructions: '[미래 전망]', items: [
       {no:1,text:'앞으로의 시간을 (   )라고 한다.',answer:'미래',initials:'ㅁㄹ',aliases:['미래']},
       {no:2,text:'예상과 예측을 (   )이라 한다.',answer:'전망',initials:'ㅈㅁ',aliases:['전망']},
-      {no:3,text:'달라짐을 (   )이라 한다.',answer:'변화',initials:'ㅂㅎ',aliases:['변화']},
+      {no:3,text:'달라짐을 (   )라 한다.',answer:'변화',initials:'ㅂㅎ',aliases:['변화']},
       {no:4,text:'과학 진보를 (      )이라 한다.',answer:'기술 발전',initials:'ㄱㅅ ㅂㅈ',aliases:['기술발전']},
-      {no:5,text:'날씨 변동을 (      )이라 한다.',answer:'기후 변화',initials:'ㄱㅎ ㅂㅎ',aliases:['기후변화']},
+      {no:5,text:'날씨 변동을 (      )라 한다.',answer:'기후 변화',initials:'ㄱㅎ ㅂㅎ',aliases:['기후변화']},
       {no:6,text:'준비함을 (   )라고 한다.',answer:'대비',initials:'ㄷㅂ',aliases:['대비']},
       {no:7,text:'미리 짐작함을 (   )이라 한다.',answer:'예측',initials:'ㅇㅊ',aliases:['예측']},
       {no:8,text:'미래 유지를 (        )이라 한다.',answer:'지속 가능',initials:'ㅈㅅ ㄱㄴ',aliases:['지속가능']},

@@ -513,7 +513,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '나쁜 목적을 이루려고 몰래 꾸미는 계획을 (    )라고 해요.', answer: '음모', initials: 'ㅇㅁ', aliases: ['음모'] },
         { no: 6, text: '윗사람의 명령을 따르는 사람을 (    )라고 해요.', answer: '부하', initials: 'ㅂㅎ', aliases: ['부하'] },
         { no: 7, text: '소설 속 유명한 해적 두목의 이름은 (        )이에요.', answer: '플린트 선장', initials: 'ㅍㄹㅌ ㅅㅈ', aliases: ['플린트선장','플린트 선장'] },
-        { no: 8, text: '한쪽 다리가 없는 교활한 해적의 이름은 (          )이에요.', answer: '롱 존 실버', initials: 'ㄹ ㅈ ㅅㅂ', aliases: ['롱존실버','롱 존 실버'] }
+        { no: 8, text: '한쪽 다리가 없는 교활한 해적의 이름은 (          )예요.', answer: '롱 존 실버', initials: 'ㄹ ㅈ ㅅㅂ', aliases: ['롱존실버','롱 존 실버'] }
       ]
     },
     quiz: {
@@ -687,7 +687,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '발을 감싸는 딱딱한 신발을 (    )라고 해요.', answer: '구두', initials: 'ㄱㄷ', aliases: ['구두'] },
         { no: 4, text: '초록빛 보석으로 빛나는 오즈의 수도를 (          )라고 해요.', answer: '에메랄드 시티', initials: 'ㅇㅁㄹㄷ ㅅㅌ', aliases: ['에메랄드시티','에메랄드 시티'] },
         { no: 5, text: '논밭에 새를 쫓으려고 세워 놓은 인형을 (      )라고 해요.', answer: '허수아비', initials: 'ㅎㅅㅇㅂ', aliases: ['허수아비'] },
-        { no: 6, text: '양철로 만들어진 나무꾼 모양 인형을 (          )라고 해요.', answer: '양철 나무꾼', initials: 'ㅇㅊ ㄴㅁㄲ', aliases: ['양철나무꾼','양철 나무꾼'] },
+        { no: 6, text: '양철로 만들어진 나무꾼 모양 인형을 (          )이라고 해요.', answer: '양철 나무꾼', initials: 'ㅇㅊ ㄴㅁㄲ', aliases: ['양철나무꾼','양철 나무꾼'] },
         { no: 7, text: '숲속의 왕이라 불리는 용맹한 동물을 (    )라고 해요.', answer: '사자', initials: 'ㅅㅈ', aliases: ['사자'] },
         { no: 8, text: '두려움을 이기고 맞서는 마음을 (    )라고 해요.', answer: '용기', initials: 'ㅇㄱ', aliases: ['용기'] }
       ]
@@ -861,7 +861,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '나무와 덩굴이 빽빽한 열대 숲을 (    )이라고 해요.', answer: '정글', initials: 'ㅈㄱ', aliases: ['정글'] },
         { no: 2, text: '노란 바탕에 검은 줄무늬가 있는 맹수를 (      )라고 해요.', answer: '호랑이', initials: 'ㅎㄹㅇ', aliases: ['호랑이'] },
-        { no: 3, text: '늑대에게 키워진 인간 소년의 이름은 (      )이에요.', answer: '모글리', initials: 'ㅁㄱㄹ', aliases: ['모글리'] },
+        { no: 3, text: '늑대에게 키워진 인간 소년의 이름은 (      )예요.', answer: '모글리', initials: 'ㅁㄱㄹ', aliases: ['모글리'] },
         { no: 4, text: '모글리에게 정글의 법을 가르쳐 준 곰의 이름은 (    )예요.', answer: '발루', initials: 'ㅂㄹ', aliases: ['발루'] },
         { no: 5, text: '모글리를 보호해 준 흑표범의 이름은 (      )예요.', answer: '바기라', initials: 'ㅂㄱㄹ', aliases: ['바기라'] },
         { no: 6, text: '가깝게 지내는 관계를 (    )라고 해요.', answer: '형제', initials: 'ㅎㅈ', aliases: ['형제'] },
@@ -1216,7 +1216,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '미국 마을에 사는 말썽꾸러기 소년의 이름은 (      )예요.', answer: '톰 소여', initials: 'ㅌ ㅅㅇ', aliases: ['톰소여','톰 소여'] },
         { no: 2, text: '부모의 자매를 (    )라고 해요.', answer: '이모', initials: 'ㅇㅁ', aliases: ['이모'] },
         { no: 3, text: '집이나 마당을 둘러싼 담장을 (      )라고 해요.', answer: '울타리', initials: 'ㅇㅌㄹ', aliases: ['울타리'] },
-        { no: 4, text: '톰의 가장 친한 친구 이름은 (          )예요.', answer: '허클베리 핀', initials: 'ㅎㅋㅂㄹ ㅍ', aliases: ['허클베리핀','허클베리 핀'] },
+        { no: 4, text: '톰의 가장 친한 친구 이름은 (          )이에요.', answer: '허클베리 핀', initials: 'ㅎㅋㅂㄹ ㅍ', aliases: ['허클베리핀','허클베리 핀'] },
         { no: 5, text: '죽은 사람을 묻어 두는 곳을 (    )라고 해요.', answer: '묘지', initials: 'ㅁㅈ', aliases: ['묘지'] },
         { no: 6, text: '다른 사람에게 알리지 않는 것을 (    )이라고 해요.', answer: '비밀', initials: 'ㅂㅁ', aliases: ['비밀'] },
         { no: 7, text: '아주 귀한 물건이나 재물을 (    )이라고 해요.', answer: '보물', initials: 'ㅂㅁ', aliases: ['보물'] },
@@ -1306,7 +1306,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '아버지가 다시 결혼한 여자를 (        )라고 해요.', answer: '새어머니', initials: 'ㅅㅇㅁㄴ', aliases: ['새어머니'] },
         { no: 3, text: '모습을 비추어 보는 물건을 (    )이라고 해요.', answer: '거울', initials: 'ㄱㅇ', aliases: ['거울'] },
         { no: 4, text: '나무가 빽빽이 들어찬 곳을 (  )이라고 해요.', answer: '숲', initials: 'ㅅ', aliases: ['숲'] },
-        { no: 5, text: '키가 아주 작은 사람을 (      )이라고 해요.', answer: '난쟁이', initials: 'ㄴㅈㅇ', aliases: ['난쟁이'] },
+        { no: 5, text: '키가 아주 작은 사람을 (      )라고 해요.', answer: '난쟁이', initials: 'ㄴㅈㅇ', aliases: ['난쟁이'] },
         { no: 6, text: '나이 많은 여자 어른을 (      )라고 해요.', answer: '할머니', initials: 'ㅎㅁㄴ', aliases: ['할머니'] },
         { no: 7, text: '빨갛고 둥근 과일을 (    )라고 해요.', answer: '사과', initials: 'ㅅㄱ', aliases: ['사과'] },
         { no: 8, text: '왕의 아들을 (    )라고 해요.', answer: '왕자', initials: 'ㅇㅈ', aliases: ['왕자'] }
@@ -1568,7 +1568,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '[잠자는 숲속의 공주 어휘]',
       items: [
-        { no: 1, text: '기쁜 일을 축하하는 모임을 (        )이라고 해요.', answer: '축하 잔치', initials: 'ㅊㅎ ㅈㅊ', aliases: ['축하잔치','축하 잔치'] },
+        { no: 1, text: '기쁜 일을 축하하는 모임을 (        )라고 해요.', answer: '축하 잔치', initials: 'ㅊㅎ ㅈㅊ', aliases: ['축하잔치','축하 잔치'] },
         { no: 2, text: '마법을 쓰는 작은 존재를 (    )이라고 해요.', answer: '요정', initials: 'ㅇㅈ', aliases: ['요정'] },
         { no: 3, text: '실을 뽑는 데 쓰는 도구를 (    )라고 해요.', answer: '물레', initials: 'ㅁㄹ', aliases: ['물레'] },
         { no: 4, text: '나쁜 일이 생기게 하는 마법의 말을 (    )라고 해요.', answer: '저주', initials: 'ㅈㅈ', aliases: ['저주'] },
@@ -2955,7 +2955,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       {no:5,text:'산신령이 두 번째 가져온 것은 (      )이다.',answer:'은도끼',initials:'ㅇㄷㄲ',aliases:['은도끼']},
       {no:6,text:'나무꾼의 진짜 도끼는 (      )이다.',answer:'쇠도끼',initials:'ㅅㄷㄲ',aliases:['쇠도끼']},
       {no:7,text:'나무꾼이 보여준 바른 태도는 (   )이다.',answer:'정직',initials:'ㅈㅈ',aliases:['정직']},
-      {no:8,text:'거짓말한 사람을 (      )이라 한다.',answer:'욕심쟁이',initials:'ㅇㅅㅈㅇ',aliases:['욕심쟁이']}
+      {no:8,text:'거짓말한 사람을 (      )라 한다.',answer:'욕심쟁이',initials:'ㅇㅅㅈㅇ',aliases:['욕심쟁이']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은?',

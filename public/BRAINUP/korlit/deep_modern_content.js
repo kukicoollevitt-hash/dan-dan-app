@@ -992,7 +992,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '고등 교육을 받은 지식인을 (      )라고 한다.', answer: '인텔리', initials: 'ㅇㅌㄹ', aliases: ['인텔리'] },
         { no: 2, text: '자신에 대해 스스로 자랑스럽게 여기는 마음을 (      )이라고 한다.', answer: '자부심', initials: 'ㅈㅂㅅ', aliases: ['자부심'] },
         { no: 3, text: '뜻대로 되지 않아 낙담하는 것을 (      )이라고 한다.', answer: '좌절', initials: 'ㅈㅈ', aliases: ['좌절'] },
-        { no: 4, text: '일자리를 구하거나 알선해 주는 곳을 (      )이라고 한다.', answer: '직업소개소', initials: 'ㅈㅇㅅㄱㅅ', aliases: ['직업소개소'] },
+        { no: 4, text: '일자리를 구하거나 알선해 주는 곳을 (      )라고 한다.', answer: '직업소개소', initials: 'ㅈㅇㅅㄱㅅ', aliases: ['직업소개소'] },
         { no: 5, text: '인력거를 끌어 손님을 태워 나르는 사람을 (      )이라고 한다.', answer: '인력거꾼', initials: 'ㅇㄹㄱㄲ', aliases: ['인력거꾼'] },
         { no: 6, text: '남에게 굽히지 않으려는 스스로의 품위를 (      )이라고 한다.', answer: '자존심', initials: 'ㅈㅈㅅ', aliases: ['자존심'] },
         { no: 7, text: '자기 자신을 비웃거나 조롱하는 것을 (      )라고 한다.', answer: '자조', initials: 'ㅈㅈ', aliases: ['자조'] },
@@ -3143,7 +3143,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 11, text: '엄마의 말뚝은 삶의 (      )이다.', answer: '기반', initials: 'ㄱㅂ', aliases: ['기반'] },
         { no: 12, text: '아들의 죽음에 엄마는 (      )에 빠졌다.', answer: '절망', initials: 'ㅈㅁ', aliases: ['절망'] },
         { no: 13, text: '"말뚝"은 정신적 (      )를 의미한다.', answer: '뿌리', initials: 'ㅃㄹ', aliases: ['뿌리'] },
-        { no: 14, text: '이 작품은 어머니의 사랑과 (      )을 보여준다.', answer: '인내', initials: 'ㅇㄴ', aliases: ['인내'] },
+        { no: 14, text: '이 작품은 어머니의 사랑과 (      )를 보여준다.', answer: '인내', initials: 'ㅇㄴ', aliases: ['인내'] },
         { no: 15, text: '작가의 경험이 작품에 (      )되어 있다.', answer: '투영', initials: 'ㅌㅇ', aliases: ['투영'] }
       ]
     },

@@ -667,7 +667,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[식물의 구조와 생존 전략 어휘]',
       items: [
         { no: 1, text: '물과 양분을 흡수하고 식물을 지탱하는 부분을 (      )라고 한다.', answer: '뿌리', initials: 'ㅃㄹ', aliases: ['뿌리'] },
-        { no: 2, text: '뿌리 끝에 나 있는 가는 털로 흡수 면적을 넓히는 것을 (      )라고 한다.', answer: '뿌리털', initials: 'ㅃㄹㅌ', aliases: ['뿌리털'] },
+        { no: 2, text: '뿌리 끝에 나 있는 가는 털로 흡수 면적을 넓히는 것을 (      )이라고 한다.', answer: '뿌리털', initials: 'ㅃㄹㅌ', aliases: ['뿌리털'] },
         { no: 3, text: '식물을 지탱하고 물과 양분을 운반하는 부분을 (      )라고 한다.', answer: '줄기', initials: 'ㅈㄱ', aliases: ['줄기'] },
         { no: 4, text: '뿌리에서 흡수한 물을 위로 운반하는 관을 (      )이라 한다.', answer: '물관', initials: 'ㅁㄱ', aliases: ['물관'] },
         { no: 5, text: '잎에서 만든 양분을 아래로 운반하는 관을 (      )이라 한다.', answer: '체관', initials: 'ㅊㄱ', aliases: ['체관'] },
@@ -765,7 +765,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '광합성이 일어나는 세포 소기관을 (      )라고 한다.', answer: '엽록체', initials: 'ㅇㄹㅊ', aliases: ['엽록체'] },
         { no: 3, text: '엽록체 안에 들어 있는 초록색 색소를 (      )라고 한다.', answer: '엽록소', initials: 'ㅇㄹㅅ', aliases: ['엽록소'] },
         { no: 4, text: '광합성의 재료가 되는 기체를 (        )라고 한다.', answer: '이산화탄소', initials: 'ㅇㅅㅎㅌㅅ', aliases: ['이산화탄소'] },
-        { no: 5, text: '광합성으로 만들어지는 양분을 (      )라고 한다.', answer: '포도당', initials: 'ㅍㄷㄷ', aliases: ['포도당'] },
+        { no: 5, text: '광합성으로 만들어지는 양분을 (      )이라고 한다.', answer: '포도당', initials: 'ㅍㄷㄷ', aliases: ['포도당'] },
         { no: 6, text: '광합성의 부산물로 방출되는 기체를 (      )라고 한다.', answer: '산소', initials: 'ㅅㅅ', aliases: ['산소'] },
         { no: 7, text: '잎에서 기체 교환이 일어나는 작은 구멍을 (      )이라 한다.', answer: '기공', initials: 'ㄱㄱ', aliases: ['기공'] },
         { no: 8, text: '포도당이 변해서 저장되는 형태를 (      )이라 한다.', answer: '녹말', initials: 'ㄴㅁ', aliases: ['녹말'] },
@@ -863,7 +863,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '세포막 안쪽에 있는 젤리 같은 물질을 (      )이라 한다.', answer: '세포질', initials: 'ㅅㅍㅈ', aliases: ['세포질'] },
         { no: 6, text: '세포의 중심에서 DNA를 담고 있는 구조를 (      )이라 한다.', answer: '핵', initials: 'ㅎ', aliases: ['핵'] },
         { no: 7, text: '식물 세포를 단단하게 지지하는 바깥 벽을 (      )이라 한다.', answer: '세포벽', initials: 'ㅅㅍㅂ', aliases: ['세포벽'] },
-        { no: 8, text: '세포에서 일어나는 물질의 분해와 합성을 (      )이라 한다.', answer: '물질대사', initials: 'ㅁㅈㄷㅅ', aliases: ['물질대사'] },
+        { no: 8, text: '세포에서 일어나는 물질의 분해와 합성을 (      )라 한다.', answer: '물질대사', initials: 'ㅁㅈㄷㅅ', aliases: ['물질대사'] },
         { no: 9, text: '하나의 세포가 둘로 나누어지는 과정을 (        )이라 한다.', answer: '세포 분열', initials: 'ㅅㅍ ㅂㅇ', aliases: ['세포분열','세포 분열'] }
       ]
     },
@@ -1718,7 +1718,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '생물과 환경이 서로 영향을 주고받는 체계를 (      )라고 한다.', answer: '생태계', initials: 'ㅅㅌㄱ', aliases: ['생태계'] },
         { no: 6, text: '쓰고 버린 물건을 다시 사용하는 것을 (      )이라 한다.', answer: '재활용', initials: 'ㅈㅎㅇ', aliases: ['재활용'] },
         { no: 7, text: '환경을 오염시키지 않는 태양열, 풍력 등의 에너지를 (          )라고 한다.', answer: '친환경 에너지', initials: 'ㅊㅎㄱ ㅇㄴㅈ', aliases: ['친환경에너지','친환경 에너지'] },
-        { no: 8, text: '사라질 위험에 처한 생물을 (          )라고 한다.', answer: '멸종 위기종', initials: 'ㅁㅈ ㅇㄱㅈ', aliases: ['멸종위기종','멸종 위기종'] },
+        { no: 8, text: '사라질 위험에 처한 생물을 (          )이라고 한다.', answer: '멸종 위기종', initials: 'ㅁㅈ ㅇㄱㅈ', aliases: ['멸종위기종','멸종 위기종'] },
         { no: 9, text: '생태계를 보호하기 위해 지정된 구역을 (            )이라 한다.', answer: '자연 보호 구역', initials: 'ㅈㅇ ㅂㅎ ㄱㅇ', aliases: ['자연보호구역','자연 보호 구역'] }
       ]
     },
@@ -1905,7 +1905,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '온실가스로 인해 지구 평균 기온이 상승하는 현상을 (          )라고 한다.', answer: '지구 온난화', initials: 'ㅈㄱ ㅇㄴㅎ', aliases: ['지구온난화','지구 온난화'] },
         { no: 3, text: '극지방이나 고산지대의 큰 얼음덩어리를 (      )라고 한다.', answer: '빙하', initials: 'ㅂㅎ', aliases: ['빙하'] },
         { no: 4, text: '폭염, 한파, 폭우 등 평소와 다른 극단적 날씨를 (        )라고 한다.', answer: '이상 기후', initials: 'ㅇㅅ ㄱㅎ', aliases: ['이상기후','이상 기후'] },
-        { no: 5, text: '살던 곳을 떠나 새로운 곳으로 옮기는 것을 (          )라고 한다.', answer: '서식지 이동', initials: 'ㅅㅅㅈ ㅇㄷ', aliases: ['서식지이동','서식지 이동'] },
+        { no: 5, text: '살던 곳을 떠나 새로운 곳으로 옮기는 것을 (          )이라고 한다.', answer: '서식지 이동', initials: 'ㅅㅅㅈ ㅇㄷ', aliases: ['서식지이동','서식지 이동'] },
         { no: 6, text: '철새 등이 이동하는 때를 (        )라고 한다.', answer: '이동 시기', initials: 'ㅇㄷ ㅅㄱ', aliases: ['이동시기','이동 시기'] },
         { no: 7, text: '산호가 하얗게 변하며 죽어가는 현상을 (        )이라 한다.', answer: '백화 현상', initials: 'ㅂㅎ ㅎㅅ', aliases: ['백화현상','백화 현상'] },
         { no: 8, text: '생물이 사라질 위험에 처한 상태를 (        )라고 한다.', answer: '멸종 위기', initials: 'ㅁㅈ ㅇㄱ', aliases: ['멸종위기','멸종 위기'] },
@@ -2003,7 +2003,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '질병을 예방하기 위해 몸에 면역을 만들어 주는 약을 (      )이라 한다.', answer: '백신', initials: 'ㅂㅅ', aliases: ['백신'] },
         { no: 6, text: '유전 정보를 이용해 면역 반응을 유도하는 백신을 (        )이라 한다.', answer: 'mRNA 백신', initials: 'mRNA ㅂㅅ', aliases: ['mRNA백신','mRNA 백신'] },
         { no: 7, text: '옳고 그름에 대한 도덕적 고민을 (        )라고 한다.', answer: '윤리적 문제', initials: 'ㅇㄹㅈ ㅁㅈ', aliases: ['윤리적문제','윤리적 문제'] },
-        { no: 8, text: '사람들 사이의 차별적 차이를 (      )라고 한다.', answer: '불평등', initials: 'ㅂㅍㄷ', aliases: ['불평등'] },
+        { no: 8, text: '사람들 사이의 차별적 차이를 (      )이라고 한다.', answer: '불평등', initials: 'ㅂㅍㄷ', aliases: ['불평등'] },
         { no: 9, text: '법이나 규칙으로 제한하는 것을 (      )라고 한다.', answer: '규제', initials: 'ㄱㅈ', aliases: ['규제'] }
       ]
     },

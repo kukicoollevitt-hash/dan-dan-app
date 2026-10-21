@@ -1174,7 +1174,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 8, text: '겉과 속이 다른 거짓된 행동을 (      )이라 한다.', answer: '위선', initials: 'ㅇㅅ', aliases: ['위선'] },
         { no: 9, text: '실제보다 크게 떠벌리는 말을 (      )이라 한다.', answer: '허풍', initials: 'ㅎㅍ', aliases: ['허풍'] },
         { no: 10, text: '사회의 부조리를 비꼬아 비판하는 것을 (      )라고 한다.', answer: '풍자', initials: 'ㅍㅈ', aliases: ['풍자'] },
-        { no: 11, text: '덕과 학식을 갖춘 이상적인 인물을 (      )이라 한다.', answer: '군자', initials: 'ㄱㅈ', aliases: ['군자'] },
+        { no: 11, text: '덕과 학식을 갖춘 이상적인 인물을 (      )라 한다.', answer: '군자', initials: 'ㄱㅈ', aliases: ['군자'] },
         { no: 12, text: '잘난 체하며 뽐내는 태도를 (      )이라 한다.', answer: '거드름', initials: 'ㄱㄷㄹ', aliases: ['거드름'] },
         { no: 13, text: '자기만 옳다고 생각하는 태도를 (      )이라 한다.', answer: '독선적', initials: 'ㄷㅅㅈ', aliases: ['독선적'] },
         { no: 14, text: '남에게 잘 보이려고 알랑거리는 것을 (      )이라 한다.', answer: '아첨', initials: 'ㅇㅊ', aliases: ['아첨'] },
@@ -1287,7 +1287,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '원인에 따른 결과가 돌아오는 것을 (        )라고 한다.', answer: '인과응보', initials: 'ㅇㄱㅇㅂ', aliases: ['인과응보'] },
         { no: 11, text: '지나치게 욕심을 부리는 것을 (      )이라 한다.', answer: '탐욕', initials: 'ㅌㅇ', aliases: ['탐욕'] },
         { no: 12, text: '차갑고 무관심한 태도를 (      )이라 한다.', answer: '냉담', initials: 'ㄴㄷ', aliases: ['냉담'] },
-        { no: 13, text: '잘못을 뉘우치고 반성하는 것을 (      )이라 한다.', answer: '참회', initials: 'ㅊㅎ', aliases: ['참회'] },
+        { no: 13, text: '잘못을 뉘우치고 반성하는 것을 (      )라 한다.', answer: '참회', initials: 'ㅊㅎ', aliases: ['참회'] },
         { no: 14, text: '착한 일을 권하고 악한 일을 벌하는 것을 (        )이라 한다.', answer: '권선징악', initials: 'ㄱㅅㅈㅇ', aliases: ['권선징악'] },
         { no: 15, text: '자신을 돌아보고 반성하는 것을 (      )이라 한다.', answer: '성찰', initials: 'ㅅㅊ', aliases: ['성찰'] }
       ]
@@ -1395,7 +1395,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 7, text: '박씨는 (          )이라는 칭호를 받았어요.', answer: '정렬부인', initials: 'ㅈㄹㅂㅇ', aliases: ['정렬부인'] },
         { no: 8, text: '사람은 내면의 (      )를 보아야 해요.', answer: '가치', initials: 'ㄱㅊ', aliases: ['가치'] },
         { no: 9, text: '1636년 청나라가 조선을 침략한 전쟁을 (        )이라 해요.', answer: '병자호란', initials: 'ㅂㅈㅎㄹ', aliases: ['병자호란'] },
-        { no: 10, text: '상황을 판단하고 대처하는 지혜와 꾀를 (      )라고 해요.', answer: '지략', initials: 'ㅈㄹ', aliases: ['지략'] }
+        { no: 10, text: '상황을 판단하고 대처하는 지혜와 꾀를 (      )이라고 해요.', answer: '지략', initials: 'ㅈㄹ', aliases: ['지략'] }
       ]
     },
     quiz: {
@@ -1486,7 +1486,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
     vocabFill: {
       instructions: '',
       items: [
-        { no: 1, text: '운영은 안평대군의 (      )을 받았어요.', answer: '총애', initials: 'ㅊㅇ', aliases: ['총애'] },
+        { no: 1, text: '운영은 안평대군의 (      )를 받았어요.', answer: '총애', initials: 'ㅊㅇ', aliases: ['총애'] },
         { no: 2, text: '운영과 김진사는 서로를 (        )하게 되었어요.', answer: '사모', initials: 'ㅅㅁ', aliases: ['사모'] },
         { no: 3, text: '두 사람은 몰래 (      )를 가졌어요.', answer: '밀회', initials: 'ㅁㅎ', aliases: ['밀회'] },
         { no: 4, text: '안평대군은 운영을 (      )했어요.', answer: '추궁', initials: 'ㅊㄱ', aliases: ['추궁'] },
@@ -1932,7 +1932,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 8, text: '두 형제는 가문의 (      )을 드높였어요.', answer: '영광', initials: 'ㅇㄱ', aliases: ['영광'] },
         { no: 9, text: '화진은 (      )이 지극하여 계모를 공경했어요.', answer: '효성', initials: 'ㅎㅅ', aliases: ['효성'] },
         { no: 10, text: '자식으로서 마땅히 해야 할 바른 길을 (      )라고 해요.', answer: '도리', initials: 'ㄷㄹ', aliases: ['도리'] },
-        { no: 11, text: '형제의 (      )로 음모를 막았어요.', answer: '단합', initials: 'ㄷㅎ', aliases: ['단합'] },
+        { no: 11, text: '형제의 (      )으로 음모를 막았어요.', answer: '단합', initials: 'ㄷㅎ', aliases: ['단합'] },
         { no: 12, text: '이 이야기는 (          )을 다루고 있어요.', answer: '가족 갈등', initials: 'ㄱㅈ ㄱㄷ', aliases: ['가족갈등', '가족 갈등'] },
         { no: 13, text: '효도와 우애는 유교적 (        )이에요.', answer: '가치관', initials: 'ㄱㅊㄱ', aliases: ['가치관'] },
         { no: 14, text: '(      )은 효성이 지극한 형이에요.', answer: '화진', initials: 'ㅎㅈ', aliases: ['화진'] },
@@ -2146,7 +2146,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '허생은 글만 읽는 (      )였어요.', answer: '선비', initials: 'ㅅㅂ', aliases: ['선비'] },
         { no: 2, text: '허생은 (      )를 해서 부자가 되겠다고 했어요.', answer: '장사', initials: 'ㅈㅅ', aliases: ['장사'] },
-        { no: 3, text: '물건을 싹쓸이해서 값을 올리는 것을 (          )라고 해요.', answer: '매점매석', initials: 'ㅁㅈㅁㅅ', aliases: ['매점매석'] },
+        { no: 3, text: '물건을 싹쓸이해서 값을 올리는 것을 (          )이라고 해요.', answer: '매점매석', initials: 'ㅁㅈㅁㅅ', aliases: ['매점매석'] },
         { no: 4, text: '물건을 사고파는 활동을 (      )이라 해요.', answer: '상업', initials: 'ㅅㅇ', aliases: ['상업'] },
         { no: 5, text: '벼슬아치는 허생에게 (      )을 구했어요.', answer: '조언', initials: 'ㅈㅇ', aliases: ['조언'] },
         { no: 6, text: '허생은 나라가 (      )할 의지가 없다고 했어요.', answer: '실천', initials: 'ㅅㅊ', aliases: ['실천'] },
@@ -2260,9 +2260,9 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '사람을 계층으로 나눈 것을 (         )라 해요.', answer: '신분 제도', initials: 'ㅅㅂ ㅈㄷ', aliases: ['신분 제도','신분제도'] },
         { no: 7, text: '겉과 속이 다르게 꾸미는 것을 (      )이라 해요.', answer: '위선', initials: 'ㅇㅅ', aliases: ['위선'] },
         { no: 8, text: '사회의 부조리를 비꼬아 드러내는 것을 (      )라 해요.', answer: '풍자', initials: 'ㅍㅈ', aliases: ['풍자'] },
-        { no: 9, text: '겉치레만 하고 실속이 없는 것을 (        )라 해요.', answer: '허례허식', initials: 'ㅎㄹㅎㅅ', aliases: ['허례허식'] },
+        { no: 9, text: '겉치레만 하고 실속이 없는 것을 (        )이라 해요.', answer: '허례허식', initials: 'ㅎㄹㅎㅅ', aliases: ['허례허식'] },
         { no: 10, text: '옛날 행정 구역 단위를 (      )이라 해요.', answer: '고을', initials: 'ㄱㅇ', aliases: ['고을'] },
-        { no: 11, text: '대대로 이름난 집안을 (       )이라 해요.', answer: '명문가', initials: 'ㅁㅁㄱ', aliases: ['명문가'] },
+        { no: 11, text: '대대로 이름난 집안을 (       )라 해요.', answer: '명문가', initials: 'ㅁㅁㄱ', aliases: ['명문가'] },
         { no: 12, text: '종종 빠르게 걷는 모습을 (        )이라 해요.', answer: '종종걸음', initials: 'ㅈㅈㄱㅇ', aliases: ['종종걸음'] },
         { no: 13, text: '남을 지배하고 복종시키는 힘을 (      )라 해요.', answer: '권위', initials: 'ㄱㅇ', aliases: ['권위'] },
         { no: 14, text: '남에게 보이는 얼굴과 명예를 (      )이라 해요.', answer: '체면', initials: 'ㅊㅁ', aliases: ['체면'] }
@@ -3327,7 +3327,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '',
       items: [
         { no: 1, text: '큰 뱀의 한 종류를 (       )라 해요.', answer: '구렁이', initials: 'ㄱㄹㅇ', aliases: ['구렁이'] },
-        { no: 2, text: '구렁이가 변한 신랑의 이름은 (       )이에요.', answer: '신선비', initials: 'ㅅㅅㅂ', aliases: ['신선비'] },
+        { no: 2, text: '구렁이가 변한 신랑의 이름은 (       )예요.', answer: '신선비', initials: 'ㅅㅅㅂ', aliases: ['신선비'] },
         { no: 3, text: '부모를 공경하는 마음을 (      )이라 해요.', answer: '효성', initials: 'ㅎㅅ', aliases: ['효성'] },
         { no: 4, text: '결혼하는 것을 (      )이라 해요.', answer: '혼인', initials: 'ㅎㅇ', aliases: ['혼인'] },
         { no: 5, text: '뱀이 벗는 껍질을 (      )이라 해요.', answer: '허물', initials: 'ㅎㅁ', aliases: ['허물'] },
@@ -4295,7 +4295,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '지조를 굳게 지키는 것을 (      )이라 해요.', answer: '정절', initials: 'ㅈㅈ', aliases: ['정절'] },
         { no: 6, text: '죽은 사람의 영혼을 (      )이라 해요.', answer: '귀신', initials: 'ㄱㅅ', aliases: ['귀신'] },
         { no: 7, text: '금오신화를 쓴 조선 초 학자는 (       )이에요.', answer: '김시습', initials: 'ㄱㅅㅅ', aliases: ['김시습'] },
-        { no: 8, text: '우리나라 최초의 한문소설집을 (        )이라 해요.', answer: '금오신화', initials: 'ㄱㅇㅅㅎ', aliases: ['금오신화'] },
+        { no: 8, text: '우리나라 최초의 한문소설집을 (        )라 해요.', answer: '금오신화', initials: 'ㄱㅇㅅㅎ', aliases: ['금오신화'] },
         { no: 9, text: '끝없이 오래도록을 (       )라 해요.', answer: '영원히', initials: 'ㅇㅇㅎ', aliases: ['영원히','영원'] },
         { no: 10, text: '거짓 없이 참된 것을 (       )이라 해요.', answer: '진정한', initials: 'ㅈㅈㅎ', aliases: ['진정한','진정'] },
         { no: 11, text: '글로 쓴 소식을 (      )라 해요.', answer: '편지', initials: 'ㅍㅈ', aliases: ['편지'] },

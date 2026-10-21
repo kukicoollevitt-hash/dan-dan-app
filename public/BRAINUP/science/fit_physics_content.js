@@ -372,7 +372,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '물체와 받침점 사이의 간격을 (      )라고 한다.', answer: '거리', initials: 'ㄱㄹ', aliases: ['거리'] },
         { no: 5, text: '구조물이 견뎌야 하는 무게나 힘을 (      )이라고 한다.', answer: '하중', initials: 'ㅎㅈ', aliases: ['하중'] },
         { no: 6, text: '거리와 힘의 비율로 균형을 맞추는 물리 법칙을 (      )라고 한다.', answer: '지렛대 원리', initials: 'ㅈㄹㄷ ㅇㄹ', aliases: ['지렛대원리','지렛대의 원리'] },
-        { no: 7, text: '특정 목적을 위해 만들어진 건축물이나 기계 장치를 (      )라고 한다.', answer: '구조물', initials: 'ㄱㅈㅁ', aliases: ['구조물'] },        { no: 8, text: '적은 힘이나 자원으로 큰 효과를 내는 것을 (      )이라고 한다.', answer: '효율적', initials: 'ㅎㅇㅈ', aliases: ['효율적'] },
+        { no: 7, text: '특정 목적을 위해 만들어진 건축물이나 기계 장치를 (      )이라고 한다.', answer: '구조물', initials: 'ㄱㅈㅁ', aliases: ['구조물'] },        { no: 8, text: '적은 힘이나 자원으로 큰 효과를 내는 것을 (      )이라고 한다.', answer: '효율적', initials: 'ㅎㅇㅈ', aliases: ['효율적'] },
         { no: 9, text: '건물이나 기계 등을 계획하고 도면을 그리는 사람을 (      )라고 한다.', answer: '설계자', initials: 'ㅅㄱㅈ', aliases: ['설계자'] }
       ]
     },
@@ -1296,7 +1296,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '물체의 진동으로 발생하는 파동을 (    )라고 한다.', answer: '소리', initials: 'ㅅㄹ', aliases: ['소리'] },
         { no: 2, text: '소리를 내는 진동하는 물체를 (    )이라 한다.', answer: '음원', initials: 'ㅇㅇ', aliases: ['음원'] },
         { no: 3, text: '소리가 전달되는 파동을 (    )라고 한다.', answer: '음파', initials: 'ㅇㅍ', aliases: ['음파'] },
-        { no: 4, text: '소리의 높고 낮음을 (      )이라 한다.', answer: '음높이', initials: 'ㅇㄴㅇ', aliases: ['음높이'] },
+        { no: 4, text: '소리의 높고 낮음을 (      )라 한다.', answer: '음높이', initials: 'ㅇㄴㅇ', aliases: ['음높이'] },
         { no: 5, text: '소리의 맵시나 느낌을 (    )이라 한다.', answer: '음색', initials: 'ㅇㅅ', aliases: ['음색'] },
         { no: 6, text: '소리의 크고 작음을 (    )이라 한다.', answer: '음량', initials: 'ㅇㄹ', aliases: ['음량'] },
         { no: 7, text: '진동하는 폭의 크기를 (    )이라 한다.', answer: '진폭', initials: 'ㅈㅍ', aliases: ['진폭'] },
@@ -1700,7 +1700,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '물이 가하는 압력을 (    )이라 한다.', answer: '수압', initials: 'ㅅㅇ', aliases: ['수압'] },
         { no: 4, text: '공기가 가하는 압력을 (    )이라 한다.', answer: '기압', initials: 'ㄱㅇ', aliases: ['기압'] },
         { no: 5, text: '유체가 물체를 위로 밀어 올리는 힘을 (    )이라 한다.', answer: '부력', initials: 'ㅂㄹ', aliases: ['부력'] },
-        { no: 6, text: '부력은 밀어낸 유체의 무게와 같다는 원리를 (            )이라 한다.', answer: '아르키메데스의 원리', initials: 'ㅇㄹㅋㅁㄷㅅ ㅇㄹ', aliases: ['아르키메데스의원리', '아르키메데스 원리'] },
+        { no: 6, text: '부력은 밀어낸 유체의 무게와 같다는 원리를 (            )라 한다.', answer: '아르키메데스의 원리', initials: 'ㅇㄹㅋㅁㄷㅅ ㅇㄹ', aliases: ['아르키메데스의원리', '아르키메데스 원리'] },
         { no: 7, text: '흐르는 성질을 가진 액체와 기체를 (    )라고 한다.', answer: '유체', initials: 'ㅇㅊ', aliases: ['유체'] },
         { no: 8, text: '단위 부피당 질량을 (    )라고 한다.', answer: '밀도', initials: 'ㅁㄷ', aliases: ['밀도'] },        { no: 9, text: '물탱크로 부력을 조절해 잠수하는 배를 (      )이라 한다.', answer: '잠수함', initials: 'ㅈㅅㅎ', aliases: ['잠수함'] }
       ]
@@ -1894,7 +1894,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       items: [
         { no: 1, text: '스스로 빛을 내는 천체를 (   )이라 한다.', answer: '별', initials: 'ㅂ', aliases: ['별', '항성'] },
         { no: 2, text: '원자핵이 합쳐지며 에너지를 방출하는 반응을 (      )이라 한다.', answer: '핵융합', initials: 'ㅎㅇㅎ', aliases: ['핵융합'] },
-        { no: 3, text: '별 표면의 온도로 색깔을 결정하는 것을 (        )이라 한다.', answer: '표면 온도', initials: 'ㅍㅁ ㅇㄷ', aliases: ['표면온도'] },
+        { no: 3, text: '별 표면의 온도로 색깔을 결정하는 것을 (        )라 한다.', answer: '표면 온도', initials: 'ㅍㅁ ㅇㄷ', aliases: ['표면온도'] },
         { no: 4, text: '별들이 모여 이룬 거대한 집단을 (    )라고 한다.', answer: '은하', initials: 'ㅇㅎ', aliases: ['은하'] },
         { no: 5, text: '태양계가 속한 은하를 (      )라고 한다.', answer: '우리 은하', initials: 'ㅇㄹ ㅇㅎ', aliases: ['우리은하', '은하수'] },
         { no: 6, text: '우주가 대폭발로 시작되었다는 이론을 (        )이라 한다.', answer: '빅뱅 이론', initials: 'ㅂㅂ ㅇㄹ', aliases: ['빅뱅이론'] },
