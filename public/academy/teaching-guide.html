@@ -2356,15 +2356,7 @@
         area.innerHTML += `
           <div style="margin-top:18px;padding:15px 18px;background:#fdf9f3;border:2px dashed #d9b98a;border-radius:14px;display:flex;flex-direction:column;gap:10px;">
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-              <span style="font-weight:900;color:#4a3520;font-size:15px;">📚 전체 워크북 한 권으로 <small style="font-weight:700;color:#8a5a3a;">· 10개 땅 40관문 (생성에 몇 분 걸려요)</small></span>
-              <span style="margin-left:auto;display:flex;gap:8px;">
-                <button type="button" onclick="downloadGkAllPDF('student')" style="padding:8px 18px;border-radius:10px;border:1.5px solid #2f6fae;background:#e8f1fa;color:#1a3a5c;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">📄 전체 학생용</button>
-                <button type="button" onclick="downloadGkAllPDF('teacher')" style="padding:8px 18px;border-radius:10px;border:1.5px solid #c0392b;background:#fdeef1;color:#c0392b;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">📕 전체 교사용</button>
-              </span>
-            </div>
-            <!-- 권별 다운로드 — 숨김 (필요 시 display:none 제거) -->
-            <div style="display:none;">
-              <span style="font-weight:900;color:#4a3520;font-size:15px;">📖 권별로 나눠서 <small style="font-weight:700;color:#8a5a3a;">· 1권: 1~4땅+형성평가(1) / 2권: 5~8땅+형성평가(2)</small></span>
+              <span style="font-weight:900;color:#4a3520;font-size:15px;">📚 전체 워크북 2권 구성 <small style="font-weight:700;color:#8a5a3a;">· 1권: 1~20관문 / 2권: 21~40관문 (권당 생성에 몇 분 걸려요)</small></span>
               <span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
                 <button type="button" onclick="downloadGkVolPDF(1,'student')" style="padding:8px 14px;border-radius:10px;border:1.5px solid #2f6fae;background:#e8f1fa;color:#1a3a5c;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">📄 1권 학생용</button>
                 <button type="button" onclick="downloadGkVolPDF(1,'teacher')" style="padding:8px 14px;border-radius:10px;border:1.5px solid #c0392b;background:#fdeef1;color:#c0392b;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">📕 1권 교사용</button>
@@ -2464,15 +2456,41 @@
       if (!imgs.length) return null;
       // 이미지 캐시 버전 — 원정대 GK_ASSET_V와 동일하게 유지 (웹툰 교체 시 함께 갱신)
       const GK_WB_IMG_V = '20260905a';
-      const cells = imgs.map((u) =>
-        '<div style="border:1.5px solid ' + GK_THEME.line + ';border-radius:8px;overflow:hidden;background:#f8fafc;">'
-        + '<img src="' + u + '?v=' + GK_WB_IMG_V + '" style="width:100%;height:176px;object-fit:cover;display:block;">'
-        + '</div>'
-      ).join('');
-      return '<div data-gk-hires="1" style="' + WB_PAGE_STYLE + '">'
-        + gkWbHeader(gateName, landLabel, audienceLabel, '🎞️ 웹툰으로 개념 만나기')
-        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">' + cells + '</div>'
-        + wbFooter(pn) + '</div>';
+      // 1열 3컷 대형 레이아웃 — 컷을 원본 비율 그대로 크게 (여러 페이지 분할, 전 관문 공통)
+      {
+        const chunks = [];
+        for (let i = 0; i < imgs.length; i += 3) chunks.push(imgs.slice(i, i + 3));
+        const circled = ['①', '②', '③', '④'];
+        // 마지막 페이지 하단 빈 공간 — 웹툰 내용 정리 쓰기 박스 (컷 수가 적을수록 줄을 많이)
+        function summaryBox(cutCount) {
+          const lines = cutCount <= 1 ? 8 : (cutCount === 2 ? 3 : 0);
+          if (!lines) return '';
+          const lineHtml = Array.from({ length: lines }, () =>
+            '<div style="height:52px;border-bottom:2px solid ' + GK_THEME.line + ';"></div>'
+          ).join('');
+          return '<div style="width:560px;margin-top:18px;background:' + GK_THEME.soft + ';border:2px solid ' + GK_THEME.main + ';border-radius:14px;padding:18px 22px 24px;box-shadow:2px 3px 8px rgba(0,0,0,0.06);">'
+            + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
+            + '<span style="font-size:17px;">✍️</span>'
+            + '<span style="font-size:15.5px;font-weight:900;color:' + GK_THEME.dark + ';">웹툰의 내용을 한 번 정리해봐요</span>'
+            + '</div>'
+            + '<div style="font-size:11.5px;color:#64748b;margin-bottom:6px;">웹툰에서 만난 개념을 떠올리며 자유롭게 적어 보세요.</div>'
+            + lineHtml
+            + '</div>';
+        }
+        return chunks.map((chunk, ci) => (p) =>
+          '<div data-gk-hires="1" style="' + WB_PAGE_STYLE + '">'
+          + gkWbHeader(gateName, landLabel, audienceLabel, '🎞️ 웹툰으로 개념 만나기' + (chunks.length > 1 ? ' ' + circled[ci] : ''))
+          + '<div style="display:flex;flex-direction:column;gap:12px;align-items:center;">'
+          + chunk.map(u =>
+              '<div style="border:1.5px solid ' + GK_THEME.line + ';border-radius:10px;overflow:hidden;background:#f8fafc;width:560px;">'
+              + '<img src="' + u + '?v=' + GK_WB_IMG_V + '" style="width:100%;display:block;">'
+              + '</div>'
+            ).join('')
+          + (ci === chunks.length - 1 ? summaryBox(chunk.length) : '')
+          + '</div>'
+          + wbFooter(p) + '</div>'
+        );
+      }
     }
 
     // 긴 본문 자동 페이지 분할 — 블록(섹션 단위)을 실측해 페이지 용량만큼 나눠 담는다
@@ -2804,7 +2822,9 @@
         (p) => gkPageWtOx(pack, gateName, landLabel, audienceLabel, p),
         () => fillPages,
         (p) => gkPageMcq(pack.mcq, '✏️ 기본 문제', pack, gateName, landLabel, audienceLabel, p),
-        (p) => gkPageMcq(pack.adv, '🚀 심화 문제', pack, gateName, landLabel, audienceLabel, p)
+        (p) => gkPageMcq(pack.adv, '🚀 심화 문제', pack, gateName, landLabel, audienceLabel, p),
+        // 🎲 마지막에 오목판 연습장 1페이지 (전 관문 공통)
+        (p) => gkPageOmok(gateName, landLabel, audienceLabel, p)
       ];
       const pages = [];
       raw.forEach(fn => {
@@ -2919,6 +2939,25 @@
       } finally {
         if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
       }
+    }
+
+    // 🎲 오목판 연습장 — 격자판 한 장 (시범: 1관문 마지막 페이지)
+    function gkPageOmok(gateName, landLabel, audienceLabel, pn) {
+      const COLS = 17, ROWS = 24, CELL = 36;
+      let cells = '';
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          cells += '<div style="width:' + CELL + 'px;height:' + CELL + 'px;border-right:1px solid #c7d4e8;border-bottom:1px solid #c7d4e8;box-sizing:border-box;"></div>';
+        }
+      }
+      return '<div style="' + WB_PAGE_STYLE + '">'
+        + gkWbHeader(gateName, landLabel, audienceLabel, '🎲 쉬어가기 · 오목판 연습장')
+        + '<div style="font-size:12px;color:#64748b;margin:-2px 0 10px;">공부 끝! 친구와 오목 한 판을 두거나, 자유롭게 글씨·그림 연습장으로 사용해 보세요.</div>'
+        + '<div style="display:flex;justify-content:center;">'
+        + '<div style="display:grid;grid-template-columns:repeat(' + COLS + ',' + CELL + 'px);border-top:1.5px solid #94a8c4;border-left:1.5px solid #94a8c4;border-radius:2px;background:#fdfefe;box-shadow:2px 3px 8px rgba(0,0,0,0.06);">'
+        + cells
+        + '</div></div>'
+        + wbFooter(pn) + '</div>';
     }
 
     // 땅 표제 페이지 — 테마색 배지 중앙 배치 (묶음 교재의 땅 구분용)
@@ -3098,7 +3137,7 @@
       if (btn) { btn.disabled = true; btn.innerHTML = '⏳ 준비 중...'; }
       try {
         if (!window.html2canvas || !window.jspdf) { alert('PDF 라이브러리 로딩 중입니다. 잠시 후 다시 시도해 주세요.'); return; }
-        const lands = vol === 1 ? [0, 1, 2, 3, 8] : [4, 5, 6, 7, 9]; // 형성평가(1)=1~4땅 범위, (2)=5~8땅 범위
+        const lands = vol === 1 ? [0, 1, 2, 3, 4] : [5, 6, 7, 8, 9]; // 1권: 1~20관문(1~5땅) / 2권: 21~40관문(6~10땅, 형성평가 포함)
         const all = [];
         const tocEntries = [];
         let done = 0, total = lands.reduce((a, li) => a + GK_GATE_NAMES[li].length, 0);
@@ -3121,7 +3160,7 @@
         }
         if (!all.length) { alert('관문 데이터를 불러오지 못했습니다.'); return; }
         const audienceLabel = audience === 'teacher' ? '교사용' : '학생용';
-        all.unshift.apply(all, gkPageToc('국어 문법 원정대 · ' + vol + '권', tocEntries, audienceLabel).concat([gkPageMemo(3)]));
+        all.unshift.apply(all, gkPageToc('국어 문법 원정대 · ' + vol + '권 (' + (vol === 1 ? '1~20' : '21~40') + '관문)', tocEntries, audienceLabel).concat([gkPageMemo(3)]));
         all.unshift({ pdf: '/images/국어개념원정대/안내01~06.pdf' }); // 안내 페이지 묶음 PDF — 벡터 원본 그대로 전체 쪽 병합
         all.unshift({ img: '/images/국어개념원정대/앞표지바로다음.png' }); // 표지 속지
         all.unshift({ img: '/images/국어개념원정대/앞표지뒷면.png' }); // 앞표지 뒷면
@@ -3206,7 +3245,7 @@
     };
 
     // 📌 콘텐츠 캐시 버전 — content.js 본문/문제 수정 시 여기만 올리면 모든 로더에 반영됨
-    const CONTENT_VERSION = '20260904a';
+    const CONTENT_VERSION = '20261022b';
 
     // 시리즈별 content.js 파일명 접두사
     const SERIES_PREFIX = {
