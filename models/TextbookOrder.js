@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const textbookItemSchema = new mongoose.Schema({
   bookType: {
     type: String,
-    enum: ['브레인문해력', '고래도서관', '브레인비평', '특강교재', '문해어휘학습장', '(신)문해어휘학습장', '과목별교재'],
+    enum: ['브레인문해력', '고래도서관', '브레인비평', '특강교재', '문해어휘학습장', '(신)문해어휘학습장', '과목별교재', '현대문법교재'],
     required: true
   },
   series: {

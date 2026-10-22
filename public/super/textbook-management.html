@@ -540,6 +540,14 @@
       })[c]);
     }
 
+    // 🚚 배송비 — 주문당 3,000원 (신청 페이지 textbook_order.html의 청구 금액과 동일 기준)
+    const SHIPPING_FEE = 3000;
+    // 주문의 실제 입금 총액 = 공급가액 + VAT 10% + 배송비 (신청 시 안내 금액과 일치)
+    function orderGrandTotal(o) {
+      const supply = o.totalAmount || 0;
+      return supply + Math.round(supply * 0.1) + SHIPPING_FEE;
+    }
+
     function isFullyDone(o) {
       return !!(o.paymentConfirmed && o.orderConfirmed && o.deliveryCompleted);
     }
@@ -564,9 +572,9 @@
       const pay  = allOrders.filter(o => o.paymentConfirmed).length;
       const ord  = allOrders.filter(o => o.orderConfirmed).length;
       const ship = allOrders.filter(o => o.deliveryCompleted).length;
-      const amt  = allOrders.reduce((s, o) => s + (o.totalAmount || 0), 0);
+      const amt  = allOrders.reduce((s, o) => s + orderGrandTotal(o), 0);
       document.getElementById('stats').innerHTML =
-        `총 <b>${total}</b>건 · 결제확인 <b>${pay}</b> · 주문확인 <b>${ord}</b> · 배송완료 <b>${ship}</b> · 금액합계 <b>${fmtMoney(amt)}</b>`;
+        `총 <b>${total}</b>건 · 결제확인 <b>${pay}</b> · 주문확인 <b>${ord}</b> · 배송완료 <b>${ship}</b> · 금액합계 <b>${fmtMoney(amt)}</b> <span style="color:#94a3b8;">(VAT·배송비 포함)</span>`;
     }
 
     function renderList() {
@@ -599,7 +607,7 @@
         `;
       }).join('');
       const vat = Math.round((o.totalAmount || 0) * 0.1);
-      const grand = (o.totalAmount || 0) + vat;
+      const grand = orderGrandTotal(o);
       const badges = [
         `<span class="badge ${o.paymentConfirmed ? 'on' : ''}">결제</span>`,
         `<span class="badge ${o.orderConfirmed ? 'on' : ''}">주문</span>`,
@@ -637,7 +645,8 @@
               <tfoot>
                 <tr><td colspan="5">공급가액</td><td>${fmtMoney(o.totalAmount)}</td></tr>
                 <tr><td colspan="5">부가세(10%)</td><td>${fmtMoney(vat)}</td></tr>
-                <tr><td colspan="5">총액 (VAT 포함, ${o.totalQuantity || 0}권)</td><td>${fmtMoney(grand)}</td></tr>
+                <tr><td colspan="5">배송비</td><td>${fmtMoney(SHIPPING_FEE)}</td></tr>
+                <tr><td colspan="5">총액 (VAT·배송비 포함, ${o.totalQuantity || 0}권)</td><td>${fmtMoney(grand)}</td></tr>
               </tfoot>
             </table>
             <div class="status-actions">
