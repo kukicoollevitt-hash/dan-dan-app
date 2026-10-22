@@ -4851,7 +4851,7 @@ app.post("/api/textbook-orders", async (req, res) => {
       <tr>
         <td style="padding: 8px; border: 1px solid #ddd;">${item.bookType}</td>
         <td style="padding: 8px; border: 1px solid #ddd;">${item.series}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.bookType === '과목별교재' ? (item.subjectName || '-') : `${item.issueNumber}호`}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${(item.bookType === '과목별교재' || item.bookType === '특강교재') && item.subjectName ? item.subjectName : (item.bookType === '과목별교재' ? '-' : `${item.issueNumber}호`)}</td>
         <td style="padding: 8px; border: 1px solid #ddd;">${item.quantity}권</td>
         <td style="padding: 8px; border: 1px solid #ddd;">${Math.round(item.quantity * item.unitPrice * 1.1).toLocaleString()}원</td>
       </tr>

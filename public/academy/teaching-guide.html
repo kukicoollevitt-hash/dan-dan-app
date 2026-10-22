@@ -61516,7 +61516,7 @@
       // 진행 표시용 버튼
       const btn = (typeof event !== 'undefined' && event && event.target) ? event.target : null;
       const originalText = btn ? btn.textContent : '';
-      if (btn) { btn.disabled = true; btn.textContent = '⏳ 생성 중 (1/4)...'; }
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ 생성 중 (1/6)...'; }
 
       // 화면 밖 임시 wrapper (각 페이지마다 innerHTML 재사용)
       const wrap = document.createElement('div');
@@ -61563,17 +61563,24 @@
           }
         }
 
+        const steps = 6;
+        let pno = 1;
         // 1) 강 표지 (사료 4장 + 단원 제목)
-        await appendPage(generateUnitCoverHTML(data, unitKey), true, false, 1);
+        await appendPage(generateUnitCoverHTML(data, unitKey), true, false, pno++);
+        // 2) 📖 본문 전문 읽기
+        if (btn) btn.textContent = `⏳ 생성 중 (${pno}/${steps})...`;
+        await appendPage(generateUnitPassageHTML(data, unitKey), false, false, pno++);
         // 2) 본문 빈칸 채우기
-        if (btn) btn.textContent = '⏳ 생성 중 (2/4)...';
-        await appendPage(generateWorkbookHTML(data, unitKey, withAnswers), false, false, 2);
-        // 3) ✍️ 글쓰기 — 자기 말로 한국사 소개
-        if (btn) btn.textContent = '⏳ 생성 중 (3/4)...';
-        await appendPage(generateUnitWritingHTML(data, unitKey, withAnswers), false, false, 3);
+        if (btn) btn.textContent = `⏳ 생성 중 (${pno}/${steps})...`;
+        await appendPage(generateWorkbookHTML(data, unitKey, withAnswers), false, false, pno++);
+        // 3) ✍️ 글쓰기 — 자기 말로 한국사 소개 (Q1·2 / Q3·4 두 페이지)
+        if (btn) btn.textContent = `⏳ 생성 중 (${pno}/${steps})...`;
+        await appendPage(generateUnitWritingHTML(data, unitKey, withAnswers, 1), false, false, pno++);
+        if (btn) btn.textContent = `⏳ 생성 중 (${pno}/${steps})...`;
+        await appendPage(generateUnitWritingHTML(data, unitKey, withAnswers, 2), false, false, pno++);
         // 4) 🎨 활동 — 나만의 사료 추가하기
-        if (btn) btn.textContent = '⏳ 생성 중 (4/4)...';
-        await appendPage(generateUnitExtraHTML(data, unitKey, withAnswers), false, false, 4);
+        if (btn) btn.textContent = `⏳ 생성 중 (${pno}/${steps})...`;
+        await appendPage(generateUnitExtraHTML(data, unitKey, withAnswers), false, false, pno++);
 
         const safeTitle = (data.title || unitKey).replace(/[\\/:*?"<>|]/g, '_');
         const tag = withAnswers ? '교사용' : '학생용';
@@ -61598,6 +61605,37 @@
         return `/images/한국사/기본한국사/${unitKey.replace('kh_', '')}`;
       }
       return null;
+    }
+
+    // 📖 본문 전문 페이지 — 사료(강 표지)와 빈칸 사이에 배치 (전 강 공통)
+    function generateUnitPassageHTML(data, unitKey) {
+      const passages = Array.isArray(data.passage) && data.passage.length ? data.passage : [];
+      const seriesLabel = unitKey.startsWith('khadv_') ? '심화한국사' : '한국사';
+      const passagesHtml = passages.map((p, i) => `
+        <div class="wb-paragraph">
+          <span class="wb-pnum">${i + 1}</span>
+          <span class="wb-ptext">${p.replace(/<b>/g, '<b style="color:#b45309;background:#fef3c7;padding:0 3px;border-radius:3px;">')}</span>
+        </div>
+      `).join('');
+      return `
+        <div class="workbook-page">
+          <div class="wb-header">
+            <div class="wb-brand">🐋 브레인문해력 · ${seriesLabel} 워크북</div>
+            <div class="wb-version">본문 읽기</div>
+          </div>
+          <div class="wb-title-row">
+            <span class="wb-unit-no">${data.labelNo || unitKey.split('_').pop()}강</span>
+            <span class="wb-unit-title">${data.title || unitKey}</span>
+          </div>
+          <div class="wb-instructions">
+            📖 본문을 소리 내어 읽어 보세요. 색이 칠해진 단어가 이 강의 핵심 어휘예요. 다음 페이지에서 이 단어들이 빈칸으로 나옵니다.
+          </div>
+          <div class="wb-passages">
+            ${passagesHtml || '<div style="color:#9ca3af;">(본문 데이터 없음)</div>'}
+          </div>
+          <div class="wb-footer">© 브레인문해력 · ${seriesLabel} 워크북 · ${unitKey}</div>
+        </div>
+      `;
     }
 
     function generateUnitCoverHTML(data, unitKey) {
@@ -61672,8 +61710,9 @@
           <div class="wb-toc-page-title">📑 목차 · 총 ${units.length}강</div>
           <div class="wb-toc-info">
             <span class="wb-toc-info-item">📑 강 표지 (사료 4장)</span>
+            <span class="wb-toc-info-item">📖 본문 읽기</span>
             <span class="wb-toc-info-item">✏️ 본문 빈칸 채우기</span>
-            <span class="wb-toc-info-item">✍️ 자기 말로 소개하기</span>
+            <span class="wb-toc-info-item">✍️ 자기 말로 소개하기 (2면)</span>
             <span class="wb-toc-info-item">🎨 나만의 사료 추가</span>
           </div>
           <div class="wb-toc-list">${rows}</div>
@@ -61684,7 +61723,8 @@
 
     // ✍️ 강 글쓰기 페이지 — "자기 말로 한국사 소개하기" (공통 4질문 + 단원 참고박스)
     // 학생용: 빈 줄 노트 / 교사용: 답안 가이드 박스 (paragraphMain 기반 자동 생성)
-    function generateUnitWritingHTML(data, unitKey, withAnswers) {
+    // part: 1 = Q1·Q2 페이지, 2 = Q3·Q4 페이지 (아이들이 크게 쓸 수 있게 줄 간격 확대 + 2페이지 분할)
+    function generateUnitWritingHTML(data, unitKey, withAnswers, part = 1) {
       const seriesLabel = unitKey.startsWith('khadv_') ? '심화한국사' : '한국사';
       const paragraphs = data.paragraphMain || [];
 
@@ -61746,13 +61786,17 @@
         }
       ];
 
-      const questionsHtml = QUESTIONS.map(q => {
+      // 페이지 분할: ① Q1·Q2 (참고 박스 포함) / ② Q3·Q4 (참고 박스 없는 만큼 줄 +2)
+      const pageQuestions = part === 2 ? QUESTIONS.slice(2) : QUESTIONS.slice(0, 2);
+      const extraLines = part === 2 ? 2 : 0;
+
+      const questionsHtml = pageQuestions.map(q => {
         const body = withAnswers
           ? `<div class="wb-w-guide-box">
                <div class="wb-w-guide-title">💡 교사용 답안 가이드</div>
                <div class="wb-w-guide-body">${q.guide}</div>
              </div>`
-          : `<div class="wb-w-lines">${Array.from({ length: q.lines }, () => '<div class="wb-w-line"></div>').join('')}</div>`;
+          : `<div class="wb-w-lines">${Array.from({ length: q.lines + extraLines }, () => '<div class="wb-w-line" style="height:44px;"></div>').join('')}</div>`;
         return `
           <div class="wb-w-question">
             <div class="wb-w-qhead">
@@ -61771,11 +61815,12 @@
             <span class="wb-w-no">${data.labelNo || unitKey.split('_').pop()}강</span>
             <span class="wb-w-title">${data.title || unitKey}</span>
           </div>
-          <div class="wb-w-page-title">✍️ 한국사 소개하기 — 자기 말로 설명해 보기</div>
+          <div class="wb-w-page-title">✍️ 한국사 소개하기 — 자기 말로 설명해 보기 ${part === 2 ? '②' : '①'}</div>
+          ${part === 2 ? '' : `
           <div class="wb-w-ref-box">
             <div class="wb-w-ref-title">📌 단원 핵심 (참고)</div>
             ${refRows}
-          </div>
+          </div>`}
           <div class="wb-w-questions">${questionsHtml}</div>
           <div class="wb-w-footer">© 브레인문해력 · ${seriesLabel} 워크북 · ${unitKey}</div>
         </div>
@@ -61993,7 +62038,7 @@
         await appendPageFromHTML(blankPageHTML(), false, false);
 
         // 4~) 각 강 4페이지: 강 표지 → 본문 빈칸 → 자기 말로 소개 → 나만의 사료 추가 (페이지 번호 표시)
-        const totalPages = units.length * 4 + 4; // 앞표지 + 목차 + 빈 + 강당 4페이지 + 뒷표지
+        const totalPages = units.length * 6 + 4; // 앞표지 + 목차 + 빈 + 강당 6페이지(본문 읽기 + 글쓰기 2p 분할) + 뒷표지
         let pageIdx = 4; // 4페이지부터 본문 시작
         for (let i = 0; i < units.length; i++) {
           const [unitKey, data] = units[i];
@@ -62002,13 +62047,20 @@
           if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx}/${totalPages})...`;
           await appendPageFromHTML(generateUnitCoverHTML(data, unitKey), false, false, pageIdx);
           pageIdx++;
+          // a+) 📖 본문 전문 읽기
+          if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx}/${totalPages})...`;
+          await appendPageFromHTML(generateUnitPassageHTML(data, unitKey), false, false, pageIdx);
+          pageIdx++;
           // b) 본문 빈칸
           if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx}/${totalPages})...`;
           await appendPageFromHTML(generateWorkbookHTML(data, unitKey, withAnswers), false, false, pageIdx);
           pageIdx++;
-          // c) 글쓰기 — 자기 말로 한국사 소개 (교사용은 답안 가이드, 학생용은 빈 줄)
+          // c) 글쓰기 — 자기 말로 한국사 소개 (Q1·2 / Q3·4 두 페이지, 교사용은 답안 가이드)
           if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx}/${totalPages})...`;
-          await appendPageFromHTML(generateUnitWritingHTML(data, unitKey, withAnswers), false, false, pageIdx);
+          await appendPageFromHTML(generateUnitWritingHTML(data, unitKey, withAnswers, 1), false, false, pageIdx);
+          pageIdx++;
+          if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx}/${totalPages})...`;
+          await appendPageFromHTML(generateUnitWritingHTML(data, unitKey, withAnswers, 2), false, false, pageIdx);
           pageIdx++;
           // d) 나만의 사료 추가하기 (사진 2개 + 마인드맵)
           if (btn) btn.textContent = `⏳ 생성 중 (${pageIdx}/${totalPages})...`;
