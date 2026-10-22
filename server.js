@@ -1036,6 +1036,17 @@ const halloweenEntrySchema = new mongoose.Schema({
 halloweenEntrySchema.index({ center: 1, createdAt: -1 });
 const HalloweenEntry = mongoose.model("HalloweenEntry", halloweenEntrySchema);
 
+// 💡 브레인 아이디어 LAB 접수 저장
+const ideaLabEntrySchema = new mongoose.Schema({
+  center: { type: String, default: "" },
+  name: { type: String, default: "" },
+  title: { type: String, default: "" },
+  content: { type: String, default: "" },
+  createdAt: { type: Date, default: Date.now },
+});
+ideaLabEntrySchema.index({ center: 1, createdAt: -1 });
+const IdeaLabEntry = mongoose.model("IdeaLabEntry", ideaLabEntrySchema);
+
 // 🎃 할로윈 삼행시 이벤트 — DB 저장 + 본사 이메일 전송 (마감: 2026-10-30 22:30 KST)
 app.post("/api/halloween/submit", async (req, res) => {
   try {
@@ -1168,6 +1179,8 @@ app.post("/api/idea-lab/submit", async (req, res) => {
     if (!center || !name || !title || !content) {
       return res.json({ ok: false, message: "센터명·성함·제목·내용을 모두 입력해 주세요." });
     }
+    // 📋 DB 저장 (모아보기·엑셀용) — 메일 실패와 무관하게 보존
+    await IdeaLabEntry.create({ center, name, title, content });
     const safe = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
     const mailOptions = {
       from: process.env.NAVER_EMAIL,
@@ -1201,12 +1214,70 @@ app.post("/api/idea-lab/submit", async (req, res) => {
         </table>
       `
     };
-    await transporter.sendMail(mailOptions);
-    console.log(`📧 [아이디어LAB] 접수: ${center} · ${name} — ${title}`);
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(`📧 [아이디어LAB] 접수: ${center} · ${name} — ${title}`);
+    } catch (mailErr) {
+      console.error("❌ [아이디어LAB] 메일 전송 실패(DB 저장은 완료):", mailErr.message);
+    }
     res.json({ ok: true });
   } catch (err) {
     console.error("❌ [/api/idea-lab/submit] 오류:", err);
     res.status(500).json({ ok: false, message: "접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." });
+  }
+});
+
+// 💡 아이디어 LAB 접수 조회 (슈퍼관리자) — 센터별/전체
+app.get("/api/super/idea-lab-entries", requireSuperAdmin, async (req, res) => {
+  try {
+    const { center } = req.query;
+    const q = center ? { center } : {};
+    const rows = await IdeaLabEntry.find(q).sort({ createdAt: -1 }).lean();
+    const centers = (await IdeaLabEntry.distinct("center")).filter(Boolean).sort();
+    res.json({ ok: true, rows, centers });
+  } catch (err) {
+    console.error("❌ [/api/super/idea-lab-entries] 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 💡 아이디어 LAB 엑셀 다운로드 (슈퍼관리자)
+app.get("/api/super/idea-lab-entries-excel", requireSuperAdmin, async (req, res) => {
+  try {
+    const { center } = req.query;
+    const q = center ? { center } : {};
+    const rows = await IdeaLabEntry.find(q).sort({ center: 1, createdAt: 1 }).lean();
+
+    const ExcelJS = require("exceljs");
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("아이디어 LAB");
+    ws.columns = [
+      { header: "센터", key: "center", width: 24 },
+      { header: "성함", key: "name", width: 12 },
+      { header: "제목", key: "title", width: 36 },
+      { header: "내용", key: "content", width: 80 },
+      { header: "접수일시", key: "at", width: 20 },
+    ];
+    rows.forEach((r) => ws.addRow({
+      center: r.center || "", name: r.name || "",
+      title: r.title || "", content: r.content || "",
+      at: r.createdAt ? new Date(r.createdAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) : "",
+    }));
+    const head = ws.getRow(1);
+    head.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    head.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1565C0" } };
+    head.alignment = { horizontal: "center", vertical: "middle" };
+    ws.views = [{ state: "frozen", ySplit: 1 }];
+    ws.getColumn("content").alignment = { wrapText: true, vertical: "top" };
+
+    const fname = encodeURIComponent(`아이디어LAB_${center || "전체"}.xlsx`);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${fname}`);
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error("❌ [아이디어 LAB 엑셀] 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
   }
 });
 

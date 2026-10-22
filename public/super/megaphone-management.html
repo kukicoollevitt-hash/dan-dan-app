@@ -887,6 +887,40 @@
       </div>
     </div>
 
+    <div class="section">
+      <div class="section-title">
+        <span>💡 브레인 아이디어 LAB 접수</span>
+        <span class="count-badge" id="ideaEntryCount">총 0건</span>
+      </div>
+      <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 15px;">
+        선생님 대시보드 아이디어 공모 접수 기록 — 센터별 조회·엑셀 다운로드 (메일 발송과 병행 저장)
+      </p>
+      <div class="filter-section" style="margin-bottom: 15px;">
+        <select id="ideaCenterFilter" onchange="loadIdeaEntries()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; min-width: 220px;">
+          <option value="">전체 센터</option>
+        </select>
+        <button class="search-btn" onclick="loadIdeaEntries()">🔄 새로고침</button>
+        <button class="search-btn" style="background: #1565c0;" onclick="downloadIdeaExcel()">📥 엑셀 다운로드</button>
+      </div>
+      <div class="snack-order-container" style="max-height: 500px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <table>
+          <thead style="position: sticky; top: 0; z-index: 10;">
+            <tr>
+              <th style="width: 50px;">번호</th>
+              <th style="width: 170px;">센터</th>
+              <th style="width: 90px;">성함</th>
+              <th style="width: 220px;">제목</th>
+              <th>내용</th>
+              <th style="width: 140px;">접수일시</th>
+            </tr>
+          </thead>
+          <tbody id="ideaEntryTableBody">
+            <tr><td colspan="6" class="loading">데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 
   <!-- 메시지 추가/수정 모달 -->
@@ -2419,6 +2453,45 @@
     }
 
     loadHwEntries();
+
+    // 💡 아이디어 LAB 접수 기록
+    async function loadIdeaEntries() {
+      const tbody = document.getElementById('ideaEntryTableBody');
+      const sel = document.getElementById('ideaCenterFilter');
+      const center = sel.value;
+      tbody.innerHTML = '<tr><td colspan="6" class="loading">데이터를 불러오는 중...</td></tr>';
+      try {
+        const r = await fetch('/api/super/idea-lab-entries?center=' + encodeURIComponent(center));
+        const d = await r.json();
+        if (!d.ok) throw new Error(d.message || '조회 실패');
+        const prev = sel.value;
+        sel.innerHTML = '<option value="">전체 센터</option>' +
+          (d.centers || []).map(c => `<option value="${hwEsc(c)}"${c === prev ? ' selected' : ''}>${hwEsc(c)}</option>`).join('');
+        document.getElementById('ideaEntryCount').textContent = `총 ${d.rows.length}건`;
+        if (!d.rows.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#999; padding:30px;">아직 접수된 아이디어가 없습니다. (전환 이전 접수분은 본사 메일함에 있습니다)</td></tr>';
+          return;
+        }
+        tbody.innerHTML = d.rows.map((e, i) => `
+          <tr>
+            <td style="text-align:center;">${d.rows.length - i}</td>
+            <td>${hwEsc(e.center) || '<span style="color:#bbb;">미확인</span>'}</td>
+            <td style="text-align:center; font-weight:700;">${hwEsc(e.name)}</td>
+            <td style="font-weight:600;">${hwEsc(e.title)}</td>
+            <td style="font-size:13px; white-space:pre-wrap;">${hwEsc(e.content)}</td>
+            <td style="text-align:center; font-size:12px; color:#777;">${e.createdAt ? new Date(e.createdAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+          </tr>`).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#c00; padding:30px;">${hwEsc(err.message)}</td></tr>`;
+      }
+    }
+
+    function downloadIdeaExcel() {
+      const center = document.getElementById('ideaCenterFilter').value;
+      location.href = '/api/super/idea-lab-entries-excel?center=' + encodeURIComponent(center);
+    }
+
+    loadIdeaEntries();
   </script>
 </body>
 </html>
