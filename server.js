@@ -103,6 +103,28 @@ function getWeekStart() {
   return monday.toISOString().split('T')[0]; // YYYY-MM-DD 형식
 }
 
+// 📅 KST(UTC+9) 기준 오늘 날짜 키 'YYYY-MM-DD' — 학부모 알림 하루 1회 판정용
+function getKstDateKey() {
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().split('T')[0];
+}
+
+// 🔒 하루 1회 발송 선점(원자적) — 오늘 처음이면 true, 이미 있으면 false
+//   · DailyLoginSent / DailyReportSent 모두 {grade,name,date} 유니크 인덱스 → upsert로 경합 안전
+async function claimDailyNotify(Model, grade, name, type) {
+  const date = getKstDateKey();
+  try {
+    const r = await Model.updateOne(
+      { grade, name, date },
+      { $setOnInsert: { grade, name, date, type: type || 'login', sentAt: new Date() } },
+      { upsert: true }
+    );
+    return r.upsertedCount === 1 || !!(r.upserted && r.upserted.length);
+  } catch (e) {
+    return false; // 유니크 충돌 = 이미 발송됨
+  }
+}
+
 // 🧪 월간 시작일(1일) 계산 함수 — 종합리포트 월간 뷰 URL용
 function getMonthStartKey() {
   const now = new Date();
@@ -2076,6 +2098,16 @@ const dailyReportSentSchema = new mongoose.Schema({
 });
 dailyReportSentSchema.index({ grade: 1, name: 1, date: 1 }, { unique: true });
 const DailyReportSent = mongoose.model("DailyReportSent", dailyReportSentSchema);
+
+// 📱 학부모 로그인 알림 하루 1회 기록 (로그아웃용 DailyReportSent와 분리 — 서로 막지 않도록)
+const dailyLoginSentSchema = new mongoose.Schema({
+  grade: String,
+  name: String,
+  date: String, // 'YYYY-MM-DD' (KST)
+  sentAt: { type: Date, default: Date.now },
+});
+dailyLoginSentSchema.index({ grade: 1, name: 1, date: 1 }, { unique: true });
+const DailyLoginSent = mongoose.model("DailyLoginSent", dailyLoginSentSchema);
 
 /* ====================================
  * ✅ 브랜치 관리자용 미들웨어
@@ -12463,7 +12495,8 @@ app.get("/logout", async (req, res) => {
     try {
       const { name, grade, school, academyName } = req.session.user;
       const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
-      if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
+      if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false
+          && await claimDailyNotify(DailyReportSent, grade, name, 'logout')) {
         sendParentNotification(name, studentUser.parentPhone, 'logout', { grade })
           .catch(err => console.error('학부모 알림(로그아웃) 실패:', err));
       }
@@ -12506,8 +12539,8 @@ app.post("/api/auto-logout", async (req, res) => {
   console.log(`🔄 [자동 로그아웃] ${grade} ${name} - 사유: ${reason || 'inactivity'}, 학습완료: 있음`);
 
   try {
-    // 오늘 날짜
-    const today = new Date().toISOString().split('T')[0];
+    // 오늘 날짜 (KST 기준 — 로그인/수동 로그아웃과 동일 키)
+    const today = getKstDateKey();
 
     // 오늘 이미 발송했는지 확인
     const alreadySent = await DailyReportSent.findOne({ grade, name, date: today });
@@ -29059,8 +29092,9 @@ app.post("/logout", async (req, res) => {
         deleted: { $ne: true }
       });
 
-      // 학부모 알림 발송 (매번)
-      if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
+      // 학부모 알림 발송 (하루 1회만, KST 기준)
+      if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false
+          && await claimDailyNotify(DailyReportSent, sessionUser.grade, sessionUser.name, 'logout')) {
         sendParentNotification(sessionUser.name, studentUser.parentPhone, 'logout', { grade: sessionUser.grade })
           .catch(err => console.error('학부모 알림 실패:', err));
         console.log(`✅ [POST] /logout 학부모 알림 발송 - ${sessionUser.grade} ${sessionUser.name}`);
@@ -29158,10 +29192,12 @@ await User.updateOne(
   { $set: { lastLogin: new Date(), activeSessionId: req.sessionID } }
 );
 
-// 📱 학부모 알림 발송 (로그인)
+// 📱 학부모 알림 발송 (로그인) — 하루 1회만 (KST 기준)
 if (user.parentPhone && user.parentNotify !== false) {
-  sendParentNotification(user.name, user.parentPhone, 'login', { grade: user.grade })
-    .catch(err => console.error('학부모 알림 실패:', err));
+  claimDailyNotify(DailyLoginSent, user.grade, user.name).then(first => {
+    if (first) sendParentNotification(user.name, user.parentPhone, 'login', { grade: user.grade })
+      .catch(err => console.error('학부모 알림 실패:', err));
+  }).catch(() => {});
 }
 
 // 📱 본사 관리자 알림 발송 (로그인)
@@ -29351,10 +29387,12 @@ app.post("/academy-login", async (req, res) => {
 
     console.log("✅ 학원용 로그인 성공:", user.name, user.grade, user.academyName);
 
-    // 📱 학부모 알림 발송 (학원 로그인)
+    // 📱 학부모 알림 발송 (학원 로그인) — 하루 1회만 (KST 기준)
     if (user.parentPhone && user.parentNotify !== false) {
-      sendParentNotification(user.name, user.parentPhone, 'login', { grade: user.grade })
-        .catch(err => console.error('학부모 알림 실패:', err));
+      claimDailyNotify(DailyLoginSent, user.grade, user.name).then(first => {
+        if (first) sendParentNotification(user.name, user.parentPhone, 'login', { grade: user.grade })
+          .catch(err => console.error('학부모 알림 실패:', err));
+      }).catch(() => {});
     }
 
     // 📱 본사 관리자 알림 발송 (학원 로그인)
@@ -38959,6 +38997,7 @@ cron.schedule('0 21 * * *', async () => {
     const today = new Date().toISOString().split('T')[0];
     const todayStart = new Date(today + 'T00:00:00.000Z');
     const todayEnd = new Date(today + 'T23:59:59.999Z');
+    const dedupKey = getKstDateKey(); // 중복 발송 판정은 KST 기준으로 통일
 
     // 오늘 학습완료가 있는 학생 조회 (LearningLog에서)
     const todayLogs = await LearningLog.find({
@@ -38970,7 +39009,7 @@ cron.schedule('0 21 * * *', async () => {
     console.log(`📧 [저녁 9시] 오늘 학습완료 학생 수: ${studentsWithLearning.length}명`);
 
     // 이미 발송된 학생 조회
-    const sentRecords = await DailyReportSent.find({ date: today });
+    const sentRecords = await DailyReportSent.find({ date: dedupKey });
     const sentStudents = new Set(sentRecords.map(r => `${r.grade}|${r.name}`));
     console.log(`📧 [저녁 9시] 오늘 이미 발송된 학생 수: ${sentStudents.size}명`);
 
@@ -38996,7 +39035,7 @@ cron.schedule('0 21 * * *', async () => {
           });
 
           // 발송 기록 저장
-          await DailyReportSent.create({ grade, name, date: today, type: 'scheduled' });
+          await DailyReportSent.create({ grade, name, date: dedupKey, type: 'scheduled' });
 
           sentCount++;
           console.log(`📧 [저녁 9시] ${grade} ${name} 리포트 발송 완료`);
