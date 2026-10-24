@@ -7816,6 +7816,10 @@
     let selectedAnswer = null;
     let timerInterval = null;
     let timeLeft = 20;
+    // 🛡️ 타이머 안정화용 — 실제 시각(타임스탬프) 기반 + 화면 가려짐 일시정지
+    let timerDeadline = 0;      // 마감 시각(ms)
+    let timerActive = false;    // 현재 문제 타이머 진행 중 여부
+    let timerPausedMs = null;   // 일시정지 시 남은 ms
     let questionResults = []; // 문제별 결과 저장
 
     // 배경 별 생성
@@ -7835,38 +7839,75 @@
 
     // 타이머 시작
     function startTimer() {
+      // 이전 타이머 확실히 제거(중복 방지)
+      clearInterval(timerInterval);
+      timerPausedMs = null;
+      timerActive = true;
       timeLeft = 20;
+      timerDeadline = Date.now() + 20 * 1000; // 실제 시각 기준 마감
       document.getElementById('timer').textContent = timeLeft;
-
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        document.getElementById('timer').textContent = timeLeft;
-
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          showFeedback(false);
-          disableChoices();
-          wrongAnswers++;
-
-          // 시간 초과 시 문제별 결과 저장
-          const quiz = selectedQuizData[currentQuestionIndex];
-          questionResults.push({
-            word: quiz.word,
-            question: quiz.question.replace(/<[^>]*>/g, ''),
-            userAnswer: '시간 초과',
-            correctAnswer: quiz.choices[quiz.correct],
-            isCorrect: false,
-            explanation: quiz.explanation,
-            example: quiz.example
-          });
-
-          showExplanation();
-          setTimeout(() => {
-            nextQuestion();
-          }, 3000);
-        }
-      }, 1000);
+      // 250ms마다 갱신하되, 남은 시간은 "틱 수"가 아니라 실제 경과로 계산
+      // → 백그라운드에서 타이머가 몰아쳐 실행돼도 20초만 소진(폭주 방지)
+      timerInterval = setInterval(tickTimer, 250);
     }
+
+    function tickTimer() {
+      if (!timerActive || timerPausedMs !== null) return; // 일시정지 중엔 무시
+      const remainMs = timerDeadline - Date.now();
+      const sec = Math.max(0, Math.ceil(remainMs / 1000));
+      if (sec !== timeLeft) {
+        timeLeft = sec;
+        document.getElementById('timer').textContent = sec;
+      }
+      if (remainMs <= 0) { stopTimer(); handleTimeUp(); }
+    }
+
+    function stopTimer() {
+      timerActive = false;
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    function handleTimeUp() {
+      if (selectedAnswer !== null) return; // 이미 답한 경우 보호
+      showFeedback(false);
+      disableChoices();
+      wrongAnswers++;
+      // 시간 초과 시 문제별 결과 저장
+      const quiz = selectedQuizData[currentQuestionIndex];
+      questionResults.push({
+        word: quiz.word,
+        question: quiz.question.replace(/<[^>]*>/g, ''),
+        userAnswer: '시간 초과',
+        correctAnswer: quiz.choices[quiz.correct],
+        isCorrect: false,
+        explanation: quiz.explanation,
+        example: quiz.example
+      });
+      showExplanation();
+      setTimeout(() => {
+        nextQuestion();
+      }, 3000);
+    }
+
+    // 🛡️ 화면 가려짐(화면잠금·앱전환·알림) 시 타이머 일시정지 → 복귀 시 재개
+    //   · 틱 몰아치기/강제 넘김 방지: 가려진 동안 시간이 흐르지 않음
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        if (timerActive && timerPausedMs === null) {
+          timerPausedMs = Math.max(0, timerDeadline - Date.now());
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+      } else {
+        if (timerActive && timerPausedMs !== null) {
+          timerDeadline = Date.now() + timerPausedMs;
+          timerPausedMs = null;
+          clearInterval(timerInterval);
+          timerInterval = setInterval(tickTimer, 250);
+        }
+      }
+    });
 
     // 문제 로드
     function loadQuestion() {
@@ -7923,7 +7964,7 @@
     function selectChoice(index) {
       if (selectedAnswer !== null) return;
 
-      clearInterval(timerInterval);
+      stopTimer();
       selectedAnswer = index;
 
       const buttons = document.querySelectorAll('.choice-btn');
@@ -8079,7 +8120,7 @@
 
     // 결과 표시
     function showResult() {
-      clearInterval(timerInterval);
+      stopTimer();
       document.body.classList.remove('quiz-active');
       document.getElementById('quizCard').style.display = 'none';
       document.getElementById('nextBtn').style.display = 'none';
@@ -8802,7 +8843,7 @@
       selectedAnswer = null;
       questionResults = [];
       historySaved = false;
-      clearInterval(timerInterval); // 타이머도 초기화
+      stopTimer(); // 타이머도 초기화
 
       // 문제 수 설정 및 문제 선택
       totalQuestions = count;
