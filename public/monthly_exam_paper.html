@@ -303,16 +303,24 @@
   }
   .omr-guide .ex { display: inline-flex; align-items: center; gap: 1.2mm; }
   .omr-guide .bub { width: 4.6mm; height: 4.6mm; font-size: 6.5pt; }
-  .omr-cols { display: flex; gap: 4mm; align-items: flex-start; justify-content: center; }
-  .omr-block { flex: 1; border: 1.5px solid var(--ink); }
-  .omr-block table { width: 100%; border-collapse: collapse; }
-  .omr-block th, .omr-block td { border: 0.35mm solid #9aa3b5; text-align: center; vertical-align: middle; }
-  .omr-block th {
-    background: #e8edf6; color: #1a3d7c; font-size: 8.5pt; font-weight: 800;
-    padding: 1.8mm 0; border-bottom: 0.5mm solid var(--ink);
+  .omr-cols { display: flex; gap: 5mm; align-items: flex-start; }
+  .omr-col { flex: 1; display: flex; flex-direction: column; gap: 4mm; min-width: 0; }
+  .omr-block { border: 1.5px solid var(--ink); }
+  .omr-block-head {
+    display: flex; align-items: center; gap: 2.5mm;
+    background: #e8edf6; border-bottom: 0.5mm solid var(--ink);
+    padding: 1.8mm 2.5mm;
   }
-  .omr-block td { padding: 1.6mm 0.8mm; }
-  .omr-block .no { width: 9mm; font-weight: 800; font-size: 9.5pt; background: #f5f7fb; }
+  .omr-block-head .pb {
+    background: #1a3d7c; color: #fff; font-size: 7.5pt; font-weight: 800;
+    padding: 0.8mm 2.2mm; border-radius: 1.2mm; letter-spacing: 0.3px;
+  }
+  .omr-block-head .ps { font-size: 9pt; font-weight: 800; color: #1a3d7c; }
+  .omr-block table { width: 100%; border-collapse: collapse; }
+  .omr-block td { border: 0.35mm solid #9aa3b5; text-align: center; vertical-align: middle; padding: 1.6mm 0.8mm; }
+  .omr-block tr td:first-child { border-left: none; }
+  .omr-block tr td:last-child { border-right: none; }
+  .omr-block .no { width: 9mm; font-weight: 800; font-size: 9.5pt; background: #f5f7fb; color: #bf5a1c; }
   .bub {
     display: inline-flex; align-items: center; justify-content: center;
     width: 5.4mm; height: 5.4mm; border: 0.45mm solid #222; border-radius: 50%;
@@ -539,26 +547,27 @@
       });
     });
 
-    /* 🖍 학생용 마지막 장: OMR 답안지 — 문제를 다 푼 뒤 수기 마킹용 (문항·보기 수는 데이터 기준 자동) */
+    /* 🖍 학생용 마지막 장: OMR 답안지 — 문제를 다 푼 뒤 수기 마킹용 (문항·보기 수는 데이터 기준 자동)
+          프로그램의 '답안 현황' 입력 패널과 동일하게 지문 단위 블록 + 좌우 2열 교차 배치 (입력 시 혼동 방지) */
     if (!showAnswers) {
       const all = d.passages.flatMap(p => p.questions || []);
-      const COL_SIZE = 10; // 한 블록에 10문항 (실제 OMR 관행)
-      const blocks = [];
-      for (let s = 0; s < all.length; s += COL_SIZE) blocks.push(all.slice(s, s + COL_SIZE));
       const maxOpts = Math.max(...all.map(q => (q.options || []).length), 5);
-      const blockHtml = (chunk) => `
+      const blockHtml = (p, pi) => `
         <div class="omr-block">
+          <div class="omr-block-head"><span class="pb">지문 ${pi + 1}</span><span class="ps">${p.subject}</span></div>
           <table>
-            <tr><th>문번</th><th colspan="${maxOpts}">답란</th></tr>
-            ${chunk.map(q => `
+            ${(p.questions || []).map(q => `
               <tr>
                 <td class="no">${q.no}</td>
                 ${Array.from({ length: maxOpts }, (_, i) =>
-                  `<td>${i < (q.options || []).length ? `<span class="bub">${i + 1}</span>` : ''}</td>`
+                  `<td>${i < (q.options || []).length ? `<span class="bub">${CIRCLED[i]}</span>` : ''}</td>`
                 ).join('')}
               </tr>`).join('')}
           </table>
         </div>`;
+      // 프로그램 패널과 같은 순서: 지문1 왼쪽, 지문2 오른쪽, 지문3 왼쪽… (좌우 교차)
+      const colL = [], colR = [];
+      d.passages.forEach((p, pi) => (pi % 2 === 0 ? colL : colR).push(blockHtml(p, pi)));
       const omrPage = document.createElement('div');
       omrPage.className = 'page';
       omrPage.innerHTML = `
@@ -585,7 +594,8 @@
             <span class="ex">잘못된 표기 <span class="bub" style="background:linear-gradient(135deg,transparent 45%,#222 45%,#222 55%,transparent 55%);">&nbsp;</span> <span class="bub" style="border-style:dashed;color:#999;">√</span></span>
           </div>
           <div class="omr-cols">
-            ${blocks.map(blockHtml).join('')}
+            <div class="omr-col">${colL.join('')}</div>
+            <div class="omr-col">${colR.join('')}</div>
           </div>
           <div class="omr-foot">답안지 마킹 후, 반드시 <b>문해프로그램에 답안을 입력</b>해 주세요. · 브레인 월말 문해 모의고사 ${round}회차</div>
         </div>`;
