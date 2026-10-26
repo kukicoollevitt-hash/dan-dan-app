@@ -1085,6 +1085,13 @@
     <div class="omr-drawer-head">
       <div class="omr-drawer-title">답안 현황</div>
       <div class="omr-drawer-summary" id="omrDrawerSummary"></div>
+      <!-- ⏱ 시험지(OMR) 응시 후 답안만 입력하는 경우 실제 소요시간 수동 기입 — 제출 시 기록 시간 대체 -->
+      <label class="omr-manual-time" for="omrManualMin" title="시험지로 풀고 답안만 입력한다면, 실제로 걸린 시간을 적어 주세요. 비워 두면 평소처럼 자동 측정됩니다."
+        style="display:inline-flex;align-items:center;gap:5px;margin-left:10px;padding:5px 10px;border:1.5px solid #e07b39;border-radius:10px;background:#fff7f0;font-size:12.5px;font-weight:800;color:#bf5a1c;white-space:nowrap;cursor:text;">
+        ⏱ 실제 소요시간
+        <input type="number" id="omrManualMin" min="1" max="999" placeholder="--"
+          style="width:44px;padding:3px 4px;border:1px solid #e9b48b;border-radius:6px;font-size:13px;font-weight:800;color:#bf5a1c;text-align:center;background:#fff;outline:none;">분
+      </label>
       <button class="omr-drawer-close" id="omrDrawerClose" aria-label="닫기">✕</button>
     </div>
     <div id="omrDrawerBody"></div>
@@ -1736,9 +1743,15 @@
       });
 
       // 결과 팝업
-      const dur = _restoredPrev
+      let dur = _restoredPrev
         ? Math.min(_restoredPrev.durationSec || 0, EXAM.totalMinutes * 60)
         : Math.floor((Date.now() - startedAt) / 1000);
+      // ⏱ 시험지(OMR) 응시 후 답안만 입력한 경우 — 수동 기입한 실제 소요시간(분)으로 기록 대체
+      //    (제한시간 초과 불가 보정과 동일하게 totalMinutes 상한, 재열람(_restoredPrev) 시에는 무시)
+      {
+        const _m = parseInt((document.getElementById('omrManualMin') || {}).value, 10);
+        if (!_restoredPrev && _m > 0) dur = Math.min(_m, EXAM.totalMinutes) * 60;
+      }
       const dMin = Math.floor(dur / 60), dSec = dur % 60;
       document.getElementById('rScore').innerHTML = `${formatScore(totalScore)}<small>/100</small>`;
       document.getElementById('rSub').textContent = `초등 월말 2회차 · ${new Date().toLocaleString('ko-KR')}`;
