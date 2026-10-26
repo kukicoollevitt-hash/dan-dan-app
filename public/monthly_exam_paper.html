@@ -268,6 +268,52 @@
     }
     .page:last-child { break-after: auto; }
   }
+  /* 🖍 OMR 답안지 (학생용 마지막 장) */
+  .omr {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    display: flex; flex-direction: column; height: 100%;
+  }
+  .omr-head {
+    display: flex; align-items: center; justify-content: space-between;
+    border: 1.5px solid var(--ink); border-bottom-width: 3px;
+    padding: 4mm 5mm; margin-bottom: 5mm; background: #f5f7fb;
+  }
+  .omr-title { font-size: 15pt; font-weight: 900; color: #1a3d7c; letter-spacing: 1px; }
+  .omr-sub { font-size: 9pt; font-weight: 700; color: #555; margin-top: 1mm; }
+  .omr-fields { display: flex; gap: 4mm; font-size: 9.5pt; font-weight: 700; }
+  .omr-fields .f {
+    display: flex; align-items: flex-end; gap: 2mm;
+    border: 1.2px solid var(--ink); background: #fff; padding: 2.5mm 3mm;
+  }
+  .omr-fields .f .slot { display: inline-block; min-width: 22mm; border-bottom: 1.2px solid #777; height: 5.5mm; }
+  .omr-guide {
+    display: flex; align-items: center; gap: 4mm; flex-wrap: wrap;
+    border: 1px dashed #8a93a6; background: #fbfcfe;
+    padding: 2.5mm 3.5mm; margin-bottom: 5mm;
+    font-size: 8.5pt; color: #333; font-weight: 600;
+  }
+  .omr-guide .ex { display: inline-flex; align-items: center; gap: 1.2mm; }
+  .omr-guide .bub { width: 4.6mm; height: 4.6mm; font-size: 6.5pt; }
+  .omr-cols { display: flex; gap: 4mm; align-items: flex-start; justify-content: center; }
+  .omr-block { flex: 1; border: 1.5px solid var(--ink); }
+  .omr-block table { width: 100%; border-collapse: collapse; }
+  .omr-block th, .omr-block td { border: 0.35mm solid #9aa3b5; text-align: center; vertical-align: middle; }
+  .omr-block th {
+    background: #e8edf6; color: #1a3d7c; font-size: 8.5pt; font-weight: 800;
+    padding: 1.8mm 0; border-bottom: 0.5mm solid var(--ink);
+  }
+  .omr-block td { padding: 1.6mm 0.8mm; }
+  .omr-block .no { width: 9mm; font-weight: 800; font-size: 9.5pt; background: #f5f7fb; }
+  .bub {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 5.4mm; height: 5.4mm; border: 0.45mm solid #222; border-radius: 50%;
+    font-size: 7.5pt; font-weight: 700; color: #444; line-height: 1;
+  }
+  .bub.filled { background: #111; border-color: #111; color: #111; }
+  .omr-foot {
+    margin-top: auto; padding-top: 4mm; text-align: center;
+    font-size: 8.5pt; color: #555; font-weight: 600;
+  }
 </style>
 </head>
 <body>
@@ -483,6 +529,53 @@
         place(qEl);
       });
     });
+
+    /* 🖍 학생용 마지막 장: OMR 답안지 — 문제를 다 푼 뒤 수기 마킹용 (문항·보기 수는 데이터 기준 자동) */
+    if (!showAnswers) {
+      const all = d.passages.flatMap(p => p.questions || []);
+      const COL_SIZE = 10; // 한 블록에 10문항 (실제 OMR 관행)
+      const blocks = [];
+      for (let s = 0; s < all.length; s += COL_SIZE) blocks.push(all.slice(s, s + COL_SIZE));
+      const maxOpts = Math.max(...all.map(q => (q.options || []).length), 5);
+      const blockHtml = (chunk) => `
+        <div class="omr-block">
+          <table>
+            <tr><th>문번</th><th colspan="${maxOpts}">답란</th></tr>
+            ${chunk.map(q => `
+              <tr>
+                <td class="no">${q.no}</td>
+                ${Array.from({ length: maxOpts }, (_, i) =>
+                  `<td>${i < (q.options || []).length ? `<span class="bub">${i + 1}</span>` : ''}</td>`
+                ).join('')}
+              </tr>`).join('')}
+          </table>
+        </div>`;
+      const omrPage = document.createElement('div');
+      omrPage.className = 'page';
+      omrPage.innerHTML = `
+        <div class="omr">
+          <div class="omr-head">
+            <div>
+              <div class="omr-title">OMR 답안지</div>
+              <div class="omr-sub">브레인 ${levelKo} 문해 모의고사 · 제${round}회 · ${d.totalQuestions}문항</div>
+            </div>
+            <div class="omr-fields">
+              <span class="f">학년 <span class="slot"></span></span>
+              <span class="f">이름 <span class="slot"></span></span>
+            </div>
+          </div>
+          <div class="omr-guide">
+            <span>■ 마킹 방법 : 답란의 번호를 컴퓨터용 사인펜으로 까맣게 칠하세요.</span>
+            <span class="ex">바른 표기 <span class="bub filled">●</span></span>
+            <span class="ex">잘못된 표기 <span class="bub" style="background:linear-gradient(135deg,transparent 45%,#222 45%,#222 55%,transparent 55%);">&nbsp;</span> <span class="bub" style="border-style:dashed;color:#999;">√</span></span>
+          </div>
+          <div class="omr-cols">
+            ${blocks.map(blockHtml).join('')}
+          </div>
+          <div class="omr-foot">답안지 마킹 후, 반드시 <b>문해프로그램에 답안을 입력</b>해 주세요. · 브레인 월말 문해 모의고사 ${round}회차</div>
+        </div>`;
+      sheet.appendChild(omrPage);
+    }
 
     if (showAnswers) {
       const all = d.passages.flatMap(p => p.questions || []);
