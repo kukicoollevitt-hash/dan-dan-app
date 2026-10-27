@@ -2274,6 +2274,276 @@
     // 과목 및 시리즈 설정
     // =============================================
     // 🧩 연계특강 하위 메뉴 전환 (한국사 / 국어문법)
+    // ═══════════════════════════════════════════════
+    // 📚 스피드 독서왕 워크북 — 연계특강 > 독서왕
+    //    권당 12쪽: 표지 + 화별(이야기 상단 + 줄거리 질문 하단) 10쪽 + 생각 키우기 1쪽 · 학생용/교사용
+    //    본문: speed-reading-book.html의 BOOK_DATA를 fetch로 재사용 (본문 단일 원본 유지)
+    //    질문: /speed-reading-workbook-data.js — 데이터가 있는 책만 버튼 활성(없으면 '준비 중')
+    // ═══════════════════════════════════════════════
+    const SR_BOOKS = [
+      { id: 'sonagi',    title: '소나기',          author: '황순원',   icon: '🌧️' },
+      { id: 'goodday',   title: '운수 좋은 날',    author: '현진건',   icon: '☔' },
+      { id: 'dongbaek',  title: '동백꽃',          author: '김유정',   icon: '🌸' },
+      { id: 'chunhyang', title: '춘향전',          author: '작자 미상', icon: '🌸' },
+      { id: 'love',      title: '사랑손님과 어머니', author: '주요섭',   icon: '💕' },
+      { id: 'sampo',     title: '삼포 가는 길',    author: '황석영',   icon: '🌨️' },
+      { id: 'samdae',    title: '삼대',            author: '염상섭',   icon: '🏛️' },
+      { id: 'cap',       title: '꺼삐딴 리',       author: '전광용',   icon: '🎖️' },
+      { id: 'sim',       title: '심청전',          author: '작자 미상', icon: '🌊' },
+      { id: 'toki',      title: '별주부전',        author: '작자 미상', icon: '🐢' },
+      { id: 'hu',        title: '허생전',          author: '박지원',   icon: '📚' },
+      { id: 'rich',      title: '흥부전',          author: '작자 미상', icon: '🎃' },
+      { id: 'yang',      title: '양반전',          author: '박지원',   icon: '📜' }
+    ];
+    // 화별 배경 삽화 경로 — speed-reading-book.html의 PART_IMAGES와 동일 규칙
+    const SR_IMG = {
+      sonagi: (n) => '/rain/rain_' + String(n).padStart(2, '0') + '.jpg',
+      goodday: (n) => '/good/good1_' + String(n).padStart(2, '0') + '.jpg',
+      dongbaek: (n) => '/flower/flower' + String(n).padStart(2, '0') + '.jpg',
+      chunhyang: (n) => '/girl/girl' + String(n).padStart(2, '0') + '.jpg',
+      samdae: (n) => '/three/three' + String(n).padStart(2, '0') + '.jpg',
+      love: (n) => '/images/love/love' + String(n).padStart(2, '0') + '.jpg',
+      sampo: (n) => '/images/sampo/sampo' + String(n).padStart(2, '0') + '.jpg',
+      cap: (n) => '/images/cap/cap' + String(n).padStart(2, '0') + '.jpg',
+      sim: (n) => '/images/sim/sim' + String(n).padStart(2, '0') + '.jpg',
+      toki: (n) => '/images/toki/toki' + String(n).padStart(2, '0') + '.jpg',
+      hu: (n) => '/images/hu/hu' + String(n).padStart(2, '0') + '.jpg',
+      rich: (n) => '/images/rich/rich' + String(n).padStart(2, '0') + '.jpg',
+      yang: (n) => '/images/yang/yang' + String(n).padStart(2, '0') + '.jpg'
+    };
+    // A4 전면에 아주 연하게 깔리는 배경 — CSS background는 html2canvas에서 유실되어 <img> 레이어로 구현
+    //    (페이지 div에 z-index:0을 줘 스택 컨텍스트를 만들고, img는 z-index:-1로 글 아래·흰 배경 위에 깔림)
+    const srBg = (bookId, n) => {
+      const fn = SR_IMG[bookId];
+      if (!fn) return '';
+      return '<img src="' + fn(n) + '" alt="" style="position:absolute;left:0;top:0;width:100%;height:100%;z-index:-1;opacity:0.10;">';
+    };
+    let SR_WB_CACHE = null;    // 질문 데이터 (SR_WORKBOOK_DATA)
+    let SR_TEXT_CACHE = null;  // 본문 데이터 (BOOK_DATA)
+
+    async function srLoadWorkbookData() {
+      if (SR_WB_CACHE) return SR_WB_CACHE;
+      await new Promise((resolve) => {
+        const s = document.createElement('script');
+        const SR_WB_V = '20261027h'; // 질문 데이터 파일 갱신 시 이 값을 올릴 것
+        s.src = '/speed-reading-workbook-data.js?v=' + SR_WB_V;
+        s.onload = resolve; s.onerror = resolve;
+        document.head.appendChild(s);
+      });
+      SR_WB_CACHE = window.SR_WORKBOOK_DATA || {};
+      return SR_WB_CACHE;
+    }
+    async function srLoadBookTexts() {
+      if (SR_TEXT_CACHE) return SR_TEXT_CACHE;
+      const res = await fetch('/speed-reading-book.html');
+      const html = await res.text();
+      const m = html.match(/const BOOK_DATA = \{[\s\S]*?\n    \};/);
+      if (!m) throw new Error('BOOK_DATA 파싱 실패');
+      SR_TEXT_CACHE = (new Function('return (' + m[0].replace('const BOOK_DATA = ', '').replace(/;\s*$/, '') + ')'))();
+      return SR_TEXT_CACHE;
+    }
+    // 본문 content(HTML)를 화 단위로 분해 — [{ no, title, paras[] } × 10]
+    function srSplitEpisodes(content) {
+      return content.split(/<p class="section-title">/).slice(1).map((seg, i) => {
+        const title = (seg.match(/^([^<]*)/) || ['', ''])[1].replace(/^Part\s*\d+\.\s*/, '').trim();
+        const paras = [...seg.matchAll(/<p>([\s\S]*?)<\/p>/g)].map(x => x[1].replace(/<[^>]+>/g, '').trim()).filter(Boolean);
+        return { no: i + 1, title, paras };
+      });
+    }
+
+    async function renderSrWorkbookArea(area) {
+      area.innerHTML = '<div style="padding:30px;text-align:center;color:#8a5a3a;font-weight:700;">도서 목록 불러오는 중…</div>';
+      const wb = await srLoadWorkbookData();
+      area.innerHTML = `
+        <div style="margin-bottom:14px;padding:12px 16px;background:#fff7f0;border:1.5px dashed #e07b39;border-radius:12px;font-size:13px;color:#8a4a1c;font-weight:600;line-height:1.6;">
+          📚 <b>스피드 독서왕 워크북</b> — 권당 12쪽: 표지 + 화별(이야기·줄거리 질문) 10쪽 + 생각 키우기 1쪽.<br>
+          📕 교사용에는 줄거리 질문 모범답안과 생각 키우기 지도 팁이 담겨요. (생성에 1분 안팎 걸립니다)
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;">
+          ${SR_BOOKS.map(b => {
+            const ready = !!wb[b.id];
+            return `
+            <div style="border:2px solid ${ready ? '#e07b39' : '#e5e0da'};border-radius:14px;padding:14px 16px;background:${ready ? '#fffdf9' : '#fafaf8'};">
+              <div style="font-size:15px;font-weight:900;color:${ready ? '#6b3a10' : '#aaa'};">${b.icon} ${b.title}</div>
+              <div style="font-size:12px;color:${ready ? '#8a5a3a' : '#bbb'};margin:2px 0 10px;">${b.author} · 10화</div>
+              ${ready ? `
+                <div style="display:flex;gap:8px;">
+                  <button type="button" onclick="downloadSrWorkbook('${b.id}','student',this)"
+                    style="flex:1;padding:8px 0;border-radius:9px;border:1.5px solid #2f6fae;background:#e8f1fa;color:#1a3a5c;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit;">📄 활동지</button>
+                  <button type="button" onclick="downloadSrWorkbook('${b.id}','teacher',this)"
+                    style="flex:1;padding:8px 0;border-radius:9px;border:1.5px solid #c0392b;background:#fdeef1;color:#c0392b;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit;">📕 교사용</button>
+                </div>` : `
+                <div style="text-align:center;padding:8px 0;border-radius:9px;background:#efece8;color:#b0a89e;font-weight:800;font-size:12.5px;">준비 중</div>`}
+            </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    async function downloadSrWorkbook(bookId, audience, btn) {
+      const originalBtn = btn ? btn.innerHTML : '';
+      if (btn) { btn.disabled = true; btn.innerHTML = '⏳ 준비 중'; }
+      try {
+        const [wb, texts] = await Promise.all([srLoadWorkbookData(), srLoadBookTexts()]);
+        const meta = SR_BOOKS.find(b => b.id === bookId);
+        const data = wb[bookId], book = texts[bookId];
+        if (!data || !book || !meta) { alert('워크북 데이터가 없습니다.'); return; }
+        const eps = srSplitEpisodes(book.content);
+        const isT = audience === 'teacher';
+        const audTag = isT ? ' · 교사용' : ''; // 지면·파일명 표기 — 학생용은 표기하지 않음
+        const T = { main: '#e07b39', dark: '#8a4a1c', soft: '#fff3e8', line: '#f0cdae' }; // 독서왕 주황 테마
+        if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
+        const pages = [];
+
+        // ── 표지 (제목 + 학년/이름 + 핵심 어휘 박스) ──
+        // 표지 어휘 = 화별 필수 어휘 50개 전체 모음 (epVocab 집계 — 없으면 vocab 폴백)
+        const coverVocab = (data.epVocab && data.epVocab.length) ? data.epVocab.flat() : (data.vocab || []);
+        const vocabRows = coverVocab.map(v =>
+          '<div style="display:flex;align-items:baseline;gap:6px;padding:3.5px 0;border-bottom:1px dashed ' + T.line + ';">'
+          + '<span style="flex-shrink:0;min-width:62px;font-size:12.5px;font-weight:900;color:' + T.dark + ';">' + v.w + '</span>'
+          + '<span style="font-size:11.5px;font-weight:600;color:#555;line-height:1.4;">' + v.m + '</span>'
+          + '</div>').join('');
+        pages.push('<div style="' + WB_PAGE_STYLE + 'z-index:0;">'
+          + srBg(bookId, 1)
+          + '<div style="height:100%;position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;border:3px solid ' + T.main + ';border-radius:18px;padding:30px 30px 20px;background:linear-gradient(180deg,rgba(255,253,249,0.75) 0%,rgba(255,243,232,0.75) 100%);">'
+          + '<div style="position:absolute;top:-18px;left:0;right:0;display:flex;justify-content:center;">'
+          + '<span style="padding:7px 26px;border-radius:999px;background:' + T.main + ';color:#fff;font-size:15px;font-weight:900;letter-spacing:2px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">독서활동지</span>'
+          + '</div>'
+          + '<div style="font-size:13px;font-weight:800;color:' + T.main + ';letter-spacing:3px;">📚 월간 독서왕 선발전</div>'
+          + '<div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px;">'
+          + '<span style="font-size:38px;line-height:1;">' + meta.icon + '</span>'
+          + '<span style="font-size:32px;font-weight:900;color:#2b2016;letter-spacing:2px;">' + meta.title + '</span>'
+          + '</div>'
+          + '<div style="font-size:14px;font-weight:700;color:' + T.dark + ';margin-top:7px;">' + meta.author + ' · 전 10화</div>'
+          + (isT ? '<div style="margin-top:9px;"><span style="padding:4px 14px;border-radius:999px;border:2px solid #c0392b;color:#c0392b;font-size:12px;font-weight:900;">교사용 · 모범답안 포함</span></div>' : '')
+          + '<div style="display:flex;gap:14px;margin-top:13px;">'
+          + '<div style="display:flex;align-items:flex-end;gap:10px;border:2px solid #2b2016;border-radius:10px;padding:9px 16px;min-width:160px;"><span style="font-size:13px;font-weight:800;">학년</span><span style="flex:1;border-bottom:2px solid #999;height:18px;"></span></div>'
+          + '<div style="display:flex;align-items:flex-end;gap:10px;border:2px solid #2b2016;border-radius:10px;padding:9px 16px;min-width:160px;"><span style="font-size:13px;font-weight:800;">이름</span><span style="flex:1;border-bottom:2px solid #999;height:18px;"></span></div>'
+          + '</div>'
+          + '<div style="align-self:stretch;margin-top:16px;position:relative;border:2px solid ' + T.main + ';border-radius:14px;background:#fff;padding:15px 18px 9px;text-align:left;">'
+          + '<div style="position:absolute;top:-13px;left:16px;background:' + T.main + ';color:#fff;font-size:12.5px;font-weight:900;padding:4px 14px;border-radius:999px;">📖 핵심 어휘 ' + coverVocab.length + '</div>'
+          + '<div style="margin:2px 0 7px;padding:6px 10px;background:' + T.soft + ';border-radius:8px;font-size:11.5px;font-weight:800;color:' + T.dark + ';">⭕ 외운 단어에 동그라미 치고, ⭐ 헷갈리는 단어에는 별표를 쳐 놓으세요.</div>'
+          + '<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:18px;">' + vocabRows + '</div>'
+          + '<div style="margin-top:6px;font-size:10px;color:#b08a68;font-weight:600;">이야기를 읽기 전에 어휘의 뜻을 먼저 익혀 두세요. 각 화에서도 5개씩 다시 만나요!</div>'
+          + '</div>'
+          + '<div style="margin-top:auto;padding-top:8px;font-size:10.5px;color:#b08a68;letter-spacing:1px;">브레인 문해력 · 도서를 읽고 한 화씩 생각을 정리해 보세요</div>'
+          + '</div></div>');
+
+        // ── 화별 페이지 (상단 이야기 + 하단 줄거리 질문 2개) ──
+        //    본문 기본 18px — 실측으로 넘치는 화만 17→16→15px로 자동 축소 (독서용 큰 글씨 + 잘림 방지 동시 보장)
+        const SR_CONTENT_H = 985; // 페이지 내부 가용 높이(px): 1123 - 상하 패딩 120, 안전 마진 포함
+        // 한글 음절의 초성 추출 — 어휘 완성 활동의 힌트용 (한글 외 글자는 그대로)
+        const SR_CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+        const srCho = (ch) => {
+          const c = ch.charCodeAt(0) - 0xAC00;
+          return (c >= 0 && c < 11172) ? SR_CHO[Math.floor(c / 588)] : ch;
+        };
+        const srMeasure = (inner) => {
+          const meas = document.createElement('div');
+          meas.style.cssText = 'position:fixed;left:-10000px;top:0;width:638px;overflow:hidden;background:#fff;font-family:"Noto Sans KR","Malgun Gothic",sans-serif;';
+          meas.innerHTML = inner;
+          document.body.appendChild(meas);
+          const h = meas.scrollHeight;
+          document.body.removeChild(meas);
+          return h;
+        };
+        eps.forEach((ep, i) => {
+          const qas = Array.isArray(data.episodes[i]) ? data.episodes[i] : [data.episodes[i] || { q: '', a: '' }];
+          const epv = (data.epVocab && data.epVocab[i]) || []; // 이 화의 필수 어휘 5개
+          const qBlock = (qa, qi) => {
+            const lines = isT
+              ? '<div style="margin-top:6px;font-size:13px;font-weight:700;color:#c0392b;line-height:1.7;">' + (qa.a || '') + '</div>'
+                + '<div style="height:9mm;border-bottom:2px solid ' + T.line + ';"></div>'
+                + '<div style="height:9mm;border-bottom:2px solid ' + T.line + ';"></div>'
+              : Array.from({ length: 3 }, () => '<div style="height:11mm;border-bottom:2px solid ' + T.line + ';"></div>').join('');
+            return '<div style="' + (qi ? 'margin-top:14px;padding-top:12px;border-top:1.5px dashed ' + T.line + ';' : '') + '">'
+              + '<div style="font-size:14px;font-weight:800;color:#2b2016;line-height:1.6;"><span style="color:' + T.main + ';font-weight:900;">Q' + (qi + 1) + '.</span> ' + qa.q + '</div>'
+              + lines
+              + '</div>';
+          };
+          const innerOf = (fontPx) =>
+            '<div style="display:flex;align-items:center;gap:10px;margin:0 0 16px;">'
+            + '<span style="background:' + T.main + ';color:#fff;font-size:15px;font-weight:900;padding:6px 16px;border-radius:999px;letter-spacing:1px;flex-shrink:0;">' + ep.no + '화</span>'
+            + '<span style="font-size:19px;font-weight:900;color:#2b2016;">' + ep.title + '</span>'
+            + '<span style="margin-left:auto;font-size:10.5px;font-weight:700;color:' + T.main + ';">📚 ' + meta.title + ' · 독서활동지' + audTag + '</span>'
+            + '</div>'
+            + '<div style="border:2px solid ' + T.line + ';border-radius:14px;background:#fffdf9;padding:16px 20px;font-size:' + fontPx + 'px;line-height:1.75;color:#333;text-align:justify;">'
+            + ep.paras.map(p => '<p style="margin:0 0 8px;text-indent:1em;">' + p + '</p>').join('')
+            + '</div>'
+            + '<div style="margin-top:26px;position:relative;border:2px solid ' + T.main + ';border-radius:14px;background:' + T.soft + ';padding:18px 22px 8px;">'
+            + '<div style="position:absolute;top:-13px;left:16px;background:' + T.main + ';color:#fff;font-size:12.5px;font-weight:900;padding:4px 14px;border-radius:999px;">📖 줄거리 파악하기' + (isT ? ' <span style="font-weight:700;">(모범답안)</span>' : '') + '</div>'
+            + qas.map(qBlock).join('')
+            + '</div>'
+            + (epv.length ? '<div style="margin-top:24px;position:relative;border:2px solid ' + T.line + ';border-radius:14px;background:#fff;padding:18px 20px 10px;">'
+              + '<div style="position:absolute;top:-13px;left:16px;background:' + T.dark + ';color:#fff;font-size:12.5px;font-weight:900;padding:4px 14px;border-radius:999px;">✏️ 이 화의 필수 어휘' + (isT ? ' <span style="font-weight:700;">(정답)</span>' : ' — 초성을 보고 완성해 보세요') + '</div>'
+              + '<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:24px;row-gap:4px;">'
+              + epv.map(v => {
+                  const boxes = [...v.w].map(ch => {
+                    if (ch === ' ') return '<span style="width:12px;"></span>';
+                    return '<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:2px solid ' + (isT ? '#c0392b' : T.line) + ';border-radius:7px;background:' + (isT ? '#fdeef1' : '#fffdf9') + ';font-size:19px;font-weight:900;color:' + (isT ? '#c0392b' : '#cbb9a4') + ';">'
+                      + (isT ? ch : srCho(ch)) + '</span>';
+                  }).join('<span style="width:4px;"></span>');
+                  return '<div style="display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px dashed ' + T.line + ';">'
+                    + '<div style="display:flex;align-items:center;flex-shrink:0;">' + boxes + '</div>'
+                    + '<div style="flex:1;min-width:0;font-size:12px;font-weight:700;color:#555;line-height:1.4;">' + v.m + '</div>'
+                    + '</div>';
+                }).join('')
+              + '</div>'
+              + '</div>' : '');
+          let inner = innerOf(18);
+          for (const f of [18, 17, 16, 15]) {
+            inner = innerOf(f);
+            if (srMeasure(inner) <= SR_CONTENT_H) break;
+          }
+          pages.push('<div style="' + WB_PAGE_STYLE + 'z-index:0;">'
+            + srBg(bookId, ep.no)
+            + inner
+            + '<div style="position:absolute;left:0;right:0;bottom:3.2mm;text-align:center;font-size:8.5pt;color:#555;">- ' + (i + 1) + ' -</div>'
+            + '<div style="position:absolute;bottom:3.6mm;left:78px;font-size:6.5pt;color:#b08a68;letter-spacing:.4px;">Brain Literacy Reading King</div>'
+            + '<div style="position:absolute;bottom:3.6mm;right:78px;font-size:6.5pt;color:#b08a68;letter-spacing:.4px;">' + meta.title + ' 독서활동지</div>'
+            + '</div>');
+        });
+
+        // ── 마지막 장: 생각 키우기 — 쪽당 3문, 넓은 줄 간격·여유 줄 수 (학생 5줄 / 교사 팁+4줄) ──
+        const thinkAll = data.think || [];
+        const thinkChunks = [];
+        for (let s = 0; s < thinkAll.length; s += 3) thinkChunks.push(thinkAll.slice(s, s + 3));
+        thinkChunks.forEach((chunk, ci) => {
+          const rows = chunk.map((t, i) => {
+            const no = ci * 3 + i + 1;
+            const tipHtml = isT
+              ? '<div style="margin-top:6px;font-size:13px;font-weight:700;color:#c0392b;line-height:1.65;">✅ 모범답안 · ' + (t.a || '') + '</div>'
+                + '<div style="font-size:11.5px;font-weight:700;color:#8a4a1c;margin-top:4px;line-height:1.55;">🧑‍🏫 지도 팁 · ' + (t.tip || '') + '</div>'
+              : '';
+            const ln = isT ? 2 : 5;
+            return '<div style="margin-bottom:12px;">'
+              + '<div style="font-size:16.5px;font-weight:800;color:#2b2016;line-height:1.6;"><span style="color:' + T.main + ';font-weight:900;">' + no + '.</span> ' + t.q + '</div>'
+              + tipHtml
+              + Array.from({ length: ln }, () => '<div style="height:12mm;border-bottom:1.8px solid ' + T.line + ';"></div>').join('')
+              + '</div>';
+          }).join('');
+          pages.push('<div style="' + WB_PAGE_STYLE + 'z-index:0;">'
+            + srBg(bookId, eps.length)
+            + '<div style="display:flex;align-items:center;gap:10px;margin:0 0 18px;">'
+            + '<span style="background:' + T.main + ';color:#fff;font-size:15px;font-weight:900;padding:6px 16px;border-radius:999px;letter-spacing:1px;">💭 생각 키우기' + (thinkChunks.length > 1 ? ' ' + (ci + 1) + '/' + thinkChunks.length : '') + '</span>'
+            + '<span style="font-size:13px;font-weight:700;color:' + T.dark + ';">정답은 없어요 — 나의 생각을 자유롭게 써 보세요</span>'
+            + '<span style="margin-left:auto;font-size:10.5px;font-weight:700;color:' + T.main + ';">📚 ' + meta.title + ' · 독서활동지' + audTag + '</span>'
+            + '</div>'
+            + rows
+            + '<div style="position:absolute;left:0;right:0;bottom:3.2mm;text-align:center;font-size:8.5pt;color:#555;">- ' + (eps.length + ci + 1) + ' -</div>'
+            + '<div style="position:absolute;bottom:3.6mm;left:78px;font-size:6.5pt;color:#b08a68;letter-spacing:.4px;">Brain Literacy Reading King</div>'
+            + '<div style="position:absolute;bottom:3.6mm;right:78px;font-size:6.5pt;color:#b08a68;letter-spacing:.4px;">' + meta.title + ' 독서활동지</div>'
+            + '</div>');
+        });
+
+        await gkRenderPdf(pages, '독서활동지_' + meta.title + (isT ? '_교사용' : '') + '.pdf', btn ? (t) => { btn.innerHTML = t; } : null, 3);
+      } catch (err) {
+        console.error('독서왕 워크북 생성 오류:', err);
+        alert('워크북 PDF 생성 중 오류가 발생했습니다.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = originalBtn; }
+      }
+    }
+
     function khSubSwitch(which){
       document.querySelectorAll('.kh-sub-btn').forEach(b=>{
         const on = b.dataset.sub === which;
@@ -2283,6 +2553,7 @@
       });
       const area = document.getElementById('khSubArea');
       if (!area) return;
+      if (which === 'reading') { renderSrWorkbookArea(area); return; }
       if (which === 'kor') {
         const korCards = [
           { key: 'kh',     icon: '📜', name: '한국사',           suffix: '· 방학특강 20강' },
@@ -3480,6 +3751,8 @@
               style="flex:1;max-width:220px;padding:12px 18px;border-radius:12px;border:2px solid #c47b3a;background:linear-gradient(135deg,#f5e0c8,#e8c49a);color:#6b3a10;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;">📜 한국사</button>
             <button type="button" class="kh-sub-btn" data-sub="grammar" onclick="khSubSwitch('grammar')"
               style="flex:1;max-width:220px;padding:12px 18px;border-radius:12px;border:2px solid #ddd;background:#fff;color:#888;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;">🧭 국어문법</button>
+            <button type="button" class="kh-sub-btn" data-sub="reading" onclick="khSubSwitch('reading')"
+              style="flex:1;max-width:220px;padding:12px 18px;border-radius:12px;border:2px solid #ddd;background:#fff;color:#888;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;">📚 독서왕</button>
           </div>
           <div id="khSubArea"></div>
         `;
