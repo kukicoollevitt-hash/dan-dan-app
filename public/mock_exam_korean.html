@@ -9,7 +9,7 @@
     <script>
     (function(){
         var m = new URLSearchParams(location.search).get('print');
-        if (m !== 'a4' && m !== 'a3') return;
+        if (m !== 'a4' && m !== 'a3' && m !== 'explain') return;
         window.__PRINT_MODE = m;
         document.documentElement.classList.add('print-mode');
         // 이후 등록되는 모든 DOMContentLoaded 초기화(로그인 확인·타이머·답안 복원·진행 기록)를 차단해 빈 시험지 상태 유지
@@ -18,7 +18,7 @@
             if (type === 'DOMContentLoaded') return;
             return _add(type, fn, opt);
         };
-        window.addEventListener('load', function(){ setTimeout(makeBlankPaperPdf, 700); });
+        window.addEventListener('load', function(){ setTimeout(function(){ (m === 'explain' && window.makeExplainPdf) ? window.makeExplainPdf() : makeBlankPaperPdf(); }, 700); });
 
         // 월말 문해 모의고사 표지와 동일한 필적 확인 문구 (회차별 순환)
         var HANDWRITING = [
@@ -5685,6 +5685,64 @@ window.showPrettyConfirm = function(opts) {
                 wrong: '① (나)의 \'늙은 버드나무 밑\'은 \'지금도\' 화자가 \'돌아오지 않는 어머니\'를 떠올리는 장소로, \'어머니의 상여\'로 미루어 볼 때 그곳은 현재 화자가 과거에 돌아가신 어머니를 그리워하는 장소임을 짐작할 수 있다. 따라서 \'어머니의 상여\'에 대한 경험을 \'늙은 버드나무 밑\'에서 떠올리는 설정은 회상의 방식으로 현재 화자가 과거에 잃어버린 것에 대해 지닌 상실감을 그려낸 것으로 볼 수 있다. ② (나)의 \'동구 밖\'은 화자가 \'돌아오지 않은 계집애\'를 기다리는 장소로, \'조약돌처럼 잃어버린\' 대상 즉 첫사랑을 그리워하는 장소임을 짐작할 수 있다. 따라서 \'조약돌처럼\' 잃어버린 대상을 \'동구 밖\'에서 \'기다려 본다\'는 것은 추억 속의 인물을 현재도 그리워하고 있음을 표현한 것으로 볼 수 있다. ③ (다)의 \'머물지도 떠나지도 못\'하는 상황은 \'눈보라 속\'에 놓인 화자의 현재 상황을 표현한 것이다. 이는 화자가 존재의 한계에 부딪쳐 이러지도 저러지도 못하는 현실을 시각적으로 형상화한 것으로 볼 수 있다. ⑤ (나)의 화자는 \'늙은 버드나무 밑\'에서 돌아오지 않는 사람들과 이야기를 기다리고 있다. \'지금도\'는 현재 화자가 과거에 대한 그리움에 젖어 있음을 나타낸 것으로 볼 수 있다. (다)의 화자는 \'한밤중\'에 깨어 \'추위가 몰려\'오는 상황을 겪는데, 이는 \'내 속\'에서 떠올린 바람 부는 \'한계령\'과 연결되어 화자가 현재 극한의 상황에 놓여 있음을 나타낸 것으로 볼 수 있다.'
             }
             // 모든 문제 해설 완료
+        };
+
+        // 📄 전체 해설 PDF 생성 (?print=explain) — explanations 전 문항을 A4로 연결
+        window.makeExplainPdf = async function () {
+            if (!window.jspdf || !window.html2canvas) { alert('PDF 라이브러리 로드 실패 — 새로고침 후 다시 시도해주세요.'); return; }
+            const round = (document.title.match(/(\d+)\s*회/) || [])[1] || '1';
+            const T = { main: '#1a3d7c', soft: '#eef3fb', line: '#cdd9ec', ok: '#2e7d32', okbg: '#edf7ee' };
+            const CW = 760, pageW = 210, pageH = 297, mT = 12, mB = 12, usableH = pageH - mT - mB;
+            const box = document.createElement('div');
+            box.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:99999;font-family:sans-serif;"><div style="color:#fff;font-size:22px;margin-bottom:12px;">📄 해설 PDF 생성 중...</div><div style="color:#fff;font-size:15px;" id="explain-prog"></div></div>';
+            document.body.appendChild(box);
+            const keys = Object.keys(explanations).sort((a, b) => (+a) - (+b));
+            const targets = [];
+            const header = document.createElement('div');
+            header.style.cssText = 'width:' + CW + 'px;padding:46px 46px 26px;background:' + T.soft + ';box-sizing:border-box;text-align:center;border-bottom:3px solid ' + T.main + ';font-family:"Noto Sans KR","Malgun Gothic",sans-serif;';
+            header.innerHTML = '<div style="font-size:15px;font-weight:800;color:' + T.main + ';letter-spacing:3px;">BRAIN 국어 모의고사</div>'
+                + '<div style="font-size:36px;font-weight:900;color:#143052;margin-top:8px;">' + round + '회차 해설</div>'
+                + '<div style="font-size:13px;color:#5a6b7a;margin-top:10px;">전 ' + keys.length + '문항 · 정답 및 오답 해설</div>';
+            targets.push(header);
+            keys.forEach(k => {
+                const e = explanations[k] || {};
+                const _ans = (typeof correctAnswers !== 'undefined' && correctAnswers[k]) ? correctAnswers[k] : null;
+                const _circ = _ans ? ('<span style="margin-left:9px;padding:2px 11px;border-radius:999px;background:' + T.ok + ';color:#fff;font-size:12.5px;font-weight:900;">정답 ' + (['①', '②', '③', '④', '⑤'][_ans - 1] || _ans) + '</span>') : '';
+                const node = document.createElement('div');
+                node.style.cssText = 'width:' + CW + 'px;padding:16px 46px;background:#fff;box-sizing:border-box;font-family:"Noto Sans KR","Malgun Gothic",sans-serif;';
+                node.innerHTML =
+                    '<div style="font-size:16px;font-weight:900;color:' + T.main + ';padding:10px 14px;background:' + T.soft + ';border-radius:8px;border-left:4px solid ' + T.main + ';line-height:1.5;">' + (e.title || (k + '번 문항')) + '</div>'
+                    + (e.correct ? '<div style="margin-top:10px;padding:13px 16px;background:' + T.okbg + ';border:1px solid #bfe3c0;border-radius:8px;"><div style="font-size:13px;font-weight:900;color:' + T.ok + ';margin-bottom:6px;display:flex;align-items:center;">✓ 정답 해설' + _circ + '</div><div style="font-size:13.5px;line-height:1.75;color:#333;">' + e.correct + '</div></div>' : '')
+                    + (e.wrong ? '<div style="margin-top:8px;padding:13px 16px;background:#f7f8fa;border:1px solid ' + T.line + ';border-radius:8px;"><div style="font-size:13px;font-weight:900;color:#6b7280;margin-bottom:6px;">오답 풀이</div><div style="font-size:13px;line-height:1.75;color:#555;">' + e.wrong + '</div></div>' : '');
+                targets.push(node);
+            });
+            targets.forEach(n => { n.style.position = 'fixed'; n.style.left = '-10000px'; n.style.top = '0'; document.body.appendChild(n); });
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            let cursorMm = mT;
+            try {
+                for (let i = 0; i < targets.length; i++) {
+                    const pe = document.getElementById('explain-prog'); if (pe) pe.textContent = (i + 1) + ' / ' + targets.length;
+                    const canvas = await window.html2canvas(targets[i], { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false });
+                    const imgW = pageW, imgH = canvas.height * imgW / canvas.width;
+                    const img = canvas.toDataURL('image/jpeg', 0.92);
+                    if (imgH > usableH) {
+                        if (cursorMm !== mT) { pdf.addPage(); cursorMm = mT; }
+                        let remaining = imgH, offset = 0;
+                        while (remaining > 0) { pdf.addImage(img, 'JPEG', 0, mT - offset, imgW, imgH); remaining -= usableH; offset += usableH; if (remaining > 0) pdf.addPage(); }
+                        pdf.addPage(); cursorMm = mT; continue;
+                    }
+                    if (cursorMm + imgH > pageH - mB) { pdf.addPage(); cursorMm = mT; }
+                    pdf.addImage(img, 'JPEG', 0, cursorMm, imgW, imgH);
+                    cursorMm += imgH + 2;
+                }
+                pdf.save('브레인모의고사_' + round + '회차_해설.pdf');
+            } catch (err) {
+                console.error('[해설 PDF]', err); alert('해설 PDF 생성 중 오류가 발생했습니다.');
+            } finally {
+                targets.forEach(n => { if (n.parentNode) n.parentNode.removeChild(n); });
+                box.remove();
+            }
         };
 
         // 해설 팝업 표시 함수

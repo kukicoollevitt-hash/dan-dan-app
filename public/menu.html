@@ -40327,6 +40327,34 @@ ${content}
             pdf.setFillColor(255, 248, 225);
             pdf.rect(0, 0, pageW, pageH, 'F');
           };
+          // ── 표지 페이지 (쓰기문해 초록 테마) — PDF 맨 앞. 다운로드·인쇄 모두 포함 ──
+          const coverNode = document.createElement('div');
+          coverNode.style.cssText = `width:${CAPTURE_WIDTH}px;height:${Math.round(CAPTURE_WIDTH * pageH / pageW)}px;background:linear-gradient(160deg,#f1f8e9 0%,#dcedc8 100%);box-sizing:border-box;display:flex;flex-direction:column;align-items:center;font-family:'Noto Sans KR','Malgun Gothic',sans-serif;position:fixed;left:-10000px;top:0;`;
+          coverNode.innerHTML = `
+            <div style="margin-top:130px;"><img src="/images/브레인문해력로고_투명.png" style="width:230px;height:auto;" crossorigin="anonymous"></div>
+            <div style="margin-top:58px;font-size:21px;font-weight:800;color:#4a6b3e;letter-spacing:6px;">브레인입문 · 쓰기문해</div>
+            <div style="margin-top:10px;font-size:58px;font-weight:900;color:#1b5e20;letter-spacing:3px;">학습 리포트</div>
+            <div style="margin-top:18px;font-size:20px;font-weight:700;color:#558b2f;">✏️  100일 완성 쓰기문해 여정  ✏️</div>
+            <div style="margin-top:70px;padding:24px 56px;background:#fff;border:2.5px solid #66bb6a;border-radius:20px;box-shadow:0 8px 24px rgba(0,0,0,0.08);text-align:center;">
+              <div style="font-size:13px;color:#4a6b3e;letter-spacing:4px;margin-bottom:8px;">STUDENT</div>
+              <div style="font-size:32px;font-weight:900;color:#143809;">${cs.grade || ''}&nbsp;&nbsp;${cs.name || ''}</div>
+            </div>
+            <div style="margin-top:auto;margin-bottom:90px;text-align:center;">
+              <div style="font-size:16px;font-weight:700;color:#2e7d32;">${yyyy}.${mm}.${dd} 발급${(cs.academyName || cs.school) ? '&nbsp;&nbsp;·&nbsp;&nbsp;' + (cs.academyName || cs.school) : ''}</div>
+              <div style="margin-top:8px;font-size:13px;color:#7cb342;letter-spacing:2px;">BRAIN LITERACY</div>
+            </div>`;
+          document.body.appendChild(coverNode);
+          await new Promise(res => {
+            const im = coverNode.querySelector('img');
+            if (!im || im.complete) return res();
+            im.onload = im.onerror = res;
+            setTimeout(res, 1500);
+          });
+          const coverCanvas = await window.html2canvas(coverNode, { scale: 2, useCORS: true, backgroundColor: null, logging: false });
+          pdf.addImage(coverCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pageW, pageH);
+          document.body.removeChild(coverNode);
+          pdf.addPage();
+
           fillBgOnPage();
           let cursorMm = marginTopMm;
 

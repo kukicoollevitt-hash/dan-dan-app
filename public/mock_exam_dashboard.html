@@ -1101,6 +1101,57 @@
             box-shadow: none;
         }
 
+        /* 🎥 실시간 강의 준비 중 팝업 */
+        .live-soon-overlay {
+            display: none; position: fixed; inset: 0; z-index: 9999;
+            background: rgba(20, 16, 40, 0.62); backdrop-filter: blur(4px);
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .live-soon-overlay.show { display: flex; animation: liveSoonFade .25s ease; }
+        @keyframes liveSoonFade { from { opacity: 0; } to { opacity: 1; } }
+        .live-soon-card {
+            position: relative; width: 100%; max-width: 380px;
+            background: linear-gradient(160deg, #ffffff 0%, #f3f0ff 100%);
+            border-radius: 26px; padding: 38px 30px 30px; text-align: center;
+            box-shadow: 0 24px 60px rgba(60, 40, 120, 0.35);
+            animation: liveSoonPop .34s cubic-bezier(.17,.84,.44,1.2);
+        }
+        @keyframes liveSoonPop { from { transform: translateY(16px) scale(.92); opacity: 0; } to { transform: none; opacity: 1; } }
+        .live-soon-close {
+            position: absolute; top: 14px; right: 16px; border: none; background: transparent;
+            font-size: 26px; line-height: 1; color: #b3a9d6; cursor: pointer; padding: 4px;
+        }
+        .live-soon-close:hover { color: #7c6fb0; }
+        .live-soon-badge {
+            display: inline-block; font-size: 11px; font-weight: 900; letter-spacing: 3px;
+            color: #fff; background: linear-gradient(135deg, #7c3aed, #a855f7);
+            padding: 5px 16px; border-radius: 999px; margin-bottom: 18px;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+        }
+        .live-soon-icon {
+            font-size: 62px; line-height: 1; margin-bottom: 14px;
+            animation: liveSoonFloat 2.4s ease-in-out infinite;
+        }
+        @keyframes liveSoonFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        .live-soon-title { font-size: 23px; font-weight: 900; color: #2e1a5e; letter-spacing: -0.5px; }
+        .live-soon-desc { font-size: 14.5px; color: #6b5e8f; line-height: 1.7; margin-top: 12px; font-weight: 600; }
+        .live-soon-desc b { color: #7c3aed; font-weight: 800; }
+        .live-soon-dots { display: flex; gap: 8px; justify-content: center; margin: 22px 0 6px; }
+        .live-soon-dots span {
+            width: 9px; height: 9px; border-radius: 50%; background: #c7b9f0;
+            animation: liveSoonBounce 1.2s ease-in-out infinite;
+        }
+        .live-soon-dots span:nth-child(2) { animation-delay: .18s; }
+        .live-soon-dots span:nth-child(3) { animation-delay: .36s; }
+        @keyframes liveSoonBounce { 0%,60%,100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-9px); opacity: 1; } }
+        .live-soon-ok {
+            margin-top: 18px; width: 100%; border: none; cursor: pointer;
+            background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff;
+            font-size: 15px; font-weight: 800; padding: 13px 0; border-radius: 14px;
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3); transition: transform .15s, box-shadow .15s;
+        }
+        .live-soon-ok:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(124, 58, 237, 0.42); }
+
         /* Vimeo 모달 */
         .vimeo-modal-overlay {
             display: none;
@@ -5601,6 +5652,19 @@
             // 추후 회차 추가
         };
 
+        // 🎥 실시간 강의 오픈 준비 중 팝업
+        function openLiveSoon() {
+            document.getElementById('liveSoonModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLiveSoon(event) {
+            if (event && event.target !== document.getElementById('liveSoonModal') && !event.target.closest('.live-soon-close') && !event.target.closest('.live-soon-ok')) {
+                return;
+            }
+            document.getElementById('liveSoonModal').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
         // Vimeo 모달 열기
         function openLectureModal(round) {
             const lecture = lectureVideos[round];
@@ -6009,19 +6073,13 @@
             }
 
             // 강의 버튼 생성 (1회차만 활성화)
-            const hasLecture = lectureVideos[exam.round];
-            const lectureButton = hasLecture
-                ? `<button class="btn-lecture" onclick="event.stopPropagation(); openLectureModal(${exam.round})">
+            // 실시간 해설강의 준비 중 — 모든 회차 '강의 시청하기' 클릭 시 예쁜 안내 팝업
+            //   (기존 Vimeo 녹화강의 로직은 lectureVideos·openLectureModal로 보존 — 오픈 시 복구)
+            const lectureButton = `<button class="btn-lecture" onclick="event.stopPropagation(); openLiveSoon()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M8 5v14l11-7z"/>
                     </svg>
                     강의 시청하기
-                   </button>`
-                : `<button class="btn-lecture disabled" onclick="event.stopPropagation(); alert('해설강의 준비 중입니다.')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M8 5v14l11-7z"/>
-                    </svg>
-                    강의 준비 중
                    </button>`;
 
             // 오답복습 버튼 생성 (응시 완료 + 틀린 문제가 있을 때만)
@@ -6052,7 +6110,10 @@
                         <div class="card-print-row">
                             <button class="btn-print" onclick="event.stopPropagation(); openExamPrint('${exam.id}', 'a4')">🖨 시험지 A4</button>
                             <button class="btn-print" onclick="event.stopPropagation(); openExamPrint('${exam.id}', 'a3')">🖨 시험지 A3</button>
-                        </div>` : '';
+                        </div>${exam.round === 1 ? `
+                        <div class="card-print-row">
+                            <button class="btn-print" style="width:100%;background:linear-gradient(135deg,#1a3d7c,#2f6fae);" onclick="event.stopPropagation(); openExamPrint('${exam.id}', 'explain')">📄 해설 전체 PDF</button>
+                        </div>` : ''}` : '';
 
             return `
                 <div class="exam-card">
@@ -10876,6 +10937,19 @@
             <div class="vimeo-modal-body">
                 <iframe id="vimeoIframe" src="" allow="autoplay; fullscreen; picture-in-picture"></iframe>
             </div>
+        </div>
+    </div>
+
+    <!-- 🎥 실시간 강의 오픈 준비 중 팝업 -->
+    <div class="live-soon-overlay" id="liveSoonModal" onclick="closeLiveSoon(event)">
+        <div class="live-soon-card" onclick="event.stopPropagation()">
+            <button class="live-soon-close" onclick="closeLiveSoon()">&times;</button>
+            <div class="live-soon-badge">COMING SOON</div>
+            <div class="live-soon-icon">🎥</div>
+            <div class="live-soon-title">실시간 강의 오픈 준비 중</div>
+            <div class="live-soon-desc">선생님과 함께하는 <b>실시간 해설강의</b>를<br>준비하고 있어요. 곧 만나요! ✨</div>
+            <div class="live-soon-dots"><span></span><span></span><span></span></div>
+            <button class="live-soon-ok" onclick="closeLiveSoon()">확인했어요</button>
         </div>
     </div>
 
