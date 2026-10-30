@@ -2313,10 +2313,12 @@
     };
     // A4 전면에 아주 연하게 깔리는 배경 — CSS background는 html2canvas에서 유실되어 <img> 레이어로 구현
     //    (페이지 div에 z-index:0을 줘 스택 컨텍스트를 만들고, img는 z-index:-1로 글 아래·흰 배경 위에 깔림)
+    // 배경 삽화 — 책당 1장(1화 삽화)으로 고정. 모든 페이지가 같은 이미지라 첫 로드 후 캐시되어
+    //   html2canvas가 뒤쪽 페이지를 캡처할 때도 즉시 그려짐(화별 다른 이미지 쓰면 로딩 미완으로 하단 여백 발생)
     const srBg = (bookId, n) => {
       const fn = SR_IMG[bookId];
       if (!fn) return '';
-      return '<img src="' + fn(n) + '" alt="" style="position:absolute;left:0;top:0;width:100%;height:100%;z-index:-1;opacity:0.10;">';
+      return '<img src="' + fn(1) + '" width="794" height="1123" alt="" style="position:absolute;left:0;top:0;width:794px;height:1123px;z-index:-1;opacity:0.10;">';
     };
     let SR_WB_CACHE = null;    // 질문 데이터 (SR_WORKBOOK_DATA)
     let SR_TEXT_CACHE = null;  // 본문 데이터 (BOOK_DATA)
@@ -2402,7 +2404,8 @@
 
     // 단권 활동지 페이지(HTML 문자열 배열) 생성 — 단권 다운로드·통합 교재 공용
     //   표지 1쪽 + 화별 10쪽 + 생각 키우기 2쪽. isT=true면 교사용(모범답안·지도 팁 포함)
-    function buildSrBookPages(bookId, data, book, meta, isT) {
+    function buildSrBookPages(bookId, data, book, meta, isT, startNo) {
+        startNo = startNo || 1;  // 하단 쪽번호 시작값 (단권=1, 통합 교재=누적)
         const eps = srSplitEpisodes(book.content);
         const audTag = isT ? ' · 교사용' : ''; // 지면 표기 — 학생용은 표기하지 않음
         const T = { main: '#e07b39', dark: '#8a4a1c', soft: '#fff3e8', line: '#f0cdae' }; // 독서왕 주황 테마
@@ -2511,7 +2514,7 @@
           pages.push('<div style="' + WB_PAGE_STYLE + 'z-index:0;">'
             + srBg(bookId, ep.no)
             + inner
-            + '<div style="position:absolute;left:0;right:0;bottom:3.2mm;text-align:center;font-size:8.5pt;color:#555;">- ' + (i + 1) + ' -</div>'
+            + '<div style="position:absolute;left:0;right:0;bottom:3.2mm;text-align:center;font-size:8.5pt;color:#555;">- ' + (startNo + i) + ' -</div>'
             + '<div style="position:absolute;bottom:3.6mm;left:78px;font-size:6.5pt;color:#b08a68;letter-spacing:.4px;">Brain Literacy Reading King</div>'
             + '<div style="position:absolute;bottom:3.6mm;right:78px;font-size:6.5pt;color:#b08a68;letter-spacing:.4px;">' + meta.title + ' 독서활동지</div>'
             + '</div>');
@@ -2543,7 +2546,7 @@
             + '<span style="margin-left:auto;font-size:10.5px;font-weight:700;color:' + T.main + ';">📚 ' + meta.title + ' · 독서활동지' + audTag + '</span>'
             + '</div>'
             + rows
-            + '<div style="position:absolute;left:0;right:0;bottom:3.2mm;text-align:center;font-size:8.5pt;color:#555;">- ' + (eps.length + ci + 1) + ' -</div>'
+            + '<div style="position:absolute;left:0;right:0;bottom:3.2mm;text-align:center;font-size:8.5pt;color:#555;">- ' + (startNo + eps.length + ci) + ' -</div>'
             + '<div style="position:absolute;bottom:3.6mm;left:78px;font-size:6.5pt;color:#b08a68;letter-spacing:.4px;">Brain Literacy Reading King</div>'
             + '<div style="position:absolute;bottom:3.6mm;right:78px;font-size:6.5pt;color:#b08a68;letter-spacing:.4px;">' + meta.title + ' 독서활동지</div>'
             + '</div>');
@@ -2577,6 +2580,7 @@
       const T = { main: '#e07b39', dark: '#8a4a1c', soft: '#fff3e8', line: '#f0cdae' };
       const rows = metas.map((meta, i) => {
         const no = startSeq + i + 1;
+        const startPage = (startSeq + i) * 12 + 1;  // 책당 활동지 12쪽(화별10+생각2) — 통합 교재 연속 쪽번호와 일치
         return '<div style="display:flex;align-items:center;gap:18px;padding:15px 20px;border:2px solid ' + T.line + ';border-radius:14px;background:rgba(255,255,255,0.85);margin-bottom:13px;">'
           + '<span style="flex-shrink:0;width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;background:' + T.main + ';color:#fff;font-size:21px;font-weight:900;letter-spacing:1px;">' + String(no).padStart(2, '0') + '</span>'
           + '<span style="font-size:30px;flex-shrink:0;">' + meta.icon + '</span>'
@@ -2584,7 +2588,7 @@
           + '<div style="font-size:21px;font-weight:900;color:#2b2016;letter-spacing:1px;">' + meta.title + '</div>'
           + '<div style="font-size:13px;font-weight:700;color:' + T.dark + ';margin-top:3px;">' + meta.author + ' · 전 10화</div>'
           + '</div>'
-          + '<span style="flex-shrink:0;font-size:12px;font-weight:700;color:#b08a68;">독서활동지</span>'
+          + '<span style="flex-shrink:0;font-size:20px;font-weight:900;color:' + T.main + ';">' + startPage + '<span style="font-size:12px;font-weight:700;color:' + T.dark + ';margin-left:2px;">쪽</span></span>'
           + '</div>';
       }).join('');
       return '<div style="' + WB_PAGE_STYLE + 'z-index:0;">'
@@ -2632,11 +2636,16 @@
         pages.push(srTocPage(readyBooks.slice(0, 7), 0, 1, 2));
         pages.push(srTocPage(readyBooks.slice(7), 7, 2, 2));
         let seq = 0;
+        let pageNo = 1;  // 활동지 하단 쪽번호 — 통합 교재 전체에 걸쳐 연속
         for (const meta of readyBooks) {
           const data = wb[meta.id], book = texts[meta.id];
           seq++;
           pages.push(srDividerPage(seq, meta));
-          buildSrBookPages(meta.id, data, book, meta, isT).forEach(p => pages.push(p));
+          const bodyPages = buildSrBookPages(meta.id, data, book, meta, isT, pageNo);
+          bodyPages.forEach(p => pages.push(p));
+          // 표지 1쪽은 번호 없음 → 번호가 매겨진 활동지(화별+생각 키우기)만큼 누적
+          const eps = srSplitEpisodes(book.content);
+          pageNo += eps.length + Math.ceil((data.think || []).length / 3);
         }
         pages.push({ pdf: '/images/독서왕문학편뒷표지.pdf' + CV, fit: 'cover' });
         pages.push({ pdf: '/images/독서왕문학편책등.pdf' + CV, fit: 'contain' });

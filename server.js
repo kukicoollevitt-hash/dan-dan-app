@@ -12552,26 +12552,13 @@ app.post("/api/auto-logout", async (req, res) => {
 
     const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
 
+    // 📵 정책 변경(2026-10): 자동 로그아웃 시 리포트 문자 발송하지 않음.
+    //    리포트는 '수동 로그아웃 버튼'(/logout)에서만 발송. 60분 자동정리/복귀는 클라이언트에서 유지.
     if (studentUser) {
-      // 📱 학부모 알림 발송 (리포트 URL 포함)
-      if (studentUser.parentPhone && studentUser.parentNotify !== false) {
-        sendParentNotification(name, studentUser.parentPhone, 'logout', { grade })
-          .catch(err => console.error('학부모 알림(자동 로그아웃+리포트) 실패:', err));
-      }
-
-      // 📱 본사 관리자 알림 발송
-      sendHQAdminNotification(name, grade, 'logout', {
-        school: studentUser.school,
-        academyName: studentUser.academyName
-      });
-
-      // 발송 기록 저장
-      await DailyReportSent.create({ grade, name, date: today, type: 'auto_logout' });
-
-      console.log(`✅ [자동 로그아웃] ${grade} ${name} SMS + 리포트 발송 완료`);
+      console.log(`⏭️ [자동 로그아웃] ${grade} ${name} - 리포트 미발송(정책: 수동 로그아웃만)`);
     }
 
-    res.json({ success: true, message: '자동 로그아웃 + 리포트 발송 완료' });
+    res.json({ success: true, message: '자동 로그아웃 처리(리포트 미발송)' });
   } catch (err) {
     console.error('[자동 로그아웃] 오류:', err);
     res.status(500).json({ success: false, message: '서버 오류' });
@@ -38989,71 +38976,8 @@ cron.schedule('0 0 * * 1', () => {
 
 console.log('✅ AI 추천 보완 학습 스케줄러 등록 완료 (매주 월요일 00:00 실행)');
 
-// 매일 저녁 9시 - 미발송 학생 일괄 리포트 발송
-cron.schedule('0 21 * * *', async () => {
-  console.log('📧 [저녁 9시 스케줄러] 미발송 학생 리포트 일괄 발송 시작');
-
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const todayStart = new Date(today + 'T00:00:00.000Z');
-    const todayEnd = new Date(today + 'T23:59:59.999Z');
-    const dedupKey = getKstDateKey(); // 중복 발송 판정은 KST 기준으로 통일
-
-    // 오늘 학습완료가 있는 학생 조회 (LearningLog에서)
-    const todayLogs = await LearningLog.find({
-      createdAt: { $gte: todayStart, $lte: todayEnd }
-    });
-
-    // 고유 학생 목록 추출
-    const studentsWithLearning = [...new Set(todayLogs.map(log => `${log.grade}|${log.name}`))];
-    console.log(`📧 [저녁 9시] 오늘 학습완료 학생 수: ${studentsWithLearning.length}명`);
-
-    // 이미 발송된 학생 조회
-    const sentRecords = await DailyReportSent.find({ date: dedupKey });
-    const sentStudents = new Set(sentRecords.map(r => `${r.grade}|${r.name}`));
-    console.log(`📧 [저녁 9시] 오늘 이미 발송된 학생 수: ${sentStudents.size}명`);
-
-    // 미발송 학생 필터링
-    const unsent = studentsWithLearning.filter(s => !sentStudents.has(s));
-    console.log(`📧 [저녁 9시] 미발송 학생 수: ${unsent.length}명`);
-
-    let sentCount = 0;
-    for (const studentKey of unsent) {
-      const [grade, name] = studentKey.split('|');
-
-      try {
-        const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
-
-        if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false) {
-          // 학부모 알림 발송
-          await sendParentNotification(name, studentUser.parentPhone, 'logout', { grade });
-
-          // 본사 관리자 알림
-          sendHQAdminNotification(name, grade, 'logout', {
-            school: studentUser.school,
-            academyName: studentUser.academyName
-          });
-
-          // 발송 기록 저장
-          await DailyReportSent.create({ grade, name, date: dedupKey, type: 'scheduled' });
-
-          sentCount++;
-          console.log(`📧 [저녁 9시] ${grade} ${name} 리포트 발송 완료`);
-        }
-      } catch (err) {
-        console.error(`📧 [저녁 9시] ${grade} ${name} 발송 오류:`, err.message);
-      }
-    }
-
-    console.log(`📧 [저녁 9시 스케줄러] 완료 - 총 ${sentCount}명 발송`);
-  } catch (err) {
-    console.error('📧 [저녁 9시 스케줄러] 오류:', err);
-  }
-}, {
-  timezone: "Asia/Seoul"
-});
-
-console.log('✅ 저녁 9시 리포트 일괄발송 스케줄러 등록 완료');
+// 📵 정책 변경(2026-10): 저녁 9시 자동 스윕 제거 — 리포트는 '수동 로그아웃 버튼'에서만 발송.
+//    (로그아웃 깜빡 등은 센터에서 관리. 본사 자동발송 안 함. 학습완료 알림은 별도 유지)
 
 // 테스트용 수동 트리거 엔드포인트
 app.post('/api/mock-exam/recommend-tasks/generate/:userId', async (req, res) => {

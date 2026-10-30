@@ -191,21 +191,9 @@
 
     console.log('[자동 로그아웃] 마지막 학습완료 후 1시간 경과 → 자동 로그아웃 실행');
 
-    try {
-      // 서버에 자동 로그아웃 요청 (SMS + 리포트 발송 포함)
-      await fetch('/api/auto-logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          grade,
-          name,
-          reason: 'learning_timeout',
-          hasCompletedLearning: true
-        })
-      });
-    } catch (err) {
-      console.error('[자동 로그아웃] API 호출 실패:', err);
-    }
+    // 📵 정책 변경(2026-10): 자동 로그아웃 시 리포트 문자 발송하지 않음.
+    //    리포트는 '수동 로그아웃 버튼'에서만 발송 → /api/auto-logout 호출 제거.
+    //    (아래 로컬 정리/복귀는 공용 태블릿 위생을 위해 그대로 유지)
 
     // 로컬 스토리지 정리
     localStorage.removeItem('loginGrade');
@@ -219,7 +207,7 @@
     sessionStorage.removeItem('hasCompletedLearning');
 
     // 로그인 페이지로 이동
-    alert('마지막 학습 완료 후 1시간이 경과하여 자동 로그아웃되었습니다.\n학습 리포트가 발송되었습니다.');
+    alert('마지막 학습 완료 후 1시간이 경과하여 자동 로그아웃되었습니다.');
     window.location.href = '/academy.html';
   }
 
