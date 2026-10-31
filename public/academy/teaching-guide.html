@@ -2385,25 +2385,27 @@
               <div style="font-size:15px;font-weight:900;color:${ready ? '#6b3a10' : '#aaa'};">${b.icon} ${b.title}</div>
               <div style="font-size:12px;color:${ready ? '#8a5a3a' : '#bbb'};margin:2px 0 10px;">${b.author} · 10화</div>
               ${ready ? `
-                <div style="display:flex;gap:8px;">
-                  <button type="button" onclick="downloadSrWorkbook('${b.id}','student',this)"
-                    style="flex:1;padding:8px 0;border-radius:9px;border:1.5px solid #2f6fae;background:#e8f1fa;color:#1a3a5c;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit;">📄 활동지</button>
+                <div style="display:flex;gap:6px;">
+                  <button type="button" onclick="downloadSrWorkbook('${b.id}','student',this,'a4')"
+                    style="flex:1;padding:8px 0;border-radius:9px;border:1.5px solid #2f6fae;background:#e8f1fa;color:#1a3a5c;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;">📄 활동지 A4</button>
+                  <button type="button" onclick="downloadSrWorkbook('${b.id}','student',this,'a3')"
+                    style="flex:1;padding:8px 0;border-radius:9px;border:1.5px solid #2f6fae;background:#dbe9f7;color:#1a3a5c;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;">📄 활동지 A3</button>
                   <button type="button" onclick="downloadSrWorkbook('${b.id}','teacher',this)"
-                    style="flex:1;padding:8px 0;border-radius:9px;border:1.5px solid #c0392b;background:#fdeef1;color:#c0392b;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit;">📕 교사용</button>
+                    style="flex:1;padding:8px 0;border-radius:9px;border:1.5px solid #c0392b;background:#fdeef1;color:#c0392b;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;">📕 교사용</button>
                 </div>` : `
                 <div style="text-align:center;padding:8px 0;border-radius:9px;background:#efece8;color:#b0a89e;font-weight:800;font-size:12.5px;">준비 중</div>`}
             </div>`;
           }).join('')}
         </div>
 
-        <!-- 📘 13권 통합 교재 — 앞표지 + 작품별 간지 + 활동지 + 뒷표지 + 책등 (A4/A3) -->
+        <!-- 📘 12권 통합 교재 — 앞표지 + 작품별 간지 + 활동지 + 뒷표지 + 책등 (A4/A3) -->
         <div style="margin-top:22px;padding:18px 20px;border:2.5px solid #8a4a1c;border-radius:16px;background:linear-gradient(135deg,#fff8f1,#ffeedd);">
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
             <span style="font-size:17px;font-weight:900;color:#6b3a10;">📘 서술형집중대비 문학편 통합 교재</span>
-            <span style="font-size:12px;font-weight:700;color:#a06a3a;">앞표지 + 목차 + 작품별 간지 + 활동지 13권 + 뒷표지 + 책등 (약 ${14 * SR_BOOKS.filter(b => wb[b.id]).length + 5}쪽)</span>
+            <span style="font-size:12px;font-weight:700;color:#a06a3a;">앞표지 + 목차 + 작품별 간지 + 활동지 12권 + 뒷표지 + 책등 (약 ${14 * SR_BOOKS.filter(b => wb[b.id]).length + 5}쪽)</span>
           </div>
           <div style="font-size:12px;color:#8a5a3a;margin:8px 0 14px;line-height:1.6;">
-            13권을 한 권으로 묶어 표지·간지까지 포함한 인쇄용 교재를 만듭니다. A4·A3 용지 중 선택하세요. (전권 묶음이라 생성에 수 분 걸릴 수 있어요)
+            12권을 한 권으로 묶어 표지·간지까지 포함한 인쇄용 교재를 만듭니다. A4·A3 용지 중 선택하세요. (전권 묶음이라 생성에 수 분 걸릴 수 있어요)
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <button type="button" onclick="downloadSrFullBook('student','a4',this)"
@@ -2598,7 +2600,8 @@
         return pages;
     }
 
-    async function downloadSrWorkbook(bookId, audience, btn) {
+    async function downloadSrWorkbook(bookId, audience, btn, paper) {
+      paper = (paper === 'a3') ? 'a3' : 'a4';  // 활동지만 A4/A3 선택, 교사용은 a4
       const originalBtn = btn ? btn.innerHTML : '';
       if (btn) { btn.disabled = true; btn.innerHTML = '⏳ 준비 중'; }
       try {
@@ -2609,7 +2612,8 @@
         const isT = audience === 'teacher';
         if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
         const pages = buildSrBookPages(bookId, data, book, meta, isT);
-        await gkRenderPdf(pages, '독서활동지_' + meta.title + (isT ? '_교사용' : '') + '.pdf', btn ? (t) => { btn.innerHTML = t; } : null, 3);
+        const fname = '독서활동지_' + meta.title + (isT ? '_교사용' : '_' + paper.toUpperCase()) + '.pdf';
+        await gkRenderPdf(pages, fname, btn ? (t) => { btn.innerHTML = t; } : null, 3, paper);
       } catch (err) {
         console.error('서술형집중대비 워크북 생성 오류:', err);
         alert('워크북 PDF 생성 중 오류가 발생했습니다.');
@@ -2662,7 +2666,7 @@
         + '</div></div></div>';
     }
 
-    // 13권 통합 교재 — 앞표지 + (작품별 간지 + 활동지) + 뒷표지 + 책등. paper: 'a4' | 'a3'
+    // 12권 통합 교재 — 앞표지 + (작품별 간지 + 활동지) + 뒷표지 + 책등. paper: 'a4' | 'a3'
     async function downloadSrFullBook(audience, paper, btn) {
       const originalBtn = btn ? btn.innerHTML : '';
       if (btn) { btn.disabled = true; btn.innerHTML = '⏳ 준비 중'; }
