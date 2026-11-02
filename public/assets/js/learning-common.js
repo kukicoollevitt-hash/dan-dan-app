@@ -4101,10 +4101,10 @@
 // 기존 화살표 버튼 대신 menu.html의 "홈으로" 버튼으로 대체됨
 
 /* =========================================================
-   🚫 창의활동 복붙 차단
-   - 출력 영역(AI 다듬은 글, 예시): 드래그/복사/우클릭/드래그앤드롭 차단
+   🚫 창의활동 + 본문 복붙 차단
+   - 출력 영역(AI 다듬은 글, 예시, 본문 지문 .passage-text): 드래그/복사/우클릭/드래그앤드롭 차단
    - 입력 영역(#creative-input): 외부 텍스트 paste 차단
-   - 학생/선생님 모두 적용 (창의활동 탭에서 복사할 일 없음)
+   - 학생/선생님 모두 적용 (복사할 일 없음, 본문 클릭 읽기는 click 이벤트라 영향 없음)
 ========================================================= */
 (function initCreativeCopyGuard() {
   if (window._creativeCopyGuardAttached) return;
@@ -4117,7 +4117,8 @@
     style.id = styleId;
     style.textContent = `
       #ai-feedback-result, #ai-feedback-result *,
-      .creative-examples-box, .creative-examples-box * {
+      .creative-examples-box, .creative-examples-box *,
+      .passage-text, .passage-text * {
         -webkit-user-select: none !important;
         -moz-user-select: none !important;
         -ms-user-select: none !important;
@@ -4160,7 +4161,7 @@
   // 3) 출력 영역(AI 결과 + 예시) — 복사/잘라내기/우클릭/드래그 차단
   function isGuardedOutputArea(target) {
     if (!target || !target.closest) return false;
-    return !!target.closest('#ai-feedback-result, .creative-examples-box');
+    return !!target.closest('#ai-feedback-result, .creative-examples-box, .passage-text');
   }
 
   ['copy', 'cut'].forEach(function(evt) {

@@ -607,6 +607,23 @@
   }
   .rec-box h3 { color: #d05a1a; font-size: 22px; margin-bottom: 6px; }
   .rec-box p { color: #7a8fa4; font-size: 14px; margin-bottom: 16px; }
+  .rec-passage {
+    display: none;
+    background: #fff8ef;
+    border: 2px solid #ffe0b2;
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin: 2px 0 16px;
+    font-size: 19px;
+    line-height: 1.8;
+    color: #3a2f27;
+    font-weight: 600;
+    text-align: left;
+    word-break: keep-all;
+    max-height: 34vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .rec-mic {
     width: 108px; height: 108px;
     border-radius: 50%;
@@ -1056,6 +1073,7 @@
 <div class="rec-modal" id="recModal">
   <div class="rec-box">
     <h3>🎙️ 낭독 녹음</h3>
+    <div class="rec-passage" id="recPassage"></div>
     <p id="recSub">마이크 버튼을 눌러 녹음을 시작해요 (최대 3분)</p>
     <div class="rec-mic" id="recMic">🎤</div>
     <div class="rec-timer" id="recTimer" style="display:none">0:00</div>
@@ -1974,7 +1992,7 @@ function drawStage1Para(st) {
         const paraSpeed = typeof p.speed === 'number' ? p.speed : autoTtsSpeed(paraChunks);
         const ttsBtn = document.getElementById('ttsBtn');
         ttsBtn.onclick = () => playTts(paraChunks, ttsBtn, paraSpeed);
-        document.getElementById('recBtn').onclick = () => openRecModal(st.pIdx);
+        document.getElementById('recBtn').onclick = () => openRecModal(st.pIdx, (p.sentences || []).join(' '));
       } else {
         btn.classList.add('wrong');
         encourage();
@@ -2139,8 +2157,14 @@ let _recordedBlob = null;
 let _recCurrentParaIdx = 0;
 const REC_MAX_SEC = 180;   // 3분
 
-function openRecModal(paraIdx) {
+function openRecModal(paraIdx, paraText) {
   _recCurrentParaIdx = paraIdx;
+  const recPassage = document.getElementById('recPassage');
+  if (recPassage) {
+    const txt = (paraText || '').replace(/\|/g, ' ').replace(/\s+/g, ' ').trim();
+    if (txt) { recPassage.textContent = txt; recPassage.style.display = 'block'; recPassage.scrollTop = 0; }
+    else { recPassage.style.display = 'none'; }
+  }
   const modal = document.getElementById('recModal');
   const mic = document.getElementById('recMic');
   const timer = document.getElementById('recTimer');
