@@ -21,6 +21,12 @@ const CourseApplicationSchema = new mongoose.Schema({
     default: "school"
   },
 
+  // 진단시험지 종류: general(일반 독해진단) / elem(초등 모의=업) / mid(중등 모의=핏)
+  testType: {
+    type: String,
+    default: "general"
+  },
+
   // 학생 정보
   studentGrade: {
     type: String,

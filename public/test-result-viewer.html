@@ -1164,7 +1164,7 @@
 
   <script>
     // 퀴즈 데이터 (25문항 - 5개 지문 × 5개 문해력 지수)
-    const quizData = [
+    let quizData = [
       // ========== 사회 (1-5) ==========
       {
         category: "사회",
@@ -1744,6 +1744,52 @@
     const urlParams = new URLSearchParams(window.location.search);
     const applicationId = urlParams.get('id');
 
+    // ===== 모의테스트(브레인모의고사) 결과 지원 =====
+    let VIEW_IS_MOCK = false;
+    let VIEW_MOCK_LEVEL = null;   // elem(초등=업 기준) | mid(중등=핏 기준)
+    // 모의테스트 과목별 평균 기준선(%) — 과목 고정값(학년 무관). 미정 과목은 전체 avg로 폴백.
+    const MOCK_CATEGORY_AVG = {
+      '생물': 85, '지구과학': 83, '물리': 78, '화학': 82, '사회문화': 89,
+      '지리': 85, '법': 82, '정치경제': 78, '현대문학': 87, '고전문학': 80,
+      '인물': 82   // 초등모의 전용
+    };
+    const MOCK_FILE = { elem: 'monthly_elem_1', mid: 'monthly_mid_1' };
+    const MOCK_SKILL_MAP = {
+      literal: '핵심 이해력', lexical: '어휘 맥락력', structural: '구조 파악력',
+      inferential: '추론 통합력', critical: '비판 적용력'
+    };
+    // 모의고사 JSON → 뷰어 quizData 포맷으로 변환 (응시 페이지와 동일 규칙)
+    async function loadMockQuizForView(level) {
+      const file = MOCK_FILE[level];
+      if (!file) throw new Error('알 수 없는 모의테스트 종류');
+      const res = await fetch('/monthly_exam_data/' + file + '.json');
+      if (!res.ok) throw new Error('모의고사 데이터 로드 실패(' + res.status + ')');
+      const data = await res.json();
+      const items = [];
+      (data.passages || []).forEach(function(p) {
+        const passageText = Array.isArray(p.text) ? p.text.join('<br><br>') : (p.text || '');
+        (p.questions || []).forEach(function(q) {
+          const explain = [q.correct || '', q.wrong || ''].filter(Boolean).join('<br><br>');
+          items.push({
+            category: p.subject || '기타',
+            skill: MOCK_SKILL_MAP[q.type] || q.typeKo || '핵심 이해력',
+            area: q.type,
+            passage: passageText,
+            passageExtended: passageText,
+            passageTitle: p.title || '',
+            question: q.text || '',
+            options: q.options || [],
+            optionsExtended: q.options || [],
+            correct: (typeof q.answer === 'number' ? q.answer - 1 : -1),
+            score: (typeof q.score === 'number' ? q.score : 0),
+            explanation: explain,
+            explanationExtended: explain
+          });
+        });
+      });
+      return items;
+    }
+
     async function loadTestResult() {
       if (!applicationId) {
         showError('시험지 ID가 없습니다.');
@@ -1765,6 +1811,19 @@
         if (!data.answers || data.answers.length === 0) {
           showError('저장된 답안 정보가 없습니다.');
           return;
+        }
+
+        // 모의테스트면 해당 회차 문항셋으로 교체 (과목·5지수·상세 모두 모의 기준)
+        if (data.testType === 'elem' || data.testType === 'mid') {
+          try {
+            quizData = await loadMockQuizForView(data.testType);
+            VIEW_IS_MOCK = true;
+            VIEW_MOCK_LEVEL = data.testType;   // elem | mid
+          } catch (e) {
+            console.error('모의고사 문항 로드 실패:', e);
+            showError('모의고사 시험지 데이터를 불러오지 못했습니다.');
+            return;
+          }
         }
 
         renderResult(data);
@@ -1827,8 +1886,27 @@
 
       // 구간 정의: [시작, 끝, 라벨, 색(인라인), 등급명, 시리즈명]
       // 색감: 낮음 = 진한 빨강 → 주황 → 노랑/연두 → 진한 녹색 (신호등)
-      // 초등은 9-segment, 중고등은 10-segment (딥 단일)
-      const segs = isElementary ? [
+      // 모의테스트: 원점수 기준 6구간 (초등=온하~업상 / 중등=업하~핏상)
+      const MOCK_SEGS = {
+        elem: [
+          [0, 74,  '온(하)', '#991b1b', '기초 D',   'BRAIN 온'],
+          [75, 79, '온(중)', '#dc2626', '보통 C+',  'BRAIN 온'],
+          [80, 84, '온(상)', '#ea580c', '보통 C+',  'BRAIN 온'],
+          [85, 89, '업(하)', '#f59e0b', '우수 A',   'BRAIN 업'],
+          [90, 94, '업(중)', '#84cc16', '우수 A',   'BRAIN 업'],
+          [95, 100,'업(상)', '#15803d', '우수 A',   'BRAIN 업']
+        ],
+        mid: [
+          [0, 74,  '업(하)', '#991b1b', '보통 C+',  'BRAIN 업'],
+          [75, 79, '업(중)', '#dc2626', '보통 C+',  'BRAIN 업'],
+          [80, 84, '업(상)', '#ea580c', '보통 C+',  'BRAIN 업'],
+          [85, 89, '핏(하)', '#f59e0b', '우수 A',   'BRAIN 핏'],
+          [90, 94, '핏(중)', '#84cc16', '우수 A',   'BRAIN 핏'],
+          [95, 100,'핏(상)', '#15803d', '우수 A',   'BRAIN 핏']
+        ]
+      };
+      // 초등은 9-segment, 중고등은 10-segment (딥 단일), 모의는 6-segment
+      const segs = (VIEW_IS_MOCK && MOCK_SEGS[VIEW_MOCK_LEVEL]) ? MOCK_SEGS[VIEW_MOCK_LEVEL] : isElementary ? [
         [0, 44,  '온(하)', '#991b1b', '기초 D',  'BRAIN 온'],  // 가장 진한 빨강 (넓은 하부)
         [45, 54, '온(중)', '#dc2626', '보통 C+', 'BRAIN 온'],
         [55, 64, '온(상)', '#ea580c', '보통 C+', 'BRAIN 온'],  // 진한 주황
@@ -1886,7 +1964,17 @@
       axis.innerHTML = tickHtml;
 
       // 범례 (시리즈 단위 + 등급 범위 안내)
-      const groups = isElementary
+      const MOCK_GROUPS = {
+        elem: [
+          { label: 'BRAIN 온 (0~84) · 온하~온상', color: '#991b1b' },
+          { label: 'BRAIN 업 (85~100) · 업하~업상', color: '#15803d' }
+        ],
+        mid: [
+          { label: 'BRAIN 업 (0~84) · 업하~업상', color: '#991b1b' },
+          { label: 'BRAIN 핏 (85~100) · 핏하~핏상', color: '#15803d' }
+        ]
+      };
+      const groups = (VIEW_IS_MOCK && MOCK_GROUPS[VIEW_MOCK_LEVEL]) ? MOCK_GROUPS[VIEW_MOCK_LEVEL] : isElementary
         ? [
             { label: '기초 D · BRAIN 온(하) (0~44)',        color: '#991b1b' },
             { label: '보통 C+ · BRAIN 온(중·상) (45~64)',  color: '#dc2626' },
@@ -1965,6 +2053,11 @@
         }
       }
 
+      // 모의테스트: 수능내신 등급 대신 저장된 등급(업/핏 상·중·하) 표시
+      if (VIEW_IS_MOCK && data.grade) {
+        displayGrade = data.grade;
+      }
+
       // 학생 정보 표시
       const gradeClass = `grade-${displayGrade}`;
       document.getElementById('studentInfo').innerHTML = `
@@ -1984,13 +2077,18 @@
         "추론 통합력": 0,
         "비판 적용력": 0
       };
-      const categoryScores = {
-        "사회": 0,
-        "과학": 0,
-        "인문": 0,
-        "경제": 0,
-        "법": 0
-      };
+      // 과목(category)은 현재 시험지의 문항에서 동적 생성 — 진단=5과목, 모의=그 회차 과목
+      const categoryScores = {};
+
+      // 지수/과목별 총 문항수 (일반=고정 5씩, 모의=동적)
+      const skillTotals = {};
+      const categoryTotals = {};
+      Object.keys(skillScores).forEach(k => { skillTotals[k] = 0; });
+      quizData.forEach(q => {
+        if (skillTotals[q.skill] !== undefined) skillTotals[q.skill]++;
+        if (categoryScores[q.category] === undefined) categoryScores[q.category] = 0;
+        categoryTotals[q.category] = (categoryTotals[q.category] || 0) + 1;
+      });
 
       data.answers.forEach((userAnswer, index) => {
         if (index < quizData.length) {
@@ -2017,7 +2115,7 @@
       // 부분 정보(현재 quizData로 재계산된 분포)를 기준으로 부족분(delta)만 균등 분배
       // → 학생의 실제 강점/약점 부분 반영 + 자연스러운 변동
       const dbScore = (typeof data.score === 'number') ? data.score : correctCount;
-      if (dbScore !== correctCount) {
+      if (!VIEW_IS_MOCK && dbScore !== correctCount) {
         const skillNames = Object.keys(skillScores);
         const catNames = Object.keys(categoryScores);
         const delta = dbScore - correctCount;
@@ -2069,16 +2167,18 @@
         wrongCount = 25 - dbScore;
       }
 
-      // 스킬별 퍼센트 계산 (각 스킬당 5문제)
+      // 스킬별 퍼센트 계산 (일반=5문제/지수, 모의=지수별 실제 문항수)
       const skillPercentages = {};
       for (const skill in skillScores) {
-        skillPercentages[skill] = (skillScores[skill] / 5) * 100;
+        const tot = skillTotals[skill] || 5;
+        skillPercentages[skill] = tot ? Math.round((skillScores[skill] / tot) * 100) : 0;
       }
 
-      // 과목별 퍼센트 계산 (각 과목당 5문제)
+      // 과목별 퍼센트 계산 (일반=5문제/과목, 모의=과목별 실제 문항수)
       const categoryPercentages = {};
       for (const category in categoryScores) {
-        categoryPercentages[category] = (categoryScores[category] / 5) * 100;
+        const tot = categoryTotals[category] || 5;
+        categoryPercentages[category] = tot ? Math.round((categoryScores[category] / tot) * 100) : 0;
       }
 
       // 가장 높은/낮은 스킬 찾기
@@ -2193,7 +2293,13 @@
 
       // 추천 시리즈 및 분석 결과 표시 (가중치 점수 기반 학원 데이터는 상/중/하 표기)
       const seriesSubLevel = hasWeighted ? getSeriesSubLevel(displayScore, isElementary) : '';
-      document.getElementById('recommendedSeries').textContent = series + seriesSubLevel;
+      if (VIEW_IS_MOCK) {
+        // 모의테스트: 원점수 등급 바 + 모의고사 제목 안내
+        document.getElementById('recommendedSeries').textContent = data.grade || (series + seriesSubLevel);
+        recommendation = '모의고사 원점수 ' + displayScore + '점 기준 ' + (data.grade || '') + ' 수준입니다. 담당 선생님과 상담해 보세요.';
+      } else {
+        document.getElementById('recommendedSeries').textContent = series + seriesSubLevel;
+      }
       document.getElementById('recommendationText').textContent = recommendation;
       document.getElementById('strengthText').textContent = strength;
       document.getElementById('weaknessText').textContent = weakness;
@@ -2215,16 +2321,25 @@
       // AI 피드백용 데이터 저장 (전역)
       // 총점은 표시 점수(가중치 100점제 또는 개수 25점제)를 그대로 사용
       const studentGradeForFeedback = data.studentGrade || '초5';
+      const gaForFeedback = getGradeAverage(studentGradeForFeedback);
+      // 과목별 기준값: 모의=과목 고정값, 일반=학년별 과목 기준값 (실제 응시 과목만)
+      const catAvgForFeedback = {};
+      Object.keys(categoryPercentages).forEach(cat => {
+        catAvgForFeedback[cat] = VIEW_IS_MOCK
+          ? (MOCK_CATEGORY_AVG[cat] != null ? MOCK_CATEGORY_AVG[cat] : gaForFeedback.avg)
+          : (gaForFeedback.categories[cat] || gaForFeedback.avg);
+      });
       window.aiFeedbackData = {
         studentName: data.studentName || '학생',
         studentGrade: studentGradeForFeedback,
         skillPercentages: skillPercentages,
         categoryPercentages: categoryPercentages,
-        gradeAverage: getGradeAverage(studentGradeForFeedback).avg,
+        categoryAverages: catAvgForFeedback,
+        gradeAverage: gaForFeedback.avg,
         totalScore: displayScore,
         totalScoreMax: hasWeighted ? 100 : 25,
         correctCount: correctCount,
-        totalQuestions: 25
+        totalQuestions: quizData.length
       };
 
       // AI 피드백 로드
@@ -2499,20 +2614,20 @@
 
     // 과목별 막대 그래프 그리기 함수
     function drawCategoryBarChart(categoryPercentages, studentGrade) {
-      const categories = [
-        "사회",
-        "과학",
-        "인문",
-        "경제",
-        "법"
-      ];
+      // 일반테스트=고정 5과목, 모의테스트=그 회차 과목(subject) 동적
+      const categories = VIEW_IS_MOCK
+        ? Object.keys(categoryPercentages)
+        : ["사회", "과학", "인문", "경제", "법"];
 
       const gradeAvg = getGradeAverage(studentGrade);
 
       let barsHTML = '';
       categories.forEach(category => {
         const percent = categoryPercentages[category] || 0;
-        const categoryAvg = gradeAvg.categories[category] || gradeAvg.avg; // 과목별 평균
+        // 모의테스트는 과목 고정 기준값, 일반테스트는 학년별 과목 기준값
+        const categoryAvg = VIEW_IS_MOCK
+          ? (MOCK_CATEGORY_AVG[category] != null ? MOCK_CATEGORY_AVG[category] : gradeAvg.avg)
+          : (gradeAvg.categories[category] || gradeAvg.avg); // 과목별 평균
         // 평균 기준선 대비 색상 결정
         let colorClass = 'poor';
         if (percent >= categoryAvg + 20) colorClass = 'excellent';      // 평균보다 20% 이상 높음
@@ -2538,7 +2653,7 @@
       barsHTML += `
         <div class="grade-avg-info">
           <span class="avg-marker"></span>
-          <span>${gradeAvg.label} 과목별 기준선</span>
+          <span>${VIEW_IS_MOCK ? '브레인 모의' : gradeAvg.label} 과목별 기준선</span>
         </div>
       `;
 

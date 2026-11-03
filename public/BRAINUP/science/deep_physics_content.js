@@ -2613,7 +2613,7 @@ window.renderVocabFill = function () {
       <span class="blank-wrap" data-answer="${answer}">
         <span class="blank-icon">${no}</span>
         <span class="blank-mark"></span>
-        <input type="text" class="blank-input" placeholder="${initials || ''}">
+        <input type="text" class="blank-input" style="width:${Math.max(96,(initials||'').length*18+40)}px" placeholder="${initials || ''}">
       </span>
     `;
     const p = text.replace(/\(\s*[-＿—\u00A0]*\s*\)/, slot);

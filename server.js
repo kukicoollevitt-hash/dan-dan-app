@@ -23703,7 +23703,10 @@ app.get("/my-learning", async (req, res) => {
           const todayMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
           if (d > todayMonthStart) return; // 이번 달 이후로는 이동 불가
           selectedMonthStart = d;
-          renderMonthlySection();
+          // 월 이동 시 상단 테이블(#todayTableContainer) 갱신 후, 하단 AI 학습 분석도 해당 월 데이터로 재생성
+          Promise.resolve(renderMonthlySection()).then(function () {
+            if (typeof initAIFeedbacks === 'function') initAIFeedbacks(true);
+          });
         }
         window.changeMonth = changeMonth;
 
@@ -35721,7 +35724,7 @@ function _diagGradeFromWeighted(w, isElem) {
 
 app.post("/api/course-application", async (req, res) => {
   try {
-    const { branchName, studentGrade, studentClassNum, studentName, studentPhone, parentPhone, grade, series, answers, score, weightedScore, duration, userType, academyName } = req.body;
+    const { branchName, studentGrade, studentClassNum, studentName, studentPhone, parentPhone, grade, series, answers, score, weightedScore, duration, userType, academyName, testType } = req.body;
 
     // 학원 응시자인데 weightedScore가 빠졌으면 서버에서 자동 계산 (캐시 이슈 대비 근본 가드)
     let finalWeighted = (typeof weightedScore === 'number') ? weightedScore : null;
@@ -35730,8 +35733,9 @@ app.post("/api/course-application", async (req, res) => {
 
     const isAcademy = (userType || '').toLowerCase() === 'academy';
     const hasAnswers = Array.isArray(answers) && answers.length > 0;
+    const isGeneralDiag = (testType || 'general') === 'general';   // 모의테스트(elem/mid)는 25문항 가중치 로직 미적용
 
-    if (isAcademy && finalWeighted === null && hasAnswers) {
+    if (isAcademy && isGeneralDiag && finalWeighted === null && hasAnswers) {
       const r1 = _diagScoreWith(answers, DIAG_CORRECTS_NEW);
       const r2 = _diagScoreWith(answers, DIAG_CORRECTS_OLD);
       let chosenW;
@@ -35753,6 +35757,7 @@ app.post("/api/course-application", async (req, res) => {
       branchName,
       academyName: academyName || '',
       userType: userType || 'school',
+      testType: testType || 'general',
       studentGrade,
       studentClassNum: studentClassNum || '',
       studentName,
@@ -43084,7 +43089,8 @@ app.post("/api/literacy-test/ai-feedback", async (req, res) => {
   try {
     const {
       studentName, studentGrade, skillPercentages, categoryPercentages, gradeAverage,
-      totalScore, totalScoreMax, correctCount, totalQuestions
+      totalScore, totalScoreMax, correctCount, totalQuestions,
+      categoryAverages: clientCategoryAverages   // 클라이언트 제공 과목 기준값(모의=과목 고정값)
     } = req.body;
 
     if (!skillPercentages || !categoryPercentages) {
@@ -43097,7 +43103,7 @@ app.post("/api/literacy-test/ai-feedback", async (req, res) => {
     const correctNum = (typeof correctCount === 'number') ? correctCount : totalScore;
     const isWeightedScale = scoreMax === 100;
     const scoreLine = isWeightedScale
-      ? `총점: ${totalScore}/100점 (25문제 중 ${correctNum}문제 정답, 가중치 반영 점수)`
+      ? `총점: ${totalScore}/100점 (${questions}문제 중 ${correctNum}문제 정답, 가중치 반영 점수)`
       : `총점: ${totalScore}/${questions}문제 정답`;
 
     console.log(`🤖 [문해력 AI 피드백] ${studentGrade} ${studentName} - 피드백 생성 요청 (${scoreLine})`);
@@ -43109,7 +43115,10 @@ app.post("/api/literacy-test/ai-feedback", async (req, res) => {
 
     // 문해력 지수 데이터 분석
     const skills = ['핵심 이해력', '구조 파악력', '어휘 맥락력', '추론 통합력', '비판 적용력'];
-    const categories = ['사회', '과학', '인문', '경제', '법'];
+    // 과목 목록: 보내온 categoryPercentages 기준(모의=실제 과목), 객체 아니면 진단 5과목
+    const categories = (categoryPercentages && !Array.isArray(categoryPercentages) && Object.keys(categoryPercentages).length)
+      ? Object.keys(categoryPercentages)
+      : ['사회', '과학', '인문', '경제', '법'];
 
     // 학년별 지수별 세부 평균
     const gradeSkillAverages = {
@@ -43154,11 +43163,16 @@ app.post("/api/literacy-test/ai-feedback", async (req, res) => {
       value: Array.isArray(skillPercentages) ? skillPercentages[i] : (skillPercentages[name] || 0),
       avg: skillAverages[name]
     }));
-    const categoryEntries = categories.map((name, i) => ({
-      name,
-      value: Array.isArray(categoryPercentages) ? categoryPercentages[i] : (categoryPercentages[name] || 0),
-      avg: categoryAverages[name]
-    }));
+    const categoryFallbackAvg = (typeof gradeAverage === 'number' && gradeAverage > 0) ? gradeAverage : 60;
+    const categoryEntries = categories.map((name, i) => {
+      const value = Array.isArray(categoryPercentages) ? categoryPercentages[i] : (categoryPercentages[name] || 0);
+      // 평균: 클라이언트 제공(모의 과목 고정값) > 학년별 하드코딩(진단 과목) > 전체 평균
+      let avg;
+      if (clientCategoryAverages && typeof clientCategoryAverages[name] === 'number') avg = clientCategoryAverages[name];
+      else if (categoryAverages && typeof categoryAverages[name] === 'number') avg = categoryAverages[name];
+      else avg = categoryFallbackAvg;
+      return { name, value, avg };
+    });
 
     const sortedSkills = [...skillEntries].sort((a, b) => b.value - a.value);
     const sortedCategories = [...categoryEntries].sort((a, b) => b.value - a.value);

@@ -3606,11 +3606,14 @@ window.renderVocabFill = function () {
 }
 
   const html = (pack.vocabFill.items || []).map(({ no, text, answer, initials }) => {
+    // 초성 길이에 맞춰 입력칸 폭 자동 설정 — 긴 초성이 번호 badge에 가려지거나 잘리는 문제 방지
+    const _ini = initials || '';
+    const _w = Math.max(96, _ini.length * 18 + 40);
     const slot = `
       <span class="blank-wrap" data-answer="${answer}">
         <span class="blank-icon">${no}</span>
         <span class="blank-mark"></span>
-        <input type="text" class="blank-input" placeholder="${initials || ''}">
+        <input type="text" class="blank-input" style="width:${_w}px" placeholder="${_ini}">
       </span>
     `;
     const p = text.replace(/\(\s*[-＿—\u00A0]*\s*\)/, slot);

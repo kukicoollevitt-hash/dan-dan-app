@@ -1040,6 +1040,15 @@
         </div>
 
         <div class="form-group">
+          <label>진단시험지 종류<span class="required">*</span></label>
+          <select id="testType">
+            <option value="general" selected>일반심화테스트</option>
+            <option value="elem">초등모의테스트</option>
+            <option value="mid">중등모의테스트</option>
+          </select>
+        </div>
+
+        <div class="form-group">
           <label>학년<span class="required">*</span></label>
           <select id="studentGrade" required>
             <option value="" disabled selected>학년 선택</option>
@@ -1103,9 +1112,9 @@
       </div>
 
       <div class="quiz-header">
-        <h2 id="questionTitle">문제 1</h2>
+        <h2 id="questionTitle">진단테스트</h2>
         <p class="quiz-number">
-          <span id="questionNumber">1</span> / 25
+          <span id="questionNumber">1</span> / <span id="questionTotal">25</span>
           <span class="difficulty-badge" id="difficultyBadge">쉬움</span>
         </p>
       </div>
@@ -1476,7 +1485,7 @@
     }
 
     // 퀴즈 데이터 (25문항 - 5개 지문 × 5개 문해력 지수)
-    const quizData = [
+    let quizData = [
       // ========== 사회 (1-5) ==========
       {
         category: "사회",
@@ -2095,7 +2104,56 @@
       }
     });
 
-    function validateAndStartQuiz() {
+    // ===== 모의테스트(브레인모의고사 연동) =====
+    let testType = 'general';   // general | elem(초등=업) | mid(중등=핏)
+    let mockMeta = null;        // 선택된 모의고사 메타(제목·총점·영역)
+    const MOCK_CONF = {
+      elem: { file: 'monthly_elem_1', time: 1800, label: '초등 모의테스트', baseSeries: '업' },  // 30분
+      mid:  { file: 'monthly_mid_1',  time: 2100, label: '중등 모의테스트', baseSeries: '핏' }   // 35분
+    };
+    // 모의고사 영역(type) → 진단 5지수 명칭 매핑 (레이더 공유)
+    const MOCK_SKILL_MAP = {
+      literal: '핵심 이해력', lexical: '어휘 맥락력', structural: '구조 파악력',
+      inferential: '추론 통합력', critical: '비판 적용력'
+    };
+
+    // 모의고사 JSON → 기존 quizData 포맷으로 변환 (기존 렌더/채점 재활용)
+    async function loadMockQuiz(level) {
+      const conf = MOCK_CONF[level];
+      if (!conf) throw new Error('알 수 없는 모의테스트 종류');
+      const res = await fetch('/monthly_exam_data/' + conf.file + '.json');
+      if (!res.ok) throw new Error('모의고사 데이터 로드 실패(' + res.status + ')');
+      const data = await res.json();
+      mockMeta = {
+        title: data.title, totalScore: data.totalScore || 100,
+        totalQuestions: data.totalQuestions, areas: data.areas || {}, level: level
+      };
+      const items = [];
+      (data.passages || []).forEach(function(p) {
+        const passageText = Array.isArray(p.text) ? p.text.join('<br><br>') : (p.text || '');
+        (p.questions || []).forEach(function(q) {
+          const explain = [q.correct || '', q.wrong || ''].filter(Boolean).join('<br><br>');
+          items.push({
+            category: p.subject || '기타',
+            skill: MOCK_SKILL_MAP[q.type] || q.typeKo || '핵심 이해력',
+            area: q.type,                                   // literal/lexical/... (원영역 키)
+            passage: passageText,
+            passageExtended: passageText,
+            passageTitle: p.title || '',
+            question: q.text || '',
+            options: q.options || [],
+            optionsExtended: q.options || [],
+            correct: (typeof q.answer === 'number' ? q.answer - 1 : -1),  // 1-based → 0-based
+            score: (typeof q.score === 'number' ? q.score : 0),           // 원점수 배점
+            explanation: explain,
+            explanationExtended: explain
+          });
+        });
+      });
+      return items;
+    }
+
+    async function validateAndStartQuiz() {
       // 모든 필수 입력 필드 가져오기
       const branchName = document.getElementById('branchName').value.trim();
       const studentGrade = document.getElementById('studentGrade').value.trim();
@@ -2155,6 +2213,10 @@
         return;
       }
 
+      // 진단시험지 종류 반영
+      const ttEl = document.getElementById('testType');
+      testType = (ttEl && ttEl.value) ? ttEl.value : 'general';
+
       // 사용자 정보 저장
       userInfo = {
         branchName,
@@ -2164,8 +2226,27 @@
         parentName,
         parentPhone,
         startTime: new Date().toISOString(),
-        userType: 'academy'  // 학원용 진단테스트 표시
+        userType: 'academy',  // 학원용 진단테스트 표시
+        testType: testType    // general | elem | mid
       };
+
+      // 모의테스트면 해당 회차 문항셋 로드 + 제한시간 설정
+      if (testType === 'elem' || testType === 'mid') {
+        const startBtn = document.querySelector('.start-btn');
+        try {
+          if (startBtn) { startBtn.disabled = true; startBtn.textContent = '시험지 불러오는 중…'; }
+          quizData = await loadMockQuiz(testType);
+          timeRemaining = MOCK_CONF[testType].time;
+        } catch (e) {
+          console.error('모의고사 로드 실패:', e);
+          alert('모의고사 시험지를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+          if (startBtn) { startBtn.disabled = false; startBtn.textContent = '진단 시작하기 →'; }
+          return;
+        }
+        if (startBtn) { startBtn.disabled = false; startBtn.textContent = '진단 시작하기 →'; }
+      } else {
+        timeRemaining = 1200;  // 일반테스트 20분
+      }
 
       console.log('사용자 정보:', userInfo);
 
@@ -2215,6 +2296,13 @@
       const studentNameText = document.getElementById('studentNameText');
       studentGradeText.textContent = userInfo.studentGrade;
       studentNameText.textContent = userInfo.studentName;
+
+      // 시험지 종류 명칭 + 실제 총 문항수 표시
+      const TEST_TITLE = { general: '일반심화테스트', elem: '초등모의테스트', mid: '중등모의테스트' };
+      const titleEl = document.getElementById('questionTitle');
+      if (titleEl) titleEl.textContent = TEST_TITLE[testType] || '진단테스트';
+      const totalEl = document.getElementById('questionTotal');
+      if (totalEl) totalEl.textContent = quizData.length;
 
       startTimer();
       showQuestion();
@@ -2424,10 +2512,20 @@
     // - score: 정답 개수 (0~25, 기존 로직 호환용)
     // - weightedScore: 가중치 점수 (0~100, 등급 결정 기준)
     let weightedScore = 0;
+    let rawScore = 0;        // 모의테스트 원점수(0~100, 문항 배점 합)
+    let skillTotals = {};    // 지수별 문항 수 (일반=5씩, 모의=7/8씩)
     function calculateFinalScore() {
       score = 0;
       weightedScore = 0;
+      rawScore = 0;
       skillScores = {
+        '핵심 이해력': 0,
+        '구조 파악력': 0,
+        '어휘 맥락력': 0,
+        '추론 통합력': 0,
+        '비판 적용력': 0
+      };
+      skillTotals = {
         '핵심 이해력': 0,
         '구조 파악력': 0,
         '어휘 맥락력': 0,
@@ -2436,13 +2534,30 @@
       };
 
       quizData.forEach((q, index) => {
+        if (skillTotals[q.skill] !== undefined) skillTotals[q.skill]++;
         const userAnswer = userAnswers[index];
         if (userAnswer === q.correct) {
           score++;
-          skillScores[q.skill]++;
+          if (skillScores[q.skill] !== undefined) skillScores[q.skill]++;
           weightedScore += (SKILL_WEIGHTS[q.skill] || 0);
+          rawScore += (typeof q.score === 'number' ? q.score : 0);
         }
       });
+      rawScore = Math.round(rawScore);
+    }
+
+    // 모의테스트 등급 산정 (원점수 기준) — elem=업 기준 / mid=핏 기준
+    function mockGrade(raw, level) {
+      const top = (level === 'mid') ? '핏' : '업';   // 95~85 구간 시리즈
+      const bot = (level === 'mid') ? '업' : '온';   // 84 이하 구간 시리즈
+      let s, sub;
+      if (raw >= 95)      { s = top; sub = '(상)'; }
+      else if (raw >= 90) { s = top; sub = '(중)'; }
+      else if (raw >= 85) { s = top; sub = '(하)'; }
+      else if (raw >= 80) { s = bot; sub = '(상)'; }
+      else if (raw >= 75) { s = bot; sub = '(중)'; }
+      else                { s = bot; sub = '(하)'; }
+      return { label: s + sub, series: s, sub: sub, seriesFull: 'BRAIN ' + s };
     }
 
     let finalDuration = ''; // 소요 시간 저장용
@@ -2454,8 +2569,10 @@
       // 점수 계산 (항상 최신 답안으로 재계산)
       calculateFinalScore();
 
+      const isMock = (testType === 'elem' || testType === 'mid');
+
       // 타이머 정지 전에 소요 시간 계산
-      const totalTime = 1200; // 20분
+      const totalTime = isMock ? MOCK_CONF[testType].time : 1200;
       const elapsedSeconds = totalTime - timeRemaining;
       const elapsedMinutes = Math.floor(elapsedSeconds / 60);
       const elapsedSecs = elapsedSeconds % 60;
@@ -2465,13 +2582,14 @@
       document.getElementById('quizScreen').style.display = 'none';
       document.getElementById('resultScreen').style.display = 'block';
 
-      document.getElementById('finalScore').textContent = weightedScore;
+      document.getElementById('finalScore').textContent = isMock ? rawScore : weightedScore;
 
-      // 각 스킬별 점수 분석 (각 스킬당 5문제)
+      // 각 스킬별 정답률 (일반=5문제/지수, 모의=지수별 실제 문항수로 나눔)
       const skillNames = Object.keys(skillScores);
       const skillPercentages = {};
       skillNames.forEach(skill => {
-        skillPercentages[skill] = (skillScores[skill] / 5) * 100;
+        const tot = skillTotals[skill] || 5;
+        skillPercentages[skill] = tot ? Math.round((skillScores[skill] / tot) * 100) : 0;
       });
 
       // 가장 높은 점수와 낮은 점수 스킬 찾기
@@ -2489,7 +2607,16 @@
       const studentGradeValue = userInfo.studentGrade || '';
       const isElementary = ['3학년', '4학년', '5학년', '6학년'].includes(studentGradeValue);
 
-      if (isElementary) {
+      if (isMock) {
+        // 모의테스트: 원점수(0~100) 기준 등급 — elem=업 기준 / mid=핏 기준
+        const mg = mockGrade(rawScore, testType);
+        grade = mg.label;                 // 예: "업(상)"
+        series = mg.seriesFull;           // 예: "BRAIN 업"
+        description = (mockMeta && mockMeta.title) ? mockMeta.title : '모의테스트 결과';
+        recommendation = '모의고사 원점수 ' + rawScore + '점 기준 ' + mg.label + ' 수준입니다. 담당 선생님과 상담해 보세요.';
+        strength = highestSkill + ' 영역이 상대적으로 우수합니다 (정답률 ' + skillPercentages[highestSkill] + '%).';
+        weakness = lowestSkill + ' 영역 보완이 필요합니다 (정답률 ' + skillPercentages[lowestSkill] + '%).';
+      } else if (isElementary) {
         // 초등 가중치 점수 기준: 78~100 핏, 65~77 업, 35~64 온 보통, 0~34 온 기초
         // (초등은 딥 시리즈 대상 학생군이 아니므로 핏이 최고 등급)
         if (weightedScore >= 78) {
@@ -2554,9 +2681,9 @@
         }
       }
 
-      // 시리즈 세부 레벨 (상/중/하) — 상담용 표시. DB에는 base series만 저장.
-      const subLevel = getSeriesSubLevel(weightedScore, isElementary);
-      const seriesDisplay = series + subLevel;
+      // 시리즈 세부 레벨 (상/중/하) — 일반테스트만 가중치 기준 산정. 모의는 grade에 이미 포함.
+      const subLevel = isMock ? '' : getSeriesSubLevel(weightedScore, isElementary);
+      const seriesDisplay = isMock ? grade : (series + subLevel);
 
       // 결과 저장 (수강신청에서 사용)
       testResult = {
@@ -2588,6 +2715,7 @@
         console.log('userAnswers:', userAnswers);
         console.log('finalDuration:', finalDuration);
 
+        const isMock = (testType === 'elem' || testType === 'mid');
         const requestBody = {
           branchName: userInfo.branchName,
           studentGrade: userInfo.studentGrade,
@@ -2597,10 +2725,11 @@
           grade: testResult.grade,
           series: testResult.series,
           answers: userAnswers,
-          score: score,
-          weightedScore: weightedScore,
+          score: score,                                   // 정답 개수(일반 0~25, 모의 0~35/40)
+          weightedScore: isMock ? rawScore : weightedScore, // 0~100 점수(모의=원점수) — 서버 재계산 방지 겸용
           duration: finalDuration,
-          userType: 'academy'  // 학원용 진단테스트 표시
+          userType: 'academy',  // 학원용 진단테스트 표시
+          testType: testType     // general | elem | mid (결과뷰어 분기용)
         };
 
         console.log('자동 저장 데이터:', JSON.stringify(requestBody, null, 2));
