@@ -39204,6 +39204,7 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
       else if (['modern', 'classic'].includes(subject)) folder = 'korlit';
       else if (['world1', 'world2'].includes(subject)) folder = 'worldlit';
       else if (['people1', 'people2'].includes(subject)) folder = 'person';
+      else if (['kh', 'khadv'].includes(subject)) folder = 'korhistory';  // 한국사·심화한국사
 
       // FIT 시리즈는 fit_xxx_content.js, ON 시리즈는 on_xxx_content.js, DEEP 시리즈는 deep_xxx_content.js 파일 사용
       let contentFileName;
@@ -39213,6 +39214,10 @@ app.get("/api/gate-quiz/generate", async (req, res) => {
         contentFileName = `on_${subject}_content.js`;
       } else if (isDeep) {
         contentFileName = `deep_${subject}_content.js`;
+      } else if (subject === 'kh') {
+        contentFileName = 'korhistory_content.js';          // 한국사
+      } else if (subject === 'khadv') {
+        contentFileName = 'korhistory_advanced_content.js'; // 심화한국사
       } else {
         contentFileName = `${subject}_content.js`;
       }

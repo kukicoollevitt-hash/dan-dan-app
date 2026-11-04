@@ -597,6 +597,23 @@
       </div>
     </div>
 
+    <!-- 서술형집중대비 교재 (문학기본편 12편) -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">📕</span>
+        서술형집중대비 교재
+      </div>
+      <div class="book-section">
+        <div class="book-section-header">
+          <div class="book-section-title">교재 목록 <span style="font-size:11px;color:#666;margin-left:6px;">(문학기본편 12편 세트, 권당 15,000원)</span> <span style="font-size:12px;font-weight:700;color:#d9480f;background:#fff4e6;border:1px solid #ffd8a8;border-radius:6px;padding:3px 9px;margin-left:8px;display:inline-block;vertical-align:middle;">📢 출판 인쇄 특성상 최소 2권부터 짝수 단위로 주문이 가능합니다</span></div>
+          <button class="add-btn" onclick="addLiteraryItem()">+ 추가</button>
+        </div>
+        <div id="literaryItems">
+          <div class="no-items">추가 버튼을 눌러 교재를 추가하세요</div>
+        </div>
+      </div>
+    </div>
+
     <p style="color:#e53935;font-weight:800;font-size:15px;line-height:1.6;text-align:center;margin:20px 0 12px;padding:14px 16px;background:#fff5f5;border:1.5px solid #ffcdd2;border-radius:12px;">
       ⚠️ 교재제작은 교재 신청일이 아닌 <span style="text-decoration:underline;">[교재비 입금일]</span>로부터 7~10일이 소요되는 점<br>꼭 참고하여 신청 부탁드립니다.
     </p>
@@ -671,6 +688,7 @@
     let vocabWbItemId = 0;
     let subjectItemId = 0;
     let grammarItemId = 0;
+    let literaryItemId = 0;
 
     // 시리즈별 호수 개수 · 브레인입문 5호 · 나머지 12호
     const BRAIN_ISSUE_COUNT = {
@@ -864,6 +882,28 @@
       updateSummary();
     }
 
+    // 서술형집중대비 교재 아이템 추가 — 문학기본편(12편) 세트, 권당 15,000원 · 최소 2권 · 2권 단위
+    function addLiteraryItem() {
+      const container = document.getElementById('literaryItems');
+      const noItems = container.querySelector('.no-items');
+      if (noItems) noItems.remove();
+
+      literaryItemId++;
+      const itemHtml = `
+        <div class="book-item" id="literary-${literaryItemId}">
+          <select onchange="updateSummary()">
+            <option value="">교재 선택</option>
+            <option value="문학기본편">문학기본편(12편)</option>
+          </select>
+          <input type="number" min="2" step="2" value="2" placeholder="권수 (2권 단위)" onchange="updateSummary()" oninput="updateSummary()">
+          <span class="item-subtotal">-</span>
+          <button class="remove-btn" onclick="removeItem('literary-${literaryItemId}')">삭제</button>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', itemHtml);
+      updateSummary();
+    }
+
     // 브레인비평 시사문해 월간 교재 아이템 추가 — 권당 최소 2권
     function addCritiqueItem() {
       const container = document.getElementById('critiqueItems');
@@ -1047,6 +1087,35 @@
         }
       });
 
+      // 서술형집중대비 교재 수집 (문학기본편 12편, 권당 15,000원 · 최소 2권 · 2권 단위)
+      const LITERARY_UNIT_PRICE = 15000;
+      document.querySelectorAll('#literaryItems .book-item').forEach(item => {
+        const sel = item.querySelector('select');
+        const input = item.querySelector('input');
+        const subtotalEl = item.querySelector('.item-subtotal');
+
+        const book = sel.value;
+        const qty = parseInt(input.value) || 0;
+
+        if (book && qty >= 2 && qty % 2 === 0) {
+          const subtotal = qty * LITERARY_UNIT_PRICE;
+          subtotalEl.textContent = subtotal.toLocaleString() + '원';
+          items.push({
+            bookType: '서술형집중대비교재',
+            series: '문학기본편(12편)',
+            issueNumber: 12,
+            subjectName: '문학기본편(12편)',
+            quantity: qty,
+            unitPrice: LITERARY_UNIT_PRICE,
+            subtotal
+          });
+          totalQty += qty;
+          totalAmt += subtotal;
+        } else {
+          subtotalEl.textContent = qty > 0 && qty < 2 ? '⚠️ 최소 2권' : (qty >= 2 && qty % 2 !== 0 ? '⚠️ 2권 단위' : '-');
+        }
+      });
+
       // 특강 교재 (한국사 통합) 아이템 수집 (최소 2권 · 2권 단위)
       document.querySelectorAll('#specialItems .book-item').forEach(item => {
         const selects = item.querySelectorAll('select');
@@ -1143,6 +1212,7 @@
           else if (item.bookType === '특강교재') issueLabel = item.subjectName || '기본+심화 통합';
           else if (item.bookType === '문해어휘학습장') issueLabel = `${item.issueNumber}권`;
           else if (item.bookType === '현대문법교재') issueLabel = `${item.issueNumber}권`;
+          else if (item.bookType === '서술형집중대비교재') issueLabel = '12편 세트';
           else if (item.bookType === '과목별교재') issueLabel = item.subjectName || '-';
           else issueLabel = `${item.issueNumber}호`;
           return `

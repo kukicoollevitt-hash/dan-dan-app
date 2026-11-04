@@ -2876,7 +2876,7 @@
           const eps = srSplitEpisodes(book.content);
           pageNo += eps.length + Math.ceil((data.think || []).length / 3);
         }
-        pages.push({ pdf: '/images/독서왕문학편뒷표지.pdf' + CV, fit: 'cover' });
+        pages.push({ pdf: '/images/독서왕문학편뒷표지.pdf' + CV, fit: 'cover', price: '22,000원' });
         pages.push({ pdf: '/images/독서왕문학편책등.pdf' + CV, fit: 'contain' });
         const fname = '서술형집중대비_문학편_통합교재' + (isT ? '_교사용' : '') + '_' + paper.toUpperCase() + '.pdf';
         await gkRenderPdf(pages, fname, btn ? (t) => { btn.innerHTML = t; } : null, 3, paper);
@@ -3561,18 +3561,42 @@
           };
           // 표지 PDF — o.fit='cover'면 목표 용지를 흰 여백 없이 꽉 채움(미세 크롭 허용, 앞·뒤표지용),
           //   'contain'이면 비율 유지 중앙 배치(책등처럼 극단 비율용). 플래그 없으면 기존 copyPages(국어문법 교재 호환).
+          // 뒷표지 가격표 — 한글 '원' 폰트 이슈 회피 위해 브라우저 캔버스로 그려 PNG로 얹음. 우측 하단 배치.
+          const drawPriceOverlay = async (page, priceText) => {
+            const SCALE = 4, FPX = 30, PADX = 24, PADY = 14;
+            const mc = document.createElement('canvas');
+            let ctx = mc.getContext('2d');
+            ctx.font = '900 ' + FPX + 'px "Noto Sans KR","Malgun Gothic",sans-serif';
+            const tw = ctx.measureText(priceText).width;
+            const bw = Math.ceil(tw + PADX * 2), bh = Math.ceil(FPX + PADY * 2);
+            mc.width = bw * SCALE; mc.height = bh * SCALE;
+            ctx = mc.getContext('2d');
+            ctx.scale(SCALE, SCALE);
+            const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); };
+            ctx.fillStyle = 'rgba(255,255,255,0.94)'; rr(1.5, 1.5, bw - 3, bh - 3, 11); ctx.fill();
+            ctx.lineWidth = 2.2; ctx.strokeStyle = '#1e3a8a'; rr(1.5, 1.5, bw - 3, bh - 3, 11); ctx.stroke();
+            ctx.fillStyle = '#1e3a8a'; ctx.font = '900 ' + FPX + 'px "Noto Sans KR","Malgun Gothic",sans-serif';
+            ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+            ctx.fillText(priceText, bw / 2, bh / 2 + 1);
+            const png = await out.embedPng(await (await fetch(mc.toDataURL('image/png'))).arrayBuffer());
+            const targetW = PT_W * 0.26;
+            const targetH = targetW * (bh / bw);
+            const margin = PT_W * 0.055;
+            page.drawImage(png, { x: PT_W - targetW - margin, y: margin, width: targetW, height: targetH });
+          };
           const addCoverPdf = async (o, bytes) => {
             const src = await PDFLib.PDFDocument.load(bytes);
             const idxs = src.getPageIndices();
             if (!o.fit) { const ps = await out.copyPages(src, idxs); ps.forEach(p => out.addPage(p)); return; }
             const cover = (o.fit === 'cover' || o.fit === true);
             const embedded = await out.embedPdf(src, idxs);
-            embedded.forEach(ep => {
+            for (const ep of embedded) {
               const page = out.addPage([PT_W, PT_H]);
               const sc = cover ? Math.max(PT_W / ep.width, PT_H / ep.height) : Math.min(PT_W / ep.width, PT_H / ep.height);
               const w = ep.width * sc, h = ep.height * sc;
               page.drawPage(ep, { x: (PT_W - w) / 2, y: (PT_H - h) / 2, width: w, height: h });
-            });
+              if (o.price) await drawPriceOverlay(page, o.price);
+            }
           };
           const addItem = async (o) => {
             if (o.pdf) { await addCoverPdf(o, await (await fetch(o.pdf)).arrayBuffer()); return; }
