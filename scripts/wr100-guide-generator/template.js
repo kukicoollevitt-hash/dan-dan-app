@@ -279,7 +279,7 @@ function pageWriting(DATA, mode, pageNum) {
       <div class="page-body">
         <div class="write-guide-banner">
           <span class="write-guide-icon">✏️</span>
-          <span class="write-guide-text">옅은 <b>오렌지 글자 위에</b> 예쁘게 따라 쓰고, 아래 <b>빈 줄</b>에 한 번 더 써봐요</span>
+          <span class="write-guide-text">옅은 <b>글자 위에</b> 예쁘게 따라 쓰고, 아래 <b>빈 줄</b>에 한 번 더 써봐요</span>
         </div>
         ${items}
       </div>
