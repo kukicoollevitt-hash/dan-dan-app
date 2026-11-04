@@ -1315,6 +1315,20 @@ const pepperoEntrySchema = new mongoose.Schema({
 pepperoEntrySchema.index({ center: 1, createdAt: -1 });
 const PepperoEntry = mongoose.model("PepperoEntry", pepperoEntrySchema);
 
+// 🍫 빼빼로 임시저장(이어쓰기) — 학생별 1건 upsert, 최종 제출 시 삭제
+const pepperoDraftSchema = new mongoose.Schema({
+  key: { type: String, unique: true, index: true }, // grade|name|center (trim·소문자)
+  center: { type: String, default: "" },
+  grade: { type: String, default: "" },
+  name: { type: String, default: "" },
+  dreams: { type: [String], default: [] },
+  actions: { type: [String], default: [] },
+  updatedAt: { type: Date, default: Date.now },
+});
+const PepperoDraft = mongoose.model("PepperoDraft", pepperoDraftSchema);
+const pepperoDraftKey = (grade, name, center) =>
+  [grade, name, center].map((s) => String(s || "").trim().toLowerCase()).join("|");
+
 const PEPPERO_DEADLINE = new Date("2026-11-11T23:59:00+09:00").getTime();
 
 // 🍫 빼빼로데이 이벤트 — DB 저장 (마감: 2026-11-11 23:59 KST) · 메일 없음, 슈퍼관리자 확성기 관리에서 조회·엑셀
@@ -1324,6 +1338,7 @@ app.post("/api/peppero/submit", async (req, res) => {
       return res.json({ ok: false, message: "이벤트가 마감되었어요. 참여해 줘서 고마워요! 🍫" });
     }
     let { name, grade, center, dreams, actions } = req.body || {};
+    const clientCenter = center; // 임시저장 키는 클라이언트가 보낸 센터 기준(아래 폴백과 무관하게 일치)
     const clean = (arr) => Array.isArray(arr) ? arr.map((s) => String(s || "").trim()) : [];
     dreams = clean(dreams);
     actions = clean(actions);
@@ -1341,11 +1356,49 @@ app.post("/api/peppero/submit", async (req, res) => {
       } catch (e) { console.error("❌ [빼빼로] 센터 조회 실패:", e.message); }
     }
     await PepperoEntry.create({ center: center || "", grade, name, dreams, actions });
+    // 최종 제출 완료 → 임시저장 삭제 (클라이언트 센터 키 + 안전망으로 grade·name 전체)
+    try {
+      await PepperoDraft.deleteOne({ key: pepperoDraftKey(grade, name, clientCenter) });
+      await PepperoDraft.deleteMany({ grade, name });
+    } catch (e) { console.error("❌ [빼빼로] 임시저장 삭제 실패:", e.message); }
     console.log(`🍫 [빼빼로데이] 접수(DB 저장): ${center || "-"} · ${grade} ${name}`);
     res.json({ ok: true });
   } catch (err) {
     console.error("❌ [/api/peppero/submit] 오류:", err);
     res.status(500).json({ ok: false, message: "접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." });
+  }
+});
+
+// 🍫 빼빼로 임시저장(이어쓰기) 저장 — 학생별 upsert, 마감 후 거부
+app.post("/api/peppero/draft/save", async (req, res) => {
+  try {
+    if (Date.now() > PEPPERO_DEADLINE) return res.json({ ok: false, message: "이벤트가 마감되었어요." });
+    const { name, grade, center, dreams, actions } = req.body || {};
+    if (!name || !grade) return res.json({ ok: false, message: "학생 정보를 확인할 수 없어요." });
+    const clip = (arr) => Array.from({ length: 11 }, (_, i) => String((Array.isArray(arr) ? arr[i] : "") || "").slice(0, 300));
+    const key = pepperoDraftKey(grade, name, center);
+    await PepperoDraft.updateOne(
+      { key },
+      { $set: { key, center: center || "", grade, name, dreams: clip(dreams), actions: clip(actions), updatedAt: new Date() } },
+      { upsert: true }
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ [/api/peppero/draft/save] 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 🍫 빼빼로 임시저장 불러오기 — 폼 열 때 복원
+app.get("/api/peppero/draft/load", async (req, res) => {
+  try {
+    const { name, grade, center } = req.query || {};
+    if (!name || !grade) return res.json({ ok: true, draft: null });
+    const d = await PepperoDraft.findOne({ key: pepperoDraftKey(grade, name, center) }).lean();
+    res.json({ ok: true, draft: d ? { dreams: d.dreams || [], actions: d.actions || [], updatedAt: d.updatedAt } : null });
+  } catch (err) {
+    console.error("❌ [/api/peppero/draft/load] 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
   }
 });
 

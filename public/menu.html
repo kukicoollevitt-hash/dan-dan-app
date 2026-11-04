@@ -30893,6 +30893,7 @@ ${content}
           <input type="file" id="pbOcrFileInput" accept="image/*" onchange="pbRunOcr(this.files&&this.files[0]); this.value='';" style="display:none;">
           <div id="pbOcrStatus" style="display:none; margin-top:8px; text-align:center; font-size:13px; font-weight:700; color:#b83268;">🤖 AI가 손글씨를 읽고 있어요… (보통 5~10초)</div>
         </div>
+        <button type="button" id="pbSaveBtn" onclick="pbSaveDraft(true)" style="width:100%; margin-bottom:10px; padding:14px; border:2px solid #ec568a; border-radius:14px; background:#fff; color:#b83268; font-size:15.5px; font-weight:900; cursor:pointer;">💾 임시저장 <span style="font-weight:700; font-size:12.5px; color:#c98aa6;">(다음에 이어서 쓰기)</span></button>
         <button id="pbSubmitBtn" onclick="pbSubmit()" style="width:100%; padding:15px; border:none; border-radius:14px; background:linear-gradient(135deg,#ec568a,#b83268); color:#fff; font-size:17px; font-weight:900; cursor:pointer; letter-spacing:1px;">제출하기</button>
       </div>
     </div>
@@ -30952,6 +30953,7 @@ ${content}
       }
       dreams.innerHTML = dh;
       actions.innerHTML = ah;
+      [dreams, actions].forEach(c => c.querySelectorAll('input').forEach(inp => inp.addEventListener('input', pbScheduleAutoSave)));
       _pbInputsBuilt = true;
     }
 
@@ -30962,6 +30964,7 @@ ${content}
       pbBuildInputs();
       document.getElementById('pbIntroOverlay').style.display = 'none';
       document.getElementById('pbFormOverlay').style.display = 'flex';
+      pbLoadDraft(); // 임시저장 있으면 복원 (최초 1회)
     }
 
     async function pbSubmit() {
@@ -31063,6 +31066,88 @@ ${content}
       } finally {
         status.style.display = 'none'; btn.disabled = false; btn.style.opacity = '1';
       }
+    }
+
+    // 💾 현재 22칸 수집
+    function pbCollect() {
+      const dreams = [], actions = [];
+      for (let i = 1; i <= 11; i++) {
+        const de = document.getElementById('pbDream' + i), ae = document.getElementById('pbAct' + i);
+        dreams.push(de ? (de.value || '').trim() : '');
+        actions.push(ae ? (ae.value || '').trim() : '');
+      }
+      return { dreams, actions };
+    }
+
+    // 💾 임시저장 (explicit=true면 버튼으로 결과 표시, false면 조용히 자동저장)
+    let _pbSaving = false;
+    async function pbSaveDraft(explicit) {
+      const s = pbGetStudent();
+      if (!s.grade || !s.name) {
+        if (explicit) pbShowMsg('🍫', '학생 정보를 못 찾았어요', '다시 로그인한 뒤<br>이용해 주세요!');
+        return false;
+      }
+      if (_pbSaving) return false;
+      _pbSaving = true;
+      const btn = document.getElementById('pbSaveBtn');
+      const orig = btn ? btn.innerHTML : '';
+      if (explicit && btn) { btn.disabled = true; btn.innerHTML = '저장 중…'; }
+      try {
+        const { dreams, actions } = pbCollect();
+        const r = await fetch('/api/peppero/draft/save', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: s.name, grade: s.grade, center: s.center, dreams, actions })
+        });
+        const d = await r.json();
+        if (explicit && btn) {
+          if (d.ok) {
+            btn.innerHTML = '✓ 저장됐어요! 다음에 이어 쓸 수 있어요';
+            btn.style.color = '#2e8b57'; btn.style.borderColor = '#2e8b57';
+            setTimeout(() => { btn.innerHTML = orig; btn.style.color = '#b83268'; btn.style.borderColor = '#ec568a'; btn.disabled = false; }, 1800);
+          } else {
+            btn.innerHTML = orig; btn.disabled = false;
+            pbShowMsg('🍫', '임시저장 실패', (d.message || '잠시 후 다시 시도해 주세요.'));
+          }
+        }
+        return !!d.ok;
+      } catch (e) {
+        if (explicit && btn) { btn.innerHTML = orig; btn.disabled = false; pbShowMsg('🍫', '오류가 발생했어요', '잠시 후 다시 시도해 주세요.'); }
+        return false;
+      } finally { _pbSaving = false; }
+    }
+
+    // 💾 자동 임시저장 — 입력 2초 후 조용히 저장 (버튼 깜빡 안 눌러도 진행 보존)
+    let _pbAutoTimer = null;
+    function pbScheduleAutoSave() {
+      clearTimeout(_pbAutoTimer);
+      _pbAutoTimer = setTimeout(() => { pbSaveDraft(false); }, 2000);
+    }
+
+    // 💾 임시저장 불러오기 — 폼 처음 열 때 1회만 복원 (재오픈 시 메모리 내용 보존)
+    let _pbDraftLoaded = false;
+    async function pbLoadDraft() {
+      if (_pbDraftLoaded) return;
+      _pbDraftLoaded = true;
+      const s = pbGetStudent();
+      if (!s.grade || !s.name) return;
+      try {
+        const q = new URLSearchParams({ name: s.name, grade: s.grade, center: s.center || '' });
+        const r = await fetch('/api/peppero/draft/load?' + q.toString());
+        const d = await r.json();
+        if (!d.ok || !d.draft) return;
+        let filled = 0;
+        for (let i = 1; i <= 11; i++) {
+          const dv = (d.draft.dreams && d.draft.dreams[i - 1]) || '';
+          const av = (d.draft.actions && d.draft.actions[i - 1]) || '';
+          const de = document.getElementById('pbDream' + i), ae = document.getElementById('pbAct' + i);
+          if (de && dv) { de.value = dv; filled++; }
+          if (ae && av) { ae.value = av; filled++; }
+        }
+        if (filled > 0) {
+          const info = document.getElementById('pbStudentInfo');
+          if (info) info.innerHTML += ' <span style="color:#fff3b0;">· 이어쓰기 불러옴 ✍️</span>';
+        }
+      } catch (e) {}
     }
 
     document.addEventListener('DOMContentLoaded', function() {
