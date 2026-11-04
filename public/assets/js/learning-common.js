@@ -293,8 +293,35 @@
       }
     }
 
+    /* =========================================================
+       🔒 선생님 모드(view-as) 학습 저장 차단 — 2026-11-04
+       - 관리자가 학생 목록에서 클릭해 들어온 view-as에서 학습하면 학생 기록이 오염/카운팅 부풀려지는 문제 방지.
+       - 발동 조건(둘 다): sessionStorage.brainAdminViewAs==='1' AND 서버 /api/admin/info 가 관리자 세션 확인.
+         → 진짜 학생(관리자 세션 없음)은 절대 안 걸림. 불확실하면 저장 허용(fail-open).
+       - 예외: 테스트 계정(초3 김윤슬) view-as는 허용 — admin→브레인문해원_테스트→김윤슬 시연 보존.
+       - ⚠️ 롤백: 아래 VIEW_AS_SAVE_BLOCK 를 false 로 바꾸면 즉시 전체 비활성(저장 원래대로).
+    ========================================================= */
+    const VIEW_AS_SAVE_BLOCK = true;
+    const VIEW_AS_SAVE_WHITELIST = [{ grade: '초3', name: '김윤슬' }];
+    let _viewAsAdminCache = null; // null=미확인 캐시
+    async function isViewAsSaveBlocked() {
+      if (!VIEW_AS_SAVE_BLOCK) return false;
+      try {
+        const stu = getCurrentStudent();
+        if (stu && VIEW_AS_SAVE_WHITELIST.some(w => w.grade === stu.grade && w.name === stu.name)) return false; // 테스트 계정 시연 허용
+        if (sessionStorage.getItem('brainAdminViewAs') !== '1') return false; // view-as 아님 → 저장 허용
+        if (_viewAsAdminCache === null) {
+          const r = await fetch('/api/admin/info');
+          _viewAsAdminCache = (r.ok && ((await r.json()) || {}).success === true);
+        }
+        return _viewAsAdminCache === true;
+      } catch (e) { return false; } // 불확실하면 저장 허용(데이터 유실 방지)
+    }
+    window.isViewAsSaveBlocked = isViewAsSaveBlocked;
+
     // ★ 서버에 단원별 학습 진행 저장
     async function saveUnitProgressToServer(data) {
+      if (await isViewAsSaveBlocked()) { console.log('🔒 선생님 모드(view-as) — 단원 진행 저장 건너뜀'); return; }
       const stu = getCurrentStudent();
       if (!stu) {
         console.log('[saveUnitProgressToServer] 학생 정보 없음, 저장 건너뜀');
@@ -372,6 +399,7 @@
 
     // ★ 서버에 학습 로그 전송 (별표 표시용 - /api/log)
     async function sendLearningLog() {
+      if (await isViewAsSaveBlocked()) { console.log('🔒 선생님 모드(view-as) — 학습 로그 전송 건너뜀'); return; }
       const stu = getCurrentStudent();
       if (!stu) {
         console.log('[sendLearningLog] 학생 정보 없음, 전송 건너뜀');
@@ -595,6 +623,7 @@
 
     // 학습 행동 데이터 서버 저장 함수
     async function sendLearningBehavior() {
+      if (await isViewAsSaveBlocked()) { console.log('🔒 선생님 모드(view-as) — 학습 행동 저장 건너뜀'); return; }
       const stu = getCurrentStudent();
       if (!stu) {
         console.log('[sendLearningBehavior] 학생 정보 없음, 전송 건너뜀');
@@ -3119,21 +3148,24 @@
           const _khStu = getCurrentStudent();
           if (_khStu) {
             const answers = Array.from(blanks).map(bw => (bw.querySelector('.blank-input').value || '').trim());
-            fetch('/api/kh/save-vocab', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                grade: _khStu.grade,
-                name: _khStu.name,
-                phone: _khStu.phone || '',
-                unit: _khUnit,
-                answers,
-                score: correctCnt,
-                total
-              })
-            }).then(r => r.json()).then(d => {
-              console.log(`[한국사] ${_khUnit} 어휘학습 저장:`, d.ok ? 'OK' : d.message);
-            }).catch(e => console.warn('[한국사] save-vocab 실패:', e));
+            isViewAsSaveBlocked().then(function (_blocked) {
+              if (_blocked) { console.log('🔒 선생님 모드(view-as) — 한국사 어휘 저장 건너뜀'); return; }
+              fetch('/api/kh/save-vocab', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  grade: _khStu.grade,
+                  name: _khStu.name,
+                  phone: _khStu.phone || '',
+                  unit: _khUnit,
+                  answers,
+                  score: correctCnt,
+                  total
+                })
+              }).then(r => r.json()).then(d => {
+                console.log(`[한국사] ${_khUnit} 어휘학습 저장:`, d.ok ? 'OK' : d.message);
+              }).catch(e => console.warn('[한국사] save-vocab 실패:', e));
+            });
           }
         }
       } catch (e) { console.warn('[한국사] save-vocab 훅 오류:', e); }
