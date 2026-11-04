@@ -889,6 +889,41 @@
 
     <div class="section">
       <div class="section-title">
+        <span>🍫 빼빼로데이 11×11 꿈 이벤트 접수</span>
+        <span class="count-badge" id="pbEntryCount">총 0건</span>
+      </div>
+      <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 15px;">
+        학생 메인 빼빼로데이 이벤트 접수 기록 — 꿈 11가지·실천 11가지. 센터별 조회·엑셀 다운로드(꿈1~11·실천1~11 펼침)해 종료 후 각 센터에 전달 (마감 11/11 23:59)
+      </p>
+      <div class="filter-section" style="margin-bottom: 15px;">
+        <select id="pbCenterFilter" onchange="loadPbEntries()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; min-width: 220px;">
+          <option value="">전체 센터</option>
+        </select>
+        <button class="search-btn" onclick="loadPbEntries()">🔄 새로고침</button>
+        <button class="search-btn" style="background: #ec568a;" onclick="downloadPbExcel()">📥 엑셀 다운로드</button>
+      </div>
+      <div class="snack-order-container" style="max-height: 500px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <table>
+          <thead style="position: sticky; top: 0; z-index: 10;">
+            <tr>
+              <th style="width: 50px;">번호</th>
+              <th style="width: 160px;">센터</th>
+              <th style="width: 55px;">학년</th>
+              <th style="width: 75px;">이름</th>
+              <th>💖 나의 꿈 11가지</th>
+              <th>⭐ 꿈을 위한 실천 11가지</th>
+              <th style="width: 130px;">접수일시</th>
+            </tr>
+          </thead>
+          <tbody id="pbEntryTableBody">
+            <tr><td colspan="7" class="loading">데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
         <span>💡 브레인 아이디어 LAB 접수</span>
         <span class="count-badge" id="ideaEntryCount">총 0건</span>
       </div>
@@ -2453,6 +2488,47 @@
     }
 
     loadHwEntries();
+
+    // 🍫 빼빼로데이 11×11 접수 기록
+    async function loadPbEntries() {
+      const tbody = document.getElementById('pbEntryTableBody');
+      const sel = document.getElementById('pbCenterFilter');
+      const center = sel.value;
+      tbody.innerHTML = '<tr><td colspan="7" class="loading">데이터를 불러오는 중...</td></tr>';
+      try {
+        const r = await fetch('/api/super/peppero-entries?center=' + encodeURIComponent(center));
+        const d = await r.json();
+        if (!d.ok) throw new Error(d.message || '조회 실패');
+        const prev = sel.value;
+        sel.innerHTML = '<option value="">전체 센터</option>' +
+          (d.centers || []).map(c => `<option value="${hwEsc(c)}"${c === prev ? ' selected' : ''}>${hwEsc(c)}</option>`).join('');
+        document.getElementById('pbEntryCount').textContent = `총 ${d.rows.length}건`;
+        if (!d.rows.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#999; padding:30px;">아직 접수된 기록이 없습니다.</td></tr>';
+          return;
+        }
+        const list = (arr) => (arr || []).map((v, i) => `${i + 1}. ${hwEsc(v)}`).join('<br>');
+        tbody.innerHTML = d.rows.map((e, i) => `
+          <tr>
+            <td style="text-align:center;">${d.rows.length - i}</td>
+            <td>${hwEsc(e.center) || '<span style="color:#bbb;">미확인</span>'}</td>
+            <td style="text-align:center;">${hwEsc(e.grade)}</td>
+            <td style="text-align:center; font-weight:700;">${hwEsc(e.name)}</td>
+            <td style="font-size:12.5px; line-height:1.6;">${list(e.dreams)}</td>
+            <td style="font-size:12.5px; line-height:1.6;">${list(e.actions)}</td>
+            <td style="text-align:center; font-size:12px; color:#777;">${e.createdAt ? new Date(e.createdAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+          </tr>`).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#c00; padding:30px;">${hwEsc(err.message)}</td></tr>`;
+      }
+    }
+
+    function downloadPbExcel() {
+      const center = document.getElementById('pbCenterFilter').value;
+      location.href = '/api/super/peppero-entries-excel?center=' + encodeURIComponent(center);
+    }
+
+    loadPbEntries();
 
     // 💡 아이디어 LAB 접수 기록
     async function loadIdeaEntries() {

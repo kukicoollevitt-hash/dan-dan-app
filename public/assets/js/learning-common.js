@@ -3571,7 +3571,7 @@
         }
         .creative-ocr-close:hover { background:#e5e7eb; color:#111827; }
         .creative-ocr-tabs {
-          display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;
+          display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:14px;  /* 촬영 버튼 숨김 — 파일 불러오기만 (인식률 ↑) */
         }
         .creative-ocr-source {
           display:flex; flex-direction:column; align-items:center; gap:4px;
@@ -3656,11 +3656,13 @@
             <button class="creative-ocr-close" onclick="closeCreativeOcrModal()" aria-label="닫기">✕</button>
           </div>
           <div class="creative-ocr-tabs">
+            <!-- 📸 직접 촬영 버튼 숨김 — 기기 촬영본 저해상도로 인식률 낮아 파일 불러오기만 노출 (복구하려면 아래 버튼 주석 해제 + .creative-ocr-tabs grid 1fr→1fr 1fr)
             <button class="creative-ocr-source" onclick="document.getElementById('creativeOcrCameraInput').click()">
               <span class="icon">📸</span>
               <span>직접 촬영하기</span>
               <span class="hint">(찍자마자 자동 인식)</span>
             </button>
+            -->
             <button class="creative-ocr-source" onclick="document.getElementById('creativeOcrFileInput').click()">
               <span class="icon">🖼️</span>
               <span>파일 불러오기</span>

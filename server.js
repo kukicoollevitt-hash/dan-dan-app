@@ -1303,6 +1303,110 @@ app.get("/api/super/idea-lab-entries-excel", requireSuperAdmin, async (req, res)
   }
 });
 
+// 🍫 빼빼로데이 11.11 "11×11 꿈을 잇는 마법의 빼빼로" 접수 기록 — 센터별 조회·엑셀 전달용
+const pepperoEntrySchema = new mongoose.Schema({
+  center: { type: String, default: "" },
+  grade: { type: String, default: "" },
+  name: { type: String, default: "" },
+  dreams: { type: [String], default: [] },   // 나의 꿈 11가지
+  actions: { type: [String], default: [] },  // 꿈을 위한 실천 11가지
+  createdAt: { type: Date, default: Date.now },
+});
+pepperoEntrySchema.index({ center: 1, createdAt: -1 });
+const PepperoEntry = mongoose.model("PepperoEntry", pepperoEntrySchema);
+
+const PEPPERO_DEADLINE = new Date("2026-11-11T23:59:00+09:00").getTime();
+
+// 🍫 빼빼로데이 이벤트 — DB 저장 (마감: 2026-11-11 23:59 KST) · 메일 없음, 슈퍼관리자 확성기 관리에서 조회·엑셀
+app.post("/api/peppero/submit", async (req, res) => {
+  try {
+    if (Date.now() > PEPPERO_DEADLINE) {
+      return res.json({ ok: false, message: "이벤트가 마감되었어요. 참여해 줘서 고마워요! 🍫" });
+    }
+    let { name, grade, center, dreams, actions } = req.body || {};
+    const clean = (arr) => Array.isArray(arr) ? arr.map((s) => String(s || "").trim()) : [];
+    dreams = clean(dreams);
+    actions = clean(actions);
+    if (!name || !grade) {
+      return res.json({ ok: false, message: "학생 정보를 확인할 수 없어요. 다시 로그인한 뒤 참여해 주세요." });
+    }
+    if (dreams.length !== 11 || actions.length !== 11 || dreams.some((s) => !s) || actions.some((s) => !s)) {
+      return res.json({ ok: false, message: "꿈 11가지와 실천 11가지를 모두 적어 주세요." });
+    }
+    // 센터명 폴백: 클라이언트 세션에 없으면 학생 DB(User.academyName)에서 조회
+    if (!center) {
+      try {
+        const stu = await User.findOne({ grade, name, deleted: { $ne: true } }, { academyName: 1 }).lean();
+        if (stu && stu.academyName) center = stu.academyName;
+      } catch (e) { console.error("❌ [빼빼로] 센터 조회 실패:", e.message); }
+    }
+    await PepperoEntry.create({ center: center || "", grade, name, dreams, actions });
+    console.log(`🍫 [빼빼로데이] 접수(DB 저장): ${center || "-"} · ${grade} ${name}`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ [/api/peppero/submit] 오류:", err);
+    res.status(500).json({ ok: false, message: "접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." });
+  }
+});
+
+// 🍫 빼빼로데이 접수 기록 조회 (슈퍼관리자) — 센터 필터
+app.get("/api/super/peppero-entries", requireSuperAdmin, async (req, res) => {
+  try {
+    const { center } = req.query;
+    const q = center ? { center } : {};
+    const rows = await PepperoEntry.find(q).sort({ createdAt: -1 }).lean();
+    const centers = (await PepperoEntry.distinct("center")).filter(Boolean).sort();
+    res.json({ ok: true, rows, centers });
+  } catch (err) {
+    console.error("❌ [/api/super/peppero-entries] 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 🍫 빼빼로데이 엑셀 다운로드 (슈퍼관리자) — 센터별/전체, 꿈1~11·실천1~11 펼침
+app.get("/api/super/peppero-entries-excel", requireSuperAdmin, async (req, res) => {
+  try {
+    const { center } = req.query;
+    const q = center ? { center } : {};
+    const rows = await PepperoEntry.find(q).sort({ center: 1, createdAt: 1 }).lean();
+
+    const ExcelJS = require("exceljs");
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("빼빼로데이 11x11");
+    const cols = [
+      { header: "센터", key: "center", width: 24 },
+      { header: "학년", key: "grade", width: 9 },
+      { header: "이름", key: "name", width: 12 },
+    ];
+    for (let i = 1; i <= 11; i++) cols.push({ header: `꿈${i}`, key: `dream${i}`, width: 22 });
+    for (let i = 1; i <= 11; i++) cols.push({ header: `실천${i}`, key: `act${i}`, width: 22 });
+    cols.push({ header: "접수일시", key: "at", width: 20 });
+    ws.columns = cols;
+
+    rows.forEach((r) => {
+      const row = { center: r.center || "", grade: r.grade || "", name: r.name || "" };
+      for (let i = 1; i <= 11; i++) row[`dream${i}`] = (r.dreams && r.dreams[i - 1]) || "";
+      for (let i = 1; i <= 11; i++) row[`act${i}`] = (r.actions && r.actions[i - 1]) || "";
+      row.at = r.createdAt ? new Date(r.createdAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) : "";
+      ws.addRow(row);
+    });
+    const head = ws.getRow(1);
+    head.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    head.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE4568A" } };
+    head.alignment = { horizontal: "center", vertical: "middle" };
+    ws.views = [{ state: "frozen", xSplit: 3, ySplit: 1 }];
+
+    const fname = encodeURIComponent(`빼빼로데이11x11_${center || "전체"}.xlsx`);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${fname}`);
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error("❌ [빼빼로데이 엑셀] 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
 app.get("/signup", (req, res) => {
   console.log("✅ [GET] /signup -> 메인으로 이동");
   return res.redirect("/");   // ❗ 쿼리 없이 루트로만 보내기
@@ -48678,6 +48782,66 @@ app.post("/api/creative-ocr", async (req, res) => {
     res.json({ ok: true, text: parsed.text, usage: ocr.usage });
   } catch (err) {
     console.error("❌ [creative-ocr] 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 🍫 빼빼로데이 11×11 OCR — "나의 꿈 11가지 + 꿈을 위한 실천 11가지" 손글씨를 두 배열로 인식
+app.post("/api/peppero-ocr", async (req, res) => {
+  try {
+    const { imageBase64 } = req.body || {};
+    if (!imageBase64) {
+      return res.status(400).json({ ok: false, message: "이미지가 전송되지 않았습니다." });
+    }
+    const dataUrl = imageBase64.startsWith('data:')
+      ? imageBase64
+      : `data:image/jpeg;base64,${imageBase64}`;
+
+    const systemPrompt = `당신은 한글 손글씨 OCR 전문가입니다.
+첨부된 사진은 "브레인문해력 11.11 빼빼로데이 — 11×11 꿈을 잇는 마법의 빼빼로" 활동지 한 페이지입니다.
+
+양식 구조:
+- 가운데 빼빼로 그림을 기준으로 좌우 두 칸이 나뉩니다.
+- 왼쪽(분홍) 칸: "나의 꿈 11가지" — 1~11번 번호가 매겨진 11줄
+- 오른쪽(파랑) 칸: "꿈을 위한 실천 11가지" — 1~11번 번호가 매겨진 11줄
+- 각 줄 앞의 번호(1~11)와 "나의 꿈 11가지" 같은 인쇄된 제목·라벨은 추출 대상이 아닙니다.
+
+== 인식 원칙 (매우 중요) ==
+- 이것은 "전사(transcription)" 작업입니다. 각 줄에 손으로 쓴 글자를 **한 글자 한 글자 보이는 그대로** 옮기세요.
+- **절대 문장을 다듬거나 자연스럽게 고치지 마세요.** 학생이 쓴 그대로. 유의어 교체 금지.
+- **상식이나 문맥으로 안 보이는 칸을 지어내지 마세요.** 사진에서 읽은 글자만. 빈 줄은 빈 문자열 "".
+- **종이 뒷면이 비쳐 보이는 희미한 글자(비침)는 절대 읽지 마세요.** 진하고 선명한 손글씨만 추출 대상.
+- 번호(왼쪽 n번 줄 ↔ dreams[n-1], 오른쪽 n번 줄 ↔ actions[n-1])를 정확히 지켜 **줄 위치 그대로** 배열에 넣으세요. 중간 줄이 비어 있으면 그 자리를 빈 문자열로 두고 다음 줄을 당기지 마세요.
+- 한 글자가 명백히 흐려 도저히 구분 안 되면 그 글자만 비우거나 가장 가까운 후보 하나만. 나머지를 매끄럽게 재구성 금지.
+- 띄어쓰기는 학생이 쓴 그대로. 줄 안의 내용은 한 줄 문자열로(줄바꿈은 공백으로).
+- 영문/숫자/특수문자는 그대로.
+
+응답은 반드시 다음 JSON 한 객체로만 (다른 설명 없이). 두 배열 모두 정확히 11개 요소:
+{ "dreams": ["","","","","","","","","","",""], "actions": ["","","","","","","","","","",""] }`;
+
+    const ocr = await workbookVisionOcr({
+      systemPrompt,
+      userText: "이 빼빼로데이 활동지 사진에서 왼쪽 '나의 꿈 11가지'와 오른쪽 '꿈을 위한 실천 11가지' 각 11줄의 손글씨를 줄 번호 위치 그대로 전사해 dreams·actions 두 배열(각 11개)로 응답해주세요. 번호·인쇄 라벨은 빼고, 문장을 다듬거나 지어내지 말고, 빈 줄은 빈 문자열로 두세요.",
+      dataUrl,
+      maxTokens: 2500
+    });
+    const aiResponse = ocr.text;
+    console.log(`📷 [peppero-ocr] engine=${ocr.engine} 응답 길이:`, (aiResponse || '').length);
+
+    let parsed;
+    try { parsed = JSON.parse(aiResponse); }
+    catch (e) {
+      const m = aiResponse.match(/\{[\s\S]*\}/);
+      parsed = m ? JSON.parse(m[0]) : null;
+    }
+    if (!parsed || !Array.isArray(parsed.dreams) || !Array.isArray(parsed.actions)) {
+      return res.status(500).json({ ok: false, message: "AI 응답을 파싱하지 못했습니다.", raw: aiResponse });
+    }
+    // 항상 길이 11로 정규화 (프론트 채움 안전)
+    const fix = (arr) => Array.from({ length: 11 }, (_, i) => String((arr[i] != null ? arr[i] : '')).replace(/\s*\n\s*/g, ' ').trim());
+    res.json({ ok: true, dreams: fix(parsed.dreams), actions: fix(parsed.actions), usage: ocr.usage });
+  } catch (err) {
+    console.error("❌ [peppero-ocr] 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
