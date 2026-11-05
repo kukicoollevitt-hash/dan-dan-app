@@ -36945,6 +36945,54 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
   }
 });
 
+// 🩺 진단 결과 목록 → 학생 추가: 신청자의 센터(branchName)로 등록
+//    academy/add-student 는 로그인 학원으로만 등록 → 본사/어드민이 추가하면 '어드민'으로 잘못 들어가는 문제 해결.
+//    academyName 은 반드시 실제 진단 신청 기록(CourseApplication.branchName)에 존재하는 센터만 허용(임의 타게팅 방지).
+app.post("/api/admin/diagnostic/add-student", async (req, res) => {
+  try {
+    if (!req.session || !req.session.admin || !req.session.admin.academyName) {
+      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+    }
+    const { grade, name, number } = req.body;
+    let academyName = String((req.body && req.body.academyName) || "").trim();
+    if (!grade || !name || !number) {
+      return res.status(400).json({ success: false, message: "학년, 이름, 전화번호는 필수입니다." });
+    }
+    // 대상 센터: 신청자의 branchName. 없으면 로그인 학원으로 폴백.
+    if (!academyName) academyName = req.session.admin.academyName;
+    // 안전장치: 실제 진단 신청 기록이 있는 센터명만 허용(로그인 학원 자신은 예외 허용)
+    if (academyName !== req.session.admin.academyName) {
+      const known = await CourseApplication.exists({ branchName: academyName });
+      if (!known) {
+        return res.status(400).json({ success: false, message: "등록 대상 센터를 확인할 수 없습니다. (진단 신청 기록 없음)" });
+      }
+    }
+    const phone = String(number).replace(/[^0-9]/g, "");
+    if (phone.length !== 11) {
+      return res.status(400).json({ success: false, message: "전화번호를 11자리로 입력해주세요." });
+    }
+    const existingUser = await User.findOne({ phone });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "이미 등록된 전화번호입니다. (ID: " + phone + ")" });
+    }
+    const newUser = new User({
+      grade: grade.trim(),
+      name: name.trim(),
+      phone,
+      academyName,
+      userType: "academy",
+      status: "approved",
+      createdAt: new Date()
+    });
+    await newUser.save();
+    console.log("✅ [진단→학생추가]", newUser.name, "ID:", phone, "센터:", academyName);
+    res.json({ success: true, message: "학생이 추가되었습니다. (ID: " + phone + ")", data: { academyName } });
+  } catch (error) {
+    console.error("진단 학생 추가 오류:", error);
+    res.status(500).json({ success: false, message: "학생 추가 중 오류가 발생했습니다." });
+  }
+});
+
 // 진단테스트 목록 조회 (브랜치 관리자용 - 지점명/학년 필터링)
 app.get("/api/admin/diagnostic-tests", async (req, res) => {
   try {
