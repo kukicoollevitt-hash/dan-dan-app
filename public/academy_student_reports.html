@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학생별 리포트 보기 · BRAIN</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      margin: 0; padding: 32px 16px; color: #1f2937;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+    h1 { font-size: 24px; font-weight: 800; color: #1e3a8a; margin: 0; }
+    .back-link { text-decoration: none; background: #fff; color: #334155; border: 1.5px solid #cbd5e1; padding: 8px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; }
+    .back-link:hover { background: #f1f5f9; }
+    .card { background: #fff; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); padding: 24px; }
+    .desc { color: #64748b; font-size: 14px; margin: 0 0 16px; line-height: 1.6; }
+    .toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .search-input { flex: 1; min-width: 220px; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 14px; }
+    .count-badge { background: #eef2ff; color: #4338ca; font-weight: 800; font-size: 13px; padding: 8px 14px; border-radius: 999px; align-self: center; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: #f8fafc; color: #475569; font-size: 13px; font-weight: 700; text-align: center; padding: 12px 10px; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+    tbody td { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; font-size: 14px; vertical-align: middle; text-align: center; }
+    tbody tr:hover { background: #fafbff; }
+    .center { text-align: center; }
+    .student-name { font-weight: 700; color: #111827; }
+    .grade-chip { display: inline-block; background: #f1f5f9; color: #475569; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+    .report-btns { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+    .rbtn { text-decoration: none; border: none; cursor: pointer; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 9px; color: #fff; white-space: nowrap; transition: transform .08s, box-shadow .15s; }
+    .rbtn:active { transform: translateY(1px); }
+    .rbtn:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .rbtn.learning { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .rbtn.mock { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .rbtn.crit { background: linear-gradient(135deg, #14b8a6, #0f766e); }
+    .rbtn.gate { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .rbtn.wr100 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .rbtn.kh { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .rbtn.grammar { background: linear-gradient(135deg, #10b981, #047857); }
+    .empty-row td { text-align: center; color: #94a3b8; padding: 40px 10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <h1>🖨️ 학생별 리포트 보기</h1>
+      <a class="back-link" href="/academy/dashboard">← 대시보드로</a>
+    </div>
+
+    <div class="card">
+      <p class="desc">
+        학생 행의 <b>분야별 리포트 버튼</b>을 누르면 해당 학생의 리포트 화면이 새 탭으로 열립니다.
+        인쇄는 각 리포트 화면에서 진행하세요.
+      </p>
+
+      <div class="toolbar">
+        <input id="searchInput" class="search-input" type="text" placeholder="🔍 이름 또는 학년으로 검색 (예: 김윤슬, 초3)" />
+        <span id="countBadge" class="count-badge">학생 0명</span>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th class="center" style="width:48px;">#</th>
+            <th style="width:80px;">학년</th>
+            <th style="width:140px;">학생명</th>
+            <th>리포트</th>
+          </tr>
+        </thead>
+        <tbody id="studentTbody">
+          <tr class="empty-row"><td colspan="4">학생 목록을 불러오는 중입니다…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let ALL_STUDENTS = [];
+
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    // === 리포트별 "그 학생으로 바로 열기" 링크 ===
+    //  학습리포트: openLearningAnalysis / 비평·쓰기문해·한국사·문법: /menu?autoOpen=토큰
+    //  모의고사: localStorage.currentStudent 저장 후 월말모의고사 대시보드(학년대 판별)
+    //  관문평가: behavior-data 페이지(학생 URL 미지원 → 페이지에서 검색)
+    function menuUrl(grade, name, autoOpen) {
+      return '/menu?grade=' + encodeURIComponent(grade || '') +
+             '&name=' + encodeURIComponent(name || '') +
+             '&autoOpen=' + autoOpen;
+    }
+    function learningReportUrl(grade, name) {
+      return '/menu?grade=' + encodeURIComponent(grade || '') +
+             '&name=' + encodeURIComponent(name || '') +
+             '&openLearningAnalysis=true';
+    }
+    // 학년 → 모의고사 대시보드 종류 (초1~4=elem34 / 초5~6=elem / 중등=mid)
+    function gradeToExamGrade(grade) {
+      const g = String(grade || '');
+      if (g.indexOf('중') !== -1) return 'mid';
+      const m = g.match(/(\d+)/);
+      const n = m ? parseInt(m[1], 10) : 0;
+      if (g.indexOf('초') !== -1) return n >= 5 ? 'elem' : 'elem34';
+      return 'elem34';
+    }
+
+    function renderRows(list) {
+      const tbody = document.getElementById('studentTbody');
+      if (!list.length) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="4">표시할 학생이 없습니다.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(function (u, i) {
+        const grade = u.grade || '';
+        const name = u.name || '';
+        return '<tr>' +
+          '<td class="center">' + (i + 1) + '</td>' +
+          '<td><span class="grade-chip">' + esc(grade) + '</span></td>' +
+          '<td class="student-name">' + esc(name) + '</td>' +
+          '<td>' +
+            '<div class="report-btns">' +
+              '<a class="rbtn learning" href="' + learningReportUrl(grade, name) + '" target="_blank" rel="noopener">📊 학습리포트</a>' +
+              '<button class="rbtn mock" data-grade="' + esc(grade) + '" data-name="' + esc(name) + '">📈 모의고사</button>' +
+              '<a class="rbtn crit" href="' + menuUrl(grade, name, 'critReport') + '" target="_blank" rel="noopener">📰 비평</a>' +
+              '<a class="rbtn gate" href="/academy/behavior-data" target="_blank" rel="noopener">🚪 관문평가</a>' +
+              '<a class="rbtn wr100" href="' + menuUrl(grade, name, 'wr100Report') + '" target="_blank" rel="noopener">✍️ 쓰기문해</a>' +
+              '<a class="rbtn kh" href="' + menuUrl(grade, name, 'khReport') + '" target="_blank" rel="noopener">🇰🇷 한국사</a>' +
+              '<a class="rbtn grammar" href="' + menuUrl(grade, name, 'grammarMain') + '" target="_blank" rel="noopener">🧭 문법</a>' +
+            '</div>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    // 📈 모의고사: localStorage에 학생 저장 후 해당 학년대 월말모의고사 대시보드 새 탭(openMockMain과 동일 방식)
+    document.getElementById('studentTbody').addEventListener('click', function (e) {
+      const btn = e.target.closest('.rbtn.mock');
+      if (!btn) return;
+      const grade = btn.getAttribute('data-grade') || '';
+      const name = btn.getAttribute('data-name') || '';
+      try { localStorage.setItem('currentStudent', JSON.stringify({ grade: grade, name: name })); } catch (err) {}
+      const eg = gradeToExamGrade(grade);
+      const page = eg === 'mid' ? '/monthly_exam_dashboard_mid.html'
+                 : (eg === 'elem34' ? '/monthly_exam_dashboard_elem34.html'
+                 : '/monthly_exam_dashboard_elem.html');
+      window.open(page, '_blank');
+    });
+
+    function applyFilter() {
+      const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+      const filtered = !q ? ALL_STUDENTS : ALL_STUDENTS.filter(function (u) {
+        return ((u.name || '').toLowerCase().includes(q) || (u.grade || '').toLowerCase().includes(q));
+      });
+      document.getElementById('countBadge').textContent = '학생 ' + filtered.length + '명';
+      renderRows(filtered);
+    }
+
+    async function loadStudents() {
+      try {
+        const res = await fetch('/api/branch/users', { credentials: 'include', cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        ALL_STUDENTS = data.students || data.users || [];
+        // 학년→이름 순 정렬
+        ALL_STUDENTS.sort(function (a, b) {
+          return String(a.grade || '').localeCompare(String(b.grade || ''), 'ko') ||
+                 String(a.name || '').localeCompare(String(b.name || ''), 'ko');
+        });
+        applyFilter();
+      } catch (err) {
+        document.getElementById('studentTbody').innerHTML =
+          '<tr class="empty-row"><td colspan="4">학생 목록을 불러오지 못했습니다. (' + esc(err.message) + ')<br>로그인 상태를 확인한 뒤 새로고침해 주세요.</td></tr>';
+      }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', applyFilter);
+    loadStudents();
+  </script>
+</body>
+</html>

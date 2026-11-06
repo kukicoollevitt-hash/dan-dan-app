@@ -6226,6 +6226,16 @@ app.get("/academy/branch/users", requireAdminLogin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "academy_branch_user_list.html"));
 });
 
+// 🖨️ 학원 관리자: 학생별 리포트 보기 — 학생×분야별 리포트 화면으로 바로 이동(인쇄는 각 리포트에서)
+app.get("/academy/student-reports", requireAdminLogin, (req, res) => {
+  console.log(
+    "✅ [GET] /academy/student-reports -> public/academy_student_reports.html",
+    "admin:",
+    req.session.admin && req.session.admin.academyName
+  );
+  res.sendFile(path.join(__dirname, "public", "academy_student_reports.html"));
+});
+
 /* ====================================
  * ✅ 슈퍼관리자: 관리자 계정 목록 / 상태 변경 / 삭제
  * ==================================== */
@@ -21215,6 +21225,24 @@ app.get("/my-learning", async (req, res) => {
           </div>
 
           <style>
+            /* 🖨️ 인쇄 3페이지 분할
+               ① 완료 단원 목록 + AI 레이더
+               ② 성장 지수 변화 + 과목 평균 평점 + 어휘 점수
+               ③ 창의활동 내역 + 주간(AI) 학습 분석 */
+            @media print {
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              /* 2페이지·3페이지 시작 */
+              #indexTrendSection { page-break-before: always; break-before: page; }
+              .record-section.creative-section { page-break-before: always; break-before: page; }
+              /* 각 섹션이 페이지 중간에서 잘리지 않도록 */
+              #todayTableContainer, .today-radar-section,
+              #indexTrendSection, #subjectBarSection, #vocabScoreSection,
+              .record-section.creative-section, #aiFeedbackSection {
+                page-break-inside: avoid; break-inside: avoid;
+              }
+              /* 인쇄에 불필요한 조작 버튼 숨김 */
+              .nav-arrow-btn, .creative-nav-btn, .slider-arrow, #todayRadarToggleWrap { display: none !important; }
+            }
             /* 창의활동 테이블 세련된 디자인 */
             .creative-section .creative-nav-btn {
               background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%);
@@ -25465,16 +25493,14 @@ app.get("/my-learning", async (req, res) => {
           const studentNameM = urlParamsM.get('name') || '';
           const hideGateStudentsM = ['최수종'];
 
+          // 🔧 월 전체 일괄 조회 — 학습 없는 날(관문만 본 날)도 포함 (기존: 학습 있는 날짜만 조회해 누락)
+          const monthStrM = monthStart.getFullYear() + '-' + String(monthStart.getMonth() + 1).padStart(2, '0');
           let monthGatesByDate = {};
           if (!hideGateStudentsM.includes(studentNameM)) {
             try {
-              const gatePromises = activeDates.map(dateStr =>
-                fetch('/api/gate-quiz/passed-by-date?grade=' + encodeURIComponent(studentGradeM) + '&name=' + encodeURIComponent(studentNameM) + '&date=' + dateStr)
-                  .then(res => res.json())
-                  .then(data => ({ date: dateStr, gates: data.ok && data.data ? data.data : [] }))
-              );
-              const results = await Promise.all(gatePromises);
-              results.forEach(item => { monthGatesByDate[item.date] = item.gates; });
+              const r = await fetch('/api/gate-quiz/passed-by-month?grade=' + encodeURIComponent(studentGradeM) + '&name=' + encodeURIComponent(studentNameM) + '&month=' + monthStrM);
+              const d = await r.json();
+              if (d.ok && d.byDate) monthGatesByDate = d.byDate;
             } catch (err) {
               console.error('월간 관문 데이터 조회 실패:', err);
             }
@@ -25482,13 +25508,9 @@ app.get("/my-learning", async (req, res) => {
 
           let monthMidtermsByDate = {};
           try {
-            const midtermPromises = activeDates.map(dateStr =>
-              fetch('/api/midterm/passed-by-date?grade=' + encodeURIComponent(studentGradeM) + '&name=' + encodeURIComponent(studentNameM) + '&date=' + dateStr)
-                .then(res => res.json())
-                .then(data => ({ date: dateStr, midterms: data.ok && data.data ? data.data : [] }))
-            );
-            const results = await Promise.all(midtermPromises);
-            results.forEach(item => { monthMidtermsByDate[item.date] = item.midterms; });
+            const r = await fetch('/api/midterm/passed-by-month?grade=' + encodeURIComponent(studentGradeM) + '&name=' + encodeURIComponent(studentNameM) + '&month=' + monthStrM);
+            const d = await r.json();
+            if (d.ok && d.byDate) monthMidtermsByDate = d.byDate;
           } catch (err) {
             console.error('월간 중간평가 데이터 조회 실패:', err);
           }
@@ -27530,8 +27552,26 @@ app.get("/my-learning", async (req, res) => {
               // 🧹 캡처용 정리: 드롭다운·화살표·토글·수정 버튼 등 화면 조작용 요소 숨김
               const cleanStyle = document.createElement('style');
               cleanStyle.id = '__pdfCaptureClean';
-              cleanStyle.textContent = '.series-selector, .nav-arrow-btn, .slider-arrow, .today-radar-toggle-wrap, .ai-feedback-bottom-actions, #toggleRadarBtn { display: none !important; } .container { box-shadow: none !important; }';
+              cleanStyle.textContent = '.series-selector, .nav-arrow-btn, .slider-arrow, .today-radar-toggle-wrap, .ai-feedback-bottom-actions, #toggleRadarBtn { display: none !important; }'
+                // 🖨️ 인쇄 배경: 흰 카드 → 리포트 톤 연한색으로(강제 페이지 나눔으로 생기는 하단 빈 영역이 "의도된 여백"처럼 보이게)
+                + ' .container { box-shadow: none !important; background: #eef1f7 !important; border-radius: 0 !important; }'
+                // 🖨️ 레이더: 클립되는 가로 슬라이더 → 전부 보이는 wrap 그리드로 펼쳐 캡처(중간 잘림 방지)
+                + ' .today-radar-viewport { overflow: visible !important; }'
+                + ' #today-radar-wrap { flex-wrap: wrap !important; transform: none !important; justify-content: center !important; row-gap: 14px !important; }'
+                // 🖨️ 파트별 간격 넓힘(2배): 각 페이지에 내용이 고르게 퍼지도록(남는 공간은 보라 연장이 메꿈)
+                + ' #todayTableContainer { margin-bottom: 72px !important; }'
+                + ' .today-radar-section { margin-top: 88px !important; }'
+                + ' #indexTrendSection { margin-top: 96px !important; }'
+                + ' #subjectBarSection { margin-top: 104px !important; }'
+                + ' #vocabScoreSection { margin-top: 104px !important; }'
+                + ' .record-section.creative-section { margin-top: 96px !important; }'
+                + ' #aiFeedbackSection { margin-top: 88px !important; }'
+                + ' .ai-feedback-item { margin-bottom: 44px !important; }';
               document.head.appendChild(cleanStyle);
+
+              // 🔑 html2canvas가 실제 캡처에 사용하는 높이(=scrollHeight, body auto 상태)를 지금 고정.
+              //    scaleY를 이 값으로 계산해야 DOM 좌표↔캔버스 좌표가 정확히 일치(복구 후 offsetHeight로 재측정하면 어긋나 겹침)
+              const capHeight = target.scrollHeight;
 
               // 페이지 자르기 안전 분기점 수집 (DOM 좌표) - 큰 섹션·카드·헤딩·행
               const targetRect = target.getBoundingClientRect();
@@ -27543,11 +27583,25 @@ app.get("/my-learning", async (req, res) => {
                 '.radar-card, .vocab-bar-row, .index-trend-chart-container, ' +
                 '.subject-bar-chart-container, .vocab-score-chart-container, .section-header'
               );
-              const safeBreaksDom = new Set([0, target.offsetHeight]);
+              const safeBreaksDom = new Set([0, capHeight]);
               breakNodes.forEach(n => {
                 const r = n.getBoundingClientRect();
                 safeBreaksDom.add(Math.round(r.top - targetRect.top));
                 safeBreaksDom.add(Math.round(r.bottom - targetRect.top));
+              });
+
+              // 🖨️ 강제 페이지 나눔: ②페이지(성장지수~) · ③페이지(창의활동~)는 항상 새 페이지 맨 위부터 시작
+              //    (표시 중인 섹션만 — 데이터 없어 숨겨진 섹션은 빈 페이지를 만들지 않음)
+              const forcedBreaksDom = [];
+              const PAGE_TOP_PAD = 64;   // 새 페이지 상단 여백(px) — 섹션보다 이만큼 위(보라 여백)에서 끊어 공백 확보
+              ['#indexTrendSection', '.record-section.creative-section'].forEach(function (sel) {
+                const el = target.querySelector(sel);
+                if (el && el.offsetParent !== null) {
+                  let top = Math.round(el.getBoundingClientRect().top - targetRect.top) - PAGE_TOP_PAD;
+                  if (top < 0) top = 0;
+                  forcedBreaksDom.push(top);
+                  safeBreaksDom.add(top);
+                }
               });
 
               console.log('🎨 캔버스 생성 중... (스크롤 없음 모드)');
@@ -27555,7 +27609,7 @@ app.get("/my-learning", async (req, res) => {
                 scale: 1.5,
                 useCORS: true,
                 allowTaint: true,
-                backgroundColor: '#ffffff',
+                backgroundColor: '#eef1f7',
                 logging: false,
                 windowHeight: target.scrollHeight,
                 height: target.scrollHeight
@@ -27602,12 +27656,17 @@ app.get("/my-learning", async (req, res) => {
               // 한 페이지가 차지하는 캔버스 픽셀 높이
               const pageHpx = canvas.width * (pdfH / pdfW);
 
-              // DOM Y → Canvas Y 변환 후 안전 분기점 정렬
-              const scaleY = canvas.height / target.offsetHeight;
+              // DOM Y → Canvas Y 변환 후 안전 분기점 정렬 (html2canvas가 쓴 높이와 동일 기준으로)
+              const scaleY = canvas.height / capHeight;
               const safeBreaks = Array.from(safeBreaksDom)
                 .map(y => Math.round(y * scaleY))
                 .filter(y => y > 0 && y <= canvas.height)
                 .sort((a, b) => a - b);
+
+              // 강제 분기점(캔버스 Y) — 청크 패킹 시 이 지점에서 반드시 페이지를 새로 시작
+              const forcedBreaks = forcedBreaksDom
+                .map(y => Math.round(y * scaleY))
+                .filter(y => y > 0 && y <= canvas.height);
 
               console.log('📄 PDF 생성 중... (페이지당 캔버스 ' + Math.round(pageHpx) + 'px, 안전 분기점 ' + safeBreaks.length + '개)');
 
@@ -27626,7 +27685,10 @@ app.get("/my-learning", async (req, res) => {
                 // 이번 페이지에 통째로 들어가는 연속 청크 범위 계산
                 let end = off;
                 let cj = ci;
+                // 현재 페이지(off) 이후의 첫 강제 분기점 — 그 지점부터는 반드시 새 페이지로(반올림 오차 안전: >= 비교)
+                const nextForced = forcedBreaks.filter(function (fb) { return fb > off + 2; }).sort(function (a, b) { return a - b; })[0];
                 while (cj < chunks.length && chunks[cj].end - off <= pageHpx) {
+                  if (cj > ci && nextForced !== undefined && chunks[cj].y >= nextForced) break;
                   end = chunks[cj].end;
                   cj++;
                 }
@@ -27640,9 +27702,14 @@ app.get("/my-learning", async (req, res) => {
                 tc.width = canvas.width;
                 tc.height = Math.round(pageHpx);
                 const tctx = tc.getContext('2d', { willReadFrequently: true });
-                tctx.fillStyle = '#ffffff';
+                tctx.fillStyle = '#eef1f7';   // 안전 기본 배경(스트레치 실패 대비)
                 tctx.fillRect(0, 0, tc.width, tc.height);
                 tctx.drawImage(canvas, 0, off, canvas.width, slice, 0, 0, canvas.width, slice);
+                // 🟣 하단 빈 영역: 잘린 내용의 맨 아랫줄(보라 카드 + 양옆 여백 그대로)을 세로로 늘려 채움
+                //    → 색 추측/이음새 없이 보라 카드가 페이지 하단까지 자연스럽게 연장됨
+                if (slice > 3 && slice < tc.height) {
+                  tctx.drawImage(canvas, 0, off + slice - 2, canvas.width, 1, 0, slice - 1, canvas.width, tc.height - slice + 1);
+                }
                 pdf.addImage(tc.toDataURL('image/jpeg', 0.5), 'JPEG', 0, 0, pdfW, pdfH);
                 off = end;
                 ci = cj;
@@ -36867,15 +36934,23 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
       return res.status(400).json({ success: false, message: "학년, 이름, 전화번호는 필수입니다." });
     }
 
-    // 관리자 · 신규 등록명(newRegistrationName)이 세팅되어 있으면 그 이름으로 저장
-    // 세션은 오래되었을 수 있어 DB에서 최신 조회
-    let adminAcademyName = req.session.admin.academyName;
+    // 🔑 슈퍼관리자가 특정 센터를 보는 중(viewingBranch)이면 그 센터명으로 저장.
+    //    (기존엔 항상 req.session.admin.academyName="어드민"으로 저장돼 다른 센터에서 추가해도 어드민 소속이 되던 버그)
+    //    body의 academyName은 신뢰하지 않음(위조 방지) — 세션의 viewingBranch/admin으로만 결정.
+    const effectiveAdmin = req.session.viewingBranch || req.session.admin;
+    // 관리자 · 신규 등록명(newRegistrationName)이 세팅되어 있으면 그 이름으로 저장. 세션은 오래됐을 수 있어 DB에서 최신 조회
+    let adminAcademyName = effectiveAdmin.academyName;
     try {
-      const freshAdmin = await Admin.findById(req.session.admin.id).select('academyName newRegistrationName').lean();
+      const lookupId = effectiveAdmin._id || effectiveAdmin.id;
+      const freshAdmin = lookupId
+        ? await Admin.findById(lookupId).select('academyName newRegistrationName').lean()
+        : null;
       if (freshAdmin) {
         adminAcademyName = (freshAdmin.newRegistrationName && freshAdmin.newRegistrationName.trim())
           || freshAdmin.academyName
           || adminAcademyName;
+      } else if (effectiveAdmin.newRegistrationName && effectiveAdmin.newRegistrationName.trim()) {
+        adminAcademyName = effectiveAdmin.newRegistrationName.trim();
       }
     } catch (e) {
       console.warn('[add-student] Admin 최신 조회 실패, 세션 값 사용:', e && e.message);
@@ -40702,6 +40777,36 @@ app.get("/api/gate-quiz/passed-by-date", async (req, res) => {
   }
 });
 
+// 📆 특정 달에 통과한 관문 전체 (KST 날짜별 그룹) — 월간 리포트용
+//    기존 월간 뷰가 '학습 있는 날짜'만 관문을 조회해 '관문만 본 날'이 누락되던 문제 해결(월 범위 일괄 조회)
+app.get("/api/gate-quiz/passed-by-month", async (req, res) => {
+  try {
+    const { grade, name, month } = req.query; // month: 'YYYY-MM' (없으면 이번 달)
+    if (!grade || !name) {
+      return res.json({ ok: false, message: "학생 정보가 필요합니다." });
+    }
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const base = month ? new Date((month.length === 7 ? month + '-01' : month) + 'T00:00:00Z') : new Date();
+    const kb = new Date(base.getTime() + kstOffset);
+    const y = kb.getUTCFullYear(), mo = kb.getUTCMonth();
+    const startOfMonth = new Date(Date.UTC(y, mo, 1, 0, 0, 0) - kstOffset);
+    const endOfMonth = new Date(Date.UTC(y, mo + 1, 0, 23, 59, 59, 999) - kstOffset);
+    const passedGates = await GatePass.find({
+      grade, name, passedAt: { $gte: startOfMonth, $lte: endOfMonth }
+    }).sort({ passedAt: 1 }).lean();
+    const byDate = {};
+    passedGates.forEach(g => {
+      const kd = new Date(new Date(g.passedAt).getTime() + kstOffset);
+      const ds = kd.getUTCFullYear() + '-' + String(kd.getUTCMonth() + 1).padStart(2, '0') + '-' + String(kd.getUTCDate()).padStart(2, '0');
+      (byDate[ds] = byDate[ds] || []).push({ gate: g.gate, passedAt: g.passedAt, units: g.units || [] });
+    });
+    res.json({ ok: true, byDate });
+  } catch (err) {
+    console.error("[gate-quiz/passed-by-month] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
 // 특정 날짜의 중간평가 기록 조회 API
 app.get("/api/midterm/passed-by-date", async (req, res) => {
   try {
@@ -40741,6 +40846,35 @@ app.get("/api/midterm/passed-by-date", async (req, res) => {
 
   } catch (err) {
     console.error("[midterm/passed-by-date] error:", err);
+    res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 📆 특정 달의 중간평가 전체 (KST 날짜별 그룹) — 월간 리포트용 (관문과 동일 사유)
+app.get("/api/midterm/passed-by-month", async (req, res) => {
+  try {
+    const { grade, name, month } = req.query;
+    if (!grade || !name) {
+      return res.json({ ok: false, message: "학생 정보가 필요합니다." });
+    }
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const base = month ? new Date((month.length === 7 ? month + '-01' : month) + 'T00:00:00Z') : new Date();
+    const kb = new Date(base.getTime() + kstOffset);
+    const y = kb.getUTCFullYear(), mo = kb.getUTCMonth();
+    const startOfMonth = new Date(Date.UTC(y, mo, 1, 0, 0, 0) - kstOffset);
+    const endOfMonth = new Date(Date.UTC(y, mo + 1, 0, 23, 59, 59, 999) - kstOffset);
+    const evals = await MidtermEval.find({
+      grade, name, completedAt: { $gte: startOfMonth, $lte: endOfMonth }
+    }).sort({ completedAt: 1 }).lean();
+    const byDate = {};
+    evals.forEach(mv => {
+      const kd = new Date(new Date(mv.completedAt).getTime() + kstOffset);
+      const ds = kd.getUTCFullYear() + '-' + String(kd.getUTCMonth() + 1).padStart(2, '0') + '-' + String(kd.getUTCDate()).padStart(2, '0');
+      (byDate[ds] = byDate[ds] || []).push({ stage: mv.stage, passed: mv.passed, score: mv.score, attemptNumber: mv.attemptNumber, completedAt: mv.completedAt, totalQuestions: mv.totalQuestions, correctCount: mv.correctCount });
+    });
+    res.json({ ok: true, byDate });
+  } catch (err) {
+    console.error("[midterm/passed-by-month] error:", err);
     res.status(500).json({ ok: false, message: "서버 오류가 발생했습니다." });
   }
 });
