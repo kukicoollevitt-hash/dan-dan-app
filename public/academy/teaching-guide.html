@@ -3147,7 +3147,25 @@
       const partLabel = _srPart === 'adv' ? '심화편' : '기본편';
       const volLabel = (SR_VOLS.find(v => v.id === _srVol) || {}).label || '1권';
       const tocLabel = field + partLabel;  // 예: '문학심화편'
-      _srMeta = { tocLabel, fnameBase: '서술형내신집중대비_' + tocLabel + '_' + volLabel + '_통합교재' };
+      // 통합 교재 표지 PDF — 앞표지·뒷표지·책등을 각각 독립 해석
+      //   · 뒷표지: 편(분야|편)별 공통 표지(문학 기본편/심화편), 없으면 독서왕문학편 공용
+      //   · 앞표지·책등: (분야|편|권) 권별 전용, 없으면 독서왕문학편 공용 폴백
+      const SR_DEF = { front: '/images/독서왕문학편앞표지.pdf', back: '/images/독서왕문학편뒷표지.pdf', spine: '/images/독서왕문학편책등.pdf', price: '22,000원' };
+      const _CDIR = '/images/서술형집중대비/';
+      const SR_BACK = { // 편별 공통 뒷표지
+        'lit|basic': _CDIR + '서술형내신문학_기본편1권_뒷표지.pdf',
+        'lit|adv':   _CDIR + '서술형내신문학_심화편1권_뒷표지.pdf'
+      };
+      const SR_FRONT_SPINE = { // 권별 앞표지·책등 (제공된 것만)
+        'lit|basic|v1': { front: _CDIR + '서술형내신문학_기본편1권_앞표지.pdf', spine: _CDIR + '서술형내신문학_기본편1권_책등.pdf' },
+        'lit|basic|v2': { front: _CDIR + '서술형내신문학_기본편2권_앞표지.pdf', spine: _CDIR + '서술형내신문학_기본편2권_책등.pdf' },
+        'lit|adv|v1':   { front: _CDIR + '서술형내신문학_심화편1권_앞표지.pdf', spine: _CDIR + '서술형내신문학_심화편1권_책등.pdf' },
+        'lit|adv|v2':   { front: _CDIR + '서술형내신문학_심화편2권_앞표지.pdf', spine: _CDIR + '서술형내신문학_심화편2권_책등.pdf' }
+      };
+      const _fsCov = SR_FRONT_SPINE[_srCat + '|' + _srPart + '|' + _srVol] || {};
+      const _back = SR_BACK[_srCat + '|' + _srPart];
+      _srMeta = { tocLabel, fnameBase: '서술형내신집중대비_' + tocLabel + '_' + volLabel + '_통합교재',
+        covers: { front: _fsCov.front || SR_DEF.front, back: _back || SR_DEF.back, spine: _fsCov.spine || SR_DEF.spine, price: _back ? undefined : SR_DEF.price } };
       if (!books) {
         body.innerHTML = '<div style="padding:60px 20px;text-align:center;border:2px dashed #e5c9a8;border-radius:16px;background:#fffaf4;">'
           + '<div style="font-size:46px;margin-bottom:12px;">🔒</div>'
@@ -3522,9 +3540,10 @@
         const tocLabel = (_srMeta && _srMeta.tocLabel) || '문학편';
         const fnameBase = (_srMeta && _srMeta.fnameBase) || '서술형내신집중대비_문학편_통합교재';
         if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
-        const CV = '?v=20261031'; // 표지 PDF 캐시 버전 (앞표지 교체 반영)
+        const CV = '?v=20261108'; // 표지 PDF 캐시 버전
+        const cov = (_srMeta && _srMeta.covers) || { front: '/images/독서왕문학편앞표지.pdf', back: '/images/독서왕문학편뒷표지.pdf', spine: '/images/독서왕문학편책등.pdf', price: '22,000원' };
         const pages = [];
-        pages.push({ pdf: '/images/독서왕문학편앞표지.pdf' + CV, fit: 'cover' });
+        pages.push({ pdf: cov.front + CV, fit: 'cover' });
         // 목차 2페이지 (앞 절반 / 뒤 절반) — 데이터 완비된 책만, 간지 번호와 동일 순서
         const readyBooks = booksSrc.filter(b => wb[b.id] && texts[b.id]);
         const tocHalf = Math.ceil(readyBooks.length / 2);  // 12편 → 6/6
@@ -3549,8 +3568,8 @@
           const eps = srSplitEpisodes(book.content);
           pageNo += eps.length + Math.ceil((data.think || []).length / 3);
         }
-        pages.push({ pdf: '/images/독서왕문학편뒷표지.pdf' + CV, fit: 'cover', price: '22,000원' });
-        pages.push({ pdf: '/images/독서왕문학편책등.pdf' + CV, fit: 'contain' });
+        pages.push(cov.price ? { pdf: cov.back + CV, fit: 'cover', price: cov.price } : { pdf: cov.back + CV, fit: 'cover' });
+        pages.push({ pdf: cov.spine + CV, fit: 'contain' });
         const fname = fnameBase + (isT ? '_교사용' : '') + '_' + paper.toUpperCase() + '.pdf';
         await gkRenderPdf(pages, fname, btn ? (t) => { btn.innerHTML = t; } : null, 3, paper);
       } catch (err) {
