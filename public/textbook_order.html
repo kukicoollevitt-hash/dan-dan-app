@@ -130,6 +130,8 @@
       font-weight: 600;
       cursor: pointer;
       transition: transform 0.2s;
+      white-space: nowrap;   /* '+ 추가' 글자 줄바꿈 방지 */
+      flex-shrink: 0;        /* 긴 안내문에 눌려 쪼그라들지 않도록 */
     }
 
     .add-btn:hover {
@@ -597,15 +599,15 @@
       </div>
     </div>
 
-    <!-- 서술형집중대비 교재 (문학기본편 12편) -->
+    <!-- 서술형내신문학 교재 (기본편(초등)·심화편(중등) 1·2권) -->
     <div class="section">
       <div class="section-title">
         <span class="icon">📕</span>
-        서술형집중대비 교재
+        서술형내신문학 교재
       </div>
       <div class="book-section">
         <div class="book-section-header">
-          <div class="book-section-title">교재 목록 <span style="font-size:11px;color:#666;margin-left:6px;">(문학기본편 12편 세트, 권당 15,000원)</span> <span style="font-size:12px;font-weight:700;color:#d9480f;background:#fff4e6;border:1px solid #ffd8a8;border-radius:6px;padding:3px 9px;margin-left:8px;display:inline-block;vertical-align:middle;">📢 출판 인쇄 특성상 최소 2권부터 짝수 단위로 주문이 가능합니다</span></div>
+          <div class="book-section-title">교재 목록 <span style="font-size:11px;color:#666;margin-left:6px;">(기본편(초등)·심화편(중등) 1·2권 별도 구매, 권당 15,000원)</span> <span style="font-size:12px;font-weight:700;color:#d9480f;background:#fff4e6;border:1px solid #ffd8a8;border-radius:6px;padding:3px 9px;margin-left:8px;display:inline-block;vertical-align:middle;">📢 출판 인쇄 특성상 최소 2권부터 짝수 단위로 주문이 가능합니다</span></div>
           <button class="add-btn" onclick="addLiteraryItem()">+ 추가</button>
         </div>
         <div id="literaryItems">
@@ -882,7 +884,7 @@
       updateSummary();
     }
 
-    // 서술형집중대비 교재 아이템 추가 — 문학기본편(12편) 세트, 권당 15,000원 · 최소 2권 · 2권 단위
+    // 서술형내신문학 교재 아이템 추가 — 기본편(초등)·심화편(중등) 1·2권, 권당 15,000원 · 최소 2권 · 2권 단위
     function addLiteraryItem() {
       const container = document.getElementById('literaryItems');
       const noItems = container.querySelector('.no-items');
@@ -893,7 +895,13 @@
         <div class="book-item" id="literary-${literaryItemId}">
           <select onchange="updateSummary()">
             <option value="">교재 선택</option>
-            <option value="문학기본편">문학기본편(12편)</option>
+            <option value="기본편(초등)">기본편(초등)</option>
+            <option value="심화편(중등)">심화편(중등)</option>
+          </select>
+          <select onchange="updateSummary()">
+            <option value="">권 선택</option>
+            <option value="1">1권</option>
+            <option value="2">2권</option>
           </select>
           <input type="number" min="2" step="2" value="2" placeholder="권수 (2권 단위)" onchange="updateSummary()" oninput="updateSummary()">
           <span class="item-subtotal">-</span>
@@ -1087,24 +1095,25 @@
         }
       });
 
-      // 서술형집중대비 교재 수집 (문학기본편 12편, 권당 15,000원 · 최소 2권 · 2권 단위)
+      // 서술형내신문학 교재 수집 (기본편(초등)·심화편(중등) 1·2권, 권당 15,000원 · 최소 2권 · 2권 단위)
       const LITERARY_UNIT_PRICE = 15000;
       document.querySelectorAll('#literaryItems .book-item').forEach(item => {
-        const sel = item.querySelector('select');
+        const selects = item.querySelectorAll('select');
         const input = item.querySelector('input');
         const subtotalEl = item.querySelector('.item-subtotal');
 
-        const book = sel.value;
+        const series = selects[0].value;   // 기본편(초등) / 심화편(중등)
+        const issue = selects[1].value;    // 1 / 2 (권)
         const qty = parseInt(input.value) || 0;
 
-        if (book && qty >= 2 && qty % 2 === 0) {
+        if (series && issue && qty >= 2 && qty % 2 === 0) {
           const subtotal = qty * LITERARY_UNIT_PRICE;
           subtotalEl.textContent = subtotal.toLocaleString() + '원';
           items.push({
-            bookType: '서술형집중대비교재',
-            series: '문학기본편(12편)',
-            issueNumber: 12,
-            subjectName: '문학기본편(12편)',
+            bookType: '서술형내신문학교재',
+            series,
+            issueNumber: parseInt(issue),
+            subjectName: issue + '권',
             quantity: qty,
             unitPrice: LITERARY_UNIT_PRICE,
             subtotal
@@ -1212,7 +1221,7 @@
           else if (item.bookType === '특강교재') issueLabel = item.subjectName || '기본+심화 통합';
           else if (item.bookType === '문해어휘학습장') issueLabel = `${item.issueNumber}권`;
           else if (item.bookType === '현대문법교재') issueLabel = `${item.issueNumber}권`;
-          else if (item.bookType === '서술형집중대비교재') issueLabel = '12편 세트';
+          else if (item.bookType === '서술형내신문학교재') issueLabel = `${item.issueNumber}권`;
           else if (item.bookType === '과목별교재') issueLabel = item.subjectName || '-';
           else issueLabel = `${item.issueNumber}호`;
           return `
