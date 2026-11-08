@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>서술형 내신 · 화별 학습</title>
+<style>
+  :root { --accent: #2e8b57; --accent2: #4caf72; --accentSoft: #aee9c6; --panel: #14201a; --panel2: #1c2c24; --line: #33493b; --text: #eaf5ef; --sub: #9fc4b2; }
+  body[data-theme="adv"] { --accent: #3a53c8; --accent2: #5a7bf0; --accentSoft: #b9c9ff; --panel: #121725; --panel2: #1c2440; --line: #3a4870; --text: #eef1ff; --sub: #9aa6d4; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--panel); color: var(--text); display: flex; flex-direction: column; overflow: hidden; }
+
+  .ep-top { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 80%, #000) 100%); }
+  .ep-title { flex: 1; font-size: 17px; font-weight: 800; }
+  .ep-title .ep-author { font-size: 13px; font-weight: 600; opacity: 0.85; margin-left: 7px; }
+  .ep-pill { background: rgba(255,255,255,0.18); border-radius: 999px; padding: 4px 11px; font-size: 12px; font-weight: 700; }
+  .ep-close { width: 34px; height: 34px; border-radius: 50%; background: rgba(0,0,0,0.22); color: #fff; border: none; font-size: 20px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+  /* 단계 표시줄 */
+  .ep-steps { flex: 0 0 auto; display: flex; gap: 8px; padding: 10px 18px; background: var(--panel2); border-bottom: 1px solid var(--line); }
+  .ep-step { flex: 1; text-align: center; font-size: 12px; font-weight: 700; color: var(--sub); padding: 6px 4px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); }
+  .ep-step.on { color: #fff; background: linear-gradient(135deg, var(--accent2), var(--accent)); border-color: transparent; }
+  .ep-step.done { color: var(--accentSoft); border-color: var(--accent2); }
+
+  .ep-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 24px 22px 30px; }
+  .ep-center { display: flex; flex-direction: column; justify-content: center; }
+  .ep-center > * { margin-top: auto; margin-bottom: auto; }
+  .ep-head { text-align: center; margin: 0 0 18px; }
+  .ep-head h2 { margin: 0 0 6px; font-size: 20px; font-weight: 800; }
+  .ep-head p { margin: 0; font-size: 13.5px; color: var(--sub); font-weight: 600; }
+
+  /* ── 본문 읽기 ── */
+  .ep-passage { max-width: 780px; margin: 0 auto; background: var(--panel2); border: 1.5px solid var(--line); border-radius: 16px; padding: 28px 30px; }
+  .ep-passage .ep-sec { font-size: 18px; font-weight: 800; color: var(--accentSoft); margin: 0 0 16px; }
+  .ep-passage p.ep-para { margin: 0 0 18px; line-height: 2.1; font-size: 22px; }
+  .ep-sent { cursor: default; padding: 2px 1px; border-radius: 5px; transition: background 0.15s ease, color 0.15s ease; }
+  .ep-sent.locked { color: color-mix(in srgb, var(--sub) 55%, transparent); }
+  .ep-sent.active { cursor: pointer; background: color-mix(in srgb, var(--accent2) 18%, transparent); box-shadow: inset 0 -2px 0 var(--accent2); }
+  .ep-sent.active:hover { background: color-mix(in srgb, var(--accent2) 34%, transparent); color: #fff; }
+  .ep-sent.read { color: var(--text); background: color-mix(in srgb, var(--accent) 15%, transparent); }
+  .ep-sent.hasword.read { box-shadow: inset 0 -2px 0 #f5a623; }
+  .ep-read-foot { max-width: 780px; margin: 16px auto 0; text-align: center; font-size: 13.5px; color: var(--sub); font-weight: 700; }
+  .ep-read-foot b { color: var(--accentSoft); }
+
+  /* ── 중심내용 / 어휘 퀴즈 공통 ── */
+  .ep-quiz { max-width: 780px; margin: 0 auto; }
+  .ep-qcard { background: var(--panel2); border: 1.5px solid var(--line); border-radius: 18px; padding: 30px 26px; text-align: center; margin-bottom: 20px; }
+  .ep-qlabel { font-size: 14px; color: var(--sub); font-weight: 700; margin-bottom: 12px; }
+  .ep-qtext { font-size: 22px; font-weight: 700; line-height: 1.5; color: var(--text); }
+  .ep-opts { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  .ep-opt { padding: 24px 24px; border-radius: 16px; background: var(--panel2); border: 1.5px solid var(--line); color: var(--text); font-size: 20px; font-weight: 700; cursor: pointer; text-align: left; line-height: 1.5; transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease; }
+  .ep-opt:hover { transform: translateY(-2px); border-color: var(--accent2); }
+  .ep-opt.correct { background: rgba(76,175,114,0.25); border-color: #4caf72; color: #d7fbe6; }
+  .ep-opt.wrong { background: rgba(229,115,115,0.22); border-color: #e57373; color: #ffd9d9; }
+  .ep-opt:disabled { cursor: default; }
+
+  /* ── 질문 빈칸 채우기 ── */
+  .ep-arrange { max-width: 780px; margin: 0 auto; }
+  .ep-ref { background: var(--panel2); border: 1.5px solid var(--line); border-radius: 14px; padding: 16px 22px; margin-bottom: 18px; }
+  .ep-ref-label { font-size: 13px; color: var(--accentSoft); font-weight: 800; margin-bottom: 10px; }
+  .ep-ref-para { margin: 0 0 12px; line-height: 1.9; font-size: 16px; color: var(--sub); }
+  .ep-ref-para:last-child { margin-bottom: 0; }
+  .ep-aq { background: var(--panel2); border: 1.5px solid var(--line); border-radius: 16px; padding: 22px 24px; margin-bottom: 18px; }
+  .ep-aq .ep-aq-label { font-size: 14px; color: var(--sub); font-weight: 700; margin-bottom: 8px; }
+  .ep-aq .ep-aq-q { font-size: 20px; font-weight: 700; line-height: 1.55; }
+  .ep-answer-sent { background: var(--panel); border: 1.5px dashed var(--line); border-radius: 14px; padding: 24px 22px; margin-bottom: 20px; line-height: 2.3; font-size: 21px; }
+  .ep-fixed { }
+  .ep-fill { display: inline-block; font-size: 20px; font-weight: 800; vertical-align: baseline; }
+  .ep-fill.empty { min-width: 76px; text-align: center; color: var(--sub); border-bottom: 3px solid var(--line); margin: 0 3px; }
+  .ep-fill.empty.next { border-bottom-color: var(--accent2); color: var(--accent2); }
+  .ep-fill.filled { padding: 5px 14px; border-radius: 9px; background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; border: none; cursor: pointer; margin: 0 3px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); }
+  .ep-pool { display: flex; flex-wrap: wrap; gap: 11px; justify-content: center; }
+  .ep-pool-chip { padding: 13px 20px; border-radius: 11px; background: var(--panel2); border: 1.5px solid var(--line); color: var(--text); font-size: 20px; font-weight: 700; cursor: pointer; transition: transform 0.12s ease, border-color 0.12s ease; }
+  .ep-pool-chip:hover { transform: translateY(-2px); border-color: var(--accent2); }
+  .ep-pool-chip.used { visibility: hidden; }
+  .ep-arrange-foot { text-align: center; margin-top: 20px; }
+
+  /* 하단 버튼 */
+  .ep-btn { padding: 12px 28px; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; background: linear-gradient(135deg, var(--accent2) 0%, var(--accent) 100%); color: #fff; box-shadow: 0 5px 14px rgba(0,0,0,0.3); transition: transform 0.14s ease, filter 0.14s ease; }
+  .ep-btn:hover { transform: translateY(-2px); filter: brightness(1.07); }
+  .ep-btn.ghost { background: var(--panel); border: 1.5px solid var(--line); color: var(--text); box-shadow: none; }
+  .ep-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+  /* 결과 */
+  .ep-result { max-width: 540px; margin: 0 auto; text-align: center; }
+  .ep-ring { width: 170px; height: 170px; border-radius: 50%; margin: 6px auto 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: conic-gradient(var(--accent2) var(--deg,0deg), var(--panel2) 0deg); position: relative; }
+  .ep-ring::before { content: ''; position: absolute; inset: 13px; border-radius: 50%; background: var(--panel); }
+  .ep-ring .ep-pct { position: relative; font-size: 42px; font-weight: 900; color: var(--accentSoft); line-height: 1; }
+  .ep-ring .ep-pct small { font-size: 19px; }
+  .ep-ring .ep-pctlb { position: relative; font-size: 12px; color: var(--sub); font-weight: 700; margin-top: 3px; }
+  .ep-break { text-align: left; background: var(--panel2); border: 1.5px solid var(--line); border-radius: 14px; padding: 14px 18px; margin: 0 auto 20px; max-width: 420px; }
+  .ep-break div { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 0; font-weight: 600; color: var(--sub); }
+  .ep-break div b { color: var(--accentSoft); }
+  .ep-review { text-align: left; background: var(--panel2); border: 1.5px solid var(--line); border-radius: 14px; padding: 16px 20px; margin: 0 auto 20px; max-width: 460px; }
+  .ep-review.perfect { text-align: center; border-color: var(--accent2); }
+  .ep-review h3 { margin: 0 0 12px; font-size: 15px; font-weight: 800; color: #ffb4b4; }
+  .ep-review.perfect h3 { color: var(--accentSoft); margin: 0; }
+  .ep-rev-sec { margin-bottom: 12px; }
+  .ep-rev-sec:last-child { margin-bottom: 0; }
+  .ep-rev-t { font-size: 13px; font-weight: 800; color: var(--accentSoft); margin-bottom: 6px; }
+  .ep-review ul { list-style: none; margin: 0; padding: 0; }
+  .ep-review li { padding: 5px 0; border-bottom: 1px dashed var(--line); font-size: 14px; line-height: 1.5; }
+  .ep-review li:last-child { border-bottom: none; }
+  .ep-review li b { color: #fff; margin-right: 6px; }
+
+  /* 피드백 + 폭죽 + 경고 모달 (seosul-vocab와 동일 톤) */
+  .ep-feedback { position: fixed; top: 42%; left: 50%; transform: translate(-50%,-50%); z-index: 95; padding: 18px 36px; border-radius: 20px; font-size: 26px; font-weight: 900; color: #fff; box-shadow: 0 14px 38px rgba(0,0,0,0.45); animation: epFbPop 1.15s ease forwards; pointer-events: none; white-space: normal; text-align: center; max-width: 80vw; line-height: 1.3; }
+  .ep-feedback.ok { background: linear-gradient(135deg, #4caf72 0%, #2e8b57 100%); }
+  .ep-feedback.no { background: linear-gradient(135deg, #ff8a65 0%, #e4572e 100%); }
+  @keyframes epFbPop { 0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0; } 16% { transform: translate(-50%,-50%) scale(1.14); opacity: 1; } 80% { transform: translate(-50%,-50%) scale(1); opacity: 1; } 100% { transform: translate(-50%,-50%) scale(1); opacity: 0; } }
+  .ep-confetti { position: fixed; top: -14px; z-index: 90; width: 10px; height: 14px; pointer-events: none; }
+  @keyframes epConfFall { 0% { transform: translateY(0) rotateZ(0); opacity: 1; } 100% { transform: translateY(104vh) rotateZ(680deg); opacity: 0.85; } }
+  .ep-modal-ov { position: fixed; inset: 0; z-index: 70; background: rgba(0,0,0,0.78); display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
+  .ep-modal { background: var(--panel2); border: 1.5px solid var(--line); border-radius: 18px; padding: 24px; max-width: 460px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: epPop 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes epPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .ep-modal .ep-modal-ic { font-size: 40px; }
+  .ep-modal h3 { margin: 10px 0 8px; font-size: 18px; font-weight: 800; color: var(--text); }
+  .ep-modal p { margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: var(--sub); font-weight: 600; }
+  .ep-modal .ep-modal-quiz { margin: 14px 0; }
+  .ep-loading { margin: auto; text-align: center; color: var(--sub); font-weight: 700; padding: 50px; }
+</style>
+</head>
+<body>
+  <div class="ep-top">
+    <div class="ep-title" id="epTitle">화별 학습</div>
+    <span class="ep-pill" id="epPill">제1화</span>
+    <button class="ep-close" id="epClose" title="닫기">&times;</button>
+  </div>
+  <div class="ep-steps" id="epSteps">
+    <div class="ep-step" data-s="read">① 본문 읽기</div>
+    <div class="ep-step" data-s="main">② 중심내용</div>
+    <div class="ep-step" data-s="q">③ 질문 답하기</div>
+  </div>
+  <div class="ep-body" id="epBody"><div class="ep-loading">불러오는 중…</div></div>
+
+<script src="/speed-reading-workbook-data.js?v=20261108b"></script>
+<script>
+(function () {
+  const qs = new URLSearchParams(location.search);
+  const BOOK = qs.get('book') || '';
+  const EP = Math.max(1, Math.min(10, parseInt(qs.get('ep') || '1', 10)));
+  const TITLE = qs.get('title') || '';
+  const AUTHOR = qs.get('author') || '';
+  const THEME = qs.get('theme') === 'adv' ? 'adv' : 'basic';
+  if (THEME === 'adv') document.body.setAttribute('data-theme', 'adv');
+  const BASE = BOOK.replace(/_(adv|basic)$/, '');
+
+  const body = document.getElementById('epBody');
+  document.getElementById('epTitle').innerHTML = (TITLE || '화별 학습') + (AUTHOR ? '<span class="ep-author">' + AUTHOR + '</span>' : '');
+  document.getElementById('epPill').textContent = '제' + EP + '화';
+  document.getElementById('epClose').onclick = () => { try { parent.postMessage({ type: 'seosulEpisodeClose' }, '*'); } catch (e) {} };
+
+  // ───────── 공통 유틸 ─────────
+  function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  const CHEERS = ['정답이에요! 🎉', '멋져요! 👏', '완벽해요! ✨', '최고예요! 🌟', '잘했어요! 💯', '대단해요! 🔥', '척척박사! 🧠', '그렇지! 👍', '훌륭해요! 🌈'];
+  const ENCOURAGE = ['괜찮아요, 다시 해봐요! 💪', '아쉬워요! 한 번 더 🌟', '천천히 다시 읽어봐요 📖', '거의 다 왔어요! ✊', '포기하지 말아요! 🌱', '조금만 더 집중! 🔎'];
+  function showFeedback(msg, ok) { const el = document.createElement('div'); el.className = 'ep-feedback ' + (ok ? 'ok' : 'no'); el.textContent = msg; document.body.appendChild(el); setTimeout(() => el.remove(), 1200); }
+  function confettiBurst() { const colors = ['#ffd24a', '#4caf72', '#5a7bf0', '#ff8a65', '#e57fd0', '#4dd0e1', '#fff176']; for (let i = 0; i < 34; i++) { const c = document.createElement('div'); c.className = 'ep-confetti'; c.style.left = (Math.random() * 100) + 'vw'; c.style.background = colors[Math.floor(Math.random() * colors.length)]; c.style.borderRadius = Math.random() < 0.5 ? '50%' : '2px'; const dur = 0.9 + Math.random() * 0.9; const delay = Math.random() * 0.2; c.style.animation = 'epConfFall ' + dur + 's cubic-bezier(0.3,0.1,0.5,1) ' + delay + 's forwards'; document.body.appendChild(c); setTimeout(() => c.remove(), (dur + delay) * 1000 + 120); } }
+  function warnModal(title, msg, onOk) { const ov = document.createElement('div'); ov.className = 'ep-modal-ov'; ov.innerHTML = '<div class="ep-modal"><div class="ep-modal-ic">⚠️</div><h3>' + title + '</h3><p>' + msg + '</p><button class="ep-btn" id="epWarnOk">확인</button></div>'; document.body.appendChild(ov); ov.querySelector('#epWarnOk').onclick = () => { ov.remove(); if (onOk) onOk(); }; }
+
+  function setStep(name) {
+    const order = ['read', 'main', 'q'];
+    const ci = order.indexOf(name);
+    document.querySelectorAll('#epSteps .ep-step').forEach(el => {
+      const i = order.indexOf(el.getAttribute('data-s'));
+      el.classList.toggle('on', i === ci);
+      el.classList.toggle('done', i < ci);
+    });
+  }
+
+  function splitSentences(text) {
+    // 마침표/물음표/느낌표(닫는 따옴표 포함) 기준 분리, 구분자 유지
+    const out = []; const re = /[^.?!]*[.?!]+["”’']?|\S[^.?!]*$/g; let m;
+    while ((m = re.exec(text)) !== null) { const t = m[0].trim(); if (t) out.push(t); }
+    return out.length ? out : [text.trim()];
+  }
+  function vocabStem(w) { return w.replace(/(하다|이다|거리다|대다|스럽다|롭다|같다|내리다|쥐다|지다|치다)$/, '').slice(0, 2); }
+  function blankCountFor(n) { let bc = Math.max(2, Math.round(n * 0.5)); return Math.min(bc, Math.max(2, n - 1)); }
+
+  // ───────── 데이터 로드 ─────────
+  let PASSAGE = null;   // { sec, paras:[[sent,...],...] , sentences:[...] }
+  let VOCAB = [];       // [{w,m}]  (이 화 5개)
+  let MAIN_IDEAS = [];  // 작품 전체 10개
+  let QUESTIONS = [];   // [{q,a}]
+
+  async function loadData() {
+    const wb = (window.SR_WORKBOOK_DATA || {})[BOOK] || {};
+    VOCAB = (wb.epVocab && wb.epVocab[EP - 1]) ? wb.epVocab[EP - 1].filter(v => v && v.w) : [];
+    QUESTIONS = (wb.episodes && wb.episodes[EP - 1]) ? wb.episodes[EP - 1].filter(q => q && q.q && q.a) : [];
+    // BOOK_DATA + PART_MAIN_IDEAS : speed-reading-book.html 에서 추출
+    const res = await fetch('/speed-reading-book.html?v=20261108b');
+    const html = await res.text();
+    const bm = html.match(/const BOOK_DATA = \{[\s\S]*?\n    \};/);
+    const mm = html.match(/const PART_MAIN_IDEAS = \{[\s\S]*?\n    \};/);
+    let BOOK_DATA = {}, PMI = {};
+    try { if (bm) BOOK_DATA = (new Function(bm[0] + '; return BOOK_DATA;'))(); } catch (e) {}
+    try { if (mm) PMI = (new Function(mm[0] + '; return PART_MAIN_IDEAS;'))(); } catch (e) {}
+    MAIN_IDEAS = PMI[BASE] || [];
+    // Part N 본문 추출
+    const entry = BOOK_DATA[BOOK];
+    if (entry && entry.content) {
+      const div = document.createElement('div'); div.innerHTML = entry.content;
+      const nodes = Array.from(div.querySelectorAll('p'));
+      let inPart = false; const paras = [];
+      for (const p of nodes) {
+        if (p.classList.contains('section-title')) {
+          const t = p.textContent.trim();
+          const mt = t.match(/Part\s*(\d+)/);
+          if (mt) inPart = (parseInt(mt[1], 10) === EP);
+          continue;
+        }
+        if (inPart) { const txt = p.textContent.trim(); if (txt) paras.push(splitSentences(txt)); }
+      }
+      PASSAGE = { paras };
+    }
+  }
+
+  // ───────── 점수 ─────────
+  const score = { vocabFirst: 0, mainFirst: 0, badgeFirst: 0, badgeTotal: 0 };
+  // 오답 정리용
+  const review = { vocab: [], vocabSet: new Set(), blanks: [], blanksSet: new Set() };
+  let mainMissed = false;
+
+  // ═══════════ 단계 1 · 본문 읽기 + 인라인 어휘 퀴즈 ═══════════
+  let sentences = [];        // 평탄화된 전체 문장
+  let sentMeta = [];         // 각 문장의 para 인덱스
+  let wordBySent = {};       // sentenceIndex -> [vocabObj,...]
+  let vocabFirstTry = {};    // word -> true(아직 안틀림)
+  let readIdx = 0;
+
+  function buildReadingModel() {
+    sentences = []; sentMeta = []; wordBySent = {};
+    (PASSAGE.paras || []).forEach((sents, pi) => {
+      sents.forEach(s => { sentences.push(s); sentMeta.push(pi); });
+    });
+    // 각 어휘를 등장 문장에 매핑 (없으면 마지막 문장)
+    VOCAB.forEach(v => {
+      vocabFirstTry[v.w] = true;
+      let found = -1;
+      for (let i = 0; i < sentences.length; i++) { if (sentences[i].includes(v.w)) { found = i; break; } }
+      if (found < 0) { const st = vocabStem(v.w); if (st.length >= 2) for (let i = 0; i < sentences.length; i++) { if (sentences[i].includes(st)) { found = i; break; } } }
+      if (found < 0) found = sentences.length - 1;
+      (wordBySent[found] = wordBySent[found] || []).push(v);
+    });
+  }
+
+  function renderReading() {
+    setStep('read');
+    body.classList.remove('ep-center');
+    buildReadingModel.alreadyBuilt || (buildReadingModel(), buildReadingModel.alreadyBuilt = true);
+    let gi = 0; let html = '<div class="ep-head"><h2>① 본문 읽기</h2><p>문장을 순서대로 눌러 읽어요 · 핵심 낱말 문장에선 어휘 퀴즈가 나와요</p></div><div class="ep-passage">';
+    (PASSAGE.paras || []).forEach((sents) => {
+      html += '<p class="ep-para">';
+      sents.forEach(s => {
+        const hasWord = (wordBySent[gi] && wordBySent[gi].length) ? ' hasword' : '';
+        const cls = gi < readIdx ? 'read' : (gi === readIdx ? 'active' : 'locked');
+        html += '<span class="ep-sent ' + cls + hasWord + '" data-i="' + gi + '">' + esc(s) + '</span> ';
+        gi++;
+      });
+      html += '</p>';
+    });
+    html += '</div><div class="ep-read-foot">읽은 문장 <b>' + readIdx + '</b> / ' + sentences.length + '</div>';
+    body.innerHTML = html;
+    const act = body.querySelector('.ep-sent.active');
+    if (act) act.onclick = () => onReadSentence(readIdx);
+    if (readIdx >= sentences.length) { renderMainIdea(); }
+  }
+
+  function onReadSentence(i) {
+    const words = wordBySent[i] || [];
+    const pending = words.filter(w => !w._done);
+    if (pending.length) { startVocabQuiz(pending[0], i); return; }
+    readIdx = i + 1; renderReading();
+  }
+
+  // 인라인 어휘 퀴즈 (모달)
+  function startVocabQuiz(vobj, sentIdx) {
+    const correct = vobj.w;
+    const distract = shuffle(VOCAB.filter(v => v.w !== correct).map(v => v.w));
+    const pool = [correct];
+    // 같은 화 어휘가 모자라면 그대로 (최소 2지선다), 가능하면 4지
+    for (const d of distract) { if (pool.length >= 4) break; if (!pool.includes(d)) pool.push(d); }
+    const opts = shuffle(pool);
+    const ov = document.createElement('div'); ov.className = 'ep-modal-ov';
+    ov.innerHTML = '<div class="ep-modal"><div class="ep-modal-ic">📖</div><h3>핵심 낱말 퀴즈</h3>' +
+      '<p>다음 뜻에 알맞은 낱말은?</p>' +
+      '<div class="ep-qtext" style="font-size:18px;margin-bottom:14px;color:var(--text)">' + esc(vobj.m) + '</div>' +
+      '<div class="ep-opts ep-modal-quiz">' + opts.map(w => '<button class="ep-opt" style="text-align:center" data-w="' + esc(w) + '">' + esc(w) + '</button>').join('') + '</div></div>';
+    document.body.appendChild(ov);
+    const btns = ov.querySelectorAll('.ep-opt');
+    btns.forEach(b => {
+      b.onclick = () => {
+        btns.forEach(x => x.disabled = true);
+        const picked = b.getAttribute('data-w');
+        if (picked === correct) {
+          b.classList.add('correct');
+          if (vocabFirstTry[correct]) { score.vocabFirst++; }
+          vocabFirstTry[correct] = false; // 이후 재시도여도 이미 집계됨
+          vobj._done = true;
+          showFeedback(pick(CHEERS), true); confettiBurst();
+          setTimeout(() => { ov.remove(); onReadSentence(sentIdx); }, 900);
+        } else {
+          b.classList.add('wrong');
+          vocabFirstTry[correct] = false;
+          if (!review.vocabSet.has(correct)) { review.vocabSet.add(correct); review.vocab.push({ w: correct, m: vobj.m }); }
+          showFeedback(pick(ENCOURAGE), false);
+          setTimeout(() => { ov.remove(); /* 문장 다시 읽기: active 유지 */ renderReading(); }, 1200);
+        }
+      };
+    });
+  }
+
+  // ═══════════ 단계 2 · 중심내용 찾기 ═══════════
+  let mainFirstTry = true;
+  function renderMainIdea() {
+    setStep('main');
+    body.classList.add('ep-center');
+    if (!MAIN_IDEAS.length) { score.mainFirst = 1; renderQuestions(); return; } // 데이터 없으면 건너뜀
+    const correct = MAIN_IDEAS[EP - 1] || MAIN_IDEAS[0];
+    const others = shuffle(MAIN_IDEAS.filter((_, i) => i !== (EP - 1))).slice(0, 3);
+    const opts = shuffle([correct, ...others]);
+    body.innerHTML = '<div class="ep-head"><h2>② 중심내용 찾기</h2><p>이 화의 중심 내용으로 알맞은 것을 고르세요</p></div>' +
+      '<div class="ep-quiz"><div class="ep-opts" id="epMainOpts">' +
+      opts.map(o => '<button class="ep-opt" data-correct="' + (o === correct ? '1' : '0') + '">' + esc(o) + '</button>').join('') +
+      '</div></div>';
+    const btns = body.querySelectorAll('.ep-opt');
+    btns.forEach(b => {
+      b.onclick = () => {
+        btns.forEach(x => x.disabled = true);
+        if (b.getAttribute('data-correct') === '1') {
+          b.classList.add('correct');
+          if (mainFirstTry) score.mainFirst = 1;
+          showFeedback(pick(CHEERS), true); confettiBurst();
+          setTimeout(() => renderQuestions(), 1000);
+        } else {
+          b.classList.add('wrong');
+          mainFirstTry = false; mainMissed = true;
+          showFeedback('처음부터 다시 읽어요 📖', false);
+          setTimeout(() => { warnModal('다시 읽어요', '중심 내용을 놓쳤어요.<br>본문을 처음부터 꼼꼼히 다시 읽어 볼까요?', () => { readIdx = 0; VOCAB.forEach(v => v._done = false); renderReading(); }); }, 900);
+        }
+      };
+    });
+  }
+
+  // ═══════════ 단계 3 · 질문 어절 배열 ═══════════
+  let qIndex = 0;
+  function renderQuestions() {
+    setStep('q');
+    body.classList.remove('ep-center');
+    score.badgeTotal = QUESTIONS.reduce((s, q) => s + blankCountFor(q.a.trim().split(/\s+/).length), 0);
+    if (!QUESTIONS.length) { finish(); return; }
+    renderArrange();
+  }
+
+  function renderArrange() {
+    if (qIndex >= QUESTIONS.length) { finish(); return; }
+    let curClean = true;         // 현재 빈칸을 아직 틀리지 않았는지
+    const scored = new Set();     // 이미 득점한 빈칸 위치
+    const q = QUESTIONS[qIndex];
+    const tokens = q.a.trim().split(/\s+/);
+    const n = tokens.length;
+    const blankCount = blankCountFor(n);
+    const byLen = tokens.map((t, i) => ({ t: t, i: i })).sort((a, b) => (b.t.length - a.t.length) || (a.i - b.i));
+    const blankSet = new Set(byLen.slice(0, blankCount).map(x => x.i));
+    const blankIdxOrder = tokens.map((t, i) => i).filter(i => blankSet.has(i)); // 문장 순서대로 빈칸 위치
+    const answerForBlank = blankIdxOrder.map(i => tokens[i]);                   // 빈칸 정답(순서)
+    const poolChips = shuffle(blankIdxOrder.map((i, b) => ({ t: tokens[i], id: b })));
+    let filled = []; // 채워진 칩 {t,id} (빈칸 순서대로)
+
+    function draw() {
+      let sent = '';
+      tokens.forEach((t, i) => {
+        if (blankSet.has(i)) {
+          const myBlank = blankIdxOrder.indexOf(i);
+          if (myBlank < filled.length) {
+            sent += '<button class="ep-fill filled" data-b="' + myBlank + '">' + esc(filled[myBlank].t) + '</button> ';
+          } else {
+            sent += '<span class="ep-fill empty' + (myBlank === filled.length ? ' next' : '') + '">____</span> ';
+          }
+        } else {
+          sent += '<span class="ep-fixed">' + esc(t) + '</span> ';
+        }
+      });
+      let refHtml = '<div class="ep-ref"><div class="ep-ref-label">📖 본문 (참고)</div>';
+      (PASSAGE.paras || []).forEach(sents => { refHtml += '<p class="ep-ref-para">' + sents.map(esc).join(' ') + '</p>'; });
+      refHtml += '</div>';
+      body.innerHTML = '<div class="ep-head"><h2>③ 질문에 답하기</h2><p>본문을 참고해, 모범답안의 빈칸을 순서대로 눌러 채우세요 (' + (qIndex + 1) + '/' + QUESTIONS.length + ')</p></div>' +
+        '<div class="ep-arrange">' +
+        refHtml +
+        '<div class="ep-aq"><div class="ep-aq-label">질문</div><div class="ep-aq-q">' + esc(q.q) + '</div></div>' +
+        '<div class="ep-answer-sent">' + sent + '</div>' +
+        '<div class="ep-pool" id="epPool">' + poolChips.map(c => '<button class="ep-pool-chip' + (filled.find(f => f.id === c.id) ? ' used' : '') + '" data-id="' + c.id + '">' + esc(c.t) + '</button>').join('') + '</div>' +
+        '<div class="ep-arrange-foot"><button class="ep-btn ghost" id="epReset">다시 채우기</button></div>' +
+        '</div>';
+      body.querySelectorAll('#epPool .ep-pool-chip').forEach(ch => {
+        if (ch.classList.contains('used')) return;
+        ch.onclick = () => {
+          const id = +ch.getAttribute('data-id');
+          const c = poolChips.find(x => x.id === id);
+          const pos = filled.length;                   // 지금 채우는 빈칸 위치
+          const expected = answerForBlank[pos];
+          if (c.t === expected) {
+            if (curClean && !scored.has(pos)) { score.badgeFirst++; scored.add(pos); } // 이 빈칸 첫 시도 정답
+            filled.push({ t: c.t, id: id });
+            curClean = true;                            // 다음 빈칸은 깨끗하게 시작
+            if (filled.length === answerForBlank.length) {
+              showFeedback(pick(CHEERS), true); confettiBurst();
+              setTimeout(() => { qIndex++; renderArrange(); }, 1000);
+            } else { draw(); }
+          } else {
+            curClean = false;                           // 이 빈칸 오답 → 득점 제외
+            const key = qIndex + ':' + pos;
+            if (!review.blanksSet.has(key)) { review.blanksSet.add(key); review.blanks.push({ q: q.q, word: expected }); }
+            showFeedback(pick(ENCOURAGE) + ' 다시 찾아봐요 🔎', false);
+          }
+        };
+      });
+      body.querySelectorAll('.ep-fill.filled').forEach(ch => {
+        ch.onclick = () => { const b = +ch.getAttribute('data-b'); filled = filled.slice(0, b); curClean = true; draw(); };
+      });
+      const rb = document.getElementById('epReset'); if (rb) rb.onclick = () => { filled = []; curClean = true; draw(); };
+    }
+    draw();
+  }
+
+  // 오답 정리 HTML
+  function buildReviewHtml() {
+    if (!review.vocab.length && !mainMissed && !review.blanks.length) {
+      return '<div class="ep-review perfect"><h3>🎉 틀린 내용이 없어요! 완벽합니다</h3></div>';
+    }
+    let h = '<div class="ep-review"><h3>✍️ 다시 볼 내용</h3>';
+    if (review.vocab.length) {
+      h += '<div class="ep-rev-sec"><div class="ep-rev-t">📖 어휘</div><ul>' + review.vocab.map(v => '<li><b>' + esc(v.w) + '</b> ' + esc(v.m) + '</li>').join('') + '</ul></div>';
+    }
+    if (mainMissed) {
+      h += '<div class="ep-rev-sec"><div class="ep-rev-t">🎯 중심내용</div><ul><li>' + esc(MAIN_IDEAS[EP - 1] || '') + '</li></ul></div>';
+    }
+    if (review.blanks.length) {
+      h += '<div class="ep-rev-sec"><div class="ep-rev-t">✍️ 질문 빈칸 정답</div><ul>' + review.blanks.map(b => '<li><b>' + esc(b.word) + '</b></li>').join('') + '</ul></div>';
+    }
+    h += '</div>';
+    return h;
+  }
+
+  // ═══════════ 결과 ═══════════
+  function finish() {
+    setStep('q');
+    body.classList.add('ep-center');
+    const vTotal = VOCAB.length;          // 어휘 수
+    const bTotal = score.badgeTotal;      // 질문 빈칸(배지) 총수
+    const total = vTotal + 1 + bTotal;    // 어휘 + 중심내용(1) + 질문 빈칸
+    const got = Math.min(score.vocabFirst, vTotal) + Math.min(score.mainFirst, 1) + Math.min(score.badgeFirst, bTotal);
+    const pct = total ? Math.round(got / total * 100) : 100;
+    const deg = Math.round(pct / 100 * 360);
+    const praise = pct >= 90 ? '완벽해요! 🏆' : pct >= 70 ? '잘했어요! 👍' : pct >= 50 ? '조금 더 복습해요 💪' : '다시 도전해봐요 📖';
+    body.innerHTML = '<div class="ep-result">' +
+      '<div class="ep-ring" style="--deg:' + deg + 'deg"><span class="ep-pct">' + pct + '<small>%</small></span><span class="ep-pctlb">정답률</span></div>' +
+      '<h2 style="font-size:22px;margin:4px 0 14px">' + praise + '</h2>' +
+      '<div class="ep-break">' +
+      '<div><span>📖 어휘 퀴즈</span><b>' + Math.min(score.vocabFirst, vTotal) + ' / ' + vTotal + '</b></div>' +
+      '<div><span>🎯 중심내용 찾기</span><b>' + Math.min(score.mainFirst, 1) + ' / 1</b></div>' +
+      '<div><span>✍️ 질문 답하기(빈칸)</span><b>' + Math.min(score.badgeFirst, bTotal) + ' / ' + bTotal + '</b></div>' +
+      '</div>' +
+      buildReviewHtml() +
+      '<button class="ep-btn" id="epDone">' + EP + '화 학습 완료</button>' +
+      '</div>';
+    const detail = { pct: pct, v: Math.min(score.vocabFirst, vTotal), vt: vTotal, m: Math.min(score.mainFirst, 1), q: Math.min(score.badgeFirst, bTotal), qt: bTotal };
+    const post = () => { try { parent.postMessage({ type: 'seosulEpisodeScore', book: BOOK, ep: EP, pct: pct, detail: detail }, '*'); } catch (e) {} };
+    document.getElementById('epDone').onclick = () => {
+      post();
+      try { parent.postMessage({ type: 'seosulEpisodeClose' }, '*'); } catch (e) {}
+    };
+    post();
+  }
+
+  // 시작
+  loadData().then(() => {
+    if (!PASSAGE || !(PASSAGE.paras || []).length) { body.innerHTML = '<div class="ep-loading">아직 이 화의 본문이 준비되지 않았어요.</div>'; return; }
+    renderReading();
+  }).catch(() => { body.innerHTML = '<div class="ep-loading">본문을 불러오지 못했어요.</div>'; });
+})();
+</script>
+</body>
+</html>

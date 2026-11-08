@@ -542,6 +542,7 @@ const LiteracyKingRecord = require("./models/LiteracyKingRecord");
 const LiteracyKingAllTime = require("./models/LiteracyKingAllTime"); // 역대 최고 기록 영구 보존
 const LiteracyKingChampion = require("./models/LiteracyKingChampion");
 const SpeedReadingKing = require("./models/SpeedReadingKing");
+const SeosulScore = require("./models/SeosulScore"); // 서술형 내신문학 통합 리더보드
 const BookOrder = require("./models/BookOrder");
 const TextbookOrder = require("./models/TextbookOrder");
 const PromotionOrder = require("./models/PromotionOrder");
@@ -13109,8 +13110,8 @@ app.post("/admin/assign-series", async (req, res) => {
       }
     }
 
-    // 🔹 학원 권한과 무관하게 모든 학원에서 자유롭게 부여·해제 가능한 시리즈 (BRAIN 입문 등)
-    const ALWAYS_ALLOWED_VALUES = new Set(['BRAIN입문']);
+    // 🔹 학원 권한과 무관하게 모든 학원에서 자유롭게 부여·해제 가능한 시리즈 (BRAIN 입문, BRAIN 서술형 등)
+    const ALWAYS_ALLOWED_VALUES = new Set(['BRAIN입문', 'BRAIN서술형']);
 
     let finalSeries;
     if (!academyAllowedValues) {
@@ -34280,6 +34281,169 @@ async function getOrInitLkState(grade, name) {
   return state;
 }
 const LK_SERIES_LABEL = { on: 'BRAIN ON', up: 'BRAIN UP', fit: 'BRAIN FIT', deep: 'BRAIN DEEP' };
+
+// ═══════════ 서술형 내신문학 — 개인별 전체 저장 + 통합 리더보드 ═══════════
+function seosulRecalcTotal(doc) {
+  let t = 0;
+  if (doc.vocab) doc.vocab.forEach(v => { if (v && typeof v.pct === 'number') t += v.pct; });
+  if (doc.episodes) doc.episodes.forEach(v => { if (v && typeof v.pct === 'number') t += v.pct; });
+  return t;
+}
+// 단계 완료 시 저장 (kind: vocab | episode | webtoon). best 기록만 갱신.
+app.post('/api/seosul/save', async (req, res) => {
+  try {
+    const { grade, name, academyName, kind, book, ep, pct, detail } = req.body || {};
+    if (!grade || !name || !kind || !book) {
+      return res.status(400).json({ ok: false, message: '필수 정보가 누락되었습니다.' });
+    }
+    let doc = await SeosulScore.findOne({ grade, name });
+    if (!doc) doc = new SeosulScore({ grade, name, academyName: academyName || '' });
+    if (academyName) doc.academyName = academyName;
+    const clamp = (x) => Math.max(0, Math.min(100, Math.round(Number(x) || 0)));
+
+    const now = new Date();
+    if (kind === 'vocab') {
+      const p = clamp(pct);
+      const cur = doc.vocab.get(book);
+      if (!cur || p >= (cur.pct || 0)) {
+        doc.vocab.set(book, { pct: p, correct: detail && detail.correct, total: detail && detail.total, at: now });
+      }
+    } else if (kind === 'episode') {
+      if (ep == null) return res.status(400).json({ ok: false });
+      const key = book + '::' + ep;
+      const p = clamp(pct);
+      const cur = doc.episodes.get(key);
+      if (!cur || p >= (cur.pct || 0)) {
+        doc.episodes.set(key, { pct: p, v: detail && detail.v, vt: detail && detail.vt, m: detail && detail.m, q: detail && detail.q, qt: detail && detail.qt, at: now });
+      }
+    } else if (kind === 'webtoon') {
+      doc.webtoon.set(book, true);
+    } else {
+      return res.status(400).json({ ok: false, message: '잘못된 종류' });
+    }
+
+    doc.total = seosulRecalcTotal(doc);
+    doc.updatedAt = new Date();
+    await doc.save();
+    res.json({ ok: true, total: doc.total });
+  } catch (e) {
+    console.error('⚠️ [서술형] 점수 저장 실패:', e.message);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 내 전체 결과 조회 — 어느 기기서든 배지·리포트 복원용
+app.get('/api/seosul/me', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.json({ ok: true, vocab: {}, episodes: {}, webtoon: {}, total: 0 });
+    const doc = await SeosulScore.findOne({ grade, name }).lean();
+    if (!doc) return res.json({ ok: true, vocab: {}, episodes: {}, webtoon: {}, total: 0 });
+    res.json({ ok: true, vocab: doc.vocab || {}, episodes: doc.episodes || {}, webtoon: doc.webtoon || {}, total: doc.total || 0 });
+  } catch (e) {
+    console.error('⚠️ [서술형] 내 결과 조회 실패:', e.message);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 작품 메타 (제목·유형) — bookId 기준
+const SEOSUL_LIT1 = { sonagi: '소나기', dongbaek: '동백꽃', yang: '양반전', chunhyang: '춘향전', sim: '심청전', hu: '허생전', rich: '흥부전', toki: '별주부전', love: '사랑손님과 어머니', goodday: '운수 좋은 날', cap: '꺼삐딴 리', sampo: '삼포 가는 길' };
+const SEOSUL_LIT2 = { memil: '메밀꽃 필 무렵', ahop: '아홉 켤레의 구두로 남은 사내', dalbam: '달밤', bombom: '봄봄', hwangman: '황만근은 이렇게 말했다', jangma: '장마', nanjaengi: '난쟁이가 쏘아올린 작은 공', gubo: '소설가 구보씨의 일일', guunmong: '구운몽', mansejeon: '만세전', gwangjang: '광장', garibong: '비 오는 날이면 가리봉동에 가야 한다' };
+function seosulBookMeta(bookId) {
+  const base = String(bookId).replace(/_(adv|basic)$/, '');
+  const title = SEOSUL_LIT1[base] || SEOSUL_LIT2[base] || bookId;
+  let type;
+  if (/_adv$/.test(bookId)) type = '심화';
+  else if (/_basic$/.test(bookId)) type = '기본';
+  else if (SEOSUL_LIT1[base]) type = '기본';   // 소나기류 무접미 = 기본1권
+  else type = '심화';                            // 메밀꽃류 무접미 = 심화2권
+  return { title: title, type: type };
+}
+
+// 관리자용 서술형 데이터 목록 — 학생×작품 행 (어휘+화별 평균 정답률, 작품별 최근 완료일)
+app.get('/api/admin/seosul-list', requireAdminLogin, async (req, res) => {
+  try {
+    const acFilter = await getAdminAcademyFilter(req);
+    if (acFilter === undefined) return res.status(403).json({ ok: false, message: '권한 없음' });
+    const { search, grade, academy, type, sort = 'date', dir = 'desc', limit = 10, offset = 0 } = req.query;
+    const q = {};
+    if (acFilter) q.academyName = acFilter.academyName;
+    else if (academy && academy.trim()) q.academyName = { $regex: academy.trim(), $options: 'i' };
+    if (grade && grade.trim()) q.grade = { $regex: grade.trim(), $options: 'i' };
+    if (search && search.trim()) q.name = { $regex: search.trim(), $options: 'i' };
+
+    const docs = await SeosulScore.find(q).lean();
+    let rows = [];
+    docs.forEach(doc => {
+      const byBook = {};
+      const add = (bookId, pct, at) => {
+        const b = byBook[bookId] || (byBook[bookId] = { sum: 0, cnt: 0, latest: null });
+        b.sum += pct; b.cnt++;
+        const d = at ? new Date(at) : null;
+        if (d && !isNaN(d) && (!b.latest || d > b.latest)) b.latest = d;
+      };
+      Object.entries(doc.vocab || {}).forEach(([book, v]) => { if (v && typeof v.pct === 'number') add(book, v.pct, v.at); });
+      Object.entries(doc.episodes || {}).forEach(([key, e]) => { const m = key.match(/^(.+)::\d+$/); if (m && e && typeof e.pct === 'number') add(m[1], e.pct, e.at); });
+      Object.entries(byBook).forEach(([bookId, agg]) => {
+        const meta = seosulBookMeta(bookId);
+        rows.push({ grade: doc.grade, name: doc.name, academyName: doc.academyName || '', bookId: bookId, type: meta.type, title: meta.title, pct: Math.round(agg.sum / agg.cnt), date: agg.latest });
+      });
+    });
+    if (type && (type === '기본' || type === '심화')) rows = rows.filter(r => r.type === type);
+
+    const d = dir === 'asc' ? 1 : -1;
+    rows.sort((a, b) => {
+      if (sort === 'grade') return (a.grade || '').localeCompare(b.grade || '') * d;
+      if (sort === 'name') return (a.name || '').localeCompare(b.name || '') * d;
+      if (sort === 'academy') return (a.academyName || '').localeCompare(b.academyName || '') * d;
+      if (sort === 'pct') return ((a.pct || 0) - (b.pct || 0)) * d;
+      if (sort === 'title') return (a.title || '').localeCompare(b.title || '') * d;
+      // date (기본)
+      const ta = a.date ? new Date(a.date).getTime() : 0, tb = b.date ? new Date(b.date).getTime() : 0;
+      return (ta - tb) * d;
+    });
+
+    const total = rows.length;
+    const off = Math.max(parseInt(offset) || 0, 0);
+    const lim = Math.min(parseInt(limit) || 10, 200);
+    const page = rows.slice(off, off + lim);
+
+    const academies = acFilter ? [acFilter.academyName] : [...new Set(docs.map(x => x.academyName).filter(Boolean))].sort();
+    const grades = [...new Set(docs.map(x => x.grade).filter(Boolean))].sort();
+    res.json({ ok: true, items: page, total, academies, grades });
+  } catch (e) {
+    console.error('⚠️ [서술형] 관리자 목록 조회 실패:', e.message);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 통합 리더보드 조회 (전체 학생) + 내 등수
+app.get('/api/seosul/leaderboard', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
+    const top = await SeosulScore.find({ total: { $gt: 0 } })
+      .sort({ total: -1, updatedAt: 1 }).limit(limit).lean();
+    const totalStudents = await SeosulScore.countDocuments({ total: { $gt: 0 } });
+    let myRank = null, myTotal = 0;
+    if (grade && name) {
+      const me = await SeosulScore.findOne({ grade, name }).lean();
+      if (me && me.total > 0) {
+        myTotal = me.total;
+        myRank = (await SeosulScore.countDocuments({ total: { $gt: me.total } })) + 1;
+      } else if (me) { myTotal = 0; }
+    }
+    res.json({
+      ok: true,
+      totalStudents,
+      myRank, myTotal,
+      top: top.map((d, i) => ({ rank: i + 1, grade: d.grade, name: d.name, academyName: d.academyName || '', total: d.total }))
+    });
+  } catch (e) {
+    console.error('⚠️ [서술형] 리더보드 조회 실패:', e.message);
+    res.status(500).json({ ok: false });
+  }
+});
 
 // 결과 저장 — 시리즈별 best 점수 갱신 + 등수 향상 시 뱃지 지급
 app.post('/api/literacy-king/save', async (req, res) => {

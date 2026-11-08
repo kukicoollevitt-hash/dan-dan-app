@@ -103,6 +103,7 @@
     <button class="tab-btn" data-tab="wr100">✍️ BRAIN입문 쓰기문해 <span class="badge-count" id="tabWr100Count">0</span></button>
     <button class="tab-btn" data-tab="mock">📊 BRAIN모고 <span class="badge-count" id="tabMockCount">0</span></button>
     <button class="tab-btn" data-tab="grammar">🧭 BRAIN문법 <span class="badge-count" id="tabGrammarCount">0</span></button>
+    <button class="tab-btn" data-tab="seosul">📚 BRAIN서술형 <span class="badge-count" id="tabSeosulCount">0</span></button>
   </div>
   <!-- 비평 섹션 -->
   <div class="section active" id="sectionCrit">
@@ -428,6 +429,52 @@
     </div>
     <div class="info-line" id="grammarInfo"></div>
     <div class="more-bar"><button class="more-btn" id="grammarMoreBtn" style="display:none;">더보기 (+10)</button></div>
+  </div>
+
+  <!-- BRAIN서술형 내신문학 — 작품별 학습 기록 -->
+  <div class="section" id="sectionSeosul">
+    <h2 class="section-title">📚 BRAIN서술형 내신문학 학습 기록 <span class="count" id="seosulCount">0건</span></h2>
+    <p style="margin:-4px 0 12px;font-size:12.5px;color:#64748b;">어휘·화별 완료 기록을 <b>작품 단위</b>로 집계합니다(웹툰 제외). 우측 리포트 버튼을 누르면 해당 작품 상세 리포트가 열려요.</p>
+    <div class="filter-row">
+      <input type="text" id="seosulSearchName" placeholder="👤 이름 검색" />
+      <input type="text" id="seosulGrade" placeholder="🎓 학년 검색 (예: 중2)" />
+      <input type="text" id="seosulAcademy" placeholder="🏫 센터(학원) 검색" />
+      <select id="seosulType">
+        <option value="">전체 유형</option>
+        <option value="기본">기본편</option>
+        <option value="심화">심화편</option>
+      </select>
+      <select id="seosulSort">
+        <option value="date-desc">최근 완료 순</option>
+        <option value="date-asc">오래된 순</option>
+        <option value="pct-desc">정답률 높은순</option>
+        <option value="grade-asc">학년 오름차순</option>
+        <option value="name-asc">이름 가나다순</option>
+      </select>
+      <button class="reset-btn" onclick="resetSeosulFilter()">초기화</button>
+    </div>
+    <div class="table-wrap" style="overflow-x:auto;">
+      <table style="min-width:1000px;table-layout:fixed;">
+        <thead>
+          <tr>
+            <th style="width:44px;">#</th>
+            <th data-sort-section="seosul" data-sort="grade" style="width:60px;">학년</th>
+            <th data-sort-section="seosul" data-sort="name" style="width:90px;">학생명</th>
+            <th data-sort-section="seosul" data-sort="academy" style="width:150px;">센터(학원)</th>
+            <th style="width:70px;text-align:center;">유형</th>
+            <th data-sort-section="seosul" data-sort="title" style="width:180px;">작품명</th>
+            <th data-sort-section="seosul" data-sort="pct" style="width:90px;text-align:center;">정답률</th>
+            <th data-sort-section="seosul" data-sort="date" style="width:130px;">완료일</th>
+            <th style="width:100px;">리포트</th>
+          </tr>
+        </thead>
+        <tbody id="seosulTbody">
+          <tr><td colspan="9" class="empty">불러오는 중…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="info-line" id="seosulInfo"></div>
+    <div class="more-bar"><button class="more-btn" id="seosulMoreBtn" style="display:none;">더보기 (+10)</button></div>
   </div>
 </div>
 
@@ -883,7 +930,7 @@
   function switchTab(t) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    const _secMap = { crit: 'sectionCrit', kh: 'sectionKh', wr100: 'sectionWr100', mock: 'sectionMock', grammar: 'sectionGrammar' };
+    const _secMap = { crit: 'sectionCrit', kh: 'sectionKh', wr100: 'sectionWr100', mock: 'sectionMock', grammar: 'sectionGrammar', seosul: 'sectionSeosul' };
     const targetId = _secMap[t] || 'sectionCrit';
     const target = document.getElementById(targetId);
     if (target) target.classList.add('active');
@@ -895,7 +942,7 @@
   try {
     const params = new URLSearchParams(location.search);
     const initialTab = params.get('tab');
-    if (['kh', 'crit', 'wr100', 'mock', 'grammar'].includes(initialTab)) switchTab(initialTab);
+    if (['kh', 'crit', 'wr100', 'mock', 'grammar', 'seosul'].includes(initialTab)) switchTab(initialTab);
   } catch {}
 
   // 카운트 동기화 — 섹션 count → 탭 배지
@@ -1605,6 +1652,149 @@
 
   // 카운트 배지는 loadMock 에서 직접 갱신 (tabMockCount)
 
+  // ===== BRAIN서술형 로드 =====
+  state.seosul = { sort: 'date', dir: 'desc', offset: 0, total: 0, searchTimer: null };
+  async function loadSeosul(reset) {
+    const st = state.seosul;
+    if (reset) { st.offset = 0; $('seosulTbody').innerHTML = ''; }
+    document.querySelectorAll('th[data-sort-section="seosul"]').forEach(th => {
+      th.classList.remove('sorted-asc','sorted-desc');
+      if (th.dataset.sort === st.sort) th.classList.add(st.dir==='asc'?'sorted-asc':'sorted-desc');
+    });
+    const params = new URLSearchParams({
+      search: $('seosulSearchName').value.trim(),
+      grade: $('seosulGrade').value.trim(),
+      academy: $('seosulAcademy').value.trim(),
+      type: $('seosulType').value,
+      sort: st.sort, dir: st.dir, limit: PAGE_SIZE, offset: st.offset
+    });
+    try {
+      const res = await fetch(`/api/admin/seosul-list?${params}`);
+      const data = await res.json();
+      if (!data.ok) { $('seosulTbody').innerHTML = `<tr><td colspan="9" class="empty" style="color:#c00;">${esc(data.message || '오류')}</td></tr>`; return; }
+      st.total = data.total;
+      $('seosulCount').textContent = `${data.total}건`;
+      document.getElementById('tabSeosulCount').textContent = String(data.total);
+      $('seosulInfo').textContent = `총 ${data.total}건 중 ${st.offset + data.items.length}건 표시`;
+      renderSeosulRows(data.items);
+      st.offset += data.items.length;
+      $('seosulMoreBtn').style.display = st.offset < st.total ? 'inline-block' : 'none';
+    } catch (err) {
+      console.error(err);
+      $('seosulTbody').innerHTML = '<tr><td colspan="9" class="empty" style="color:#c00;">네트워크 오류</td></tr>';
+    }
+  }
+  function renderSeosulRows(items) {
+    const tbody = $('seosulTbody');
+    if (state.seosul.offset === 0 && items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="empty">서술형 학습 기록이 없습니다.</td></tr>';
+      return;
+    }
+    const html = items.map((it, idx) => {
+      const typeBadge = it.type === '심화'
+        ? '<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:#e8edff;color:#3a53c8;font-size:11px;font-weight:700;">심화</span>'
+        : '<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:#e6f5ec;color:#2e8b57;font-size:11px;font-weight:700;">기본</span>';
+      return `<tr>
+        <td class="num">${state.seosul.offset + idx + 1}</td>
+        <td style="white-space:nowrap;">${esc(it.grade)}</td>
+        <td style="white-space:nowrap;"><b>${esc(it.name)}</b></td>
+        <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(it.academyName || '-')}</td>
+        <td style="text-align:center;">${typeBadge}</td>
+        <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;color:#2e8b57;">${esc(it.title || '-')}</td>
+        <td style="text-align:center;">${fmtPct(it.pct)}</td>
+        <td style="font-size:12px;color:#6b7280;white-space:nowrap;">${fmtDate(it.date)}</td>
+        <td><button class="report-btn" style="white-space:nowrap;" onclick="openSeosulAdminReport('${esc(it.grade)}','${esc(it.name)}','${esc(it.bookId)}','${esc(it.title)}','${esc(it.type)}')">📋 리포트</button></td>
+      </tr>`;
+    }).join('');
+    if (state.seosul.offset === 0) tbody.innerHTML = html;
+    else tbody.insertAdjacentHTML('beforeend', html);
+  }
+  function bindSeosulControls() {
+    $('seosulSearchName').oninput = debounce('seosul', () => loadSeosul(true));
+    $('seosulGrade').oninput      = debounce('seosul', () => loadSeosul(true));
+    $('seosulAcademy').oninput    = debounce('seosul', () => loadSeosul(true));
+    $('seosulType').onchange = () => loadSeosul(true);
+    $('seosulSort').onchange = () => { const [s, d] = $('seosulSort').value.split('-'); state.seosul.sort = s; state.seosul.dir = d; loadSeosul(true); };
+    $('seosulMoreBtn').onclick = () => loadSeosul(false);
+    document.querySelectorAll('th[data-sort-section="seosul"]').forEach(th => {
+      th.onclick = () => {
+        const key = th.dataset.sort; const st = state.seosul;
+        if (st.sort === key) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
+        else { st.sort = key; st.dir = 'desc'; }
+        st.offset = 0; loadSeosul(true);
+      };
+    });
+  }
+  window.resetSeosulFilter = function() {
+    $('seosulSearchName').value = ''; $('seosulGrade').value = ''; $('seosulAcademy').value = ''; $('seosulType').value = ''; $('seosulSort').value = 'date-desc';
+    state.seosul.sort = 'date'; state.seosul.dir = 'desc';
+    loadSeosul(true);
+  };
+
+  // 작품 상세 리포트 (학생앱과 동일 내용) — 서버 /api/seosul/me 에서 그 학생 데이터 조회
+  window.openSeosulAdminReport = async function(grade, name, bookId, title, type) {
+    const old = document.getElementById('seosulRepOverlay'); if (old) old.remove();
+    const ov = document.createElement('div');
+    ov.id = 'seosulRepOverlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:28px 16px;';
+    ov.innerHTML = '<div style="max-width:760px;width:100%;margin:auto;"><div style="text-align:center;color:#fff;font-weight:700;padding:40px;" id="seosulRepLoad">리포트 불러오는 중…</div></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    try {
+      const res = await fetch('/api/seosul/me?grade=' + encodeURIComponent(grade) + '&name=' + encodeURIComponent(name));
+      const d = await res.json();
+      const V = (d && d.vocab) || {}, E = (d && d.episodes) || {}, W = (d && d.webtoon) || {};
+      const vd = V[bookId]; const wtDone = !!W[bookId];
+      const eps = []; const pcts = [];
+      if (vd && typeof vd.pct === 'number') pcts.push(vd.pct);
+      let doneEp = 0;
+      for (let i = 1; i <= 10; i++) { const e = E[bookId + '::' + i]; eps.push(e || null); if (e && typeof e.pct === 'number') { pcts.push(e.pct); doneEp++; } }
+      const avg = pcts.length ? Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length) : null;
+      let rows = '';
+      eps.forEach((e, i) => {
+        const ep = i + 1;
+        if (!e || typeof e.pct !== 'number') rows += `<tr style="color:#b4bfc0;"><td>${ep}화</td><td>미완료</td><td>-</td><td>-</td><td>-</td></tr>`;
+        else rows += `<tr><td>${ep}화</td><td><b style="color:#2e8b57;">${e.pct}%</b></td><td>${e.v != null ? e.v + '/' + e.vt : '-'}</td><td>${e.m != null ? e.m + '/1' : '-'}</td><td>${e.q != null ? e.q + '/' + e.qt : '-'}</td></tr>`;
+      });
+      const vocabCell = (vd && typeof vd.pct === 'number') ? `<b>${vd.pct}%</b>${vd.total ? ` <small style="color:#789;">(${vd.correct}/${vd.total})</small>` : ''}` : '<span style="color:#aab;">미완료</span>';
+      const d2 = new Date();
+      const dateStr = d2.getFullYear() + '.' + String(d2.getMonth()+1).padStart(2,'0') + '.' + String(d2.getDate()).padStart(2,'0');
+      ov.innerHTML =
+        '<div style="max-width:760px;width:100%;margin:auto;position:relative;">' +
+        '<div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:12px;">' +
+        '<button id="seosulRepPrint" style="padding:10px 18px;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#4caf72,#2e8b57);color:#fff;">🖨 인쇄</button>' +
+        '<button id="seosulRepClose" style="padding:10px 18px;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;background:#fff;color:#333;">닫기</button></div>' +
+        '<div id="seosulRepBody" style="background:#fff;color:#2a3b33;border-radius:16px;padding:30px 32px;box-shadow:0 20px 50px rgba(0,0,0,0.4);">' +
+        '<div style="text-align:center;border-bottom:2px solid #2e8b57;padding-bottom:16px;margin-bottom:20px;">' +
+        '<div style="font-size:20px;font-weight:900;color:#2e8b57;">📊 서술형 내신문학 학습 리포트</div>' +
+        '<div style="font-size:16px;font-weight:800;color:#1f3328;margin-top:8px;">' + esc(type) + '편 · ' + esc(title) + '</div>' +
+        '<div style="font-size:13px;color:#7a8a99;margin-top:6px;">' + esc(grade) + ' ' + esc(name) + ' · ' + dateStr + ' 기준</div></div>' +
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;">' +
+        '<div style="background:linear-gradient(135deg,#eafaf0,#d7f0e0);border:1px solid #4caf72;border-radius:12px;padding:14px 10px;text-align:center;"><div style="font-size:12px;color:#6b8577;font-weight:700;margin-bottom:6px;">종합 평균</div><div style="font-size:18px;font-weight:800;color:#1f3328;">' + (avg === null ? '<span style=\"color:#aab;\">-</span>' : '<b>' + avg + '%</b>') + '</div></div>' +
+        '<div style="background:#f2f8f4;border:1px solid #d9e8df;border-radius:12px;padding:14px 10px;text-align:center;"><div style="font-size:12px;color:#6b8577;font-weight:700;margin-bottom:6px;">📖 어휘</div><div style="font-size:18px;font-weight:800;color:#1f3328;">' + vocabCell + '</div></div>' +
+        '<div style="background:#f2f8f4;border:1px solid #d9e8df;border-radius:12px;padding:14px 10px;text-align:center;"><div style="font-size:12px;color:#6b8577;font-weight:700;margin-bottom:6px;">🎬 웹툰</div><div style="font-size:18px;font-weight:800;">' + (wtDone ? '<b style=\"color:#2e8b57;\">완독 ✓</b>' : '<span style=\"color:#aab;\">미완</span>') + '</div></div>' +
+        '<div style="background:#f2f8f4;border:1px solid #d9e8df;border-radius:12px;padding:14px 10px;text-align:center;"><div style="font-size:12px;color:#6b8577;font-weight:700;margin-bottom:6px;">완료 화</div><div style="font-size:18px;font-weight:800;color:#1f3328;"><b>' + doneEp + '</b> / 10</div></div>' +
+        '</div>' +
+        '<table style="width:100%;border-collapse:collapse;font-size:14px;"><thead><tr>' +
+        '<th style="background:#2e8b57;color:#fff;padding:10px 8px;">화</th><th style="background:#2e8b57;color:#fff;padding:10px 8px;">정답률</th><th style="background:#2e8b57;color:#fff;padding:10px 8px;">어휘</th><th style="background:#2e8b57;color:#fff;padding:10px 8px;">중심</th><th style="background:#2e8b57;color:#fff;padding:10px 8px;">질문</th>' +
+        '</tr></thead><tbody style="text-align:center;">' + rows.replace(/<td>/g, '<td style="padding:9px 8px;border-bottom:1px solid #e6efe9;">') + '</tbody></table>' +
+        '<div style="margin-top:16px;font-size:11.5px;color:#8a9aa5;line-height:1.6;">· 정답률은 각 항목 <b>첫 시도 정답</b> 기준입니다. · 어휘·중심·질문을 합산해 화별 정답률을 계산합니다.</div>' +
+        '</div></div>';
+      document.getElementById('seosulRepClose').onclick = () => ov.remove();
+      document.getElementById('seosulRepPrint').onclick = () => {
+        const bodyEl = document.getElementById('seosulRepBody');
+        const win = window.open('', '_blank', 'width=900,height=1000');
+        if (!win) { alert('팝업이 차단되었어요. 허용 후 다시 눌러 주세요.'); return; }
+        win.document.write('<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>서술형 학습 리포트</title><style>body{margin:0;background:#fff;font-family:sans-serif;} @page{margin:12mm;} @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>' + bodyEl.outerHTML + '</body></html>');
+        win.document.close(); win.focus();
+        setTimeout(() => { try { win.print(); } catch(e){} }, 350);
+        win.onafterprint = () => { try { win.close(); } catch(e){} };
+      };
+    } catch (err) {
+      ov.innerHTML = '<div style="max-width:760px;width:100%;margin:auto;"><div style="text-align:center;color:#fff;font-weight:700;padding:40px;">리포트를 불러오지 못했어요. <button onclick="document.getElementById(\'seosulRepOverlay\').remove()" style="margin-left:10px;padding:6px 12px;">닫기</button></div></div>';
+    }
+  };
+
   // 초기 로드
   bindCritControls();
   bindKhControls();
@@ -1613,6 +1803,7 @@
   bindWr100Controls();
   bindMockControls();
   bindGrammarControls();
+  bindSeosulControls();
   loadCrit(true);
   loadKh(true);
   loadKhExam(true);
@@ -1620,6 +1811,7 @@
   loadWr100(true);
   loadMock(true);
   loadGrammar(true);
+  loadSeosul(true);
 </script>
 </body>
 </html>

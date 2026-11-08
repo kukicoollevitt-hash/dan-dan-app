@@ -7851,6 +7851,8 @@ canvas[id^="confetti-canvas"] {
         <li class="series-item grammar-special" data-series="BRAINGRAMMAR" id="grammarSeriesItem" style="display:none;"><span>BRAIN문법</span><span class="meta">개념특강</span></li>
         <!-- 👑 BRAIN최상위(수능 최상위과정) — 초3 김윤슬 QA 화이트리스트만 노출, 클릭 시 수능 과정 페이지 -->
         <li class="series-item top-special" data-series="BRAINTOP" id="topSeriesItem" style="display:none;"><span>BRAIN최상위</span><span class="meta">수능특강</span></li>
+        <!-- 📚 BRAIN서술형(내신문학 특강) — 초3 김윤슬 QA 화이트리스트만 노출, 클릭 시 인트로 영상 팝업(학습 준비 중) -->
+        <li class="series-item seosul-special" data-series="BRAINSEOSUL" id="seosulSeriesItem" style="display:none;"><span>BRAIN서술형</span><span class="meta">내신특강</span></li>
         <li class="series-item" data-series="BRAINM" style="display:none;"><span>BRAIN실전</span><span class="meta">모의고사</span></li>
         <li class="series-item" data-series="BRAINNAESIN" style="display:none;"><span>📝 BRAIN내신</span><span class="meta">내신대비</span></li>
         <li class="series-item" data-series="BRAINSUNEUNG" style="display:none;"><span>🎯 BRAIN수능</span><span class="meta">수능대비</span></li>
@@ -11524,6 +11526,23 @@ if (logoutConfirmBtn) {
           return;
         }
 
+        // 📚 BRAINSEOSUL (BRAIN서술형 · 내신문학 특강) — 부여된 학생 + 초3 김윤슬, 인트로 영상 팝업 → 라이브러리
+        if (series === 'BRAINSEOSUL') {
+          try {
+            const u = JSON.parse(sessionStorage.getItem('user') || '{}');
+            const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}');
+            const g = cs.grade || u.grade, n = cs.name || u.name;
+            const isYunseul = (g === '초3' && n === '김윤슬');
+            const assigned = Array.isArray(u.assignedSeries) && u.assignedSeries.includes('BRAIN서술형');
+            if (!isYunseul && !assigned) {
+              alert('BRAIN서술형은 아직 열려 있지 않아요. (선생님께 문의해 주세요)');
+              return;
+            }
+          } catch { return; }
+          if (typeof window.showSeosulSeriesPopup === 'function') window.showSeosulSeriesPopup();
+          return;
+        }
+
         // 🌍 BRAINWORLDHIST (BRAIN세계사 · 역사특강) — 초3 김윤슬 전용, 인트로 영상 팝업 → "12월 말 오픈 예정"
         if (series === 'BRAINWORLDHIST') {
           try {
@@ -14013,6 +14032,7 @@ async function performLogout() {
         // 시리즈 이름 매핑 (모달에서 사용하는 이름 -> HTML data-series 값)
         const seriesMapping = {
           'BRAIN입문': 'WRITING100',
+          'BRAIN서술형': 'BRAINSEOSUL',
           'BRAIN은': 'BRAINON',
           'BRAIN암': 'BRAINUP',
           'BRAIN빛': 'BRAINFIT',
@@ -14107,6 +14127,20 @@ async function performLogout() {
             const isYunseul = (g === '초3' && n === '김윤슬');
             li.style.display = isYunseul ? '' : 'none';
             if (isYunseul) li.classList.remove('disabled');
+            return;
+          }
+
+          // 📚 BRAIN서술형(BRAINSEOSUL · 내신문학 특강) — 부여된 학생만 노출(디폴트 off) + 초3 김윤슬은 항상 노출
+          if (seriesId === 'BRAINSEOSUL') {
+            let g = user.grade, n = user.name;
+            try { const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); if (cs.grade) g = cs.grade; if (cs.name) n = cs.name; } catch {}
+            const isYunseul = (g === '초3' && n === '김윤슬');
+            if (isYunseul || allowedSeriesIds.includes('BRAINSEOSUL')) {
+              li.style.display = '';
+              li.classList.remove('disabled');
+            } else {
+              li.style.display = 'none';
+            }
             return;
           }
 
@@ -14222,6 +14256,9 @@ async function performLogout() {
         // 🌍 BRAIN세계사(역사특강) — 초3 김윤슬 테스트계정에만 노출
         const worldHistItem = document.getElementById('worldHistSeriesItem');
         if (worldHistItem && isReviewer) worldHistItem.style.display = '';
+        // 📚 BRAIN서술형(내신문학 특강) — 초3 김윤슬 테스트계정에만 노출
+        const seosulItem = document.getElementById('seosulSeriesItem');
+        if (seosulItem && isReviewer) seosulItem.style.display = '';
         // 🥚 교과어휘 몽글 도감 런처 — 전체 오픈(2026-08-18), QA 화이트리스트 해제
         // 🧭 BRAIN문법(원정대) — 전체 센터 오픈(2026-09-26): grammarSeriesItem 표시는
         //    applySeriesRestrictions의 BRAINGRAMMAR default-on 게이트가 처리 (여기서 별도 처리 불필요)
@@ -14372,6 +14409,9 @@ async function performLogout() {
           } else if (ao === 'grammarMain' && typeof window.openGrammarExpedition === 'function') {
             // 🧭 문법 리포트 메인 — 국어 개념 원정대(문법) 화면으로 진입(학생별, 관문별 리포트는 내부에서 선택)
             window.openGrammarExpedition();
+          } else if (ao === 'seosulLibrary' && typeof window.showSeosulLibrary === 'function') {
+            // 📚 서술형 내신문학 — 라이브러리(기본/심화) 진입, 작품별 리포트는 내부 🔍 버튼으로
+            window.showSeosulLibrary();
           }
         }, 1000);
       } catch (e) { console.warn('[autoOpen] 실패:', e); }
@@ -35326,6 +35366,727 @@ ${content}
     }
     window.showTopSeriesPopup = showTopSeriesPopup;
 
+    // 📚 BRAIN서술형(내신문학 특강) 인트로 영상 팝업 — 하단 "학습시작하기" 클릭 시 '준비 중' 안내(최상위와 동일 패턴)
+    function showSeosulSeriesPopup() {
+      const existing = document.getElementById('seosulSeriesIntroOverlay');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.id = 'seosulSeriesIntroOverlay';
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
+        z-index: 10005; backdrop-filter: blur(6px);
+      `;
+
+      const box = document.createElement('div');
+      box.style.cssText = `
+        position: relative; display: inline-block; background: #000;
+        border: 2px solid #e07b39; border-radius: 16px; overflow: hidden;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+        animation: grammarIntroPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); line-height: 0;
+      `;
+
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '&times;';
+      closeBtn.title = '닫기';
+      closeBtn.style.cssText = `
+        position: absolute; top: 10px; right: 12px; z-index: 3;
+        width: 36px; height: 36px; border-radius: 50%;
+        background: rgba(0,0,0,0.55); color: #fff; border: none;
+        font-size: 22px; font-weight: 700; cursor: pointer; line-height: 1; backdrop-filter: blur(6px);
+      `;
+      closeBtn.onclick = () => overlay.remove();
+
+      const video = document.createElement('video');
+      video.src = '/images/서술형집중대비/brain서술형팝업영상.mp4';
+      video.autoplay = true; video.loop = true; video.muted = true;
+      video.setAttribute('playsinline', '');
+      video.style.cssText = `display: block; max-width: 90vw; max-height: 86vh; height: auto; width: auto; background: #000;`;
+
+      const actions = document.createElement('div');
+      actions.style.cssText = `
+        position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+        padding: 18px 16px 16px; display: flex; gap: 10px; justify-content: center; align-items: center;
+        flex-wrap: wrap; line-height: 1.2;
+        background: linear-gradient(0deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 100%);
+      `;
+
+      const enterBtn = document.createElement('button');
+      enterBtn.innerHTML = '📚 학습시작하기';
+      enterBtn.style.cssText = `
+        padding: 14px 32px;
+        background: linear-gradient(135deg, #f0a868 0%, #e07b39 100%);
+        color: #fff; border: none; border-radius: 14px;
+        font-size: 16px; font-weight: 800; cursor: pointer;
+        box-shadow: 0 6px 16px rgba(224,123,57,0.45);
+        transition: transform 0.15s ease; letter-spacing: 0.3px;
+      `;
+      enterBtn.onmouseover = () => enterBtn.style.transform = 'translateY(-2px)';
+      enterBtn.onmouseout = () => enterBtn.style.transform = '';
+      enterBtn.onclick = () => {
+        try { video.pause(); } catch {}
+        overlay.remove();
+        window.showSeosulLibrary();
+      };
+      actions.appendChild(enterBtn);
+
+      box.appendChild(closeBtn);
+      box.appendChild(video);
+      box.appendChild(actions);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) { try { video.pause(); } catch {} overlay.remove(); }
+      });
+    }
+    window.showSeosulSeriesPopup = showSeosulSeriesPopup;
+
+    // 📚 BRAIN서술형 라이브러리 — 학습시작하기 → 기본/심화 메인카드 → 권별 작품카드 그리드
+    (function () {
+      const SEOSUL_IMG = '/images/서술형집중대비/';
+      const SEOSUL_IMG_V = '?v=20261108b'; // 이미지 교체 시 이 값을 올리면 캐시 갱신됨
+      const SEOSUL_V1 = [
+        { t: '소나기', a: '황순원', img: '소나기.png' },
+        { t: '동백꽃', a: '김유정', img: '동백꽃.png' },
+        { t: '양반전', a: '박지원', img: '양반전.png' },
+        { t: '춘향전', a: '작자 미상', img: '춘향전.png' },
+        { t: '심청전', a: '작자 미상', img: '심청전.png' },
+        { t: '허생전', a: '박지원', img: '허생전.png' },
+        { t: '흥부전', a: '작자 미상', img: '흥부전.png' },
+        { t: '별주부전', a: '작자 미상', img: '별주부전.png' },
+        { t: '사랑손님과 어머니', a: '주요섭', img: '사랑손님과어머니.png' },
+        { t: '운수 좋은 날', a: '현진건', img: '운수좋은날.png' },
+        { t: '꺼삐딴 리', a: '전광용', img: '꺼삐딴리.png' },
+        { t: '삼포 가는 길', a: '황석영', img: '삼포가는길.png' },
+      ];
+      const SEOSUL_V2 = [
+        { t: '메밀꽃 필 무렵', a: '이효석', img: '메밀꽃필무렵.png' },
+        { t: '아홉 켤레의 구두로 남은 사내', a: '윤흥길', img: '아홉켤레구두로남은사내.png' },
+        { t: '달밤', a: '이태준', img: '달밤.png' },
+        { t: '봄봄', a: '김유정', img: '봄봄.png' },
+        { t: '황만근은 이렇게 말했다', a: '성석제', img: '황만근은이렇게말했다.png' },
+        { t: '장마', a: '윤흥길', img: '장마.png' },
+        { t: '난쟁이가 쏘아올린 작은 공', a: '조세희', img: '난쟁이가쏘아올린작은공.png' },
+        { t: '소설가 구보씨의 일일', a: '박태원', img: '소설가구보씨의일일.png' },
+        { t: '구운몽', a: '김만중', img: '구운몽.png' },
+        { t: '만세전', a: '염상섭', img: '만세전.png' },
+        { t: '광장', a: '최인훈', img: '광장.png' },
+        { t: '비 오는 날이면 가리봉동에 가야 한다', a: '양귀자', img: '비오는날에가리봉동에가야한다.png' },
+      ];
+
+      // 작품 → 워크북 book id (편/권/순번별, teaching-guide SR_SHELF와 동일 순서)
+      const SEOSUL_BOOKID = {
+        basic: {
+          1: ['sonagi', 'dongbaek', 'yang', 'chunhyang', 'sim', 'hu', 'rich', 'toki', 'love', 'goodday', 'cap', 'sampo'],
+          2: ['memil_basic', 'ahop_basic', 'dalbam_basic', 'bombom_basic', 'hwangman_basic', 'jangma_basic', 'nanjaengi_basic', 'gubo_basic', 'guunmong_basic', 'mansejeon_basic', 'gwangjang_basic', 'garibong_basic']
+        },
+        adv: {
+          1: ['sonagi_adv', 'dongbaek_adv', 'yang_adv', 'chunhyang_adv', 'sim_adv', 'hu_adv', 'rich_adv', 'toki_adv', 'love_adv', 'goodday_adv', 'cap_adv', 'sampo_adv'],
+          2: ['memil', 'ahop', 'dalbam', 'bombom', 'hwangman', 'jangma', 'nanjaengi', 'gubo', 'guunmong', 'mansejeon', 'gwangjang', 'garibong']
+        }
+      };
+      function seosulBookId(part, vol, idx) {
+        try { return (SEOSUL_BOOKID[part] || {})[+vol][idx] || ''; } catch (e) { return ''; }
+      }
+      function seosulStudentKey() {
+        let n = 'guest';
+        try { const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); if (cs && cs.name) n = cs.name; } catch (e) {}
+        return n;
+      }
+      function seosulScoreKey(bookId) { return 'seosulVocabScore::' + seosulStudentKey() + '::' + bookId; }
+      function seosulGetScore(bookId) {
+        if (!bookId) return null;
+        const v = localStorage.getItem(seosulScoreKey(bookId));
+        return (v === null || v === '') ? null : parseInt(v, 10);
+      }
+      function seosulWebtoonKey(bookId) { return 'seosulWebtoonDone::' + seosulStudentKey() + '::' + bookId; }
+      function seosulGetWebtoonDone(bookId) { return bookId ? localStorage.getItem(seosulWebtoonKey(bookId)) === '1' : false; }
+      function seosulEpisodeKey(bookId, ep) { return 'seosulEpisodeScore::' + seosulStudentKey() + '::' + bookId + '::' + ep; }
+      function seosulGetEpisodeScore(bookId, ep) { if (!bookId) return null; const v = localStorage.getItem(seosulEpisodeKey(bookId, ep)); return (v === null || v === '') ? null : parseInt(v, 10); }
+      function seosulEpisodeDetailKey(bookId, ep) { return 'seosulEpisodeDetail::' + seosulStudentKey() + '::' + bookId + '::' + ep; }
+      function seosulGetEpisodeDetail(bookId, ep) { try { return JSON.parse(localStorage.getItem(seosulEpisodeDetailKey(bookId, ep)) || 'null'); } catch (e) { return null; } }
+      function seosulVocabDetailKey(bookId) { return 'seosulVocabDetail::' + seosulStudentKey() + '::' + bookId; }
+      function seosulGetVocabDetail(bookId) { try { return JSON.parse(localStorage.getItem(seosulVocabDetailKey(bookId)) || 'null'); } catch (e) { return null; } }
+      // 서버에 단계 결과 전송 (kind: vocab | episode | webtoon) — 개인별 전체 저장
+      function seosulPost(payload) {
+        let cs = {};
+        try { cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); } catch (e) {}
+        if (!cs.grade || !cs.name) return;
+        try {
+          fetch('/api/seosul/save', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(Object.assign({ grade: cs.grade, name: cs.name, academyName: cs.academyName || cs.academy || '' }, payload))
+          }).catch(() => {});
+        } catch (e) {}
+      }
+      // 서버에서 내 전체 결과를 받아 localStorage에 복원 (어느 기기서든 배지·리포트 복원)
+      async function seosulHydrate() {
+        let cs = {};
+        try { cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); } catch (e) {}
+        if (!cs.grade || !cs.name) return;
+        try {
+          const res = await fetch('/api/seosul/me?grade=' + encodeURIComponent(cs.grade) + '&name=' + encodeURIComponent(cs.name));
+          const d = await res.json();
+          if (!d || !d.ok) return;
+          const V = d.vocab || {}, E = d.episodes || {}, W = d.webtoon || {};
+          Object.keys(V).forEach(book => { const v = V[book] || {}; if (typeof v.pct === 'number') { localStorage.setItem(seosulScoreKey(book), String(v.pct)); localStorage.setItem(seosulVocabDetailKey(book), JSON.stringify({ pct: v.pct, correct: v.correct, total: v.total })); } });
+          Object.keys(E).forEach(key => { const m = key.match(/^(.+)::(\d+)$/); if (!m) return; const book = m[1], ep = m[2]; const e = E[key] || {}; if (typeof e.pct === 'number') { localStorage.setItem(seosulEpisodeKey(book, ep), String(e.pct)); localStorage.setItem(seosulEpisodeDetailKey(book, ep), JSON.stringify({ pct: e.pct, v: e.v, vt: e.vt, m: e.m, q: e.q, qt: e.qt })); } });
+          Object.keys(W).forEach(book => { if (W[book]) localStorage.setItem(seosulWebtoonKey(book), '1'); });
+        } catch (e) {}
+      }
+
+      function subCard(part, vol, idx, kind, ep, icon, label, special) {
+        let inner;
+        if (kind === 'ep') {
+          inner = '<span class="seosul-ep-num">' + ep + '</span><span class="seosul-ep-cap">화</span>';
+        } else {
+          inner = (icon ? '<span class="seosul-subcard-ic">' + icon + '</span>' : '') +
+            '<span class="seosul-subcard-lb">' + label + '</span>';
+        }
+        let scoreChip = '', completed = '';
+        if (kind === 'vocab') {
+          const sc = seosulGetScore(seosulBookId(part, vol, idx));
+          if (sc !== null) { scoreChip = '<span class="seosul-score-chip">' + sc + '%</span>'; completed = ' completed'; }
+        } else if (kind === 'webtoon') {
+          if (seosulGetWebtoonDone(seosulBookId(part, vol, idx))) { scoreChip = '<span class="seosul-score-chip">완독</span>'; completed = ' completed'; }
+        } else if (kind === 'ep') {
+          const es = seosulGetEpisodeScore(seosulBookId(part, vol, idx), ep);
+          if (es !== null) { scoreChip = '<span class="seosul-score-chip">' + es + '%</span>'; completed = ' completed'; }
+        }
+        const cls = 'seosul-subcard' + (special ? ' special' : '') + (kind === 'ep' ? ' ep' : '') + completed;
+        return (
+          '<div class="' + cls + '" ' +
+          'data-part="' + part + '" data-vol="' + vol + '" data-idx="' + idx + '" data-kind="' + kind + '"' +
+          (ep ? ' data-ep="' + ep + '"' : '') + '>' +
+          '<span class="seosul-subcard-sheen"></span>' + scoreChip + inner + '</div>'
+        );
+      }
+
+      function subCardsHtml(part, vol, idx) {
+        let s = '';
+        s += subCard(part, vol, idx, 'vocab', null, '📖', '어휘', true);
+        s += subCard(part, vol, idx, 'webtoon', null, '🎬', '웹툰', true);
+        for (let e = 1; e <= 10; e++) s += subCard(part, vol, idx, 'ep', e, '', '제' + e + '화', false);
+        return s;
+      }
+
+      function workRowHtml(w, part, vol, idx) {
+        const suffix = part === 'adv' ? ' (심화)' : '';
+        return (
+          '<div class="seosul-workrow">' +
+          '<div class="seosul-work-main" title="' + w.t + suffix + ' — ' + w.a + '">' +
+          '<div class="seosul-work-imgwrap"><img src="' + encodeURI(SEOSUL_IMG + w.img) + SEOSUL_IMG_V + '" alt="' + w.t + '" loading="lazy"></div>' +
+          '<div class="seosul-work-titlerow">' +
+          '<span class="seosul-work-title">' + (idx + 1) + '. ' + w.t + suffix + '</span>' +
+          '<button class="seosul-work-report" data-part="' + part + '" data-vol="' + vol + '" data-idx="' + idx + '" title="학습 리포트 보기"><span class="seosul-report-lb">리포트</span>🔍</button>' +
+          '</div>' +
+          '<div class="seosul-work-author">' + w.a + '</div>' +
+          '</div>' +
+          '<div class="seosul-subcards">' + subCardsHtml(part, vol, idx) + '</div>' +
+          '</div>'
+        );
+      }
+
+      function gridSection(label, list, part, vol) {
+        let rows = '';
+        list.forEach((w, i) => { rows += workRowHtml(w, part, vol, i); });
+        return (
+          '<div class="seosul-volsec">' +
+          '<div class="seosul-volhead"><span class="seosul-volbadge">' + label + '</span></div>' +
+          '<div class="seosul-worklist">' + rows + '</div>' +
+          '</div>'
+        );
+      }
+
+      function ensureStyle() {
+        if (document.getElementById('seosulLibStyle')) return;
+        const st = document.createElement('style');
+        st.id = 'seosulLibStyle';
+        st.textContent = `
+          #seosulLibOverlay { position: fixed; inset: 0; z-index: 10006; background: rgba(12,28,20,0.82); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 28px 16px; }
+          .seosul-lib-panel { position: relative; margin: auto; width: 100%; max-width: 1180px; max-height: calc(100vh - 56px); display: flex; flex-direction: column; background: linear-gradient(rgba(16,26,20,0.82), rgba(16,26,20,0.9)), url('/images/서술형집중대비/기본편심화편배경.png?v=20261108b') center top / 100% auto no-repeat, #121d16; border-radius: 20px; box-shadow: 0 24px 70px rgba(0,0,0,0.55); border: 1px solid #2c4034; overflow: hidden; animation: grammarIntroPop 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+          .seosul-lib-top { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 18px 22px; background: linear-gradient(135deg, #2e8b57 0%, #256f46 100%); color: #fff; }
+          .seosul-lib-top .seosul-lib-title { font-size: 18px; font-weight: 800; letter-spacing: 0.3px; flex: 1; }
+          .seosul-lib-top .seosul-badge-pill { background: rgba(255,255,255,0.18); border-radius: 999px; padding: 4px 11px; font-size: 12px; font-weight: 700; }
+          .seosul-lib-close { width: 34px; height: 34px; border-radius: 50%; background: rgba(0,0,0,0.22); color: #fff; border: none; font-size: 20px; font-weight: 700; cursor: pointer; line-height: 1; }
+          .seosul-lib-back { background: rgba(255,255,255,0.2); color: #fff; border: none; border-radius: 9px; padding: 7px 13px; font-size: 13px; font-weight: 700; cursor: pointer; }
+          .seosul-lib-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 26px 24px 30px; }
+          .seosul-main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; max-width: 680px; margin: 10px auto; }
+          .seosul-main-card { position: relative; cursor: pointer; border-radius: 18px; overflow: hidden; background: linear-gradient(160deg, #203328 0%, #15231b 100%); box-shadow: 0 10px 28px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.06); border: 1.5px solid #3a5540; transition: transform 0.2s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.2s ease, border-color 0.2s ease; }
+          .seosul-main-card:hover { transform: translateY(-6px); box-shadow: 0 20px 42px rgba(46,139,87,0.5), inset 0 1px 0 rgba(255,255,255,0.12); border-color: #5bc98a; }
+          .seosul-main-card img { width: 100%; display: block; }
+          .seosul-main-cap { text-align: center; padding: 13px 8px 15px; font-size: 15.5px; font-weight: 800; color: #9fe3bc; letter-spacing: 0.3px; }
+          /* 메인 선택뷰 — 팝업 박스·헤더 없이 카드 이미지만 떠 있게 */
+          .seosul-lib-panel.seosul-mainview { background: transparent; border: none; box-shadow: none; overflow: visible; }
+          .seosul-lib-panel.seosul-mainview .seosul-lib-top { display: none; }
+          .seosul-lib-panel.seosul-mainview .seosul-lib-body { padding: 0; overflow: visible; display: flex; align-items: center; justify-content: center; }
+          .seosul-lib-panel.seosul-mainview .seosul-main-grid { margin: 0 auto; }
+          .seosul-lib-panel.seosul-mainview .seosul-main-card { background: transparent; border: none; box-shadow: 0 16px 38px rgba(0,0,0,0.55); }
+          .seosul-lib-panel.seosul-mainview .seosul-main-card:hover { box-shadow: 0 24px 50px rgba(0,0,0,0.65); border: none; }
+          .seosul-mainview-close { position: fixed; top: 20px; right: 24px; width: 44px; height: 44px; padding: 0; border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; border: none; font-size: 24px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; z-index: 10; backdrop-filter: blur(6px); }
+          .seosul-mainview-close:hover { background: rgba(0,0,0,0.72); }
+          .seosul-volsec { margin-bottom: 26px; }
+          .seosul-volhead { margin: 2px 0 13px; }
+          .seosul-volbadge { display: inline-block; background: linear-gradient(135deg, #4caf72 0%, #2e8b57 100%); color: #fff; font-size: 14px; font-weight: 800; padding: 6px 15px; border-radius: 999px; box-shadow: 0 3px 8px rgba(46,139,87,0.3); }
+          .seosul-worklist { display: flex; flex-direction: column; gap: 18px; }
+          .seosul-workrow { position: relative; display: flex; gap: 20px; align-items: stretch; background: linear-gradient(145deg, #1f3328 0%, #16231c 100%); border: 1px solid #2f453a; border-radius: 18px; padding: 16px; box-shadow: 0 8px 22px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.045); }
+          .seosul-workrow::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; border-radius: 0 4px 4px 0; background: linear-gradient(180deg, #4caf72, #2e8b57); opacity: 0.85; }
+          .seosul-work-main { flex: 0 0 196px; width: 196px; padding-left: 8px; }
+          .seosul-work-imgwrap { width: 100%; border-radius: 12px; overflow: hidden; background: #223229; border: 1px solid #3a5540; line-height: 0; box-shadow: 0 8px 20px rgba(0,0,0,0.45); }
+          .seosul-work-imgwrap img { width: 100%; height: auto; display: block; }
+          .seosul-work-titlerow { display: flex; align-items: center; gap: 6px; margin-top: 11px; }
+          .seosul-work-title { color: #f1f9f4; font-size: 14.5px; font-weight: 800; line-height: 1.3; letter-spacing: -0.2px; flex: 1; }
+          .seosul-work-report { flex: 0 0 auto; height: 30px; padding: 0 10px; border-radius: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); color: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease; }
+          .seosul-work-report:hover { transform: translateY(-2px); background: rgba(255,255,255,0.22); border-color: #fff; }
+          .seosul-report-lb { font-size: 12px; font-weight: 700; letter-spacing: 0.2px; }
+          .seosul-work-author { color: #8fb3a1; font-size: 12px; margin-top: 3px; }
+          .seosul-subcards { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; align-content: start; }
+          .seosul-subcard { position: relative; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 74px; border-radius: 13px; background: #1c2e24 url('/images/서술형집중대비/기본편각카드배경.png?v=20261108b') center/cover no-repeat; border: 1px solid #3a5540; color: #d6ebdf; font-weight: 700; text-align: center; overflow: hidden; box-shadow: 0 3px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06); transition: transform 0.16s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.16s ease, border-color 0.16s ease, filter 0.16s ease; }
+          .seosul-subcard-sheen { position: absolute; left: 0; right: 0; top: 0; height: 42%; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%); pointer-events: none; }
+          .seosul-score-chip { position: absolute; top: 4px; right: 5px; z-index: 3; background: linear-gradient(135deg, #ffd85a 0%, #f59a1a 100%); color: #3a2300; font-size: 13.5px; font-weight: 900; padding: 3px 9px; border-radius: 999px; border: 1.5px solid rgba(255,255,255,0.92); box-shadow: 0 3px 9px rgba(0,0,0,0.5); letter-spacing: 0.3px; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
+          /* 어휘 학습 완료 카드 — 카드 배경은 그대로, 중앙 상단에서 조명(스포트라이트)이 내려옴 */
+          .seosul-subcard.completed { border-color: #ffe08a; box-shadow: 0 0 0 1.5px rgba(255,216,90,0.5), 0 6px 18px rgba(245,154,26,0.35); }
+          .seosul-subcard.completed::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 84%; height: 100%; background: linear-gradient(to bottom, rgba(255,247,208,0.62) 0%, rgba(255,232,162,0.2) 42%, rgba(255,232,162,0) 78%); clip-path: polygon(36% 0, 64% 0, 100% 100%, 0% 100%); pointer-events: none; z-index: 1; animation: seosulSpot 2.4s ease-in-out infinite; }
+          .seosul-subcard.completed .seosul-subcard-ic, .seosul-subcard.completed .seosul-subcard-lb, .seosul-subcard.completed .seosul-ep-num, .seosul-subcard.completed .seosul-ep-cap { position: relative; z-index: 2; }
+          @keyframes seosulSpot { 0%, 100% { opacity: 0.72; } 50% { opacity: 1; } }
+          .seosul-subcard:hover { transform: translateY(-4px) scale(1.025); border-color: #5bc98a; box-shadow: 0 14px 26px rgba(46,139,87,0.45), inset 0 1px 0 rgba(255,255,255,0.14); filter: brightness(1.06); }
+          .seosul-subcard.special { border-color: #3a5540; color: #d6ebdf; box-shadow: 0 3px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06); }
+          .seosul-subcard-ic { font-size: 19px; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
+          .seosul-subcard-lb { font-size: 13px; line-height: 1.1; letter-spacing: 0.2px; }
+          .seosul-ep-num { font-size: 23px; font-weight: 900; color: #aee9c6; line-height: 1; letter-spacing: 0.5px; text-shadow: 0 1px 2px rgba(0,0,0,0.45); }
+          .seosul-subcard.ep:hover .seosul-ep-num { color: #d7fbe6; }
+          .seosul-ep-cap { font-size: 10.5px; color: #86ab98; font-weight: 700; letter-spacing: 2px; }
+          /* 심화편(중고등) — 블루/사파이어 테마 (기본편 녹색과 구분) */
+          .seosul-main-card[data-part="adv"] { background: linear-gradient(160deg, #222c4a 0%, #161c30 100%); border-color: #3c4a74; }
+          .seosul-main-card[data-part="adv"]:hover { box-shadow: 0 20px 42px rgba(79,124,240,0.5), inset 0 1px 0 rgba(255,255,255,0.12); border-color: #7f9bf5; }
+          .seosul-main-card[data-part="adv"] .seosul-main-cap { color: #aac2ff; }
+          .seosul-lib-panel.theme-adv { background: linear-gradient(rgba(14,18,32,0.82), rgba(14,18,32,0.9)), url('/images/서술형집중대비/기본편심화편배경.png?v=20261108b') center top / 100% auto no-repeat, #0e1220; border-color: #2a3550; }
+          .seosul-lib-panel.theme-adv .seosul-lib-top { background: linear-gradient(135deg, #4f6fe0 0%, #3447b4 100%); }
+          .seosul-lib-panel.theme-adv .seosul-volbadge { background: linear-gradient(135deg, #5a7bf0 0%, #3a53c8 100%); box-shadow: 0 3px 8px rgba(58,83,200,0.35); }
+          .seosul-lib-panel.theme-adv .seosul-workrow { background: linear-gradient(145deg, #1c2440 0%, #141829 100%); border-color: #2c3658; }
+          .seosul-lib-panel.theme-adv .seosul-workrow::before { background: linear-gradient(180deg, #6f8cf0, #3a53c8); }
+          .seosul-lib-panel.theme-adv .seosul-work-imgwrap { border-color: #3c4a74; }
+          .seosul-lib-panel.theme-adv .seosul-work-title { color: #eef1ff; }
+          .seosul-lib-panel.theme-adv .seosul-work-author { color: #9aa6d4; }
+          .seosul-lib-panel.theme-adv .seosul-subcard { background: #1a2138 url('/images/서술형집중대비/심화편각카드배경.png?v=20261108b') center/cover no-repeat; border-color: #3a4870; }
+          .seosul-lib-panel.theme-adv .seosul-subcard:hover { border-color: #7f9bf5; box-shadow: 0 14px 26px rgba(79,124,240,0.45), inset 0 1px 0 rgba(255,255,255,0.14); }
+          .seosul-lib-panel.theme-adv .seosul-subcard.special { border-color: #3a4870; color: #d6ebdf; box-shadow: 0 3px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06); }
+          .seosul-lib-panel.theme-adv .seosul-ep-num { color: #b9c9ff; }
+          .seosul-lib-panel.theme-adv .seosul-subcard.ep:hover .seosul-ep-num { color: #e6ecff; }
+          .seosul-lib-panel.theme-adv .seosul-ep-cap { color: #8a95c0; }
+          @media (max-width: 1000px) { .seosul-subcards { grid-template-columns: repeat(4, 1fr); } }
+          @media (max-width: 760px) { .seosul-workrow { flex-direction: column; } .seosul-work-main { width: 100%; flex: none; max-width: 240px; margin: 0 auto; padding-left: 0; } .seosul-workrow::before { display: none; } .seosul-main-grid { grid-template-columns: 1fr; } }
+          @media (max-width: 480px) { .seosul-subcards { grid-template-columns: repeat(3, 1fr); } }
+          /* 🔍 학습 리포트 (라이트 테마 · 인쇄/PDF용) */
+          #seosulReportOverlay { position: fixed; inset: 0; z-index: 10009; background: rgba(0,0,0,0.75); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 28px 16px; }
+          .sr-rep-panel { position: relative; width: 100%; max-width: 760px; margin: auto; }
+          .sr-rep-actions { display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 12px; }
+          .sr-rep-btn { padding: 10px 18px; border: none; border-radius: 10px; font-size: 14px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+          .sr-rep-btn.pdf { background: linear-gradient(135deg, #4caf72, #2e8b57); color: #fff; }
+          .sr-rep-btn.close { background: rgba(255,255,255,0.92); color: #333; }
+          .sr-rep-btn:disabled { opacity: 0.6; cursor: default; }
+          .seosul-report { background: #fff; color: #2a3b33; border-radius: 16px; padding: 30px 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
+          .sr-rep-head { text-align: center; border-bottom: 2px solid #2e8b57; padding-bottom: 16px; margin-bottom: 20px; }
+          .sr-rep-logo { font-size: 20px; font-weight: 900; color: #2e8b57; }
+          .sr-rep-work { font-size: 16px; font-weight: 800; color: #1f3328; margin-top: 8px; }
+          .sr-rep-work span { color: #6b8577; font-weight: 600; font-size: 14px; }
+          .sr-rep-meta { font-size: 13px; color: #7a8a99; margin-top: 6px; }
+          .sr-rep-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+          .sr-rep-card { background: #f2f8f4; border: 1px solid #d9e8df; border-radius: 12px; padding: 14px 10px; text-align: center; }
+          .sr-rep-card.hi { background: linear-gradient(135deg, #eafaf0, #d7f0e0); border-color: #4caf72; }
+          .sr-rep-k { font-size: 12px; color: #6b8577; font-weight: 700; margin-bottom: 6px; }
+          .sr-rep-v { font-size: 18px; font-weight: 800; color: #1f3328; }
+          .sr-rep-v small { font-size: 12px; color: #7a8a99; font-weight: 600; }
+          .sr-rep-ok { color: #2e8b57; }
+          .sr-rep-na { color: #aab4bc; font-weight: 600; }
+          .sr-rep-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+          .sr-rep-table th { background: #2e8b57; color: #fff; padding: 10px 8px; font-weight: 800; }
+          .sr-rep-table td { padding: 9px 8px; text-align: center; border-bottom: 1px solid #e6efe9; }
+          .sr-rep-table tbody tr:nth-child(even) { background: #f6faf7; }
+          .sr-rep-table td b { color: #2e8b57; }
+          .sr-rep-undone td { color: #b4bfc0; }
+          .sr-rep-foot { margin-top: 16px; font-size: 11.5px; color: #8a9aa5; line-height: 1.6; }
+          @media (max-width: 620px) { .sr-rep-cards { grid-template-columns: 1fr 1fr; } }
+          /* 🏆 문학 통합 순위 */
+          .seosul-main-stage { position: relative; width: 100%; max-width: 680px; margin: 0 auto; }
+          .seosul-main-stage .seosul-main-grid { max-width: 100%; margin: 0; }
+          .seosul-rank-btn { position: absolute; top: -62px; right: -6px; z-index: 4; padding: 11px 22px; border: none; border-radius: 999px; font-size: 14px; font-weight: 800; cursor: pointer; background: linear-gradient(135deg, #ffd85a 0%, #f59a1a 100%); color: #3a2300; box-shadow: 0 8px 22px rgba(245,154,26,0.55); border: 1.5px solid rgba(255,255,255,0.85); transition: transform 0.15s ease, filter 0.15s ease; white-space: nowrap; }
+          .seosul-rank-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+          @media (max-width: 680px) { .seosul-rank-btn { position: static; display: block; margin: 18px auto 0; } }
+          #seosulRankOverlay { position: fixed; inset: 0; z-index: 10010; background: rgba(0,0,0,0.78); display: flex; align-items: center; justify-content: center; padding: 20px; }
+          .seosul-rank-panel { width: 100%; max-width: 460px; max-height: 88vh; display: flex; flex-direction: column; background: #14201a; border: 1px solid #2c4034; border-radius: 18px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.55); }
+          .seosul-rank-top { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: linear-gradient(135deg, #f0a868, #e07b39); color: #fff; font-size: 17px; font-weight: 800; }
+          .seosul-rank-close { width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.2); color: #fff; border: none; font-size: 20px; cursor: pointer; line-height: 1; }
+          .seosul-rank-body { flex: 1 1 auto; overflow-y: auto; padding: 18px; }
+          .seosul-rank-loading { text-align: center; color: #9fc4b2; font-weight: 700; padding: 40px 10px; }
+          .seosul-rank-me { text-align: center; background: linear-gradient(135deg, #243a2e, #1c2c24); border: 1.5px solid #ffd85a; border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+          .srk-me-k { font-size: 12px; color: #9fc4b2; font-weight: 700; }
+          .srk-me-v { font-size: 22px; color: #fff; font-weight: 800; margin: 4px 0; }
+          .srk-me-v b { color: #ffd85a; }
+          .srk-me-score { font-size: 13px; color: #aee9c6; font-weight: 700; }
+          .srk-me-score b { color: #fff; font-size: 15px; }
+          .srk-list-head { display: flex; padding: 6px 12px; font-size: 11px; color: #789; font-weight: 700; }
+          .srk-list-head span:nth-child(1) { width: 52px; } .srk-list-head span:nth-child(2) { flex: 1; } .srk-list-head span:nth-child(3) { width: 70px; text-align: right; }
+          .srk-list { display: flex; flex-direction: column; gap: 7px; }
+          .srk-row { display: flex; align-items: center; padding: 11px 12px; border-radius: 10px; background: #1c2c24; border: 1px solid #33493b; }
+          .srk-row.me { background: linear-gradient(135deg, #2e5340, #243a2e); border-color: #ffd85a; }
+          .srk-rank { width: 52px; font-weight: 800; color: #aee9c6; font-size: 15px; }
+          .srk-name { flex: 1; color: #eaf5ef; font-weight: 700; }
+          .srk-name small { display: block; font-size: 11px; color: #8fb3a1; font-weight: 500; margin-top: 1px; }
+          .srk-score { width: 70px; text-align: right; font-weight: 800; color: #ffd85a; }
+        `;
+        document.head.appendChild(st);
+      }
+
+      function renderMain(body) {
+        const panel = body.closest('.seosul-lib-panel');
+        if (panel) { panel.classList.remove('theme-adv'); panel.classList.add('seosul-mainview'); }
+        body.innerHTML =
+          '<button class="seosul-mainview-close" title="닫기">&times;</button>' +
+          '<div class="seosul-main-stage">' +
+          '<div class="seosul-main-grid">' +
+          '<div class="seosul-main-card" data-part="basic"><img src="' + encodeURI(SEOSUL_IMG + '문학기본편메인카드.png') + SEOSUL_IMG_V + '" alt="문학 기본편"></div>' +
+          '<div class="seosul-main-card" data-part="adv"><img src="' + encodeURI(SEOSUL_IMG + '문학심화편메인카드.png') + SEOSUL_IMG_V + '" alt="문학 심화편"></div>' +
+          '</div>' +
+          '<button class="seosul-rank-btn" id="seosulRankBtn">🏆 나의 문학 순위 보기</button>' +
+          '</div>';
+        const cb = body.querySelector('.seosul-mainview-close');
+        if (cb) cb.onclick = () => { const o = document.getElementById('seosulLibOverlay'); if (o) o.remove(); };
+        body.querySelectorAll('.seosul-main-card').forEach(c => {
+          c.onclick = () => renderGrid(body, c.getAttribute('data-part'));
+        });
+        const rb = document.getElementById('seosulRankBtn');
+        if (rb) rb.onclick = () => openSeosulRanking();
+      }
+
+      function renderGrid(body, part) {
+        const name = part === 'adv' ? '심화편' : '기본편';
+        const panel = body.closest('.seosul-lib-panel');
+        if (panel) { panel.classList.remove('seosul-mainview'); panel.classList.toggle('theme-adv', part === 'adv'); }
+        body.innerHTML =
+          gridSection(name + ' 1권', SEOSUL_V1, part, 1) +
+          gridSection(name + ' 2권', SEOSUL_V2, part, 2);
+        setBack(() => renderMain(body), name);
+        body.querySelectorAll('.seosul-work-report').forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const p = btn.getAttribute('data-part');
+            const vol = btn.getAttribute('data-vol');
+            const idx = +btn.getAttribute('data-idx');
+            const w = (vol === '2' ? SEOSUL_V2 : SEOSUL_V1)[idx];
+            openSeosulReport(p, vol, idx, w);
+          };
+        });
+        body.querySelectorAll('.seosul-subcard').forEach(card => {
+          card.onclick = () => {
+            const cardPart = card.getAttribute('data-part');
+            const vol = card.getAttribute('data-vol');
+            const idx = +card.getAttribute('data-idx');
+            const kind = card.getAttribute('data-kind');
+            const ep = card.getAttribute('data-ep');
+            const w = (vol === '2' ? SEOSUL_V2 : SEOSUL_V1)[idx];
+            if (kind === 'vocab') { openSeosulVocab(cardPart, vol, idx, w); return; }
+            if (kind === 'webtoon') { openSeosulWebtoon(cardPart, vol, idx, w); return; }
+            if (kind === 'ep') { openSeosulEpisode(cardPart, vol, idx, ep, w); return; }
+          };
+        });
+      }
+
+      // 📖 어휘카드 → 학습+퀴즈 팝업(iframe) 열기
+      function openSeosulVocab(part, vol, idx, w) {
+        const bookId = seosulBookId(part, vol, idx);
+        if (!bookId) { alert('어휘 데이터를 찾을 수 없어요.'); return; }
+        const old = document.getElementById('seosulVocabOverlay');
+        if (old) old.remove();
+        const ov = document.createElement('div');
+        ov.id = 'seosulVocabOverlay';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:10008;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;padding:18px;';
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;width:100%;max-width:1000px;height:100%;max-height:92vh;border-radius:18px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,0.6);background:#14201a;';
+        const url = '/academy/seosul-vocab.html?book=' + encodeURIComponent(bookId)
+          + '&title=' + encodeURIComponent(w.t)
+          + '&author=' + encodeURIComponent(w.a)
+          + '&theme=' + (part === 'adv' ? 'adv' : 'basic')
+          + '&v=20261108b';
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
+        wrap.appendChild(iframe);
+        ov.appendChild(wrap);
+        document.body.appendChild(ov);
+        ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
+      }
+
+      // 🎬 웹툰카드 → 10컷 뷰어 팝업(iframe) 열기
+      function openSeosulWebtoon(part, vol, idx, w) {
+        const bookId = seosulBookId(part, vol, idx);
+        if (!bookId) { alert('웹툰을 찾을 수 없어요.'); return; }
+        const old = document.getElementById('seosulWebtoonOverlay');
+        if (old) old.remove();
+        const ov = document.createElement('div');
+        ov.id = 'seosulWebtoonOverlay';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:10008;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:18px;';
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;width:100%;max-width:1040px;height:100%;max-height:94vh;border-radius:18px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,0.6);background:#14201a;';
+        const url = '/academy/seosul-webtoon.html?book=' + encodeURIComponent(bookId)
+          + '&title=' + encodeURIComponent(w.t)
+          + '&author=' + encodeURIComponent(w.a)
+          + '&theme=' + (part === 'adv' ? 'adv' : 'basic')
+          + '&v=20261108b';
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
+        wrap.appendChild(iframe);
+        ov.appendChild(wrap);
+        document.body.appendChild(ov);
+        ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
+      }
+
+      // 📖 제N화 카드 → 화별 학습(본문읽기·어휘·중심내용·질문) 팝업(iframe)
+      function openSeosulEpisode(part, vol, idx, ep, w) {
+        const bookId = seosulBookId(part, vol, idx);
+        if (!bookId) { alert('본문을 찾을 수 없어요.'); return; }
+        const old = document.getElementById('seosulEpisodeOverlay');
+        if (old) old.remove();
+        const ov = document.createElement('div');
+        ov.id = 'seosulEpisodeOverlay';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:10008;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:18px;';
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;width:100%;max-width:960px;height:100%;max-height:94vh;border-radius:18px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,0.6);background:#14201a;';
+        const url = '/academy/seosul-episode.html?book=' + encodeURIComponent(bookId)
+          + '&ep=' + ep
+          + '&title=' + encodeURIComponent(w.t)
+          + '&author=' + encodeURIComponent(w.a)
+          + '&theme=' + (part === 'adv' ? 'adv' : 'basic')
+          + '&v=20261108b';
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
+        wrap.appendChild(iframe);
+        ov.appendChild(wrap);
+        document.body.appendChild(ov);
+        ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
+      }
+
+      // 🔍 작품 학습 리포트 — 어휘·웹툰·1~10화 누적 결과 한눈에 + PDF
+      function openSeosulReport(part, vol, idx, w) {
+        const bookId = seosulBookId(part, vol, idx);
+        const name = part === 'adv' ? '심화편' : '기본편';
+        const suffix = part === 'adv' ? ' (심화)' : '';
+        const vPct = seosulGetScore(bookId);
+        const vDet = seosulGetVocabDetail(bookId);
+        const wtDone = seosulGetWebtoonDone(bookId);
+        const eps = []; const pcts = []; let doneEp = 0;
+        if (vPct !== null) pcts.push(vPct);
+        for (let e = 1; e <= 10; e++) {
+          const sc = seosulGetEpisodeScore(bookId, e);
+          const det = seosulGetEpisodeDetail(bookId, e);
+          eps.push({ ep: e, pct: sc, det: det });
+          if (sc !== null) { pcts.push(sc); doneEp++; }
+        }
+        const avg = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null;
+        let g = '', n = '';
+        try { const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); g = cs.grade || ''; n = cs.name || ''; } catch (e) {}
+        const d = new Date();
+        const dateStr = d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0');
+
+        let rows = '';
+        eps.forEach(o => {
+          if (o.pct === null) rows += '<tr class="sr-rep-undone"><td>' + o.ep + '화</td><td>미완료</td><td>-</td><td>-</td><td>-</td></tr>';
+          else if (o.det) rows += '<tr><td>' + o.ep + '화</td><td><b>' + o.pct + '%</b></td><td>' + o.det.v + '/' + o.det.vt + '</td><td>' + o.det.m + '/1</td><td>' + o.det.q + '/' + o.det.qt + '</td></tr>';
+          else rows += '<tr><td>' + o.ep + '화</td><td><b>' + o.pct + '%</b></td><td>-</td><td>-</td><td>-</td></tr>';
+        });
+        const vocabCell = vPct === null ? '<span class="sr-rep-na">미완료</span>' : ('<b>' + vPct + '%</b>' + (vDet && vDet.total ? ' <small>(' + vDet.correct + '/' + vDet.total + ')</small>' : ''));
+        const wtCell = wtDone ? '<b class="sr-rep-ok">완독 ✓</b>' : '<span class="sr-rep-na">미완</span>';
+        const avgCell = avg === null ? '<span class="sr-rep-na">-</span>' : ('<b>' + avg + '%</b>');
+
+        const old = document.getElementById('seosulReportOverlay'); if (old) old.remove();
+        const ov = document.createElement('div');
+        ov.id = 'seosulReportOverlay';
+        ov.innerHTML =
+          '<div class="sr-rep-panel">' +
+          '<div class="sr-rep-actions"><button class="sr-rep-btn pdf" id="srRepPrint">🖨 인쇄</button><button class="sr-rep-btn close" id="srRepClose">닫기</button></div>' +
+          '<div class="seosul-report" id="seosulReportBody">' +
+          '<div class="sr-rep-head"><div class="sr-rep-logo">📊 서술형 내신문학 학습 리포트</div>' +
+          '<div class="sr-rep-work">' + name + ' ' + vol + '권 · ' + (idx + 1) + '. ' + w.t + suffix + ' <span>— ' + w.a + '</span></div>' +
+          '<div class="sr-rep-meta">' + (g ? g + ' ' : '') + n + ' · ' + dateStr + ' 기준</div></div>' +
+          '<div class="sr-rep-cards">' +
+          '<div class="sr-rep-card hi"><div class="sr-rep-k">종합 평균</div><div class="sr-rep-v">' + avgCell + '</div></div>' +
+          '<div class="sr-rep-card"><div class="sr-rep-k">📖 어휘</div><div class="sr-rep-v">' + vocabCell + '</div></div>' +
+          '<div class="sr-rep-card"><div class="sr-rep-k">🎬 웹툰</div><div class="sr-rep-v">' + wtCell + '</div></div>' +
+          '<div class="sr-rep-card"><div class="sr-rep-k">완료 화</div><div class="sr-rep-v"><b>' + doneEp + '</b> / 10</div></div>' +
+          '</div>' +
+          '<table class="sr-rep-table"><thead><tr><th>화</th><th>정답률</th><th>어휘</th><th>중심</th><th>질문</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+          '<div class="sr-rep-foot">· 정답률은 각 항목 <b>첫 시도 정답</b> 기준입니다. · 어휘·중심·질문을 모두 합산해 화별 정답률을 계산합니다.</div>' +
+          '</div></div>';
+        document.body.appendChild(ov);
+        ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
+        document.getElementById('srRepClose').onclick = () => ov.remove();
+        document.getElementById('srRepPrint').onclick = () => printSeosulReport();
+      }
+
+      // 리포트만 담은 창을 열어 바로 인쇄 (다른 리포트와 동일하게 인쇄 대화상자로 진입)
+      function printSeosulReport() {
+        const bodyEl = document.getElementById('seosulReportBody');
+        if (!bodyEl) return;
+        const styleEl = document.getElementById('seosulLibStyle');
+        const css = styleEl ? styleEl.textContent : '';
+        const win = window.open('', '_blank', 'width=900,height=1000');
+        if (!win) { alert('팝업이 차단되었어요. 팝업을 허용한 뒤 다시 눌러 주세요.'); return; }
+        win.document.write(
+          '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>서술형 내신문학 학습 리포트</title>' +
+          '<style>' + css +
+          ' body{margin:0;background:#fff;} .seosul-report{box-shadow:none;max-width:760px;margin:0 auto;}' +
+          ' @page{margin:12mm;} @media print{ body{-webkit-print-color-adjust:exact;print-color-adjust:exact;} }' +
+          '</style></head><body>' + bodyEl.outerHTML + '</body></html>'
+        );
+        win.document.close();
+        win.focus();
+        setTimeout(() => { try { win.print(); } catch (e) {} }, 350);
+        win.onafterprint = () => { try { win.close(); } catch (e) {} };
+      }
+
+      // 🏆 문학 통합 순위 (전체 학생) 팝업
+      async function openSeosulRanking() {
+        const esc = (x) => String(x == null ? '' : x).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+        let g = '', n = '';
+        try { const cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); g = cs.grade || ''; n = cs.name || ''; } catch (e) {}
+        const old = document.getElementById('seosulRankOverlay'); if (old) old.remove();
+        const ov = document.createElement('div');
+        ov.id = 'seosulRankOverlay';
+        ov.innerHTML = '<div class="seosul-rank-panel"><div class="seosul-rank-top"><span>🏆 문학 통합 순위</span><button class="seosul-rank-close" id="srkClose">&times;</button></div><div class="seosul-rank-body" id="srkBody"><div class="seosul-rank-loading">불러오는 중…</div></div></div>';
+        document.body.appendChild(ov);
+        ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
+        document.getElementById('srkClose').onclick = () => ov.remove();
+        const bodyEl = document.getElementById('srkBody');
+        try {
+          const res = await fetch('/api/seosul/leaderboard?grade=' + encodeURIComponent(g) + '&name=' + encodeURIComponent(n) + '&limit=15');
+          const data = await res.json();
+          if (!data || !data.ok) { bodyEl.innerHTML = '<div class="seosul-rank-loading">순위를 불러오지 못했어요.</div>'; return; }
+          const myRank = data.myRank, myTotal = data.myTotal || 0, totalStudents = data.totalStudents || 0;
+          const myCard = '<div class="seosul-rank-me"><div class="srk-me-k">내 순위</div><div class="srk-me-v">' +
+            (myRank ? ('<b>' + myRank + '</b>위 · 전체 ' + totalStudents + '명') : '아직 기록이 없어요') +
+            '</div><div class="srk-me-score">누적 점수 <b>' + myTotal + '</b></div></div>';
+          let rows = '';
+          (data.top || []).forEach(r => {
+            const isMe = (r.grade === g && r.name === n);
+            const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : (r.rank + '위');
+            rows += '<div class="srk-row' + (isMe ? ' me' : '') + '"><span class="srk-rank">' + medal + '</span>' +
+              '<span class="srk-name">' + (r.grade ? esc(r.grade) + ' ' : '') + esc(r.name) + '</span>' +
+              '<span class="srk-score">' + r.total + '</span></div>';
+          });
+          if (!rows) rows = '<div class="seosul-rank-loading">아직 순위에 오른 학생이 없어요.</div>';
+          bodyEl.innerHTML = myCard + '<div class="srk-list-head"><span>순위</span><span>이름</span><span>누적점수</span></div><div class="srk-list">' + rows + '</div>';
+        } catch (e) { bodyEl.innerHTML = '<div class="seosul-rank-loading">순위를 불러오지 못했어요.</div>'; }
+      }
+
+      // 어휘 퀴즈 결과 수신 → 점수 저장 + 카드 배지 갱신 / 닫기
+      window.addEventListener('message', (e) => {
+        const d = (e && e.data) || {};
+        if (d.type === 'seosulVocabClose') {
+          const ov = document.getElementById('seosulVocabOverlay'); if (ov) ov.remove();
+        } else if (d.type === 'seosulVocabScore' && d.book) {
+          try { localStorage.setItem(seosulScoreKey(d.book), String(d.pct)); } catch (err) {}
+          try { localStorage.setItem(seosulVocabDetailKey(d.book), JSON.stringify({ pct: d.pct, correct: d.correct, total: d.total })); } catch (err) {}
+          seosulPost({ kind: 'vocab', book: d.book, pct: d.pct, detail: { correct: d.correct, total: d.total } });
+          const bodyEl = document.getElementById('seosulLibBody');
+          if (bodyEl) {
+            bodyEl.querySelectorAll('.seosul-subcard[data-kind="vocab"]').forEach(card => {
+              const bId = seosulBookId(card.getAttribute('data-part'), card.getAttribute('data-vol'), +card.getAttribute('data-idx'));
+              if (bId === d.book) {
+                let chip = card.querySelector('.seosul-score-chip');
+                if (!chip) { chip = document.createElement('span'); chip.className = 'seosul-score-chip'; card.insertBefore(chip, card.querySelector('.seosul-subcard-ic') || card.firstChild); }
+                chip.textContent = d.pct + '%';
+                card.classList.add('completed');
+              }
+            });
+          }
+        } else if (d.type === 'seosulEpisodeClose') {
+          const ov = document.getElementById('seosulEpisodeOverlay'); if (ov) ov.remove();
+        } else if (d.type === 'seosulEpisodeScore' && d.book && d.ep) {
+          try { localStorage.setItem(seosulEpisodeKey(d.book, d.ep), String(d.pct)); } catch (err) {}
+          if (d.detail) { try { localStorage.setItem(seosulEpisodeDetailKey(d.book, d.ep), JSON.stringify(d.detail)); } catch (err) {} }
+          seosulPost({ kind: 'episode', book: d.book, ep: d.ep, pct: d.pct, detail: d.detail });
+          const bodyEl = document.getElementById('seosulLibBody');
+          if (bodyEl) {
+            bodyEl.querySelectorAll('.seosul-subcard[data-kind="ep"]').forEach(card => {
+              const bId = seosulBookId(card.getAttribute('data-part'), card.getAttribute('data-vol'), +card.getAttribute('data-idx'));
+              if (bId === d.book && card.getAttribute('data-ep') === String(d.ep)) {
+                let chip = card.querySelector('.seosul-score-chip');
+                if (!chip) { chip = document.createElement('span'); chip.className = 'seosul-score-chip'; card.insertBefore(chip, card.firstChild); }
+                chip.textContent = d.pct + '%';
+                card.classList.add('completed');
+              }
+            });
+          }
+        } else if (d.type === 'seosulWebtoonClose') {
+          const ov = document.getElementById('seosulWebtoonOverlay'); if (ov) ov.remove();
+        } else if (d.type === 'seosulWebtoonDone' && d.book) {
+          try { localStorage.setItem(seosulWebtoonKey(d.book), '1'); } catch (err) {}
+          seosulPost({ kind: 'webtoon', book: d.book });
+          const bodyEl = document.getElementById('seosulLibBody');
+          if (bodyEl) {
+            bodyEl.querySelectorAll('.seosul-subcard[data-kind="webtoon"]').forEach(card => {
+              const bId = seosulBookId(card.getAttribute('data-part'), card.getAttribute('data-vol'), +card.getAttribute('data-idx'));
+              if (bId === d.book) {
+                let chip = card.querySelector('.seosul-score-chip');
+                if (!chip) { chip = document.createElement('span'); chip.className = 'seosul-score-chip'; card.insertBefore(chip, card.querySelector('.seosul-subcard-ic') || card.firstChild); }
+                chip.textContent = '완독';
+                card.classList.add('completed');
+              }
+            });
+          }
+        }
+      });
+
+      let _setBackFn = null;
+      function setBack(fn, label) {
+        _setBackFn = fn;
+        const backBtn = document.getElementById('seosulLibBack');
+        const titleEl = document.getElementById('seosulLibTitle');
+        if (backBtn) backBtn.style.display = fn ? '' : 'none';
+        if (titleEl) titleEl.textContent = label ? ('BRAIN 서술형 · ' + label) : 'BRAIN 서술형 내신문학';
+      }
+
+      function showSeosulLibrary() {
+        ensureStyle();
+        const old = document.getElementById('seosulLibOverlay');
+        if (old) old.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'seosulLibOverlay';
+        overlay.innerHTML =
+          '<div class="seosul-lib-panel">' +
+          '<div class="seosul-lib-top">' +
+          '<button class="seosul-lib-back" id="seosulLibBack" style="display:none;">‹ 뒤로</button>' +
+          '<div class="seosul-lib-title" id="seosulLibTitle">BRAIN 서술형 내신문학</div>' +
+          '<span class="seosul-badge-pill">📚 내신문학</span>' +
+          '<button class="seosul-lib-close" id="seosulLibClose" title="닫기">&times;</button>' +
+          '</div>' +
+          '<div class="seosul-lib-body" id="seosulLibBody"></div>' +
+          '</div>';
+        document.body.appendChild(overlay);
+
+        const body = overlay.querySelector('#seosulLibBody');
+        overlay.querySelector('#seosulLibClose').onclick = () => overlay.remove();
+        overlay.querySelector('#seosulLibBack').onclick = () => { if (_setBackFn) _setBackFn(); };
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+        renderMain(body);
+        // 서버에서 내 전체 결과 복원 → 완료 후 그리드가 열려 있으면 배지 최신화
+        seosulHydrate().then(() => {
+          const bEl = document.getElementById('seosulLibBody');
+          const panel = bEl && bEl.closest('.seosul-lib-panel');
+          if (bEl && panel && bEl.querySelector('.seosul-worklist')) {
+            renderGrid(bEl, panel.classList.contains('theme-adv') ? 'adv' : 'basic');
+          }
+        });
+      }
+      window.showSeosulLibrary = showSeosulLibrary;
+    })();
+
     // 🌍 BRAIN세계사(역사특강) 인트로 영상 팝업 — 하단 "12월 말 오픈 예정" 버튼(진입 없음, 최상위와 동일 패턴)
     function showWorldHistSeriesPopup() {
       const existing = document.getElementById('worldHistIntroOverlay');
@@ -36666,6 +37427,22 @@ ${content}
       border-radius: 12px;
       font-weight: 700;
       box-shadow: 0 2px 6px rgba(47, 111, 174, 0.4);
+      letter-spacing: 0.3px;
+    }
+    /* 📚 BRAIN서술형 (내신문학 특강) — 우상단 배지, 서술형내신 주황 테마 */
+    .series-item.seosul-special { position: relative; }
+    .series-item.seosul-special::after {
+      content: '📚 내신문학';
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: linear-gradient(135deg, #4caf72 0%, #2e8b57 100%);
+      color: #fff;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(46, 139, 87, 0.45);
       letter-spacing: 0.3px;
     }
 

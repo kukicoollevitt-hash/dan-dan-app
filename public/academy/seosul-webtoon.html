@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>서술형 내신 · 웹툰</title>
+<style>
+  :root { --accent: #2e8b57; --accent2: #4caf72; --accentSoft: #aee9c6; --panel: #14201a; --panel2: #1c2c24; --line: #33493b; --text: #eaf5ef; --sub: #9fc4b2; }
+  body[data-theme="adv"] { --accent: #3a53c8; --accent2: #5a7bf0; --accentSoft: #b9c9ff; --panel: #121725; --panel2: #1c2440; --line: #3a4870; --text: #eef1ff; --sub: #9aa6d4; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--panel); color: var(--text); display: flex; flex-direction: column; overflow: hidden; }
+
+  .wt-top { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 80%, #000) 100%); }
+  .wt-title { flex: 1; font-size: 17px; font-weight: 800; }
+  .wt-title .wt-author { font-size: 13px; font-weight: 600; opacity: 0.85; margin-left: 7px; }
+  .wt-pill { background: rgba(255,255,255,0.18); border-radius: 999px; padding: 4px 11px; font-size: 12px; font-weight: 700; }
+  .wt-close { width: 34px; height: 34px; border-radius: 50%; background: rgba(0,0,0,0.22); color: #fff; border: none; font-size: 20px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+  .wt-stage { flex: 1 1 auto; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; padding: 16px; overflow: hidden; }
+  .wt-img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 10px 34px rgba(0,0,0,0.5); animation: wtFade 0.3s ease; background: #000; }
+  @keyframes wtFade { from { opacity: 0; transform: scale(0.985); } to { opacity: 1; transform: scale(1); } }
+  /* 좌우 탭 영역 */
+  .wt-nav-zone { position: absolute; top: 0; bottom: 0; width: 22%; cursor: pointer; z-index: 2; display: flex; align-items: center; opacity: 0; transition: opacity 0.15s ease; }
+  .wt-nav-zone.left { left: 0; justify-content: flex-start; padding-left: 10px; }
+  .wt-nav-zone.right { right: 0; justify-content: flex-end; padding-right: 10px; }
+  .wt-stage:hover .wt-nav-zone { opacity: 1; }
+  .wt-nav-zone .wt-arrow { width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; font-size: 24px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .wt-nav-zone.disabled { pointer-events: none; }
+  .wt-nav-zone.disabled .wt-arrow { opacity: 0.25; }
+
+  .wt-foot { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 16px; padding: 14px 18px; background: var(--panel2); border-top: 1px solid var(--line); }
+  .wt-dots { display: flex; gap: 7px; }
+  .wt-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); transition: background 0.2s ease, transform 0.2s ease; }
+  .wt-dot.on { background: var(--accent2); transform: scale(1.25); }
+  .wt-dot.seen { background: color-mix(in srgb, var(--accent2) 55%, var(--line)); }
+  .wt-count { font-size: 15px; font-weight: 800; color: var(--sub); min-width: 58px; text-align: center; }
+  .wt-count b { color: var(--accentSoft); }
+  .wt-btn { padding: 12px 26px; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; background: linear-gradient(135deg, var(--accent2) 0%, var(--accent) 100%); color: #fff; box-shadow: 0 5px 14px rgba(0,0,0,0.3); transition: transform 0.14s ease, filter 0.14s ease, opacity 0.14s ease; }
+  .wt-btn:hover { transform: translateY(-2px); filter: brightness(1.07); }
+  .wt-btn.ghost { background: var(--panel); border: 1.5px solid var(--line); color: var(--text); box-shadow: none; }
+  .wt-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+  .wt-btn.done { background: linear-gradient(135deg, #ffd85a 0%, #f59a1a 100%); color: #3a2300; box-shadow: 0 6px 18px rgba(245,154,26,0.5); animation: wtPulse 1.4s ease-in-out infinite; }
+  @keyframes wtPulse { 0%,100% { box-shadow: 0 6px 18px rgba(245,154,26,0.5); } 50% { box-shadow: 0 6px 26px rgba(245,154,26,0.85); } }
+
+  .wt-empty { margin: auto; text-align: center; color: var(--sub); font-weight: 700; padding: 40px; }
+</style>
+</head>
+<body>
+  <div class="wt-top">
+    <div class="wt-title" id="wtTitle">웹툰</div>
+    <span class="wt-pill">🎬 웹툰 10컷</span>
+    <button class="wt-close" id="wtClose" title="닫기">&times;</button>
+  </div>
+  <div class="wt-stage" id="wtStage"></div>
+  <div class="wt-foot" id="wtFoot" style="display:none;"></div>
+
+<script>
+(function () {
+  const srBaseId = (id) => id.replace(/_(adv|basic)$/, '');
+  const SEOSUL_WEBTOON = {
+    sonagi: '소나기/소나기', dongbaek: '동백꽃/동백꽃', yang: '양반전/양반전', chunhyang: '춘향전/춘향전',
+    sim: '심청전/심청전', hu: '허생전/허생전', rich: '흥부전/흥부전', toki: '별주부전/별주부전',
+    love: '사랑손님과어머니/사랑손님과어머니', goodday: '운수좋은날/운수좋은날', cap: '꺼삐딴리/꺼삐딴리', sampo: '삼포가는길/삼포가는길',
+    memil: '메밀꽃필무렵/메밀꽃필무렵', ahop: '아홉켤레의구두로남은사내/아홉켤레구두로남은사내', dalbam: '달밤/달밤', bombom: '봄봄/봄봄',
+    hwangman: '황만근은이렇게말했다/황만근은이렇게말했다', jangma: '장마/장마', nanjaengi: '난쟁이가쏘아올린작은공/난쟁이가쏘아올린작은공',
+    guunmong: '구운몽/구운몽', mansejeon: '만세전/만세전', gubo: '소설가구보씨의일일/소설가구보씨의일일',
+    gwangjang: '광장/광장', garibong: '비오는날이면가리봉동에가야한다/비오는날이면가리봉동에가야한다'
+  };
+  const COUNT = 10;
+
+  const qs = new URLSearchParams(location.search);
+  const BOOK = qs.get('book') || '';
+  const TITLE = qs.get('title') || '';
+  const AUTHOR = qs.get('author') || '';
+  const THEME = qs.get('theme') === 'adv' ? 'adv' : 'basic';
+  if (THEME === 'adv') document.body.setAttribute('data-theme', 'adv');
+
+  const base = srBaseId(BOOK);
+  const path = SEOSUL_WEBTOON[base];
+  const stage = document.getElementById('wtStage');
+  const foot = document.getElementById('wtFoot');
+  document.getElementById('wtTitle').innerHTML = (TITLE || '웹툰') + (AUTHOR ? '<span class="wt-author">' + AUTHOR + '</span>' : '');
+  document.getElementById('wtClose').onclick = () => { try { parent.postMessage({ type: 'seosulWebtoonClose' }, '*'); } catch (e) {} };
+
+  if (!path) { stage.innerHTML = '<div class="wt-empty">아직 이 작품의 웹툰이 준비되지 않았어요.</div>'; return; }
+
+  function srcOf(n) { return encodeURI('/images/서술형집중대비/' + path + String(n).padStart(2, '0') + '.jpg') + '?v=20261108b'; }
+  // 다음 컷 미리 로드
+  function preload(n) { if (n >= 1 && n <= COUNT) { const im = new Image(); im.src = srcOf(n); } }
+
+  let cur = 1;
+  let maxSeen = 1;
+
+  function render() {
+    maxSeen = Math.max(maxSeen, cur);
+    stage.innerHTML =
+      '<div class="wt-nav-zone left' + (cur <= 1 ? ' disabled' : '') + '" id="wtPrev"><div class="wt-arrow">‹</div></div>' +
+      '<img class="wt-img" id="wtImg" src="' + srcOf(cur) + '" alt="' + cur + '컷">' +
+      '<div class="wt-nav-zone right' + (cur >= COUNT ? ' disabled' : '') + '" id="wtNext"><div class="wt-arrow">›</div></div>';
+    document.getElementById('wtPrev').onclick = prev;
+    document.getElementById('wtNext').onclick = next;
+    preload(cur + 1);
+    renderFoot();
+  }
+  function renderFoot() {
+    let dots = '';
+    for (let i = 1; i <= COUNT; i++) dots += '<span class="wt-dot' + (i === cur ? ' on' : (i <= maxSeen ? ' seen' : '')) + '"></span>';
+    const last = cur >= COUNT;
+    foot.style.display = 'flex';
+    foot.innerHTML =
+      '<button class="wt-btn ghost" id="wtPrevBtn"' + (cur <= 1 ? ' disabled' : '') + '>‹ 이전</button>' +
+      '<div class="wt-dots">' + dots + '</div>' +
+      '<span class="wt-count"><b>' + cur + '</b> / ' + COUNT + '</span>' +
+      (last
+        ? '<button class="wt-btn done" id="wtDone">완료하기 ✓</button>'
+        : '<button class="wt-btn" id="wtNextBtn">다음 ›</button>');
+    const pb = document.getElementById('wtPrevBtn'); if (pb) pb.onclick = prev;
+    const nb = document.getElementById('wtNextBtn'); if (nb) nb.onclick = next;
+    const db = document.getElementById('wtDone'); if (db) db.onclick = finish;
+  }
+  function prev() { if (cur > 1) { cur--; render(); } }
+  function next() { if (cur < COUNT) { cur++; render(); } }
+  function finish() {
+    try { parent.postMessage({ type: 'seosulWebtoonDone', book: BOOK }, '*'); } catch (e) {}
+    try { parent.postMessage({ type: 'seosulWebtoonClose' }, '*'); } catch (e) {}
+  }
+
+  // 키보드 좌우
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') prev();
+    else if (e.key === 'ArrowRight') next();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
