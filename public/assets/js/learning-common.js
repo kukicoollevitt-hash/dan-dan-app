@@ -2232,12 +2232,15 @@
     // 활용 키워드 박스 — 칩 형태 + 가사 자동 동기화 체크
     if (pack && pack.vocab && pack.vocab.length > 0) {
       // 📖 낱말(명사)만 키워드로 노출 — 서술어(용언 ~다)는 제외
+      // '다'로 끝나는 명사 예외(이 단어들만 유지). 그 외 공백없는 ~다는 전부 용언 처리
+      //  → 식다·꾀다 같은 1음절 어간 용언도 정확히 제외됨
+      const _NOUN_DA_KEEP = new Set(['바다', '수다', '사이다', '소다']);
       function _isPredicateKw(kw) {
         const w = String(kw).trim();
-        if (w.indexOf(' ') !== -1) return false;           // 공백 포함 명사구 → 낱말로 유지
-        if (!/다$/.test(w)) return false;                  // ~다로 끝나지 않으면 낱말
-        if (/하다$/.test(w) && w.length >= 4) return true;  // ~하다형 용언
-        return w.slice(0, -1).length >= 2;                 // 어간 2자 이상 용언 (바다·수다 등 1자 어간은 낱말로 유지)
+        if (w.indexOf(' ') !== -1) return false;   // 공백 포함 명사구 → 낱말로 유지
+        if (!/다$/.test(w)) return false;          // ~다로 끝나지 않으면 낱말
+        if (_NOUN_DA_KEEP.has(w)) return false;    // 다로 끝나는 명사 예외 → 유지
+        return true;                               // 그 외 공백없는 ~다 = 용언(서술어) → 제외
       }
       const vocabKeywords = pack.vocab.map(v => v[0]).filter(function (kw) { return !_isPredicateKw(kw); });
       // 낱말이 하나도 없으면 키워드 박스 미표시
