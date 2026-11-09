@@ -846,6 +846,24 @@
       }
     }
 
+    // 🔁 본문학습 라디오 선택 비파괴 재적용 (느린 기기의 렌더↔복원 레이스 대비)
+    //  - 현재 아무것도 체크 안 된 문항만 채움 → 사용자 선택/이미 복원된 선택은 절대 덮지 않음
+    //  - 라디오 .checked만 설정(멱등). 채점 HTML·레이더 등은 건드리지 않음
+    //  - 서술형(q3_1/q4_1/q5 textarea) 문항은 라디오 재적용 제외
+    function reapplyReadingRadios(inputs) {
+      if (!inputs) return;
+      ['q1', 'q2', 'q3', 'q4', 'q5'].forEach(q => {
+        const val = inputs[q];
+        if (val === undefined || val === null || val === '') return;
+        if (q === 'q3' && inputs.q3_1) return;                 // q3 서술형이면 제외
+        if (q === 'q4' && inputs.q4_1) return;                 // q4 서술형이면 제외
+        if (q === 'q5' && document.getElementById('q5')) return; // q5 textarea면 제외
+        if (document.querySelector(`input[name="${q}"]:checked`)) return; // 이미 선택 있으면 보존
+        const radio = document.querySelector(`input[name="${q}"][value="${val}"]`);
+        if (radio) radio.checked = true;
+      });
+    }
+
     // ★ 서버 데이터로 본문학습 상태 복원
     function restoreReadingStateFromServer(data) {
       // reportState 구조인 경우 내부 데이터 추출
@@ -867,6 +885,20 @@
         return;
       }
       console.log('[restoreReadingStateFromServer] 입력값 복원 시작:', inputs);
+
+      // 🔁 비파괴 재적용 예약 — 느린 기기(센터 태블릿 등)에서 퀴즈가 복원보다 늦게 렌더되어
+      //    선택이 유실되는 레이스 대비. 비어있는 문항만 채워 기존/사용자 선택은 보존.
+      try {
+        window._readingRestoreInputs = inputs;
+        if (!window._readingReapplyBound) {
+          window._readingReapplyBound = true;
+          const _reapply = () => reapplyReadingRadios(window._readingRestoreInputs);
+          window.addEventListener('load', _reapply);
+          setTimeout(_reapply, 300);
+          setTimeout(_reapply, 800);
+          setTimeout(_reapply, 1500);
+        }
+      } catch (e) { console.warn('[restoreReadingStateFromServer] 재적용 예약 실패:', e); }
 
       // 1번, 2번 - 라디오 버튼 복원
       if (inputs.q1) {
@@ -1944,6 +1976,22 @@
     playSubmitCelebration();
     window.showSubmitSuccess('분석리포트');
 
+    // 7-1) 완료 문구(약 2.6초) 노출 후 학습창 자동 닫기 — 우측 상단 X 수동 클릭 불필요
+    //  · 서버 저장(step 9)·과제완료(step 8)는 이미 요청이 전송된 상태라 닫혀도 영향 없음
+    setTimeout(() => {
+      try {
+        if (window.parent && window.parent !== window && typeof window.parent.closeUnitModal === 'function') {
+          window.parent.closeUnitModal();            // 메뉴 모달(iframe) 닫기
+        } else if (typeof goToMenu === 'function') {
+          goToMenu();
+        } else {
+          window.location.href = '/menu.html';
+        }
+      } catch (e) {
+        console.log('[submitReport] 학습창 자동 닫기 실패:', e);
+      }
+    }, 2800);
+
     // 8) AI 추천 과제 복습 완료 처리 (백그라운드)
     if (typeof window.markAITaskAsCompleted === 'function') {
       window.markAITaskAsCompleted(stu.grade, stu.name, cur).catch(error => {
@@ -2183,7 +2231,21 @@
 
     // 활용 키워드 박스 — 칩 형태 + 가사 자동 동기화 체크
     if (pack && pack.vocab && pack.vocab.length > 0) {
-      const vocabKeywords = pack.vocab.map(v => v[0]);
+      // 📖 낱말(명사)만 키워드로 노출 — 서술어(용언 ~다)는 제외
+      function _isPredicateKw(kw) {
+        const w = String(kw).trim();
+        if (w.indexOf(' ') !== -1) return false;           // 공백 포함 명사구 → 낱말로 유지
+        if (!/다$/.test(w)) return false;                  // ~다로 끝나지 않으면 낱말
+        if (/하다$/.test(w) && w.length >= 4) return true;  // ~하다형 용언
+        return w.slice(0, -1).length >= 2;                 // 어간 2자 이상 용언 (바다·수다 등 1자 어간은 낱말로 유지)
+      }
+      const vocabKeywords = pack.vocab.map(v => v[0]).filter(function (kw) { return !_isPredicateKw(kw); });
+      // 낱말이 하나도 없으면 키워드 박스 미표시
+      if (vocabKeywords.length === 0) {
+        const _emptyKb = document.querySelector('.creative-keyword-box');
+        if (_emptyKb) _emptyKb.remove();
+        return;
+      }
 
       // 기존 키워드 박스가 있으면 업데이트, 없으면 생성
       let keywordBox = document.querySelector('.creative-keyword-box');

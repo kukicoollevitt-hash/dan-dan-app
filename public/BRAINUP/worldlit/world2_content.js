@@ -4064,8 +4064,11 @@ window.DanDan = window.DanDan || {};
         await captureElementToPDF('capture-report', '단단국어_분석리포트.pdf', { withStudentInfo: true });
     }
       const key = ProgressManager.markComplete();
-      if (typeof window.showSubmitSuccess === 'function') showSubmitSuccess('분석리포트');
-      else console.log(`학습완료 처리됨: ${key}`);
+      if (typeof window.showSubmitSuccess === 'function') {
+        showSubmitSuccess('분석리포트');
+        // ⏱️ 완료 문구 후 학습창 자동 닫기 (X 수동 클릭 불필요)
+        setTimeout(function(){try{if(window.parent&&window.parent!==window&&typeof window.parent.closeUnitModal==='function'){window.parent.closeUnitModal();}else{window.location.href='/menu.html';}}catch(e){}},2800);
+      } else console.log(`학습완료 처리됨: ${key}`);
       if (typeof window.sendLearningLog === 'function') {
         try { await window.sendLearningLog(); } catch (e) { console.warn('[submitReport] sendLearningLog 실패', e); }
     }

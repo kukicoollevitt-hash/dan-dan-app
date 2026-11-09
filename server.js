@@ -457,6 +457,7 @@ const MockExamConsultation = require("./models/MockExamConsultation");
 const MegaphoneMessage = require("./models/MegaphoneMessage");
 const Notice = require("./models/Notice");
 const AcademyNotice = require("./models/AcademyNotice");
+const AdminLoginLog = require("./models/AdminLoginLog");
 const SnackOrder = require("./models/SnackOrder");
 const SentenceRead = require("./models/SentenceRead");
 const SpeedVocabKing = require("./models/SpeedVocabKing");
@@ -814,6 +815,108 @@ app.get("/academy-admin-login", (req, res) => {
 });
 
 // ✅ 학원용 관리자 로그인 처리 (POST)
+// 🛰️ 로그인 IP 관찰 대상 학원 (계정 공유 의심) — 여기 추가하면 그 학원도 관찰
+// ⚠️ DB의 실제 academyName과 정확히 일치해야 기록됨 (탑아카데미센터 = "브레인문해력_탑아카데미센터")
+const LOGIN_WATCH_ACADEMIES = new Set(["브레인문해력_탑아카데미센터"]);
+
+// 요청에서 실제 클라이언트 IP 추출 (Cloudflare → Render 구조)
+function getClientIp(req) {
+  return String(
+    req.headers["cf-connecting-ip"] ||
+    (req.headers["x-forwarded-for"] || "").split(",")[0].trim() ||
+    (req.socket && req.socket.remoteAddress) ||
+    ""
+  ).replace(/^::ffff:/, "");
+}
+
+// 🚨 계정 공유 경고 문자 설정 — 10km 이상 떨어진 곳에서 동시(30분 내) 로그인 시 발송
+const LOGIN_ALERT_SMS = process.env.LOGIN_ALERT_SMS || "01038879967";
+const LOGIN_ALERT_DISTANCE_KM = 10;              // 경고 거리 임계값(km)
+const LOGIN_ALERT_WINDOW_MS = 30 * 60 * 1000;    // 동시 사용으로 보는 시간창(30분)
+const LOGIN_ALERT_COOLDOWN_MS = 15 * 60 * 1000;  // 같은 학원 반복 발송 방지(15분)
+const _loginAlertCooldown = new Map();           // academyName -> 마지막 발송 시각(ms)
+
+// 두 좌표 간 거리(km) — Haversine
+function haversineKm(lat1, lon1, lat2, lon2) {
+  if ([lat1, lon1, lat2, lon2].some(v => typeof v !== "number")) return null;
+  const R = 6371, d = x => x * Math.PI / 180;
+  const dLa = d(lat2 - lat1), dLo = d(lon2 - lon1);
+  const a = Math.sin(dLa / 2) ** 2 + Math.cos(d(lat1)) * Math.cos(d(lat2)) * Math.sin(dLo / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// 로그인 직후: 지역 백필 + 30분 내 10km 이상 떨어진 동시접속이면 경고 문자 발송
+// (비동기 백그라운드 — 로그인 응답을 지연시키지 않음, 실패해도 로그인 무영향)
+async function handleLoginGeoAlert(logId, academyName, name, ip, at) {
+  try {
+    if (!ip) return;
+    // 1) 새 로그인 IP 지역 추정
+    const geoMap = await lookupIpGeo([ip]);
+    const g = geoMap[ip] || {};
+    // 2) 방금 생성된 로그에 지역/좌표 백필
+    await AdminLoginLog.updateOne({ _id: logId }, {
+      $set: { region: g.region || "", city: g.city || "", isp: g.isp || "", lat: g.lat, lon: g.lon }
+    });
+    if (typeof g.lat !== "number" || typeof g.lon !== "number") return; // 좌표 없으면 거리 판단 불가
+
+    // 3) 30분 내 '다른 IP' 최근 로그인들과 거리 비교
+    const since = new Date(at.getTime() - LOGIN_ALERT_WINDOW_MS);
+    const recent = await AdminLoginLog.find({
+      academyName,
+      _id: { $ne: logId },
+      at: { $gte: since },
+      ip: { $ne: ip }
+    }).sort({ at: -1 }).limit(20).lean();
+
+    // 좌표 없는 최근 기록은 즉석 추정(캐시 활용) 후 거리 비교
+    const missing = [...new Set(recent.filter(r => typeof r.lat !== "number" || typeof r.lon !== "number").map(r => r.ip).filter(Boolean))];
+    const extraGeo = missing.length ? await lookupIpGeo(missing) : {};
+
+    let worst = null;
+    for (const r of recent) {
+      let rlat = r.lat, rlon = r.lon, rregion = r.region, rcity = r.city;
+      if ((typeof rlat !== "number" || typeof rlon !== "number") && extraGeo[r.ip]) {
+        rlat = extraGeo[r.ip].lat; rlon = extraGeo[r.ip].lon;
+        rregion = rregion || extraGeo[r.ip].region; rcity = rcity || extraGeo[r.ip].city;
+      }
+      if (typeof rlat !== "number" || typeof rlon !== "number") continue;
+      const km = haversineKm(g.lat, g.lon, rlat, rlon);
+      if (km != null && km >= LOGIN_ALERT_DISTANCE_KM) {
+        if (!worst || km > worst.km) worst = { km, r: { ...r, region: rregion, city: rcity } };
+      }
+    }
+    if (!worst) return;
+
+    // 4) 쿨다운 체크 (15분 내 재발송 방지)
+    const lastSent = _loginAlertCooldown.get(academyName) || 0;
+    if (Date.now() - lastSent < LOGIN_ALERT_COOLDOWN_MS) {
+      console.log(`🚨 [로그인경고] ${academyName} 거리초과 감지했으나 쿨다운 중 → 발송 생략`);
+      return;
+    }
+    _loginAlertCooldown.set(academyName, Date.now());
+
+    // 5) 경고 문자 발송
+    const fmtT = dt => {
+      const k = new Date(new Date(dt).getTime() + 9 * 3600 * 1000);
+      return `${k.getUTCMonth() + 1}/${k.getUTCDate()} ${String(k.getUTCHours()).padStart(2, "0")}:${String(k.getUTCMinutes()).padStart(2, "0")}`;
+    };
+    const locA = `${g.region || "?"} ${g.city || ""}`.trim();
+    const rr = worst.r;
+    const locB = `${rr.region || "?"} ${rr.city || ""}`.trim();
+    const label = String(academyName).replace(/^브레인문해력_/, "");
+    const msg =
+      `[계정공유 의심] ${label} ${name || ""}\n` +
+      `${Math.round(worst.km)}km 떨어진 두 곳에서 ${Math.round((at - new Date(rr.at)) / 60000)}분 간격 동시 로그인\n` +
+      `A ${fmtT(at)} ${locA} (${ip})\n` +
+      `B ${fmtT(rr.at)} ${locB} (${rr.ip})\n` +
+      `※ 지역은 IP 추정치로 오차 가능`;
+    const sres = await sendSMS(LOGIN_ALERT_SMS, msg);
+    console.log(`🚨 [로그인경고] 발송 ${sres.success ? "성공" : "실패"} → ${LOGIN_ALERT_SMS} (${Math.round(worst.km)}km)`);
+  } catch (e) {
+    console.error("⚠️ 로그인 거리경고 처리 실패:", e.message);
+  }
+}
+
 app.post("/academy-admin-login", async (req, res) => {
   try {
     const { academyName, name, phone } = req.body;
@@ -846,6 +949,37 @@ app.post("/academy-admin-login", async (req, res) => {
     // 마지막 로그인 시간 업데이트
     admin.lastLogin = new Date();
     await admin.save();
+
+    // 🛰️ 로그인 IP 관찰 기록 (지정 학원만) — 계정 공유 탐지용. 실패해도 로그인엔 영향 없음.
+    try {
+      if (LOGIN_WATCH_ACADEMIES.has(admin.academyName)) {
+        const _ip = getClientIp(req);
+        const _at = new Date();
+        const _logDoc = await AdminLoginLog.create({
+          academyName: admin.academyName,
+          name: admin.name,
+          adminId: admin._id.toString(),
+          ip: _ip,
+          country: req.headers["cf-ipcountry"] || "",
+          userAgent: String(req.headers["user-agent"] || "").slice(0, 300),
+          at: _at
+        });
+        // 🚨 거리 기반 동시접속 경고 문자 (백그라운드 — 로그인 응답 지연 없음)
+        handleLoginGeoAlert(_logDoc._id, admin.academyName, admin.name, _ip, _at)
+          .catch(e => console.error("⚠️ 로그인경고 비동기 오류:", e.message));
+        // 해당 학원 최근 300건만 유지
+        const cnt = await AdminLoginLog.countDocuments({ academyName: admin.academyName });
+        if (cnt > 300) {
+          const old = await AdminLoginLog.find({ academyName: admin.academyName })
+            .sort({ at: 1 }).limit(cnt - 300).select("_id");
+          if (old.length) {
+            await AdminLoginLog.deleteMany({ _id: { $in: old.map(o => o._id) } });
+          }
+        }
+      }
+    } catch (logErr) {
+      console.error("⚠️ 로그인 관찰 기록 실패:", logErr.message);
+    }
 
     // 🔥 슈퍼관리자 체크 (role: "super" 또는 isSuper: true)
     console.log("🔍 [DEBUG] admin.role:", admin.role, "admin.isSuper:", admin.isSuper);
@@ -2822,6 +2956,132 @@ app.get("/super/dashboard", requireSuperAdmin, (req, res) => {
     req.session.admin && req.session.admin.name
   );
   res.sendFile(path.join(__dirname, "public", "super_admin_dashboard.html"));
+});
+
+// ============================================
+// 🛰️ 로그인 IP 관찰 (계정 공유 탐지) — 관찰 대상 학원 전용
+// ============================================
+
+// 조회 페이지
+app.get("/super/login-watch", requireSuperAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "super_login_watch.html"));
+});
+
+// 메모리 캐시: IP → geo 추정 (ip-api). 재조회 최소화.
+const _ipGeoCache = new Map();
+
+// IP 목록을 ip-api.com batch로 지역/통신사 추정 (참고용, 부정확할 수 있음)
+async function lookupIpGeo(ips) {
+  const result = {};
+  const need = [];
+  for (const ip of ips) {
+    if (!ip) continue;
+    if (_ipGeoCache.has(ip)) result[ip] = _ipGeoCache.get(ip);
+    else need.push(ip);
+  }
+  // ip-api batch: 1회 최대 100개
+  for (let i = 0; i < need.length; i += 100) {
+    const chunk = need.slice(i, i + 100);
+    try {
+      const resp = await fetch("http://ip-api.com/batch?fields=status,country,regionName,city,isp,as,lat,lon,query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(chunk.map(q => ({ query: q })))
+      });
+      const arr = await resp.json();
+      if (Array.isArray(arr)) {
+        arr.forEach(r => {
+          const geo = (r && r.status === "success")
+            ? { country: r.country || "", region: r.regionName || "", city: r.city || "", isp: r.isp || "", asn: r.as || "", lat: (typeof r.lat === "number" ? r.lat : null), lon: (typeof r.lon === "number" ? r.lon : null) }
+            : { country: "", region: "", city: "", isp: "", asn: "", lat: null, lon: null };
+          _ipGeoCache.set(r.query, geo);
+          result[r.query] = geo;
+        });
+      }
+    } catch (e) {
+      console.error("⚠️ ip-api 조회 실패:", e.message);
+      chunk.forEach(q => { result[q] = { country: "", region: "", city: "", isp: "", asn: "", lat: null, lon: null }; });
+    }
+  }
+  return result;
+}
+
+// 로그인 이력 + 공유 의심 분석 API
+app.get("/api/super/login-logs", requireSuperAdmin, async (req, res) => {
+  try {
+    const academy = req.query.academy || [...LOGIN_WATCH_ACADEMIES][0] || "";
+    const logs = await AdminLoginLog.find({ academyName: academy })
+      .sort({ at: -1 }).limit(300).lean();
+
+    // geo 추정 (고유 IP만)
+    const uniqIps = [...new Set(logs.map(l => l.ip).filter(Boolean))];
+    const geo = await lookupIpGeo(uniqIps);
+
+    // 로그 레코드 + geo 병합 (좌표는 저장값 우선, 없으면 geo 추정)
+    const records = logs.map(l => ({
+      at: l.at,
+      name: l.name,
+      ip: l.ip,
+      country: l.country || (geo[l.ip] && geo[l.ip].country) || "",
+      region: l.region || (geo[l.ip] && geo[l.ip].region) || "",
+      city: l.city || (geo[l.ip] && geo[l.ip].city) || "",
+      isp: l.isp || (geo[l.ip] && geo[l.ip].isp) || "",
+      asn: (geo[l.ip] && geo[l.ip].asn) || "",
+      lat: (typeof l.lat === "number" ? l.lat : (geo[l.ip] && geo[l.ip].lat)),
+      lon: (typeof l.lon === "number" ? l.lon : (geo[l.ip] && geo[l.ip].lon)),
+      userAgent: l.userAgent || ""
+    }));
+
+    // 🔴 공유 의심 신호: 30분 창 안에서 서로 다른 IP가 동시 사용된 경우 (거리 10km↑ = 강함)
+    const WINDOW_MS = 30 * 60 * 1000;
+    const asc = [...records].sort((a, b) => new Date(a.at) - new Date(b.at));
+    const alerts = [];
+    for (let i = 0; i < asc.length; i++) {
+      for (let j = i + 1; j < asc.length; j++) {
+        const dt = new Date(asc[j].at) - new Date(asc[i].at);
+        if (dt > WINDOW_MS) break;
+        if (asc[i].ip && asc[j].ip && asc[i].ip !== asc[j].ip) {
+          const diffAsn = asc[i].asn && asc[j].asn && asc[i].asn !== asc[j].asn;
+          const km = haversineKm(asc[i].lat, asc[i].lon, asc[j].lat, asc[j].lon);
+          const far = km != null && km >= LOGIN_ALERT_DISTANCE_KM;
+          alerts.push({
+            severity: far ? "high" : (diffAsn ? "mid" : "low"), // 10km↑=강함, 통신사만 다름=주의
+            gapMin: Math.round(dt / 60000),
+            km: km != null ? Math.round(km) : null,
+            a: { at: asc[i].at, ip: asc[i].ip, region: asc[i].region, city: asc[i].city, isp: asc[i].isp },
+            b: { at: asc[j].at, ip: asc[j].ip, region: asc[j].region, city: asc[j].city, isp: asc[j].isp }
+          });
+        }
+      }
+    }
+    // 최신 경보 먼저
+    alerts.sort((a, b) => new Date(b.b.at) - new Date(a.b.at));
+
+    // 고유 IP 요약
+    const ipSummary = uniqIps.map(ip => {
+      const g = geo[ip] || {};
+      const hits = logs.filter(l => l.ip === ip);
+      return {
+        ip,
+        count: hits.length,
+        region: g.region || "", city: g.city || "", isp: g.isp || "", asn: g.asn || "",
+        lastAt: hits.length ? hits[0].at : null
+      };
+    }).sort((a, b) => b.count - a.count);
+
+    res.json({
+      ok: true,
+      academy,
+      total: records.length,
+      uniqueIpCount: uniqIps.length,
+      records,
+      ipSummary,
+      alerts
+    });
+  } catch (err) {
+    console.error("❌ /api/super/login-logs 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
 });
 
 // ============================================

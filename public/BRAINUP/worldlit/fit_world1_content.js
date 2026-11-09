@@ -4059,6 +4059,8 @@ window.DanDan = window.DanDan || {};
 
       if (typeof window.showSubmitSuccess === 'function') {
         showSubmitSuccess('분석리포트');
+      // ⏱️ 완료 문구 후 학습창 자동 닫기 (X 수동 클릭 불필요)
+      setTimeout(function(){try{if(window.parent&&window.parent!==window&&typeof window.parent.closeUnitModal==='function'){window.parent.closeUnitModal();}else{window.location.href='/menu.html';}}catch(e){}},2800);
       } else {
         console.log(`학습완료 처리됨: ${key}`);
     }

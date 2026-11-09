@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로그인 IP 관찰 · 계정 공유 탐지</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Noto Sans KR',-apple-system,sans-serif; background:#f4f5fb; color:#222; }
+  .top { background:linear-gradient(135deg,#6B5B95,#8B7BB5); color:#fff; padding:18px 24px; display:flex; align-items:center; gap:14px; }
+  .top h1 { font-size:20px; margin:0; font-weight:800; }
+  .top .back { background:rgba(255,255,255,0.2); color:#fff; text-decoration:none; padding:7px 14px; border-radius:8px; font-weight:700; font-size:14px; }
+  .wrap { max-width:1080px; margin:0 auto; padding:22px 18px 60px; }
+  .note { background:#fff8e1; border:1px solid #ffe08a; color:#8a6d00; padding:12px 14px; border-radius:10px; font-size:13px; line-height:1.6; margin-bottom:18px; }
+  .cards { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  .stat { background:#fff; border-radius:12px; padding:16px 20px; box-shadow:0 2px 8px rgba(0,0,0,0.05); flex:1; min-width:150px; }
+  .stat .v { font-size:28px; font-weight:900; color:#6B5B95; }
+  .stat .l { font-size:13px; color:#777; margin-top:3px; }
+  h2 { font-size:16px; margin:26px 0 12px; display:flex; align-items:center; gap:8px; }
+  .panel { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); overflow:hidden; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th,td { padding:10px 12px; text-align:left; border-bottom:1px solid #eef0f5; white-space:nowrap; }
+  th { background:#f7f8fc; color:#555; font-weight:700; font-size:12px; }
+  tr:last-child td { border-bottom:none; }
+  .mono { font-family:'SF Mono',Consolas,monospace; font-size:12px; }
+  .alert { border-left:5px solid #e63946; background:#fff; border-radius:10px; padding:14px 16px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+  .alert.mid { border-left-color:#f0932b; }
+  .alert.low { border-left-color:#c9ab00; }
+  .alert .sev { display:inline-block; font-size:11px; font-weight:800; padding:2px 9px; border-radius:999px; color:#fff; background:#e63946; margin-bottom:7px; }
+  .alert.mid .sev { background:#f0932b; }
+  .alert.low .sev { background:#c9ab00; }
+  .alert .row { font-size:13px; line-height:1.7; }
+  .alert .ip { font-weight:800; color:#c0392b; }
+  .empty { padding:30px; text-align:center; color:#999; }
+  .muted { color:#999; }
+  .reload { background:#6B5B95; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer; font-size:13px; }
+  .sub { font-size:12px; color:#aaa; }
+</style>
+</head>
+<body>
+  <div class="top">
+    <a href="/super/dashboard?type=academy" class="back">← 대시보드</a>
+    <h1>🛰️ 로그인 IP 관찰 — 계정 공유 탐지</h1>
+  </div>
+  <div class="wrap">
+    <div class="note">
+      ⚠️ <b>지역·통신사는 IP 기반 추정치</b>라 부정확할 수 있습니다(특히 모바일은 통신사 게이트웨이로 찍힘).
+      <b>창원/김해 같은 인접 도시 단위는 신뢰하지 마세요.</b>
+      진짜 공유 신호는 <b>짧은 시간 안에 서로 다른 IP·다른 통신사에서 동시 로그인</b>입니다.
+      기록은 <b>관찰을 시작한 시점 이후</b>부터만 쌓입니다.
+      <br>📱 <b>30분 내 10km 이상 떨어진 곳에서 동시 로그인</b>이 감지되면 <b>010-3887-9967</b>로 경고 문자가 자동 발송됩니다(15분 쿨다운).
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+      <div class="sub" id="academyLabel">관찰 대상: —</div>
+      <button class="reload" onclick="load()">새로고침</button>
+    </div>
+
+    <div class="cards" id="stats"></div>
+
+    <h2>🔴 공유 의심 경보 <span class="sub" id="alertSub"></span></h2>
+    <div id="alerts"></div>
+
+    <h2>🌐 고유 IP 요약</h2>
+    <div class="panel"><table id="ipTable"><thead><tr>
+      <th>IP</th><th>추정 지역</th><th>도시</th><th>통신사(ISP)</th><th>접속수</th><th>마지막 접속</th>
+    </tr></thead><tbody></tbody></table></div>
+
+    <h2>🕑 로그인 이력 (최신순)</h2>
+    <div class="panel"><table id="logTable"><thead><tr>
+      <th>시각</th><th>이름</th><th>IP</th><th>지역</th><th>통신사</th><th>기기</th>
+    </tr></thead><tbody></tbody></table></div>
+  </div>
+
+<script>
+  function fmt(dt){ if(!dt) return '-'; const d=new Date(dt);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+  function uaShort(ua){ if(!ua) return '-';
+    let os=/iPhone|iPad/.test(ua)?'iOS':/Android/.test(ua)?'Android':/Windows/.test(ua)?'Windows':/Mac/.test(ua)?'Mac':'기타';
+    let br=/CriOS|Chrome/.test(ua)?'Chrome':/Safari/.test(ua)?'Safari':/Edg/.test(ua)?'Edge':'';
+    return os+(br?' · '+br:''); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+  async function load(){
+    try {
+      const r = await fetch('/api/super/login-logs');
+      if (r.status===401){ alert('슈퍼관리자 로그인이 필요합니다.'); location.href='/academy-admin-login'; return; }
+      const d = await r.json();
+      if (!d.ok){ alert(d.message||'조회 실패'); return; }
+
+      document.getElementById('academyLabel').textContent = '관찰 대상: ' + (d.academy||'—');
+      document.getElementById('stats').innerHTML =
+        '<div class="stat"><div class="v">'+d.total+'</div><div class="l">총 로그인 기록</div></div>'+
+        '<div class="stat"><div class="v">'+d.uniqueIpCount+'</div><div class="l">고유 IP 수</div></div>'+
+        '<div class="stat"><div class="v" style="color:'+(d.alerts.length?'#e63946':'#2ecc71')+'">'+d.alerts.length+'</div><div class="l">공유 의심 경보</div></div>';
+
+      // 경보
+      const alertsEl = document.getElementById('alerts');
+      document.getElementById('alertSub').textContent = d.alerts.length ? '('+d.alerts.length+'건)' : '';
+      if (!d.alerts.length){
+        alertsEl.innerHTML = '<div class="panel"><div class="empty">30분 내 서로 다른 IP 동시접속 신호 없음 ✓</div></div>';
+      } else {
+        alertsEl.innerHTML = d.alerts.map(a=>{
+          const sevCls = a.severity==='high' ? 'high' : (a.severity==='mid' ? 'mid' : 'low');
+          const kmTxt = (a.km!=null) ? (a.km+'km 떨어짐') : '거리 미상';
+          const sevTxt = a.severity==='high' ? ('🚨 '+kmTxt+' (10km↑)') : (a.severity==='mid' ? ('다른 통신사 · '+kmTxt) : ('다른 IP · '+kmTxt));
+          return '<div class="alert '+sevCls+'">'+
+          '<span class="sev">'+sevTxt+' · '+a.gapMin+'분 간격</span>'+
+          '<div class="row">A &nbsp;'+fmt(a.a.at)+' &nbsp; <span class="ip">'+esc(a.a.ip)+'</span> &nbsp; '+esc(a.a.region||'?')+' '+esc(a.a.city||'')+' <span class="muted">'+esc(a.a.isp||'')+'</span></div>'+
+          '<div class="row">B &nbsp;'+fmt(a.b.at)+' &nbsp; <span class="ip">'+esc(a.b.ip)+'</span> &nbsp; '+esc(a.b.region||'?')+' '+esc(a.b.city||'')+' <span class="muted">'+esc(a.b.isp||'')+'</span></div>'+
+          '</div>';
+        }).join('');
+      }
+
+      // IP 요약
+      const ipBody = document.querySelector('#ipTable tbody');
+      ipBody.innerHTML = d.ipSummary.length ? d.ipSummary.map(s=>
+        '<tr><td class="mono">'+esc(s.ip)+'</td><td>'+esc(s.region||'-')+'</td><td>'+esc(s.city||'-')+'</td><td>'+esc(s.isp||'-')+'</td><td>'+s.count+'</td><td>'+fmt(s.lastAt)+'</td></tr>'
+      ).join('') : '<tr><td colspan="6" class="empty">기록 없음</td></tr>';
+
+      // 로그 이력
+      const logBody = document.querySelector('#logTable tbody');
+      logBody.innerHTML = d.records.length ? d.records.map(l=>
+        '<tr><td>'+fmt(l.at)+'</td><td>'+esc(l.name||'-')+'</td><td class="mono">'+esc(l.ip||'-')+'</td><td>'+esc(l.region||'-')+(l.city?' '+esc(l.city):'')+'</td><td>'+esc(l.isp||'-')+'</td><td>'+uaShort(l.userAgent)+'</td></tr>'
+      ).join('') : '<tr><td colspan="6" class="empty">아직 로그인 기록이 없습니다. (관찰 시작 이후부터 쌓임)</td></tr>';
+
+    } catch(e){
+      alert('조회 중 오류: '+e.message);
+    }
+  }
+  load();
+</script>
+</body>
+</html>

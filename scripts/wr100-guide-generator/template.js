@@ -183,20 +183,30 @@ function pageDayCover(DATA) {
 }
 
 /* ═══ 페이지 1 · 어휘 익히기 ═══ */
+// 따라쓰기 어휘 글자크기 — 기본 16.9pt(≈40pt). 긴 단어만 좁은 박스 한 줄에 맞게 축소.
+function traceGhostStyle(word) {
+  const n = [...String(word)].length;
+  if (n <= 4) return '';                                 // 40pt 유지 (최장 4자까지 한 줄)
+  if (n === 5) return 'font-size:12pt; letter-spacing:1px;';   // 5자(이산화탄소 등) · 한 줄 유지
+  return 'font-size:10pt; letter-spacing:0;';            // 6자+ (현재 없음 · 안전장치)
+}
 function page1(DATA, mode) {
   const vocab = DATA.vocab || [];
   // 상단 · 어휘 8개 나열 (연한 오렌지 필사)
-  const vocabList = vocab.map(v => `
+  const vocabList = vocab.map(v => {
+    const gs = traceGhostStyle(v.word);
+    return `
     <div class="vocab-card">
       <div class="vocab-word">${esc(v.word)}</div>
       <div class="vocab-meaning">${esc(v.meaning)}</div>
       <div class="vocab-trace-row">
         <span class="vocab-trace-label">따라 쓰기</span>
-        <span class="vocab-trace-box vocab-trace-box-solid"><span class="vocab-trace-ghost">${esc(v.word)}</span></span>
-        <span class="vocab-trace-box vocab-trace-box-dashed"><span class="vocab-trace-ghost">${esc(v.word)}</span></span>
+        <span class="vocab-trace-box vocab-trace-box-solid"><span class="vocab-trace-ghost" style="${gs}">${esc(v.word)}</span></span>
+        <span class="vocab-trace-box vocab-trace-box-dashed"><span class="vocab-trace-ghost" style="${gs}">${esc(v.word)}</span></span>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   // 하단 · 줄잇기 (좌 어휘 랜덤 / 우 뜻 랜덤 · 간추림)
   const wordShuffled = shuffle(vocab);
@@ -997,11 +1007,12 @@ function buildHtml(DATA, mode = 'student') {
     .vocab-trace-box-solid { border-bottom: 1.8px solid var(--border); }
     .vocab-trace-box-dashed { border-bottom: 1.8px dashed var(--border); }
     .vocab-trace-ghost {
-      font-size: 15pt;
+      font-size: 16.9pt;   /* 따라쓰는 어휘 · PDF 약 40pt 목표 (기존 15pt→35.5pt) */
       font-weight: 700;
       color: var(--very-light);   /* 좌측 · 옅은 파스텔 톤 */
       letter-spacing: 2px;
       text-align: center;
+      white-space: nowrap;   /* 긴 단어도 한 줄 유지 (크기는 traceGhostStyle로 축소) */
     }
     /* 우측 박스 · 글자도 점선(외곽선)으로 · 학생이 안쪽을 채우도록 */
     .vocab-trace-box-dashed .vocab-trace-ghost {
@@ -1168,7 +1179,7 @@ function buildHtml(DATA, mode = 'student') {
       display: flex;
       gap: 3mm;
       align-items: flex-start;   /* 번호를 문장 시작 위치에 정렬 */
-      font-size: 16pt;
+      font-size: 16.9pt;   /* 따라쓰는 문장 · PDF 약 40pt 목표 (기존 16pt→37.9pt) */
       line-height: 1.7;
       letter-spacing: 0.8px;
       margin-bottom: 3mm;
