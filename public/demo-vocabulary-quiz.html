@@ -7941,6 +7941,7 @@
       // 섞인 후 정답의 새로운 위치 찾기
       const newCorrectIndex = shuffledChoices.findIndex(item => item.originalIndex === originalCorrectAnswer);
       quiz.shuffledCorrect = newCorrectIndex;
+      quiz.shuffledChoices = shuffledChoices; // 섞인 선택지 보관 → 내 답 텍스트 정확히 기록
 
       shuffledChoices.forEach((item, index) => {
         const btn = document.createElement('button');
@@ -7980,14 +7981,10 @@
           buttons[index].classList.remove('selected');
           buttons[index].classList.add('correct');
 
-          // 총 문제 수에 따른 점수 계산 (100점 만점)
-          const points = Math.round(100 / totalQuestions);
-
-          score += points;
-          totalScore += points;
           correctAnswers++;
+          // 정확한 점수 = (정답수 / 총문항수) × 100 — 항상 0~100, 문항 수와 무관하게 정확
+          score = Math.round((correctAnswers / totalQuestions) * 100);
           document.getElementById('score').textContent = score;
-          setTotalScore(totalScore); // localStorage에 저장
           showFeedback(true);
           createConfetti();
 
@@ -7995,7 +7992,7 @@
           questionResults.push({
             word: quiz.word,
             question: quiz.question.replace(/<[^>]*>/g, ''), // HTML 태그 제거
-            userAnswer: quiz.choices[index] || quiz.choices[quiz.shuffledCorrect !== undefined ? shuffledChoices[index].originalIndex : index],
+            userAnswer: (quiz.shuffledChoices && quiz.shuffledChoices[index]) ? quiz.shuffledChoices[index].choice : quiz.choices[index],
             correctAnswer: quiz.choices[quiz.correct],
             isCorrect: true,
             explanation: quiz.explanation,
@@ -8012,7 +8009,7 @@
           questionResults.push({
             word: quiz.word,
             question: quiz.question.replace(/<[^>]*>/g, ''), // HTML 태그 제거
-            userAnswer: quiz.choices[index] || '선택 없음',
+            userAnswer: (quiz.shuffledChoices && quiz.shuffledChoices[index]) ? quiz.shuffledChoices[index].choice : '선택 없음',
             correctAnswer: quiz.choices[quiz.correct],
             isCorrect: false,
             explanation: quiz.explanation,
@@ -8168,6 +8165,10 @@
           showCoinPopup();
         }, 800);
       }
+
+      // 이번 세션 점수(정답률)를 평생 누적 점수에 1회 반영
+      totalScore = getTotalScore() + score;
+      setTotalScore(totalScore);
 
       // 퀴즈 횟수 증가 및 평균 점수 업데이트
       quizCount = getQuizCount() + 1;
