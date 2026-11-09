@@ -34314,7 +34314,7 @@ app.post('/api/seosul/save', async (req, res) => {
       const p = clamp(pct);
       const cur = doc.episodes.get(key);
       if (!cur || p >= (cur.pct || 0)) {
-        doc.episodes.set(key, { pct: p, v: detail && detail.v, vt: detail && detail.vt, m: detail && detail.m, q: detail && detail.q, qt: detail && detail.qt, at: now });
+        doc.episodes.set(key, { pct: p, v: detail && detail.v, vt: detail && detail.vt, m: detail && detail.m, q: detail && detail.q, qt: detail && detail.qt, sec: detail && detail.sec, at: now });
       }
     } else if (kind === 'webtoon') {
       doc.webtoon.set(book, true);

@@ -145,6 +145,11 @@
   const THEME = qs.get('theme') === 'adv' ? 'adv' : 'basic';
   if (THEME === 'adv') document.body.setAttribute('data-theme', 'adv');
   const BASE = BOOK.replace(/_(adv|basic)$/, '');
+  // 이야기별 배경 삽화 아주 연하게
+  try {
+    const _ov = THEME === 'adv' ? '14,18,32' : '16,26,20';
+    document.body.style.background = 'linear-gradient(rgba(' + _ov + ',0.88), rgba(' + _ov + ',0.9)), url(\'/images/서술형집중대비/_배경/' + BASE + '.jpg?v=20261109w\') center/cover no-repeat';
+  } catch (e) {}
 
   const body = document.getElementById('epBody');
   document.getElementById('epTitle').innerHTML = (TITLE || '화별 학습') + (AUTHOR ? '<span class="ep-author">' + AUTHOR + '</span>' : '');
@@ -224,6 +229,7 @@
   const review = { vocab: [], vocabSet: new Set(), blanks: [], blanksSet: new Set() };
   let mainMissed = false;
 
+  let startTime = 0;         // 화 완주 소요시간 측정(재도전 포함 = 첫 시작부터 완료까지)
   // ═══════════ 단계 1 · 본문 읽기 + 인라인 어휘 퀴즈 ═══════════
   let sentences = [];        // 평탄화된 전체 문장
   let sentMeta = [];         // 각 문장의 para 인덱스
@@ -456,6 +462,7 @@
     const pct = total ? Math.round(got / total * 100) : 100;
     const deg = Math.round(pct / 100 * 360);
     const praise = pct >= 90 ? '완벽해요! 🏆' : pct >= 70 ? '잘했어요! 👍' : pct >= 50 ? '조금 더 복습해요 💪' : '다시 도전해봐요 📖';
+    const sec = startTime ? Math.max(0, Math.round((Date.now() - startTime) / 1000)) : null;
     body.innerHTML = '<div class="ep-result">' +
       '<div class="ep-ring" style="--deg:' + deg + 'deg"><span class="ep-pct">' + pct + '<small>%</small></span><span class="ep-pctlb">정답률</span></div>' +
       '<h2 style="font-size:22px;margin:4px 0 14px">' + praise + '</h2>' +
@@ -463,11 +470,12 @@
       '<div><span>📖 어휘 퀴즈</span><b>' + Math.min(score.vocabFirst, vTotal) + ' / ' + vTotal + '</b></div>' +
       '<div><span>🎯 중심내용 찾기</span><b>' + Math.min(score.mainFirst, 1) + ' / 1</b></div>' +
       '<div><span>✍️ 질문 답하기(빈칸)</span><b>' + Math.min(score.badgeFirst, bTotal) + ' / ' + bTotal + '</b></div>' +
+      '<div><span>⏱ 소요시간</span><b>' + (sec == null ? '-' : (sec >= 60 ? (Math.floor(sec / 60) + '분 ' + (sec % 60) + '초') : (sec + '초'))) + '</b></div>' +
       '</div>' +
       buildReviewHtml() +
       '<button class="ep-btn" id="epDone">' + EP + '화 학습 완료</button>' +
       '</div>';
-    const detail = { pct: pct, v: Math.min(score.vocabFirst, vTotal), vt: vTotal, m: Math.min(score.mainFirst, 1), q: Math.min(score.badgeFirst, bTotal), qt: bTotal };
+    const detail = { pct: pct, v: Math.min(score.vocabFirst, vTotal), vt: vTotal, m: Math.min(score.mainFirst, 1), q: Math.min(score.badgeFirst, bTotal), qt: bTotal, sec: sec };
     const post = () => { try { parent.postMessage({ type: 'seosulEpisodeScore', book: BOOK, ep: EP, pct: pct, detail: detail }, '*'); } catch (e) {} };
     document.getElementById('epDone').onclick = () => {
       post();
@@ -479,6 +487,7 @@
   // 시작
   loadData().then(() => {
     if (!PASSAGE || !(PASSAGE.paras || []).length) { body.innerHTML = '<div class="ep-loading">아직 이 화의 본문이 준비되지 않았어요.</div>'; return; }
+    startTime = Date.now();   // 첫 시작 시각(재도전으로 renderReading 재호출돼도 갱신 안 함)
     renderReading();
   }).catch(() => { body.innerHTML = '<div class="ep-loading">본문을 불러오지 못했어요.</div>'; });
 })();
