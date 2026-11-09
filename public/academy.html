@@ -2,6 +2,34 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <!-- 🩺 임시 진단기 (브라우저별 '학습시작 안눌림' 원인 추적용) — ?diag=1 일 때만 표시 · 원인 확인 후 제거 -->
+    <script>
+    (function(){
+      var DIAG = /[?&]diag=1(&|$)/.test((location && location.search) || '');
+      function show(msg){
+        if(!DIAG) return;   // 일반 사용자에겐 아무것도 안 보임 (?diag=1 접속 시에만)
+        try{
+          var b=document.getElementById('__diag_err');
+          if(!b){
+            b=document.createElement('div'); b.id='__diag_err';
+            b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#c0392b;color:#fff;font:12px/1.5 monospace;padding:8px 12px;white-space:pre-wrap;word-break:break-all;max-height:60vh;overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.5)';
+            var mount=function(){ (document.body||document.documentElement).appendChild(b); };
+            if(document.body) mount(); else document.addEventListener('DOMContentLoaded',mount);
+          }
+          b.textContent += (b.__init?'\n──────\n':('🩺 진단모드\nUA: '+navigator.userAgent+'\n──────\n')) + msg;
+          b.__init=true;
+        }catch(_){ try{ alert('진단: '+msg); }catch(__){} }
+      }
+      window.addEventListener('error', function(e){
+        var m=(e&&e.message)||(e&&e.error&&e.error.message)||'알수없는 오류';
+        show('❌ '+m+'\n  '+((e&&e.filename)||'')+' : '+((e&&e.lineno)||'')+':'+((e&&e.colno)||''));
+      }, true);
+      window.addEventListener('unhandledrejection', function(e){
+        var r=e&&e.reason; show('❌ Promise: '+((r&&r.message)||r));
+      });
+      window.__diagPing=function(t){ show('ℹ️ '+t); };
+    })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>브레인 문해원 학생 로그인</title>
     <link rel="icon" type="image/png" href="/favicon.png">
@@ -2779,10 +2807,12 @@
             // ✅ 기본 로그인 모달 열기/닫기
             const mobileStartBtn = document.getElementById("mobileStartBtn");
 
+            if (window.__diagPing) window.__diagPing('학습시작 핸들러 연결됨 (openBtn=' + !!openBtn + ' overlay=' + !!overlay + ' closeBtn=' + !!closeBtn + ')');
             if (openBtn && overlay && closeBtn) {
                 overlay.classList.remove("active");
 
                 openBtn.addEventListener("click", () => {
+                    if (window.__diagPing) window.__diagPing('학습시작(헤더) 클릭됨 → 모달 열기');
                     overlay.classList.add("active");
                     showPanel("login");
                 });
@@ -2790,6 +2820,7 @@
                 // 모바일 버튼도 동일하게 로그인 모달 열기
                 if (mobileStartBtn) {
                     mobileStartBtn.addEventListener("click", () => {
+                        if (window.__diagPing) window.__diagPing('학습시작(모바일) 클릭됨 → 모달 열기');
                         overlay.classList.add("active");
                         showPanel("login");
                     });
