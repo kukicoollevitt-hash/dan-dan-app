@@ -73652,14 +73652,17 @@
       const btn = e.target.closest('button, a');
       if (!btn) return;
       const oc = btn.getAttribute('onclick') || '';
-      if (!COPYRIGHT_DL_RE.test(oc)) return;
+      const href = btn.getAttribute('href') || '';
+      // 입문(100day) 등은 <a href="/api/wr100-guide/download|season-download" download> 링크라 onclick이 없음 → href로도 포착
+      const isApiDownload = /\/api\/wr100-guide\/(download|season-download)/.test(href);
+      if (!COPYRIGHT_DL_RE.test(oc) && !isApiDownload) return;
       if (btn.dataset.ccOk === '1') { btn.dataset.ccOk = ''; return; }  // 동의 후 재실행 통과
       e.preventDefault(); e.stopImmediatePropagation();
       showCopyrightConsentModal().then((ok) => {
         if (!ok) return;
-        recordCopyrightConsent(oc);
+        recordCopyrightConsent(oc || href);
         btn.dataset.ccOk = '1';
-        btn.click();  // 원래 onclick 재실행 → 즉시 다운로드
+        btn.click();  // 원래 동작(onclick/다운로드) 재실행 → 즉시 다운로드
       });
     }, true);
 
