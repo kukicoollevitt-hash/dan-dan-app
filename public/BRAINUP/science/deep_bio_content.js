@@ -1610,7 +1610,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[유전 관련 어휘]',
       items: [
         { no: 1, text: '유전 정보를 담은 이중 나선 구조의 분자를 (      )라고 한다.', answer: 'DNA', initials: 'DNA', aliases: ['DNA', '디엔에이'] },
-        { no: 2, text: 'DNA의 기본 단위로 당, 인산, 염기로 구성된 것을 (        )라고 한다.', answer: '뉴클레오타이드', initials: 'ㄴㅋㄹㅇㅌㄷ', aliases: ['뉴클레오타이드'] },
+        { no: 2, text: 'DNA의 기본 단위로 당, 인산, 염기로 구성된 것을 (        )라고 한다.', answer: '뉴클레오타이드', initials: 'ㄴㅋㄹㅇㅌㅇㄷ', aliases: ['뉴클레오타이드'] },
         { no: 3, text: 'DNA의 유전 정보를 담는 A, T, G, C 네 종류 물질을 (      )라고 한다.', answer: '염기', initials: 'ㅇㄱ', aliases: ['염기'] },
         { no: 4, text: '특정 단백질을 암호화하는 DNA 구간을 (      )라고 한다.', answer: '유전자', initials: 'ㅇㅈㅈ', aliases: ['유전자'] },
         { no: 5, text: 'DNA가 히스톤에 감겨 압축된 구조를 (      )라고 한다.', answer: '염색체', initials: 'ㅇㅅㅊ', aliases: ['염색체'] },

@@ -2076,7 +2076,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '이사부는 (       )을 신라에 복속시켰습니다.', answer: '우산국', initials: 'ㅇㅅㄱ', aliases: ['우산국'] },
         { no: 3, text: '이사부는 우산국을 신라에 (      )시켰습니다.', answer: '복속', initials: 'ㅂㅅ', aliases: ['복속'] },
         { no: 4, text: '이사부는 뛰어난 (      )과 용맹함을 갖췄습니다.', answer: '지략', initials: 'ㅈㄹ', aliases: ['지략'] },
-        { no: 5, text: '이사부는 실직주의 (      )가 되었습니다.', answer: '군주', initials: 'ㄱㅊ', aliases: ['군주'] },
+        { no: 5, text: '이사부는 실직주의 (      )가 되었습니다.', answer: '군주', initials: 'ㄱㅈ', aliases: ['군주'] },
         { no: 6, text: '이사부는 신라의 (      )를 넓혀야 한다는 사명감을 느꼈습니다.', answer: '영토', initials: 'ㅇㅌ', aliases: ['영토'] },
         { no: 7, text: '우산국은 (       )으로 중요한 위치에 있었습니다.', answer: '전략적', initials: 'ㅈㄹㅈ', aliases: ['전략적'] },
         { no: 8, text: '우산국은 신라에 (      )하지 않고 독립을 유지했습니다.', answer: '복종', initials: 'ㅂㅈ', aliases: ['복종'] },

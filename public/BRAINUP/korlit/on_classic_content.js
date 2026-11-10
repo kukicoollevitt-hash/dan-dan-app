@@ -71,7 +71,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '월매는 노래와 춤으로 손님을 접대하는 (      )이었어요.', answer: '기생', initials: 'ㄱㅅ', aliases: ['기생'] },
         { no: 2, text: '몽룡의 아버지가 다른 곳으로 (         )되어 떠나야 했어요.', answer: '부임하게', initials: 'ㅂㅇㅎㄱ', aliases: ['부임하게','부임'] },
         { no: 3, text: '변학도는 춘향을 (      )로 불러 수청을 들라고 했어요.', answer: '관아', initials: 'ㄱㅇ', aliases: ['관아'] },
-        { no: 4, text: '춘향은 거절했다가 감옥에 갇히고 (         ).', answer: '매를 맞았어요', initials: 'ㅁㄹ ㅁㅈㅇㅇ', aliases: ['매를맞았어요','매를 맞았어요','매를맞다'] },
+        { no: 4, text: '춘향은 거절했다가 감옥에 갇히고 (         ).', answer: '매를 맞았어요', initials: 'ㅁㄹ ㅁㅇㅇㅇ', aliases: ['매를맞았어요','매를 맞았어요','매를맞다'] },
         { no: 5, text: '몽룡은 (      )에 가서 과거 시험을 보겠다고 했어요.', answer: '한양', initials: 'ㅎㅇ', aliases: ['한양'] },
         { no: 6, text: '춘향과 몽룡이 처음 만난 날은 (      )날이었어요.', answer: '단오', initials: 'ㄷㅇ', aliases: ['단오'] },
         { no: 7, text: '몽룡은 춘향에게 꼭 돌아오겠다고 (         ).', answer: '약속했어요', initials: 'ㅇㅅㅎㅇㅇ', aliases: ['약속했어요','약속하다','약속'] },

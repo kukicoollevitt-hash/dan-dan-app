@@ -985,7 +985,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '문화를 상품으로 만들어 경제적 가치를 창출하는 산업을 (        )이라고 한다.', answer: '문화 산업', initials: 'ㅁㅎ ㅅㅇ', aliases: ['문화산업', '문화 산업'] },
         { no: 3, text: '이야기를 효과적으로 전달하는 기술을 (          )이라고 한다.', answer: '스토리텔링', initials: 'ㅅㅌㄹㅌㄹ', aliases: ['스토리텔링'] },
         { no: 4, text: '인터넷으로 영상 콘텐츠를 제공하는 서비스를 (      )라고 한다.', answer: 'OTT', initials: 'OTT', aliases: ['OTT', 'ott'] },
-        { no: 5, text: '온라인에서 콘텐츠를 공유하고 소비하는 공간을 (          )이라고 한다.', answer: '디지털 플랫폼', initials: 'ㄷㅈㅌ ㅍㄹㅌㅍ', aliases: ['디지털플랫폼', '디지털 플랫폼'] },
+        { no: 5, text: '온라인에서 콘텐츠를 공유하고 소비하는 공간을 (          )이라고 한다.', answer: '디지털 플랫폼', initials: 'ㄷㅈㅌ ㅍㄹㅍ', aliases: ['디지털플랫폼', '디지털 플랫폼'] },
         { no: 6, text: '문화와 가치관의 매력으로 영향력을 행사하는 힘을 (        )라고 한다.', answer: '소프트 파워', initials: 'ㅅㅍㅌ ㅍㅇ', aliases: ['소프트파워', '소프트 파워'] },
         { no: 7, text: '군사력이나 경제력으로 영향력을 행사하는 힘을 (        )라고 한다.', answer: '하드 파워', initials: 'ㅎㄷ ㅍㅇ', aliases: ['하드파워', '하드 파워'] },
         { no: 8, text: '외국인들이 특정 나라에 대해 갖는 인식과 느낌을 (        )라고 한다.', answer: '국가 이미지', initials: 'ㄱㄱ ㅇㅁㅈ', aliases: ['국가이미지', '국가 이미지'] },

@@ -2903,7 +2903,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 7, text: '마음을 시험하는 어려움을 (      )이라 해요.', answer: '시련', initials: 'ㅅㄹ', aliases: ['시련'] },
         { no: 8, text: '살아남으려는 힘을 (       )이라 해요.', answer: '생명력', initials: 'ㅅㅁㄹ', aliases: ['생명력'] },        { no: 9, text: '부수어 망가뜨리는 것을 (      )라 해요.', answer: '파괴', initials: 'ㅍㄱ', aliases: ['파괴'] },
         { no: 10, text: '전쟁이나 재난의 끔찍한 재앙을 (      )라 해요.', answer: '참화', initials: 'ㅊㅎ', aliases: ['참화'] },
-        { no: 11, text: '서로 노동력을 교환하며 돕는 것을 (       )라 해요.', answer: '품앗이', initials: 'ㅍㅇㅅㅇ', aliases: ['품앗이'] },
+        { no: 11, text: '서로 노동력을 교환하며 돕는 것을 (       )라 해요.', answer: '품앗이', initials: 'ㅍㅇㅇ', aliases: ['품앗이'] },
         { no: 12, text: '배를 타고 바다를 건너가는 것을 (      )라 해요.', answer: '항해', initials: 'ㅎㅎ', aliases: ['항해'] },
         { no: 13, text: '무너져 황폐해진 곳을 (      )라 해요.', answer: '폐허', initials: 'ㅍㅎ', aliases: ['폐허'] },      ]
     },

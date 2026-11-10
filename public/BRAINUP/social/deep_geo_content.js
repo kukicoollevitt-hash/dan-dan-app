@@ -764,7 +764,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[도시화와 도시 문제 어휘]',
       items: [
         { no: 1, text: '도시 인구 비율이 증가하고 도시적 생활 양식이 확산되는 현상을 (      )라 한다.', answer: '도시화', initials: 'ㄷㅅㅎ', aliases: ['도시화'] },
-        { no: 2, text: '전체 인구 중 도시 인구가 차지하는 비율을 (      )이라 한다.', answer: '도시화율', initials: 'ㄷㅅㅎㄹ', aliases: ['도시화율'] },
+        { no: 2, text: '전체 인구 중 도시 인구가 차지하는 비율을 (      )이라 한다.', answer: '도시화율', initials: 'ㄷㅅㅎㅇ', aliases: ['도시화율'] },
         { no: 3, text: '도시 인구가 교외나 농촌으로 이동하는 현상을 (      )라 한다.', answer: '역도시화', initials: 'ㅇㄷㅅㅎ', aliases: ['역도시화'] },
         { no: 4, text: '도심의 상주 인구가 줄어드는 현상을 (      )라 한다.', answer: '인구 공동화', initials: 'ㅇㄱ ㄱㄷㅎ', aliases: ['인구공동화'] },
         { no: 5, text: '도시 기능과 인구가 외곽으로 확산되는 현상을 (      )라 한다.', answer: '교외화', initials: 'ㄱㅇㅎ', aliases: ['교외화'] },
@@ -1533,7 +1533,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[세계 도시화와 도시 문제 어휘]',
       items: [
         { no: 1, text: '인구와 산업이 도시로 집중되어 도시 지역이 확대되는 현상을 (      )라고 한다.', answer: '도시화', initials: 'ㄷㅅㅎ', aliases: ['도시화'] },
-        { no: 2, text: '전체 인구 중 도시에 거주하는 인구의 비율을 (        )이라고 한다.', answer: '도시화율', initials: 'ㄷㅅㅎㄹ', aliases: ['도시화율'] },
+        { no: 2, text: '전체 인구 중 도시에 거주하는 인구의 비율을 (        )이라고 한다.', answer: '도시화율', initials: 'ㄷㅅㅎㅇ', aliases: ['도시화율'] },
         { no: 3, text: '도시화로 인해 발생하는 주택, 교통, 환경 등의 문제를 (        )라고 한다.', answer: '도시 문제', initials: 'ㄷㅅ ㅁㅈ', aliases: ['도시문제', '도시 문제'] },
         { no: 4, text: '도시의 중심부로 상업·업무 기능이 집중된 지역을 (    )이라고 한다.', answer: '도심', initials: 'ㄷㅅ', aliases: ['도심'] },
         { no: 5, text: '도심 지역의 상주 인구가 감소하는 현상을 (          )라고 한다.', answer: '도심 공동화', initials: 'ㄷㅅ ㄱㄷㅎ', aliases: ['도심공동화', '도심 공동화'] },

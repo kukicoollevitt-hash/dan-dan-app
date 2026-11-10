@@ -490,7 +490,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 5, text: '모든 사람이 똑같이 1표씩 가지는 선거 원칙을 (      )라고 한다.', answer: '평등 선거', initials: 'ㅍㄷㅅㄱ', aliases: ['평등 선거','평등선거'] },
         { no: 6, text: '누구를 선택했는지 타인이 알 수 없도록 보호하는 선거 방식을 (      )라고 한다.', answer: '비밀 선거', initials: 'ㅂㅁㅅㄱ', aliases: ['비밀 선거','비밀선거'] },        { no: 7, text: '불편하거나 손해가 되는 일을 (      )이라고 한다.', answer: '불이익', initials: 'ㅂㅇㅇ', aliases: ['불이익'] },
         { no: 8, text: '국민이 정치에 참여할 수 있는 권리를 (      )이라고 한다.', answer: '참정권', initials: 'ㅊㅈㄱ', aliases: ['참정권'] },
-        { no: 9, text: '전체 유권자 중 실제 투표한 사람의 비율을 (      )이라고 한다.', answer: '투표율', initials: 'ㅌㅍㄹ', aliases: ['투표율'] }
+        { no: 9, text: '전체 유권자 중 실제 투표한 사람의 비율을 (      )이라고 한다.', answer: '투표율', initials: 'ㅌㅍㅇ', aliases: ['투표율'] }
       ]
     },
     quiz: {

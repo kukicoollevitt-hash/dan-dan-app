@@ -650,7 +650,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 1, text: '성격이 예민하고 남을 쉽게 받아들이지 못하는 것을 (        )라고 해요.', answer: '까다롭다', initials: 'ㄲㄷㄹㄷ', aliases: ['까다롭다','까다로운'] },
         { no: 2, text: '크고 훌륭한 집을 (      )이라고 해요.', answer: '저택', initials: 'ㅈㅌ', aliases: ['저택'] },
         { no: 3, text: '사람에게서 사람으로 옮아가는 병을 (      )이라고 해요.', answer: '전염병', initials: 'ㅈㅇㅂ', aliases: ['전염병'] },
-        { no: 4, text: '벽이나 담을 타고 올라가는 식물을 (        )이라고 해요.', answer: '담쟁이덩굴', initials: 'ㄷㅉㅇㄷㄱ', aliases: ['담쟁이덩굴'] },
+        { no: 4, text: '벽이나 담을 타고 올라가는 식물을 (        )이라고 해요.', answer: '담쟁이덩굴', initials: 'ㄷㅈㅇㄷㄱ', aliases: ['담쟁이덩굴'] },
         { no: 5, text: '물기가 없어 바싹 말라 있는 것을 (        )라고 해요.', answer: '메마르다', initials: 'ㅁㅁㄹㄷ', aliases: ['메마르다'] },
         { no: 6, text: '앞으로 잘 될 것이라고 기대하는 마음을 (      )이라고 해요.', answer: '희망', initials: 'ㅎㅁ', aliases: ['희망'] },
         { no: 7, text: '상처나 병이 낫는 것을 (      )라고 해요.', answer: '치유', initials: 'ㅊㅇ', aliases: ['치유'] },

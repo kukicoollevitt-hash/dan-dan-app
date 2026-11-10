@@ -286,7 +286,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 6, text: '이건 분명 점순이의 (      )이다.', answer: '부추김', initials: 'ㅂㅊㄱ', aliases: ['부추김'] },
         { no: 7, text: '더 이상 이렇게 (      )받으며 살 수는 없다고 생각했다.', answer: '홀대', initials: 'ㅎㄷ', aliases: ['홀대'] },
         { no: 8, text: '영문을 몰라 (      ) 서 있었다.', answer: '멍하니', initials: 'ㅁㅎㄴ', aliases: ['멍하니'] },
-        { no: 9, text: '점순이의 (      ) 속셈을 그제야 알아차렸다.', answer: '앙큼한', initials: 'ㅇㄲㅎ', aliases: ['앙큼한'] },
+        { no: 9, text: '점순이의 (      ) 속셈을 그제야 알아차렸다.', answer: '앙큼한', initials: 'ㅇㅋㅎ', aliases: ['앙큼한'] },
         { no: 10, text: '등짝이 (        ) 아팠다.', answer: '얼얼하게', initials: 'ㅇㅇㅎㄱ', aliases: ['얼얼하게'] },
         { no: 11, text: '장인을 이기고 나서 묘한 (      )감을 느꼈다.', answer: '허탈', initials: 'ㅎㅌ', aliases: ['허탈'] },
         { no: 12, text: '점순이의 (      )에 또 넘어가고 만 것이다.', answer: '교묘함', initials: 'ㄱㅁㅎ', aliases: ['교묘함'] },
@@ -1303,7 +1303,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '윤직원의 모습은 당시 친일 부역자들의 (      )이다.', answer: '전형', initials: 'ㅈㅎ', aliases: ['전형'] },
         { no: 11, text: '조선이 일본에 (      )된 후로 오히려 장사가 잘되었다.', answer: '합병', initials: 'ㅎㅂ', aliases: ['합병'] },
         { no: 12, text: '그에게는 자신의 (      )만이 중요했다.', answer: '안위', initials: 'ㅇㅇ', aliases: ['안위'] },
-        { no: 13, text: '손자가 집안을 (        )했다며 분노했다.', answer: '망신시켰다', initials: 'ㅁㅅㅅㄲㄷ', aliases: ['망신시켰다','망신시키다'] },
+        { no: 13, text: '손자가 집안을 (        )했다며 분노했다.', answer: '망신시켰다', initials: 'ㅁㅅㅅㅋㄷ', aliases: ['망신시켰다','망신시키다'] },
         { no: 14, text: '채만식은 (      )과 풍자를 통해 윤직원의 추악함을 드러낸다.', answer: '해학', initials: 'ㅎㅎ', aliases: ['해학'] },
         { no: 15, text: '윤직원의 탐욕과 무지는 당시 친일파들의 모습을 (      )한다.', answer: '대변', initials: 'ㄷㅂ', aliases: ['대변','대변하다'] }
       ]
@@ -2476,7 +2476,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '같은 (      )끼리 서로를 해치는 비극이 담겨 있다.', answer: '동포', initials: 'ㄷㅍ', aliases: ['동포'] },
         { no: 11, text: '북한에서는 (      ) 체제가 수립되었다.', answer: '사회주의', initials: 'ㅅㅎㅈㅇ', aliases: ['사회주의'] },
         { no: 12, text: '갑돌이는 옛 주인을 (      )했다.', answer: '핍박', initials: 'ㅍㅂ', aliases: ['핍박'] },
-        { no: 13, text: '오작녀와의 이별은 (      )한 상황이었다.', answer: '애틋', initials: 'ㅇㄸ', aliases: ['애틋'] },
+        { no: 13, text: '오작녀와의 이별은 (      )한 상황이었다.', answer: '애틋', initials: 'ㅇㅌ', aliases: ['애틋'] },
         { no: 14, text: '황순원은 (      )인 문체로 유명하다.', answer: '함축적', initials: 'ㅎㅊㅈ', aliases: ['함축적'] },
         { no: 15, text: '이념은 인간 본성을 (      )한다.', answer: '왜곡', initials: 'ㅇㄱ', aliases: ['왜곡'] }
       ]

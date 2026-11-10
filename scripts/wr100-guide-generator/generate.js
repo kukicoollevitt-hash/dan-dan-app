@@ -59,7 +59,7 @@ async function generateOne(browser, day) {
   console.log(`\n▶ Day ${day} 생성 시작`);
   const DATA = extractData(day);
 
-  for (const mode of ['student', 'teacher']) {
+  for (const mode of ['student', 'teacher', 'answerkey']) {
     let html = buildHtml(DATA, mode);
     // 템플릿의 상대 경로 이미지 → base64 data URI 로 인라인 변환
     // 예: ../../public/images/100day/1day_01.jpg → data:image/jpeg;base64,...

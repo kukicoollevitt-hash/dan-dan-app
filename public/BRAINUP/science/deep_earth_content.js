@@ -1782,7 +1782,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       { no: 10, text: '자원을 재사용·재활용하는 경제 모델을 (        )라고 한다.', answer: '순환 경제', initials: 'ㅅㅎ ㄱㅈ', aliases: ['순환경제', '순환 경제'] },
       { no: 11, text: '폐전자기기에서 유가 금속을 회수하는 개념을 (        )이라고 한다.', answer: '도시 광산', initials: 'ㄷㅅ ㄱㅅ', aliases: ['도시광산', '도시 광산'] },
       { no: 12, text: '제품의 전 생애주기 환경 영향 분석을 (        )라고 한다.', answer: '전과정 평가', initials: 'ㅈㄱㅈ ㅍㄱ', aliases: ['전과정평가', 'LCA'] },
-      { no: 13, text: '투입 에너지 대비 획득 에너지 비율을 (          )이라고 한다.', answer: '에너지 회수율', initials: 'ㅇㄴㅈ ㅎㅅㄹ', aliases: ['에너지회수율', 'EROI'] },
+      { no: 13, text: '투입 에너지 대비 획득 에너지 비율을 (          )이라고 한다.', answer: '에너지 회수율', initials: 'ㅇㄴㅈ ㅎㅅㅇ', aliases: ['에너지회수율', 'EROI'] },
       { no: 14, text: '자원을 국가 전략 자산으로 활용하는 정책을 (          )라고 한다.', answer: '자원 민족주의', initials: 'ㅈㅇ ㅁㅈㅈㅇ', aliases: ['자원민족주의', '자원 민족주의'] },
       { no: 15, text: '핵심 자원의 안정적 확보 전략을 (        )라고 한다.', answer: '공급망 안보', initials: 'ㄱㄱㅁ ㅇㅂ', aliases: ['공급망안보', '공급망 안보'] }
     ]},
@@ -2190,7 +2190,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       { no: 10, text: '댐퍼로 건물의 진동 에너지를 흡수하는 기술을 (    )이라 한다.', answer: '제진', initials: 'ㅈㅈ', aliases: ['제진'] },
       { no: 11, text: '초기 조건 불확실성을 반영한 확률론적 기상 예측을 (       )라고 한다.', answer: '앙상블 예보', initials: 'ㅇㅅㅂ ㅇㅂ', aliases: ['앙상블예보', '앙상블 예보'] },
       { no: 12, text: '재해 확률, 노출도, 취약성의 함수로 정량화한 위험 지표를 (       )라고 한다.', answer: '재해 위험도', initials: 'ㅈㅎ ㅇㅎㄷ', aliases: ['재해위험도', '재해 위험도'] },
-      { no: 13, text: '유엔의 2015-2030 재해 위험 경감 국제 협약을 (         )라고 한다.', answer: '센다이 프레임워크', initials: 'ㅅㄷㅇ ㅍㄹㅇㅁㅇㅋ', aliases: ['센다이프레임워크', '센다이 프레임워크'] },
+      { no: 13, text: '유엔의 2015-2030 재해 위험 경감 국제 협약을 (         )라고 한다.', answer: '센다이 프레임워크', initials: 'ㅅㄷㅇ ㅍㄹㅇㅇㅋ', aliases: ['센다이프레임워크', '센다이 프레임워크'] },
       { no: 14, text: '기후변화의 영향에 대응하여 취약성을 줄이는 조치를 (       )이라 한다.', answer: '기후 적응', initials: 'ㄱㅎ ㅈㅇ', aliases: ['기후적응', '기후 적응'] },
       { no: 15, text: '습지, 맹그로브 등 자연 생태계를 활용한 방재 전략을 (        )이라 한다.', answer: '자연 기반 해법', initials: 'ㅈㅇ ㄱㅂ ㅎㅂ', aliases: ['자연기반해법', '자연 기반 해법', 'NbS'] }
     ]},

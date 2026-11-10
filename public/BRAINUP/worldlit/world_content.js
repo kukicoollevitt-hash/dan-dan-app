@@ -269,7 +269,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 4, text: '서울 도심 좌표 표기는 대략 37° (  ) , 127° (  ) 이다.', answer: 'N/E', initials: 'ㅂ/ㄷ', aliases: ['N,E','북/동','북위/동경','N / E'] },
         { no: 5, text: '지도를 일정 간격으로 나눈 선들의 모음을 (      )라고 한다.', answer: '격자', initials: 'ㄱㅈ', aliases: ['격자','grid'] },
         { no: 6, text: '위도·경도 두 값이 교차하는 (  )이 곧 한 장소를 정확히 지정한다.', answer: '한 점', initials: 'ㅎ ㅈ', aliases: ['한점','한 지점','점'] },
-        { no: 7, text: '경도 0°는 (        )를, 위도 0°는 적도를 의미한다.', answer: '본초 자오선/적도', initials: 'ㅂㅊ ㅈㅇㅅ ', aliases: ['본초자오선'] }
+        { no: 7, text: '경도 0°는 (        )를, 위도 0°는 적도를 의미한다.', answer: '본초 자오선/적도', initials: 'ㅂㅊ ㅈㅇㅅ/ㅈㄷ', aliases: ['본초자오선'] }
       ]
     },
     quiz: {

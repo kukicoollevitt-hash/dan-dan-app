@@ -469,18 +469,6 @@
           <a href="/super/academy-admins" style="background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);">관리자 목록 보기<span>→</span></a>
         </div>
 
-        <!-- 로그인 IP 관찰 (계정 공유 탐지) -->
-        <div class="card" style="border-color: rgba(107, 91, 149, 0.2);">
-          <div>
-            <div class="card-icon">🛰️</div>
-            <div class="card-title">로그인 IP 관찰 (계정 공유 탐지)</div>
-            <div class="card-desc">
-              관찰 대상 학원의 선생님 로그인 IP·접속 지역을 기록하고, 짧은 시간 내 서로 다른 IP·통신사 동시접속(공유 의심)을 자동 표시합니다.
-            </div>
-          </div>
-          <a href="/super/login-watch" style="background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);">관찰 현황 보기<span>→</span></a>
-        </div>
-
         <!-- 진단테스트 및 결과 관리 -->
         <div class="card" style="border-color: rgba(107, 91, 149, 0.2);">
           <div>
@@ -551,6 +539,30 @@
             </div>
           </div>
           <a href="/super/kpi/login" style="background: linear-gradient(135deg, #E67E22 0%, #D35400 100%);">KPI 관리 로그인<span>→</span></a>
+        </div>
+
+        <!-- 로그인 IP 관찰 (계정 공유 탐지) -->
+        <div class="card" style="border-color: rgba(107, 91, 149, 0.2);">
+          <div>
+            <div class="card-icon">🛰️</div>
+            <div class="card-title">로그인 IP 관찰 (계정 공유 탐지)</div>
+            <div class="card-desc">
+              관찰 대상 학원의 선생님 로그인 IP·접속 지역을 기록하고, 짧은 시간 내 서로 다른 IP·통신사 동시접속(공유 의심)을 자동 표시합니다.
+            </div>
+          </div>
+          <a href="/super/login-watch" style="background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);">관찰 현황 보기<span>→</span></a>
+        </div>
+
+        <!-- © 저작권 동의 현황 (교재 다운로드) -->
+        <div class="card" style="border-color: rgba(107, 91, 149, 0.2);">
+          <div>
+            <div class="card-icon">©️</div>
+            <div class="card-title">저작권 동의 현황 (교재 다운로드)</div>
+            <div class="card-desc">
+              센터별 교재 PDF 다운로드 시 받은 저작권 동의 내역을 조회합니다. (읽기 전용 · 센터별 횟수·최근일시·상세 로그)
+            </div>
+          </div>
+          <a href="#" onclick="openCopyrightConsents(event)" style="background: linear-gradient(135deg, #8B7BB5 0%, #6B5B95 100%);">동의 내역 보기<span>→</span></a>
         </div>
       </div>
     </div>
@@ -698,6 +710,47 @@
       const input = document.getElementById('briefingUrl');
       if (input) input.value = '';
       saveBriefingLink();
+    }
+
+    // © 저작권 동의 현황 조회 (읽기 전용) — 센터별 집계 + 최근 상세 로그
+    function _ccEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    function _ccFmt(d){ try{ const t=new Date(d); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'); }catch(e){ return ''; } }
+    async function openCopyrightConsents(ev){
+      if (ev) ev.preventDefault();
+      let ov = document.getElementById('ccViewOverlay');
+      if (ov) ov.remove();
+      ov = document.createElement('div');
+      ov.id = 'ccViewOverlay';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,0.55);padding:20px;';
+      ov.innerHTML = '<div style="width:min(860px,96vw);max-height:88vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);font-family:\'Noto Sans KR\',sans-serif;">'
+        + '<div style="position:sticky;top:0;background:linear-gradient(135deg,#6B5B95,#5a4a85);color:#fff;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">'
+        + '<div style="font-size:17px;font-weight:800;">©️ 저작권 동의 현황 <span style="font-size:12px;opacity:.8;font-weight:600;">(읽기 전용)</span></div>'
+        + '<button onclick="document.getElementById(\'ccViewOverlay\').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer;">✕</button></div>'
+        + '<div id="ccViewBody" style="padding:22px 24px;color:#334155;">불러오는 중…</div></div>';
+      ov.addEventListener('click', e=>{ if(e.target===ov) ov.remove(); });
+      document.body.appendChild(ov);
+      try {
+        const r = await fetch('/api/super/copyright-consents');
+        const d = await r.json();
+        const body = document.getElementById('ccViewBody');
+        if (!d || !d.ok) { body.innerHTML = '<div style="color:#dc2626;">조회 실패'+(d&&d.message?(': '+_ccEsc(d.message)):'')+'</div>'; return; }
+        const summary = d.summary || [], rows = d.rows || [];
+        const sumHtml = summary.length
+          ? '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px;"><thead><tr style="background:#f1edfa;color:#5a4a85;"><th style="text-align:left;padding:8px 10px;border-bottom:2px solid #e2ddf0;">센터</th><th style="text-align:right;padding:8px 10px;border-bottom:2px solid #e2ddf0;">동의 횟수</th><th style="text-align:left;padding:8px 10px;border-bottom:2px solid #e2ddf0;">최근 동의</th></tr></thead><tbody>'
+            + summary.map(s=>'<tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:700;">'+_ccEsc(s._id||'(미상)')+'</td><td style="padding:7px 10px;border-bottom:1px solid #eee;text-align:right;">'+(s.count||0)+'</td><td style="padding:7px 10px;border-bottom:1px solid #eee;color:#64748b;">'+_ccFmt(s.last)+'</td></tr>').join('')
+            + '</tbody></table>'
+          : '<div style="color:#94a3b8;padding:10px 0;">아직 동의 기록이 없습니다.</div>';
+        const rowsHtml = rows.length
+          ? '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#f8fafc;color:#475569;"><th style="text-align:left;padding:6px 8px;border-bottom:1px solid #e2e8f0;">일시</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid #e2e8f0;">센터</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid #e2e8f0;">이름</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid #e2e8f0;">다운로드</th></tr></thead><tbody>'
+            + rows.map(x=>'<tr><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;color:#64748b;white-space:nowrap;">'+_ccFmt(x.at)+'</td><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;font-weight:600;">'+_ccEsc(x.academyName||'(미상)')+'</td><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;">'+_ccEsc(x.name||'')+'</td><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;color:#475569;font-family:monospace;font-size:11px;">'+_ccEsc((x.action||'').slice(0,70))+'</td></tr>').join('')
+            + '</tbody></table>'
+          : '';
+        body.innerHTML = '<div style="font-size:13px;font-weight:800;color:#5a4a85;margin-bottom:8px;">📊 센터별 동의 집계</div>'+sumHtml
+          + (rows.length ? ('<div style="font-size:13px;font-weight:800;color:#5a4a85;margin:18px 0 8px;">🧾 최근 동의 내역 <span style="font-size:11px;font-weight:600;color:#94a3b8;">(최대 '+rows.length+'건)</span></div>'+rowsHtml) : '');
+      } catch (e) {
+        const body = document.getElementById('ccViewBody');
+        if (body) body.innerHTML = '<div style="color:#dc2626;">조회 중 오류가 발생했습니다.</div>';
+      }
     }
   </script>
 </body>

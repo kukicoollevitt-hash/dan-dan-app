@@ -480,7 +480,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 2, text: '흙, 모래, 자갈 등이 쌓이는 현상을 (      )이라고 한다.', answer: '퇴적', initials: 'ㅌㅈ', aliases: ['퇴적'] },
         { no: 3, text: '물이 흐르는 속도를 (      )이라고 한다.', answer: '유속', initials: 'ㅇㅅ', aliases: ['유속'] },
         { no: 4, text: '강에서 산에 가까운 위쪽 지역을 (      )라고 한다.', answer: '상류', initials: 'ㅅㄹ', aliases: ['상류'] },
-        { no: 5, text: '물이 빠르게 흐르며 형성된 좁고 깊은 V자 모양의 계곡을 (        )이라 한다.', answer: 'V자 계곡', initials: 'V ㄱㄱ', aliases: ['V자 계곡', 'V자계곡', '브이자 계곡'] },
+        { no: 5, text: '물이 빠르게 흐르며 형성된 좁고 깊은 V자 모양의 계곡을 (        )이라 한다.', answer: 'V자 계곡', initials: 'Vㅈ ㄱㄱ', aliases: ['V자 계곡', 'V자계곡', '브이자 계곡'] },
         { no: 6, text: '강에서 상류와 하류 사이의 지역을 (      )라고 한다.', answer: '중류', initials: 'ㅈㄹ', aliases: ['중류'] },
         { no: 7, text: '산 아래 평지에 흙과 자갈이 부채꼴로 쌓인 지형을 (      )라고 한다.', answer: '선상지', initials: 'ㅅㅅㅈ', aliases: ['선상지'] },
         { no: 8, text: 'S자 모양으로 굽이치며 흐르는 강을 (        )이라 한다.', answer: '곡류 하천', initials: 'ㄱㄹ ㅎㅊ', aliases: ['곡류 하천', '곡류하천'] },

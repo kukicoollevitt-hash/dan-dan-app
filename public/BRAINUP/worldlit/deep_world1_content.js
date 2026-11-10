@@ -1537,7 +1537,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 7, text: '뾰족한 가시가 있는 나무를 (        )라고 해요.', answer: '가시나무', initials: 'ㄱㅅㄴㅁ', aliases: ['가시나무'] },
         { no: 8, text: '옛날부터 전해 내려오는 이야기를 (    )이라고 해요.', answer: '전설', initials: 'ㅈㅅ', aliases: ['전설'] },
         { no: 9, text: '사랑하는 사람에게 입술을 맞추는 일을 (      )이라고 해요.', answer: '입맞춤', initials: 'ㅇㅁㅊ', aliases: ['입맞춤'] },        { no: 10, text: '물레에 달린 뾰족한 부분을 (    )이라고 해요.', answer: '바늘', initials: 'ㅂㄴ', aliases: ['바늘'] },
-        { no: 11, text: '왕의 딸을 (    )라고 해요.', answer: '공주', initials: 'ㄱㅊ', aliases: ['공주'] },
+        { no: 11, text: '왕의 딸을 (    )라고 해요.', answer: '공주', initials: 'ㄱㅈ', aliases: ['공주'] },
         { no: 12, text: '새로운 것을 알고 싶어하는 마음을 (      )이라고 해요.', answer: '호기심', initials: 'ㅎㄱㅅ', aliases: ['호기심'] }
       ]
     },

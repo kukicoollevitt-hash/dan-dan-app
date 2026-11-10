@@ -574,8 +574,63 @@ function themeOf(DATA) {
 }
 
 /* ══════════════════ 최상위 · 전체 HTML ══════════════════ */
+/* ═══ 정답지 · 교사용 정답 모음 · 1페이지 압축 (어휘 + 빈칸 정답) ═══ */
+function pageAnswerKey(DATA) {
+  const vocab = DATA.vocab || [];
+  const stage2 = DATA.stage2 || [];
+  const stage3 = DATA.stage3 || [];
+
+  const vocabItems = vocab.map((v, i) => `
+    <div class="ak-item">
+      <span class="ak-num">${i + 1}</span>
+      <b class="ak-word">${esc(v.word)}</b>
+      <span class="ak-def">${esc(shortMeaning(v.meaning))}</span>
+    </div>`).join('');
+
+  // 빈칸 정답 · 정답 단어만
+  const wordList = (arr) => (arr || []).map((s, i) =>
+    `<div class="ak-wd"><span class="ak-num sm">${i + 1}</span><b class="ak-ans">${esc(s.target)}</b></div>`
+  ).join('');
+
+  // 중심내용 · 문단별 · 문장 형태(교사용과 동일한 centerAnswer)
+  const paragraphs = DATA.paragraphs || [];
+  const centerItems = paragraphs.map((p, i) =>
+    `<div class="ak-center"><span class="ak-pnum">문단 ${i + 1}</span><span class="ak-center-text">${esc(p.centerAnswer || p.title || '')}</span></div>`
+  ).join('');
+
+  return `
+    <section class="page">
+      ${pageColorWhaleHtml(DATA.day)}
+      ${pageHeader('정답지', '교사용', 'Day ' + DATA.day + ' · 정답 모음', 'pill-right')}
+      <div class="page-body ak-body">
+        <div class="ak-block">
+          <div class="ak-title">📘 오늘의 어휘 (${vocab.length})</div>
+          <div class="ak-vocab">${vocabItems}</div>
+        </div>
+        <div class="ak-block">
+          <div class="ak-title">✏️ 빈칸 정답</div>
+          <div class="ak-blank-cols">
+            <div class="ak-col">
+              <div class="ak-subtitle">① 문맥쓰기</div>
+              <div class="ak-wdlist">${wordList(stage2)}</div>
+            </div>
+            <div class="ak-col">
+              <div class="ak-subtitle">② 활용하기</div>
+              <div class="ak-wdlist">${wordList(stage3)}</div>
+            </div>
+          </div>
+        </div>
+        <div class="ak-block">
+          <div class="ak-title">🎯 중심내용 찾기 (문단별)</div>
+          <div class="ak-centers">${centerItems}</div>
+        </div>
+      </div>
+      ${pageFooter()}
+    </section>`;
+}
+
 function buildHtml(DATA, mode = 'student') {
-  const modeLabel = mode === 'teacher' ? '교사용' : '학생용';
+  const modeLabel = mode === 'teacher' ? '교사용' : (mode === 'answerkey' ? '정답지' : '학생용');
   const season = themeOf(DATA);
   const T = THEMES[season];
   const css = `
@@ -1125,11 +1180,11 @@ function buildHtml(DATA, mode = 'student') {
       border-radius: 10px;
       padding: 3mm 4mm;
       flex: 1;
-      min-height: 0;
+      min-height: 50mm;   /* 이미지 44mm + 상하 여백 6mm — 짧은 문단서 이미지 삐짐 방지(4박스 A4 수용) */
       align-items: stretch;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
     }
-    .write-block + .write-block { margin-top: 2.5mm; }
+    .write-block + .write-block { margin-top: 1mm; }   /* 문단 박스 간격 좁힘 — 4문단 하단 짤림 방지 */
     /* 지그재그 · 짝수 문단은 이미지 우측 · 텍스트 좌측 · order 로 스왑 */
     .write-block-reverse {
       grid-template-columns: 1fr 50mm;
@@ -1148,7 +1203,7 @@ function buildHtml(DATA, mode = 'student') {
     .write-img {
       width: 100%;
       height: 100%;
-      max-height: 48mm;
+      max-height: 44mm;
       object-fit: cover;
       border-radius: 8px;
       border: 1.5px solid var(--soft-line);
@@ -1489,11 +1544,45 @@ function buildHtml(DATA, mode = 'student') {
       border-bottom: 1.2px solid #ccc;
       height: 2mm;               /* 밑줄만 · 실제 쓰기 공간은 위 gap 이 담당 */
     }
+
+    /* ═══ 정답지 (교사용 정답 모음) ═══ */
+    .ak-body { display: flex; flex-direction: column; gap: 4mm; }
+    .ak-block {
+      background: #fff; border: 1.5px solid var(--soft-line); border-radius: 10px;
+      padding: 4mm 5mm; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .ak-title { font-size: 13pt; font-weight: 800; color: var(--deep); margin-bottom: 3mm; }
+    .ak-subtitle { font-size: 11pt; font-weight: 800; color: var(--main); margin-bottom: 2.5mm; }
+    .ak-vocab { display: grid; grid-template-columns: 1fr; gap: 2mm; }
+    .ak-item { display: flex; align-items: baseline; gap: 2mm; font-size: 11pt; }
+    .ak-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 5mm; height: 5mm; background: var(--main); color: #fff;
+      border-radius: 50%; font-size: 8.5pt; font-weight: 800; flex-shrink: 0;
+    }
+    .ak-num.sm { min-width: 4.5mm; height: 4.5mm; font-size: 8pt; }
+    .ak-word { color: var(--deep); font-weight: 800; white-space: nowrap; flex-shrink: 0; }
+    .ak-def { color: #555; font-size: 10pt; }   /* 뜻 전체 표시 (생략 없음) */
+    /* 빈칸 정답 · 2단 (문맥쓰기 / 활용하기) · 단어만 */
+    .ak-blank-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+    .ak-wdlist { display: flex; flex-direction: column; gap: 1.8mm; }
+    .ak-wd { display: flex; align-items: center; gap: 2mm; font-size: 11.5pt; }
+    .ak-ans { color: var(--main); font-weight: 800; background: #fff3e0; padding: 0 1.5mm; border-radius: 3px; }
+    /* 중심내용 · 문단별 */
+    .ak-centers { display: flex; flex-direction: column; gap: 2.5mm; }
+    .ak-center { display: flex; align-items: flex-start; gap: 2.5mm; font-size: 11pt; line-height: 1.45; }
+    .ak-pnum {
+      background: var(--main); color: #fff; border-radius: 999px;
+      padding: 0.8mm 3mm; font-size: 8.5pt; font-weight: 800; flex-shrink: 0; margin-top: 0.3mm;
+    }
+    .ak-center-text { color: var(--deep); font-weight: 700; flex: 1; }
   `;
 
   // 교사용은 어휘익히기/문장적어보기/갈래별글쓰기 3페이지 생략 · 나머지 유지
   const isTeacher = mode === 'teacher';
-  const pageList = isTeacher
+  const pageList = mode === 'answerkey'
+    ? [ pageAnswerKey(DATA) ]   // 정답지 · 1페이지 압축
+    : isTeacher
     ? [
         pageDayCover(DATA),
         pageFillStage(DATA, mode, 3, 'stage2', '단어', '문맥쓰기', '본문 순서대로 · 초성 힌트를 보고 알맞은 어휘를 채워봐요', 'right-rounded'),

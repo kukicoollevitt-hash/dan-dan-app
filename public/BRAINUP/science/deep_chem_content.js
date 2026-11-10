@@ -205,7 +205,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 7, text: '전자가 배치되는 원자핵 주위의 에너지 준위를 (    )이라 한다.', answer: '전자껍질', initials: 'ㅈㅈㄲㅈ', aliases: ['전자껍질'] },
         { no: 8, text: '가장 바깥 전자껍질에 있어 화학적 성질을 결정하는 전자를 (    )라 한다.', answer: '원자가 전자', initials: 'ㅇㅈㄱ ㅈㅈ', aliases: ['원자가전자'] },
         { no: 9, text: '원자가 전자 8개를 갖추려는 경향을 (    )이라 한다.', answer: '옥텟 규칙', initials: 'ㅇㅌ ㄱㅊ', aliases: ['옥텟규칙'] },
-        { no: 10, text: '원소를 원자 번호 순으로 배열하여 성질의 규칙성을 나타낸 표를 (    )라 한다.', answer: '주기율표', initials: 'ㅈㄱㄹㅍ', aliases: ['주기율표'] },
+        { no: 10, text: '원소를 원자 번호 순으로 배열하여 성질의 규칙성을 나타낸 표를 (    )라 한다.', answer: '주기율표', initials: 'ㅈㄱㅇㅍ', aliases: ['주기율표'] },
         { no: 11, text: '주기율표의 세로줄로 원자가 전자 수가 같은 원소들의 집합을 (    )이라 한다.', answer: '족', initials: 'ㅈ', aliases: ['족'] },
         { no: 12, text: '주기율표의 가로줄로 전자껍질 수가 같은 원소들의 집합을 (    )라 한다.', answer: '주기', initials: 'ㅈㄱ', aliases: ['주기'] },
         { no: 13, text: '중성 원자에서 전자를 떼어내는 데 필요한 에너지를 (    )라 한다.', answer: '이온화 에너지', initials: 'ㅇㅇㅎ ㅇㄴㅈ', aliases: ['이온화에너지'] },

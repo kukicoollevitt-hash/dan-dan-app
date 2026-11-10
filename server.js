@@ -458,6 +458,7 @@ const MegaphoneMessage = require("./models/MegaphoneMessage");
 const Notice = require("./models/Notice");
 const AcademyNotice = require("./models/AcademyNotice");
 const AdminLoginLog = require("./models/AdminLoginLog");
+const CopyrightConsent = require("./models/CopyrightConsent");
 const SnackOrder = require("./models/SnackOrder");
 const SentenceRead = require("./models/SentenceRead");
 const SpeedVocabKing = require("./models/SpeedVocabKing");
@@ -1275,6 +1276,48 @@ app.post("/api/halloween/submit", async (req, res) => {
 });
 
 // 🎃 할로윈 삼행시 접수 기록 조회 (슈퍼관리자) — 센터 필터
+// © 교재 PDF 다운로드 저작권 동의 기록 (로그인 관리자 — 센터별 1클릭 1건 적재)
+app.post("/api/copyright-consent", async (req, res) => {
+  try {
+    if (!isAdminLoggedInOrViewing(req)) {
+      return res.status(401).json({ ok: false, message: "로그인이 필요합니다." });
+    }
+    const academyName = getAcademyNameFromSession(req) || "(미상)";
+    const sa = (req.session && (req.session.viewingBranch || req.session.admin)) || {};
+    await CopyrightConsent.create({
+      academyName,
+      name: sa.name || "",
+      adminId: sa.id || "",
+      action: String((req.body && req.body.action) || "").slice(0, 200),
+      ip: getClientIp(req),
+      userAgent: String(req.headers["user-agent"] || "").slice(0, 300)
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ [/api/copyright-consent] 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// © 저작권 동의 내역 조회 (슈퍼관리자 전용 · 읽기 전용) — 센터별 집계 + 최근 내역
+app.get("/api/super/copyright-consents", requireSuperAdmin, async (req, res) => {
+  try {
+    const { center, limit } = req.query;
+    const q = center ? { academyName: center } : {};
+    const lim = Math.min(parseInt(limit, 10) || 500, 2000);
+    const rows = await CopyrightConsent.find(q).sort({ at: -1 }).limit(lim).lean();
+    const summary = await CopyrightConsent.aggregate([
+      { $group: { _id: "$academyName", count: { $sum: 1 }, last: { $max: "$at" } } },
+      { $sort: { last: -1 } }
+    ]);
+    const centers = (await CopyrightConsent.distinct("academyName")).filter(Boolean).sort();
+    res.json({ ok: true, rows, summary, centers });
+  } catch (err) {
+    console.error("❌ [/api/super/copyright-consents] 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
 app.get("/api/super/halloween-entries", requireSuperAdmin, async (req, res) => {
   try {
     const { center } = req.query;
@@ -46015,11 +46058,17 @@ app.get('/api/wr100-guide/config', async (req, res) => {
       // 권한 없음 · 응답에 allowed:false 만 반환 · 목록은 노출 안 함
       return res.json({ ok: true, allowed: false, days: [] });
     }
+    // 🏢 '브레인문해원_테스트' 센터에서만 학생용/교사용 버튼도 노출 (그 외엔 정답지만)
+    //  · view-as면 '보고 있는 센터'의 academyName 기준(슈퍼라도 다른 센터 보면 정답지만)
+    const _effAcademy =
+      (req.session && req.session.viewingBranch && req.session.viewingBranch.academyName) ||
+      (req.session && req.session.admin && req.session.admin.academyName) || '';
+    const showAllTypes = (_effAcademy === '브레인문해원_테스트');
     const fs = require('fs');
     const path = require('path');
     const dir = path.join(__dirname, 'uploads', 'wr100-guides');
     if (!fs.existsSync(dir)) {
-      return res.json({ ok: true, allowed: true, days: [] });
+      return res.json({ ok: true, allowed: true, showAllTypes, days: [] });
     }
     // 100 Day 목록 · 파일 유무 체크 + 메타 (단원명/갈래)
     const days = [];
@@ -46036,7 +46085,7 @@ app.get('/api/wr100-guide/config', async (req, res) => {
         hasTeacher: fs.existsSync(teacherFile)
       });
     }
-    res.json({ ok: true, allowed: true, days });
+    res.json({ ok: true, allowed: true, showAllTypes, days });
   } catch (err) {
     console.error('[wr100-guide/config] 오류:', err && err.message);
     res.status(500).json({ ok: false, allowed: false, days: [] });
@@ -46219,6 +46268,45 @@ async function buildSeasonMergedPdf(season, type) {
   return cachePath;
 }
 
+// 📋 정답지 시즌 묶음 · 20일 정답지(각 1쪽)만 깔끔히 병합 (학생 교재 표지·안내·목차 없이)
+async function buildAnswerKeySeasonPdf(season) {
+  const fs = require('fs');
+  const path = require('path');
+  const { PDFDocument } = require('pdf-lib');
+  const cfg = WR100_SEASONS.find(s => s.c === season);
+  if (!cfg) throw new Error('invalid season');
+  const dir = path.join(__dirname, 'uploads', 'wr100-guides');
+  const cachePath = path.join(dir, `season-${season}-answerkey.pdf`);
+  const [start, end] = cfg.days;
+
+  const dayFiles = [];
+  let latestMtime = 0;
+  for (let d = start; d <= end; d++) {
+    const dayStr = String(d).padStart(3, '0');
+    const fp = path.join(dir, `100day_${dayStr}_answerkey.pdf`);
+    if (fs.existsSync(fp)) {
+      dayFiles.push(fp);
+      const m = fs.statSync(fp).mtimeMs;
+      if (m > latestMtime) latestMtime = m;
+    }
+  }
+  if (dayFiles.length === 0) return null;
+
+  // 캐시가 최신 정답지 PDF보다 새것이면 재사용
+  if (fs.existsSync(cachePath) && fs.statSync(cachePath).mtimeMs >= latestMtime) {
+    return cachePath;
+  }
+
+  const merged = await PDFDocument.create();
+  for (const fp of dayFiles) {
+    const doc = await PDFDocument.load(fs.readFileSync(fp));
+    const pages = await merged.copyPages(doc, doc.getPageIndices());
+    pages.forEach(p => merged.addPage(p));
+  }
+  fs.writeFileSync(cachePath, await merged.save());
+  return cachePath;
+}
+
 app.get('/api/wr100-guide/season-download', async (req, res) => {
   try {
     if (!isWr100GuideAllowed(req)) {
@@ -46229,16 +46317,18 @@ app.get('/api/wr100-guide/season-download', async (req, res) => {
     if (!Number.isInteger(season) || season < 1 || season > 5) {
       return res.status(400).json({ ok: false, message: '잘못된 season 값 (1~5)' });
     }
-    if (type !== 'student' && type !== 'teacher') {
-      return res.status(400).json({ ok: false, message: '잘못된 type 값 (student|teacher)' });
+    if (type !== 'student' && type !== 'teacher' && type !== 'answerkey') {
+      return res.status(400).json({ ok: false, message: '잘못된 type 값 (student|teacher|answerkey)' });
     }
-    const cachePath = await buildSeasonMergedPdf(season, type);
+    const cachePath = type === 'answerkey'
+      ? await buildAnswerKeySeasonPdf(season)
+      : await buildSeasonMergedPdf(season, type);
     if (!cachePath) {
       return res.status(404).json({ ok: false, message: '해당 시즌 PDF가 아직 준비되지 않았습니다.' });
     }
     const fs = require('fs');
     const cfg = WR100_SEASONS.find(s => s.c === season);
-    const kindLabel = type === 'student' ? '학생용' : '교사용';
+    const kindLabel = type === 'student' ? '학생용' : (type === 'teacher' ? '교사용' : '정답지');
     const downloadName = `쓰기문해_${cfg.name}_${kindLabel}.pdf`;
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`);
@@ -46260,8 +46350,8 @@ app.get('/api/wr100-guide/download', async (req, res) => {
     if (!Number.isInteger(day) || day < 1 || day > 100) {
       return res.status(400).json({ ok: false, message: '잘못된 day 값' });
     }
-    if (type !== 'student' && type !== 'teacher') {
-      return res.status(400).json({ ok: false, message: '잘못된 type 값 (student|teacher)' });
+    if (type !== 'student' && type !== 'teacher' && type !== 'answerkey') {
+      return res.status(400).json({ ok: false, message: '잘못된 type 값 (student|teacher|answerkey)' });
     }
     const path = require('path');
     const fs = require('fs');
@@ -46272,7 +46362,7 @@ app.get('/api/wr100-guide/download', async (req, res) => {
       return res.status(404).json({ ok: false, message: '파일이 아직 준비되지 않았습니다.' });
     }
     // 다운로드 파일명 · 한글 포함 UTF-8 인코딩
-    const kindLabel = type === 'student' ? '학생용' : '교사용';
+    const kindLabel = type === 'student' ? '학생용' : (type === 'teacher' ? '교사용' : '정답지');
     const downloadName = `쓰기문해_Day${day}_${kindLabel}.pdf`;
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`);

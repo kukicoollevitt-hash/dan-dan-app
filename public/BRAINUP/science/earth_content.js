@@ -1629,7 +1629,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       {no:6,text:'고생대 바다 생물을 (    )이라 한다.',answer:'삼엽충',initials:'ㅅㅇㅊ',aliases:['삼엽충']},
       {no:7,text:'생물이 사라짐을 (   )이라 한다.',answer:'멸종',initials:'ㅁㅈ',aliases:['멸종']},
       {no:8,text:'작은 천체를 (    )이라 한다.',answer:'소행성',initials:'ㅅㅎㅅ',aliases:['소행성']},
-      {no:9,text:'가장 오래된 시대를 (       )라 한다.',answer:'선캄브리아 시대',initials:'ㅅㅋㅂㄹㅇ',aliases:['선캄브리아시대','선캄브리아']}
+      {no:9,text:'가장 오래된 시대를 (       )라 한다.',answer:'선캄브리아 시대',initials: 'ㅅㅋㅂㄹㅇ ㅅㄷ',aliases:['선캄브리아시대','선캄브리아']}
     ]},
     quiz: {
       q1_text: '이 글의 내용과 일치하는 것은 무엇인가요?',

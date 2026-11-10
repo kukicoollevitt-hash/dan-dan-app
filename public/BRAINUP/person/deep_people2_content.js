@@ -414,7 +414,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '양이 매우 많은 것을 (      )하다고 한다.', answer: '방대', initials: 'ㅂㄷ', aliases: ['방대'] },
         { no: 11, text: '여러 악기가 함께 연주하는 큰 규모의 관현악곡을 (       )이라고 한다.', answer: '교향곡', initials: 'ㄱㅎㄱ', aliases: ['교향곡'] },
         { no: 12, text: '죽은 사람을 위해 부르는 음악을 (       )이라고 한다.', answer: '진혼곡', initials: 'ㅈㅎㄱ', aliases: ['진혼곡'] },
-        { no: 13, text: '모든 사람이나 상황에 공통으로 적용되는 성질을 (       )이라고 한다.', answer: '보편성', initials: 'ㅂㅂㅅ', aliases: ['보편성'] },
+        { no: 13, text: '모든 사람이나 상황에 공통으로 적용되는 성질을 (       )이라고 한다.', answer: '보편성', initials: 'ㅂㅍㅅ', aliases: ['보편성'] },
         { no: 14, text: '유럽 중부에 있는 나라로 모차르트의 고향인 나라는 (         )이다.', answer: '오스트리아', initials: 'ㅇㅅㅌㄹㅇ', aliases: ['오스트리아'] },
         { no: 15, text: '피아노나 오르간의 흰색, 검은색 키를 (      )이라고 한다.', answer: '건반', initials: 'ㄱㅂ', aliases: ['건반'] }
       ]
@@ -1818,7 +1818,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 10, text: '새로운 것을 생각해내는 능력을 (       )이라 한다.', answer: '창의력', initials: 'ㅊㅇㄹ', aliases: ['창의력'] },
         { no: 11, text: '그림이나 인형을 조금씩 움직여 만든 영화를 (         )이라고 한다.', answer: '애니메이션', initials: 'ㅇㄴㅁㅇㅅ', aliases: ['애니메이션'] },
         { no: 12, text: '새롭게 바꾸어 발전시키는 것을 (      )이라 한다.', answer: '혁신', initials: 'ㅎㅅ', aliases: ['혁신'] },
-        { no: 13, text: '위험을 무릅쓰고 새로운 일에 도전하는 것을 (      )이라 한다.', answer: '모험', initials: 'ㅍㅎ', aliases: ['모험'] },
+        { no: 13, text: '위험을 무릅쓰고 새로운 일에 도전하는 것을 (      )이라 한다.', answer: '모험', initials: 'ㅁㅎ', aliases: ['모험'] },
         { no: 14, text: '재산을 모두 잃고 빚만 남는 것을 (      )이라 한다.', answer: '파산', initials: 'ㅍㅅ', aliases: ['파산'] },
         { no: 15, text: '창작의 원동력이 되는 깨달음을 (      )이라 한다.', answer: '영감', initials: 'ㅇㄱ', aliases: ['영감'] }
       ]
@@ -3843,7 +3843,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[코코 샤넬 관련 어휘]',
       items: [
         { no: 1, text: '집을 나가 돌아오지 않는 것을 (      )이라 한다.', answer: '가출', initials: 'ㄱㅊ', aliases: ['가출'] },
-        { no: 2, text: '폐에 염증이 생기는 병을 (      )이라 한다.', answer: '폐렴', initials: 'ㅍㅇ', aliases: ['폐렴'] },
+        { no: 2, text: '폐에 염증이 생기는 병을 (      )이라 한다.', answer: '폐렴', initials: 'ㅍㄹ', aliases: ['폐렴'] },
         { no: 3, text: '옷이나 천을 바느질하는 것을 (      )이라 한다.', answer: '재봉', initials: 'ㅈㅂ', aliases: ['재봉'] },
         { no: 4, text: '본래 이름 대신 부르는 이름을 (      )이라 한다.', answer: '별명', initials: 'ㅂㅁ', aliases: ['별명'] },
         { no: 5, text: '다른 사람과 구별되는 독특한 성격이나 특징을 (      )이라 한다.', answer: '개성', initials: 'ㄱㅅ', aliases: ['개성'] },

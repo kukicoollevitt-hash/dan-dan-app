@@ -610,7 +610,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[비밀의 화원 어휘]',
       items: [        { no: 1, text: '크고 훌륭한 집을 (      )이라고 해요.', answer: '저택', initials: 'ㅈㅌ', aliases: ['저택'] },
         { no: 2, text: '사람에게서 사람으로 옮아가는 병을 (      )이라고 해요.', answer: '전염병', initials: 'ㅈㅇㅂ', aliases: ['전염병'] },
-        { no: 3, text: '벽이나 담을 타고 올라가는 식물을 (        )이라고 해요.', answer: '담쟁이덩굴', initials: 'ㄷㅉㅇㄷㄱ', aliases: ['담쟁이덩굴'] },        { no: 4, text: '앞으로 잘 될 것이라고 기대하는 마음을 (      )이라고 해요.', answer: '희망', initials: 'ㅎㅁ', aliases: ['희망'] },
+        { no: 3, text: '벽이나 담을 타고 올라가는 식물을 (        )이라고 해요.', answer: '담쟁이덩굴', initials: 'ㄷㅈㅇㄷㄱ', aliases: ['담쟁이덩굴'] },        { no: 4, text: '앞으로 잘 될 것이라고 기대하는 마음을 (      )이라고 해요.', answer: '희망', initials: 'ㅎㅁ', aliases: ['희망'] },
         { no: 5, text: '상처나 병이 낫는 것을 (      )라고 해요.', answer: '치유', initials: 'ㅊㅇ', aliases: ['치유'] },
         { no: 6, text: '살아 있는 듯한 활기와 힘을 (      )라고 해요.', answer: '생기', initials: 'ㅅㄱ', aliases: ['생기'] },        { no: 7, text: '마음이 크게 움직이는 것을 (      )이라고 해요.', answer: '감동', initials: 'ㄱㄷ', aliases: ['감동'] }
       ]

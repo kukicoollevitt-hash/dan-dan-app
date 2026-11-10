@@ -1700,7 +1700,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 3, text: '물이 가하는 압력을 (    )이라 한다.', answer: '수압', initials: 'ㅅㅇ', aliases: ['수압'] },
         { no: 4, text: '공기가 가하는 압력을 (    )이라 한다.', answer: '기압', initials: 'ㄱㅇ', aliases: ['기압'] },
         { no: 5, text: '유체가 물체를 위로 밀어 올리는 힘을 (    )이라 한다.', answer: '부력', initials: 'ㅂㄹ', aliases: ['부력'] },
-        { no: 6, text: '부력은 밀어낸 유체의 무게와 같다는 원리를 (            )라 한다.', answer: '아르키메데스의 원리', initials: 'ㅇㄹㅋㅁㄷㅅ ㅇㄹ', aliases: ['아르키메데스의원리', '아르키메데스 원리'] },
+        { no: 6, text: '부력은 밀어낸 유체의 무게와 같다는 원리를 (            )라 한다.', answer: '아르키메데스의 원리', initials: 'ㅇㄹㅋㅁㄷㅅㅇ ㅇㄹ', aliases: ['아르키메데스의원리', '아르키메데스 원리'] },
         { no: 7, text: '흐르는 성질을 가진 액체와 기체를 (    )라고 한다.', answer: '유체', initials: 'ㅇㅊ', aliases: ['유체'] },
         { no: 8, text: '단위 부피당 질량을 (    )라고 한다.', answer: '밀도', initials: 'ㅁㄷ', aliases: ['밀도'] },        { no: 9, text: '물탱크로 부력을 조절해 잠수하는 배를 (      )이라 한다.', answer: '잠수함', initials: 'ㅈㅅㅎ', aliases: ['잠수함'] }
       ]

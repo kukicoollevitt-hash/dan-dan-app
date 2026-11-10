@@ -75,6 +75,13 @@
       background: var(--bg);
       font-family: "Gmarket Sans", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--text);
+      /* 🔒 드래그 선택·복사 방지 (지침서 정답 보호) */
+      -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+      -webkit-touch-callout: none;
+    }
+    /* 입력창은 사용 가능하게 예외 */
+    input, textarea, [contenteditable="true"] {
+      -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text;
     }
     .wrap {
       max-width: 1000px;
@@ -404,6 +411,7 @@
       transition: transform .1s, box-shadow .15s;
     }
     .wr100-dl-btn.student {
+      display: none !important;   /* 학생용 버튼 숨김 (Day별·시즌묶음 전부) */
       background: linear-gradient(135deg, #e3f2fd, #bbdefb);
       color: #01579b;
       border-color: #64b5f6;
@@ -413,6 +421,7 @@
       box-shadow: 0 3px 8px rgba(1, 87, 155, 0.2);
     }
     .wr100-dl-btn.teacher {
+      display: none !important;   /* 교사용 버튼 숨김 (Day별·시즌묶음 전부) */
       background: linear-gradient(135deg, #fff3e0, #ffe0b2);
       color: #bf360c;
       border-color: #ffb74d;
@@ -420,6 +429,18 @@
     .wr100-dl-btn.teacher:hover {
       background: linear-gradient(135deg, #ffe0b2, #ffcc80);
       box-shadow: 0 3px 8px rgba(191, 54, 12, 0.2);
+    }
+    .wr100-dl-btn.answerkey {
+      background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+      color: #1b5e20;
+      border-color: #81c784;
+    }
+    /* 🏢 본사·테스트 계정(브레인문해원_테스트 등)에선 학생용·교사용도 노출 */
+    body.wr100-showall .wr100-dl-btn.student,
+    body.wr100-showall .wr100-dl-btn.teacher { display: inline-flex !important; }
+    .wr100-dl-btn.answerkey:hover {
+      background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
+      box-shadow: 0 3px 8px rgba(27, 94, 32, 0.2);
     }
     .wr100-dl-btn:disabled,
     .wr100-dl-btn.disabled {
@@ -794,6 +815,11 @@
       background: #b91c1c;
       color: #fff;
       box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+    }
+    .wb-all-answerkey {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4);
     }
 
     /* 📕 워크북 표지 페이지 — A4 정확 비율 (794 × 297/210 = 1123px) */
@@ -1610,6 +1636,10 @@
       background: #fff2dc;                    /* 네모 박스 배경 살짝 진하게 (캡처 선명) */
       border-color: #c2681a;
     }
+    /* 📋 정답지 본문 — 밑줄(중심문장)·네모(핵심어)만 진하게, 나머지 글씨는 연하게 */
+    .ak-body-p { color: #d7dbe0 !important; }
+    .ak-body-p .tg-mid { color: #1f2937 !important; }
+    .ak-body-p .tg-key { color: #b45309 !important; }
 
     /* 문단별 중심내용 */
     .paragraph-list {
@@ -3227,8 +3257,8 @@
     function srAdvGridHtml(wb, books) {
       books = books || SR_BOOKS_ADV;
       const readyCount = books.filter(b => wb[b.id]).length;
-      // 📘 통합 교재 — 데이터 준비된 책이 하나라도 있을 때만 노출 (기본편과 동일 구성, 보라 테마)
-      const bundleBlock = readyCount >= 1 ? `
+      // 📘 통합 교재 — 데이터 준비된 책이 하나라도 있을 때만 노출 (본사 전용 — 다른 센터는 숨김)
+      const bundleBlock = (readyCount >= 1 && window.IS_BRAIN_ADMIN === true) ? `
         <div style="margin-top:22px;padding:18px 20px;border:2.5px solid #4a2f8a;border-radius:16px;background:linear-gradient(135deg,#f6f3fe,#ece6fb);">
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
             <span style="font-size:17px;font-weight:900;color:#4a2f8a;">📘 서술형내신집중대비 문학편 통합 교재</span>
@@ -3716,8 +3746,8 @@
             </div>
           </div>
         `).join('');
-        // 맨 아래 전체(10개 땅 · 40관문) 통합 다운로드 바
-        area.innerHTML += `
+        // 맨 아래 전체(10개 땅 · 40관문) 통합 다운로드 바 — 본사 전용 (다른 센터 숨김)
+        if (window.IS_BRAIN_ADMIN === true) area.innerHTML += `
           <div style="margin-top:18px;padding:15px 18px;background:#fdf9f3;border:2px dashed #d9b98a;border-radius:14px;display:flex;flex-direction:column;gap:10px;">
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
               <span style="font-weight:900;color:#4a3520;font-size:15px;">📚 전체 워크북 2권 구성 <small style="font-weight:700;color:#8a5a3a;">· 1권: 1~20관문 / 2권: 21~40관문 (권당 생성에 몇 분 걸려요)</small></span>
@@ -4202,7 +4232,7 @@
       const li = +m[1], gi = +m[2];
       const gateName = (GK_GATE_NAMES[li] || [])[gi] || gateKey;
       const landLabel = GK_LAND_NAMES[li] + ' · ' + (gi + 1) + '관문';
-      const audienceLabel = audience === 'teacher' ? '교사용' : '학생용';
+      const audienceLabel = audience === 'teacher' ? '교사용' : (audience === 'answerkey' ? '정답지' : '학생용');
       GK_THEME = GK_LAND_THEMES[li] || GK_LAND_THEMES[0];
       // 페이지 분할 실측 정확도를 위해 폰트를 먼저 로딩
       if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
@@ -4299,6 +4329,8 @@
           anyPage = true;
           pdf.addImage(img, 'JPEG', 0, 0, PW, PH, undefined, 'FAST');
         }
+        // 🏷️ 본문 각 페이지에 '브레인문해력' 워터마크 (학생용·교사용 모두 — 연계특강 브랜드 보호)
+        bmWatermarkPdf(pdf, PW, PH);
         if (usePdfLib && (frontCovers.length || backCovers.length)) {
           if (progressCb) progressCb('⏳ 표지 병합 중...');
           const out = await PDFLib.PDFDocument.create();
@@ -4380,7 +4412,7 @@
         if (!window.html2canvas || !window.jspdf) { alert('PDF 라이브러리 로딩 중입니다. 잠시 후 다시 시도해 주세요.'); return; }
         const built = await gkBuildGatePages(gateKey, audience, 1);
         if (!built) { alert('관문 데이터를 불러오지 못했습니다.'); return; }
-        const audienceLabel = audience === 'teacher' ? '교사용' : '학생용';
+        const audienceLabel = audience === 'teacher' ? '교사용' : (audience === 'answerkey' ? '정답지' : '학생용');
         const cleanGate = built.gateName.replace(/\s+/g, '');
         await gkRenderPdf(built.pages, '교재_국어문법_' + (built.li + 1) + '-' + (built.gi + 1) + '_' + cleanGate + '_' + audienceLabel + '.pdf', btn ? (t) => { btn.innerHTML = t; } : null, 3);
       } catch (err) {
@@ -4494,7 +4526,7 @@
           if (built) all.push.apply(all, built.pages);
         }
         if (!all.length) { alert('관문 데이터를 불러오지 못했습니다.'); return; }
-        const audienceLabel = audience === 'teacher' ? '교사용' : '학생용';
+        const audienceLabel = audience === 'teacher' ? '교사용' : (audience === 'answerkey' ? '정답지' : '학생용');
         const cleanLand = GK_LAND_NAMES[li].replace(/\s+/g, '');
         await gkRenderPdf(all, '교재_국어문법_' + (li + 1) + '땅_' + cleanLand + '_' + audienceLabel + '.pdf', btn ? (t) => { btn.innerHTML = t; } : null, 3);
       } catch (err) {
@@ -4609,7 +4641,7 @@
           if (en.gates.length) tocEntries.push(en);
         }
         if (!all.length) { alert('관문 데이터를 불러오지 못했습니다.'); return; }
-        const audienceLabel = audience === 'teacher' ? '교사용' : '학생용';
+        const audienceLabel = audience === 'teacher' ? '교사용' : (audience === 'answerkey' ? '정답지' : '학생용');
         all.unshift.apply(all, gkPageToc('국어 문법 원정대 · ' + vol + '권 (' + (vol === 1 ? '1~20' : '21~40') + '관문)', tocEntries, audienceLabel).concat([gkPageMemo(3)]));
         all.unshift({ pdf: '/images/국어개념원정대/안내01~06.pdf' }); // 안내 페이지 묶음 PDF — 벡터 원본 그대로 전체 쪽 병합
         all.unshift({ img: '/images/국어개념원정대/앞표지바로다음.png' }); // 표지 속지
@@ -4655,7 +4687,7 @@
           if (en.gates.length) tocEntries.push(en);
         }
         if (!all.length) { alert('관문 데이터를 불러오지 못했습니다.'); return; }
-        const audienceLabel = audience === 'teacher' ? '교사용' : '학생용';
+        const audienceLabel = audience === 'teacher' ? '교사용' : (audience === 'answerkey' ? '정답지' : '학생용');
         all.unshift.apply(all, gkPageToc('국어 문법 원정대 · 전체' + (excludeExam ? ' (형성평가 제외)' : ''), tocEntries, audienceLabel).concat([gkPageMemo(3)]));
         all.unshift({ pdf: '/images/국어개념원정대/안내01~06.pdf' }); // 안내 페이지 묶음 PDF — 벡터 원본 그대로 전체 쪽 병합
         all.unshift({ img: '/images/국어개념원정대/앞표지바로다음.png' }); // 표지 속지
@@ -4782,6 +4814,8 @@
         // 권한 확인 · 탭 버튼 노출
         const tabBtn = document.querySelector('.tab-btn.wr100-tab');
         if (tabBtn) tabBtn.style.display = '';
+        // 🏢 본사·테스트 계정이면 학생용/교사용 버튼도 노출
+        document.body.classList.toggle('wr100-showall', !!data.showAllTypes);
         // Day 목록 렌더
         renderWr100Guide(data.days || []);
         _wr100GuideLoaded = true;
@@ -4819,6 +4853,9 @@
           const teacherBtn = d.hasTeacher
             ? `<a class="wr100-dl-btn teacher" href="/api/wr100-guide/download?day=${d.day}&type=teacher" download>👩‍🏫 교사용</a>`
             : `<button class="wr100-dl-btn teacher disabled" disabled>👩‍🏫 교사용 (준비 중)</button>`;
+          const answerkeyBtn = d.hasTeacher
+            ? `<a class="wr100-dl-btn answerkey" href="/api/wr100-guide/download?day=${d.day}&type=answerkey" download>📋 정답지</a>`
+            : `<button class="wr100-dl-btn answerkey disabled" disabled>📋 정답지 (준비 중)</button>`;
           const topicHtml = d.topic
             ? `<div class="wr100-day-topic" title="${d.topic}">${d.topic}</div>`
             : `<div class="wr100-day-topic wr100-day-topic-empty">준비 중</div>`;
@@ -4835,6 +4872,7 @@
               <div class="wr100-day-actions">
                 ${studentBtn}
                 ${teacherBtn}
+                ${answerkeyBtn}
               </div>
             </div>
           `);
@@ -4850,6 +4888,7 @@
             <div class="wr100-day-actions">
               <a class="wr100-dl-btn student" href="/api/wr100-guide/season-download?season=${season.c}&type=student" download>👨‍🎓 학생용</a>
               <a class="wr100-dl-btn teacher" href="/api/wr100-guide/season-download?season=${season.c}&type=teacher" download>👩‍🏫 교사용</a>
+              <a class="wr100-dl-btn answerkey" href="/api/wr100-guide/season-download?season=${season.c}&type=answerkey" download>📋 정답지</a>
             </div>
           </div>
         `);
@@ -5009,8 +5048,8 @@
       const prependBulkPdfBox = (contents) => {
         if (containerEl.querySelector('.workbook-all-box')) return;  // 중복 방지
 
-        // 한국사/심화한국사
-        if (series === 'korhistory' && (subjectKey === 'kh' || subjectKey === 'khadv')) {
+        // 한국사/심화한국사 — 전체 워크북 묶음은 본사 전용 (다른 센터 숨김)
+        if (series === 'korhistory' && (subjectKey === 'kh' || subjectKey === 'khadv') && window.IS_BRAIN_ADMIN === true) {
           const total = Object.keys(contents).length;
           const seriesLabel = subjectKey === 'khadv' ? '심화한국사' : '한국사';
           const headerBox = document.createElement('div');
@@ -5061,8 +5100,11 @@
                 ${window.IS_BRAIN_ADMIN === true ? `<button type="button" class="wb-all-btn wb-all-student" onclick="${meta.fn}('student')">
                   ✏️ 학생용 전체 (${total}강)
                 </button>` : ''}
-                <button type="button" class="wb-all-btn wb-all-teacher" onclick="${meta.fn}('teacher')">
+                ${window.IS_BRAIN_ADMIN === true ? `<button type="button" class="wb-all-btn wb-all-teacher" onclick="${meta.fn}('teacher')">
                   📘 교사용 전체 (${total}강)
+                </button>` : ''}
+                <button type="button" class="wb-all-btn wb-all-answerkey" onclick="${meta.fn}('answerkey')">
+                  📋 정답지 전체 (${total}강)
                 </button>
               </div>
             `;
@@ -5101,8 +5143,11 @@
                 ${window.IS_BRAIN_ADMIN === true ? `<button type="button" class="wb-all-btn wb-all-student" onclick="${upMeta.fn}('student')">
                   ✏️ 학생용 전체 (${total}강)
                 </button>` : ''}
-                <button type="button" class="wb-all-btn wb-all-teacher" onclick="${upMeta.fn}('teacher')">
+                ${window.IS_BRAIN_ADMIN === true ? `<button type="button" class="wb-all-btn wb-all-teacher" onclick="${upMeta.fn}('teacher')">
                   📘 교사용 전체 (${total}강)
+                </button>` : ''}
+                <button type="button" class="wb-all-btn wb-all-answerkey" onclick="${upMeta.fn}('answerkey')">
+                  📋 정답지 전체 (${total}강)
                 </button>
               </div>
             `;
@@ -5141,8 +5186,11 @@
                 ${window.IS_BRAIN_ADMIN === true ? `<button type="button" class="wb-all-btn wb-all-student" onclick="${fitMeta.fn}('student')">
                   ✏️ 학생용 전체 (${total}강)
                 </button>` : ''}
-                <button type="button" class="wb-all-btn wb-all-teacher" onclick="${fitMeta.fn}('teacher')">
+                ${window.IS_BRAIN_ADMIN === true ? `<button type="button" class="wb-all-btn wb-all-teacher" onclick="${fitMeta.fn}('teacher')">
                   📘 교사용 전체 (${total}강)
+                </button>` : ''}
+                <button type="button" class="wb-all-btn wb-all-answerkey" onclick="${fitMeta.fn}('answerkey')">
+                  📋 정답지 전체 (${total}강)
                 </button>
               </div>
             `;
@@ -5181,8 +5229,11 @@
                 ${window.IS_BRAIN_ADMIN === true ? `<button type="button" class="wb-all-btn wb-all-student" onclick="${deepMeta.fn}('student')">
                   ✏️ 학생용 전체 (${total}강)
                 </button>` : ''}
-                <button type="button" class="wb-all-btn wb-all-teacher" onclick="${deepMeta.fn}('teacher')">
+                ${window.IS_BRAIN_ADMIN === true ? `<button type="button" class="wb-all-btn wb-all-teacher" onclick="${deepMeta.fn}('teacher')">
                   📘 교사용 전체 (${total}강)
+                </button>` : ''}
+                <button type="button" class="wb-all-btn wb-all-answerkey" onclick="${deepMeta.fn}('answerkey')">
+                  📋 정답지 전체 (${total}강)
                 </button>
               </div>
             `;
@@ -63077,6 +63128,7 @@
 
         const safeTitle = (data.title || unitKey).replace(/[\\/:*?"<>|]/g, '_');
         const tag = withAnswers ? '교사용' : '학생용';
+        bmWatermarkPdf(pdf, 210, 297);
         pdf.save(`한국사워크북_${unitKey}_${safeTitle}_${tag}.pdf`);
       } catch (err) {
         console.error('[workbook PDF]', err);
@@ -63572,6 +63624,7 @@
           await appendPageFromHTML(backHtml, false, true);
         }
 
+        bmWatermarkPdf(pdf, 210, 297);
         pdf.save(`한국사워크북_${seriesLabel}_${units.length}강_${tag}.pdf`);
       } catch (err) {
         console.error('[workbook all PDF]', err);
@@ -63972,15 +64025,23 @@
             <span>학생용 워크북 PDF</span>
           </button>`
         : '';
-      // 🔴 교사용 워크북: 전체 센터 오픈 (단원별 하단 버튼)
-      const teacherWorkbookBtn = isWorkbookUnit
+      // 🔴 교사용 워크북: 본사(브레인문해원_테스트) 전용 — 다른 센터는 정답지만 노출
+      const teacherWorkbookBtn = (isBrainAdmin && isWorkbookUnit)
         ? `
           <button class="pdf-download-btn" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);" onclick="downloadWorkbookPDF('${unitKey}', 'teacher')">
             <span class="icon">📕</span>
             <span>교사용 워크북 PDF</span>
           </button>`
         : '';
-      const workbookButtons = studentWorkbookBtn + teacherWorkbookBtn;
+      // 📋 정답지 워크북: 전체 센터 오픈
+      const answerkeyWorkbookBtn = isWorkbookUnit
+        ? `
+          <button class="pdf-download-btn" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);" onclick="downloadWorkbookPDF('${unitKey}', 'answerkey')">
+            <span class="icon">📋</span>
+            <span>정답지 PDF</span>
+          </button>`
+        : '';
+      const workbookButtons = studentWorkbookBtn + teacherWorkbookBtn + answerkeyWorkbookBtn;
       // 📥 수업 지침서 PDF 다운로드 버튼은 숨김 (요청: 불필요) — 워크북 버튼만 노출
       html += `
         <div class="pdf-download-wrap" style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
@@ -64840,6 +64901,7 @@
 
         const audienceLabel = withAnswers ? '교사용' : '학생용';
         const fileName = `BRAIN_문해어휘학습장_${volLabel}_${audienceLabel}.pdf`;
+        if (withAnswers) bmWatermarkPdf(pdf, 210, 297);
         pdf.save(fileName);
         if (btn) {
           btn.disabled = false;
@@ -65223,7 +65285,8 @@
     // ─── 페이지 1: 표지 ─────────────────────────
     function wbPageCover(unit, audienceLabel, unitKey) {
       const T = getWbTheme(unitKey);
-      const isTeacher = audienceLabel === '교사용';
+      const isAnswerKey = audienceLabel === '정답지';
+      const isTeacher = audienceLabel === '교사용' || isAnswerKey;
       const title = unit.title || '';
       const achievement = unit.achievement || '';
       const vocab = unit.vocab || [];
@@ -66542,7 +66605,8 @@
     // ─── 페이지 2: 본문 ───────────────────────────
     function wbPageBody(unit, audienceLabel, unitKey) {
       const T = getWbTheme(unitKey);
-      const isTeacher = audienceLabel === '교사용';
+      const isAnswerKey = audienceLabel === '정답지';
+      const isTeacher = audienceLabel === '교사용' || isAnswerKey;
       // 본문 내 <b> 태그를 색깔 있는 강조로 변환 (vocab 어휘가 굵게 표시되어 있음)
       // 초3~4 시인성 확보 — 본문 폰트 키움
       // 본문이 특히 긴 단원은 줄간격을 살짝 줄여 어휘 박스와 겹치지 않게 (BRAIN업 bio·earth 전체)
@@ -67896,7 +67960,7 @@
             const inner = (_teacherMarks && _teacherMarks[idx] != null)
               ? _teacherMarks[idx]
               : String(p).replace(/<b>/g, '<b style="color:#d97706; font-weight:800;">');
-            return `<p class="wb-mark-p" style="font-size: 13px; line-height: 1.9; margin: 0 0 8px; text-indent: 13px;">${inner}</p>`;
+            return `<p class="wb-mark-p${isAnswerKey ? ' ak-body-p' : ''}" style="font-size: 13px; line-height: 1.9; margin: 0 0 8px; text-indent: 13px;">${inner}</p>`;
           }).join('')
         : passageHtml;
 
@@ -67963,7 +68027,7 @@
             ${passageHtmlAdj}
             ${isTeacher ? teacherBox : ''}
           </div>
-          ${vocabBoxHtml}
+          ${isAnswerKey ? '' : vocabBoxHtml}
           ${_bodyBgHtml}
           ${wbFooter(
             (typeof unit._footerNum === 'number') ? unit._footerNum : 2,
@@ -67982,7 +68046,8 @@
       const _deepQuizSpacingTight = ['deep_bio_01', 'deep_chem_18', 'deep_classic_19', 'deep_geo_01', 'deep_geo_02', 'deep_geo_04', 'deep_geo_05', 'deep_geo_08', 'deep_geo_09', 'deep_geo_12', 'deep_geo_15', 'deep_geo_17', 'deep_law_10', 'deep_law_11', 'deep_law_12', 'deep_law_13', 'deep_law_16', 'deep_modern_01', 'deep_modern_02', 'deep_modern_04', 'deep_modern_27', 'deep_modern_30', 'deep_pol_02', 'deep_pol_03', 'deep_pol_04', 'deep_pol_06', 'deep_pol_09', 'deep_pol_13', 'deep_pol_17', 'deep_pol_22', 'deep_soc_06', 'deep_soc_07', 'deep_soc_08', 'deep_soc_09', 'deep_soc_10', 'deep_soc_16', 'deep_soc_17', 'deep_soc_18'].includes(unitKey);
       // 10·13·14는 문항이 가장 길어 한 단계 더 축소
       const _fitSocEssayExtraTight = ['fit_soc_10', 'fit_soc_13', 'fit_soc_14'].includes(unitKey);
-      const isTeacher = audienceLabel === '교사용';
+      const isAnswerKey = audienceLabel === '정답지';
+      const isTeacher = audienceLabel === '교사용' || isAnswerKey;
       const qz = unit.quiz || {};
       const key = unit.answerKey || {};
       const det = unit.detail || {};
@@ -68060,6 +68125,18 @@
         const qFontSize = _isFitTightQuiz
           ? (isTeacher ? 12 : 13)
           : (isTeacher ? 13.5 : 14.5);
+        // 정답지: 문제·선지 제거 → 정답 번호 + 해설만 (해설 글씨를 문제 크기로 키움)
+        if (isAnswerKey) {
+          const _explText = det[`q${qNo}`] || '';
+          return `
+          <div style="margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+              ${questionBadge(qNo)}
+              ${correctIdx ? `<span style="flex-shrink: 0; font-size: 16px; color: #b45309; font-weight: 800; white-space: nowrap;">정답 ( ${CIRCLE_NUMS[parseInt(correctIdx)-1] || correctIdx} )</span>` : ''}
+            </div>
+            ${_explText ? `<div style="margin: 0 0 0 40px; padding: 9px 12px; background:#fef2f2; border-left:3px solid #dc2626; border-radius:4px; font-size: 13.5px; line-height: 1.7; color:#7f1d1d; white-space: pre-wrap;">${_explText}</div>` : ''}
+          </div>`;
+        }
         return `
           <div style="margin-bottom: ${wrapperMb};">
             <div style="font-family: 'NanumSquare', 'Noto Sans KR', sans-serif; font-size: ${qFontSize}px; font-weight: 700; color:#1f2937; margin-bottom: ${titleMb}; display: flex; align-items: flex-start; gap: 10px;">
@@ -68220,7 +68297,8 @@
     // ─── 페이지 3: 문맥어휘 초성 빈칸 + 짝 짓기 ──────────────
     function wbPageVocab(unit, audienceLabel, unitKey) {
       const T = getWbTheme(unitKey);
-      const isTeacher = audienceLabel === '교사용';
+      const isAnswerKey = audienceLabel === '정답지';
+      const isTeacher = audienceLabel === '교사용' || isAnswerKey;
       // 기본 8개, deep 등 _vocabFillCount override 시 그 개수만큼
       const _vfCount = (typeof unit._vocabFillCount === 'number' && unit._vocabFillCount > 0) ? unit._vocabFillCount : 8;
       const items = (unit.vocabFill?.items || []).slice(0, _vfCount);
@@ -68323,9 +68401,11 @@
     }
 
     // ─── 페이지 4: 중심내용 찾기 ───────────────────
-    function wbPageMainIdea(unit, audienceLabel, unitKey) {
+    function wbPageMainIdea(unit, audienceLabel, unitKey, opts) {
       const T = getWbTheme(unitKey);
-      const isTeacher = audienceLabel === '교사용';
+      const isAnswerKey = audienceLabel === '정답지';
+      const isTeacher = audienceLabel === '교사용' || isAnswerKey;
+      const _bare = !!(opts && opts.bare);
       const passage = unit.passage || [];
       const mains = unit.paragraphMain || [];
 
@@ -68439,15 +68519,25 @@
           </div>`;
       }
 
-      return `
-        <div style="${WB_PAGE_STYLE}">
+      // 정답지: 중심내용만 줄 단위로 (지문·빈칸 없이)
+      const akMainList = isAnswerKey
+        ? '<div style="margin-top:4px;">' + mains.map((m, i) => m
+            ? `<div style="display:flex; gap:10px; align-items:baseline; margin-bottom:10px; font-size:14px; line-height:1.5;"><span style="flex-shrink:0; padding:3px 11px; background:${T.mainAlt}; color:#fff; border-radius:999px; font-size:11px; font-weight:800;">${i + 1 + _paraNoOffset}문단</span><span style="color:#1f2937; font-weight:600;">${String(m).replace(/<\/?b[^>]*>/g, '')}</span></div>`
+            : '').join('') + '</div>'
+        : '';
+
+      const _miInner = `
           ${wbHeader('각 문단의 중심 내용을 직접 찾아서 적어보세요', '', {
             leftBox: { line1: '중심내용', line2: '찾기', line1Size: 21, line2Size: 27, shape: 'pill-right', subtitle: true },
             theme: T
           })}
-          ${paragraphsHtml}
-          ${summaryFillHtml}
-          ${mindmapHtml}
+          ${isAnswerKey ? akMainList : paragraphsHtml}
+          ${isAnswerKey ? '' : summaryFillHtml}
+          ${isAnswerKey ? '' : mindmapHtml}`;
+      if (_bare) return _miInner;
+      return `
+        <div style="${WB_PAGE_STYLE}">
+          ${_miInner}
           ${wbFooter(
             (typeof unit._footerNum === 'number') ? unit._footerNum : (isTeacher ? 6 : 5),
             (typeof unit._footerTotal === 'number') ? unit._footerTotal : (isTeacher ? 7 : 6)
@@ -68456,9 +68546,11 @@
     }
 
     // ─── 페이지 5: 창의활동 ────────────────────────
-    function wbPageCreative(unit, audienceLabel, teacherGuideHtml, creativeExamples, unitKey) {
+    function wbPageCreative(unit, audienceLabel, teacherGuideHtml, creativeExamples, unitKey, opts) {
       const T = getWbTheme(unitKey);
-      const isTeacher = audienceLabel === '교사용';
+      const isAnswerKey = audienceLabel === '정답지';
+      const isTeacher = audienceLabel === '교사용' || isAnswerKey;
+      const _bare = !!(opts && opts.bare);
       // 단원 키 prefix — bio: labelNo, earth: `earth_{labelNo}`, physics: `physics_{labelNo}`, chem: `chem_{labelNo}`, soc: `soc_{labelNo}`, geo: `geo_{labelNo}`, law: `law_{labelNo}`, pol: `pol_{labelNo}`, modern: `modern_{labelNo}`
       const isEarth   = typeof unitKey === 'string' && (unitKey.startsWith('on_earth_')   || unitKey.startsWith('fit_earth_')   || /^earth_\d+$/.test(unitKey));
       const isPhysics = typeof unitKey === 'string' && (unitKey.startsWith('on_physics_') || unitKey.startsWith('fit_physics_') || /^physics_\d+$/.test(unitKey));
@@ -70972,17 +71064,22 @@
       // 글쓰기 유도 발문 박스 — 학생용 1단계 가이드 질문이 같은 역할을 하므로 제거(중복 방지)
       const teacherGuideBox = '';
 
-      return `
-        <div style="${WB_PAGE_STYLE}">
-          ${wbHeader('주제에 맞게 자유롭게 자신의 생각을 글로 표현해보세요', '', {
+      const _crBody = `
+          ${isAnswerKey ? '' : topicBox}
+          ${isAnswerKey ? '' : hintBox}
+          ${isAnswerKey ? '' : examplesBox}
+          ${writingBox}
+          ${isAnswerKey ? '' : teacherGuideBox}`;
+      // 합친 페이지용: 전체폭(음수마진) 헤더를 빼고 글쓰기 도전 본문만 반환 (내부에 '✏️ 글쓰기 도전' 라벨 있음)
+      if (_bare) return _crBody;
+      const _crHeader = wbHeader('주제에 맞게 자유롭게 자신의 생각을 글로 표현해보세요', '', {
             leftBox: { line1: '창의', line2: '활동', line1Size: 24, line2Size: 24, shape: 'pill-right', subtitle: true },
             theme: T
-          })}
-          ${topicBox}
-          ${hintBox}
-          ${examplesBox}
-          ${writingBox}
-          ${teacherGuideBox}
+          });
+      return `
+        <div style="${WB_PAGE_STYLE}">
+          ${_crHeader}
+          ${_crBody}
           ${wbFooter(isTeacher ? 7 : 6, isTeacher ? 7 : 6)}
         </div>`;
     }
@@ -71052,14 +71149,40 @@
 
     // ─── 단원 1개 → 페이지 배열 변환 ───────────
     function buildBioUnitPages(unit, audienceLabel, teachData, unitKey) {
-      return [
-        wbPageWebtoon(unit, audienceLabel, unitKey),
+      const isAK = audienceLabel === '정답지';
+      const _creativeExamples = (unit.creative && unit.creative.examples && unit.creative.examples.length > 0 ? unit.creative.examples : teachData.creativeExamples) || [];
+      if (isAK) {
+        // 정답지: 웹툰 제외 + 중심내용·창의활동을 한 페이지로 합침
+        const miBare = wbPageMainIdea(unit, audienceLabel, unitKey, { bare: true });
+        const crBare = wbPageCreative(unit, audienceLabel, teachData.teacherGuide || '', _creativeExamples, unitKey, { bare: true });
+        const _akT = getWbTheme(unitKey);
+        const combined = `
+          <div style="${WB_PAGE_STYLE}">
+            ${miBare}
+            <div style="margin: 28px 0 16px; display:flex; align-items:center; gap:10px;">
+              <span style="flex-shrink:0; padding:5px 15px; background:${_akT.main}; color:#fff; border-radius:999px; font-size:12.5px; font-weight:800; white-space:nowrap;">✏️ 창의활동</span>
+              <span style="flex:1; border-top:1.5px dashed #e5e7eb;"></span>
+            </div>
+            ${crBare}
+            ${wbFooter(4, 4)}
+          </div>`;
+        return [
+          wbPageBody(unit, audienceLabel, unitKey),
+          wbPageQuiz(unit, audienceLabel, unitKey),
+          wbPageVocab(unit, audienceLabel, unitKey),
+          combined
+        ].flat();
+      }
+      const pages = [
         wbPageBody(unit, audienceLabel, unitKey),
         wbPageQuiz(unit, audienceLabel, unitKey),
         wbPageVocab(unit, audienceLabel, unitKey),
         wbPageMainIdea(unit, audienceLabel, unitKey),
-        wbPageCreative(unit, audienceLabel, teachData.teacherGuide || '', (unit.creative && unit.creative.examples && unit.creative.examples.length > 0 ? unit.creative.examples : teachData.creativeExamples) || [], unitKey)
-      ].flat();
+        wbPageCreative(unit, audienceLabel, teachData.teacherGuide || '', _creativeExamples, unitKey)
+      ];
+      // 정답지엔 웹툰 배경학습 페이지 제외
+      pages.unshift(wbPageWebtoon(unit, audienceLabel, unitKey));
+      return pages.flat();
     }
 
     // ─── BRAIN딥 생물 전용 6페이지 빌더 ───────────
@@ -71117,6 +71240,41 @@
     }
 
     // ─── 메인: 워크북 PDF 생성 ─────────────────────
+    // 🏷️ 교사용 PDF 워터마크 — 브라우저 canvas로 '브레인문해력' 타일 PNG 생성(한글폰트 심을 필요 없음) 후 각 페이지에 반투명 오버레이
+    function bmBuildWatermarkPng() {
+      if (window.__bmWmPng) return window.__bmWmPng;
+      const W = 1240, H = 1754; // ≈ A4 150dpi
+      const c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      const ctx = c.getContext('2d');
+      ctx.globalAlpha = 0.09;
+      ctx.fillStyle = '#6b6b6b';
+      ctx.font = '700 46px "Noto Sans KR","Malgun Gothic",sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (let y = -H; y < 2 * H; y += 230) {
+        for (let x = -W; x < 2 * W; x += 300) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(-28 * Math.PI / 180);
+          ctx.fillText('브레인문해력', 0, 0);
+          ctx.restore();
+        }
+      }
+      window.__bmWmPng = c.toDataURL('image/png');
+      return window.__bmWmPng;
+    }
+    function bmWatermarkPdf(pdf, pageW, pageH) {
+      try {
+        const png = bmBuildWatermarkPng();
+        const n = pdf.getNumberOfPages();
+        for (let i = 1; i <= n; i++) {
+          pdf.setPage(i);
+          pdf.addImage(png, 'PNG', 0, 0, pageW, pageH, undefined, 'FAST');
+        }
+      } catch (e) { console.warn('[워터마크] 실패:', e); }
+    }
+
     async function downloadWorkbookPDF(unitKey, audience) {
       const btn = event.target.closest('.pdf-download-btn');
       const originalText = btn ? btn.innerHTML : '';
@@ -71146,7 +71304,7 @@
         }
 
         const teachData = (typeof TEACHER_GUIDES === 'object' && TEACHER_GUIDES) ? (TEACHER_GUIDES[unitKey] || {}) : {};
-        const audienceLabel = audience === 'teacher' ? '교사용' : '학생용';
+        const audienceLabel = audience === 'teacher' ? '교사용' : (audience === 'answerkey' ? '정답지' : '학생용');
 
         // 학생용 6페이지 / 교사용 7페이지 (유형별문제풀이가 2페이지로 분할)
         const pages = buildUnitPagesDispatch(unit, audienceLabel, teachData, unitKey);  // wbPageQuiz가 교사용에서 배열을 반환할 수 있어 평면화 (헬퍼 내부 처리)
@@ -71217,6 +71375,7 @@
           .replace(/\s+/g, '')                                       // 공백 제거
           .replace(/[^\w가-힣]/g, '');                                // 한글·영문·숫자만 유지
         const fileName = `교재_${seriesName}_${subjectName}${labelNoStr}_${cleanTitle}_${audienceLabel}.pdf`;
+        if (audience === 'teacher' || audience === 'answerkey') bmWatermarkPdf(pdf, 210, 297);
         pdf.save(fileName);
 
         if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
@@ -71242,7 +71401,7 @@
           return;
         }
 
-        const audienceLabel = audience === 'teacher' ? '교사용' : '학생용';
+        const audienceLabel = audience === 'teacher' ? '교사용' : (audience === 'answerkey' ? '정답지' : '학생용');
         // BRAIN업 분기: subjectKey가 *_up 이거나 seriesOverride='brainup'
         // BRAIN핏 분기: subjectKey가 *_fit 이거나 seriesOverride='brainfit'
         // BRAIN딥 분기: subjectKey가 *_deep 이거나 seriesOverride='braindeep'
@@ -71516,6 +71675,9 @@
 
         document.body.removeChild(stage);
 
+        // 🏷️ 교사용이면 본문 각 페이지에 '브레인문해력' 워터마크 (표지는 제외)
+        if (audience === 'teacher' || audience === 'answerkey') bmWatermarkPdf(pdf, pageW, pageH);
+
         // 파일명: 교재_브레인{온/업/핏/딥}_{과목}_전체NN강_{용도}.pdf
         const seriesLabelKor = isBraindeep ? '딥' : (isBrainfit ? '핏' : (isBrainup ? '업' : '온'));
         const fileName = `교재_브레인${seriesLabelKor}_${sub.label}_전체${orderedUnits.length}강_${audienceLabel}.pdf`;
@@ -71525,7 +71687,8 @@
         const hasCoverAssets = !!(subjectCoverPdfs.front || subjectCoverPdfs.back1 || commonPdfsBytes.length || subjectTocPngDataUrls.length || subjectTocPdfBytesList.length);
         if (hasCoverAssets) {
           if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 병합 중...</span>`;
-          const bodyJsPdfBytes = pdf.output('arraybuffer');
+          if (typeof isTeacher !== 'undefined' && isTeacher) bmWatermarkPdf(pdf, pageW, pageH);
+        const bodyJsPdfBytes = pdf.output('arraybuffer');
           const mergedBytes = await mergeSubjectFinalPdf({
             frontBytes: subjectCoverPdfs.front,
             studyPlanBytes: subjectCoverPdfs.studyPlan,
@@ -72225,7 +72388,7 @@
     async function downloadMonthlyVolumePDF(volNum, isTeacher) {
       // 🔒 학생용 월간교재는 본사 전용 (버튼 비노출 + 호출 차단 이중 잠금)
       if (!isTeacher && window.IS_BRAIN_ADMIN !== true) { alert('학생용 월간교재는 본사 전용입니다. 교재 신청을 이용해 주세요.'); return; }
-      const audienceLabel = isTeacher ? '교사용' : '학생용';
+      const audienceLabel = (isTeacher === 'answerkey') ? '정답지' : (isTeacher ? '교사용' : '학생용');
       const btn = document.querySelector(`[data-monthly-vol="${volNum}"][data-monthly-teacher="${isTeacher}"]`);
       const originalText = btn ? btn.innerHTML : '';
       if (btn) {
@@ -72405,6 +72568,7 @@
 
         // 4) pdf-lib로 표지+공용 PDF와 본문 jsPDF 병합 (벡터 무손실)
         if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 병합 중...</span>`;
+        if (typeof isTeacher !== 'undefined' && isTeacher) bmWatermarkPdf(pdf, pageW, pageH);
         const bodyJsPdfBytes = pdf.output('arraybuffer');
         const mergedBytes = await mergeFinalPdf({
           frontBytes: coverPdfs.front,
@@ -72438,7 +72602,7 @@
     async function downloadMonthlyVolumePDFUp(volNum, isTeacher) {
       // 🔒 학생용 월간교재는 본사 전용 (버튼 비노출 + 호출 차단 이중 잠금)
       if (!isTeacher && window.IS_BRAIN_ADMIN !== true) { alert('학생용 월간교재는 본사 전용입니다. 교재 신청을 이용해 주세요.'); return; }
-      const audienceLabel = isTeacher ? '교사용' : '학생용';
+      const audienceLabel = (isTeacher === 'answerkey') ? '정답지' : (isTeacher ? '교사용' : '학생용');
       const btn = document.querySelector(`[data-monthly-vol-up="${volNum}"][data-monthly-teacher="${isTeacher}"]`);
       const originalText = btn ? btn.innerHTML : '';
       if (btn) {
@@ -72607,6 +72771,7 @@
 
         // 4) pdf-lib 병합
         if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 병합 중...</span>`;
+        if (typeof isTeacher !== 'undefined' && isTeacher) bmWatermarkPdf(pdf, pageW, pageH);
         const bodyJsPdfBytes = pdf.output('arraybuffer');
         const mergedBytes = await mergeFinalPdf({
           frontBytes: coverPdfs.front,
@@ -72640,7 +72805,7 @@
     async function downloadMonthlyVolumePDFFit(volNum, isTeacher) {
       // 🔒 학생용 월간교재는 본사 전용 (버튼 비노출 + 호출 차단 이중 잠금)
       if (!isTeacher && window.IS_BRAIN_ADMIN !== true) { alert('학생용 월간교재는 본사 전용입니다. 교재 신청을 이용해 주세요.'); return; }
-      const audienceLabel = isTeacher ? '교사용' : '학생용';
+      const audienceLabel = (isTeacher === 'answerkey') ? '정답지' : (isTeacher ? '교사용' : '학생용');
       const btn = document.querySelector(`[data-monthly-vol-fit="${volNum}"][data-monthly-teacher="${isTeacher}"]`);
       const originalText = btn ? btn.innerHTML : '';
       if (btn) {
@@ -72809,6 +72974,7 @@
 
         // 4) pdf-lib 병합
         if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 병합 중...</span>`;
+        if (typeof isTeacher !== 'undefined' && isTeacher) bmWatermarkPdf(pdf, pageW, pageH);
         const bodyJsPdfBytes = pdf.output('arraybuffer');
         const mergedBytes = await mergeFinalPdf({
           frontBytes: coverPdfs.front,
@@ -72842,7 +73008,7 @@
     async function downloadMonthlyVolumePDFDeep(volNum, isTeacher) {
       // 🔒 학생용 월간교재는 본사 전용 (버튼 비노출 + 호출 차단 이중 잠금)
       if (!isTeacher && window.IS_BRAIN_ADMIN !== true) { alert('학생용 월간교재는 본사 전용입니다. 교재 신청을 이용해 주세요.'); return; }
-      const audienceLabel = isTeacher ? '교사용' : '학생용';
+      const audienceLabel = (isTeacher === 'answerkey') ? '정답지' : (isTeacher ? '교사용' : '학생용');
       const btn = document.querySelector(`[data-monthly-vol-deep="${volNum}"][data-monthly-teacher="${isTeacher}"]`);
       const originalText = btn ? btn.innerHTML : '';
       if (btn) {
@@ -73011,6 +73177,7 @@
 
         // 4) pdf-lib 병합
         if (btn) btn.innerHTML = `<span class="icon">⏳</span><span>PDF 병합 중...</span>`;
+        if (typeof isTeacher !== 'undefined' && isTeacher) bmWatermarkPdf(pdf, pageW, pageH);
         const bodyJsPdfBytes = pdf.output('arraybuffer');
         const mergedBytes = await mergeFinalPdf({
           frontBytes: coverPdfs.front,
@@ -73067,8 +73234,9 @@
             <ul style="margin:0; padding:0 0 0 0; list-style:none; background:#f8fafc; border-radius:8px; padding:10px 12px;">${weeksHtml}</ul>
             <div style="display:flex; gap:6px; margin-top:auto;">
               ${window.IS_BRAIN_ADMIN === true ? `<button type="button" data-monthly-vol=\"${v}\" data-monthly-teacher=\"false\" onclick=\"downloadMonthlyVolumePDF(${v}, false)\" style=\"flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:linear-gradient(135deg,#3b82f6,#1d4ed8); color:#fff; box-shadow:0 2px 6px rgba(59,130,246,0.25);\">✏️ 학생용</button>` : ''}
-              <button type="button" data-monthly-vol="${v}" data-monthly-teacher="true" onclick="downloadMonthlyVolumePDF(${v}, true)" style="flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:#b91c1c; color:#fff; box-shadow:0 2px 6px rgba(185,28,28,0.25);">
-                📘 교사용
+              ${window.IS_BRAIN_ADMIN === true ? `<button type="button" data-monthly-vol="${v}" data-monthly-teacher="true" onclick="downloadMonthlyVolumePDF(${v}, true)" style="flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:#b91c1c; color:#fff; box-shadow:0 2px 6px rgba(185,28,28,0.25);">📘 교사용</button>` : ''}
+              <button type="button" data-monthly-vol="${v}" data-monthly-teacher="answerkey" onclick="downloadMonthlyVolumePDF(${v}, 'answerkey')" style="flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; box-shadow:0 2px 6px rgba(22,163,74,0.25);">
+                📋 정답지
               </button>
             </div>
           </div>
@@ -73116,8 +73284,9 @@
             <ul style="margin:0; padding:0 0 0 0; list-style:none; background:#f5f3ff; border-radius:8px; padding:10px 12px;">${weeksHtml}</ul>
             <div style="display:flex; gap:6px; margin-top:auto;">
               ${window.IS_BRAIN_ADMIN === true ? `<button type="button" data-monthly-vol-up=\"${v}\" data-monthly-teacher=\"false\" onclick=\"downloadMonthlyVolumePDFUp(${v}, false)\" style=\"flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:linear-gradient(135deg,#8b5cf6,#5b21b6); color:#fff; box-shadow:0 2px 6px rgba(91,33,182,0.25);\">✏️ 학생용</button>` : ''}
-              <button type="button" data-monthly-vol-up="${v}" data-monthly-teacher="true" onclick="downloadMonthlyVolumePDFUp(${v}, true)" style="flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:#b91c1c; color:#fff; box-shadow:0 2px 6px rgba(185,28,28,0.25);">
-                📘 교사용
+              ${window.IS_BRAIN_ADMIN === true ? `<button type="button" data-monthly-vol-up="${v}" data-monthly-teacher="true" onclick="downloadMonthlyVolumePDFUp(${v}, true)" style="flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:#b91c1c; color:#fff; box-shadow:0 2px 6px rgba(185,28,28,0.25);">📘 교사용</button>` : ''}
+              <button type="button" data-monthly-vol-up="${v}" data-monthly-teacher="answerkey" onclick="downloadMonthlyVolumePDFUp(${v}, 'answerkey')" style="flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; box-shadow:0 2px 6px rgba(22,163,74,0.25);">
+                📋 정답지
               </button>
             </div>
           </div>
@@ -73165,8 +73334,9 @@
             <ul style="margin:0; padding:0 0 0 0; list-style:none; background:#fdf2f8; border-radius:8px; padding:10px 12px;">${weeksHtml}</ul>
             <div style="display:flex; gap:6px; margin-top:auto;">
               ${window.IS_BRAIN_ADMIN === true ? `<button type="button" data-monthly-vol-fit=\"${v}\" data-monthly-teacher=\"false\" onclick=\"downloadMonthlyVolumePDFFit(${v}, false)\" style=\"flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; box-shadow:0 2px 6px rgba(190,24,93,0.25);\">✏️ 학생용</button>` : ''}
-              <button type="button" data-monthly-vol-fit="${v}" data-monthly-teacher="true" onclick="downloadMonthlyVolumePDFFit(${v}, true)" style="flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:#b91c1c; color:#fff; box-shadow:0 2px 6px rgba(185,28,28,0.25);">
-                📘 교사용
+              ${window.IS_BRAIN_ADMIN === true ? `<button type="button" data-monthly-vol-fit="${v}" data-monthly-teacher="true" onclick="downloadMonthlyVolumePDFFit(${v}, true)" style="flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:#b91c1c; color:#fff; box-shadow:0 2px 6px rgba(185,28,28,0.25);">📘 교사용</button>` : ''}
+              <button type="button" data-monthly-vol-fit="${v}" data-monthly-teacher="answerkey" onclick="downloadMonthlyVolumePDFFit(${v}, 'answerkey')" style="flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; box-shadow:0 2px 6px rgba(22,163,74,0.25);">
+                📋 정답지
               </button>
             </div>
           </div>
@@ -73214,8 +73384,9 @@
             <ul style="margin:0; padding:0 0 0 0; list-style:none; background:#f0fdfa; border-radius:8px; padding:10px 12px;">${weeksHtml}</ul>
             <div style="display:flex; gap:6px; margin-top:auto;">
               ${window.IS_BRAIN_ADMIN === true ? `<button type="button" data-monthly-vol-deep=\"${v}\" data-monthly-teacher=\"false\" onclick=\"downloadMonthlyVolumePDFDeep(${v}, false)\" style=\"flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:linear-gradient(135deg,#14b8a6,#0f766e); color:#fff; box-shadow:0 2px 6px rgba(15,118,110,0.25);\">✏️ 학생용</button>` : ''}
-              <button type="button" data-monthly-vol-deep="${v}" data-monthly-teacher="true" onclick="downloadMonthlyVolumePDFDeep(${v}, true)" style="flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:#b91c1c; color:#fff; box-shadow:0 2px 6px rgba(185,28,28,0.25);">
-                📘 교사용
+              ${window.IS_BRAIN_ADMIN === true ? `<button type="button" data-monthly-vol-deep="${v}" data-monthly-teacher="true" onclick="downloadMonthlyVolumePDFDeep(${v}, true)" style="flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:#b91c1c; color:#fff; box-shadow:0 2px 6px rgba(185,28,28,0.25);">📘 교사용</button>` : ''}
+              <button type="button" data-monthly-vol-deep="${v}" data-monthly-teacher="answerkey" onclick="downloadMonthlyVolumePDFDeep(${v}, 'answerkey')" style="flex:1; min-width:0; padding:7px 10px; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; box-shadow:0 2px 6px rgba(22,163,74,0.25);">
+                📋 정답지
               </button>
             </div>
           </div>
@@ -73428,6 +73599,71 @@
     });
 
     // =============================================
+    // © 저작권 동의 게이트 — 모든 PDF 다운로드(학생용·교사용·정답지) 클릭 시 경고 팝업
+    //   동의 → 서버에 센터별 기록 + 즉시 다운로드. (슈퍼관리자에서 조회)
+    // =============================================
+    const COPYRIGHT_DL_RE = /\bdownload[A-Za-z0-9]*(PDF|Workbook|FullBook)\s*\(/;
+    function showCopyrightConsentModal() {
+      return new Promise((resolve) => {
+        const prev = document.getElementById('copyrightConsentOverlay');
+        if (prev) prev.remove();
+        if (!document.getElementById('ccPopStyle')) {
+          const st = document.createElement('style'); st.id = 'ccPopStyle';
+          st.textContent = '@keyframes ccPop{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}';
+          document.head.appendChild(st);
+        }
+        const ov = document.createElement('div');
+        ov.id = 'copyrightConsentOverlay';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:2147483600;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,0.55);backdrop-filter:blur(3px);padding:20px;';
+        ov.innerHTML = `
+          <div role="dialog" aria-modal="true" style="width:min(460px,94vw);background:#fff;border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;font-family:'Noto Sans KR','Malgun Gothic',sans-serif;animation:ccPop .22s cubic-bezier(.2,.9,.3,1.3);">
+            <div style="background:linear-gradient(135deg,#b91c1c,#7f1d1d);padding:22px 26px;color:#fff;display:flex;align-items:center;gap:12px;">
+              <div style="font-size:30px;line-height:1;">©️</div>
+              <div>
+                <div style="font-size:18px;font-weight:900;letter-spacing:0.3px;">저작권 보호 안내</div>
+                <div style="font-size:12px;opacity:0.85;margin-top:2px;">브레인문해력 교재 다운로드</div>
+              </div>
+            </div>
+            <div style="padding:24px 26px 8px;">
+              <p style="margin:0 0 14px;font-size:14px;line-height:1.8;color:#334155;">본 교재의 <b style="color:#b91c1c;">모든 콘텐츠는 저작권법에 따라 보호</b>되며,<br>무단 <b>복사·복제·배포·외부 유출</b> 등 저작권 침해 행위 적발 시 관련 법령에 따라 <b style="color:#b91c1c;">민·형사상 법적 책임 및 손해배상</b>이 청구될 수 있습니다.</p>
+              <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:11px 14px;font-size:12px;color:#7f1d1d;font-weight:700;line-height:1.6;">⚠️ 동의하시면 다운로드가 시작되며, 동의 내역은 센터별로 기록됩니다.</div>
+            </div>
+            <div style="display:flex;gap:10px;padding:18px 26px 24px;">
+              <button type="button" id="ccCancel" style="flex:1;padding:13px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">취소</button>
+              <button type="button" id="ccAgree" style="flex:2;padding:13px;border:none;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-radius:12px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(22,163,74,0.35);">동의하고 다운로드</button>
+            </div>
+          </div>`;
+        document.body.appendChild(ov);
+        const done = (v) => { ov.remove(); resolve(v); };
+        ov.querySelector('#ccAgree').onclick = () => done(true);
+        ov.querySelector('#ccCancel').onclick = () => done(false);
+        ov.addEventListener('click', (e) => { if (e.target === ov) done(false); });
+      });
+    }
+    function recordCopyrightConsent(action) {
+      try {
+        fetch('/api/copyright-consent', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: String(action || '').slice(0, 200) })
+        }).catch(() => {});
+      } catch (e) {}
+    }
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('button, a');
+      if (!btn) return;
+      const oc = btn.getAttribute('onclick') || '';
+      if (!COPYRIGHT_DL_RE.test(oc)) return;
+      if (btn.dataset.ccOk === '1') { btn.dataset.ccOk = ''; return; }  // 동의 후 재실행 통과
+      e.preventDefault(); e.stopImmediatePropagation();
+      showCopyrightConsentModal().then((ok) => {
+        if (!ok) return;
+        recordCopyrightConsent(oc);
+        btn.dataset.ccOk = '1';
+        btn.click();  // 원래 onclick 재실행 → 즉시 다운로드
+      });
+    }, true);
+
+    // =============================================
     // 초기화
     // =============================================
     document.addEventListener('DOMContentLoaded', () => {
@@ -73542,6 +73778,9 @@
                       <button type="button" class="wb-all-btn wb-all-teacher" onclick="${meta.fn}('teacher')">
                         📘 교사용 전체 (${total}강)
                       </button>
+                      <button type="button" class="wb-all-btn wb-all-answerkey" onclick="${meta.fn}('answerkey')">
+                        📋 정답지 전체 (${total}강)
+                      </button>
                     </div>
                   `;
                   el.insertBefore(headerBox, el.firstChild);
@@ -73570,6 +73809,24 @@
         }
       })();
     });
+  </script>
+  <!-- 🔒 드래그 복사·우클릭 방지 (지침서 정답 보호) · 입력창은 예외 -->
+  <script>
+  (function () {
+    function isInput(t) {
+      return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+    }
+    ['copy', 'cut', 'dragstart', 'selectstart'].forEach(function (ev) {
+      document.addEventListener(ev, function (e) {
+        if (isInput(e.target)) return;
+        e.preventDefault();
+      }, true);
+    });
+    document.addEventListener('contextmenu', function (e) {
+      if (isInput(e.target)) return;
+      e.preventDefault();
+    });
+  })();
   </script>
 </body>
 </html>

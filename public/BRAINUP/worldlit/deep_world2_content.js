@@ -612,7 +612,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 8, text: '거짓말로 남을 속이는 사람을 (      )이라 한다.', answer: '사기꾼', initials: 'ㅅㄱㄲ', aliases: ['사기꾼'] },
         { no: 9, text: '죽은 사람이 남긴 재산을 (      )이라 한다.', answer: '유산', initials: 'ㅇㅅ', aliases: ['유산'] },
         { no: 10, text: '지식과 기술을 가르치고 배우는 것을 (      )이라 한다.', answer: '교육', initials: 'ㄱㅇ', aliases: ['교육'] },
-        { no: 11, text: '사회에서 지켜야 할 바른 행동과 예절을 (        )이라 한다.', answer: '예의범절', initials: 'ㅇㅇㅂㅂ', aliases: ['예의범절'] },
+        { no: 11, text: '사회에서 지켜야 할 바른 행동과 예절을 (        )이라 한다.', answer: '예의범절', initials: 'ㅇㅇㅂㅈ', aliases: ['예의범절'] },
         { no: 12, text: '맡은 일을 끝까지 해내려는 마음을 (      )이라 한다.', answer: '책임감', initials: 'ㅊㅇㄱ', aliases: ['책임감'] },
         { no: 13, text: '갇힌 곳에서 빠져나오는 것을 (      )이라 한다.', answer: '탈출', initials: 'ㅌㅊ', aliases: ['탈출'] },
         { no: 14, text: '새롭고 위험한 일을 해보고 싶어하는 마음을 (      )이라 한다.', answer: '모험심', initials: 'ㅁㅎㅅ', aliases: ['모험심'] }
@@ -706,7 +706,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
       instructions: '[비밀의 화원 어휘]',
       items: [        { no: 1, text: '크고 훌륭한 집을 (      )이라고 해요.', answer: '저택', initials: 'ㅈㅌ', aliases: ['저택'] },
         { no: 2, text: '사람에게서 사람으로 옮아가는 병을 (      )이라고 해요.', answer: '전염병', initials: 'ㅈㅇㅂ', aliases: ['전염병'] },
-        { no: 3, text: '벽이나 담을 타고 올라가는 식물을 (        )이라고 해요.', answer: '담쟁이덩굴', initials: 'ㄷㅉㅇㄷㄱ', aliases: ['담쟁이덩굴'] },        { no: 4, text: '앞으로 잘 될 것이라고 기대하는 마음을 (      )이라고 해요.', answer: '희망', initials: 'ㅎㅁ', aliases: ['희망'] },
+        { no: 3, text: '벽이나 담을 타고 올라가는 식물을 (        )이라고 해요.', answer: '담쟁이덩굴', initials: 'ㄷㅈㅇㄷㄱ', aliases: ['담쟁이덩굴'] },        { no: 4, text: '앞으로 잘 될 것이라고 기대하는 마음을 (      )이라고 해요.', answer: '희망', initials: 'ㅎㅁ', aliases: ['희망'] },
         { no: 5, text: '상처나 병이 낫는 것을 (      )라고 해요.', answer: '치유', initials: 'ㅊㅇ', aliases: ['치유'] },
         { no: 6, text: '살아 있는 듯한 활기와 힘을 (      )라고 해요.', answer: '생기', initials: 'ㅅㄱ', aliases: ['생기'] },        { no: 7, text: '마음이 크게 움직이는 것을 (      )이라고 해요.', answer: '감동', initials: 'ㄱㄷ', aliases: ['감동'] },
         { no: 8, text: '남을 옆에서 돌보며 시키는 일을 하는 것을 (      )이라고 해요.', answer: '시중', initials: 'ㅅㅈ', aliases: ['시중'] },        { no: 9, text: '혼자 있어서 쓸쓸한 감정을 (      )이라고 해요.', answer: '외로움', initials: 'ㅇㄹㅇ', aliases: ['외로움'] },        { no: 10, text: '몸과 마음이 튼튼한 상태를 (      )이라고 해요.', answer: '건강', initials: 'ㄱㄱ', aliases: ['건강'] }
@@ -1664,7 +1664,7 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         { no: 8, text: '나쁘고 그른 것을 (    )이라고 해요.', answer: '악', initials: 'ㅇ', aliases: ['악'] },
         { no: 9, text: '다스리고 제어하는 것을 (      )라고 해요.', answer: '통제', initials: 'ㅌㅈ', aliases: ['통제'] },
         { no: 10, text: '기대와 반대되는 결과를 (      )이라고 해요.', answer: '역설', initials: 'ㅇㅅ', aliases: ['역설'] },
-        { no: 11, text: '남을 불쌍히 여기고 너그러운 것을 (        )이라고 해요.', answer: '자비로운', initials: 'ㅊㅂㄹㅇ', aliases: ['자비로운','자비'] },
+        { no: 11, text: '남을 불쌍히 여기고 너그러운 것을 (        )이라고 해요.', answer: '자비로운', initials: 'ㅈㅂㄹㅇ', aliases: ['자비로운','자비'] },
         { no: 12, text: '교양 있고 예의 바른 남자를 (      )라고 해요.', answer: '신사', initials: 'ㅅㅅ', aliases: ['신사'] },
         { no: 13, text: '이전과 크게 달라 눈에 띄는 것을 (          )이라고 해요.', answer: '획기적인', initials: 'ㅎㄱㅈㅇ', aliases: ['획기적인','획기적'] },
         { no: 14, text: '몹시 싫어하는 느낌을 (        )이라고 해요.', answer: '혐오감', initials: 'ㅎㅇㄱ', aliases: ['혐오감'] },
