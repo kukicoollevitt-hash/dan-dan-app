@@ -614,8 +614,8 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 놀부와 흥부 형제 소개, 놀부의 박대',
         '4문단 : 흥부전 의의, 탐욕 경계와 나눔의 가치'
       ],
-      q3_html: '제비가 <input class="inline-input" id="q3-1" type="text" placeholder="ㅂㅆ"> 한 알을 물어다 주었고, 흥부는 이를 심어 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㄴ">보화를 얻어 부자가 되었다.',
-      q3_1_ph: 'ㅂㅆ', q3_2_ph: 'ㄱㄴ',
+      q3_html: '제비가 <input class="inline-input" id="q3-1" type="text" placeholder="ㅂㅆ"> 한 알을 물어다 주었고, 흥부는 이를 심어 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅇ">보화를 얻어 부자가 되었다.',
+      q3_1_ph: 'ㅂㅆ', q3_2_ph: 'ㄱㅇ',
       q4_html: '놀부네 박에서는 <input class="inline-input" id="q4-1" type="text" placeholder="ㄷㄲㅂ">가 쏟아져 나왔고, 놀부는 자신의 <input class="inline-input" id="q4-2" type="text" placeholder="ㅌㅇ">을 뉘우쳤다.',
       q4_1_ph: 'ㄷㄲㅂ', q4_2_ph: 'ㅌㅇ',
       q5_text: '흥부와 놀부에게 각각 다른 결과가 찾아온 이유를 본문 내용을 바탕으로 설명해 보세요.'

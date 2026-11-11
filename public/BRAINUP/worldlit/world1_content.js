@@ -93,10 +93,10 @@ window.CONTENTS = Object.assign(window.CONTENTS, {
         '3문단 : 변화와 성장, 낯선 사람에게 인사',
         '4문단 : 데미안 책 발견, 알을 깨는 깨달음'
       ],
-      q3_html: '글쓴이는 새로운 사람을 만나면 무슨 말을 해야 할지 몰라 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅅㅇㄷ"> 결국 민호에게 용기를 내어 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅂㅎㄷ"> 마음먹었습니다.',
-      q4_html: '글쓴이는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅇㅎ"> 도서관에서 데미안을 발견하고, 두려움을 조금씩 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅂㅎㄷ"> 시작했습니다.',
-      q3_1_ph: 'ㅁㅅㅇㄷ', q3_2_ph: 'ㄱㅂㅎㄷ',
-      q4_1_ph: 'ㅇㅇㅎ', q4_2_ph: 'ㄱㅂㅎㄷ',
+      q3_html: '글쓴이는 새로운 사람을 만나면 무슨 말을 해야 할지 몰라 <input class="inline-input" id="q3-1" type="text" placeholder="ㅁㅅㅇㄷ"> 결국 민호에게 용기를 내어 <input class="inline-input" id="q3-2" type="text" placeholder="ㄱㅂㅎㄱㄹ"> 마음먹었습니다.',
+      q4_html: '글쓴이는 <input class="inline-input" id="q4-1" type="text" placeholder="ㅇㅇㅎ"> 도서관에서 데미안을 발견하고, 두려움을 조금씩 <input class="inline-input" id="q4-2" type="text" placeholder="ㄱㅂㅎㄱ"> 시작했습니다.',
+      q3_1_ph: 'ㅁㅅㅇㄷ', q3_2_ph: 'ㄱㅂㅎㄱㄹ',
+      q4_1_ph: 'ㅇㅇㅎ', q4_2_ph: 'ㄱㅂㅎㄱ',
       q5_text: '데미안이 싱클레어에게 "새는 알에서 나오려고 투쟁한다"라고 말한 이유를 본문 내용과 연결하여 설명해 보세요.'
     },
     answerKey: { q1:'2', q2:'1', q3_1:['망설이다','망설임'], q3_2:['고백하기로','고백'], q4_1:['우연히','우연'], q4_2:['극복하기','극복'] },

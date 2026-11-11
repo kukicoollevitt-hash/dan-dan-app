@@ -3420,12 +3420,21 @@
     /* ===== AI 글 다듬기 함수 ===== */
     async function polishWriting(text) {
       try {
+        // 🐋 현재 단원 키워드(명사 칩) 수집 → 모범답안에 1~2개 자연스럽게 포함되도록 전달
+        let keywords = [];
+        try {
+          keywords = Array.from(document.querySelectorAll('.creative-keyword-box .kw-chip'))
+            .map(function (c) { return (c.textContent || '').trim(); })
+            .filter(Boolean)
+            .slice(0, 12);
+        } catch (e) { keywords = []; }
+
         const response = await fetch('/api/polish-writing', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ text: text })
+          body: JSON.stringify({ text: text, keywords: keywords })
         });
 
         if (!response.ok) {
