@@ -459,6 +459,7 @@ const Notice = require("./models/Notice");
 const AcademyNotice = require("./models/AcademyNotice");
 const AdminLoginLog = require("./models/AdminLoginLog");
 const CopyrightConsent = require("./models/CopyrightConsent");
+const AdminKickEvent = require("./models/AdminKickEvent");
 const SnackOrder = require("./models/SnackOrder");
 const SentenceRead = require("./models/SentenceRead");
 const SpeedVocabKing = require("./models/SpeedVocabKing");
@@ -789,6 +790,36 @@ async function enforceSingleSession(req, res, next) {
         }
       }
     }
+
+    // 🔒 관리자(선생님) 단일세션 — 다른 기기 로그인 시 이전 세션 kick
+    //    제외: 슈퍼관리자 · 본사 테스트(브레인문해원_테스트) · 슈퍼 조회(view-as) 모드
+    const adm = req.session && req.session.admin;
+    if (adm && adm.id && !adm.isSuper && !req.session.viewingBranch && adm.academyName !== '브레인문해원_테스트'
+        && req.path !== '/academy-admin-login') {   // 로그인 라우트는 제외(재로그인 차단 방지)
+      const isApiA = req.path.startsWith('/api/');
+      const nowA = Date.now();
+      const doCheckA = (nowA - (req.session._ssCheckedAtAdmin || 0) > 15000); // 학생과 동일하게 15초 캐시
+      if (doCheckA) {
+        const a = await Admin.findById(adm.id).select('activeSessionId').lean();
+        req.session._ssCheckedAtAdmin = nowA;
+        if (a && a.activeSessionId && a.activeSessionId !== req.sessionID) {
+          // 킥 이벤트 기록 (세션 파기 전 신원 확보) — 로그인 모달 '확인하기'가 이 id로 ack
+          let kickId = '';
+          try {
+            const ev = await AdminKickEvent.create({
+              academyName: adm.academyName, name: adm.name, adminId: adm.id,
+              ip: getClientIp(req), userAgent: String(req.headers['user-agent'] || '').slice(0, 300)
+            });
+            kickId = String(ev._id);
+          } catch (e) { console.warn('[단일세션] 킥 이벤트 기록 실패:', e && e.message); }
+          return req.session.destroy(() => {
+            if (isApiA) return res.status(401).json({ ok: false, kicked: true, error: 'session_superseded', k: kickId });
+            if (req.method === 'GET' && req.accepts('html')) return res.redirect('/academy-admin-login?kicked=1' + (kickId ? ('&k=' + kickId) : ''));
+            return res.status(401).end();
+          });
+        }
+      }
+    }
   } catch (e) { /* 조회 실패 시 통과(기존 세션 유지) */ }
   next();
 }
@@ -998,6 +1029,12 @@ app.post("/academy-admin-login", async (req, res) => {
       userType: "academy",
       isSuper: isSuperAdmin
     };
+
+    // 🔒 단일세션: 이 세션을 활성 세션으로 등록 (다른 기기 로그인 시 이전 세션이 kick됨)
+    //    본사 테스트·슈퍼는 enforceSingleSession에서 enforce 제외라 영향 없음
+    try {
+      await Admin.updateOne({ _id: admin._id }, { $set: { activeSessionId: req.sessionID } });
+    } catch (e) { console.warn('[단일세션] admin activeSessionId 갱신 실패:', e && e.message); }
 
     // 🔹 슈퍼관리자 조회 모드 세션 정리 (브랜치 관리자 직접 로그인 시)
     if (req.session.viewingBranch) {
@@ -1314,6 +1351,41 @@ app.get("/api/super/copyright-consents", requireSuperAdmin, async (req, res) => 
     res.json({ ok: true, rows, summary, centers });
   } catch (err) {
     console.error("❌ [/api/super/copyright-consents] 오류:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// 🔒 단일세션 킥 경고 '확인하기' 저장 — 세션이 이미 파기된 상태라 kickId로 식별(읽기전용 기록용)
+app.post("/api/admin-kick-ack", async (req, res) => {
+  try {
+    const id = String((req.body && req.body.id) || "").trim();
+    if (!id || !/^[a-f0-9]{24}$/i.test(id)) return res.json({ ok: true, skipped: true });
+    await AdminKickEvent.updateOne(
+      { _id: id },
+      { $set: { acknowledged: true, acknowledgedAt: new Date() } }
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ [/api/admin-kick-ack] 오류:", err);
+    res.json({ ok: false, message: err.message });
+  }
+});
+
+// 🔒 단일세션 킥(선생님 계정공유 경고) 현황 조회 (슈퍼관리자 전용 · 읽기 전용)
+app.get("/api/super/admin-kick-events", requireSuperAdmin, async (req, res) => {
+  try {
+    const { center, limit } = req.query;
+    const q = center ? { academyName: center } : {};
+    const lim = Math.min(parseInt(limit, 10) || 500, 2000);
+    const rows = await AdminKickEvent.find(q).sort({ kickedAt: -1 }).limit(lim).lean();
+    const summary = await AdminKickEvent.aggregate([
+      { $group: { _id: "$academyName", count: { $sum: 1 }, acked: { $sum: { $cond: ["$acknowledged", 1, 0] } }, last: { $max: "$kickedAt" } } },
+      { $sort: { last: -1 } }
+    ]);
+    const centers = (await AdminKickEvent.distinct("academyName")).filter(Boolean).sort();
+    res.json({ ok: true, rows, summary, centers });
+  } catch (err) {
+    console.error("❌ [/api/super/admin-kick-events] 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
@@ -1997,6 +2069,10 @@ const User = mongoose.model("User", userSchema);
 // ✅ 브랜치 관리자(학원장) / 슈퍼관리자 스키마
 const adminSchema = new mongoose.Schema({
   academyName: { type: String, required: true }, // 학원명/지점명 (내부 세션 · 로그인 키)
+
+  // 🔒 단일세션: 현재 활성 기기의 세션ID (다른 기기 로그인 시 갱신 → 기존 기기 로그아웃)
+  //    본사 테스트(브레인문해원_테스트)·슈퍼관리자·조회모드는 enforceSingleSession에서 enforce 제외
+  activeSessionId: String,
 
   // 🔹 통합 관리용 별칭 · 조회 시 함께 포함 (예: ["브레인문해력_대치센터"])
   //    → getAdminAcademyNames() 로 [academyName, ...academyAliases] 모두 대상으로 학생 조회

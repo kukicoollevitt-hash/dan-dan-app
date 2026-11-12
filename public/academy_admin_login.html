@@ -373,6 +373,56 @@
       successMsg.classList.add('show');
     }
 
+    // 🔒 단일세션 킥 — 다른 기기에서 로그인되어 자동 로그아웃된 경우 예쁜 모달 안내
+    if (urlParams.get('kicked') === '1') {
+      var _kickId = urlParams.get('k') || '';
+      try { history.replaceState(null, '', '/academy-admin-login'); } catch (e) {}
+      showAdminKickModal(_kickId);
+    }
+
+    // 🔒 단일세션 킥 — 예쁜 모달 + 하단 경고 박스 + 확인하기(서버 저장)
+    function showAdminKickModal(kickId) {
+      if (document.getElementById('adminKickModal')) return;
+      var ov = document.createElement('div');
+      ov.id = 'adminKickModal';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;background:rgba(17,24,39,0.55);backdrop-filter:blur(3px);padding:20px;font-family:"Pretendard","Noto Sans KR",system-ui,sans-serif;';
+      ov.innerHTML =
+        '<div style="background:#fff;max-width:440px;width:100%;border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;animation:akPop .28s cubic-bezier(.34,1.56,.64,1);">'
+        + '<div style="padding:30px 28px 22px;text-align:center;">'
+        + '<div style="font-size:52px;line-height:1;margin-bottom:14px;">📱</div>'
+        + '<div style="font-size:21px;font-weight:800;color:#dc2626;margin-bottom:10px;">다른 기기에서 로그인되었어요</div>'
+        + '<div style="font-size:15px;color:#374151;line-height:1.6;">🔒 다른 기기(또는 브라우저)에서 로그인되어<br><b>자동 로그아웃</b>되었습니다.</div>'
+        + '</div>'
+        + '<div style="margin:0 20px 18px;padding:16px 16px;border:1.5px solid #fca5a5;background:#fef2f2;border-radius:14px;text-align:left;">'
+        + '<div style="font-size:14px;font-weight:800;color:#b91c1c;margin-bottom:8px;">⚠️ 선생님 계정 무단 공유 경고</div>'
+        + '<div style="font-size:12.5px;color:#7f1d1d;line-height:1.65;">모든 계정의 접속 IP 및 위치 정보는 보안 목적으로 기록·관리됩니다. 계정 공유·대여·양도는 엄격히 금지되며, 위반 시 <b>계정 이용 정지, 환불 제한 및 법적 조치·손해배상 청구</b>가 이루어질 수 있습니다.</div>'
+        + '</div>'
+        + '<div style="padding:0 20px 24px;">'
+        + '<button id="adminKickOk" style="width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(220,38,38,0.35);">확인하기</button>'
+        + '</div>'
+        + '</div>';
+      document.body.appendChild(ov);
+      if (!document.getElementById('akPopStyle')) {
+        var st = document.createElement('style');
+        st.id = 'akPopStyle';
+        st.textContent = '@keyframes akPop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}';
+        document.head.appendChild(st);
+      }
+      var okBtn = document.getElementById('adminKickOk');
+      okBtn.addEventListener('click', function () {
+        okBtn.disabled = true;
+        okBtn.textContent = '확인 중...';
+        // 저작권 동의 현황처럼 서버에 '경고 확인' 기록
+        fetch('/api/admin-kick-ack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: kickId })
+        }).catch(function () {}).finally(function () {
+          try { ov.remove(); } catch (e) {}
+        });
+      });
+    }
+
     // ========== 탭 전환 ==========
     const loginTab = document.getElementById('loginTab');
     const registerTab = document.getElementById('registerTab');
