@@ -59,7 +59,9 @@ async function generateOne(browser, day) {
   console.log(`\n▶ Day ${day} 생성 시작`);
   const DATA = extractData(day);
 
-  for (const mode of ['student', 'teacher', 'answerkey']) {
+  // 생성 모드 — 기본 3종 전부, WR100_MODES=student 로 특정 모드만 재생성 가능(불필요 churn 방지)
+  const MODES = (process.env.WR100_MODES || 'student,teacher,answerkey').split(',').map(s => s.trim()).filter(Boolean);
+  for (const mode of MODES) {
     let html = buildHtml(DATA, mode);
     // 템플릿의 상대 경로 이미지 → base64 data URI 로 인라인 변환
     // 예: ../../public/images/100day/1day_01.jpg → data:image/jpeg;base64,...

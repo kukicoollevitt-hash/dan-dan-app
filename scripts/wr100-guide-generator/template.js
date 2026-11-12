@@ -631,6 +631,14 @@ function pageAnswerKey(DATA) {
 
 function buildHtml(DATA, mode = 'student') {
   const modeLabel = mode === 'teacher' ? '교사용' : (mode === 'answerkey' ? '정답지' : '학생용');
+  // 🏷️ 학생용 PDF 워터마크 — '브레인문해력' 연한 타일. 쓰기문해라 다른 교재(0.09)보다 연하게(fill-opacity 0.045), 쓰기 내용 뒤 배경으로 깔림. 표지(page-cover) 제외.
+  const _wmSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='300' height='190'><text x='6' y='120' transform='rotate(-24 150 95)' font-family='sans-serif' font-size='27' font-weight='700' fill='#5b6673' fill-opacity='0.045'>브레인문해력</text></svg>`;
+  const _wmUri = `data:image/svg+xml;base64,${Buffer.from(_wmSvg).toString('base64')}`;
+  const watermarkCss = mode === 'student' ? `
+    .page:not(.page-cover) {
+      background-image: url("${_wmUri}");
+      background-repeat: repeat;
+    }` : '';
   const season = themeOf(DATA);
   const T = THEMES[season];
   const css = `
@@ -1576,6 +1584,7 @@ function buildHtml(DATA, mode = 'student') {
       padding: 0.8mm 3mm; font-size: 8.5pt; font-weight: 800; flex-shrink: 0; margin-top: 0.3mm;
     }
     .ak-center-text { color: var(--deep); font-weight: 700; flex: 1; }
+    ${watermarkCss}
   `;
 
   // 교사용은 어휘익히기/문장적어보기/갈래별글쓰기 3페이지 생략 · 나머지 유지
