@@ -1089,6 +1089,17 @@ body {
   .mg-launcher { left: auto; right: 12px; bottom: 250px; }
   .mg-launcher img { height: 74px; }
 }
+/* 🎄 크리스마스 문학블록팡팡 런처 — 숨은도감 런처와 동일 크기(96px), 코너에 작게 둥둥 */
+.santa-launcher {
+  position: fixed; bottom: 50px; left: 1020px; cursor: pointer; z-index: 1000; user-select: none; display: none;
+  animation: float-icon 3s ease-in-out infinite; animation-delay: 0.4s; transition: transform 0.3s ease, filter 0.3s ease;
+}
+.santa-launcher:hover { animation-play-state: paused; transform: translateY(-2px) scale(1.05); filter: brightness(1.06); }
+.santa-launcher img { height: 96px; width: auto; display: block; border-radius: 16px; filter: drop-shadow(0 7px 14px rgba(0,0,0,0.22)); }
+@media (max-width: 1100px) {
+  .santa-launcher { left: auto; right: 12px; bottom: 360px; }
+  .santa-launcher img { height: 74px; }
+}
 /* 🥚 야생 몽글 알 — 랜덤 슬롯 등장, 클릭 시 바로 어휘 퀴즈 */
 .wild-egg {
   position: fixed;
@@ -7832,6 +7843,11 @@ canvas[id^="confetti-canvas"] {
     </div>
   </header>
 
+  <!-- 🎄 크리스마스 이벤트 배너 (본사 테스트/김윤슬 전용) — 숨은도감 런처와 동일 크기, 코너 둥둥 -->
+  <div id="santaEventBanner" class="santa-launcher" onclick="openSantaMonggeul()" title="산타 몽글이와 함께하는 크리스마스 — 문학블록팡팡">
+    <img src="/images/산타 몽글이와 함께하는 크리스마스 문학블록팡팡.png" alt="산타 몽글이와 함께하는 크리스마스 — 문학블록팡팡" draggable="false">
+  </div>
+
   <div class="layout">
     <!-- ① 시리즈 -->
     <div class="col" id="colSeries">
@@ -14259,6 +14275,9 @@ async function performLogout() {
         // 📚 BRAIN서술형(내신문학 특강) — 초3 김윤슬 테스트계정에만 노출
         const seosulItem = document.getElementById('seosulSeriesItem');
         if (seosulItem && isReviewer) seosulItem.style.display = '';
+        // 🎄 크리스마스 문학블록팡팡 이벤트 배너 — 본사 테스트/김윤슬에게만 노출(우선 테스트)
+        const santaBanner = document.getElementById('santaEventBanner');
+        if (santaBanner && isReviewer) santaBanner.style.display = 'block';
         // 🥚 교과어휘 몽글 도감 런처 — 전체 오픈(2026-08-18), QA 화이트리스트 해제
         // 🧭 BRAIN문법(원정대) — 전체 센터 오픈(2026-09-26): grammarSeriesItem 표시는
         //    applySeriesRestrictions의 BRAINGRAMMAR default-on 게이트가 처리 (여기서 별도 처리 불필요)
@@ -35583,8 +35602,12 @@ ${content}
 
       function workRowHtml(w, part, vol, idx) {
         const suffix = part === 'adv' ? ' (심화)' : '';
+        // 미완료 판정: 어휘 + 웹툰 + 1~10화 전부 완료해야 완독 → 하나라도 미완료면 테두리 러닝 라이트(todo)
+        const _bId = seosulBookId(part, vol, idx);
+        let _done = (seosulGetScore(_bId) !== null) && seosulGetWebtoonDone(_bId);
+        if (_done) { for (let e = 1; e <= 10; e++) { if (seosulGetEpisodeScore(_bId, e) === null) { _done = false; break; } } }
         return (
-          '<div class="seosul-workrow">' +
+          '<div class="seosul-workrow' + (_done ? '' : ' todo') + '">' +
           '<div class="seosul-work-main" title="' + w.t + suffix + ' — ' + w.a + '">' +
           '<div class="seosul-work-imgwrap">' + (w.vid
             ? '<video class="seosul-work-vid" autoplay muted loop playsinline preload="metadata" poster="' + encodeURI(SEOSUL_IMG + w.img) + SEOSUL_IMG_V + '"><source src="' + encodeURI(SEOSUL_IMG + w.img.replace(/\.png$/i, '.mp4')) + '?v=20261109w" type="video/mp4"></video>'
@@ -35675,6 +35698,15 @@ ${content}
             animation: seosulBorderRun 2.8s linear infinite;
           }
           @keyframes seosulBorderRun { to { --seosul-bangle: 360deg; } }
+          /* 미완료 이야기 카드 — 테두리를 도는 러닝 라이트(서브카드와 동일 효과, 큰 반경) */
+          .seosul-workrow.todo::after {
+            content: ''; position: absolute; inset: 0; border-radius: 18px; padding: 2px;
+            background: conic-gradient(from var(--seosul-bangle), transparent 0deg, transparent 230deg, rgba(255,255,255,0.35) 285deg, rgba(255,255,255,0.98) 312deg, rgba(255,255,255,0.35) 339deg, transparent 360deg);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude;
+            pointer-events: none; z-index: 3;
+            animation: seosulBorderRun 3.2s linear infinite;
+          }
           #seosulLockOverlay { position: fixed; inset: 0; z-index: 10011; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
           .seosul-lock-modal { background: linear-gradient(160deg, #1f3328 0%, #14201a 100%); border: 1.5px solid #33493b; border-radius: 18px; padding: 28px 26px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,0.55); animation: grammarIntroPop 0.3s cubic-bezier(0.34,1.56,0.64,1); }
           .seosul-lock-ic { font-size: 44px; line-height: 1; }
@@ -35856,7 +35888,7 @@ ${content}
           + '&title=' + encodeURIComponent(w.t)
           + '&author=' + encodeURIComponent(w.a)
           + '&theme=' + (part === 'adv' ? 'adv' : 'basic')
-          + '&v=20261108b';
+          + '&v=20261113c';
         const iframe = document.createElement('iframe');
         iframe.src = url;
         iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
@@ -48562,6 +48594,52 @@ ${content}
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _refreshBetaCounts);
     else _refreshBetaCounts();
     setTimeout(_refreshBetaCounts, 1200); // 로그인 정보가 늦게 채워지는 경우 대비
+  })();
+  </script>
+
+  <!-- 🎄 산타 몽글이와 함께하는 크리스마스 — 문학블록팡팡: 영상 팝업 + 게임 실행 -->
+  <script>
+  (function () {
+    // 영상 팝업 → 시작하기 → 게임 오버레이
+    window.openSantaMonggeul = function () {
+      if (document.getElementById('santaVideoOverlay')) return;
+      var ov = document.createElement('div');
+      ov.id = 'santaVideoOverlay';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:100050;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(ellipse at center, rgba(12,34,26,0.82), rgba(5,16,12,0.95));backdrop-filter:blur(4px);';
+      ov.innerHTML =
+        '<div style="position:relative;width:100%;max-width:640px;background:linear-gradient(170deg,#1e4038,#0e261e);border:1.5px solid rgba(255,255,255,0.18);border-radius:22px;padding:18px 18px 22px;box-shadow:0 26px 70px rgba(0,0,0,0.55);text-align:center;font-family:\'Pretendard\',sans-serif;">' +
+        '<button id="santaVClose" style="position:absolute;top:12px;right:14px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.4);color:#fff;border:1.5px solid rgba(255,255,255,0.3);font-size:18px;cursor:pointer;z-index:2;">✕</button>' +
+        '<div style="font-size:19px;font-weight:900;color:#ffd85a;margin:4px 0 12px;">🎄 산타 몽글이와 함께하는 크리스마스 — 문학블록팡팡</div>' +
+        '<video id="santaVideo" src="/images/산타몽글문학블록팡팡.mp4" style="width:100%;border-radius:14px;background:#000;display:block;" autoplay muted playsinline controls loop></video>' +
+        '<button id="santaStartBtn" style="margin-top:16px;width:100%;padding:15px;border:none;border-radius:14px;font-size:17px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#2fae6a,#5bd98a);color:#06281a;box-shadow:0 8px 22px rgba(47,174,106,0.4);">시작하기 🎁</button>' +
+        '</div>';
+      document.body.appendChild(ov);
+      var close = function () { try { var v = document.getElementById('santaVideo'); if (v) v.pause(); } catch (e) {} ov.remove(); };
+      document.getElementById('santaVClose').onclick = close;
+      ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+      document.getElementById('santaStartBtn').onclick = function () { close(); openSantaGame(); };
+    };
+    // 게임 전체화면 오버레이(iframe)
+    window.openSantaGame = function () {
+      var old = document.getElementById('santaGameOverlay'); if (old) old.remove();
+      var ov = document.createElement('div');
+      ov.id = 'santaGameOverlay';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:100050;background:#0a1a16;';
+      var ifr = document.createElement('iframe');
+      ifr.src = '/academy/santa-monggeul.html?v=20261113f';
+      ifr.style.cssText = 'width:100%;height:100%;border:none;display:block;';
+      var x = document.createElement('button');
+      x.textContent = '✕'; x.title = '닫기';
+      x.style.cssText = 'position:absolute;top:12px;right:14px;z-index:2;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,0.55);color:#fff;border:1.5px solid rgba(255,255,255,0.35);font-size:19px;cursor:pointer;';
+      x.onclick = function () { ov.remove(); };
+      ov.appendChild(ifr); ov.appendChild(x);
+      document.body.appendChild(ov);
+    };
+    // 게임 내 '완료하기' → 오버레이 닫기
+    window.addEventListener('message', function (e) {
+      var d = (e && e.data) || {};
+      if (d.type === 'santaMonggeulDone') { var g = document.getElementById('santaGameOverlay'); if (g) g.remove(); }
+    });
   })();
   </script>
 

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>산타 몽글이와 함께하는 크리스마스 — 문학블록팡팡</title>
+<script src="/speed-reading-workbook-data.js?v=20261108b"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root { --xred: #e2464a; --xgreen: #2fae6a; --xgold: #ffd85a; --snow: #eaf4ff; --line: rgba(255,255,255,0.22); --panel: rgba(18,34,28,0.72); }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: 'Pretendard', -apple-system, 'Noto Sans KR', sans-serif; color: #f2f7ff; user-select: none;
+    background: radial-gradient(ellipse at 50% -10%, #1e4038 0%, #10261f 55%, #0a1a16 100%); position: relative; }
+  /* 게임 내부 배경 영상 (연하게) */
+  #bgVideo { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; pointer-events: none; opacity: 0.22; }
+  /* 크리스마스 배경 장식 */
+  #scene { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .xlight { position: absolute; top: 0; width: 9px; height: 9px; border-radius: 50%; animation: xtwinkle 1.6s ease-in-out infinite; }
+  .tree { position: absolute; bottom: -6px; opacity: 0.5; filter: drop-shadow(0 0 10px rgba(47,174,106,0.5)); }
+  @keyframes xtwinkle { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
+  #parts { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; opacity: 0.9; }
+  #parts > div { position: absolute; top: -12vh; }
+  .p-emoji { line-height: 1; animation: pSway linear infinite; }
+  .p-snow { border-radius: 50%; background: #fff; filter: blur(0.3px); animation: pSway linear infinite; }
+  @keyframes pSway { 0% { transform: translateY(-12vh) translateX(0) rotate(0deg); } 50% { transform: translateY(56vh) translateX(var(--sx,24px)) rotate(180deg); } 100% { transform: translateY(125vh) translateX(0) rotate(360deg); } }
+  #flash { position: fixed; inset: 0; z-index: 2; background: #fff; opacity: 0; pointer-events: none; }
+  #flash.on { animation: flashA 0.42s ease-out; }
+  @keyframes flashA { 0% { opacity: 0; } 15% { opacity: 0.5; } 100% { opacity: 0; } }
+
+  #game { position: relative; z-index: 3; height: 100%; display: flex; flex-direction: column; }
+
+  /* HUD */
+  #hud { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 10px 16px; flex-wrap: wrap;
+    background: linear-gradient(180deg, rgba(10,26,20,0.92), rgba(10,26,20,0.3)); border-bottom: 1px solid var(--line); }
+  .hud-title { font-size: 16px; font-weight: 900; display: flex; align-items: center; gap: 6px; color: #fff; white-space: nowrap; }
+  .hud-title b { color: var(--xgold); }
+  .hud-spacer { flex: 1; }
+  .hud-chip { display: flex; align-items: center; gap: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 5px 12px; font-weight: 800; font-size: 13.5px; white-space: nowrap; }
+  .hud-chip .lb { font-size: 10.5px; color: #a9d8c2; font-weight: 700; }
+  #lives { letter-spacing: 1px; font-size: 15px; display: inline-block; }
+  #lives.lifehit { animation: lifeHit 0.5s ease-out; }
+  @keyframes lifeHit { 0%,100% { transform: scale(1); } 30% { transform: scale(1.45); filter: drop-shadow(0 0 9px #ff5a7a); } }
+  #workBar { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 14px; font-size: 13px; font-weight: 800; color: #cde9db; background: rgba(10,26,20,0.5); border-bottom: 1px solid var(--line); }
+  #workBar .wbEmoji { font-size: 17px; }
+  #workBar b { color: var(--xgold); }
+
+  #arena { flex: 1 1 auto; display: flex; min-height: 0; position: relative; }
+  #field { position: relative; flex: 1 1 auto; overflow: hidden; }
+  #field::before, #field::after { content: ''; position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.06); }
+  #field::before { left: 33.33%; } #field::after { left: 66.66%; }
+
+  /* 선물상자 블록 */
+  /* 선물상자 블록 — 가운데 십자선 없이 글자 선명, 테두리에 선물 리본 느낌 + 코너 보우 */
+  .block { position: absolute; max-width: 30%; min-width: 142px; padding: 15px 16px 14px; border-radius: 13px;
+    color: #fff; font-size: 16px; font-weight: 800; line-height: 1.4; text-align: center; transform: translateX(-50%); will-change: top;
+    background: linear-gradient(160deg, #e2464a 0%, #b4282c 100%);
+    border: 3px solid var(--xgold);
+    box-shadow: 0 7px 20px rgba(0,0,0,0.45), inset 0 0 0 2px rgba(255,255,255,0.4), inset 0 2px 0 rgba(255,255,255,0.3); }
+  .block.g2 { background: linear-gradient(160deg, #2fae6a 0%, #1c7d4b 100%); }
+  .block::after { content: '🎀'; position: absolute; top: -14px; right: -8px; font-size: 19px; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5)); }
+  .block .b-ic { display: block; font-size: 17px; margin-bottom: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
+  .block.danger { border-color: #ffe08a; box-shadow: 0 7px 20px rgba(0,0,0,0.45), 0 0 16px rgba(255,90,122,0.6); animation: wob 0.5s ease-in-out infinite; }
+  @keyframes wob { 0%,100% { transform: translateX(-50%) rotate(-1.5deg); } 50% { transform: translateX(-50%) rotate(1.5deg); } }
+  /* 지금 맞혀야 할 블록 — 흰 테두리 + 맥동하는 금빛 글로우 링 + "🎯 지금!" 배지 */
+  .block.target { border-color: #fff !important; z-index: 5; animation: tgtPulse 0.8s ease-in-out infinite !important; }
+  @keyframes tgtPulse {
+    0%,100% { box-shadow: 0 0 0 3px var(--xgold), 0 0 18px 4px rgba(255,216,90,0.8), 0 7px 22px rgba(0,0,0,0.5); }
+    50% { box-shadow: 0 0 0 5px #fff, 0 0 34px 12px rgba(255,216,90,1), 0 7px 22px rgba(0,0,0,0.5); }
+  }
+  .block.target::before { content: '🎯 지금!'; position: absolute; top: -27px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 900; color: #3a2300; background: var(--xgold); padding: 3px 11px; border-radius: 999px; white-space: nowrap; box-shadow: 0 3px 9px rgba(0,0,0,0.45); animation: tgtBob 0.8s ease-in-out infinite; }
+  @keyframes tgtBob { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(3px); } }
+  .block.pop { animation: blockPop 0.26s ease-out forwards; }
+  @keyframes blockPop { to { transform: translateX(-50%) scale(1.5); opacity: 0; filter: blur(3px); } }
+
+  /* 우측: 외운 단어 */
+  #side { flex: 0 0 210px; border-left: 1px solid var(--line); background: rgba(8,20,16,0.6); display: flex; flex-direction: column; min-height: 0; }
+  #side h3 { font-size: 12.5px; font-weight: 900; padding: 10px 13px 7px; color: #9fe3bc; display: flex; align-items: center; gap: 6px; }
+  #side h3 span { margin-left: auto; font-size: 11px; color: #a9d8c2; background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 999px; }
+  #learnedList { flex: 1; overflow-y: auto; padding: 0 11px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .learned-chip { background: linear-gradient(135deg, rgba(47,174,106,0.2), rgba(255,216,90,0.12)); border: 1px solid rgba(47,174,106,0.4); border-radius: 10px; padding: 7px 10px; animation: chipIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+  .learned-chip .lw { font-size: 13.5px; font-weight: 900; color: #e9fff3; }
+  .learned-chip .lm { font-size: 10.5px; color: #a9d8c2; margin-top: 1px; line-height: 1.3; }
+  @keyframes chipIn { from { transform: translateX(26px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* 파워업 */
+  #powerups { position: absolute; left: 14px; bottom: 14px; z-index: 7; display: flex; gap: 11px; align-items: flex-end; }
+  .pu-btn { position: relative; width: 68px; height: 68px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.5);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: #fff; font-size: 24px; line-height: 1;
+    box-shadow: 0 7px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3); transition: transform 0.12s; }
+  .pu-btn:hover { transform: scale(1.08); } .pu-btn:active { transform: scale(0.94); }
+  .pu-btn .pu-lb { font-size: 9.5px; font-weight: 800; margin-top: -1px; }
+  .pu-btn .pu-ct { position: absolute; top: -6px; right: -6px; background: var(--xgold); color: #3a2300; font-size: 11.5px; font-weight: 900; border-radius: 999px; padding: 1px 6px; border: 1.5px solid #fff; }
+  .pu-btn.empty { filter: grayscale(0.85) brightness(0.65); cursor: not-allowed; box-shadow: none; }
+  #whirl { background: radial-gradient(circle at 50% 32%, #3a6ad0, #16266e); border-color: #9fd0ff; }
+  #hint { background: radial-gradient(circle at 50% 32%, #f0a93a, #9a5a12); border-color: #ffd98a; }
+  .whirl-sweep { position: absolute; left: 50%; top: 42%; transform: translate(-50%,-50%); font-size: 160px; z-index: 30; pointer-events: none; filter: drop-shadow(0 0 22px rgba(150,200,255,0.85)); animation: whirlSweep 0.75s ease-out forwards; }
+  @keyframes whirlSweep { 0% { opacity: 0; transform: translate(-50%,12%) scale(0.3) rotate(0deg); } 30% { opacity: 0.95; } 100% { opacity: 0; transform: translate(-50%,-62%) scale(1.5) rotate(540deg); } }
+
+  /* 하단 단어 버튼 */
+  #words { flex: 0 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; padding: 12px 16px 15px; background: linear-gradient(0deg, rgba(10,26,20,0.95), rgba(10,26,20,0.4)); border-top: 1px solid var(--line); }
+  .wbtn { position: relative; padding: 13px 8px; border-radius: 12px; border: 2px solid var(--xgold); color: #fff; font-size: 16px; font-weight: 800; cursor: pointer; transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s; box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.22);
+    background: linear-gradient(160deg, #2fae6a, #1c7d4b); }
+  .wbtn:nth-child(odd) { background: linear-gradient(160deg, #e2464a, #b4282c); }
+  .wbtn:hover { transform: translateY(-3px); border-color: #fff; box-shadow: 0 10px 22px rgba(255,216,90,0.45); }
+  .wbtn:active { transform: translateY(0) scale(0.97); }
+  .wbtn.miss { animation: shk 0.3s; }
+  @keyframes shk { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
+  .wbtn.done { pointer-events: none; opacity: 0.45; }
+  .wbtn.done::after { content: '✓'; position: absolute; top: 4px; right: 7px; color: var(--xgold); font-size: 13px; font-weight: 900; }
+  .wbtn.hintglow { border-color: var(--xgold) !important; animation: hintGlow 0.6s ease-in-out 0s 7 alternate; }
+  @keyframes hintGlow { from { box-shadow: 0 4px 12px rgba(0,0,0,0.35); } to { box-shadow: 0 0 22px 5px var(--xgold), 0 0 40px rgba(255,216,90,0.7); transform: translateY(-4px) scale(1.06); } }
+
+  /* FX */
+  #fx { position: fixed; inset: 0; z-index: 50; pointer-events: none; overflow: hidden; }
+  .snowball { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #d4e8ff 70%, #a9c6e6); box-shadow: 0 0 10px rgba(255,255,255,0.85); }
+  .spark { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px #cfe3ff; animation: sparkA 0.5s ease-out forwards; }
+  @keyframes sparkA { to { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; } }
+  .scorepop { position: absolute; font-size: 22px; font-weight: 900; color: var(--xgold); text-shadow: 0 2px 8px rgba(0,0,0,0.6); animation: scoreA 0.8s ease-out forwards; }
+  @keyframes scoreA { 0% { transform: translateY(0) scale(0.6); opacity: 0; } 25% { transform: translateY(-10px) scale(1.1); opacity: 1; } 100% { transform: translateY(-46px) scale(1); opacity: 0; } }
+
+  /* 보너스 하트 */
+  .heart-item { position: absolute; transform: translateX(-50%); z-index: 6; cursor: pointer; font-size: 40px; line-height: 1; filter: drop-shadow(0 0 12px rgba(255,120,170,0.95)); animation: heartPulse 0.85s ease-in-out infinite; will-change: top; }
+  .heart-item::before { content: '생명 +1'; position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 900; color: #ffd0e0; text-shadow: 0 1px 3px rgba(0,0,0,0.6); white-space: nowrap; }
+  @keyframes heartPulse { 0%,100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.18); } }
+  .heart-item.grab { animation: heartGrab 0.28s ease-out forwards; }
+  @keyframes heartGrab { to { transform: translateX(-50%) scale(2.3); opacity: 0; } }
+
+  /* 토스트 */
+  #toast { position: absolute; top: 44%; left: 50%; z-index: 60; transform: translate(-50%,-50%); padding: 22px 34px; border-radius: 20px; max-width: 88vw; text-align: center; background: linear-gradient(135deg, rgba(226,70,74,0.97), rgba(164,31,27,0.97)); color: #fff; box-shadow: 0 20px 50px rgba(226,70,74,0.5), inset 0 1px 0 rgba(255,255,255,0.3); opacity: 0; pointer-events: none; }
+  #toast .t-main { font-size: 26px; font-weight: 900; } #toast .t-sub { font-size: 15px; font-weight: 700; margin-top: 8px; color: #ffe3ea; }
+  #toast.show { animation: toastA 2.0s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes toastA { 0% { opacity: 0; transform: translate(-50%,-50%) scale(0.6); } 14% { opacity: 1; transform: translate(-50%,-50%) scale(1.08); } 30% { transform: translate(-50%,-50%) scale(1); } 86% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%,-54%) scale(0.98); } }
+
+  /* 오버레이 */
+  #ov { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; background: radial-gradient(ellipse at center, rgba(12,34,26,0.84), rgba(5,16,12,0.95)); backdrop-filter: blur(5px); }
+  #ov.hide { display: none; }
+  .ov-card { position: relative; width: 100%; max-width: 460px; max-height: 92vh; overflow-y: auto; background: linear-gradient(170deg, rgba(30,64,56,0.96), rgba(14,38,30,0.96)); border: 1.5px solid var(--line); border-radius: 24px; padding: 30px 28px; text-align: center; box-shadow: 0 28px 70px rgba(0,0,0,0.55); animation: ovPop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+  .ov-rank-btn { position: absolute; top: 14px; right: 14px; z-index: 2; display: inline-flex; align-items: center; gap: 4px; padding: 7px 13px; border: 1.5px solid var(--xgold); border-radius: 999px; background: rgba(255,216,90,0.14); color: var(--xgold); font-size: 13px; font-weight: 800; cursor: pointer; }
+  .ov-rank-btn:hover { background: rgba(255,216,90,0.28); }
+  @keyframes ovPop { from { transform: translateY(16px) scale(0.96); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+  .ov-emoji { font-size: 54px; line-height: 1; margin-bottom: 8px; }
+  .ov-title { font-size: 24px; font-weight: 900; margin-bottom: 8px; background: linear-gradient(90deg, var(--xred), var(--xgold), var(--xgreen)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .ov-sub { font-size: 14px; color: #c7e5d6; line-height: 1.6; margin-bottom: 16px; font-weight: 500; }
+  .ov-stat { display: flex; justify-content: center; gap: 18px; margin-bottom: 16px; flex-wrap: wrap; }
+  .ov-stat div { font-size: 12px; color: #a9d8c2; font-weight: 700; } .ov-stat b { display: block; font-size: 22px; color: var(--xgold); margin-top: 3px; }
+  .ov-btn { width: 100%; padding: 14px; border: none; border-radius: 14px; font-size: 16px; font-weight: 900; cursor: pointer; background: linear-gradient(135deg, var(--xred), #ff7a5a); color: #fff; box-shadow: 0 8px 22px rgba(226,70,74,0.4); margin-bottom: 9px; }
+  .ov-btn.green { background: linear-gradient(135deg, var(--xgreen), #5bd98a); box-shadow: 0 8px 22px rgba(47,174,106,0.4); color: #06281a; }
+  .ov-btn.sub { background: rgba(255,255,255,0.1); color: #cdeada; box-shadow: none; font-size: 14px; padding: 12px; }
+  .ov-btn:active { transform: scale(0.98); }
+  .help-row { display: flex; gap: 8px; justify-content: center; margin: 12px 0 2px; flex-wrap: wrap; }
+  .help-row span { font-size: 12px; color: #a9d8c2; background: rgba(255,255,255,0.06); padding: 6px 10px; border-radius: 9px; font-weight: 600; }
+  /* 리더보드 */
+  .lb-box { background: rgba(0,0,0,0.26); border-radius: 14px; padding: 10px 12px; margin-bottom: 14px; text-align: left; }
+  .lb-head { font-size: 12px; font-weight: 800; color: #9fe3bc; margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .lb-row { display: grid; grid-template-columns: 34px 1fr auto auto; gap: 8px; align-items: center; padding: 5px 4px; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 12.5px; }
+  .lb-row.me { background: rgba(255,216,90,0.14); border-radius: 8px; }
+  .lb-rank { font-weight: 900; color: var(--xgold); text-align: center; }
+  .lb-name { font-weight: 700; color: #eafff3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-stage { font-weight: 800; color: #9fe3bc; } .lb-time { color: #a9d8c2; font-size: 11.5px; }
+
+  @media (max-width: 860px) {
+    #side { display: none; }
+    .block { font-size: 14px; min-width: 120px; }
+    .wbtn { font-size: 14px; padding: 11px 4px; }
+    .pu-btn { width: 58px; height: 58px; font-size: 21px; }
+    #toast .t-main { font-size: 20px; } #toast .t-sub { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+  <video id="bgVideo" src="/images/산타몽글문학블록팡팡게임내부배경.mp4" autoplay muted loop playsinline></video>
+  <div id="scene"></div>
+  <div id="parts"></div>
+  <div id="flash"></div>
+
+  <div id="game">
+    <div id="hud">
+      <div class="hud-title">🎄 <b>문학블록팡팡</b></div>
+      <div class="hud-spacer"></div>
+      <div class="hud-chip"><span class="lb">단계</span><span id="stageTxt">0 / 120</span></div>
+      <div class="hud-chip"><span class="lb">생명</span><span id="lives">❤️❤️❤️</span></div>
+      <div class="hud-chip"><span class="lb">어휘</span><span id="words2">0</span></div>
+      <div class="hud-chip"><span class="lb">점수</span><span id="score">0</span></div>
+      <div class="hud-chip"><span class="lb">⏱</span><span id="timer">0:00</span></div>
+    </div>
+    <div id="workBar"><span class="wbEmoji" id="wbEmoji">🎄</span> <span id="wbTitle">—</span></div>
+    <div id="arena">
+      <div id="field"></div>
+      <div id="side">
+        <h3>🎁 외운 단어 <span id="learnedCount">0</span></h3>
+        <div id="learnedList"></div>
+      </div>
+      <div id="powerups">
+        <button id="whirl" class="pu-btn" type="button"></button>
+        <button id="hint" class="pu-btn" type="button"></button>
+      </div>
+    </div>
+    <div id="words"></div>
+    <div id="toast"></div>
+  </div>
+
+  <div id="fx"></div>
+  <div id="ov"><div class="ov-card" id="ovCard"></div></div>
+
+<script>
+(function () {
+  'use strict';
+  // ===== 24편 작품(id↔제목) =====
+  var WORKS = [
+    { id: 'sonagi', t: '소나기' }, { id: 'dongbaek', t: '동백꽃' }, { id: 'yang', t: '양반전' }, { id: 'chunhyang', t: '춘향전' },
+    { id: 'sim', t: '심청전' }, { id: 'hu', t: '허생전' }, { id: 'rich', t: '흥부전' }, { id: 'toki', t: '별주부전' },
+    { id: 'love', t: '사랑손님과 어머니' }, { id: 'goodday', t: '운수 좋은 날' }, { id: 'cap', t: '꺼삐딴 리' }, { id: 'sampo', t: '삼포 가는 길' },
+    { id: 'memil', t: '메밀꽃 필 무렵' }, { id: 'ahop', t: '아홉 켤레의 구두' }, { id: 'dalbam', t: '달밤' }, { id: 'bombom', t: '봄봄' },
+    { id: 'hwangman', t: '황만근은 이렇게 말했다' }, { id: 'jangma', t: '장마' }, { id: 'nanjaengi', t: '난쟁이가 쏘아올린 작은 공' }, { id: 'gubo', t: '소설가 구보씨의 일일' },
+    { id: 'guunmong', t: '구운몽' }, { id: 'mansejeon', t: '만세전' }, { id: 'gwangjang', t: '광장' }, { id: 'garibong', t: '비 오는 날이면 가리봉동에' }
+  ];
+  var XMAS = ['🎄','🎁','⛄','🔔','⭐','❄️','🎅','🦌','🕯️','🍬','🧦','🌟','☃️','🎀','🪅','🥛','🍪','🧣','🛷','🔥','💝','🌲','✨','🎶'];
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  // 작품 chunk(2화) → 10개 단어
+  function chunkWords(id, c) {
+    var b = (window.SR_WORKBOOK_DATA || {})[id]; if (!b || !Array.isArray(b.epVocab)) return [];
+    var two = [].concat(b.epVocab[c * 2] || [], b.epVocab[c * 2 + 1] || []);
+    var seen = {}, list = [];
+    two.forEach(function (v) { if (v && v.w && v.m && !seen[v.w]) { seen[v.w] = 1; list.push({ w: v.w, m: v.m }); } });
+    return list;
+  }
+  // 120 스테이지(작품×5) 셔플
+  var STAGES = (function () {
+    var arr = [];
+    for (var w = 0; w < WORKS.length; w++) for (var c = 0; c < 5; c++) arr.push({ w: w, c: c });
+    return shuffle(arr);
+  })();
+  var TOTAL_STAGES = STAGES.length; // 120
+
+  // ===== DOM =====
+  var field = document.getElementById('field'), wordsEl = document.getElementById('words'), fx = document.getElementById('fx');
+  var ov = document.getElementById('ov'), ovCard = document.getElementById('ovCard');
+  var livesEl = document.getElementById('lives'), scoreEl = document.getElementById('score'), timerEl = document.getElementById('timer');
+  var stageTxt = document.getElementById('stageTxt'), words2 = document.getElementById('words2');
+  var learnedList = document.getElementById('learnedList'), learnedCount = document.getElementById('learnedCount');
+  var wbEmoji = document.getElementById('wbEmoji'), wbTitle = document.getElementById('wbTitle');
+  var whirlBtn = document.getElementById('whirl'), hintBtn = document.getElementById('hint');
+
+  // ===== 상태 =====
+  var G = { stageIdx: 0, cleared: 0, lives: 3, score: 0, combo: 0, learned: 0, runMs: 0, whirl: 0, hint: 0 };
+  var WHIRL_PER_STAGE = 2, HINT_PER_STAGE = 2;
+  var blocks = [], hearts = [], spawnQueue = [], pendingWords = {}, btnByWord = {}, _curTarget = null;
+  var heartSpawned = false, heartAt = 0, BLOCK_IC = '🎁';
+  var rafId = null, lastT = 0, spawnTimer = 0, spawnEvery = 2000, maxOnScreen = 4, fallSec = 18, running = false;
+  var LANES = [16.67, 50, 83.33], LANE_GAP = 100;
+
+  // ===== 사운드 =====
+  var AC = null;
+  function beep(f, d, t, v) { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); var o = AC.createOscillator(), g = AC.createGain(); o.type = t || 'triangle'; o.frequency.value = f; g.gain.value = v || 0.06; o.connect(g); g.connect(AC.destination); o.start(); g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + (d || 0.12)); o.stop(AC.currentTime + (d || 0.12)); } catch (e) {} }
+
+  // ===== 배경 장식(전구·트리) =====
+  (function decorate() {
+    var s = document.getElementById('scene'), html = '';
+    var cols = ['#ff5a5a', '#ffd85a', '#5bd98a', '#7fb0ff', '#ff8fd0'];
+    for (var i = 0; i < 22; i++) { var l = (Math.random() * 100).toFixed(1), d = (Math.random() * 1.6).toFixed(2), c = cols[i % cols.length], tp = (Math.random() * 12).toFixed(1); html += '<div class="xlight" style="left:' + l + '%;top:' + tp + '%;background:' + c + ';box-shadow:0 0 10px ' + c + ';animation-delay:-' + d + 's"></div>'; }
+    // 간단 트리(이모지 크게) 좌우 하단
+    html += '<div class="tree" style="left:2%;font-size:150px;">🎄</div><div class="tree" style="right:2%;font-size:120px;">🎄</div>';
+    s.innerHTML = html;
+  })();
+  function flashColor(c) { var f = document.getElementById('flash'); f.style.background = c; f.classList.remove('on'); void f.offsetWidth; f.classList.add('on'); }
+  function flash() { flashColor('#fff'); }
+  function flashRed() { flashColor('#ff6a8a'); }
+  function pulseLives() { livesEl.classList.remove('lifehit'); void livesEl.offsetWidth; livesEl.classList.add('lifehit'); }
+
+  // 단계별 크리스마스 이모지 파티클
+  function makeParticles(emoji) {
+    var r = document.getElementById('parts'); r.innerHTML = '';
+    var html = '';
+    for (var i = 0; i < 26; i++) { var left = (Math.random() * 100).toFixed(2), delay = (-Math.random() * 9).toFixed(2), sx = (Math.random() * 70 - 35).toFixed(0) + 'px', du = (6 + Math.random() * 5).toFixed(2), fs = (15 + Math.random() * 13).toFixed(0); html += '<div class="p-emoji" style="left:' + left + '%;font-size:' + fs + 'px;animation-duration:' + du + 's;animation-delay:' + delay + 's;--sx:' + sx + '">' + emoji + '</div>'; }
+    for (var j = 0; j < 20; j++) { var l2 = (Math.random() * 100).toFixed(2), de2 = (-Math.random() * 9).toFixed(2), sx2 = (Math.random() * 60 - 30).toFixed(0) + 'px', du2 = (6 + Math.random() * 5).toFixed(2), sz = (4 + Math.random() * 5).toFixed(0); html += '<div class="p-snow" style="left:' + l2 + '%;width:' + sz + 'px;height:' + sz + 'px;animation-duration:' + du2 + 's;animation-delay:' + de2 + 's;--sx:' + sx2 + '"></div>'; }
+    r.innerHTML = html;
+  }
+
+  // ===== HUD =====
+  function renderLives() { livesEl.textContent = '❤️'.repeat(G.lives) + '🖤'.repeat(Math.max(0, 3 - G.lives)); }
+  function renderScore() { scoreEl.textContent = G.score; }
+  function renderWords() { words2.textContent = G.learned; learnedCount.textContent = G.learned + ' / 1200'; }
+  function renderStageTxt() { stageTxt.textContent = (G.stageIdx + 1) + ' / ' + TOTAL_STAGES; }
+  function renderWhirl() { whirlBtn.innerHTML = '🌪️<span class="pu-lb">회오리</span><span class="pu-ct">x' + G.whirl + '</span>'; whirlBtn.classList.toggle('empty', G.whirl <= 0); }
+  function renderHint() { hintBtn.innerHTML = '💡<span class="pu-lb">힌트</span><span class="pu-ct">x' + G.hint + '</span>'; hintBtn.classList.toggle('empty', G.hint <= 0); }
+  function fmtTime(ms) { var s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+
+  // ===== 오버레이 =====
+  function showOverlay(html) { ovCard.innerHTML = html; ov.classList.remove('hide'); }
+  function hideOverlay() { ov.classList.add('hide'); }
+
+  function getStudent() { try { var cs = JSON.parse(localStorage.getItem('currentStudent') || '{}'); return { grade: cs.grade || '', name: cs.name || '', academyName: cs.academyName || cs.academy || '' }; } catch (e) { return { grade: '', name: '', academyName: '' }; } }
+
+  function startScreen() {
+    running = false;
+    var bad = (TOTAL_STAGES < 120);
+    showOverlay(
+      '<button class="ov-rank-btn" id="rankBtn">🏆 순위보기</button>' +
+      '<div class="ov-emoji">🎅🎄</div>' +
+      '<div class="ov-title">산타 몽글이와 함께하는<br>크리스마스 — 문학블록팡팡</div>' +
+      '<div class="ov-sub">선물상자에 담긴 <b>뜻</b>이 눈처럼 쏟아져요!<br>아래 <b>낱말</b>을 눌러 <b>눈덩이</b>로 맞혀 터뜨리세요.<br>24편 어휘로 <b>1~120단계</b>에 도전! 🎁</div>' +
+      '<div class="help-row"><span>🎯 120단계</span><span>❤️ 생명 3</span><span>🌪️ 회오리 · 💡 힌트</span></div>' +
+      (bad ? '<div class="ov-sub" style="color:#ff9bb0">⚠️ 어휘 데이터를 불러오지 못했습니다.</div>' : '') +
+      '<button class="ov-btn green" id="startBtn">시작하기 🎁</button>'
+    );
+    document.getElementById('startBtn').onclick = function () { beep(660, 0.1); G.cleared = 0; G.score = 0; G.learned = 0; G.runMs = 0; learnedList.innerHTML = ''; renderWords(); startStage(0); };
+    document.getElementById('rankBtn').onclick = showRanking;
+  }
+
+  // 순위 보기(상위 20명) — 시작 화면에서 열람
+  function showRanking() {
+    beep(760, 0.1); running = false;
+    var st = getStudent();
+    showOverlay(
+      '<button class="ov-rank-btn" id="rankBackTop">← 뒤로</button>' +
+      '<div class="ov-emoji">🏆🎄</div>' +
+      '<div class="ov-title">문학블록팡팡 순위</div>' +
+      '<div class="ov-sub">완료 단계 → 총 시간 순 · 상위 <b>20명</b></div>' +
+      '<div class="lb-box"><div class="lb-head"><span>🏅 전체 순위</span><span id="lbMine"></span></div><div id="lbRows">불러오는 중…</div></div>' +
+      '<button class="ov-btn sub" id="rankBack">← 돌아가기</button>'
+    );
+    document.getElementById('rankBack').onclick = startScreen;
+    document.getElementById('rankBackTop').onclick = startScreen;
+    loadLeaderboard(st, 20);
+  }
+
+  // ===== 단계 시작 =====
+  function startStage(idx) {
+    G.stageIdx = idx; G.combo = 0; G.lives = 3; G.whirl = WHIRL_PER_STAGE; G.hint = HINT_PER_STAGE; _stageStartMs = G.runMs;
+    renderStageTxt(); renderLives(); renderScore(); renderWords(); renderWhirl(); renderHint();
+    field.innerHTML = ''; blocks = []; _curTarget = null; hearts = []; heartSpawned = false; heartAt = 5 + Math.random() * 7;
+
+    var st = STAGES[idx], work = WORKS[st.w];
+    wbEmoji.textContent = XMAS[idx % XMAS.length]; wbTitle.innerHTML = '<b>' + work.t + '</b> · ' + (st.c + 1) + '/5';
+    makeParticles(XMAS[idx % XMAS.length]);
+    BLOCK_IC = XMAS[idx % XMAS.length];
+
+    // 속도 램프: 1단계 18초 → 120단계 5.5초
+    var p = idx / Math.max(1, (TOTAL_STAGES - 1));
+    fallSec = 18 - (18 - 5.5) * p;
+    spawnEvery = 2000 - (2000 - 950) * p;
+    maxOnScreen = (idx >= 80) ? 5 : 4;
+
+    var words = chunkWords(work.id, st.c);
+    pendingWords = {}; spawnQueue = shuffle(words.slice());
+    words.forEach(function (v) { pendingWords[v.w] = v.m; });
+    btnByWord = {}; wordsEl.innerHTML = '';
+    shuffle(words.slice()).forEach(function (v) { var b = document.createElement('button'); b.className = 'wbtn'; b.textContent = v.w; b.onclick = function () { onWordClick(v.w, b); }; wordsEl.appendChild(b); btnByWord[v.w] = b; });
+
+    hideOverlay(); running = true; lastT = 0; spawnTimer = 0;
+    spawnOne();
+    if (rafId) cancelAnimationFrame(rafId); rafId = requestAnimationFrame(loop);
+  }
+
+  // ===== 블록 생성(레인·겹침 방지) =====
+  function freeLane() {
+    var topY = [Infinity, Infinity, Infinity];
+    for (var i = 0; i < blocks.length; i++) { var b = blocks[i]; if (b.dead) continue; if (b.y < topY[b.lane]) topY[b.lane] = b.y; }
+    var cand = []; for (var l = 0; l < 3; l++) if (topY[l] >= LANE_GAP) cand.push(l);
+    return cand.length ? cand[Math.floor(Math.random() * cand.length)] : -1;
+  }
+  function spawnOne() {
+    if (!spawnQueue.length) return false;
+    var lane = freeLane(); if (lane < 0) return false;
+    var v = spawnQueue.shift(); if (!pendingWords[v.w]) return true;
+    var el = document.createElement('div'); el.className = 'block' + (Math.random() < 0.5 ? ' g2' : '');
+    el.style.setProperty('--ry', (34 + Math.random() * 20).toFixed(0) + '%');
+    el.innerHTML = '<span class="b-ic">' + BLOCK_IC + '</span>' + v.m;
+    el.style.left = LANES[lane] + '%'; el.style.top = '-60px';
+    field.appendChild(el);
+    blocks.push({ el: el, w: v.w, m: v.m, lane: lane, y: -60, dead: false });
+    return true;
+  }
+  function spawnHeart() {
+    var el = document.createElement('div'); el.className = 'heart-item'; el.textContent = '❤️';
+    var lane = 20 + Math.random() * 60; el.style.left = lane + '%'; el.style.top = '-56px'; field.appendChild(el);
+    var h = { el: el, y: -56, dead: false }; el.onclick = function () { grabHeart(h); }; hearts.push(h);
+  }
+  function grabHeart(h) {
+    if (h.dead || !running) return; h.dead = true; h.el.classList.add('grab'); setTimeout(function () { h.el.remove(); }, 280);
+    var r = h.el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2; snowSplat(cx, cy); flash();
+    beep(1040, 0.1, 'sine', 0.08); setTimeout(function () { beep(1400, 0.1, 'sine', 0.06); }, 70);
+    if (G.lives < 3) { G.lives++; renderLives(); pulseLives(); flashColor('#8affc0'); scorePop(cx, cy - 10, '+1 ❤️', '#7af9d0'); }
+    else { G.score += 150; renderScore(); scorePop(cx, cy - 10, '생명 가득! +150', '#ffd85a'); }
+  }
+
+  // ===== 회오리 =====
+  function onWhirlClick() { if (!running || G.whirl <= 0) return; var a = blocks.filter(function (b) { return !b.dead; }); if (!a.length) return; G.whirl--; renderWhirl(); whirlUp(a); }
+  function whirlUp(active) {
+    active.sort(function (a, b) { return b.y - a.y; }); var cnt = [0, 0, 0];
+    active.forEach(function (b) { var n = cnt[b.lane]++; b.y = -60 - n * LANE_GAP; b.el.style.top = b.y + 'px'; b.el.classList.remove('danger'); });
+    _curTarget = null;
+    var s = document.createElement('div'); s.className = 'whirl-sweep'; s.textContent = '🌪️'; field.appendChild(s); setTimeout(function () { s.remove(); }, 760);
+    flashColor('#bfe3ff'); beep(300, 0.12, 'sawtooth', 0.07); setTimeout(function () { beep(540, 0.14, 'sine', 0.06); }, 90); setTimeout(function () { beep(780, 0.14, 'sine', 0.05); }, 180);
+  }
+  // ===== 힌트 =====
+  function onHintClick() {
+    if (!running || G.hint <= 0) return; var front = frontBlock(); if (!front) return;
+    var btn = btnByWord[front.w]; if (!btn || btn.classList.contains('done')) return;
+    G.hint--; renderHint(); beep(900, 0.1, 'sine', 0.07); setTimeout(function () { beep(1180, 0.08, 'sine', 0.05); }, 70);
+    btn.classList.remove('hintglow'); void btn.offsetWidth; btn.classList.add('hintglow'); setTimeout(function () { btn.classList.remove('hintglow'); }, 4400);
+  }
+
+  // ===== 루프 =====
+  function loop(t) {
+    if (!running) return;
+    if (!lastT) lastT = t;
+    var dt = Math.min(0.05, (t - lastT) / 1000); lastT = t;
+    G.runMs += dt * 1000; timerEl.textContent = fmtTime(G.runMs);
+    var H = field.clientHeight, speed = (H - 40) / fallSec, limit = H - 6;
+    spawnTimer += dt * 1000;
+    var onScreen = blocks.filter(function (b) { return !b.dead; }).length;
+    if (spawnTimer >= spawnEvery && spawnQueue.length && onScreen < maxOnScreen) { if (spawnOne()) spawnTimer = 0; }
+    for (var i = 0; i < blocks.length; i++) {
+      var b = blocks[i]; if (b.dead) continue;
+      b.y += speed * dt; b.el.style.top = b.y + 'px';
+      var bottom = b.y + b.el.offsetHeight;
+      if (!b.el.classList.contains('danger') && bottom > H * 0.72) b.el.classList.add('danger');
+      if (bottom >= limit) missBlock(b);
+    }
+    for (var k = 0; k < hearts.length; k++) { var hh = hearts[k]; if (hh.dead) continue; hh.y += speed * 0.88 * dt; hh.el.style.top = hh.y + 'px'; if (hh.y + hh.el.offsetHeight >= limit) { hh.dead = true; hh.el.remove(); } }
+    if (!heartSpawned && G.runMsStage() >= heartAt) { heartSpawned = true; spawnHeart(); }
+    var f = frontBlock();
+    if (f !== _curTarget) { if (_curTarget && _curTarget.el) _curTarget.el.classList.remove('target'); if (f && f.el) f.el.classList.add('target'); _curTarget = f; }
+    rafId = requestAnimationFrame(loop);
+  }
+  // 단계 내 경과(하트 등장 타이밍용) — 간단히 현재 단계 시작 이후 시간
+  var _stageStartMs = 0;
+  G.runMsStage = function () { return (G.runMs - _stageStartMs) / 1000; };
+
+  function frontBlock() { var f = null; for (var i = 0; i < blocks.length; i++) { var b = blocks[i]; if (!b.dead && (!f || b.y > f.y)) f = b; } return f; }
+
+  function missBlock(b) {
+    if (b.dead) return; b.dead = true; b.el.remove();
+    beep(140, 0.22, 'sawtooth', 0.08); flashRed(); pulseLives();
+    G.lives--; G.combo = 0; renderLives();
+    if (G.lives <= 0) { endRun(false); return; }
+    if (pendingWords[b.w]) spawnQueue.push({ w: b.w, m: b.m });
+  }
+
+  var toastEl = null, _toastTimer = null;
+  var ENC = ['다시 할 수 있어요! 💪', '괜찮아요, 천천히 🍀', '집중! 거의 다 왔어요 ✊', '실수는 누구나 해요 😊', '한 번 더! 🌟', '포기하지 말아요 🌱', '침착하게 😉'];
+  var WRONG_ORDER = ['⬇ 순서대로! 맨 아래부터', '앗! 금색 선물부터예요', '맨 아래 ⬇ 선물의 뜻을 찾아요'];
+  var WRONG_NONE = ['❌ 아직 안 떨어진 단어예요', '그 뜻은 아직 안 보여요', '천천히! 떨어지는 뜻을 봐요'];
+  function showToast(main) { if (!toastEl) toastEl = document.getElementById('toast'); var e = ENC[Math.floor(Math.random() * ENC.length)]; toastEl.innerHTML = '<div class="t-main">' + main + '</div><div class="t-sub">' + e + '</div>'; toastEl.classList.remove('show'); void toastEl.offsetWidth; toastEl.classList.add('show'); if (_toastTimer) clearTimeout(_toastTimer); _toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2000); }
+
+  function onWordClick(w, btn) {
+    if (!running) return; var front = frontBlock();
+    if (front && front.w === w) { hitBlock(front, btn); return; }
+    btn.classList.add('miss'); setTimeout(function () { btn.classList.remove('miss'); }, 300);
+    if (front) {
+      var onScreen = blocks.some(function (b) { return !b.dead && b.w === w; });
+      showToast((onScreen ? WRONG_ORDER : WRONG_NONE)[Math.floor(Math.random() * 3)]);
+      G.combo = 0; beep(150, 0.26, 'sawtooth', 0.09); flashRed(); pulseLives();
+      var r = btn.getBoundingClientRect(); scorePop(r.left + r.width / 2, r.top - 10, '-1 ❤️', '#ff6a8a');
+      G.lives--; renderLives(); if (G.lives <= 0) { endRun(false); }
+    } else { beep(240, 0.08, 'square', 0.05); }
+  }
+
+  function hitBlock(b, btn) {
+    b.dead = true;
+    var br = btn.getBoundingClientRect(), tr = b.el.getBoundingClientRect();
+    throwSnow(br.left + br.width / 2, br.top, tr.left + tr.width / 2, tr.top + tr.height / 2);
+    flash(); beep(820, 0.09, 'sine', 0.07); setTimeout(function () { beep(1160, 0.08, 'sine', 0.05); }, 70);
+    // 눈덩이 세례를 맞은 뒤(약 300ms) 터지게
+    setTimeout(function () { b.el.classList.add('pop'); setTimeout(function () { b.el.remove(); }, 260); }, 300);
+    G.combo++; var gain = 100 + (G.combo >= 2 ? (G.combo - 1) * 25 : 0); G.score += gain; renderScore();
+    scorePop(tr.left + tr.width / 2, tr.top - 20, '+' + gain + (G.combo >= 3 ? ' 🔥x' + G.combo : ''), '#ffd85a');
+    addLearned(b.w, b.m); delete pendingWords[b.w]; if (btn) btn.classList.add('done');
+    if (Object.keys(pendingWords).length === 0) setTimeout(stageClear, 420);
+  }
+  function addLearned(w, m) { G.learned++; renderWords(); var c = document.createElement('div'); c.className = 'learned-chip'; c.innerHTML = '<div class="lw">' + w + '</div><div class="lm">' + m + '</div>'; learnedList.insertBefore(c, learnedList.firstChild); }
+
+  // ===== 눈덩이 발사체 =====
+  function throwSnow(x1, y1, x2, y2) {
+    var dx = x2 - x1, dy = y2 - y1;
+    for (var i = 0; i < 4; i++) {
+      (function (k) {
+        setTimeout(function () {
+          var jx = (Math.random() * 16 - 8), jy = (Math.random() * 10 - 5), sz = 15 + Math.random() * 9;
+          var s = document.createElement('div'); s.className = 'snowball';
+          s.style.width = sz + 'px'; s.style.height = sz + 'px';
+          s.style.left = (x1 - sz / 2 + jx) + 'px'; s.style.top = (y1 - sz / 2) + 'px';
+          fx.appendChild(s); s.style.transition = 'transform 0.32s cubic-bezier(.4,0,.7,1)';
+          requestAnimationFrame(function () { s.style.transform = 'translate(' + (dx - jx) + 'px,' + (dy + jy) + 'px) scale(0.72)'; });
+          setTimeout(function () { snowSplat(x2 + jx, y2 + jy); s.remove(); }, 320);
+        }, k * 55); // 연속으로 천천히 날아가는 느낌
+      })(i);
+    }
+  }
+  function snowSplat(x, y) { for (var i = 0; i < 12; i++) { var s = document.createElement('div'); s.className = 'spark'; var a = Math.random() * Math.PI * 2, d = 22 + Math.random() * 44; s.style.left = x + 'px'; s.style.top = y + 'px'; s.style.setProperty('--dx', (Math.cos(a) * d).toFixed(0) + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d).toFixed(0) + 'px'); fx.appendChild(s); (function (el) { setTimeout(function () { el.remove(); }, 500); })(s); } }
+  function scorePop(x, y, txt, color) { var p = document.createElement('div'); p.className = 'scorepop'; p.textContent = txt; if (color) p.style.color = color; p.style.left = x + 'px'; p.style.top = y + 'px'; p.style.transform = 'translateX(-50%)'; fx.appendChild(p); setTimeout(function () { p.remove(); }, 820); }
+
+  // ===== 단계 클리어 / 종료 =====
+  function stopLoop() { running = false; if (rafId) cancelAnimationFrame(rafId); rafId = null; }
+  function stageClear() {
+    G.cleared = G.stageIdx + 1;
+    stopLoop();                 // 단계 정보 화면 동안 블록·타이머 정지(쉬는 시간, 총 시간 미포함)
+    if (G.cleared >= TOTAL_STAGES) { endRun(true); return; }
+    beep(760, 0.12); setTimeout(function () { beep(1020, 0.14); }, 110); flashColor('#8affc0');
+    var cur = STAGES[G.stageIdx], curWork = WORKS[cur.w];
+    var nextIdx = G.stageIdx + 1, nx = STAGES[nextIdx], nxWork = WORKS[nx.w], nxEmoji = XMAS[nextIdx % XMAS.length];
+    showOverlay(
+      '<div class="ov-emoji">🎁✨</div>' +
+      '<div class="ov-title">' + G.cleared + '단계 클리어!</div>' +
+      '<div class="ov-sub"><b>' + curWork.t + '</b> 어휘 10개를 모두 터뜨렸어요! 🎉</div>' +
+      '<div class="ov-stat"><div>완료 단계<b>' + G.cleared + ' / ' + TOTAL_STAGES + '</b></div><div>외운 어휘<b>' + G.learned + '</b></div><div>점수<b>' + G.score + '</b></div><div>총 시간<b>' + fmtTime(G.runMs) + '</b></div></div>' +
+      '<div class="help-row"><span>다음 ' + (nextIdx + 1) + '단계 &nbsp;' + nxEmoji + '&nbsp; <b style="color:#ffd85a">' + nxWork.t + '</b></span></div>' +
+      '<button class="ov-btn green" id="nextBtn">다음 단계 도전하기 🎁</button>'
+    );
+    document.getElementById('nextBtn').onclick = function () { beep(660, 0.1); startStage(nextIdx); };
+  }
+
+  function endRun(won) {
+    stopLoop();
+    var st = getStudent();
+    submitScore(st, function () { showResult(won, st); });
+  }
+  function submitScore(st, cb) {
+    if (!st.grade || !st.name) { cb && cb(); return; }
+    fetch('/api/santa-monggeul/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ grade: st.grade, name: st.name, academyName: st.academyName, stage: G.cleared, words: G.learned, timeMs: Math.round(G.runMs) }) }).then(function (r) { return r.json(); }).catch(function () { return null; }).then(function () { cb && cb(); });
+  }
+
+  function showResult(won, st) {
+    var statHtml = '<div class="ov-stat"><div>완료 단계<b>' + G.cleared + ' / ' + TOTAL_STAGES + '</b></div><div>외운 어휘<b>' + G.learned + '</b></div><div>총 시간<b>' + fmtTime(G.runMs) + '</b></div></div>';
+    showOverlay(
+      '<div class="ov-emoji">' + (won ? '🏆🎄' : '🎅⛄') + '</div>' +
+      '<div class="ov-title">' + (won ? '120단계 완주! 대단해요!' : '게임 종료') + '</div>' +
+      '<div class="ov-sub">' + (won ? '모든 작품 어휘를 선물로 받았어요! 🎁' : G.cleared + '단계까지 클리어했어요! 다시 도전해 볼까요?') + '</div>' +
+      statHtml +
+      '<div class="lb-box" id="lbBox"><div class="lb-head"><span>🏅 전체 순위</span><span id="lbMine"></span></div><div id="lbRows">불러오는 중…</div></div>' +
+      '<button class="ov-btn green" id="againBtn">다시 도전 🎁</button>' +
+      '<button class="ov-btn sub" id="finishBtn">완료하기</button>'
+    );
+    document.getElementById('againBtn').onclick = function () { beep(660, 0.1); G.cleared = 0; G.score = 0; G.learned = 0; G.runMs = 0; _stageStartMs = 0; learnedList.innerHTML = ''; renderWords(); startStage(0); };
+    document.getElementById('finishBtn').onclick = finishGame;
+    loadLeaderboard(st, 20);
+  }
+  function loadLeaderboard(st, limit) {
+    var params = [];
+    if (st.grade && st.name) { params.push('grade=' + encodeURIComponent(st.grade)); params.push('name=' + encodeURIComponent(st.name)); }
+    params.push('limit=' + (limit || 20));
+    fetch('/api/santa-monggeul/leaderboard?' + params.join('&')).then(function (r) { return r.json(); }).then(function (d) {
+      var rows = document.getElementById('lbRows'); if (!rows) return;
+      if (!d || !d.ok) { rows.textContent = '순위를 불러오지 못했어요.'; return; }
+      var mine = document.getElementById('lbMine'); if (mine && d.myRank) mine.textContent = '내 순위 ' + d.myRank + '위';
+      if (!d.top || !d.top.length) { rows.innerHTML = '<div style="color:#a9d8c2;padding:6px 2px;">아직 순위가 없어요. 첫 주인공이 되어보세요!</div>'; return; }
+      rows.innerHTML = d.top.map(function (r) {
+        var isMe = (st.grade === r.grade && st.name === r.name);
+        var medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : (r.rank + '위');
+        return '<div class="lb-row' + (isMe ? ' me' : '') + '"><span class="lb-rank">' + medal + '</span><span class="lb-name">' + (r.grade ? r.grade + ' ' : '') + r.name + '</span><span class="lb-stage">' + r.stage + '단계</span><span class="lb-time">' + fmtTime(r.timeMs) + '</span></div>';
+      }).join('');
+    }).catch(function () { var rows = document.getElementById('lbRows'); if (rows) rows.textContent = '순위를 불러오지 못했어요.'; });
+  }
+  function finishGame() { try { parent.postMessage({ type: 'santaMonggeulDone' }, '*'); } catch (e) {} try { window.close(); } catch (e) {} setTimeout(function () { if (!window.closed) { if (history.length > 1) history.back(); else location.href = '/menu.html'; } }, 150); }
+
+  // ===== 시작 =====
+  whirlBtn.onclick = onWhirlClick; hintBtn.onclick = onHintClick;
+  makeParticles('🎄');
+  startScreen();
+})();
+</script>
+</body>
+</html>

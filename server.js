@@ -546,6 +546,7 @@ const LiteracyKingAllTime = require("./models/LiteracyKingAllTime"); // 역대 �
 const LiteracyKingChampion = require("./models/LiteracyKingChampion");
 const SpeedReadingKing = require("./models/SpeedReadingKing");
 const SeosulScore = require("./models/SeosulScore"); // 서술형 내신문학 통합 리더보드
+const SantaMonggeulScore = require("./models/SantaMonggeulScore"); // 🎄 크리스마스 문학블록팡팡 이벤트 순위
 const BookOrder = require("./models/BookOrder");
 const TextbookOrder = require("./models/TextbookOrder");
 const PromotionOrder = require("./models/PromotionOrder");
@@ -34828,6 +34829,74 @@ app.get('/api/seosul/leaderboard', async (req, res) => {
     });
   } catch (e) {
     console.error('⚠️ [서술형] 리더보드 조회 실패:', e.message);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 🎄 크리스마스 문학블록팡팡 — 결과 제출(학생별 최고기록 1개: 완료단계↑, 동률이면 총시간↓)
+app.post('/api/santa-monggeul/submit', async (req, res) => {
+  try {
+    const { grade, name, academyName } = req.body || {};
+    if (!grade || !name) return res.status(400).json({ ok: false, message: '학년·이름이 필요합니다.' });
+    const stage = Math.max(0, Math.min(120, Math.round(Number(req.body.stage) || 0)));
+    const words = Math.max(0, Math.round(Number(req.body.words) || 0));
+    const timeMs = Math.max(0, Math.round(Number(req.body.timeMs) || 0));
+    let doc = await SantaMonggeulScore.findOne({ grade, name });
+    const now = new Date();
+    if (!doc) doc = new SantaMonggeulScore({ grade, name, academyName: academyName || '' });
+    if (academyName) doc.academyName = academyName;
+    doc.plays = (doc.plays || 0) + 1;
+    doc.updatedAt = now;
+    // 최고기록 갱신: 더 높은 단계 OR (같은 단계 & 더 짧은 시간)
+    const better = (stage > (doc.stage || 0)) ||
+      (stage === (doc.stage || 0) && (doc.timeMs ? timeMs < doc.timeMs : true) && timeMs > 0);
+    if (better) { doc.stage = stage; doc.words = words; doc.timeMs = timeMs; doc.at = now; }
+    await doc.save();
+    res.json({ ok: true, best: { stage: doc.stage, words: doc.words, timeMs: doc.timeMs }, updated: better });
+  } catch (e) {
+    console.error('⚠️ [산타몽글] 제출 실패:', e.message);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 🎄 크리스마스 문학블록팡팡 — 전 센터 통합 리더보드(완료단계↓ → 총시간↑)
+app.get('/api/santa-monggeul/leaderboard', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
+    const top = await SantaMonggeulScore.find({ stage: { $gt: 0 } })
+      .sort({ stage: -1, timeMs: 1 }).limit(limit).lean();
+    const totalStudents = await SantaMonggeulScore.countDocuments({ stage: { $gt: 0 } });
+    let myRank = null, me = null;
+    if (grade && name) {
+      me = await SantaMonggeulScore.findOne({ grade, name }).lean();
+      if (me && me.stage > 0) {
+        // 나보다 상위(더 높은 단계 or 동단계·더 짧은 시간) 인원 수 + 1
+        myRank = (await SantaMonggeulScore.countDocuments({
+          $or: [{ stage: { $gt: me.stage } }, { stage: me.stage, timeMs: { $lt: me.timeMs } }]
+        })) + 1;
+      }
+    }
+    res.json({
+      ok: true, totalStudents, myRank,
+      me: me ? { stage: me.stage, words: me.words, timeMs: me.timeMs } : null,
+      top: top.map((d, i) => ({ rank: i + 1, grade: d.grade, name: d.name, academyName: d.academyName || '', stage: d.stage, words: d.words, timeMs: d.timeMs }))
+    });
+  } catch (e) {
+    console.error('⚠️ [산타몽글] 리더보드 조회 실패:', e.message);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 🎄 크리스마스 문학블록팡팡 — 슈퍼관리자 조회(읽기 전용)
+app.get('/api/super/santa-monggeul-scores', requireSuperAdmin, async (req, res) => {
+  try {
+    const limit = Math.min(2000, parseInt(req.query.limit, 10) || 1000);
+    const rows = await SantaMonggeulScore.find({ stage: { $gt: 0 } }).sort({ stage: -1, timeMs: 1 }).limit(limit).lean();
+    const totalStudents = await SantaMonggeulScore.countDocuments({ stage: { $gt: 0 } });
+    res.json({ ok: true, totalStudents, rows: rows.map((d, i) => ({ rank: i + 1, grade: d.grade, name: d.name, academyName: d.academyName || '', stage: d.stage, words: d.words, timeMs: d.timeMs, plays: d.plays || 0, at: d.at })) });
+  } catch (e) {
+    console.error('⚠️ [산타몽글] 슈퍼 조회 실패:', e.message);
     res.status(500).json({ ok: false });
   }
 });

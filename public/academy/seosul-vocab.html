@@ -43,6 +43,17 @@
   .sv-vcard.learned .sv-mean { color: color-mix(in srgb, var(--accentSoft) 70%, #ffffff); }
   .sv-vcard .sv-learned-dot { position: absolute; top: 7px; right: 8px; width: 22px; height: 22px; border-radius: 50%; background: #ffffff; color: var(--accent); font-size: 13px; display: none; align-items: center; justify-content: center; font-weight: 900; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
   .sv-vcard.learned .sv-learned-dot { display: flex; }
+  /* 아직 안 외운(미완료) 어휘 카드 — 테두리를 도는 러닝 라이트(외우면 .learned → 자동으로 꺼짐) */
+  @property --sv-bangle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+  .sv-vcard:not(.learned)::after {
+    content: ''; position: absolute; inset: 0; border-radius: 14px; padding: 2px;
+    background: conic-gradient(from var(--sv-bangle), transparent 0deg, transparent 230deg, rgba(255,255,255,0.35) 285deg, rgba(255,255,255,0.98) 312deg, rgba(255,255,255,0.35) 339deg, transparent 360deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none; z-index: 2;
+    animation: svBorderRun 2.8s linear infinite;
+  }
+  @keyframes svBorderRun { to { --sv-bangle: 360deg; } }
 
   /* 하단 고정 바 */
   .sv-foot { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 18px; background: var(--panel2); border-top: 1px solid var(--line); }
@@ -52,6 +63,11 @@
   .sv-btn:hover { transform: translateY(-2px); filter: brightness(1.07); }
   .sv-btn.ghost { background: var(--panel); border: 1.5px solid var(--line); color: var(--text); box-shadow: none; }
   .sv-btn.pulse { animation: svPulse 1.4s ease-in-out infinite; }
+  .sv-foot-right { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
+  .sv-foot-hint { font-size: 12.5px; font-weight: 700; color: var(--sub); }
+  .sv-foot-hint b { color: var(--accentSoft); }
+  .sv-foot-btns { display: flex; gap: 10px; align-items: center; }
+  .sv-btn.game { background: linear-gradient(135deg, #8b6cff 0%, #5a3ed6 100%); }
   @keyframes svPulse { 0%,100% { box-shadow: 0 5px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 5px 22px color-mix(in srgb, var(--accent2) 70%, transparent); } }
 
   /* 퀴즈 */
@@ -229,13 +245,20 @@
     const all = learned >= VOCAB_ALL.length;
     foot.innerHTML =
       '<span class="sv-progress-txt">외운 어휘 <b>' + learned + '</b> / ' + VOCAB_ALL.length + '</span>' +
-      '<button class="sv-btn' + (all ? ' pulse' : '') + '" id="svToQuiz">퀴즈 풀기 →</button>';
-    document.getElementById('svToQuiz').onclick = () => {
-      const got = body.querySelectorAll('.sv-vcard.learned').length;
-      const remain = VOCAB_ALL.length - got;
+      '<div class="sv-foot-right">' +
+        '<span class="sv-foot-hint">💡 <b>퀴즈 카드</b> 또는 <b>퀴즈 게임</b> 중 하나를 완료해 주세요</span>' +
+        '<div class="sv-foot-btns">' +
+          '<button class="sv-btn' + (all ? ' pulse' : '') + '" id="svToQuiz">📝 퀴즈 카드</button>' +
+          '<button class="sv-btn game' + (all ? ' pulse' : '') + '" id="svToGame">🎮 퀴즈 게임</button>' +
+        '</div>' +
+      '</div>';
+    const guard = (fn) => () => {
+      const remain = VOCAB_ALL.length - body.querySelectorAll('.sv-vcard.learned').length;
       if (remain > 0) { showLearnWarn(remain); return; }
-      renderQuiz();
+      fn();
     };
+    document.getElementById('svToQuiz').onclick = guard(renderQuiz);
+    document.getElementById('svToGame').onclick = guard(openVocabGame);
   }
   function showWarnModal(innerHtml) {
     const ov = document.createElement('div');
@@ -335,6 +358,43 @@
     // 부모(메뉴)에 정답률 보고 → 카드 배지 갱신
     try { parent.postMessage({ type: 'seosulVocabScore', book: BOOK, pct: pct, total: total, correct: correctCount }, '*'); } catch (e) {}
   }
+
+  // ═══════════ 퀴즈 게임(낙하 블록) — 완료 시 퀴즈 풀기와 동일하게 100% 완료 ═══════════
+  function openVocabGame() {
+    const old = document.getElementById('svGameOverlay'); if (old) old.remove();
+    const ov = document.createElement('div');
+    ov.id = 'svGameOverlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:60;background:#06091c;';
+    const ifr = document.createElement('iframe');
+    ifr.src = '/academy/sonagi-game.html?book=' + encodeURIComponent(BOOK)
+      + '&title=' + encodeURIComponent(TITLE || '어휘')
+      + '&theme=' + THEME + '&embed=1&v=20261113a';
+    ifr.style.cssText = 'width:100%;height:100%;border:none;display:block;';
+    const x = document.createElement('button');
+    x.textContent = '✕'; x.title = '닫기';
+    x.style.cssText = 'position:absolute;top:12px;right:14px;z-index:2;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,0.55);color:#fff;border:1.5px solid rgba(255,255,255,0.35);font-size:19px;cursor:pointer;';
+    x.onclick = () => ov.remove();
+    ov.appendChild(ifr); ov.appendChild(x);
+    document.body.appendChild(ov);
+  }
+  function showGameDone() {
+    const ov = document.createElement('div');
+    ov.className = 'sv-modal-ov';
+    ov.innerHTML = '<div class="sv-modal"><div class="sv-modal-ic">🏆</div><h3>퀴즈 게임 완료!</h3>' +
+      '<p>어휘 <b>' + VOCAB_ALL.length + '개</b>를 모두 격파했어요!<br>어휘 학습이 <b>완료</b> 처리됐어요. ✅</p>' +
+      '<button class="sv-btn" id="svGameDoneOk">확인</button></div>';
+    document.body.appendChild(ov);
+    ov.querySelector('#svGameDoneOk').onclick = () => { try { parent.postMessage({ type: 'seosulVocabClose' }, '*'); } catch (e) {} };
+  }
+  // 게임(iframe)에서 완료 신호 → 메뉴에 100% 완료 보고 + 게임 닫고 완료 모달
+  window.addEventListener('message', (e) => {
+    const d = (e && e.data) || {};
+    if (d.type === 'seosulGameDone') {
+      const g = document.getElementById('svGameOverlay'); if (g) g.remove();
+      try { parent.postMessage({ type: 'seosulVocabScore', book: BOOK, pct: 100, total: VOCAB.length, correct: VOCAB.length }, '*'); } catch (err) {}
+      showGameDone();
+    }
+  });
 
   renderLearn();
 })();

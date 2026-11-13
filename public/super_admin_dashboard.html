@@ -576,6 +576,18 @@
           </div>
           <a href="#" onclick="openAdminKickEvents(event)" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);">경고 내역 보기<span>→</span></a>
         </div>
+
+        <!-- 🎄 크리스마스 문학블록팡팡 순위 -->
+        <div class="card" style="border-color: rgba(47, 174, 106, 0.25);">
+          <div>
+            <div class="card-icon">🎄</div>
+            <div class="card-title">크리스마스 문학블록팡팡 순위</div>
+            <div class="card-desc">
+              산타 몽글이와 함께하는 크리스마스 이벤트(120단계) 전 센터 통합 순위를 조회합니다. (읽기 전용 · 완료단계·외운 어휘·총 시간)
+            </div>
+          </div>
+          <a href="#" onclick="openSantaMonggeulScores(event)" style="background: linear-gradient(135deg, #2fae6a 0%, #b4282c 100%);">순위 보기<span>→</span></a>
+        </div>
       </div>
     </div>
 
@@ -800,6 +812,40 @@
           + (rows.length ? ('<div style="font-size:13px;font-weight:800;color:#b91c1c;margin:18px 0 8px;">🧾 최근 킥 내역 <span style="font-size:11px;font-weight:600;color:#94a3b8;">(최대 '+rows.length+'건)</span></div>'+rowsHtml) : '');
       } catch (e) {
         const body = document.getElementById('akViewBody');
+        if (body) body.innerHTML = '<div style="color:#dc2626;">조회 중 오류가 발생했습니다.</div>';
+      }
+    }
+
+    // 🎄 크리스마스 문학블록팡팡 순위 (읽기 전용) — 전 센터 통합
+    function _smFmtTime(ms){ const s=Math.floor((ms||0)/1000); return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+    async function openSantaMonggeulScores(ev){
+      if (ev) ev.preventDefault();
+      let ov = document.getElementById('smViewOverlay'); if (ov) ov.remove();
+      ov = document.createElement('div'); ov.id = 'smViewOverlay';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,0.55);padding:20px;';
+      ov.innerHTML = '<div style="width:min(900px,96vw);max-height:88vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);font-family:\'Noto Sans KR\',sans-serif;">'
+        + '<div style="position:sticky;top:0;background:linear-gradient(135deg,#2fae6a,#b4282c);color:#fff;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">'
+        + '<div style="font-size:17px;font-weight:800;">🎄 크리스마스 문학블록팡팡 순위 <span style="font-size:12px;opacity:.85;font-weight:600;">(읽기 전용 · 완료단계↓ → 총시간↑)</span></div>'
+        + '<button onclick="document.getElementById(\'smViewOverlay\').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer;">✕</button></div>'
+        + '<div id="smViewBody" style="padding:22px 24px;color:#334155;">불러오는 중…</div></div>';
+      ov.addEventListener('click', e=>{ if(e.target===ov) ov.remove(); });
+      document.body.appendChild(ov);
+      try {
+        const r = await fetch('/api/super/santa-monggeul-scores');
+        const d = await r.json();
+        const body = document.getElementById('smViewBody');
+        if (!d || !d.ok) { body.innerHTML = '<div style="color:#dc2626;">조회 실패'+(d&&d.message?(': '+_ccEsc(d.message)):'')+'</div>'; return; }
+        const rows = d.rows || [];
+        if (!rows.length) { body.innerHTML = '<div style="color:#94a3b8;padding:10px 0;">아직 기록이 없습니다.</div>'; return; }
+        const html = '<div style="font-size:13px;font-weight:800;color:#166534;margin-bottom:8px;">🏅 전체 순위 <span style="font-size:11px;font-weight:600;color:#94a3b8;">(참여 '+d.totalStudents+'명)</span></div>'
+          + '<table style="width:100%;border-collapse:collapse;font-size:12.5px;"><thead><tr style="background:#f0fdf4;color:#166534;">'
+          + '<th style="text-align:center;padding:7px 8px;border-bottom:2px solid #bbf7d0;">순위</th><th style="text-align:left;padding:7px 8px;border-bottom:2px solid #bbf7d0;">학년</th><th style="text-align:left;padding:7px 8px;border-bottom:2px solid #bbf7d0;">이름</th><th style="text-align:left;padding:7px 8px;border-bottom:2px solid #bbf7d0;">센터</th>'
+          + '<th style="text-align:right;padding:7px 8px;border-bottom:2px solid #bbf7d0;">완료단계</th><th style="text-align:right;padding:7px 8px;border-bottom:2px solid #bbf7d0;">외운 어휘</th><th style="text-align:right;padding:7px 8px;border-bottom:2px solid #bbf7d0;">총 시간</th></tr></thead><tbody>'
+          + rows.map(x=>'<tr><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;text-align:center;font-weight:800;color:#16a34a;">'+x.rank+'</td><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;">'+_ccEsc(x.grade||'')+'</td><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;font-weight:700;">'+_ccEsc(x.name||'')+'</td><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;color:#64748b;">'+_ccEsc(x.academyName||'')+'</td><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:800;">'+x.stage+'</td><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;text-align:right;">'+x.words+'</td><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;text-align:right;color:#475569;">'+_smFmtTime(x.timeMs)+'</td></tr>').join('')
+          + '</tbody></table>';
+        body.innerHTML = html;
+      } catch (e) {
+        const body = document.getElementById('smViewBody');
         if (body) body.innerHTML = '<div style="color:#dc2626;">조회 중 오류가 발생했습니다.</div>';
       }
     }
