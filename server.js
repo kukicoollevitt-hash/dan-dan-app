@@ -109,10 +109,29 @@ function getKstDateKey() {
   return kst.toISOString().split('T')[0];
 }
 
+// 🔹 로그아웃 리포트 발송 주기 키 (reportCycle별). monthly는 24일 이전이면 null(그 달 스킵).
+//   daily  → "2026-11-13"            (기존 일단위와 동일 포맷)
+//   weekly → "W2026-11-09"           (그 주 월요일 · 월~일 중 첫 로그아웃 1회)
+//   monthly→ "M2026-11"              (24~31일 로그아웃에만, 그 달 1회) / 1~23일은 null
+function reportPeriodKey(cycle) {
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  if (cycle === 'weekly') {
+    const dow = (kst.getUTCDay() + 6) % 7; // 월=0 … 일=6
+    const mon = new Date(kst);
+    mon.setUTCDate(kst.getUTCDate() - dow);
+    return 'W' + mon.toISOString().split('T')[0];
+  }
+  if (cycle === 'monthly') {
+    if (kst.getUTCDate() < 24) return null; // 월말(24~31)에만 발송
+    return 'M' + kst.toISOString().slice(0, 7); // "M2026-11"
+  }
+  return kst.toISOString().split('T')[0]; // daily (기본)
+}
+
 // 🔒 하루 1회 발송 선점(원자적) — 오늘 처음이면 true, 이미 있으면 false
 //   · DailyLoginSent / DailyReportSent 모두 {grade,name,date} 유니크 인덱스 → upsert로 경합 안전
-async function claimDailyNotify(Model, grade, name, type) {
-  const date = getKstDateKey();
+async function claimDailyNotify(Model, grade, name, type, customDateKey) {
+  const date = customDateKey || getKstDateKey();
   try {
     const r = await Model.updateOne(
       { grade, name, date },
@@ -2064,6 +2083,12 @@ const userSchema = new mongoose.Schema({
   parentNotify: {
     type: Boolean,
     default: true
+  },
+  // 🔹 로그아웃 리포트 발송 주기 (daily=일 / weekly=주 / monthly=월말 24~31일 1회)
+  reportCycle: {
+    type: String,
+    enum: ['daily', 'weekly', 'monthly'],
+    default: 'daily'
   }
 });
 const User = mongoose.model("User", userSchema);
@@ -6055,12 +6080,51 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
 });
 
 // ✅ 학생 정보 수정 API (학부모 번호 포함) - 브랜치 관리자용
+// ✅ 로그아웃 리포트 주기 전체 일괄 적용 (브랜치 관리자 — 자기 학원 전 학생)
+app.put("/api/branch/users/report-cycle/bulk", requireAdminLogin, async (req, res) => {
+  try {
+    const { reportCycle } = req.body;
+    if (!['daily', 'weekly', 'monthly'].includes(reportCycle)) {
+      return res.status(400).json({ ok: false, message: "주기 값이 올바르지 않습니다." });
+    }
+    // 🔹 조회(GET /api/branch/users)와 동일 범위로 스코프 (슈퍼 view-as + 별칭 포함)
+    const viewingBranch = req.session.viewingBranch;
+    const admin = viewingBranch || (req.session && req.session.admin);
+    if (!admin || !admin.academyName) {
+      return res.status(401).json({ ok: false, message: "로그인이 필요합니다." });
+    }
+    const academyName = admin.academyName;
+    const userType = viewingBranch ? "academy" : (admin.userType || "school");
+    let adminSource = admin;
+    try {
+      const adminId = admin.id || (admin._id && String(admin._id));
+      if (adminId) {
+        const fresh = await Admin.findById(adminId).select('academyName academyAliases').lean();
+        if (fresh) adminSource = { academyName: fresh.academyName, academyAliases: fresh.academyAliases || [] };
+      }
+    } catch (e) {}
+    const academyNames = getAdminAcademyNames(adminSource);
+    const scopeFilter = { deleted: { $ne: true } };
+    if (userType === "academy") {
+      scopeFilter.academyName = academyNames.length > 1 ? { $in: academyNames } : academyName;
+    } else {
+      scopeFilter.school = academyName;
+    }
+    const r = await User.updateMany(scopeFilter, { $set: { reportCycle } });
+    console.log(`📝 [일괄] ${academyName}(${userType}) reportCycle=${reportCycle} 적용: ${r.modifiedCount}명`);
+    res.json({ ok: true, message: `전체 ${r.modifiedCount}명에 적용되었습니다.`, modified: r.modifiedCount });
+  } catch (err) {
+    console.error("❌ reportCycle 일괄 적용 오류:", err);
+    res.status(500).json({ ok: false, message: "일괄 적용 중 오류가 발생했습니다." });
+  }
+});
+
 app.put("/api/branch/users/:id", requireAdminLogin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { parentPhone, parentNotify } = req.body;
+    const { parentPhone, parentNotify, reportCycle } = req.body;
 
-    console.log(`📝 [PUT] /api/branch/users/${id} - 학부모 번호 수정:`, { parentPhone, parentNotify });
+    console.log(`📝 [PUT] /api/branch/users/${id} - 학부모 번호 수정:`, { parentPhone, parentNotify, reportCycle });
 
     const updateData = {};
 
@@ -6073,6 +6137,11 @@ app.put("/api/branch/users/:id", requireAdminLogin, async (req, res) => {
     // parentNotify가 명시적으로 전달된 경우에만 업데이트
     if (parentNotify !== undefined) {
       updateData.parentNotify = parentNotify;
+    }
+
+    // 🔹 reportCycle(로그아웃 리포트 주기)이 전달된 경우에만 업데이트
+    if (reportCycle !== undefined && ['daily', 'weekly', 'monthly'].includes(reportCycle)) {
+      updateData.reportCycle = reportCycle;
     }
 
     const user = await User.findByIdAndUpdate(
@@ -13044,8 +13113,9 @@ app.get("/logout", async (req, res) => {
     try {
       const { name, grade, school, academyName } = req.session.user;
       const studentUser = await User.findOne({ grade, name, deleted: { $ne: true } });
+      const _rcKey = studentUser ? reportPeriodKey(studentUser.reportCycle) : null;
       if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false
-          && await claimDailyNotify(DailyReportSent, grade, name, 'logout')) {
+          && _rcKey && await claimDailyNotify(DailyReportSent, grade, name, 'logout', _rcKey)) {
         sendParentNotification(name, studentUser.parentPhone, 'logout', { grade })
           .catch(err => console.error('학부모 알림(로그아웃) 실패:', err));
       }
@@ -29688,9 +29758,10 @@ app.post("/logout", async (req, res) => {
         deleted: { $ne: true }
       });
 
-      // 학부모 알림 발송 (하루 1회만, KST 기준)
+      // 학부모 알림 발송 (reportCycle 주기별: 일/주/월말 — null이면 스킵)
+      const _rcKey2 = studentUser ? reportPeriodKey(studentUser.reportCycle) : null;
       if (studentUser && studentUser.parentPhone && studentUser.parentNotify !== false
-          && await claimDailyNotify(DailyReportSent, sessionUser.grade, sessionUser.name, 'logout')) {
+          && _rcKey2 && await claimDailyNotify(DailyReportSent, sessionUser.grade, sessionUser.name, 'logout', _rcKey2)) {
         sendParentNotification(sessionUser.name, studentUser.parentPhone, 'logout', { grade: sessionUser.grade })
           .catch(err => console.error('학부모 알림 실패:', err));
         console.log(`✅ [POST] /logout 학부모 알림 발송 - ${sessionUser.grade} ${sessionUser.name}`);
@@ -34840,6 +34911,7 @@ app.post('/api/santa-monggeul/submit', async (req, res) => {
     const { grade, name, academyName } = req.body || {};
     if (!grade || !name) return res.status(400).json({ ok: false, message: '학년·이름이 필요합니다.' });
     const stage = Math.max(0, Math.min(120, Math.round(Number(req.body.stage) || 0)));
+    const score = Math.max(0, Math.round(Number(req.body.score) || 0));
     const words = Math.max(0, Math.round(Number(req.body.words) || 0));
     const timeMs = Math.max(0, Math.round(Number(req.body.timeMs) || 0));
     let doc = await SantaMonggeulScore.findOne({ grade, name });
@@ -34848,11 +34920,13 @@ app.post('/api/santa-monggeul/submit', async (req, res) => {
     if (academyName) doc.academyName = academyName;
     doc.plays = (doc.plays || 0) + 1;
     doc.updatedAt = now;
-    // 이어하기(전진형): 완료 단계가 더 높아질 때만 갱신 → 그 단계까지의 누적 어휘·시간을 기록
+    // 이어하기(전진형): 완료 단계가 더 높아질 때만 단계·어휘·시간 갱신
     const better = stage > (doc.stage || 0);
     if (better) { doc.stage = stage; doc.words = words; doc.timeMs = timeMs; doc.at = now; }
+    // 총점은 역대 최고치만 보관(단조 증가) — 이어하기 때 복원·누적되므로 더 낮은 값으로 덮어쓰지 않음
+    doc.score = Math.max(doc.score || 0, score);
     await doc.save();
-    res.json({ ok: true, best: { stage: doc.stage, words: doc.words, timeMs: doc.timeMs }, updated: better });
+    res.json({ ok: true, best: { stage: doc.stage, score: doc.score, words: doc.words, timeMs: doc.timeMs }, updated: better });
   } catch (e) {
     console.error('⚠️ [산타몽글] 제출 실패:', e.message);
     res.status(500).json({ ok: false });
@@ -34920,10 +34994,10 @@ app.get('/api/santa-snack-apply/mine', async (req, res) => {
 app.get('/api/santa-monggeul/me', async (req, res) => {
   try {
     const { grade, name } = req.query;
-    if (!grade || !name) return res.json({ ok: true, stage: 0, words: 0, timeMs: 0 });
+    if (!grade || !name) return res.json({ ok: true, stage: 0, score: 0, words: 0, timeMs: 0 });
     const doc = await SantaMonggeulScore.findOne({ grade, name }).lean();
-    if (!doc) return res.json({ ok: true, stage: 0, words: 0, timeMs: 0 });
-    res.json({ ok: true, stage: doc.stage || 0, words: doc.words || 0, timeMs: doc.timeMs || 0 });
+    if (!doc) return res.json({ ok: true, stage: 0, score: 0, words: 0, timeMs: 0 });
+    res.json({ ok: true, stage: doc.stage || 0, score: doc.score || 0, words: doc.words || 0, timeMs: doc.timeMs || 0 });
   } catch (e) {
     console.error('⚠️ [산타몽글] 진행 조회 실패:', e.message);
     res.json({ ok: false, stage: 0 });
@@ -34936,22 +35010,27 @@ app.get('/api/santa-monggeul/leaderboard', async (req, res) => {
     const { grade, name } = req.query;
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
     const top = await SantaMonggeulScore.find({ stage: { $gt: 0 } })
-      .sort({ stage: -1, timeMs: 1 }).limit(limit).lean();
+      .sort({ stage: -1, score: -1, timeMs: 1 }).limit(limit).lean();
     const totalStudents = await SantaMonggeulScore.countDocuments({ stage: { $gt: 0 } });
     let myRank = null, me = null;
     if (grade && name) {
       me = await SantaMonggeulScore.findOne({ grade, name }).lean();
       if (me && me.stage > 0) {
-        // 나보다 상위(더 높은 단계 or 동단계·더 짧은 시간) 인원 수 + 1
+        const myScore = me.score || 0;
+        // 나보다 상위 = 더 높은 단계 / 동단계·더 높은 총점 / 동단계·동총점·더 짧은 시간
         myRank = (await SantaMonggeulScore.countDocuments({
-          $or: [{ stage: { $gt: me.stage } }, { stage: me.stage, timeMs: { $lt: me.timeMs } }]
+          $or: [
+            { stage: { $gt: me.stage } },
+            { stage: me.stage, score: { $gt: myScore } },
+            { stage: me.stage, score: myScore, timeMs: { $lt: me.timeMs } }
+          ]
         })) + 1;
       }
     }
     res.json({
       ok: true, totalStudents, myRank,
-      me: me ? { stage: me.stage, words: me.words, timeMs: me.timeMs } : null,
-      top: top.map((d, i) => ({ rank: i + 1, grade: d.grade, name: d.name, academyName: d.academyName || '', stage: d.stage, words: d.words, timeMs: d.timeMs }))
+      me: me ? { stage: me.stage, score: me.score || 0, words: me.words, timeMs: me.timeMs } : null,
+      top: top.map((d, i) => ({ rank: i + 1, grade: d.grade, name: d.name, academyName: d.academyName || '', stage: d.stage, score: d.score || 0, words: d.words, timeMs: d.timeMs }))
     });
   } catch (e) {
     console.error('⚠️ [산타몽글] 리더보드 조회 실패:', e.message);
@@ -34963,9 +35042,9 @@ app.get('/api/santa-monggeul/leaderboard', async (req, res) => {
 app.get('/api/super/santa-monggeul-scores', requireSuperAdmin, async (req, res) => {
   try {
     const limit = Math.min(2000, parseInt(req.query.limit, 10) || 1000);
-    const rows = await SantaMonggeulScore.find({ stage: { $gt: 0 } }).sort({ stage: -1, timeMs: 1 }).limit(limit).lean();
+    const rows = await SantaMonggeulScore.find({ stage: { $gt: 0 } }).sort({ stage: -1, score: -1, timeMs: 1 }).limit(limit).lean();
     const totalStudents = await SantaMonggeulScore.countDocuments({ stage: { $gt: 0 } });
-    res.json({ ok: true, totalStudents, rows: rows.map((d, i) => ({ rank: i + 1, grade: d.grade, name: d.name, academyName: d.academyName || '', stage: d.stage, words: d.words, timeMs: d.timeMs, plays: d.plays || 0, at: d.at })) });
+    res.json({ ok: true, totalStudents, rows: rows.map((d, i) => ({ rank: i + 1, grade: d.grade, name: d.name, academyName: d.academyName || '', stage: d.stage, score: d.score || 0, words: d.words, timeMs: d.timeMs, plays: d.plays || 0, at: d.at })) });
   } catch (e) {
     console.error('⚠️ [산타몽글] 슈퍼 조회 실패:', e.message);
     res.status(500).json({ ok: false });
@@ -48203,6 +48282,26 @@ app.get('/api/speed-reading-king/ranking', async (req, res) => {
     res.json({ ok: true, ranking });
   } catch (err) {
     console.error('스피드 독서왕 순위 조회 오류:', err);
+    res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 슈퍼관리자: 독서왕 선발전 완료 기록 조회 (확성기 관리 페이지용)
+app.get('/api/super/speed-reading-king/entries', requireSuperAdmin, async (req, res) => {
+  try {
+    const { eventName } = req.query;
+    const filter = {};
+    if (eventName) filter.eventName = eventName;
+    // 소요 시간 오름차순(빠를수록 상위) — 선발전 순위와 동일 기준
+    const rows = await SpeedReadingKing.find(filter)
+      .sort({ totalTime: 1 })
+      .limit(500)
+      .lean();
+    // 이벤트 선택 드롭다운용 전체 이벤트 목록
+    const events = await SpeedReadingKing.distinct('eventName');
+    res.json({ ok: true, rows, events });
+  } catch (err) {
+    console.error('독서왕 선발전 기록 조회 오류:', err);
     res.status(500).json({ ok: false, message: '서버 오류가 발생했습니다.' });
   }
 });

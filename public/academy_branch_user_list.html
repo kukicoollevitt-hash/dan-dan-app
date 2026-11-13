@@ -1006,6 +1006,15 @@
         <button id="btn-auto-task" class="btn btn-primary" style="display: none; background: #059669; color: #fff; border-color: #059669;">자동 과제 부여</button>
         <button id="btn-delete-all" style="background: #dc2626; color: #fff; border-color: #dc2626;">전체 데이터 삭제</button>
         <a id="btn-export" class="btn btn-outline" href="#" style="display: none;">엑셀 다운로드</a>
+        <span style="display:inline-flex;align-items:center;gap:5px;margin-left:8px;padding:4px 10px;border:1px dashed #94a3b8;border-radius:8px;background:#f8fafc;">
+          <span style="font-size:12px;color:#475569;white-space:nowrap;">📩 로그아웃 리포트 전체</span>
+          <select id="bulk-cycle-select" class="btn btn-outline" style="padding:4px 6px;font-size:12px;">
+            <option value="daily">일단위</option>
+            <option value="weekly">주단위</option>
+            <option value="monthly">월단위</option>
+          </select>
+          <button onclick="bulkSetReportCycle()" style="padding:5px 12px;background:#6366f1;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">전체 적용</button>
+        </span>
       </div>
     </div>
 
@@ -1753,6 +1762,15 @@
                    maxlength="13"
                    oninput="formatParentPhone(this)"
                    style="width: 105px; min-width: 0; padding: 3px 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px;" /><button onclick="saveParentPhone('${u._id}')" style="padding: 3px 6px; background: #3b82f6; color: white; border: none; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 3px;">저장</button>
+            <div style="margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+              <span style="font-size: 10px; color: #9ca3af; white-space: nowrap;">리포트 주기</span>
+              <select onchange="setReportCycle('${u._id}', this.value)" title="로그아웃 리포트 발송 주기"
+                      style="padding: 2px 4px; border: 1px solid #ddd; border-radius: 4px; font-size: 10px; cursor: pointer;">
+                <option value="daily" ${(u.reportCycle || 'daily') === 'daily' ? 'selected' : ''}>일단위</option>
+                <option value="weekly" ${u.reportCycle === 'weekly' ? 'selected' : ''}>주단위</option>
+                <option value="monthly" ${u.reportCycle === 'monthly' ? 'selected' : ''}>월단위</option>
+              </select>
+            </div>
           </td>
           <td class="center">
             ${studyRoomStatusHtml}
@@ -2882,6 +2900,68 @@
       }
     }
 
+    // ===== 로그아웃 리포트 발송 주기 (학생별) =====
+    const CYCLE_LABEL = { daily: '일단위', weekly: '주단위', monthly: '월단위' };
+
+    // 커스텀 확인 팝업 (전체 일괄용) — 네이티브 confirm 대체
+    let _cycleConfirmResolve = null;
+    function confirmCyclePopup(label) {
+      return new Promise(function (resolve) {
+        _cycleConfirmResolve = resolve;
+        document.getElementById('cycleConfirmLabel').textContent = label;
+        document.getElementById('cycleConfirmOverlay').style.display = 'flex';
+      });
+    }
+    function closeCycleConfirm(ok) {
+      document.getElementById('cycleConfirmOverlay').style.display = 'none';
+      if (_cycleConfirmResolve) { _cycleConfirmResolve(ok); _cycleConfirmResolve = null; }
+    }
+    async function setReportCycle(userId, cycle) {
+      try {
+        const res = await fetch('/api/branch/users/' + userId, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ reportCycle: cycle })
+        });
+        const data = await res.json();
+        if (data.ok) showToast('리포트 주기: ' + (CYCLE_LABEL[cycle] || cycle) + ' 저장됨', 'success');
+        else showToast(data.message || '저장에 실패했습니다', 'error');
+      } catch (err) {
+        console.error('리포트 주기 저장 오류:', err);
+        showToast('저장 중 오류가 발생했습니다', 'error');
+      }
+    }
+
+    // ===== 로그아웃 리포트 주기 전체 일괄 적용 =====
+    async function bulkSetReportCycle() {
+      const sel = document.getElementById('bulk-cycle-select');
+      if (!sel) return;
+      const cycle = sel.value;
+      const label = CYCLE_LABEL[cycle] || cycle;
+      const _ok = await confirmCyclePopup(label);
+      if (!_ok) return;
+      try {
+        const res = await fetch('/api/branch/users/report-cycle/bulk', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ reportCycle: cycle })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showToast('전체 ' + (data.modified || 0) + '명 → ' + label + ' 적용됨', 'success');
+          // 각 행 select도 즉시 반영 (새로고침 없이)
+          document.querySelectorAll('select[onchange^="setReportCycle"]').forEach(s => { s.value = cycle; });
+        } else {
+          showToast(data.message || '일괄 적용에 실패했습니다', 'error');
+        }
+      } catch (err) {
+        console.error('일괄 적용 오류:', err);
+        showToast('일괄 적용 중 오류가 발생했습니다', 'error');
+      }
+    }
+
     // ===== 토스트 메시지 함수 =====
     function showToast(message, type = 'success') {
       // 기존 토스트 제거
@@ -2929,5 +3009,24 @@
       }, 3000);
     }
   </script>
+  <!-- 📩 로그아웃 리포트 주기 일괄 적용 확인 팝업 -->
+  <div id="cycleConfirmOverlay" onclick="if(event.target===this)closeCycleConfirm(false)"
+       style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); z-index:100000; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#fff; width:100%; max-width:360px; border-radius:18px; box-shadow:0 20px 50px rgba(0,0,0,0.28); overflow:hidden; animation:cyclePop .22s ease;">
+      <div style="padding:28px 24px 18px; text-align:center;">
+        <div style="width:58px; height:58px; margin:0 auto 16px; border-radius:50%; background:linear-gradient(135deg,#eef2ff,#e0e7ff); display:flex; align-items:center; justify-content:center; font-size:30px;">📩</div>
+        <div style="font-size:16px; font-weight:800; color:#1e293b; line-height:1.6;">
+          이 센터 <b>전체 학생</b>의<br>로그아웃 리포트 주기를<br>
+          <span id="cycleConfirmLabel" style="color:#6366f1; font-size:19px;">주단위</span> 로 적용할까요?
+        </div>
+        <div style="font-size:12px; color:#94a3b8; margin-top:12px;">개별 학생은 이후 따로 변경할 수 있어요</div>
+      </div>
+      <div style="display:flex; border-top:1px solid #f1f5f9;">
+        <button onclick="closeCycleConfirm(false)" style="flex:1; padding:15px; border:none; border-right:1px solid #f1f5f9; background:#fff; color:#64748b; font-size:15px; font-weight:700; cursor:pointer;">취소</button>
+        <button onclick="closeCycleConfirm(true)" style="flex:1; padding:15px; border:none; background:#6366f1; color:#fff; font-size:15px; font-weight:800; cursor:pointer;">적용</button>
+      </div>
+    </div>
+  </div>
+  <style>@keyframes cyclePop{from{opacity:0;transform:scale(.92) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}</style>
 </body>
 </html>
