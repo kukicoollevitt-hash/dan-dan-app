@@ -138,6 +138,7 @@
   .ov-rank-btn { position: absolute; top: 14px; right: 14px; z-index: 2; display: inline-flex; align-items: center; gap: 4px; padding: 7px 13px; border: 1.5px solid var(--xgold); border-radius: 999px; background: rgba(255,216,90,0.14); color: var(--xgold); font-size: 13px; font-weight: 800; cursor: pointer; }
   .ov-rank-btn:hover { background: rgba(255,216,90,0.28); }
   @keyframes ovPop { from { transform: translateY(16px) scale(0.96); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+  @keyframes giftBob { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-7px) rotate(3deg); } }
   .ov-emoji { font-size: 54px; line-height: 1; margin-bottom: 8px; }
   .ov-title { font-size: 24px; font-weight: 900; margin-bottom: 8px; background: linear-gradient(90deg, var(--xred), var(--xgold), var(--xgreen)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   .ov-sub { font-size: 14px; color: #c7e5d6; line-height: 1.6; margin-bottom: 16px; font-weight: 500; }
@@ -215,6 +216,8 @@
     { id: 'guunmong', t: '구운몽' }, { id: 'mansejeon', t: '만세전' }, { id: 'gwangjang', t: '광장' }, { id: 'garibong', t: '비 오는 날이면 가리봉동에' }
   ];
   var XMAS = ['🎄','🎁','⛄','🔔','⭐','❄️','🎅','🦌','🕯️','🍬','🧦','🌟','☃️','🎀','🪅','🥛','🍪','🧣','🛷','🔥','💝','🌲','✨','🎶'];
+  // 응모 과자 목록 (서버 SANTA_SNACKS와 동기 유지)
+  var SNACKS = ['🦐 새우깡','🥔 포테토칩','🌽 꼬깔콘','🍿 콘소메맛팝콘','🍪 리얼초코칩쿠키','🥔 포카칩','🍩 칸쵸','🍫 콘초코플러스','🥧 초코파이','🥮 달콤한호떡과자','🌭 후랑크핫도그','🍫 프로틴바','🍡 찹쌀떡','🥛 바나나우유','🥛 초코우유','🥛 딸기우유','🥤 사이다','🥤 콜라','🧃 오렌지주스','🥐 슈크림빵','🍞 연세우유 생크림빵','🧁 크림치즈 생크림빵','🍫 초코 생크림빵','🍓 딸기샌드'];
   function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   // 작품 chunk(2화) → 10개 단어
   function chunkWords(id, c) {
@@ -224,11 +227,15 @@
     two.forEach(function (v) { if (v && v.w && v.m && !seen[v.w]) { seen[v.w] = 1; list.push({ w: v.w, m: v.m }); } });
     return list;
   }
-  // 120 스테이지(작품×5) 셔플
+  // 120 스테이지(작품×5) — 학생별 시드 셔플(세션·기기 간 동일 순서 → 이어하기 일관)
+  function hashStr(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function seededShuffle(arr, rng) { for (var i = arr.length - 1; i > 0; i--) { var j = Math.floor(rng() * (i + 1)); var t = arr[i]; arr[i] = arr[j]; arr[j] = t; } return arr; }
   var STAGES = (function () {
     var arr = [];
     for (var w = 0; w < WORKS.length; w++) for (var c = 0; c < 5; c++) arr.push({ w: w, c: c });
-    return shuffle(arr);
+    var stu = getStudent(); var key = (stu.grade || '') + '|' + (stu.name || '');
+    return key.length > 1 ? seededShuffle(arr, mulberry32(hashStr(key + '|santa120'))) : shuffle(arr);
   })();
   var TOTAL_STAGES = STAGES.length; // 120
 
@@ -296,15 +303,45 @@
     var bad = (TOTAL_STAGES < 120);
     showOverlay(
       '<button class="ov-rank-btn" id="rankBtn">🏆 순위보기</button>' +
+      '<button class="ov-rank-btn" id="applyBtnStart" style="top:52px;">🎟️ 응모기록</button>' +
       '<div class="ov-emoji">🎅🎄</div>' +
       '<div class="ov-title">산타 몽글이와 함께하는<br>크리스마스 — 문학블록팡팡</div>' +
       '<div class="ov-sub">선물상자에 담긴 <b>뜻</b>이 눈처럼 쏟아져요!<br>아래 <b>낱말</b>을 눌러 <b>눈덩이</b>로 맞혀 터뜨리세요.<br>24편 어휘로 <b>1~120단계</b>에 도전! 🎁</div>' +
       '<div class="help-row"><span>🎯 120단계</span><span>❤️ 생명 3</span><span>🌪️ 회오리 · 💡 힌트</span></div>' +
       (bad ? '<div class="ov-sub" style="color:#ff9bb0">⚠️ 어휘 데이터를 불러오지 못했습니다.</div>' : '') +
+      '<div id="resumeHint" class="help-row" style="display:none;"></div>' +
       '<button class="ov-btn green" id="startBtn">시작하기 🎁</button>'
     );
-    document.getElementById('startBtn').onclick = function () { beep(660, 0.1); G.cleared = 0; G.score = 0; G.learned = 0; G.runMs = 0; learnedList.innerHTML = ''; renderWords(); startStage(0); };
     document.getElementById('rankBtn').onclick = showRanking;
+    document.getElementById('applyBtnStart').onclick = openMyApplies;
+    var st = getStudent();
+    // 저장된 진행(완료 단계)을 불러와 안내 — 시작 시 그 다음 단계부터 이어하기
+    fetchMe(st, function (me) {
+      var done = (me && me.stage) ? me.stage : 0;
+      var btn = document.getElementById('startBtn'); if (!btn) return;
+      if (done > 0 && done < TOTAL_STAGES) {
+        var hint = document.getElementById('resumeHint');
+        if (hint) { hint.style.display = 'flex'; hint.innerHTML = '<span>✅ ' + done + '단계 완료 — <b style="color:#ffd85a">' + (done + 1) + '단계부터 이어서</b></span>'; }
+        btn.textContent = (done + 1) + '단계부터 이어하기 🎁';
+      }
+    });
+    document.getElementById('startBtn').onclick = function () {
+      beep(660, 0.1);
+      var b = document.getElementById('startBtn'); b.disabled = true;
+      fetchMe(getStudent(), function (me) {
+        var done = (me && me.stage) ? me.stage : 0;
+        if (done >= TOTAL_STAGES) { done = 0; G.cleared = 0; G.learned = 0; G.runMs = 0; }   // 이미 완주 → 처음부터
+        else { G.cleared = done; G.learned = (me && me.words) || 0; G.runMs = (me && me.timeMs) || 0; }
+        G.score = 0; learnedList.innerHTML = ''; renderWords();
+        startStage(done);   // 완료한 단계 다음(인덱스=done)부터
+      });
+    };
+  }
+
+  function fetchMe(st, cb) {
+    if (!st.grade || !st.name) { cb(null); return; }
+    fetch('/api/santa-monggeul/me?grade=' + encodeURIComponent(st.grade) + '&name=' + encodeURIComponent(st.name))
+      .then(function (r) { return r.json(); }).then(function (d) { cb(d && d.ok ? d : null); }).catch(function () { cb(null); });
   }
 
   // 순위 보기(상위 20명) — 시작 화면에서 열람
@@ -322,6 +359,35 @@
     document.getElementById('rankBack').onclick = startScreen;
     document.getElementById('rankBackTop').onclick = startScreen;
     loadLeaderboard(st, 20);
+  }
+
+  // 🎟️ 내 과자 응모 기록
+  function openMyApplies() {
+    beep(760, 0.1); running = false;
+    var st = getStudent();
+    showOverlay(
+      '<button class="ov-rank-btn" id="applyBackTop">← 뒤로</button>' +
+      '<div class="ov-emoji">🎟️🎁</div>' +
+      '<div class="ov-title">내 과자 응모 기록</div>' +
+      '<div class="ov-sub">10단계마다 받은 선물로 응모한 과자예요 🎄<br><span style="font-size:12px;color:#9fb;">본사 월 추첨 대상</span></div>' +
+      '<div class="lb-box"><div class="lb-head"><span>🎟️ 응모 내역</span><span id="applyCount"></span></div><div id="applyRows">불러오는 중…</div></div>' +
+      '<button class="ov-btn sub" id="applyBack">← 돌아가기</button>'
+    );
+    document.getElementById('applyBack').onclick = startScreen;
+    document.getElementById('applyBackTop').onclick = startScreen;
+    if (!st.grade || !st.name) { document.getElementById('applyRows').innerHTML = '<div style="color:#a9d8c2;padding:8px 2px;">로그인 정보가 없어요.</div>'; return; }
+    fetch('/api/santa-snack-apply/mine?grade=' + encodeURIComponent(st.grade) + '&name=' + encodeURIComponent(st.name))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var el = document.getElementById('applyRows'); if (!el) return;
+        var rows = (d && d.rows) || [];
+        var cnt = document.getElementById('applyCount'); if (cnt) cnt.textContent = rows.length + '건';
+        if (!rows.length) { el.innerHTML = '<div style="color:#a9d8c2;padding:8px 2px;">아직 응모한 과자가 없어요.<br>10단계마다 선물 상자를 열어 응모해요! 🎁</div>'; return; }
+        el.innerHTML = rows.map(function (r) {
+          return '<div class="lb-row" style="grid-template-columns:62px 1fr;"><span class="lb-rank" style="color:#ffd85a;">' + r.milestone + '단계</span><span class="lb-name" style="white-space:normal;">' + r.itemName + '</span></div>';
+        }).join('');
+      })
+      .catch(function () { var el = document.getElementById('applyRows'); if (el) el.textContent = '응모기록을 불러오지 못했어요.'; });
   }
 
   // ===== 단계 시작 =====
@@ -434,7 +500,7 @@
     if (b.dead) return; b.dead = true; b.el.remove();
     beep(140, 0.22, 'sawtooth', 0.08); flashRed(); pulseLives();
     G.lives--; G.combo = 0; renderLives();
-    if (G.lives <= 0) { endRun(false); return; }
+    if (G.lives <= 0) { gameOver(); return; }
     if (pendingWords[b.w]) spawnQueue.push({ w: b.w, m: b.m });
   }
 
@@ -453,7 +519,7 @@
       showToast((onScreen ? WRONG_ORDER : WRONG_NONE)[Math.floor(Math.random() * 3)]);
       G.combo = 0; beep(150, 0.26, 'sawtooth', 0.09); flashRed(); pulseLives();
       var r = btn.getBoundingClientRect(); scorePop(r.left + r.width / 2, r.top - 10, '-1 ❤️', '#ff6a8a');
-      G.lives--; renderLives(); if (G.lives <= 0) { endRun(false); }
+      G.lives--; renderLives(); if (G.lives <= 0) { gameOver(); }
     } else { beep(240, 0.08, 'square', 0.05); }
   }
 
@@ -496,44 +562,116 @@
   function stageClear() {
     G.cleared = G.stageIdx + 1;
     stopLoop();                 // 단계 정보 화면 동안 블록·타이머 정지(쉬는 시간, 총 시간 미포함)
-    if (G.cleared >= TOTAL_STAGES) { endRun(true); return; }
+    submitScore(getStudent(), null);   // ✅ 체크포인트 저장(완료 단계까지 서버 기록)
+    if (G.cleared >= TOTAL_STAGES) { gameWin(); return; }
     beep(760, 0.12); setTimeout(function () { beep(1020, 0.14); }, 110); flashColor('#8affc0');
     var cur = STAGES[G.stageIdx], curWork = WORKS[cur.w];
     var nextIdx = G.stageIdx + 1, nx = STAGES[nextIdx], nxWork = WORKS[nx.w], nxEmoji = XMAS[nextIdx % XMAS.length];
+    var milestone = (G.cleared % 10 === 0) ? G.cleared : 0;  // 10단계마다 과자 응모 선물
+    var giftHtml = milestone ? (
+      '<div id="stageGift" style="margin:4px auto 16px;cursor:pointer;animation:giftBob 1s ease-in-out infinite;">' +
+        '<div style="font-size:64px;line-height:1;filter:drop-shadow(0 6px 14px rgba(0,0,0,0.5));">🎁</div>' +
+        '<div style="margin-top:4px;font-size:14px;font-weight:900;color:#ffd85a;">🎉 ' + milestone + '단계 선물 상자! <u>눌러서 과자 응모</u></div>' +
+      '</div>'
+    ) : '';
     showOverlay(
       '<div class="ov-emoji">🎁✨</div>' +
       '<div class="ov-title">' + G.cleared + '단계 클리어!</div>' +
       '<div class="ov-sub"><b>' + curWork.t + '</b> 어휘 10개를 모두 터뜨렸어요! 🎉</div>' +
+      giftHtml +
       '<div class="ov-stat"><div>완료 단계<b>' + G.cleared + ' / ' + TOTAL_STAGES + '</b></div><div>외운 어휘<b>' + G.learned + '</b></div><div>점수<b>' + G.score + '</b></div><div>총 시간<b>' + fmtTime(G.runMs) + '</b></div></div>' +
       '<div class="help-row"><span>다음 ' + (nextIdx + 1) + '단계 &nbsp;' + nxEmoji + '&nbsp; <b style="color:#ffd85a">' + nxWork.t + '</b></span></div>' +
       '<button class="ov-btn green" id="nextBtn">다음 단계 도전하기 🎁</button>'
     );
     document.getElementById('nextBtn').onclick = function () { beep(660, 0.1); startStage(nextIdx); };
+    if (milestone) { document.getElementById('stageGift').onclick = function () { beep(880, 0.1, 'sine', 0.07); openSnackPicker(milestone); }; }
   }
 
-  function endRun(won) {
-    stopLoop();
+  // 🎁 과자 응모 피커(과자 종류 선택) — 기존 과자 응모 풀에 합류
+  function openSnackPicker(milestone) {
     var st = getStudent();
-    submitScore(st, function () { showResult(won, st); });
+    var old = document.getElementById('snackOv'); if (old) old.remove();
+    var ov2 = document.createElement('div'); ov2.id = 'snackOv';
+    ov2.style.cssText = 'position:fixed;inset:0;z-index:110;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(5,16,12,0.86);backdrop-filter:blur(4px);';
+    var grid = SNACKS.map(function (s, i) { return '<button class="snack-opt" data-i="' + i + '" style="padding:12px 8px;border:2px solid var(--xgold);border-radius:13px;background:linear-gradient(160deg,' + (i % 2 ? '#2fae6a,#1c7d4b' : '#e2464a,#b4282c') + ');color:#fff;font-size:13.5px;font-weight:800;cursor:pointer;line-height:1.3;">' + s + '</button>'; }).join('');
+    ov2.innerHTML = '<div style="width:100%;max-width:520px;max-height:90vh;overflow-y:auto;background:linear-gradient(170deg,#1e4038,#0e261e);border:1.5px solid var(--line);border-radius:22px;padding:24px 22px;text-align:center;box-shadow:0 26px 70px rgba(0,0,0,0.6);">' +
+      '<div style="font-size:48px;">🎁</div>' +
+      '<div style="font-size:21px;font-weight:900;margin:6px 0 4px;color:#ffd85a;">' + milestone + '단계 선물 — 과자 응모</div>' +
+      '<div style="font-size:13.5px;color:#c7e5d6;margin-bottom:16px;">받고 싶은 과자를 하나 골라 응모하세요! 🎟️<br><span style="font-size:12px;color:#9fb;">본사 월 추첨에 등록돼요</span></div>' +
+      '<div id="snackMsg" style="min-height:0;"></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px;">' + grid + '</div>' +
+      '<button id="snackClose" style="width:100%;padding:12px;border:none;border-radius:13px;background:rgba(255,255,255,0.1);color:#cdeada;font-size:14px;font-weight:800;cursor:pointer;">닫기</button>' +
+      '</div>';
+    document.body.appendChild(ov2);
+    document.getElementById('snackClose').onclick = function () { ov2.remove(); };
+    ov2.addEventListener('click', function (e) { if (e.target === ov2) ov2.remove(); });
+    Array.prototype.forEach.call(ov2.querySelectorAll('.snack-opt'), function (b) {
+      b.onclick = function () {
+        var item = SNACKS[+b.dataset.i];
+        Array.prototype.forEach.call(ov2.querySelectorAll('.snack-opt'), function (x) { x.disabled = true; x.style.opacity = '0.55'; });
+        var msg = document.getElementById('snackMsg'); msg.innerHTML = '<div style="color:#ffd85a;font-weight:800;padding:8px;">응모 중…</div>';
+        fetch('/api/santa-snack-apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ grade: st.grade, name: st.name, academyName: st.academyName, milestone: milestone, itemName: item }) })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d && d.ok) {
+              beep(1040, 0.1, 'sine', 0.08); setTimeout(function () { beep(1400, 0.1, 'sine', 0.06); }, 70);
+              msg.innerHTML = '<div style="color:#7af9d0;font-weight:900;font-size:15px;padding:10px;">🎟️ ' + item + ' 응모 완료!<br><span style="font-size:12px;color:#c7e5d6;">본사 추첨에 등록됐어요 🎄</span></div>';
+              var g = document.getElementById('stageGift'); if (g) { g.style.animation = 'none'; g.innerHTML = '<div style="font-size:40px;">✅</div><div style="font-size:13px;font-weight:800;color:#7af9d0;">' + milestone + '단계 선물 응모 완료</div>'; g.onclick = null; g.style.cursor = 'default'; }
+              setTimeout(function () { ov2.remove(); }, 1600);
+            } else {
+              msg.innerHTML = '<div style="color:#ff9bb0;font-weight:800;padding:8px;">' + ((d && d.message) || '응모에 실패했어요.') + '</div>';
+              if (d && d.already) { var g2 = document.getElementById('stageGift'); if (g2) { g2.innerHTML = '<div style="font-size:40px;">✅</div><div style="font-size:13px;font-weight:800;color:#7af9d0;">이미 응모함</div>'; g2.onclick = null; } setTimeout(function () { ov2.remove(); }, 1500); }
+              else { Array.prototype.forEach.call(ov2.querySelectorAll('.snack-opt'), function (x) { x.disabled = false; x.style.opacity = ''; }); }
+            }
+          })
+          .catch(function () { msg.innerHTML = '<div style="color:#ff9bb0;padding:8px;">네트워크 오류</div>'; Array.prototype.forEach.call(ov2.querySelectorAll('.snack-opt'), function (x) { x.disabled = false; x.style.opacity = ''; }); });
+      };
+    });
   }
+
   function submitScore(st, cb) {
     if (!st.grade || !st.name) { cb && cb(); return; }
     fetch('/api/santa-monggeul/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ grade: st.grade, name: st.name, academyName: st.academyName, stage: G.cleared, words: G.learned, timeMs: Math.round(G.runMs) }) }).then(function (r) { return r.json(); }).catch(function () { return null; }).then(function () { cb && cb(); });
   }
 
-  function showResult(won, st) {
-    var statHtml = '<div class="ov-stat"><div>완료 단계<b>' + G.cleared + ' / ' + TOTAL_STAGES + '</b></div><div>외운 어휘<b>' + G.learned + '</b></div><div>총 시간<b>' + fmtTime(G.runMs) + '</b></div></div>';
+  // 생명 소진 → 게임오버(완료 단계는 이미 저장됨) → 그 다음 단계부터 이어서 도전
+  function gameOver() {
+    stopLoop();
+    var st = getStudent();
     showOverlay(
-      '<div class="ov-emoji">' + (won ? '🏆🎄' : '🎅⛄') + '</div>' +
-      '<div class="ov-title">' + (won ? '120단계 완주! 대단해요!' : '게임 종료') + '</div>' +
-      '<div class="ov-sub">' + (won ? '모든 작품 어휘를 선물로 받았어요! 🎁' : G.cleared + '단계까지 클리어했어요! 다시 도전해 볼까요?') + '</div>' +
-      statHtml +
-      '<div class="lb-box" id="lbBox"><div class="lb-head"><span>🏅 전체 순위</span><span id="lbMine"></span></div><div id="lbRows">불러오는 중…</div></div>' +
-      '<button class="ov-btn green" id="againBtn">다시 도전 🎁</button>' +
+      '<button class="ov-rank-btn" id="goRank">🏆 순위</button>' +
+      '<div class="ov-emoji">🎅⛄</div>' +
+      '<div class="ov-title">' + (G.stageIdx + 1) + '단계 실패!</div>' +
+      '<div class="ov-sub">생명을 다 썼어요. <b>완료한 ' + G.cleared + '단계</b>는 저장됐어요!<br>그 <b>다음 단계부터 이어서</b> 도전할 수 있어요. 🎁</div>' +
+      '<div class="ov-stat"><div>완료 단계<b>' + G.cleared + ' / ' + TOTAL_STAGES + '</b></div><div>외운 어휘<b>' + G.learned + '</b></div><div>총 시간<b>' + fmtTime(G.runMs) + '</b></div></div>' +
+      '<div class="lb-box"><div class="lb-head"><span>🏅 전체 순위</span><span id="lbMine"></span></div><div id="lbRows">불러오는 중…</div></div>' +
+      '<button class="ov-btn green" id="resumeBtn">' + (G.cleared + 1) + '단계 이어서 도전 🎁</button>' +
       '<button class="ov-btn sub" id="finishBtn">완료하기</button>'
     );
-    document.getElementById('againBtn').onclick = function () { beep(660, 0.1); G.cleared = 0; G.score = 0; G.learned = 0; G.runMs = 0; _stageStartMs = 0; learnedList.innerHTML = ''; renderWords(); startStage(0); };
+    document.getElementById('resumeBtn').onclick = function () { beep(660, 0.1); startStage(G.cleared); };  // 인덱스=cleared = 다음(실패했던) 단계, 생명 3 재충전
     document.getElementById('finishBtn').onclick = finishGame;
+    document.getElementById('goRank').onclick = showRanking;
+    loadLeaderboard(st, 20);
+  }
+
+  // 120단계 완주
+  function gameWin() {
+    stopLoop();
+    var st = getStudent();
+    [0, 140, 280, 440].forEach(function (d, i) { setTimeout(function () { beep(660 + i * 180, 0.15); }, d); });
+    showOverlay(
+      '<button class="ov-rank-btn" id="winRank">🏆 순위</button>' +
+      '<div class="ov-emoji">🏆🎄</div>' +
+      '<div class="ov-title">120단계 완주! 대단해요!</div>' +
+      '<div class="ov-sub">모든 작품 어휘를 선물로 받았어요! 🎁</div>' +
+      '<div class="ov-stat"><div>완료 단계<b>120 / 120</b></div><div>외운 어휘<b>' + G.learned + '</b></div><div>총 시간<b>' + fmtTime(G.runMs) + '</b></div></div>' +
+      '<div class="lb-box"><div class="lb-head"><span>🏅 전체 순위</span><span id="lbMine"></span></div><div id="lbRows">불러오는 중…</div></div>' +
+      '<button class="ov-btn green" id="replayBtn">처음부터 다시 🎁</button>' +
+      '<button class="ov-btn sub" id="finishBtn">완료하기</button>'
+    );
+    document.getElementById('replayBtn').onclick = function () { beep(660, 0.1); G.cleared = 0; G.score = 0; G.learned = 0; G.runMs = 0; _stageStartMs = 0; learnedList.innerHTML = ''; renderWords(); startStage(0); };
+    document.getElementById('finishBtn').onclick = finishGame;
+    document.getElementById('winRank').onclick = showRanking;
     loadLeaderboard(st, 20);
   }
   function loadLeaderboard(st, limit) {

@@ -547,6 +547,7 @@ const LiteracyKingChampion = require("./models/LiteracyKingChampion");
 const SpeedReadingKing = require("./models/SpeedReadingKing");
 const SeosulScore = require("./models/SeosulScore"); // 서술형 내신문학 통합 리더보드
 const SantaMonggeulScore = require("./models/SantaMonggeulScore"); // 🎄 크리스마스 문학블록팡팡 이벤트 순위
+const SantaSnackApply = require("./models/SantaSnackApply"); // 🎁 산타몽글 단계보상 과자 응모(10단계마다)
 const BookOrder = require("./models/BookOrder");
 const TextbookOrder = require("./models/TextbookOrder");
 const PromotionOrder = require("./models/PromotionOrder");
@@ -34847,15 +34848,85 @@ app.post('/api/santa-monggeul/submit', async (req, res) => {
     if (academyName) doc.academyName = academyName;
     doc.plays = (doc.plays || 0) + 1;
     doc.updatedAt = now;
-    // 최고기록 갱신: 더 높은 단계 OR (같은 단계 & 더 짧은 시간)
-    const better = (stage > (doc.stage || 0)) ||
-      (stage === (doc.stage || 0) && (doc.timeMs ? timeMs < doc.timeMs : true) && timeMs > 0);
+    // 이어하기(전진형): 완료 단계가 더 높아질 때만 갱신 → 그 단계까지의 누적 어휘·시간을 기록
+    const better = stage > (doc.stage || 0);
     if (better) { doc.stage = stage; doc.words = words; doc.timeMs = timeMs; doc.at = now; }
     await doc.save();
     res.json({ ok: true, best: { stage: doc.stage, words: doc.words, timeMs: doc.timeMs }, updated: better });
   } catch (e) {
     console.error('⚠️ [산타몽글] 제출 실패:', e.message);
     res.status(500).json({ ok: false });
+  }
+});
+
+// 🎁 산타몽글 단계보상 과자 — 응모 가능 과자 목록(기존 몽글 과자 재사용, 중복 제거)
+const SANTA_SNACKS = [
+  '🦐 새우깡', '🥔 포테토칩', '🌽 꼬깔콘', '🍿 콘소메맛팝콘', '🍪 리얼초코칩쿠키', '🥔 포카칩',
+  '🍩 칸쵸', '🍫 콘초코플러스', '🥧 초코파이', '🥮 달콤한호떡과자', '🌭 후랑크핫도그', '🍫 프로틴바',
+  '🍡 찹쌀떡', '🥛 바나나우유', '🥛 초코우유', '🥛 딸기우유', '🥤 사이다', '🥤 콜라',
+  '🧃 오렌지주스', '🥐 슈크림빵', '🍞 연세우유 생크림빵', '🧁 크림치즈 생크림빵', '🍫 초코 생크림빵', '🍓 딸기샌드'
+];
+
+// 🎁 산타몽글 — 10단계마다 과자 응모(과자 종류 선택). 기존 CU 응모 풀(SnackOrder, 0뱃지) 합류.
+app.post('/api/santa-snack-apply', async (req, res) => {
+  try {
+    const { grade, name, academyName, itemName } = req.body || {};
+    const milestone = parseInt(req.body.milestone, 10);
+    if (!grade || !name) return res.status(400).json({ ok: false, message: '학년·이름이 필요합니다.' });
+    if (!(milestone % 10 === 0 && milestone >= 10 && milestone <= 120)) return res.status(400).json({ ok: false, message: '잘못된 단계입니다.' });
+    if (SANTA_SNACKS.indexOf(itemName) < 0) return res.status(400).json({ ok: false, message: '잘못된 과자입니다.' });
+    // 단계 도달 검증(서버 기록 기준) — 조작 방지
+    const sc = await SantaMonggeulScore.findOne({ grade, name }).lean();
+    if (!sc || (sc.stage || 0) < milestone) return res.status(400).json({ ok: false, message: '아직 이 단계에 도달하지 않았어요.' });
+    const aName = academyName || (sc.academyName || '');
+    // 중복 방지(학생+단계 1회)
+    try {
+      await SantaSnackApply.create({ grade, name, academyName: aName, milestone, itemName });
+    } catch (dupErr) {
+      if (dupErr && dupErr.code === 11000) return res.json({ ok: false, already: true, message: '이미 이 단계 선물은 응모했어요.' });
+      throw dupErr;
+    }
+    // 기존 CU 응모 풀에 무료 응모(0뱃지) 합류 → 본사 월 추첨 목록에 함께 노출
+    try {
+      await new SnackOrder({
+        grade, name, school: aName,
+        items: [{ name: `🎄 산타몽글 ${milestone}단계 선물 · ${itemName}`, price: 0, quantity: 1 }],
+        totalBadges: 0, status: 'pending'
+      }).save();
+    } catch (soErr) { console.error('산타몽글 응모 SnackOrder 합류 실패:', soErr.message); }
+    sendHQAdminNotification(name, grade, 'snackOrder', { items: [{ name: `산타몽글 ${milestone}단계 · ${itemName}` }], totalBadges: 0 }).catch(() => {});
+    console.log(`🎁 산타몽글 응모: ${aName} ${grade} ${name} — ${itemName} (${milestone}단계)`);
+    res.json({ ok: true, itemName, milestone });
+  } catch (e) {
+    console.error('⚠️ [산타몽글] 과자 응모 실패:', e.message);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// 🎁 산타몽글 — 내 과자 응모 기록 조회
+app.get('/api/santa-snack-apply/mine', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.json({ ok: true, rows: [] });
+    const rows = await SantaSnackApply.find({ grade, name }).sort({ milestone: 1 }).lean();
+    res.json({ ok: true, rows: rows.map(r => ({ milestone: r.milestone, itemName: r.itemName, at: r.at })) });
+  } catch (e) {
+    console.error('⚠️ [산타몽글] 응모기록 조회 실패:', e.message);
+    res.json({ ok: false, rows: [] });
+  }
+});
+
+// 🎄 크리스마스 문학블록팡팡 — 내 진행(완료 단계) 조회(이어하기용)
+app.get('/api/santa-monggeul/me', async (req, res) => {
+  try {
+    const { grade, name } = req.query;
+    if (!grade || !name) return res.json({ ok: true, stage: 0, words: 0, timeMs: 0 });
+    const doc = await SantaMonggeulScore.findOne({ grade, name }).lean();
+    if (!doc) return res.json({ ok: true, stage: 0, words: 0, timeMs: 0 });
+    res.json({ ok: true, stage: doc.stage || 0, words: doc.words || 0, timeMs: doc.timeMs || 0 });
+  } catch (e) {
+    console.error('⚠️ [산타몽글] 진행 조회 실패:', e.message);
+    res.json({ ok: false, stage: 0 });
   }
 });
 
