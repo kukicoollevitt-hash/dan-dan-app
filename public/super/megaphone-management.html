@@ -924,6 +924,42 @@
 
     <div class="section">
       <div class="section-title">
+        <span>🏆 독서왕 선발전 기록</span>
+        <span class="count-badge" id="srkCount">총 0명</span>
+      </div>
+      <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 15px;">
+        학생 메인 독서왕 선발전 완료 기록 — 완독+퀴즈까지 마친 학생만 저장됨. 소요 시간이 빠를수록 상위 순위 (학년·이름·전화 뒤 4자리로 식별, 센터 정보는 저장되지 않음)
+      </p>
+      <div class="filter-section" style="margin-bottom: 15px;">
+        <select id="srkEventFilter" onchange="loadSrkEntries()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; min-width: 220px;">
+          <option value="">전체 이벤트</option>
+        </select>
+        <button class="search-btn" onclick="loadSrkEntries()">🔄 새로고침</button>
+      </div>
+      <div class="snack-order-container" style="max-height: 500px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <table>
+          <thead style="position: sticky; top: 0; z-index: 10;">
+            <tr>
+              <th style="width: 60px;">순위</th>
+              <th style="width: 150px;">이벤트</th>
+              <th style="width: 120px;">도서</th>
+              <th style="width: 55px;">학년</th>
+              <th style="width: 80px;">이름</th>
+              <th style="width: 85px;">전화뒤4</th>
+              <th style="width: 85px;">맞힌 개수</th>
+              <th style="width: 95px;">소요시간</th>
+              <th style="width: 125px;">참가일시</th>
+            </tr>
+          </thead>
+          <tbody id="srkTableBody">
+            <tr><td colspan="9" class="loading">데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
         <span>💡 브레인 아이디어 LAB 접수</span>
         <span class="count-badge" id="ideaEntryCount">총 0건</span>
       </div>
@@ -2529,6 +2565,50 @@
     }
 
     loadPbEntries();
+
+    // ============ 🏆 독서왕 선발전 기록 ============
+    async function loadSrkEntries() {
+      const tbody = document.getElementById('srkTableBody');
+      const sel = document.getElementById('srkEventFilter');
+      const ev = sel.value;
+      tbody.innerHTML = '<tr><td colspan="9" class="loading">데이터를 불러오는 중...</td></tr>';
+      try {
+        const r = await fetch('/api/super/speed-reading-king/entries?eventName=' + encodeURIComponent(ev), { credentials: 'include' });
+        const d = await r.json();
+        if (!d.ok) throw new Error(d.message || '조회 실패');
+        const prev = sel.value;
+        sel.innerHTML = '<option value="">전체 이벤트</option>' +
+          (d.events || []).map(e => `<option value="${hwEsc(e)}"${e === prev ? ' selected' : ''}>${hwEsc(e)}</option>`).join('');
+        document.getElementById('srkCount').textContent = `총 ${d.rows.length}명`;
+        if (!d.rows.length) {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#999; padding:30px;">아직 완료한 학생이 없습니다.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = d.rows.map((e, i) => {
+          const rank = i + 1;
+          const rankBadge = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '위';
+          const tt = e.totalTime || 0;
+          const timeStr = `${Math.floor(tt / 60)}분 ${tt % 60}초`;
+          const dt = e.createdAt ? new Date(e.createdAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+          return `
+          <tr>
+            <td style="text-align:center; font-weight:700; color:${rank <= 3 ? '#d4af37' : '#555'};">${rankBadge}</td>
+            <td style="font-size:12px; word-break:keep-all;">${hwEsc(e.eventName)}</td>
+            <td style="font-size:12px; word-break:keep-all;">${hwEsc(e.bookTitle)}</td>
+            <td style="text-align:center;">${hwEsc(e.grade)}</td>
+            <td style="text-align:center; font-weight:700;">${hwEsc(e.name)}</td>
+            <td style="text-align:center; color:#777;">${hwEsc(e.phone)}</td>
+            <td style="text-align:center;">${(e.correctCount != null ? e.correctCount : '-')}/${e.totalQuestions || 10}</td>
+            <td style="text-align:center; font-weight:700; color:#e67645;">${timeStr}</td>
+            <td style="text-align:center; font-size:12px; color:#777;">${dt}</td>
+          </tr>`;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#c00; padding:30px;">${hwEsc(err.message)}</td></tr>`;
+      }
+    }
+
+    loadSrkEntries();
 
     // 💡 아이디어 LAB 접수 기록
     async function loadIdeaEntries() {
