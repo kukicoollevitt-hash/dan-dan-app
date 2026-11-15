@@ -888,6 +888,16 @@
     }
     .cw-article-body p { margin: 0 0 8px; }
     .cw-article-body p:last-child { margin-bottom: 0; }
+    /* 🚫 본문 드래그/선택/복사 방지 (학생이 지문을 긁어 답안에 붙여넣기 방지) */
+    #articleArea {
+      -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+      -webkit-touch-callout: none;
+    }
+    /* 본문 안 빈칸·입력칸은 타이핑/선택 허용 */
+    #articleArea input, #articleArea textarea {
+      -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text;
+    }
+    #articleArea img { -webkit-user-drag: none; user-drag: none; }
     /* 어휘 표 */
     .cw-vocab-box {
       margin-top: 10px;
@@ -4793,5 +4803,42 @@
       el.addEventListener('focus', clear);
     }
   </script>
+  <!-- 🚫 본문 보호: 지문 복사/드래그 방지 + 답안칸 붙여넣기 방지 -->
+  <script>
+  (function () {
+    function inArticle(node) {
+      var a = document.getElementById('articleArea');
+      if (!a || !node) return false;
+      if (node.nodeType === 3) node = node.parentNode; // 텍스트노드 → 부모
+      return a.contains(node);
+    }
+    function isField(el) {
+      return el && el.matches && el.matches('.six-w-input, .six-w-textarea, .thinking-textarea, .cw-vblank-answer');
+    }
+    // 본문 영역: 복사·잘라내기 차단 (선택 지점이 본문 안이면)
+    ['copy', 'cut'].forEach(function (ev) {
+      document.addEventListener(ev, function (e) {
+        var sel = window.getSelection && window.getSelection();
+        if ((sel && sel.anchorNode && inArticle(sel.anchorNode)) || inArticle(e.target)) {
+          e.preventDefault();
+        }
+      }, true);
+    });
+    // 본문 영역: 드래그/우클릭/선택 시작 차단 (입력칸은 예외)
+    ['dragstart', 'contextmenu'].forEach(function (ev) {
+      document.addEventListener(ev, function (e) {
+        if (inArticle(e.target) && !isField(e.target)) e.preventDefault();
+      }, true);
+    });
+    document.addEventListener('selectstart', function (e) {
+      if (inArticle(e.target) && !isField(e.target)) e.preventDefault();
+    }, true);
+    // 답안칸(육하원칙·내 생각·본문 빈칸): 붙여넣기 차단
+    document.addEventListener('paste', function (e) {
+      if (isField(e.target)) e.preventDefault();
+    }, true);
+  })();
+  </script>
+
 </body>
 </html>
