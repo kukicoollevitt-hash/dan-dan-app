@@ -2409,7 +2409,7 @@
       if (SR_WB_CACHE) return SR_WB_CACHE;
       await new Promise((resolve) => {
         const s = document.createElement('script');
-        const SR_WB_V = '20261114c'; // 질문 데이터 파일 갱신 시 이 값을 올릴 것
+        const SR_WB_V = '20261116x'; // 질문 데이터 파일 갱신 시 이 값을 올릴 것
         s.src = '/speed-reading-workbook-data.js?v=' + SR_WB_V;
         s.onload = resolve; s.onerror = resolve;
         document.head.appendChild(s);
@@ -3426,14 +3426,100 @@
     // [분야][편][권] → 작품 배열. null이면 🔒(준비중 · 나중에 지문 받아 작성/권 확장)
     //   현재 콘텐츠: 기본편 1권=소나기류(SR_BOOKS) · 기본편 2권=메밀꽃류 축소(SR_BOOKS_B2) · 기본편 3권=SR_BOOKS_V3(목록만)
     //              심화편 1권=SR_BOOKS_S1ADV · 심화편 2권=SR_BOOKS_ADV · 심화편 3권=SR_BOOKS_V3ADV(목록만)
+    // 📙 서술형내신비문학 — 기본/심화 × 1·2·3권, 각 12칸. 현재 기본편 1권 1번(bimun1)만 내용 완비, 나머지는 '준비 중' 선등록
+    const nfStub = (p, n) => Array.from({ length: n }, (_, i) => ({ id: 'nf_' + p + '_' + String(i + 1).padStart(2, '0'), title: '준비 중', author: '', icon: '📄' }));
+    const SR_BOOKS_NF_B1 = [
+      { id: 'bimun1', title: '시계보다 달력이 중요한 이유', author: '비문학 · 설명문', icon: '🕰️' },
+      { id: 'bimun2', title: '시간이 천천히 흐르는 섬, 청산도', author: '비문학 · 설명문', icon: '🏝️' },
+      { id: 'bimun3', title: '소금은 우리 몸의 물 도둑', author: '비문학 · 설명문', icon: '🧂' },
+      { id: 'bimun4', title: '하얀 황금, 소금이 인류에게 소중한 이유', author: '비문학 · 설명문', icon: '💎' },
+      { id: 'bimun5', title: '남북의 언어 차이, 이해와 존중으로 여는 통일 시대', author: '비문학 · 설명문', icon: '🕊️' },
+      { id: 'bimun6', title: '물 부족이 부르는 미래의 위기', author: '비문학 · 설명문', icon: '💧' },
+      { id: 'bimun7', title: '잊힐 권리의 법제화, 왜 신중해야 하는가?', author: '비문학 · 설명문', icon: '⚖️' },
+      { id: 'bimun8', title: '세계인의 입맛을 사로잡은 고추의 역사와 전파', author: '비문학 · 설명문', icon: '🌶️' },
+      { id: 'bimun9', title: '디지털 치매는 퇴보인가, 인류 진화의 새로운 모습인가?', author: '비문학 · 설명문', icon: '🧠' },
+      { id: 'bimun10', title: '생활 속 과학이 만든 놀라운 발명, 적정 기술', author: '비문학 · 설명문', icon: '💡' },
+      { id: 'bimun11', title: '빠른 배달의 이면, 택배 기사들의 노동과 권리', author: '비문학 · 설명문', icon: '📦' },
+      { id: 'bimun12', title: '편리함 뒤에 숨겨진 위험, 플라스틱이 위협하는 지구', author: '비문학 · 설명문', icon: '♻️' }
+    ];
+    const SR_BOOKS_NF_B2 = [
+      { id: 'bimun13', title: '빛이 넘치는 세상, 우리에게 어둠이 필요한 이유', author: '비문학 · 설명문', icon: '🌙' },
+      { id: 'bimun14', title: '젓가락질의 숨겨진 힘과 올바른 식사 예절의 의미', author: '비문학 · 설명문', icon: '🥢' },
+      { id: 'bimun15', title: '자유와 평등을 향한 위대한 행진, 마틴 루서 킹의 외침', author: '비문학 · 연설문', icon: '✊' },
+      { id: 'bimun16', title: '화려한 도시의 밤, 빛 공해와 야간 경관의 두 얼굴', author: '비문학 · 설명문', icon: '🌃' },
+      { id: 'bimun17', title: '남북한의 언어 차이를 좁히는 길', author: '비문학 · 설명문', icon: '🤝' },
+      { id: 'bimun18', title: '빠른 유행과 값싼 옷의 이면', author: '비문학 · 설명문', icon: '👕' },
+      { id: 'bimun19', title: '과학 연구의 자유는 어디까지 허용되어야 할까?', author: '비문학 · 논설문', icon: '🧬' },
+      { id: 'bimun20', title: '그림은 왜 보이는 대로 그리지 않을까?', author: '비문학 · 설명문', icon: '🎨' },
+      { id: 'bimun21', title: '인공지능과 로봇의 시대, 미래의 일자리는 어떻게 달라질까?', author: '비문학 · 설명문', icon: '🤖' },
+      { id: 'bimun22', title: '뇌가 만들어 내는 시각의 비밀', author: '비문학 · 설명문', icon: '👁️' },
+      { id: 'bimun23', title: '일제 강점기의 아픔을 딛고 다시 선 광화문', author: '비문학 · 설명문', icon: '🏯' },
+      { id: 'bimun24', title: '140년 만의 귀환, 외규장각 의궤', author: '비문학 · 설명문', icon: '📜' }
+    ];
+    const SR_BOOKS_NF_B3 = [
+      { id: 'bimun25', title: '발생 원인부터 기후 변화까지, 미세먼지의 비밀', author: '비문학 · 설명문', icon: '🌫️' },
+      { id: 'bimun26', title: '『80일간의 세계 일주』로 배우는 경제학', author: '비문학 · 설명문', icon: '🌍' },
+      { id: 'bimun27', title: '문화마다 다른 합리성, 낯선 관습에 숨겨진 삶의 지혜', author: '비문학 · 설명문', icon: '🌏' },
+      { id: 'bimun28', title: '커피 한 잔의 탄생, 생두에서 향기로운 원두가 되기까지', author: '비문학 · 설명문', icon: '☕' },
+      { id: 'bimun29', title: '정의 돈수(情誼敦修), 따뜻한 정이 넘치는 사회', author: '비문학 · 논설문', icon: '💗' },
+      { id: 'bimun30', title: '24시간 불이 꺼지지 않는 편의점, 도시의 편리함과 그 이면', author: '비문학 · 설명문', icon: '🏪' },
+      { id: 'bimun31', title: '패놉티콘, 보이지 않는 감시', author: '비문학 · 설명문', icon: '📹' },
+      { id: 'bimun32', title: '세상을 바꾸는 따뜻한 과학, 모두를 위한 적정 기술', author: '비문학 · 설명문', icon: '🏺' },
+      { id: 'bimun33', title: '논쟁의 힘, 갈등을 넘어 더 나은 사회로', author: '비문학 · 논설문', icon: '💬' },
+      { id: 'bimun34', title: '순자의 성악설, 인간의 본성과 도덕적 실천의 의미', author: '비문학 · 설명문', icon: '☯️' },
+      { id: 'bimun35', title: '인간의 뇌를 움직이는 신경 전달 물질', author: '비문학 · 설명문', icon: '🧠' },
+      { id: 'bimun36', title: '태평양 쓰레기 섬의 경고, 육지배설물', author: '비문학 · 설명문', icon: '🌊' }
+    ];
+    const SR_BOOKS_NF_A1 = [
+      { id: 'simhwa1_01', title: '시계보다 달력이 중요한 이유', author: '비문학 · 설명문', icon: '🕰️' },
+      { id: 'simhwa1_02', title: '시간이 천천히 흐르는 섬, 청산도', author: '비문학 · 설명문', icon: '🏝️' },
+      { id: 'simhwa1_03', title: '소금은 우리 몸의 물 도둑', author: '비문학 · 설명문', icon: '🧂' },
+      { id: 'simhwa1_04', title: '하얀 황금, 소금이 인류에게 소중한 이유', author: '비문학 · 설명문', icon: '💎' },
+      { id: 'simhwa1_05', title: '남북의 언어 차이, 이해와 존중으로 여는 통일 시대', author: '비문학 · 설명문', icon: '🗣️' },
+      { id: 'simhwa1_06', title: '물 부족이 부르는 미래의 위기', author: '비문학 · 설명문', icon: '💧' },
+      { id: 'simhwa1_07', title: '잊힐 권리의 법제화, 왜 신중해야 하는가?', author: '비문학 · 논설문', icon: '⚖️' },
+      { id: 'simhwa1_08', title: '세계인의 입맛을 사로잡은 고추의 역사와 전파', author: '비문학 · 설명문', icon: '🌶️' },
+      { id: 'simhwa1_09', title: '디지털 치매는 퇴보인가, 인류 진화의 새로운 모습인가?', author: '비문학 · 논설문', icon: '📱' },
+      { id: 'simhwa1_10', title: '생활 속 과학이 만든 놀라운 발명, 적정 기술', author: '비문학 · 설명문', icon: '🔧' },
+      { id: 'simhwa1_11', title: '빠른 배달의 이면, 택배 기사들의 노동과 권리', author: '비문학 · 논설문', icon: '📦' },
+      { id: 'simhwa1_12', title: '편리함 뒤에 숨겨진 위험, 플라스틱이 위협하는 지구', author: '비문학 · 논설문', icon: '♻️' }
+    ];
+    const SR_BOOKS_NF_A2 = [
+      { id: 'simhwa2_01', title: '빛이 넘치는 세상, 우리에게 어둠이 필요한 이유', author: '비문학 · 논설문', icon: '🌃' },
+      { id: 'simhwa2_02', title: '젓가락질의 숨겨진 힘과 올바른 식사 예절의 의미', author: '비문학 · 설명문', icon: '🥢' },
+      { id: 'simhwa2_03', title: '자유와 평등을 향한 위대한 행진, 마틴 루서 킹의 외침', author: '비문학 · 연설문', icon: '✊' },
+      { id: 'simhwa2_04', title: '화려한 도시의 밤, 빛 공해와 야간 경관의 두 얼굴', author: '비문학 · 설명문', icon: '🌆' },
+      { id: 'simhwa2_05', title: '남북한의 언어 차이를 좁히는 길', author: '비문학 · 논설문', icon: '🤝' },
+      { id: 'simhwa2_06', title: '빠른 유행과 값싼 옷의 이면', author: '비문학 · 논설문', icon: '👕' },
+      { id: 'simhwa2_07', title: '과학 연구의 자유는 어디까지 허용되어야 할까?', author: '비문학 · 논설문', icon: '🧬' },
+      { id: 'simhwa2_08', title: '그림은 왜 보이는 대로 그리지 않을까?', author: '비문학 · 설명문', icon: '🎨' },
+      { id: 'simhwa2_09', title: '인공지능과 로봇의 시대, 미래의 일자리는 어떻게 달라질까?', author: '비문학 · 논설문', icon: '🤖' },
+      { id: 'simhwa2_10', title: '뇌가 만들어 내는 시각의 비밀', author: '비문학 · 설명문', icon: '👁️' },
+      { id: 'simhwa2_11', title: '일제 강점기의 아픔을 딛고 다시 선 광화문', author: '비문학 · 설명문', icon: '🏯' },
+      { id: 'simhwa2_12', title: '140년 만의 귀환, 외규장각 의궤', author: '비문학 · 설명문', icon: '📜' }
+    ];
+    const SR_BOOKS_NF_A3 = [
+      { id: 'simhwa3_01', title: '발생 원인부터 기후 변화까지, 미세먼지의 비밀', author: '비문학 · 설명문', icon: '😷' },
+      { id: 'simhwa3_02', title: '『80일간의 세계 일주』로 배우는 경제학', author: '비문학 · 설명문', icon: '🌍' },
+      { id: 'simhwa3_03', title: '문화마다 다른 합리성, 낯선 관습에 숨겨진 삶의 지혜', author: '비문학 · 설명문', icon: '🌏' },
+      { id: 'simhwa3_04', title: '커피 한 잔의 탄생, 생두에서 향기로운 원두가 되기까지', author: '비문학 · 설명문', icon: '☕' },
+      { id: 'simhwa3_05', title: '정의 돈수(情誼敦修), 따뜻한 정이 넘치는 사회', author: '비문학 · 논설문', icon: '💛' },
+      { id: 'simhwa3_06', title: '24시간 불이 꺼지지 않는 편의점, 도시의 편리함과 그 이면', author: '비문학 · 설명문', icon: '🏪' },
+      { id: 'simhwa3_07', title: '패놉티콘, 보이지 않는 감시', author: '비문학 · 설명문', icon: '🗼' },
+      { id: 'simhwa3_08', title: '세상을 바꾸는 따뜻한 과학, 모두를 위한 적정 기술', author: '비문학 · 설명문', icon: '🏺' },
+      { id: 'simhwa3_09', title: '논쟁의 힘, 갈등을 넘어 더 나은 사회로', author: '비문학 · 논설문', icon: '💬' },
+      { id: 'simhwa3_10', title: '순자의 성악설, 인간의 본성과 도덕적 실천의 의미', author: '비문학 · 설명문', icon: '☯️' },
+      { id: 'simhwa3_11', title: '인간의 뇌를 움직이는 신경 전달 물질', author: '비문학 · 설명문', icon: '🧠' },
+      { id: 'simhwa3_12', title: '태평양 쓰레기 섬의 경고, 육지배설물', author: '비문학 · 설명문', icon: '🌊' }
+    ];
     const SR_SHELF = {
       lit: {
         basic: { v1: SR_BOOKS,       v2: SR_BOOKS_B2,  v3: SR_BOOKS_V3 },
         adv:   { v1: SR_BOOKS_S1ADV, v2: SR_BOOKS_ADV, v3: SR_BOOKS_V3ADV }
       },
       nf: {
-        basic: { v1: null, v2: null },
-        adv:   { v1: null, v2: null }
+        basic: { v1: SR_BOOKS_NF_B1, v2: SR_BOOKS_NF_B2, v3: SR_BOOKS_NF_B3 },
+        adv:   { v1: SR_BOOKS_NF_A1, v2: SR_BOOKS_NF_A2, v3: SR_BOOKS_NF_A3 }
       }
     };
     let _srWb = null;        // 워크북 데이터 캐시
@@ -3493,7 +3579,7 @@
       const partName = adv ? '심화편' : '기본편';  // 권 라벨 앞에 붙일 편 이름
       const row = document.getElementById('srVolRow');
       if (row) {
-        row.innerHTML = SR_VOLS.map(v => {
+        row.innerHTML = SR_VOLS.filter(v => vols[v.id] !== undefined).map(v => {
           const books = vols[v.id];
           const ready = !!(books && books.some(b => _srWb && _srWb[b.id]));
           return `
@@ -3987,15 +4073,7 @@
       const area = document.getElementById('khSubArea');
       if (!area) return;
       if (which === 'reading-lit') { renderSrWorkbookArea(area, 'lit'); return; }
-      if (which === 'reading-nf') {
-        // 비문학은 아직 제작 전 — 전체 잠금 (지문 준비되면 renderSrWorkbookArea(area,'nf')로 교체)
-        area.innerHTML = '<div style="padding:60px 20px;text-align:center;border:2px dashed #e5c9a8;border-radius:16px;background:#fffaf4;">'
-          + '<div style="font-size:46px;margin-bottom:12px;">🔒</div>'
-          + '<div style="font-size:19px;font-weight:900;color:#8a4a1c;margin-bottom:6px;">서술형내신비문학</div>'
-          + '<div style="font-size:14px;color:#a06a3a;font-weight:700;">준비 중입니다. 지문이 준비되는 대로 공개할게요!</div>'
-          + '</div>';
-        return;
-      }
+      if (which === 'reading-nf') { renderSrWorkbookArea(area, 'nf'); return; }
       if (which === 'kor') {
         const korCards = [
           { key: 'kh',     icon: '📜', name: '한국사',           suffix: '· 방학특강 20강' },
@@ -5255,7 +5333,7 @@
             <button type="button" class="kh-sub-btn" data-sub="reading-lit" onclick="khSubSwitch('reading-lit')"
               style="flex:1;max-width:220px;padding:12px 18px;border-radius:12px;border:2px solid #ddd;background:#fff;color:#888;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;">📚 서술형내신문학</button>
             <button type="button" class="kh-sub-btn" data-sub="reading-nf" onclick="khSubSwitch('reading-nf')"
-              style="flex:1;max-width:220px;padding:12px 18px;border-radius:12px;border:2px solid #ddd;background:#fff;color:#888;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;">📚 서술형내신비문학 🔒</button>
+              style="flex:1;max-width:220px;padding:12px 18px;border-radius:12px;border:2px solid #ddd;background:#fff;color:#888;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;">📚 서술형내신비문학</button>
           </div>
           <div id="khSubArea"></div>
         `;
