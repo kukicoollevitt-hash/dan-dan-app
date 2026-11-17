@@ -193,7 +193,10 @@
 
   async function loadData() {
     const wb = (window.SR_WORKBOOK_DATA || {})[BOOK] || {};
-    VOCAB = (wb.epVocab && wb.epVocab[EP - 1]) ? wb.epVocab[EP - 1].filter(v => v && v.w) : [];
+    // 문학=epVocab(화별 5개) · 비문학=vocab(flat 50) → 화별 5개 슬라이스 폴백
+    const _epv = (wb.epVocab && wb.epVocab[EP - 1]) ? wb.epVocab[EP - 1]
+      : (Array.isArray(wb.vocab) ? wb.vocab.slice((EP - 1) * 5, (EP - 1) * 5 + 5) : []);
+    VOCAB = (_epv || []).filter(v => v && v.w);
     QUESTIONS = (wb.episodes && wb.episodes[EP - 1]) ? wb.episodes[EP - 1].filter(q => q && q.q && q.a) : [];
     // BOOK_DATA + PART_MAIN_IDEAS : speed-reading-book.html 에서 추출
     const res = await fetch('/speed-reading-book.html?v=20261114');
@@ -209,15 +212,15 @@
     if (entry && entry.content) {
       const div = document.createElement('div'); div.innerHTML = entry.content;
       const nodes = Array.from(div.querySelectorAll('p'));
-      let inPart = false; const paras = [];
+      let curSection = 0, ordinal = 0; const paras = [];
       for (const p of nodes) {
         if (p.classList.contains('section-title')) {
-          const t = p.textContent.trim();
-          const mt = t.match(/Part\s*(\d+)/);
-          if (mt) inPart = (parseInt(mt[1], 10) === EP);
+          ordinal++;
+          const mt = p.textContent.match(/Part\s*(\d+)/);
+          curSection = mt ? parseInt(mt[1], 10) : ordinal;  // 문학=Part번호 · 비문학=①②③ 등장순서
           continue;
         }
-        if (inPart) { const txt = p.textContent.trim(); if (txt) paras.push(splitSentences(txt)); }
+        if (curSection === EP) { const txt = p.textContent.trim(); if (txt) paras.push(splitSentences(txt)); }
       }
       PASSAGE = { paras };
     }

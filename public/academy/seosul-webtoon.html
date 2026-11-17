@@ -70,7 +70,46 @@
     yuja: '유자소전/유자소전', doldari: '돌다리/돌다리', malttuk: '엄마의말뚝/엄마의말뚝', parkssi: '박씨전/박씨전',
     honggyewol: '홍계월전/홍계월전', isaeng: '이생규장전/이생규장전', choicheok: '최척전/최척전', unyeong: '운영전/운영전'
   };
-  const COUNT = 10;
+  // 📄 비문학 웹툰 폴더맵 (bimun1~36, 4컷 .png) — teaching-guide SR_WEBTOON에서 추출
+  const NF_WEBTOON = {
+    bimun1: '시계보다달력이중요한이유/시계보다달력이중요한이유',
+    bimun2: '시간이천천히흐르는섬청산도/시간이천천히흐르는섬청산도',
+    bimun3: '소금은우리몸의물도둑/소금은우리몸의물도둑',
+    bimun4: '하얀황금소금이인류에게소중한이유/하얀황금소금이인류에게소중한이유',
+    bimun5: '남북의언어차이/남북의언어차이',
+    bimun6: '물부족이부르는미래의위기/물부족이부르는미래의위기',
+    bimun7: '잊힐권리의법제화/잊힐권리의법제화',
+    bimun8: '세계인의입맛을사로잡은고추/세계인의입맛을사로잡은고추',
+    bimun9: '디지털치매/디지털치매',
+    bimun10: '놀라운발명적정기술/놀라운발명적정기술',
+    bimun11: '택배기사들/택배기사들',
+    bimun12: '플라스틱위협/플라스틱위협',
+    bimun13: '빛이넘치는세상/빛이넘치는세상',
+    bimun14: '젓가락질/젓가락질',
+    bimun15: '마틴루서킹/마틴루서킹',
+    bimun16: '화려한도시의밤/화려한도시의밤',
+    bimun17: '남북한언어차이/남북한언어차이',
+    bimun18: '값싼옷의이면/값싼옷의이면',
+    bimun19: '과학연구의자유/과학연구의자유',
+    bimun20: '그림은왜보이는대로/그림은왜보이는대로',
+    bimun21: '인공지능과로봇의시대/인공지능과로봇의시대',
+    bimun22: '시각의비밀/시각의비밀',
+    bimun23: '광화문/광화문',
+    bimun24: '외규장각/외규장각',
+    bimun25: '미세먼지/미세먼지',
+    bimun26: '80일간의/80일간의',
+    bimun27: '합리성/합리성',
+    bimun28: '커피/커피',
+    bimun29: '정의돈수/정의돈수',
+    bimun30: '편의점/편의점',
+    bimun31: '패놉티콘/패놉티콘',
+    bimun32: '모두를위한적정기술/모두를위한적정기술',
+    bimun33: '논쟁/논쟁',
+    bimun34: '성악설/성악설',
+    bimun35: '신경전달물질/신경전달물질',
+    bimun36: '태평양쓰레기/태평양쓰레기',
+  };
+  const srNfWtId = (id) => { const m = id.match(/^simhwa([123])_(\d{2})$/); return m ? ('bimun' + ((+m[1] - 1) * 12 + (+m[2]))) : id; };
 
   const qs = new URLSearchParams(location.search);
   const BOOK = qs.get('book') || '';
@@ -80,12 +119,18 @@
   if (THEME === 'adv') document.body.setAttribute('data-theme', 'adv');
 
   const base = srBaseId(BOOK);
-  // 이야기별 배경 삽화 아주 연하게
+  // 📄 비문학(bimun/simhwa)=4컷 .png / 문학=10컷 .jpg
+  const IS_NF = /^(bimun|simhwa)/.test(BOOK);
+  const path = IS_NF ? (NF_WEBTOON[srNfWtId(BOOK)] || NF_WEBTOON[base]) : SEOSUL_WEBTOON[base];
+  const COUNT = IS_NF ? 4 : 10;
+  const EXT = IS_NF ? '.png' : '.jpg';
+  try { const _pill = document.querySelector('.wt-pill'); if (_pill) _pill.textContent = '🎬 웹툰 ' + COUNT + '컷'; } catch (e) {}
+  // 이야기별 배경 삽화 아주 연하게 (비문학은 웹툰 1컷을 배경으로)
   try {
     const _ov = THEME === 'adv' ? '14,18,32' : '16,26,20';
-    document.body.style.background = 'linear-gradient(rgba(' + _ov + ',0.88), rgba(' + _ov + ',0.9)), url(\'/images/서술형집중대비/_배경/' + base + '.jpg?v=20261109w\') center/cover no-repeat';
+    const _bg = IS_NF ? ('/images/서술형집중대비/' + path + '01' + EXT + '?v=20261114') : ('/images/서술형집중대비/_배경/' + base + '.jpg?v=20261109w');
+    if (path) document.body.style.background = 'linear-gradient(rgba(' + _ov + ',0.88), rgba(' + _ov + ',0.9)), url(\'' + _bg + '\') center/cover no-repeat';
   } catch (e) {}
-  const path = SEOSUL_WEBTOON[base];
   const stage = document.getElementById('wtStage');
   const foot = document.getElementById('wtFoot');
   document.getElementById('wtTitle').innerHTML = (TITLE || '웹툰') + (AUTHOR ? '<span class="wt-author">' + AUTHOR + '</span>' : '');
@@ -93,7 +138,7 @@
 
   if (!path) { stage.innerHTML = '<div class="wt-empty">아직 이 작품의 웹툰이 준비되지 않았어요.</div>'; return; }
 
-  function srcOf(n) { return encodeURI('/images/서술형집중대비/' + path + String(n).padStart(2, '0') + '.jpg') + '?v=20261114'; }
+  function srcOf(n) { return encodeURI('/images/서술형집중대비/' + path + String(n).padStart(2, '0') + EXT) + '?v=20261114'; }
   // 다음 컷 미리 로드
   function preload(n) { if (n >= 1 && n <= COUNT) { const im = new Image(); im.src = srcOf(n); } }
 
