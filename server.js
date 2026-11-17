@@ -771,6 +771,12 @@ app.use(
 );
 
 // ============================================================
+// 🔓 관리자(선생님) 단일세션 '면제' 센터 — 여기 등록된 학원은 다기기 동시접속 허용(kick·경고 없음)
+//   ⚠️ 이 센터는 계정공유 방지(단일세션)와 AdminKickEvent 공유감지가 꺼짐. academyName 정확히 일치해야 함.
+const ADMIN_SS_EXEMPT_ACADEMIES = new Set([
+  '브레인문해력_운정센터',   // 파주 운정센터 (요청: 다기기 허용)
+]);
+// ============================================================
 // 🔒 단일 세션(1계정 = 1기기) 강제 미들웨어
 //   - 다른 기기에서 로그인하면 User.activeSessionId가 갱신됨
 //   - 이 세션ID가 활성 세션ID와 다르면 = 다른 기기에 밀린 것 → 세션 파기 후 요청 거부
@@ -816,6 +822,7 @@ async function enforceSingleSession(req, res, next) {
     //    제외: 슈퍼관리자 · 본사 테스트(브레인문해원_테스트) · 슈퍼 조회(view-as) 모드
     const adm = req.session && req.session.admin;
     if (adm && adm.id && !adm.isSuper && !req.session.viewingBranch && adm.academyName !== '브레인문해원_테스트'
+        && !ADMIN_SS_EXEMPT_ACADEMIES.has(adm.academyName)   // 🔓 면제 센터는 단일세션 검사 건너뜀(다기기 허용)
         && req.path !== '/academy-admin-login') {   // 로그인 라우트는 제외(재로그인 차단 방지)
       const isApiA = req.path.startsWith('/api/');
       const nowA = Date.now();
