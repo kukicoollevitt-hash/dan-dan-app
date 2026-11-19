@@ -958,6 +958,39 @@
       </div>
     </div>
 
+    <!-- 🎄 크리스마스 문학블록팡팡 순위 (대시보드에서 이전) -->
+    <div class="section">
+      <div class="section-title">
+        <span>🎄 크리스마스 문학블록팡팡 순위</span>
+        <span class="count-badge" id="smCount">총 0명</span>
+      </div>
+      <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 15px;">
+        산타 몽글이와 함께하는 크리스마스 이벤트(120단계) 전 센터 통합 순위 — 읽기 전용 · 완료단계↓ → 총점↓ → 총시간↑ (학년·이름·센터로 식별)
+      </p>
+      <div class="filter-section" style="margin-bottom: 15px;">
+        <button class="search-btn" onclick="loadSantaMonggeulScores()">🔄 새로고침</button>
+      </div>
+      <div class="snack-order-container" style="max-height: 500px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <table>
+          <thead style="position: sticky; top: 0; z-index: 10;">
+            <tr>
+              <th style="width: 60px;">순위</th>
+              <th style="width: 55px;">학년</th>
+              <th style="width: 110px;">이름</th>
+              <th style="width: 170px;">센터</th>
+              <th style="width: 85px;">완료단계</th>
+              <th style="width: 75px;">총점</th>
+              <th style="width: 85px;">외운 어휘</th>
+              <th style="width: 90px;">총 시간</th>
+            </tr>
+          </thead>
+          <tbody id="smTableBody">
+            <tr><td colspan="8" class="loading">데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="section">
       <div class="section-title">
         <span>💡 브레인 아이디어 LAB 접수</span>
@@ -2609,6 +2642,43 @@
     }
 
     loadSrkEntries();
+
+    // 🎄 크리스마스 문학블록팡팡 순위 (읽기 전용 · 전 센터 통합) — 대시보드에서 이전
+    function _smEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function _smTime(ms){ const s=Math.floor((ms||0)/1000); return Math.floor(s/60)+'분 '+('0'+(s%60)).slice(-2)+'초'; }
+    async function loadSantaMonggeulScores() {
+      const tbody = document.getElementById('smTableBody');
+      tbody.innerHTML = '<tr><td colspan="8" class="loading">데이터를 불러오는 중...</td></tr>';
+      try {
+        const r = await fetch('/api/super/santa-monggeul-scores', { credentials: 'include' });
+        const d = await r.json();
+        if (!d || !d.ok) throw new Error((d && d.message) || '조회 실패');
+        const rows = d.rows || [];
+        document.getElementById('smCount').textContent = `총 ${d.totalStudents != null ? d.totalStudents : rows.length}명`;
+        if (!rows.length) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#999; padding:30px;">아직 기록이 없습니다.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = rows.map(x => {
+          const rank = x.rank;
+          const rankBadge = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank + '위';
+          return `
+          <tr>
+            <td style="text-align:center; font-weight:700; color:${rank <= 3 ? '#d4af37' : '#555'};">${rankBadge}</td>
+            <td style="text-align:center;">${_smEsc(x.grade)}</td>
+            <td style="text-align:center; font-weight:700;">${_smEsc(x.name)}</td>
+            <td style="font-size:12px; color:#777; word-break:keep-all;">${_smEsc(x.academyName)}</td>
+            <td style="text-align:center; font-weight:800;">${x.stage != null ? x.stage : '-'}</td>
+            <td style="text-align:center; font-weight:800; color:#b45309;">${x.score || 0}</td>
+            <td style="text-align:center;">${x.words != null ? x.words : '-'}</td>
+            <td style="text-align:center; color:#475569;">${_smTime(x.timeMs)}</td>
+          </tr>`;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#c00; padding:30px;">${_smEsc(err.message)}</td></tr>`;
+      }
+    }
+    loadSantaMonggeulScores();
 
     // 💡 아이디어 LAB 접수 기록
     async function loadIdeaEntries() {
