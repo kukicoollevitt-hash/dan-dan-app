@@ -471,6 +471,7 @@ const UserProgress = require("./models/UserProgress");
 const DiagnosticTest = require("./models/DiagnosticTest");
 const CourseApplication = require("./models/CourseApplication");
 const MockExamResult = require("./models/MockExamResult");
+const SuneungEventResult = require("./models/SuneungEventResult"); // 2027 온라인 수능 이벤트 결과
 const MockExamUser = require("./models/MockExamUser");
 const MockExamConsultation = require("./models/MockExamConsultation");
 const MegaphoneMessage = require("./models/MegaphoneMessage");
@@ -36919,6 +36920,30 @@ app.delete("/api/academy-lti-results/delete-selected", requireSuperAdmin, async 
   }
 });
 
+// 슈퍼관리자: 전체 센터 2027 수능 이벤트 결과 조회/삭제
+app.get("/api/academy-suneung-event-results", requireSuperAdmin, async (req, res) => {
+  try {
+    const rows = await SuneungEventResult.find({}).sort({ completedAt: -1 }).select("-answers").lean();
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error("[GET /api/academy-suneung-event-results]", error);
+    res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
+  }
+});
+app.delete("/api/academy-suneung-event-results/delete-selected", requireSuperAdmin, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.json({ success: false, message: "삭제할 항목을 선택해주세요." });
+    }
+    const result = await SuneungEventResult.deleteMany({ _id: { $in: ids } });
+    res.json({ success: true, deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error("[DELETE /api/academy-suneung-event-results/delete-selected]", error);
+    res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
+  }
+});
+
 // 문해력 진단테스트 정답 배열 (25문제) - diagnostic_reading_test.html과 동일하게 유지
 const diagnosticCorrectAnswers = [2, 0, 1, 1, 2, 1, 2, 1, 2, 3, 2, 0, 1, 1, 2, 1, 1, 1, 2, 2, 1, 0, 1, 1, 2];
 
@@ -38476,18 +38501,18 @@ const examDetailMappingsServer = {
     litModernPoem: [35, 36, 37]
   },
   'korean_mock_10': {
-    speechTalk: [1, 2, 3],
-    speechIntegrated: [4, 5, 6, 7],
-    speechWrite: [8, 9, 10],
-    grammarModern: [13, 14, 15],
-    grammarClassic: [11, 12],
-    readingHumanities: [16, 17, 18, 19, 20, 21],
-    readingLaw: [39, 40, 41, 42],
-    readingScience: [22, 23, 24, 25],
-    litClassicPoem: [30, 31, 32, 33, 34],
-    litClassicProse: [43, 44, 45],
-    litModernNovel: [26, 27, 28, 29],
-    litModernPoem: [35, 36, 37, 38]
+    speechTalk: [35, 36, 37],
+    speechIntegrated: [38, 39, 40, 41, 42],
+    speechWrite: [43, 44, 45],
+    grammarModern: [],
+    grammarClassic: [],
+    readingHumanities: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    readingLaw: [14, 15, 16, 17],
+    readingScience: [10, 11, 12, 13],
+    litClassicPoem: [31, 32, 33, 34],
+    litClassicProse: [18, 19, 20, 21],
+    litModernNovel: [27, 28, 29, 30],
+    litModernPoem: [22, 23, 24, 25, 26]
   },
   'korean_mock_11': {
     speechTalk: [1, 2, 3],
@@ -42137,6 +42162,117 @@ app.get("/api/menu-init", async (req, res) => {
 });
 
 // ===== 모의고사 결과 저장 API =====
+// ===== 2027 온라인 수능 이벤트 =====
+// 응시 결과 저장
+app.post("/api/suneung-event/submit", async (req, res) => {
+  try {
+    const { academyId, academyName, studentName, grade, phoneNumber, gradeLevel, score, correctCount, totalQuestions, answers, wrongAnswers, elapsedTimeStr } = req.body;
+    if (!studentName || !grade || score === undefined || !answers) {
+      return res.status(400).json({ ok: false, message: "필수 정보가 누락되었습니다." });
+    }
+    // 센터명 보정 (academyId로 표시명 재조회)
+    let centerName = (academyName || "").trim();
+    if (academyId && /^[a-fA-F0-9]{24}$/.test(academyId)) {
+      try {
+        const a = await Admin.findById(academyId).select("academyName newRegistrationName").lean();
+        if (a) centerName = getAdminDisplayName(a) || centerName;
+      } catch {}
+    }
+    const result = new SuneungEventResult({
+      academyId: academyId || "",
+      academyName: centerName,
+      studentName,
+      grade,
+      phoneNumber: phoneNumber || "",
+      gradeLevel: gradeLevel,
+      score,
+      correctCount,
+      totalQuestions: totalQuestions || 45,
+      answers: new Map(Object.entries(answers || {})),
+      wrongAnswers: wrongAnswers || [],
+      elapsedTimeStr: elapsedTimeStr || "--:--"
+    });
+    await result.save();
+    return res.json({ ok: true, resultId: result._id });
+  } catch (err) {
+    console.error("❌ [/api/suneung-event/submit] 오류:", err);
+    return res.status(500).json({ ok: false, message: "저장에 실패했습니다." });
+  }
+});
+
+// 결과 단건 조회 (결과지용)
+app.get("/api/suneung-event/result/:id", async (req, res) => {
+  try {
+    if (!/^[a-fA-F0-9]{24}$/.test(req.params.id)) return res.json({ ok: false, message: "잘못된 id" });
+    const r = await SuneungEventResult.findById(req.params.id).lean();
+    if (!r) return res.json({ ok: false, message: "결과를 찾을 수 없습니다." });
+    return res.json({ ok: true, result: r });
+  } catch (err) {
+    console.error("❌ [/api/suneung-event/result] 오류:", err);
+    return res.json({ ok: false, message: "조회 실패" });
+  }
+});
+
+// 센터별 응시 목록 (어드민 신청목록 하단 테이블용)
+app.get("/api/admin/suneung-event-results", async (req, res) => {
+  try {
+    const viewingBranch = req.session && req.session.viewingBranch;
+    if (!viewingBranch && (!req.session || !req.session.admin || !req.session.admin.academyName)) {
+      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+    }
+    const sessionAdmin = viewingBranch || req.session.admin;
+    let names = [sessionAdmin.academyName].filter(Boolean);
+    try {
+      const adminId = sessionAdmin.id || sessionAdmin._id;
+      if (adminId) {
+        const fresh = await Admin.findById(adminId).select("academyName academyAliases").lean();
+        if (fresh) names = getAdminAcademyNames(fresh);
+      }
+    } catch {}
+    if (!names || names.length === 0) return res.json({ success: true, data: [] });
+    const esc = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const clauses = names.map(n => ({ academyName: { $regex: esc(n), $options: "i" } }));
+    const filter = clauses.length === 1 ? clauses[0] : { $or: clauses };
+    const rows = await SuneungEventResult.find(filter).sort({ completedAt: -1 }).select("-answers").lean();
+    return res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error("❌ [/api/admin/suneung-event-results] 오류:", err);
+    return res.json({ success: false, message: "조회 실패" });
+  }
+});
+
+// 수능 이벤트 결과 선택 삭제 (본인 센터 결과만)
+app.delete("/api/admin/suneung-event-results/delete-selected", async (req, res) => {
+  try {
+    const viewingBranch = req.session && req.session.viewingBranch;
+    if (!viewingBranch && (!req.session || !req.session.admin || !req.session.admin.academyName)) {
+      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+    }
+    const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids : [];
+    if (ids.length === 0) return res.json({ success: false, message: "삭제할 항목이 없습니다." });
+
+    const sessionAdmin = viewingBranch || req.session.admin;
+    let names = [sessionAdmin.academyName].filter(Boolean);
+    try {
+      const adminId = sessionAdmin.id || sessionAdmin._id;
+      if (adminId) {
+        const fresh = await Admin.findById(adminId).select("academyName academyAliases").lean();
+        if (fresh) names = getAdminAcademyNames(fresh);
+      }
+    } catch {}
+    if (!names || names.length === 0) return res.json({ success: false, message: "권한이 없습니다." });
+    const esc = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const clauses = names.map(n => ({ academyName: { $regex: esc(n), $options: "i" } }));
+    const nameFilter = clauses.length === 1 ? clauses[0] : { $or: clauses };
+    // 본인 센터 소속 결과만 삭제 (타 센터 _id 섞여도 제외됨)
+    const result = await SuneungEventResult.deleteMany({ _id: { $in: ids }, ...nameFilter });
+    return res.json({ success: true, deletedCount: result.deletedCount || 0 });
+  } catch (err) {
+    console.error("❌ [/api/admin/suneung-event-results/delete-selected] 오류:", err);
+    return res.json({ success: false, message: "삭제 실패" });
+  }
+});
+
 app.post("/api/mock-exam/submit", async (req, res) => {
   try {
     const { visitorId, studentInfo, examId, examTitle, grade, answers, score, correctCount, totalQuestions, wrongAnswers, elapsedTimeStr } = req.body;
@@ -42335,10 +42471,10 @@ app.post("/api/mock-exam/submit", async (req, res) => {
                 literature: [16, 17, 18, 19, 26, 27, 28, 29, 35, 36, 37, 42, 43, 44, 45]
               },
               'korean_mock_10': {
-                speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                grammar: [11, 12, 13, 14, 15],
-                reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 39, 40, 41, 42],
-                literature: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 43, 44, 45]
+                speech: [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
+                grammar: [],
+                reading: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+                literature: [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
               },
               'korean_mock_11': {
                 speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -43019,10 +43155,10 @@ app.get("/api/mock-exam/area-analysis/:userId", async (req, res) => {
         literature: [16, 17, 18, 19, 26, 27, 28, 29, 35, 36, 37, 42, 43, 44, 45]
       },
       'korean_mock_10': {
-        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        grammar: [11, 12, 13, 14, 15],
-        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 39, 40, 41, 42],
-        literature: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 43, 44, 45]
+        speech: [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
+        grammar: [],
+        reading: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+        literature: [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
       },
       'korean_mock_11': {
         speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -43165,10 +43301,10 @@ app.post("/api/mock-exam/generate-ai-feedback", async (req, res) => {
         literature: [16, 17, 18, 19, 26, 27, 28, 29, 35, 36, 37, 42, 43, 44, 45]
       },
       'korean_mock_10': {
-        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        grammar: [11, 12, 13, 14, 15],
-        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 39, 40, 41, 42],
-        literature: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 43, 44, 45]
+        speech: [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
+        grammar: [],
+        reading: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+        literature: [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
       },
       'korean_mock_11': {
         speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -43507,10 +43643,10 @@ app.get("/api/mock-exam/area-trend/:userId", async (req, res) => {
         literature: [16, 17, 18, 19, 26, 27, 28, 29, 35, 36, 37, 42, 43, 44, 45]
       },
       'korean_mock_10': {
-        speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        grammar: [11, 12, 13, 14, 15],
-        reading: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 39, 40, 41, 42],
-        literature: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 43, 44, 45]
+        speech: [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
+        grammar: [],
+        reading: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+        literature: [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
       },
       'korean_mock_11': {
         speech: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
