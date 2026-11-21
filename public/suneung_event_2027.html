@@ -4740,7 +4740,7 @@ window.showPrettyConfirm = function(opts) {
         }
 
         // 시험 시작 함수 (비밀번호 모달 표시)
-        function startExam() {
+        async function startExam() {
             const schoolName = document.getElementById('schoolName').value.trim();
             const grade = document.getElementById('grade').value;
             const studentName = document.getElementById('studentName').value.trim();
@@ -4777,6 +4777,20 @@ window.showPrettyConfirm = function(opts) {
             }
 
             if (!isValid) return;
+
+            // 1인 1회: 전화번호 중복 체크 (센터 단위) — 시작 전 차단
+            try {
+                const qs = new URLSearchParams({
+                    academyName: window.SUNEUNG_ACADEMY_NAME || schoolName || '',
+                    phoneNumber: phoneNumber
+                });
+                const chk = await fetch('/api/suneung-event/check-phone?' + qs.toString());
+                const cd = await chk.json();
+                if (cd && cd.exists) {
+                    showInputError('phoneNumber', '이미 응시한 전화번호입니다. (1인 1회만 응시 가능)');
+                    return;
+                }
+            } catch (e) { /* 조회 실패 시 통과 (응시 자체를 막지 않음) */ }
 
             // 바로 시작하지 않고 단계별 안내문 표시
             showExamGuide();

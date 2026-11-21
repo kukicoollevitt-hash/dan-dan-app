@@ -42164,6 +42164,22 @@ app.get("/api/menu-init", async (req, res) => {
 // ===== 모의고사 결과 저장 API =====
 // ===== 2027 온라인 수능 이벤트 =====
 // 응시 결과 저장
+// 1인 1회: 전화번호 중복 확인 (센터 단위) — 응시 시작 전 호출
+app.get("/api/suneung-event/check-phone", async (req, res) => {
+  try {
+    const academyName = String(req.query.academyName || "").trim();
+    const phoneNumber = String(req.query.phoneNumber || "").trim();
+    if (!phoneNumber) return res.json({ ok: true, exists: false });
+    const q = { phoneNumber };
+    if (academyName) q.academyName = academyName;
+    const found = await SuneungEventResult.findOne(q).select("_id").lean();
+    return res.json({ ok: true, exists: !!found });
+  } catch (err) {
+    console.error("❌ [/api/suneung-event/check-phone] 오류:", err);
+    return res.json({ ok: false, exists: false });
+  }
+});
+
 app.post("/api/suneung-event/submit", async (req, res) => {
   try {
     const { academyId, academyName, studentName, grade, phoneNumber, gradeLevel, score, correctCount, totalQuestions, answers, wrongAnswers, elapsedTimeStr } = req.body;
@@ -42177,6 +42193,16 @@ app.post("/api/suneung-event/submit", async (req, res) => {
         const a = await Admin.findById(academyId).select("academyName newRegistrationName").lean();
         if (a) centerName = getAdminDisplayName(a) || centerName;
       } catch {}
+    }
+    // 1인 1회: 같은 센터+전화번호 기존 기록이 있으면 재저장하지 않고 최초 기록 유지
+    const phone = (phoneNumber || "").trim();
+    if (phone) {
+      const dupQ = { phoneNumber: phone };
+      if (centerName) dupQ.academyName = centerName;
+      const dup = await SuneungEventResult.findOne(dupQ).select("_id").lean();
+      if (dup) {
+        return res.json({ ok: true, resultId: dup._id, duplicate: true });
+      }
     }
     const result = new SuneungEventResult({
       academyId: academyId || "",

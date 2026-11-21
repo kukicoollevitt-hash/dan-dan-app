@@ -206,7 +206,30 @@ function fmtDate(iso){
   render(result);
 })();
 
+let PRINT_FILE_TITLE = '';
+
+// 인쇄 → PDF 저장: 파일명 = 센터명 학년 이름
+// iframe(관리자 모달)에서 인쇄 시 브라우저는 '최상위 문서'의 title을 파일명으로 쓰므로
+// 부모(top) 문서 title도 함께 바꾼 뒤 인쇄, 인쇄 후 원복한다.
+function printResult(){
+  const t = PRINT_FILE_TITLE || document.title;
+  let topDoc = null, oldTop = null;
+  try { topDoc = window.top.document; oldTop = topDoc.title; topDoc.title = t; } catch (e) { /* 교차출처면 무시 */ }
+  const oldSelf = document.title;
+  document.title = t;
+  window.print();
+  // 인쇄 대화상자 종료 후 원복
+  setTimeout(function(){
+    try { if (topDoc) topDoc.title = oldTop; } catch (e) {}
+    document.title = oldSelf;
+  }, 1500);
+}
+
 function render(r){
+  // 인쇄 → PDF 저장 시 기본 파일명 = 센터명 학년 이름 (파일명 불가문자 제거)
+  const fileTitle = [r.academyName, r.grade, r.studentName].filter(Boolean).join(' ').replace(/[\\/:*?"<>|]/g, '').trim();
+  if (fileTitle) { document.title = fileTitle; PRINT_FILE_TITLE = fileTitle; }
+
   // 오답 집합 (미응답 포함)
   const wrongSet = new Set((r.wrongAnswers||[]).map(w=>w.questionNum));
   const areaStat = key=>{
@@ -287,7 +310,7 @@ function render(r){
     </div>
 
     <div class="print-hide" style="padding:6px 34px 28px;text-align:center;">
-      <button onclick="window.print()" style="background:#1e293b;color:#fff;border:none;border-radius:12px;padding:14px 32px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(30,41,59,.25);">🖨 결과지 인쇄하기</button>
+      <button onclick="printResult()" style="background:#1e293b;color:#fff;border:none;border-radius:12px;padding:14px 32px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(30,41,59,.25);">🖨 결과지 인쇄하기</button>
     </div>
 
     <div class="foot">본 결과지는 2027학년도 온라인 수학능력시험(이벤트) 응시 기록입니다. · BRAIN 문해력</div>
