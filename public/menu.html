@@ -12066,6 +12066,25 @@ if (logoutConfirmBtn) {
         const targetLi = domainList.querySelector(`[data-domain="${savedDomainId}"]`);
         if (targetLi) {
           targetLi.classList.add('active');
+
+          // 🛡️ 세부 과목 열이 비어 있는데 분야가 복원된 경우, 저장된 과목까지 함께 복원.
+          //   renderDomains가 '분야만' 다시 그리고 과목 열을 비운 채 두면(pageshow 권한 재적용 레이스),
+          //   단원은 떠 있는데 세부 과목만 빈 상태가 가끔 생김 → 여기서 불변식을 강제.
+          //   (비어 있을 때만 채우므로 정상 상태는 건드리지 않음)
+          if (!isSeriesDisabled && subjectList && subjectList.children.length === 0) {
+            const savedDom = domainData.find(d => d.id === savedDomainId);
+            const savedSub = localStorage.getItem('selectedMenuSubject');
+            if (savedDom && savedSub) {
+              currentSelectedDomain = savedDom;
+              renderSubjects(seriesKey, savedDom);
+              const savedSubOffset = localStorage.getItem('selectedMenuSubjectOffset');
+              const wantOffset = savedSubOffset ? parseInt(savedSubOffset) : null;
+              document.querySelectorAll('.subject-item').forEach(li => {
+                const liOffset = li.dataset.offset ? parseInt(li.dataset.offset) : null;
+                li.classList.toggle('active', li.dataset.sub === savedSub && liOffset === wantOffset);
+              });
+            }
+          }
         }
       }
     }
