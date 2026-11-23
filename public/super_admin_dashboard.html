@@ -807,5 +807,68 @@
 
     // 🎄 크리스마스 문학블록팡팡 순위 → 이벤트 관리(megaphone-management) 페이지로 이전됨
   </script>
+  <!-- 🚀 슈퍼관리자 환영 팝업 -->
+  <div id="superWelcomeOverlay" style="display:none; position:fixed; inset:0; z-index:100000; background:rgba(10,12,22,.66); -webkit-backdrop-filter:blur(5px); backdrop-filter:blur(5px); align-items:center; justify-content:center; padding:20px;">
+    <div id="superWelcomeCard" style="position:relative; width:100%; max-width:420px; border-radius:24px; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,.5); background:linear-gradient(160deg,#4f46e5 0%,#7c3aed 55%,#9333ea 100%); color:#fff; transform:scale(.92); opacity:0; transition:transform .35s cubic-bezier(.2,1.3,.4,1), opacity .35s ease;">
+      <button onclick="closeSuperWelcome()" aria-label="닫기" style="position:absolute; top:12px; right:14px; z-index:2; background:rgba(255,255,255,.18); color:#fff; border:none; width:34px; height:34px; border-radius:50%; font-size:20px; cursor:pointer; line-height:1;">×</button>
+      <div style="padding:34px 30px 30px; text-align:center;">
+        <div style="font-size:13px; font-weight:700; letter-spacing:1px; opacity:.85;">
+          <span id="swHello">환영합니다</span> 👋
+        </div>
+        <div style="margin-top:22px; display:flex; align-items:baseline; justify-content:center; gap:8px;">
+          <span id="swRemaining" style="font-size:64px; font-weight:900; line-height:1; letter-spacing:-2px; text-shadow:0 4px 18px rgba(0,0,0,.25);">2,946</span>
+          <span style="font-size:22px; font-weight:800;">개</span>
+        </div>
+        <div style="margin-top:12px; font-size:18px; font-weight:800;">의 센터가 오고 있는 중입니다 🚀</div>
+        <div style="margin-top:10px; font-size:15px; font-weight:600; opacity:.92;">함께 성장할 수 있어 감사합니다</div>
+
+        <div style="margin-top:20px; height:10px; border-radius:999px; background:rgba(255,255,255,.22); overflow:hidden;">
+          <div id="swBar" style="height:100%; width:0%; border-radius:999px; background:linear-gradient(90deg,#fde68a,#fbbf24); transition:width .9s ease .2s;"></div>
+        </div>
+        <div style="margin-top:8px; font-size:12.5px; font-weight:700; opacity:.85;">
+          현재 <span id="swCount">—</span>개 · 목표 <span id="swGoal">3,000</span>개
+        </div>
+
+        <button onclick="closeSuperWelcome()" style="margin-top:24px; width:100%; padding:14px; border:none; border-radius:14px; background:#fff; color:#4f46e5; font-size:16px; font-weight:800; cursor:pointer; box-shadow:0 8px 20px rgba(0,0,0,.2);">오늘도 시작하기</button>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    function fmt(n){ return (Number(n)||0).toLocaleString('ko-KR'); }
+    window.closeSuperWelcome = function(){
+      var ov = document.getElementById('superWelcomeOverlay');
+      var card = document.getElementById('superWelcomeCard');
+      if (card){ card.style.transform='scale(.92)'; card.style.opacity='0'; }
+      setTimeout(function(){ if(ov) ov.style.display='none'; }, 250);
+    };
+    async function showSuperWelcome(){
+      // 세션당 1회만 노출 (로그인 세션 기준)
+      try { if (sessionStorage.getItem('superWelcomeShown') === '1') return; } catch(e){}
+      try {
+        var r = await fetch('/api/super/center-count');
+        var d = await r.json();
+        if (!d || !d.ok) return;
+        var hello = (d.name ? (d.name + '님, ') : '') + '환영합니다';
+        document.getElementById('swHello').textContent = hello;
+        document.getElementById('swRemaining').textContent = fmt(d.remaining);
+        document.getElementById('swCount').textContent = fmt(d.count);
+        document.getElementById('swGoal').textContent = fmt(d.goal);
+        var pct = d.goal ? Math.min(100, Math.round((d.count / d.goal) * 100)) : 0;
+        var ov = document.getElementById('superWelcomeOverlay');
+        var card = document.getElementById('superWelcomeCard');
+        ov.style.display = 'flex';
+        requestAnimationFrame(function(){
+          card.style.transform='scale(1)'; card.style.opacity='1';
+          setTimeout(function(){ var b=document.getElementById('swBar'); if(b) b.style.width = pct + '%'; }, 120);
+        });
+        try { sessionStorage.setItem('superWelcomeShown','1'); } catch(e){}
+      } catch(e){ /* 조용히 무시 */ }
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(showSuperWelcome, 400); });
+    else setTimeout(showSuperWelcome, 400);
+  })();
+  </script>
+
 </body>
 </html>

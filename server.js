@@ -7318,6 +7318,31 @@ app.post("/super/admin-edit", requireSuperAdmin, async (req, res) => {
 /* ====================================
  * ✅ 슈퍼관리자: 센터용 관리자(선생님) 목록
  * ==================================== */
+// 🚀 슈퍼관리자 환영 팝업용 — 센터 수·목표 잔여·인사말
+app.get("/api/super/center-count", requireSuperAdmin, async (req, res) => {
+  try {
+    // /super/academy-admins 와 동일 기준: userType academy · 미삭제 · phone 중복제거
+    const grouped = await Admin.aggregate([
+      { $match: { deleted: { $ne: true }, userType: "academy" } },
+      { $group: { _id: "$phone" } },
+      { $count: "n" }
+    ]);
+    const count = grouped[0] ? grouped[0].n : 0;
+    const GOAL = 3000;
+    res.json({
+      ok: true,
+      count,
+      goal: GOAL,
+      remaining: Math.max(0, GOAL - count),
+      name: (req.session.admin && req.session.admin.name) || "",
+      academyName: (req.session.admin && req.session.admin.academyName) || ""
+    });
+  } catch (e) {
+    console.error("❌ /api/super/center-count 오류:", e);
+    res.json({ ok: false, remaining: 0, count: 0, goal: 3000 });
+  }
+});
+
 app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
   try {
     // 센터용 관리자만 조회 (userType === 'academy')
