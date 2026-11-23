@@ -106,7 +106,7 @@
   let warningTimer = null;
   let isLoggedIn = false;
 
-  // 현재 로그인 학생 식별 (학교식 loginGrade/Name → 학원식 sessionStorage.user → localStorage.currentStudent 순)
+  // 현재 로그인 학생 식별 (학교식 loginGrade/Name → 센터식 sessionStorage.user → localStorage.currentStudent 순)
   function getLoginIdentity() {
     let grade = localStorage.getItem('loginGrade') || sessionStorage.getItem('loginGrade');
     let name = localStorage.getItem('loginName') || sessionStorage.getItem('loginName');

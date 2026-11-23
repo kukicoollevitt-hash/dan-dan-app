@@ -1754,6 +1754,38 @@
       '인물': 82   // 초등모의 전용
     };
     const MOCK_FILE = { elem: 'monthly_elem_1', mid: 'monthly_mid_1' };
+    // 🎯 모의테스트 등급 구간 [시작,끝,라벨,색,등급명,시리즈] — 점수 막대·상단 배지 공용(단일 출처)
+    //    경계 변경 시 여기만 고치면 바·배지가 함께 바뀜 (예: 중등 온 등급 확장 반영)
+    const MOCK_SEGS = {
+      elem: [
+        [0, 40,  '입문1', '#7f1d1d', '입문',    'BRAIN 입문'],
+        [41, 46, '입문2', '#b91c1c', '입문',    'BRAIN 입문'],
+        [47, 52, '입문3', '#dc2626', '입문',    'BRAIN 입문'],
+        [53, 58, '입문4', '#ea580c', '입문',    'BRAIN 입문'],
+        [59, 64, '입문5', '#f97316', '입문',    'BRAIN 입문'],
+        [65, 70, '온(하)', '#f59e0b', '기초 D',  'BRAIN 온'],
+        [71, 76, '온(중)', '#eab308', '보통 C+', 'BRAIN 온'],
+        [77, 82, '온(상)', '#a3e635', '보통 C+', 'BRAIN 온'],
+        [83, 88, '업(하)', '#84cc16', '우수 A',  'BRAIN 업'],
+        [89, 94, '업(중)', '#22c55e', '우수 A',  'BRAIN 업'],
+        [95, 100,'업(상)', '#15803d', '우수 A',  'BRAIN 업']
+      ],
+      mid: [
+        [0, 51,  '온(하)', '#7f1d1d', '기초 D',  'BRAIN 온'],
+        [52, 62, '온(중)', '#b91c1c', '기초 D',  'BRAIN 온'],
+        [63, 74, '온(상)', '#ea580c', '기초 D',  'BRAIN 온'],
+        [75, 79, '업(중)', '#f59e0b', '보통 C+', 'BRAIN 업'],
+        [80, 84, '업(상)', '#eab308', '보통 C+', 'BRAIN 업'],
+        [85, 89, '핏(하)', '#84cc16', '우수 A',  'BRAIN 핏'],
+        [90, 94, '핏(중)', '#22c55e', '우수 A',  'BRAIN 핏'],
+        [95, 100,'핏(상)', '#15803d', '우수 A',  'BRAIN 핏']
+      ]
+    };
+    // 점수 → 등급 라벨(예: '온(하)'). 저장된 옛 등급 대신 현재 구간표로 재계산.
+    function mockGradeLabel(level, score) {
+      const b = (MOCK_SEGS[level] || []).find(function (seg) { return score >= seg[0] && score <= seg[1]; });
+      return b ? b[2] : null;
+    }
     const MOCK_SKILL_MAP = {
       literal: '핵심 이해력', lexical: '어휘 맥락력', structural: '구조 파악력',
       inferential: '추론 통합력', critical: '비판 적용력'
@@ -1885,33 +1917,7 @@
       if (!container || !bar || !axis || !legend) return;
 
       // 구간 정의: [시작, 끝, 라벨, 색(인라인), 등급명, 시리즈명]
-      // 색감: 낮음 = 진한 빨강 → 주황 → 노랑/연두 → 진한 녹색 (신호등)
-      // 모의테스트: 원점수 기준 6구간 (초등=온하~업상 / 중등=업하~핏상)
-      const MOCK_SEGS = {
-        elem: [
-          [0, 40,  '입문1', '#7f1d1d', '입문',    'BRAIN 입문'],
-          [41, 46, '입문2', '#b91c1c', '입문',    'BRAIN 입문'],
-          [47, 52, '입문3', '#dc2626', '입문',    'BRAIN 입문'],
-          [53, 58, '입문4', '#ea580c', '입문',    'BRAIN 입문'],
-          [59, 64, '입문5', '#f97316', '입문',    'BRAIN 입문'],
-          [65, 70, '온(하)', '#f59e0b', '기초 D',  'BRAIN 온'],
-          [71, 76, '온(중)', '#eab308', '보통 C+', 'BRAIN 온'],
-          [77, 82, '온(상)', '#a3e635', '보통 C+', 'BRAIN 온'],
-          [83, 88, '업(하)', '#84cc16', '우수 A',  'BRAIN 업'],
-          [89, 94, '업(중)', '#22c55e', '우수 A',  'BRAIN 업'],
-          [95, 100,'업(상)', '#15803d', '우수 A',  'BRAIN 업']
-        ],
-        mid: [
-          [0, 51,  '온(하)', '#7f1d1d', '기초 D',  'BRAIN 온'],
-          [52, 62, '온(중)', '#b91c1c', '기초 D',  'BRAIN 온'],
-          [63, 74, '온(상)', '#ea580c', '기초 D',  'BRAIN 온'],
-          [75, 79, '업(중)', '#f59e0b', '보통 C+', 'BRAIN 업'],
-          [80, 84, '업(상)', '#eab308', '보통 C+', 'BRAIN 업'],
-          [85, 89, '핏(하)', '#84cc16', '우수 A',  'BRAIN 핏'],
-          [90, 94, '핏(중)', '#22c55e', '우수 A',  'BRAIN 핏'],
-          [95, 100,'핏(상)', '#15803d', '우수 A',  'BRAIN 핏']
-        ]
-      };
+      // 모의테스트 구간(MOCK_SEGS)은 상단으로 이동 — 바·배지 공용(단일 출처)
       // 초등은 9-segment, 중고등은 10-segment (딥 단일), 모의는 6-segment
       const segs = (VIEW_IS_MOCK && MOCK_SEGS[VIEW_MOCK_LEVEL]) ? MOCK_SEGS[VIEW_MOCK_LEVEL] : isElementary ? [
         [0, 44,  '온(하)', '#991b1b', '기초 D',  'BRAIN 온'],  // 가장 진한 빨강 (넓은 하부)
@@ -2021,7 +2027,7 @@
         }
       });
 
-      // 가중치 점수가 저장돼 있으면 그 값을 우선 사용 (학원 신규 응시자)
+      // 가중치 점수가 저장돼 있으면 그 값을 우선 사용 (센터 신규 응시자)
       // 없으면 기존 정답 개수 기반으로 표시 (구버전 데이터)
       const hasWeighted = (typeof data.weightedScore === 'number' && data.weightedScore !== null);
       const displayScore = hasWeighted
@@ -2035,7 +2041,7 @@
       let displayGrade;
 
       if (hasWeighted) {
-        // 가중치 점수 기준 (신규 학원 응시자)
+        // 가중치 점수 기준 (신규 센터 응시자)
         if (isElementary) {
           // 초등: 78 핏 / 65 업 / 45 온 보통 / 0 온 기초
           if (displayScore >= 78)      displayGrade = "최우수 (A+) / 수능내신 1~2등급(예측)";
@@ -2064,9 +2070,10 @@
         }
       }
 
-      // 모의테스트: 수능내신 등급 대신 저장된 등급(업/핏 상·중·하) 표시
-      if (VIEW_IS_MOCK && data.grade) {
-        displayGrade = data.grade;
+      // 모의테스트: 수능내신 등급 대신 현재 구간표로 재계산한 등급(온/업/핏 상·중·하) 표시
+      //   저장된 data.grade는 응시 시점(옛 경계)으로 굳어 있어, 바와 어긋날 수 있으므로 점수로 재계산한다.
+      if (VIEW_IS_MOCK && VIEW_MOCK_LEVEL) {
+        displayGrade = mockGradeLabel(VIEW_MOCK_LEVEL, displayScore) || data.grade || displayGrade;
       }
 
       // 학생 정보 표시
@@ -2206,7 +2213,7 @@
 
       // 초등/중고등 + 가중치/개수 기준 분리
       if (hasWeighted) {
-        // === 가중치 점수 기준 (학원 신규 응시자) ===
+        // === 가중치 점수 기준 (센터 신규 응시자) ===
         if (isElementary) {
           // 초등: 78 핏 / 65 업 / 35 온 보통 / 0 온 기초 (딥 없음)
           if (score >= 78) {
@@ -2302,7 +2309,7 @@
         }
       }
 
-      // 추천 시리즈 및 분석 결과 표시 (가중치 점수 기반 학원 데이터는 상/중/하 표기)
+      // 추천 시리즈 및 분석 결과 표시 (가중치 점수 기반 센터 데이터는 상/중/하 표기)
       const seriesSubLevel = hasWeighted ? getSeriesSubLevel(displayScore, isElementary) : '';
       if (VIEW_IS_MOCK) {
         // 모의테스트: 원점수 등급 바 + 모의고사 제목 안내

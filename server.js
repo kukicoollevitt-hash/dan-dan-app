@@ -451,7 +451,7 @@ async function sendHQAdminNotification(studentName, grade, type, additionalInfo 
       message = `[본사알림] ${location} ${grade} ${studentName} 몽글도감 응모: ${additionalInfo.itemName || ''}${additionalInfo.detail ? ` (${additionalInfo.detail})` : ''}`;
       break;
     case 'studentAdded':
-      // 학원 브렌치 관리자가 학생 추가 — 현재 학원 active 학생 수 포함
+      // 센터 브렌치 관리자가 학생 추가 — 현재 센터 active 학생 수 포함
       const totalCount = additionalInfo.totalCount || 0;
       message = `[본사알림] ${location} 신규 등록: ${grade} ${studentName} (현재 ${totalCount}명)`;
       break;
@@ -724,9 +724,9 @@ try {
   console.error("❌ 업로드 폴더 생성 실패:", UPLOAD_DIR, e.message);
 }
 
-// 🔹 슈퍼관리자 학원 조회 모드 지원 헬퍼 함수
+// 🔹 슈퍼관리자 센터 조회 모드 지원 헬퍼 함수
 function getAcademyNameFromSession(req) {
-  // 슈퍼관리자가 특정 학원 조회 중인 경우
+  // 슈퍼관리자가 특정 센터 조회 중인 경우
   if (req.session && req.session.viewingBranch) {
     return req.session.viewingBranch.academyName;
   }
@@ -772,7 +772,7 @@ app.use(
 );
 
 // ============================================================
-// 🔓 관리자(선생님) 단일세션 '면제' 센터 — 여기 등록된 학원은 다기기 동시접속 허용(kick·경고 없음)
+// 🔓 관리자(선생님) 단일세션 '면제' 센터 — 여기 등록된 센터는 다기기 동시접속 허용(kick·경고 없음)
 //   ⚠️ 이 센터는 계정공유 방지(단일세션)와 AdminKickEvent 공유감지가 꺼짐. academyName 정확히 일치해야 함.
 const ADMIN_SS_EXEMPT_ACADEMIES = new Set([
   '브레인문해력_운정센터',   // 파주 운정센터 (요청: 다기기 허용)
@@ -865,18 +865,18 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "academy.html"));
 });
 
-// ✅ 학원용 랜딩 페이지
+// ✅ 센터용 랜딩 페이지
 app.get("/academy", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "academy.html"));
 });
 
-// ✅ 학원용 관리자 로그인 페이지
+// ✅ 센터용 관리자 로그인 페이지
 app.get("/academy-admin-login", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "academy_admin_login.html"));
 });
 
-// ✅ 학원용 관리자 로그인 처리 (POST)
-// 🛰️ 로그인 IP 관찰 대상 학원 (계정 공유 의심) — 여기 추가하면 그 학원도 관찰
+// ✅ 센터용 관리자 로그인 처리 (POST)
+// 🛰️ 로그인 IP 관찰 대상 센터 (계정 공유 의심) — 여기 추가하면 그 센터도 관찰
 // ⚠️ DB의 실제 academyName과 정확히 일치해야 기록됨 (탑아카데미센터 = "브레인문해력_탑아카데미센터")
 const LOGIN_WATCH_ACADEMIES = new Set(["브레인문해력_탑아카데미센터"]);
 
@@ -894,7 +894,7 @@ function getClientIp(req) {
 const LOGIN_ALERT_SMS = process.env.LOGIN_ALERT_SMS || "01038879967";
 const LOGIN_ALERT_DISTANCE_KM = 10;              // 경고 거리 임계값(km)
 const LOGIN_ALERT_WINDOW_MS = 30 * 60 * 1000;    // 동시 사용으로 보는 시간창(30분)
-const LOGIN_ALERT_COOLDOWN_MS = 15 * 60 * 1000;  // 같은 학원 반복 발송 방지(15분)
+const LOGIN_ALERT_COOLDOWN_MS = 15 * 60 * 1000;  // 같은 센터 반복 발송 방지(15분)
 const _loginAlertCooldown = new Map();           // academyName -> 마지막 발송 시각(ms)
 
 // 두 좌표 간 거리(km) — Haversine
@@ -983,7 +983,7 @@ app.post("/academy-admin-login", async (req, res) => {
     const { academyName, name, phone } = req.body;
     console.log("📥 [POST] /academy-admin-login:", { academyName, name, phone });
 
-    // DB에서 학원용 관리자 찾기 · academyName 본명·별칭(academyAliases)·신규등록명(newRegistrationName) 모두 허용
+    // DB에서 센터용 관리자 찾기 · academyName 본명·별칭(academyAliases)·신규등록명(newRegistrationName) 모두 허용
     const admin = await Admin.findOne({
       $or: [
         { academyName },
@@ -997,13 +997,13 @@ app.post("/academy-admin-login", async (req, res) => {
     });
 
     if (!admin) {
-      console.log("❌ 학원 관리자 로그인 실패: 일치하는 계정 없음");
+      console.log("❌ 센터 관리자 로그인 실패: 일치하는 계정 없음");
       return res.redirect("/academy-admin-login?error=invalid");
     }
 
     // 승인 대기 상태면 로그인 막기
     if (admin.status === "pending") {
-      console.log("⛔ 승인 대기 학원 관리자 로그인 시도:", admin.name);
+      console.log("⛔ 승인 대기 센터 관리자 로그인 시도:", admin.name);
       return res.redirect("/academy-admin-login?error=pending");
     }
 
@@ -1011,7 +1011,7 @@ app.post("/academy-admin-login", async (req, res) => {
     admin.lastLogin = new Date();
     await admin.save();
 
-    // 🛰️ 로그인 IP 관찰 기록 (지정 학원만) — 계정 공유 탐지용. 실패해도 로그인엔 영향 없음.
+    // 🛰️ 로그인 IP 관찰 기록 (지정 센터만) — 계정 공유 탐지용. 실패해도 로그인엔 영향 없음.
     try {
       if (LOGIN_WATCH_ACADEMIES.has(admin.academyName)) {
         const _ip = getClientIp(req);
@@ -1028,7 +1028,7 @@ app.post("/academy-admin-login", async (req, res) => {
         // 🚨 거리 기반 동시접속 경고 문자 (백그라운드 — 로그인 응답 지연 없음)
         handleLoginGeoAlert(_logDoc._id, admin.academyName, admin.name, _ip, _at)
           .catch(e => console.error("⚠️ 로그인경고 비동기 오류:", e.message));
-        // 해당 학원 최근 300건만 유지
+        // 해당 센터 최근 300건만 유지
         const cnt = await AdminLoginLog.countDocuments({ academyName: admin.academyName });
         if (cnt > 300) {
           const old = await AdminLoginLog.find({ academyName: admin.academyName })
@@ -1070,19 +1070,19 @@ app.post("/academy-admin-login", async (req, res) => {
       delete req.session.viewingBranch;
     }
 
-    // 🔥 학원용 관리자 쿠키 설정 (세션 만료 시 리다이렉트용)
+    // 🔥 센터용 관리자 쿠키 설정 (세션 만료 시 리다이렉트용)
     res.cookie("adminType", "academy", { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
 
-    console.log("✅ 학원 관리자 로그인 성공:", admin.academyName, admin.name, isSuperAdmin ? "(슈퍼관리자)" : "");
+    console.log("✅ 센터 관리자 로그인 성공:", admin.academyName, admin.name, isSuperAdmin ? "(슈퍼관리자)" : "");
 
     // 🔥 슈퍼관리자면 PIN 인증 페이지로 이동 (슈퍼관리자 대시보드 접근용)
     if (isSuperAdmin) {
-      console.log("🔐 학원 슈퍼관리자 PIN 인증 필요:", admin.name);
+      console.log("🔐 센터 슈퍼관리자 PIN 인증 필요:", admin.name);
       req.session.superPinRequired = true;
       return res.redirect("/super/pin");
     }
 
-    // 🔥 학원명이 "어드민"이면 슈퍼관리자 대시보드로 바로 이동
+    // 🔥 센터명이 "어드민"이면 슈퍼관리자 대시보드로 바로 이동
     if (academyName === "어드민") {
       console.log("🏢 어드민 계정 → 슈퍼관리자 대시보드로 이동");
       req.session.admin.isSuper = true;  // 슈퍼관리자 권한 부여
@@ -1090,23 +1090,23 @@ app.post("/academy-admin-login", async (req, res) => {
       return res.redirect("/super/dashboard?type=academy");
     }
 
-    // 🔥 일반 학원 관리자는 PIN 인증 없이 바로 학원용 브랜치 대시보드로 이동
-    console.log("🏢 학원 관리자 → 학원용 브랜치 대시보드로 이동 (PIN 생략)");
+    // 🔥 일반 센터 관리자는 PIN 인증 없이 바로 센터용 브랜치 대시보드로 이동
+    console.log("🏢 센터 관리자 → 센터용 브랜치 대시보드로 이동 (PIN 생략)");
     req.session.adminPinVerified = true;
     return res.redirect("/academy/dashboard");
   } catch (err) {
     console.error("❌ /academy-admin-login 에러:", err);
-    res.status(500).send("학원 관리자 로그인 중 오류가 발생했습니다.");
+    res.status(500).send("센터 관리자 로그인 중 오류가 발생했습니다.");
   }
 });
 
-// ✅ 학원용 관리자 회원가입 처리 (POST)
+// ✅ 센터용 관리자 회원가입 처리 (POST)
 app.post("/academy-admin-register", async (req, res) => {
   try {
     const { academyName, name, phone } = req.body;
     console.log("📥 [POST] /academy-admin-register:", { academyName, name, phone });
 
-    // 전화번호 중복 체크 (학원용 관리자)
+    // 전화번호 중복 체크 (센터용 관리자)
     const existingAdmin = await Admin.findOne({
       phone,
       userType: "academy",
@@ -1114,11 +1114,11 @@ app.post("/academy-admin-register", async (req, res) => {
     });
 
     if (existingAdmin) {
-      console.log("❌ 학원 관리자 회원가입 실패: 전화번호 중복");
+      console.log("❌ 센터 관리자 회원가입 실패: 전화번호 중복");
       return res.redirect("/academy-admin-login?error=duplicate");
     }
 
-    // 새 학원 관리자 생성
+    // 새 센터 관리자 생성
     const newAdmin = new Admin({
       academyName,
       name,
@@ -1131,19 +1131,19 @@ app.post("/academy-admin-register", async (req, res) => {
     });
 
     await newAdmin.save();
-    console.log("✅ 학원 관리자 회원가입 완료 (승인 대기):", academyName, name);
+    console.log("✅ 센터 관리자 회원가입 완료 (승인 대기):", academyName, name);
 
     // 회원가입 알림 이메일 발송
     try {
       const mailOptions = {
         from: process.env.NAVER_EMAIL,
         to: "kukikukilove@naver.com",
-        subject: `[학원용 선생님 회원가입] ${academyName} - ${name}`,
+        subject: `[센터용 선생님 회원가입] ${academyName} - ${name}`,
         html: `
-          <h2>👨‍🏫 학원용 선생님 회원가입 알림</h2>
+          <h2>👨‍🏫 센터용 선생님 회원가입 알림</h2>
           <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
             <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 10px; font-weight: bold; width: 100px;">학원명</td>
+              <td style="padding: 10px; font-weight: bold; width: 100px;">센터명</td>
               <td style="padding: 10px;">${academyName}</td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
@@ -1162,7 +1162,7 @@ app.post("/academy-admin-register", async (req, res) => {
         `
       };
       await transporter.sendMail(mailOptions);
-      console.log("📧 학원용 선생님 회원가입 알림 이메일 발송 완료");
+      console.log("📧 센터용 선생님 회원가입 알림 이메일 발송 완료");
     } catch (emailErr) {
       console.error("⚠ 이메일 발송 실패 (회원가입은 완료됨):", emailErr);
     }
@@ -1170,7 +1170,7 @@ app.post("/academy-admin-register", async (req, res) => {
     return res.redirect("/academy-admin-login?success=registered");
   } catch (err) {
     console.error("❌ /academy-admin-register 에러:", err);
-    res.status(500).send("학원 관리자 회원가입 중 오류가 발생했습니다.");
+    res.status(500).send("센터 관리자 회원가입 중 오류가 발생했습니다.");
   }
 });
 
@@ -1752,7 +1752,7 @@ app.get("/menu", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "menu.html"));
 });
 
-// ✅ 등록된 학원 목록 조회 API (학원용 로그인/회원가입용)
+// ✅ 등록된 센터 목록 조회 API (센터용 로그인/회원가입용)
 app.get("/api/academies", async (req, res) => {
   try {
     // Admin 문서에서 academyName + academyAliases + newRegistrationName 모두 취합
@@ -1768,7 +1768,7 @@ app.get("/api/academies", async (req, res) => {
       if (a.newRegistrationName) adminAcademies.push(a.newRegistrationName);
     }
 
-    // User 테이블에서 학원용 academyName 목록 가져오기
+    // User 테이블에서 센터용 academyName 목록 가져오기
     const userAcademies = await User.find({
       deleted: { $ne: true },
       userType: "academy"
@@ -1793,7 +1793,7 @@ app.get("/api/academies", async (req, res) => {
   }
 });
 
-// ✅ 학원 이름 조회 API (진단테스트 자동 프리필 · QR용) — 세션 불필요
+// ✅ 센터 이름 조회 API (진단테스트 자동 프리필 · QR용) — 세션 불필요
 // GET /api/academy/lookup?id=<adminId(ObjectId 24hex)>
 app.get("/api/academy/lookup", async (req, res) => {
   try {
@@ -1804,11 +1804,11 @@ app.get("/api/academy/lookup", async (req, res) => {
     }
     const admin = await Admin.findById(id).select("academyName academyAliases newRegistrationName userType deleted").lean();
     if (!admin || admin.deleted || admin.userType !== "academy") {
-      return res.json({ ok: false, message: "존재하지 않거나 유효하지 않은 학원" });
+      return res.json({ ok: false, message: "존재하지 않거나 유효하지 않은 센터" });
     }
     const academyName = (admin.academyName || "").trim();
     if (!academyName || academyName === "어드민") {
-      return res.json({ ok: false, message: "학원명 없음 또는 유효하지 않음" });
+      return res.json({ ok: false, message: "센터명 없음 또는 유효하지 않음" });
     }
     // 진단테스트 프리필/저장에 사용할 표시명 · 신규 등록명 우선
     const displayName = getAdminDisplayName(admin);
@@ -1956,7 +1956,7 @@ app.use((req, res, next) => {
       req.path === '/super_kpi_login.html' ||
       (req.path.startsWith('/super/') && req.path.endsWith('.html'))) {
     console.log("⛔ 슈퍼관리자 파일 직접 접근 차단:", req.path);
-    // 학원용 관리자인지 확인 후 적절한 로그인 페이지로
+    // 센터용 관리자인지 확인 후 적절한 로그인 페이지로
     const isAcademyAdmin = req.cookies && req.cookies.adminType === "academy";
     return res.redirect("/academy-admin-login");
   }
@@ -2048,9 +2048,9 @@ const userSchema = new mongoose.Schema({
   lastLogin: Date,
   activeSessionId: String,   // 🔹 단일 세션: 현재 활성 기기의 세션ID (다른 기기 로그인 시 갱신 → 기존 기기 로그아웃)
   school: String,
-  // 🔹 학원용: 학원명 (학교용은 school 필드 사용)
+  // 🔹 센터용: 센터명 (학교용은 school 필드 사용)
   academyName: String,
-  // 🔹 사용자 타입: school(학교용) / academy(학원용)
+  // 🔹 사용자 타입: school(학교용) / academy(센터용)
   userType: {
     type: String,
     enum: ["school", "academy"],
@@ -2101,9 +2101,9 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model("User", userSchema);
 
-// ✅ 브랜치 관리자(학원장) / 슈퍼관리자 스키마
+// ✅ 브랜치 관리자(센터장) / 슈퍼관리자 스키마
 const adminSchema = new mongoose.Schema({
-  academyName: { type: String, required: true }, // 학원명/지점명 (내부 세션 · 로그인 키)
+  academyName: { type: String, required: true }, // 센터명/지점명 (내부 세션 · 로그인 키)
 
   // 🔒 단일세션: 현재 활성 기기의 세션ID (다른 기기 로그인 시 갱신 → 기존 기기 로그아웃)
   //    본사 테스트(브레인문해원_테스트)·슈퍼관리자·조회모드는 enforceSingleSession에서 enforce 제외
@@ -2134,7 +2134,7 @@ const adminSchema = new mongoose.Schema({
   },
 
   name:  { type: String, required: true }, // 성함
-  birth: { type: String, default: "" }, // 예) 900305 (학교용만 사용, 학원용은 생략)
+  birth: { type: String, default: "" }, // 예) 900305 (학교용만 사용, 센터용은 생략)
   phone: { type: String, required: true }, // 로그인 ID + PW
 
   // 🔥 슈퍼관리자 여부 (어드민 계정만 true)
@@ -2165,7 +2165,7 @@ const adminSchema = new mongoose.Schema({
   // 🔐 브랜치 관리자 PIN (6자리)
   pin: { type: String, default: null },
 
-  // 🔹 사용자 타입: school(학교용) / academy(학원용)
+  // 🔹 사용자 타입: school(학교용) / academy(센터용)
   userType: {
     type: String,
     enum: ["school", "academy"],
@@ -2185,7 +2185,7 @@ const adminSchema = new mongoose.Schema({
     default: ['brainon', 'brainup', 'brainfit', 'braindeep', 'brainreal']
   },
 
-  // 🔹 계약 관리 (학원용)
+  // 🔹 계약 관리 (센터용)
   contractStartDate: { type: Date, default: null }, // 계약 시작일
   contractEndDate: { type: Date, default: null },   // 계약 종료일 (시작일 + 1년)
   contractType: { type: String, enum: ['franchise', 'subscription'], default: null }, // 계약구분: franchise(프리미엄), subscription(스탠다드)
@@ -2204,7 +2204,7 @@ const adminSchema = new mongoose.Schema({
   overStudentCount: { type: Number, default: 0 },     // 직전 월말 기준 초과 인원
   currentCycleNumber: { type: Number, default: 0 },   // 현재 계약 사이클 번호 (0=첫해, 1=2년차, ...)
   lastSnapshotYearMonth: { type: String, default: null }, // 마지막 스냅샷 yearMonth ("2026-06")
-  maxStudentLimit: { type: Number, default: 360 }, // 최대 학생 수 제한 (초기 도입 프로모션: 360명, 학원별 별도 지정 가능)
+  maxStudentLimit: { type: Number, default: 360 }, // 최대 학생 수 제한 (초기 도입 프로모션: 360명, 센터별 별도 지정 가능)
 });
 
 const Admin = mongoose.model("Admin", adminSchema);
@@ -2241,18 +2241,18 @@ const kpiAccountSchema = new mongoose.Schema({
 kpiAccountSchema.index({ scope: 1, branchId: 1, name: 1 }, { unique: true });
 const KpiAccount = mongoose.model("KpiAccount", kpiAccountSchema);
 
-// 학원 리드/계약 파이프라인 (KPI 대시보드 우측 테이블)
+// 센터 리드/계약 파이프라인 (KPI 대시보드 우측 테이블)
 const kpiAcademySchema = new mongoose.Schema({
   // 귀속 (등록한 부서/지사)
   scope: { type: String, enum: KPI_SCOPES, required: true },
   branchId: { type: mongoose.Schema.Types.ObjectId, ref: "KpiBranch", default: null },
 
-  // 1차 학원정보
+  // 1차 센터정보
   inflow: { type: String, default: "" },            // 유입경로: 지인소개/홈페이지/인스타그램/페이스북
   firstConsultDate: { type: String, default: "" },  // 최초상담일 (YYYY-MM-DD)
-  academyName: { type: String, required: true },    // 학원명
+  academyName: { type: String, required: true },    // 센터명
   region: { type: String, default: "" },            // 지역
-  directorName: { type: String, default: "" },      // 학원장 이름
+  directorName: { type: String, default: "" },      // 센터장 이름
   phone: { type: String, default: "" },             // 연락처
   purpose: { type: String, default: "" },           // 목적: 신규창업/추가과목개설/문해력관확장
 
@@ -2321,14 +2321,14 @@ const kpiCenterSchema = new mongoose.Schema({
   contractType: { type: String, default: "" },   // 스탠다드 / 프리미엄
   centerName: { type: String, required: true },   // 센터명
   contractDate: { type: String, default: "" },    // 계약일 (YYYY-MM-DD)
-  directorName: { type: String, default: "" },    // 학원장명
+  directorName: { type: String, default: "" },    // 센터장명
   phone: { type: String, default: "" },           // 연락처
 
   // 2차 관리현황 (입력값 · 금액은 만원 단위)
   currentStudents: { type: Number, default: 0 },     // 현재등록학생
   usedAccounts: { type: Number, default: 0 },        // 사용계정 (총계정은 계약유형에서 파생)
   tuitionPerAccount: { type: Number, default: 0 },   // 계정당수강료 (만원)
-  // 학원매출 = 수강료×사용계정, 투자대비수익 = 매출−계약금액 → 조회 시 계산(비저장)
+  // 센터매출 = 수강료×사용계정, 투자대비수익 = 매출−계약금액 → 조회 시 계산(비저장)
 
   createdBy: { type: String, default: "" },
   createdAt: { type: Date, default: Date.now },
@@ -2390,7 +2390,7 @@ function verifyKpiPassword(password, stored) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-// ✅ 관리자의 학원명 전체 목록 반환 (본명 + 별칭)
+// ✅ 관리자의 센터명 전체 목록 반환 (본명 + 별칭)
 //   · 학생 조회 시 { academyName: { $in: getAdminAcademyNames(admin) } } 형태로 사용
 //   · session.admin, session.viewingBranch, Admin document 모두 호환
 function getAdminAcademyNames(source) {
@@ -2407,7 +2407,7 @@ function getAdminDisplayName(source) {
   return (source.newRegistrationName && source.newRegistrationName.trim()) || source.academyName || '';
 }
 
-// ✅ 관리자의 신규 등록 학원명 (신규 학생에게 부여) · newRegistrationName || academyName
+// ✅ 관리자의 신규 등록 센터명 (신규 학생에게 부여) · newRegistrationName || academyName
 function getAdminRegistrationName(source) {
   return getAdminDisplayName(source);
 }
@@ -2416,7 +2416,7 @@ function getAdminRegistrationName(source) {
 //   · 세션 캐시가 오래됐을 수 있어 DB에서 최신 조회
 async function buildBranchNameFilter(req) {
   if (!req.session || (!req.session.admin && !req.session.viewingBranch)) return null;
-  // 슈퍼관리자 학원 조회 모드면 조회 중인 학원 기준으로 필터
+  // 슈퍼관리자 센터 조회 모드면 조회 중인 센터 기준으로 필터
   const admin = req.session.viewingBranch || req.session.admin;
   let names = [admin.academyName].filter(Boolean);
   try {
@@ -2432,7 +2432,7 @@ async function buildBranchNameFilter(req) {
   return clauses.length === 1 ? clauses[0] : { $or: clauses };
 }
 
-// ===== 월별 학원 학생수 스냅샷 (월말 cron이 기록) =====
+// ===== 월별 센터 학생수 스냅샷 (월말 cron이 기록) =====
 const monthlyStudentSnapshotSchema = new mongoose.Schema({
   academyName: { type: String, required: true, index: true },
   yearMonth: { type: String, required: true }, // "2026-06"
@@ -2467,7 +2467,7 @@ const monthlyExamResultSchema = new mongoose.Schema({
   userId:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   studentName:  { type: String, required: true, index: true }, // 검색/조회용
   grade:        { type: String, required: true },              // 학생 학년(예: '초3','중2')
-  academyName:  { type: String, default: '', index: true },    // 소속 학원 (있으면)
+  academyName:  { type: String, default: '', index: true },    // 소속 센터 (있으면)
   examGrade:    { type: String, enum: ['elem','elem34','mid'], required: true, index: true }, // elem34=초등 저학년(1~4)
   round:        { type: Number, min: 1, max: 12, required: true, index: true },
   examKey:      { type: String, required: true }, // 예: 'monthly_elem_1'
@@ -2488,14 +2488,14 @@ monthlyExamResultSchema.index({ userId: 1, examGrade: 1, round: 1 }, { unique: t
 const MonthlyExamResult = mongoose.model('MonthlyExamResult', monthlyExamResultSchema);
 
 // ===== LTI 문해력 성향 검사 결과 (초등·중등) =====
-// source: 'student' = 학생 메뉴(로그인 세션), 'academy' = 학원 대시보드 입력(비로그인)
+// source: 'student' = 학생 메뉴(로그인 세션), 'academy' = 센터 대시보드 입력(비로그인)
 const ltiResultSchema = new mongoose.Schema({
   source:      { type: String, enum: ['student','academy'], default: 'student', index: true },
   userId:      { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true }, // 학생 세션 저장 시에만
   studentName: { type: String, required: true, index: true }, // 검색/조회용
   grade:       { type: String, default: '' },                 // 학생 학년(예: '초3','중2','고1')
-  academyName: { type: String, default: '', index: true },    // 소속/입력 학원
-  studentPhone:{ type: String, default: '' },                 // 학원 입력 시 연락처
+  academyName: { type: String, default: '', index: true },    // 소속/입력 센터
+  studentPhone:{ type: String, default: '' },                 // 센터 입력 시 연락처
   level:       { type: String, enum: ['elem','mid'], required: true, index: true },
   code:        { type: String, required: true },              // LTI 4글자 (예: 'DFLP')
   mbti:        { type: String, default: '' },                 // 대응 MBTI (예: 'ISTJ')
@@ -2504,7 +2504,7 @@ const ltiResultSchema = new mongoose.Schema({
   submittedAt: { type: Date, default: Date.now, index: true },
   updatedAt:   { type: Date, default: Date.now },
 }, { minimize: false });
-// 로그인 학생은 같은 학년(레벨)당 최신 1건만 유지 (userId가 ObjectId일 때만 유니크 · 학원입력(userId없음)은 제외)
+// 로그인 학생은 같은 학년(레벨)당 최신 1건만 유지 (userId가 ObjectId일 때만 유니크 · 센터입력(userId없음)은 제외)
 ltiResultSchema.index({ userId: 1, level: 1 }, { unique: true, partialFilterExpression: { userId: { $type: 'objectId' } } });
 const LtiResult = mongoose.model('LtiResult', ltiResultSchema);
 
@@ -2565,9 +2565,9 @@ function requireAdminLogin(req, res, next) {
   }
 
   if (!req.session.admin) {
-    // 🔥 학원용 관리자인지 판단 (3단계 체크)
-    // 1순위: 요청 URL에 "academy"가 포함되어 있으면 학원용
-    // 2순위: Referer 헤더에 "academy"가 포함되어 있으면 학원용
+    // 🔥 센터용 관리자인지 판단 (3단계 체크)
+    // 1순위: 요청 URL에 "academy"가 포함되어 있으면 센터용
+    // 2순위: Referer 헤더에 "academy"가 포함되어 있으면 센터용
     // 3순위: adminType 쿠키로 확인
     const requestPath = req.originalUrl || req.url || "";
     const referer = req.headers.referer || req.headers.referrer || "";
@@ -2637,7 +2637,7 @@ function requireSuperAdmin(req, res, next) {
     if (req.path.startsWith('/api/')) {
       return res.status(401).json({ ok: false, message: '슈퍼관리자 권한이 필요합니다.' });
     }
-    // 슈퍼 관리자 페이지는 학원 관리자 로그인으로
+    // 슈퍼 관리자 페이지는 센터 관리자 로그인으로
     return res.redirect("/academy-admin-login");
   }
 
@@ -2681,13 +2681,13 @@ async function requireSuperOrTextbook(req, res, next) {
  *   (모두 public 폴더의 HTML과 연결)
  * ==================================== */
 
-// 관리자 로그인 페이지 (GET) - 🔥 3000 포트는 학원용 전용이므로 학원 로그인으로 리다이렉트
+// 관리자 로그인 페이지 (GET) - 🔥 3000 포트는 센터용 전용이므로 센터 로그인으로 리다이렉트
 app.get("/admin-login", (req, res) => {
-  console.log("✅ [GET] /admin-login -> 학원용 로그인으로 리다이렉트");
+  console.log("✅ [GET] /admin-login -> 센터용 로그인으로 리다이렉트");
   return res.redirect("/academy-admin-login");
 });
 
-// ✅ /admin/login 으로 들어오면 학원용 로그인으로 보내기
+// ✅ /admin/login 으로 들어오면 센터용 로그인으로 보내기
 app.get("/admin/login", (req, res) => {
   return res.redirect("/academy-admin-login");
 });
@@ -3113,7 +3113,7 @@ app.get("/super/dashboard", requireSuperAdmin, (req, res) => {
 });
 
 // ============================================
-// 🛰️ 로그인 IP 관찰 (계정 공유 탐지) — 관찰 대상 학원 전용
+// 🛰️ 로그인 IP 관찰 (계정 공유 탐지) — 관찰 대상 센터 전용
 // ============================================
 
 // 조회 페이지
@@ -3493,7 +3493,7 @@ app.post("/api/super/kpi/accounts/:id/reset-password", requireKpiUser, async (re
   }
 });
 
-// ----- 학원 리드/계약 파이프라인 -----
+// ----- 센터 리드/계약 파이프라인 -----
 // 노드(소속/지사) 열람 권한: 본사=전체, 사업본부=본사제외, 지사=본인지사만
 function kpiCanAccessScope(u, scope, branchId) {
   if (u.scope === "본사") return true;
@@ -3507,7 +3507,7 @@ const KPI_ACADEMY_FIELDS = [
   "step_offlineMeeting", "step_contract", "holdReason", "step_payment",
 ];
 
-// 선택 노드의 학원 목록
+// 선택 노드의 센터 목록
 app.get("/api/super/kpi/academies", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
@@ -3520,12 +3520,12 @@ app.get("/api/super/kpi/academies", requireKpiUser, async (req, res) => {
     const rows = await KpiAcademy.find(query).sort({ createdAt: -1 }).lean();
     res.json({ ok: true, rows });
   } catch (err) {
-    console.error("❌ KPI 학원목록 오류:", err);
+    console.error("❌ KPI 센터목록 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
 
-// 학원 목록 엑셀(.xlsx) 내보내기 (선택 노드 + 월 필터 반영)
+// 센터 목록 엑셀(.xlsx) 내보내기 (선택 노드 + 월 필터 반영)
 app.get("/api/super/kpi/academies/export", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
@@ -3541,14 +3541,14 @@ app.get("/api/super/kpi/academies/export", requireKpiUser, async (req, res) => {
 
     const ExcelJS = require("exceljs");
     const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet("학원관리");
+    const ws = wb.addWorksheet("센터관리");
     const yn = (b) => (b ? "O" : "X");
     ws.columns = [
       { header: "유입경로", key: "inflow", width: 12 },
       { header: "최초상담일", key: "firstConsultDate", width: 13 },
-      { header: "학원명", key: "academyName", width: 22 },
+      { header: "센터명", key: "academyName", width: 22 },
       { header: "지역", key: "region", width: 14 },
-      { header: "학원장", key: "directorName", width: 12 },
+      { header: "센터장", key: "directorName", width: 12 },
       { header: "연락처", key: "phone", width: 15 },
       { header: "목적", key: "purpose", width: 14 },
       { header: "최초상담", key: "s1", width: 9 },
@@ -3574,7 +3574,7 @@ app.get("/api/super/kpi/academies/export", requireKpiUser, async (req, res) => {
     head.alignment = { horizontal: "center", vertical: "middle" };
     ws.views = [{ state: "frozen", ySplit: 1 }];
 
-    const fname = encodeURIComponent(`KPI_학원관리_${scope}${month ? "_" + month : ""}.xlsx`);
+    const fname = encodeURIComponent(`KPI_센터관리_${scope}${month ? "_" + month : ""}.xlsx`);
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${fname}`);
     await wb.xlsx.write(res);
@@ -3585,13 +3585,13 @@ app.get("/api/super/kpi/academies/export", requireKpiUser, async (req, res) => {
   }
 });
 
-// 학원 등록 (본인 소속으로만 생성)
+// 센터 등록 (본인 소속으로만 생성)
 app.post("/api/super/kpi/academies", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     const { inflow, firstConsultDate, academyName, region, directorName, phone, purpose, targetScope, targetBranchId } = req.body || {};
     if (!academyName || !String(academyName).trim()) {
-      return res.status(400).json({ ok: false, message: "학원명을 입력하세요." });
+      return res.status(400).json({ ok: false, message: "센터명을 입력하세요." });
     }
 
     // 등록 귀속: 본사=대상 선택 가능(본사/사업본부/지사), 사업본부=사업본부 고정, 지사=본인 지사 고정
@@ -3631,7 +3631,7 @@ app.post("/api/super/kpi/academies", requireKpiUser, async (req, res) => {
     // 단문(SMS) 유지를 위해 90바이트 이내로 구성/절단
     if (u.scope !== "본사") {
       const who = (u.scope === "사업본부") ? "사업본부" : (u.branchName || u.scope);
-      let smsMsg = `[KPI학원등록] ${who} ${u.name} - ${String(academyName).trim()}`;
+      let smsMsg = `[KPI센터등록] ${who} ${u.name} - ${String(academyName).trim()}`;
       if (getByteLength(smsMsg) > 90) {
         let cut = "", bytes = 0;
         for (const ch of smsMsg) {
@@ -3644,22 +3644,22 @@ app.post("/api/super/kpi/academies", requireKpiUser, async (req, res) => {
       (async () => {
         for (const hqPhone of HQ_ADMIN_PHONES) {
           try { await sendSMS(hqPhone, smsMsg); }
-          catch (e) { console.error("📱 [KPI 학원등록 본사알림] 발송 오류:", e.message); }
+          catch (e) { console.error("📱 [KPI 센터등록 본사알림] 발송 오류:", e.message); }
         }
       })();
     }
   } catch (err) {
-    console.error("❌ KPI 학원등록 오류:", err);
+    console.error("❌ KPI 센터등록 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
 
-// 학원 정보/진행상황 수정
+// 센터 정보/진행상황 수정
 app.patch("/api/super/kpi/academies/:id", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     const row = await KpiAcademy.findById(req.params.id);
-    if (!row) return res.status(404).json({ ok: false, message: "학원을 찾을 수 없습니다." });
+    if (!row) return res.status(404).json({ ok: false, message: "센터를 찾을 수 없습니다." });
     if (!kpiCanAccessScope(u, row.scope, row.branchId)) {
       return res.status(403).json({ ok: false, message: "수정 권한이 없습니다." });
     }
@@ -3672,7 +3672,7 @@ app.patch("/api/super/kpi/academies/:id", requireKpiUser, async (req, res) => {
     await row.save();
     res.json({ ok: true });
   } catch (err) {
-    console.error("❌ KPI 학원수정 오류:", err);
+    console.error("❌ KPI 센터수정 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
@@ -3682,7 +3682,7 @@ app.post("/api/super/kpi/academies/:id/consult-log", requireKpiUser, async (req,
   try {
     const u = req.session.kpiUser;
     const row = await KpiAcademy.findById(req.params.id);
-    if (!row) return res.status(404).json({ ok: false, message: "학원을 찾을 수 없습니다." });
+    if (!row) return res.status(404).json({ ok: false, message: "센터를 찾을 수 없습니다." });
     if (!kpiCanAccessScope(u, row.scope, row.branchId)) {
       return res.status(403).json({ ok: false, message: "권한이 없습니다." });
     }
@@ -3708,7 +3708,7 @@ app.delete("/api/super/kpi/academies/:id/consult-log/:logId", requireKpiUser, as
   try {
     const u = req.session.kpiUser;
     const row = await KpiAcademy.findById(req.params.id);
-    if (!row) return res.status(404).json({ ok: false, message: "학원을 찾을 수 없습니다." });
+    if (!row) return res.status(404).json({ ok: false, message: "센터를 찾을 수 없습니다." });
     if (!kpiCanAccessScope(u, row.scope, row.branchId)) {
       return res.status(403).json({ ok: false, message: "권한이 없습니다." });
     }
@@ -3722,19 +3722,19 @@ app.delete("/api/super/kpi/academies/:id/consult-log/:logId", requireKpiUser, as
   }
 });
 
-// 학원 삭제
+// 센터 삭제
 app.delete("/api/super/kpi/academies/:id", requireKpiUser, async (req, res) => {
   try {
     const u = req.session.kpiUser;
     const row = await KpiAcademy.findById(req.params.id);
-    if (!row) return res.status(404).json({ ok: false, message: "학원을 찾을 수 없습니다." });
+    if (!row) return res.status(404).json({ ok: false, message: "센터를 찾을 수 없습니다." });
     if (!kpiCanAccessScope(u, row.scope, row.branchId)) {
       return res.status(403).json({ ok: false, message: "삭제 권한이 없습니다." });
     }
     await row.deleteOne();
     res.json({ ok: true });
   } catch (err) {
-    console.error("❌ KPI 학원삭제 오류:", err);
+    console.error("❌ KPI 센터삭제 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
@@ -3766,7 +3766,7 @@ function kpiCenterDerived(c) {
   return {
     contractAmount: info.amount,          // 계약금액(만원)
     totalAccounts: info.totalAccounts,    // 총계정
-    revenue,                              // 학원매출(만원)
+    revenue,                              // 센터매출(만원)
     roi: revenue - info.amount,           // 투자대비수익(만원)
   };
 }
@@ -3887,9 +3887,9 @@ app.post("/api/super/kpi/send-sms", requireKpiUser, kpiSmsUpload.single('image')
         results.push({ academyName: lead.academyName, directorName: lead.directorName, phone: lead.phone || '', success: false });
         continue;
       }
-      // 치환 변수: {학원명} {원장님}
+      // 치환 변수: {센터명} {원장님}
       const personalized = message
-        .split('{학원명}').join(lead.academyName || '')
+        .split('{센터명}').join(lead.academyName || '')
         .split('{원장님}').join(lead.directorName || '원장님');
       const finalMsg = personalized + KPI_SMS_FOOTER;
       const r = imageBuffer ? await sendMMS(phone, finalMsg, imageBuffer) : await sendSMS(phone, finalMsg);
@@ -4044,7 +4044,7 @@ app.get("/api/super/kpi/centers/export", requireKpiUser, async (req, res) => {
       { header: "계약유형", key: "contractType", width: 12 },
       { header: "센터명", key: "centerName", width: 22 },
       { header: "계약일", key: "contractDate", width: 13 },
-      { header: "학원장", key: "directorName", width: 12 },
+      { header: "센터장", key: "directorName", width: 12 },
       { header: "연락처", key: "phone", width: 15 },
       { header: "계약기간", key: "elapsed", width: 10 },
       { header: "계약종료", key: "remain", width: 12 },
@@ -4053,7 +4053,7 @@ app.get("/api/super/kpi/centers/export", requireKpiUser, async (req, res) => {
       { header: "총계정", key: "totalAccounts", width: 9 },
       { header: "계정사용률(%)", key: "usageRate", width: 12 },
       { header: "계정당수강료(만원)", key: "tuitionPerAccount", width: 15 },
-      { header: "학원매출(만원)", key: "revenue", width: 13 },
+      { header: "센터매출(만원)", key: "revenue", width: 13 },
       { header: "계약금액(만원)", key: "contractAmount", width: 13 },
       { header: "투자대비수익(만원)", key: "roi", width: 15 },
     ];
@@ -4420,7 +4420,7 @@ app.put("/api/super/textbook-inventory", requireSuperOrTextbook, async (req, res
   }
 });
 
-// ✅ 슈퍼관리자: 학원용 진단테스트 관리
+// ✅ 슈퍼관리자: 센터용 진단테스트 관리
 app.get("/super/academy-diagnostic-management", requireSuperAdmin, (req, res) => {
   console.log(
     "✅ [GET] /super/academy-diagnostic-management -> public/super/academy-diagnostic-management.html"
@@ -4428,17 +4428,17 @@ app.get("/super/academy-diagnostic-management", requireSuperAdmin, (req, res) =>
   res.sendFile(path.join(__dirname, "public", "super", "academy-diagnostic-management.html"));
 });
 
-// ✅ 슈퍼관리자: 학원용 모의고사 관리
+// ✅ 슈퍼관리자: 센터용 모의고사 관리
 app.get("/super/academy-mock-exam-management", requireSuperAdmin, (req, res) => {
   console.log("✅ [GET] /super/academy-mock-exam-management");
-  // 학원용 모의고사 관리 페이지 (준비 중 안내)
+  // 센터용 모의고사 관리 페이지 (준비 중 안내)
   const html = `
   <!DOCTYPE html>
   <html lang="ko">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>학원용 모의고사 관리</title>
+    <title>센터용 모의고사 관리</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body {
@@ -4475,8 +4475,8 @@ app.get("/super/academy-mock-exam-management", requireSuperAdmin, (req, res) => 
   <body>
     <div class="container">
       <div class="icon">📝</div>
-      <h1>학원용 모의고사 관리</h1>
-      <p>학원용 모의고사 기능은 현재 준비 중입니다.<br>학원 학생들이 모의고사를 응시하면 이 페이지에서 관리할 수 있습니다.</p>
+      <h1>센터용 모의고사 관리</h1>
+      <p>센터용 모의고사 기능은 현재 준비 중입니다.<br>센터 학생들이 모의고사를 응시하면 이 페이지에서 관리할 수 있습니다.</p>
       <a href="/super/dashboard?type=academy" class="back-btn">← 대시보드로 돌아가기</a>
     </div>
   </body>
@@ -4485,7 +4485,7 @@ app.get("/super/academy-mock-exam-management", requireSuperAdmin, (req, res) => 
   res.send(html);
 });
 
-// ✅ 슈퍼관리자: 학원용 보완 학습 시험지 관리
+// ✅ 슈퍼관리자: 센터용 보완 학습 시험지 관리
 app.get("/super/academy-supplement-exam-management", requireSuperAdmin, (req, res) => {
   console.log("✅ [GET] /super/academy-supplement-exam-management");
   const html = `
@@ -4494,7 +4494,7 @@ app.get("/super/academy-supplement-exam-management", requireSuperAdmin, (req, re
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>학원용 보완 학습 관리</title>
+    <title>센터용 보완 학습 관리</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body {
@@ -4531,8 +4531,8 @@ app.get("/super/academy-supplement-exam-management", requireSuperAdmin, (req, re
   <body>
     <div class="container">
       <div class="icon">📚</div>
-      <h1>학원용 보완 학습 관리</h1>
-      <p>학원용 보완 학습 기능은 현재 준비 중입니다.<br>학원 학생들의 보완 학습 데이터가 생성되면 이 페이지에서 관리할 수 있습니다.</p>
+      <h1>센터용 보완 학습 관리</h1>
+      <p>센터용 보완 학습 기능은 현재 준비 중입니다.<br>센터 학생들의 보완 학습 데이터가 생성되면 이 페이지에서 관리할 수 있습니다.</p>
       <a href="/super/dashboard?type=academy" class="back-btn">← 대시보드로 돌아가기</a>
     </div>
   </body>
@@ -4541,13 +4541,13 @@ app.get("/super/academy-supplement-exam-management", requireSuperAdmin, (req, re
   res.send(html);
 });
 
-// ✅ 학원 관리자: 행동예측 AI 데이터 관리 페이지
+// ✅ 센터 관리자: 행동예측 AI 데이터 관리 페이지
 app.get("/academy/behavior-data", requireAdminLogin, (req, res) => {
   console.log("✅ [GET] /academy/behavior-data");
   res.sendFile(path.join(__dirname, "public", "academy", "behavior-data.html"));
 });
 
-// ✅ 학원 관리자: 관문 통과 기록 API (학원명 필터) - 최적화 버전
+// ✅ 센터 관리자: 관문 통과 기록 API (센터명 필터) - 최적화 버전
 // 관문 상세 인쇄 완료 표시/해제 — 출력 확인 기반 기록 (센터 내 모든 선생님·기기에서 공유)
 app.post("/api/academy/gate-pass-printed", requireAdminLogin, async (req, res) => {
   try {
@@ -4556,7 +4556,7 @@ app.post("/api/academy/gate-pass-printed", requireAdminLogin, async (req, res) =
     const GatePassModel = mongoose.model("GatePass");
     const gp = await GatePassModel.findById(id).lean();
     if (!gp) return res.status(404).json({ ok: false, message: "기록을 찾을 수 없습니다." });
-    // 본인 학원(별칭 포함) 학생 기록만 수정 가능
+    // 본인 센터(별칭 포함) 학생 기록만 수정 가능
     const sessionAdmin = req.session.viewingBranch || req.session.admin;
     const academyNames = getAdminAcademyNames(sessionAdmin);
     const isMine = await User.exists({ academyName: { $in: academyNames }, grade: gp.grade, name: gp.name });
@@ -4575,10 +4575,10 @@ app.get("/api/academy/gate-passes", requireAdminLogin, async (req, res) => {
     const sessionAdmin = req.session.viewingBranch || req.session.admin;
     const academyName = sessionAdmin?.academyName;
     if (!academyName) {
-      return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
+      return res.json({ ok: false, message: "센터 정보를 찾을 수 없습니다." });
     }
 
-    // 1. 해당 학원 학생 목록을 먼저 조회 (본명 + 별칭 모두 포함)
+    // 1. 해당 센터 학생 목록을 먼저 조회 (본명 + 별칭 모두 포함)
     const academyNames = getAdminAcademyNames(sessionAdmin);
     const academyUsers = await User.find({ academyName: { $in: academyNames } }).select('grade name').lean();
 
@@ -4589,7 +4589,7 @@ app.get("/api/academy/gate-passes", requireAdminLogin, async (req, res) => {
     const GatePassModel = mongoose.model("GatePass");
     const gatePasses = await GatePassModel.find({}).sort({ passedAt: -1 }).lean();
 
-    // 4. Set을 이용해 빠르게 필터링 (학원 학생만)
+    // 4. Set을 이용해 빠르게 필터링 (센터 학생만)
     const filteredPasses = gatePasses.filter(gp => studentKeys.has(`${gp.grade}||${gp.name}`));
 
     // 5. units가 비어있는 항목이 있는지 확인
@@ -4638,18 +4638,18 @@ app.get("/api/academy/gate-passes", requireAdminLogin, async (req, res) => {
 
     res.json({ ok: true, data: enrichedData });
   } catch (err) {
-    console.error("❌ 학원 관문 통과 기록 조회 오류:", err);
+    console.error("❌ 센터 관문 통과 기록 조회 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
 
-// ✅ 학원 관리자: 관문 상세 정보 API
+// ✅ 센터 관리자: 관문 상세 정보 API
 app.get("/api/academy/gate-pass-details", requireAdminLogin, async (req, res) => {
   try {
     const sessionAdmin = req.session.viewingBranch || req.session.admin;
     const academyName = sessionAdmin?.academyName;
     if (!academyName) {
-      return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
+      return res.json({ ok: false, message: "센터 정보를 찾을 수 없습니다." });
     }
 
     const { grade, name, gate } = req.query;
@@ -4658,7 +4658,7 @@ app.get("/api/academy/gate-pass-details", requireAdminLogin, async (req, res) =>
       return res.json({ ok: false, message: "필수 정보가 부족합니다." });
     }
 
-    // 학원 소속 학생인지 확인 (본명 + 별칭 모두 허용)
+    // 센터 소속 학생인지 확인 (본명 + 별칭 모두 허용)
     const academyNames = getAdminAcademyNames(sessionAdmin);
     const user = await User.findOne({ grade, name }).lean();
     if (!user || !academyNames.includes(user.academyName)) {
@@ -4747,21 +4747,21 @@ app.get("/api/academy/gate-pass-details", requireAdminLogin, async (req, res) =>
       }
     });
   } catch (err) {
-    console.error("❌ 학원 관문 상세 정보 조회 오류:", err);
+    console.error("❌ 센터 관문 상세 정보 조회 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
 
-// ✅ 학원 관리자: 학습 행동 데이터 API (학원명 필터) - 최적화 버전
+// ✅ 센터 관리자: 학습 행동 데이터 API (센터명 필터) - 최적화 버전
 app.get("/api/academy/learning-behaviors", requireAdminLogin, async (req, res) => {
   try {
     const sessionAdmin = req.session.viewingBranch || req.session.admin;
     const academyName = sessionAdmin?.academyName;
     if (!academyName) {
-      return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
+      return res.json({ ok: false, message: "센터 정보를 찾을 수 없습니다." });
     }
 
-    // 1. 해당 학원 학생 목록을 먼저 조회 (본명 + 별칭 모두 포함)
+    // 1. 해당 센터 학생 목록을 먼저 조회 (본명 + 별칭 모두 포함)
     const academyNames = getAdminAcademyNames(sessionAdmin);
     const academyUsers = await User.find({ academyName: { $in: academyNames } }).select('grade name').lean();
 
@@ -4789,21 +4789,21 @@ app.get("/api/academy/learning-behaviors", requireAdminLogin, async (req, res) =
 
     res.json({ ok: true, data: enrichedData });
   } catch (err) {
-    console.error("❌ 학원 학습 행동 데이터 조회 오류:", err);
+    console.error("❌ 센터 학습 행동 데이터 조회 오류:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
 
-// ✅ 학원용 중간평가 대상 학생 조회 API
+// ✅ 센터용 중간평가 대상 학생 조회 API
 app.get("/api/academy/midterm-pending", requireAdminLogin, async (req, res) => {
   try {
     const sessionAdmin = req.session.viewingBranch || req.session.admin;
     const academyName = sessionAdmin?.academyName;
     if (!academyName) {
-      return res.json({ ok: false, message: "학원 정보를 찾을 수 없습니다." });
+      return res.json({ ok: false, message: "센터 정보를 찾을 수 없습니다." });
     }
 
-    // 해당 학원 학생 목록 조회 (본명 + 별칭)
+    // 해당 센터 학생 목록 조회 (본명 + 별칭)
     const academyNames = getAdminAcademyNames(sessionAdmin);
     const academyUsers = await User.find({ academyName: { $in: academyNames } }).select('grade name school').lean();
     const studentKeys = new Set(academyUsers.map(u => `${u.grade}||${u.name}`));
@@ -4822,7 +4822,7 @@ app.get("/api/academy/midterm-pending", requireAdminLogin, async (req, res) => {
       const { grade, name } = student._id;
       const key = `${grade}||${name}`;
 
-      // 해당 학원 학생만 필터링
+      // 해당 센터 학생만 필터링
       if (!studentKeys.has(key)) continue;
 
       const gates = student.gates.sort((a, b) => a - b);
@@ -4878,7 +4878,7 @@ app.get("/api/academy/midterm-pending", requireAdminLogin, async (req, res) => {
   }
 });
 
-// ✅ 슈퍼관리자: 학원용 형성평가 관문 AI 관리
+// ✅ 슈퍼관리자: 센터용 형성평가 관문 AI 관리
 app.get("/super/academy-gate-pass-management", requireSuperAdmin, (req, res) => {
   console.log("✅ [GET] /super/academy-gate-pass-management");
   const html = `
@@ -4887,7 +4887,7 @@ app.get("/super/academy-gate-pass-management", requireSuperAdmin, (req, res) => 
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>학원용 형성평가 관문 AI 관리</title>
+    <title>센터용 형성평가 관문 AI 관리</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body {
@@ -4924,8 +4924,8 @@ app.get("/super/academy-gate-pass-management", requireSuperAdmin, (req, res) => 
   <body>
     <div class="container">
       <div class="icon">🤖</div>
-      <h1>학원용 형성평가 관문 AI 관리</h1>
-      <p>학원용 형성평가 관문 AI 기능은 현재 준비 중입니다.<br>학원 학생들의 AI 추천 학습 데이터가 생성되면 이 페이지에서 관리할 수 있습니다.</p>
+      <h1>센터용 형성평가 관문 AI 관리</h1>
+      <p>센터용 형성평가 관문 AI 기능은 현재 준비 중입니다.<br>센터 학생들의 AI 추천 학습 데이터가 생성되면 이 페이지에서 관리할 수 있습니다.</p>
       <a href="/super/dashboard?type=academy" class="back-btn">← 대시보드로 돌아가기</a>
     </div>
   </body>
@@ -4934,7 +4934,7 @@ app.get("/super/academy-gate-pass-management", requireSuperAdmin, (req, res) => 
   res.send(html);
 });
 
-// ✅ 슈퍼관리자: 학원용 고래뱃지/확성기 관리
+// ✅ 슈퍼관리자: 센터용 고래뱃지/확성기 관리
 app.get("/super/academy-megaphone-management", requireSuperAdmin, (req, res) => {
   console.log("✅ [GET] /super/academy-megaphone-management");
   const html = `
@@ -4943,7 +4943,7 @@ app.get("/super/academy-megaphone-management", requireSuperAdmin, (req, res) => 
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>학원용 고래뱃지/확성기 관리</title>
+    <title>센터용 고래뱃지/확성기 관리</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body {
@@ -4980,8 +4980,8 @@ app.get("/super/academy-megaphone-management", requireSuperAdmin, (req, res) => 
   <body>
     <div class="container">
       <div class="icon">🐋</div>
-      <h1>학원용 고래뱃지/확성기 관리</h1>
-      <p>학원용 고래뱃지/확성기 기능은 현재 준비 중입니다.<br>학원 학생들의 Live 및 고래뱃지 데이터가 생성되면 이 페이지에서 관리할 수 있습니다.</p>
+      <h1>센터용 고래뱃지/확성기 관리</h1>
+      <p>센터용 고래뱃지/확성기 기능은 현재 준비 중입니다.<br>센터 학생들의 Live 및 고래뱃지 데이터가 생성되면 이 페이지에서 관리할 수 있습니다.</p>
       <a href="/super/dashboard?type=academy" class="back-btn">← 대시보드로 돌아가기</a>
     </div>
   </body>
@@ -5037,7 +5037,7 @@ app.get("/api/super/gate-passes", requireSuperAdmin, async (req, res) => {
     // 모든 관문 통과 기록 조회
     const gatePasses = await GatePassModel.find({}).sort({ passedAt: -1 }).lean();
 
-    // 학교명/학원명을 가져오기 위해 User 정보와 매칭
+    // 학교명/센터명을 가져오기 위해 User 정보와 매칭
     const enrichedData = await Promise.all(gatePasses.map(async (gp, index) => {
       // User 컬렉션에서 해당 학생 찾기
       const user = await User.findOne({ grade: gp.grade, name: gp.name }).lean();
@@ -5089,7 +5089,7 @@ app.get("/api/super/learning-behaviors", requireSuperAdmin, async (req, res) => 
     // 모든 학습 행동 데이터 조회
     const behaviors = await LearningBehaviorModel.find({}).sort({ createdAt: -1 }).lean();
 
-    // 학교명/학원명을 가져오기 위해 User 정보와 매칭
+    // 학교명/센터명을 가져오기 위해 User 정보와 매칭
     const enrichedData = await Promise.all(behaviors.map(async (item, index) => {
       const user = await User.findOne({ grade: item.grade, name: item.name }).lean();
       return {
@@ -5854,7 +5854,7 @@ app.delete("/api/promotion-orders/:id", async (req, res) => {
   }
 });
 
-// ✅ 슈퍼관리자: 전체 학원 학생 목록 보기
+// ✅ 슈퍼관리자: 전체 센터 학생 목록 보기
 app.get("/super/users", requireSuperAdmin, (req, res) => {
   const { type } = req.query; // school 또는 academy
   console.log(
@@ -5864,7 +5864,7 @@ app.get("/super/users", requireSuperAdmin, (req, res) => {
 
   // 🔐 ADMIN_KEY 는 서버에서만 알고 있으니,
   // 여기서 쿼리에 붙여서 기존 /admin/users 화면을 재사용한다.
-  // 🔹 type 파라미터가 있으면 함께 전달 (학교용/학원용 필터링)
+  // 🔹 type 파라미터가 있으면 함께 전달 (학교용/센터용 필터링)
   let redirectUrl = `/admin/users?key=${encodeURIComponent(ADMIN_KEY)}`;
   if (type) {
     redirectUrl += `&type=${encodeURIComponent(type)}`;
@@ -5874,7 +5874,7 @@ app.get("/super/users", requireSuperAdmin, (req, res) => {
 
 
 
-// ✅ 내 학원 학생 목록 데이터 API (JSON)
+// ✅ 내 센터 학생 목록 데이터 API (JSON)
 app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
   try {
     // 🔹 슈퍼관리자 조회 모드 지원
@@ -5889,7 +5889,7 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
     const adminClassNum = viewingBranch ? "" : (admin.classNum || ""); // 슈퍼관리자 조회 시 전체 반
     const { q, status, sort } = req.query; // 검색어 + 상태 필터(옵션) + 정렬
 
-    const userType = viewingBranch ? "academy" : (admin.userType || "school");  // 🔥 학교용/학원용 구분
+    const userType = viewingBranch ? "academy" : (admin.userType || "school");  // 🔥 학교용/센터용 구분
 
     console.log("🔍 [/api/branch/users] 필터 조건:", {
       academyName,
@@ -5904,7 +5904,7 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
       deleted: { $ne: true },
     };
 
-    // 🔥 학원용인 경우 academyName 필드로 필터링, 학교용인 경우 school 필드로 필터링
+    // 🔥 센터용인 경우 academyName 필드로 필터링, 학교용인 경우 school 필드로 필터링
     // 별칭(academyAliases)이 있으면 함께 포함해 통합 조회 (본명 + 별칭)
     // ※ 세션이 마이그레이션 이전이면 aliases 비어있을 수 있어 DB에서 최신 조회
     let adminSource = admin;
@@ -6045,11 +6045,11 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
       if ((!completedUnitsSet || completedUnitsSet.size === 0) && user.school) {
         completedUnitsSet = completedUnitsMapBySchoolName.get(`${user.school}|${user.name}`);
       }
-      // 3. 학원명|이름으로 폴백 (학원용)
+      // 3. 센터명|이름으로 폴백 (센터용)
       if ((!completedUnitsSet || completedUnitsSet.size === 0) && user.academyName) {
         completedUnitsSet = completedUnitsMapBySchoolName.get(`${user.academyName}|${user.name}`);
       }
-      // 4. 이름만으로 최후 폴백 (학원용이 아닌 경우에만, 동명이인 문제 방지)
+      // 4. 이름만으로 최후 폴백 (센터용이 아닌 경우에만, 동명이인 문제 방지)
       if ((!completedUnitsSet || completedUnitsSet.size === 0) && !user.academyName) {
         completedUnitsSet = completedUnitsMapByName.get(user.name);
       }
@@ -6076,7 +6076,7 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
       academyName,
       adminGrade: adminGrade || "",
       adminClassNum: adminClassNum || "",
-      userType,  // 🔥 학교용/학원용 구분 추가
+      userType,  // 🔥 학교용/센터용 구분 추가
       count: users.length,
       students: users,
       users,
@@ -6088,7 +6088,7 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
 });
 
 // ✅ 학생 정보 수정 API (학부모 번호 포함) - 브랜치 관리자용
-// ✅ 로그아웃 리포트 주기 전체 일괄 적용 (브랜치 관리자 — 자기 학원 전 학생)
+// ✅ 로그아웃 리포트 주기 전체 일괄 적용 (브랜치 관리자 — 자기 센터 전 학생)
 app.put("/api/branch/users/report-cycle/bulk", requireAdminLogin, async (req, res) => {
   try {
     const { reportCycle } = req.body;
@@ -6258,7 +6258,7 @@ app.get("/api/branch/logs", requireAdminLogin, async (req, res) => {
   }
 });
 
-// 브랜치 관리자용 AI 추천과제 목록 API (학원별 필터링)
+// 브랜치 관리자용 AI 추천과제 목록 API (센터별 필터링)
 app.get('/api/branch/ai-tasks', requireAdminLogin, async (req, res) => {
   try {
     const admin = req.session.admin;
@@ -6268,7 +6268,7 @@ app.get('/api/branch/ai-tasks', requireAdminLogin, async (req, res) => {
 
     const academyName = admin.academyName;
 
-    // 해당 학원 학생들의 UserProgress만 조회 (본명 + 별칭 모두 허용)
+    // 해당 센터 학생들의 UserProgress만 조회 (본명 + 별칭 모두 허용)
     const academyNames = getAdminAcademyNames(admin);
     const allProgress = await UserProgress.find({ school: { $in: academyNames } });
 
@@ -6317,8 +6317,8 @@ app.get('/api/branch/ai-tasks', requireAdminLogin, async (req, res) => {
   }
 });
 
-// 학원 학생 영구 삭제 (모달 안내 문구와 동작 일치)
-// 안전장치: 요청한 학원 관리자의 academyName 과 일치하는 학생만 삭제 가능
+// 센터 학생 영구 삭제 (모달 안내 문구와 동작 일치)
+// 안전장치: 요청한 센터 관리자의 academyName 과 일치하는 학생만 삭제 가능
 app.post('/api/branch/hard-delete-user', requireAdminLogin, async (req, res) => {
   try {
     const viewingBranch = req.session.viewingBranch;
@@ -6346,7 +6346,7 @@ app.post('/api/branch/hard-delete-user', requireAdminLogin, async (req, res) => 
       orClauses.push({ id }, { phone: id });
     }
 
-    // 학원 일치 + userType 일치 + 위 id 조건 중 하나 (본명 + 별칭 모두 허용)
+    // 센터 일치 + userType 일치 + 위 id 조건 중 하나 (본명 + 별칭 모두 허용)
     // ※ 세션이 마이그레이션 이전이면 aliases 비어있을 수 있어 DB에서 최신 조회
     let adminSource = sessionAdmin;
     try {
@@ -6480,7 +6480,7 @@ app.post("/admin-signup", async (req, res) => {
       return res.status(400).send("필수 정보가 부족합니다.");
     }
 
-    // 간단 중복 체크: 같은 학원명 + 학년 + 반 + 이름 + 전화번호
+    // 간단 중복 체크: 같은 센터명 + 학년 + 반 + 이름 + 전화번호
     const exists = await Admin.findOne({ academyName, grade, classNum, name, phone });
     if (exists) {
       console.log("⛔ 이미 존재하는 관리자:", academyName, grade, classNum, name, phone);
@@ -6568,7 +6568,7 @@ app.post("/admin-signup", async (req, res) => {
       console.error("⚠ 이메일 발송 실패 (회원가입은 완료됨):", emailErr);
     }
 
-    // 🔥 3000 포트는 학원용 전용이므로 학원 로그인으로 리다이렉트
+    // 🔥 3000 포트는 센터용 전용이므로 센터 로그인으로 리다이렉트
     return res.redirect("/academy-admin-login");
   } catch (err) {
     console.error("❌ /admin-signup 에러:", err);
@@ -6665,7 +6665,7 @@ app.get("/admin/dashboard", requireAdminLogin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin_dashboard.html"));
 });
 
-// 🔥 학원용 브랜치 관리자 대시보드
+// 🔥 센터용 브랜치 관리자 대시보드
 app.get("/academy/dashboard", requireAdminLogin, (req, res) => {
   console.log(
     "✅ [GET] /academy/dashboard -> public/academy_admin_dashboard.html",
@@ -6675,7 +6675,7 @@ app.get("/academy/dashboard", requireAdminLogin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "academy_admin_dashboard.html"));
 });
 
-// 🔥 학원용 학생 목록 페이지
+// 🔥 센터용 학생 목록 페이지
 app.get("/academy/branch/users", requireAdminLogin, (req, res) => {
   console.log(
     "✅ [GET] /academy/branch/users -> public/academy_branch_user_list.html",
@@ -6685,7 +6685,7 @@ app.get("/academy/branch/users", requireAdminLogin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "academy_branch_user_list.html"));
 });
 
-// 🖨️ 학원 관리자: 학생별 리포트 보기 — 학생×분야별 리포트 화면으로 바로 이동(인쇄는 각 리포트에서)
+// 🖨️ 센터 관리자: 학생별 리포트 보기 — 학생×분야별 리포트 화면으로 바로 이동(인쇄는 각 리포트에서)
 app.get("/academy/student-reports", requireAdminLogin, (req, res) => {
   console.log(
     "✅ [GET] /academy/student-reports -> public/academy_student_reports.html",
@@ -6706,7 +6706,7 @@ app.get("/super/admins", requireSuperAdmin, async (req, res) => {
     // 삭제 안 된 학교용 관리자만 (userType이 academy가 아닌 것들)
     const admins = await Admin.find({
       deleted: { $ne: true },
-      userType: { $ne: "academy" }  // 학원용 제외
+      userType: { $ne: "academy" }  // 센터용 제외
     })
       .sort({ academyName: 1, name: 1 })
       .lean();
@@ -7316,11 +7316,11 @@ app.post("/super/admin-edit", requireSuperAdmin, async (req, res) => {
 });
 
 /* ====================================
- * ✅ 슈퍼관리자: 학원용 관리자(선생님) 목록
+ * ✅ 슈퍼관리자: 센터용 관리자(선생님) 목록
  * ==================================== */
 app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
   try {
-    // 학원용 관리자만 조회 (userType === 'academy')
+    // 센터용 관리자만 조회 (userType === 'academy')
     // phone 기준으로 가장 최신 계약(contractStartDate)만 표시 (재계약 중복 방지)
     const adminsRaw = await Admin.aggregate([
       { $match: { deleted: { $ne: true }, userType: "academy" } },
@@ -7340,7 +7340,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
       return bDate - aDate;  // 최신순
     });
 
-    // 🔹 각 학원별 현재 학생 수 조회 — 승인/대기 분리 집계
+    // 🔹 각 센터별 현재 학생 수 조회 — 승인/대기 분리 집계
     //    (표시 시 관리자의 별칭(academyAliases)까지 합산 — 지점 학생 목록과 동일 매칭)
     const studentCountByAcademy = await User.aggregate([
       { $match: { deleted: { $ne: true }, userType: "academy" } },
@@ -7354,7 +7354,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
     studentCountByAcademy.forEach(item => {
       studentCountMap[item._id] = { approved: item.approved, pending: item.pending };
     });
-    // 관리자별: 현재 학원명 + 별칭 전체 합산
+    // 관리자별: 현재 센터명 + 별칭 전체 합산
     const countForAdmin = (adm) => {
       const names = [adm.academyName, ...(adm.academyAliases || [])].filter(Boolean);
       let approved = 0, pending = 0;
@@ -7370,7 +7370,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
     <html lang="ko">
     <head>
       <meta charset="UTF-8" />
-      <title>학원 선생님 계정 관리</title>
+      <title>센터 선생님 계정 관리</title>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <style>
         :root {
@@ -7705,7 +7705,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
       <div class="wrap">
         <div class="top-bar">
           <div>
-            <h1>👨‍💼 지점 개설 및 학원 선생님 계정 관리</h1>
+            <h1>👨‍💼 지점 개설 및 센터 선생님 계정 관리</h1>
             <p class="desc">
               지점 개설 및 선생님 관리자 계정을 확인하고,<br/>
               승인 상태 변경 및 삭제(휴지 처리)를 할 수 있습니다.
@@ -7718,9 +7718,9 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
         <div class="modal-overlay" id="addModal">
           <div class="modal-card">
             <h2>👨‍💼 지점 및 선생님 추가</h2>
-            <p class="modal-desc">새로운 지점 및 학원 선생님 계정을 직접 추가합니다.</p>
+            <p class="modal-desc">새로운 지점 및 센터 선생님 계정을 직접 추가합니다.</p>
             <form action="/super/academy-admin-add" method="POST">
-              <label>학원명 (지점명) *</label>
+              <label>센터명 (지점명) *</label>
               <input type="text" name="academyName" placeholder="예: 공터국어" required />
 
               <label>선생님 이름 *</label>
@@ -7944,7 +7944,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
           <div style="display: flex; align-items: center; gap: 16px;">
             <button type="button" class="btn-add" onclick="openAddModal()">+ 지점 및 선생님 추가</button>
             <p class="info-line" style="margin: 0;">
-              총 <strong>${admins.length}</strong>개의 학원 선생님 계정이 있습니다.
+              총 <strong>${admins.length}</strong>개의 센터 선생님 계정이 있습니다.
             </p>
           </div>
           <div style="display: flex; align-items: center; gap: 12px;">
@@ -7956,7 +7956,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
               <option value="none">미설정</option>
             </select>
             <div style="position: relative;">
-              <input type="text" id="searchInput" placeholder="학원명, 이름, 전화번호 검색..."
+              <input type="text" id="searchInput" placeholder="센터명, 이름, 전화번호 검색..."
                 style="padding: 10px 14px 10px 36px; border: 2px solid var(--line); border-radius: 10px; font-size: 14px; width: 260px; outline: none; transition: border-color 0.2s;"
                 onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--line)'" oninput="filterTable()">
               <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-light);">🔍</span>
@@ -7966,8 +7966,8 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
 
         ${admins.length === 0 ? `
         <div class="empty-state">
-          <h3>등록된 학원 선생님이 없습니다</h3>
-          <p>학원용 선생님 가입이 진행되면 여기에 표시됩니다.</p>
+          <h3>등록된 센터 선생님이 없습니다</h3>
+          <p>센터용 선생님 가입이 진행되면 여기에 표시됩니다.</p>
           <button type="button" class="btn-add" style="margin-top: 20px;" onclick="openAddModal()">+ 지점 및 선생님 추가</button>
         </div>
         ` : `
@@ -7976,7 +7976,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
             <thead>
               <tr>
                 <th>#</th>
-                <th>학원명</th>
+                <th>센터명</th>
                 <th>이름</th>
                 <th>전화번호(ID)</th>
                 <th>계약구분</th>
@@ -8135,17 +8135,17 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
     res.send(html);
   } catch (err) {
     console.error("❌ /super/academy-admins 에러:", err);
-    res.status(500).send("학원 선생님 목록 조회 중 오류가 발생했습니다.");
+    res.status(500).send("센터 선생님 목록 조회 중 오류가 발생했습니다.");
   }
 });
 
-// 🔹 학원용 관리자 추가 (슈퍼관리자)
+// 🔹 센터용 관리자 추가 (슈퍼관리자)
 app.post("/super/academy-admin-add", requireSuperAdmin, async (req, res) => {
   try {
     const { academyName, name, phone, status, contractType, contractStartDate } = req.body;
 
     if (!academyName || !name || !phone) {
-      return res.status(400).send("학원명, 이름, 전화번호는 필수입니다.");
+      return res.status(400).send("센터명, 이름, 전화번호는 필수입니다.");
     }
 
     if (!contractType || !contractStartDate) {
@@ -8180,7 +8180,7 @@ app.post("/super/academy-admin-add", requireSuperAdmin, async (req, res) => {
     });
 
     await newAdmin.save();
-    console.log("✅ 학원 선생님 추가:", academyName, name, phone, "계약유형:", contractType, "계약시작일:", contractStartDate);
+    console.log("✅ 센터 선생님 추가:", academyName, name, phone, "계약유형:", contractType, "계약시작일:", contractStartDate);
     res.redirect("/super/academy-admins");
   } catch (err) {
     console.error("❌ /super/academy-admin-add 에러:", err);
@@ -8231,7 +8231,7 @@ app.post("/super/school-admin-add", requireSuperAdmin, async (req, res) => {
   }
 });
 
-// 🔹 학원용 관리자 상태 변경
+// 🔹 센터용 관리자 상태 변경
 app.get("/super/academy-admin-status", requireSuperAdmin, async (req, res) => {
   const { id, status } = req.query;
   const allowed = ["approved", "pending"];
@@ -8242,7 +8242,7 @@ app.get("/super/academy-admin-status", requireSuperAdmin, async (req, res) => {
 
   try {
     await Admin.findByIdAndUpdate(id, { status });
-    console.log("✅ 학원 관리자 상태 변경:", id, "→", status);
+    console.log("✅ 센터 관리자 상태 변경:", id, "→", status);
     res.redirect("/super/academy-admins");
   } catch (err) {
     console.error("❌ /super/academy-admin-status 에러:", err);
@@ -8250,7 +8250,7 @@ app.get("/super/academy-admin-status", requireSuperAdmin, async (req, res) => {
   }
 });
 
-// 🔹 학원용 관리자 시리즈 승인 상태 변경 (deprecated - approvedSeries 배열로 대체)
+// 🔹 센터용 관리자 시리즈 승인 상태 변경 (deprecated - approvedSeries 배열로 대체)
 app.get("/super/academy-admin-series", requireSuperAdmin, async (req, res) => {
   const { id, approved } = req.query;
 
@@ -8261,7 +8261,7 @@ app.get("/super/academy-admin-series", requireSuperAdmin, async (req, res) => {
   try {
     const seriesApproved = approved === "true";
     await Admin.findByIdAndUpdate(id, { seriesApproved });
-    console.log("✅ 학원 관리자 시리즈 승인 상태 변경:", id, "→", seriesApproved);
+    console.log("✅ 센터 관리자 시리즈 승인 상태 변경:", id, "→", seriesApproved);
     res.redirect("/super/academy-admins");
   } catch (err) {
     console.error("❌ /super/academy-admin-series 에러:", err);
@@ -8320,7 +8320,7 @@ app.post("/super/api/toggle-series", requireSuperAdmin, async (req, res) => {
   }
 });
 
-// 🔹 학원용 관리자 휴지통 이동
+// 🔹 센터용 관리자 휴지통 이동
 app.get("/super/academy-admin-trash", requireSuperAdmin, async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).send("id 파라미터가 필요합니다.");
@@ -8330,7 +8330,7 @@ app.get("/super/academy-admin-trash", requireSuperAdmin, async (req, res) => {
       deleted: true,
       deletedAt: new Date()
     });
-    console.log("🗑 학원 관리자 휴지통 이동:", id);
+    console.log("🗑 센터 관리자 휴지통 이동:", id);
     res.redirect("/super/academy-admins");
   } catch (err) {
     console.error("❌ /super/academy-admin-trash 에러:", err);
@@ -8338,7 +8338,7 @@ app.get("/super/academy-admin-trash", requireSuperAdmin, async (req, res) => {
   }
 });
 
-// 🔹 학원용 관리자 완전 삭제
+// 🔹 센터용 관리자 완전 삭제
 app.get("/super/academy-admin-delete", requireSuperAdmin, async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).send("id 파라미터가 필요합니다.");
@@ -8348,7 +8348,7 @@ app.get("/super/academy-admin-delete", requireSuperAdmin, async (req, res) => {
     if (!admin) return res.status(404).send("관리자 계정을 찾을 수 없습니다.");
 
     await Admin.findByIdAndDelete(id);
-    console.log("🗑 학원 관리자 완전 삭제:", id, admin.academyName, admin.name);
+    console.log("🗑 센터 관리자 완전 삭제:", id, admin.academyName, admin.name);
     res.redirect("/super/academy-admins");
   } catch (err) {
     console.error("❌ /super/academy-admin-delete 에러:", err);
@@ -8356,7 +8356,7 @@ app.get("/super/academy-admin-delete", requireSuperAdmin, async (req, res) => {
   }
 });
 
-// 🔹 슈퍼관리자: 특정 학원 대시보드 조회 (학원명 클릭 시)
+// 🔹 슈퍼관리자: 특정 센터 대시보드 조회 (센터명 클릭 시)
 app.get("/super/view-branch", requireSuperAdmin, async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).send("id 파라미터가 필요합니다.");
@@ -8365,7 +8365,7 @@ app.get("/super/view-branch", requireSuperAdmin, async (req, res) => {
     const admin = await Admin.findById(id);
     if (!admin) return res.status(404).send("해당 관리자를 찾을 수 없습니다.");
 
-    // 세션에 임시로 해당 학원 정보 저장 (슈퍼관리자가 학원 대시보드 조회용)
+    // 세션에 임시로 해당 센터 정보 저장 (슈퍼관리자가 센터 대시보드 조회용)
     req.session.viewingBranch = {
       _id: admin._id,
       academyName: admin.academyName,
@@ -8376,24 +8376,24 @@ app.get("/super/view-branch", requireSuperAdmin, async (req, res) => {
       approvedSeries: admin.approvedSeries || []
     };
 
-    console.log("🔍 슈퍼관리자가 학원 대시보드 조회:", admin.academyName);
+    console.log("🔍 슈퍼관리자가 센터 대시보드 조회:", admin.academyName);
     res.redirect("/academy/dashboard?viewMode=super");
   } catch (err) {
     console.error("❌ /super/view-branch 에러:", err);
-    res.status(500).send("학원 대시보드 조회 중 오류가 발생했습니다.");
+    res.status(500).send("센터 대시보드 조회 중 오류가 발생했습니다.");
   }
 });
 
-// 🔹 슈퍼관리자: 학원 조회 모드 종료
+// 🔹 슈퍼관리자: 센터 조회 모드 종료
 app.get("/super/exit-view-branch", requireSuperAdmin, (req, res) => {
   if (req.session.viewingBranch) {
-    console.log("🔙 슈퍼관리자가 학원 조회 모드 종료:", req.session.viewingBranch.academyName);
+    console.log("🔙 슈퍼관리자가 센터 조회 모드 종료:", req.session.viewingBranch.academyName);
     delete req.session.viewingBranch;
   }
   res.redirect("/super/academy-admins");
 });
 
-// 🔹 학원용 관리자 정보 수정 화면
+// 🔹 센터용 관리자 정보 수정 화면
 app.get("/super/academy-admin-edit", requireSuperAdmin, async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).send("id 파라미터가 필요합니다.");
@@ -8407,7 +8407,7 @@ app.get("/super/academy-admin-edit", requireSuperAdmin, async (req, res) => {
     <html lang="ko">
     <head>
       <meta charset="UTF-8" />
-      <title>학원 선생님 정보 수정</title>
+      <title>센터 선생님 정보 수정</title>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <style>
         body {
@@ -8489,14 +8489,14 @@ app.get("/super/academy-admin-edit", requireSuperAdmin, async (req, res) => {
     </head>
     <body>
       <div class="card">
-        <h1>학원 선생님 정보 수정</h1>
-        <p class="small">학원 선생님 계정 정보를 수정합니다.</p>
+        <h1>센터 선생님 정보 수정</h1>
+        <p class="small">센터 선생님 계정 정보를 수정합니다.</p>
 
         <form method="POST" action="/super/academy-admin-edit">
           <input type="hidden" name="id" value="${admin._id.toString()}" />
 
           <div class="row">
-            <label>학원명</label>
+            <label>센터명</label>
             <input type="text" name="academyName" value="${admin.academyName || ""}" />
           </div>
 
@@ -8535,7 +8535,7 @@ app.get("/super/academy-admin-edit", requireSuperAdmin, async (req, res) => {
   }
 });
 
-// 🔹 학원용 관리자 정보 수정 처리
+// 🔹 센터용 관리자 정보 수정 처리
 app.post("/super/academy-admin-edit", requireSuperAdmin, async (req, res) => {
   const { id, academyName, name, phone, status } = req.body;
 
@@ -8551,7 +8551,7 @@ app.post("/super/academy-admin-edit", requireSuperAdmin, async (req, res) => {
     admin.status = status || admin.status;
 
     await admin.save();
-    console.log("✅ 학원 관리자 정보 수정 완료:", admin.academyName, admin.name);
+    console.log("✅ 센터 관리자 정보 수정 완료:", admin.academyName, admin.name);
 
     res.redirect("/super/academy-admins");
   } catch (err) {
@@ -8614,29 +8614,29 @@ app.get("/super/admin-delete", requireSuperAdmin, async (req, res) => {
 
 
 /* ====================================
- * ✅ 슈퍼관리자: 학원/지점 목록 / 지점별 학생
+ * ✅ 슈퍼관리자: 센터/지점 목록 / 지점별 학생
  * ==================================== */
 
-// 🔹 학원/지점 목록 페이지
+// 🔹 센터/지점 목록 페이지
 app.get("/super/branches", requireSuperAdmin, async (req, res) => {
   try {
     // 1) 전체 학생 / 관리자 불러오기
     const users = await User.find({ deleted: { $ne: true } }).lean();
     const admins = await Admin.find({ deleted: { $ne: true } }).lean();
 
-    // 2) 학원/지점 + 반별로 묶기
+    // 2) 센터/지점 + 반별로 묶기
     const branchMap = {};
 
-    // 관리자 기준(학원명) - 관리자는 반 정보가 없으므로 학교 단위로만 카운트
+    // 관리자 기준(센터명) - 관리자는 반 정보가 없으므로 학교 단위로만 카운트
     const adminCountBySchool = {};
     admins.forEach((a) => {
-      const name = a.academyName || "학원명 미입력";
+      const name = a.academyName || "센터명 미입력";
       adminCountBySchool[name] = (adminCountBySchool[name] || 0) + 1;
     });
 
     // 학생 기준(학교명 + 학년 + 반)
     users.forEach((u) => {
-      const school = u.school || "학원명 미입력";
+      const school = u.school || "센터명 미입력";
       const grade = u.grade || "학년 미입력";
       const classNum = u.classNum || "반 미입력";
       const key = `${school}___${grade}___${classNum}`; // 학교+학년+반을 키로 사용
@@ -8693,7 +8693,7 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
     <html lang="ko">
     <head>
       <meta charset="UTF-8" />
-      <title>학원/지점 목록</title>
+      <title>센터/지점 목록</title>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <style>
         :root {
@@ -9105,37 +9105,37 @@ app.get("/super/branches", requireSuperAdmin, async (req, res) => {
 });
 
 /* ====================================
- * ✅ 슈퍼관리자: 학원용 지점 목록 (academy type)
+ * ✅ 슈퍼관리자: 센터용 지점 목록 (academy type)
  * ==================================== */
 
-// 🔹 학원용 지점 목록 페이지
+// 🔹 센터용 지점 목록 페이지
 app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
   try {
     // ========== 연도 필터 파라미터 ==========
     const selectedYear = parseInt(req.query.year) || new Date().getFullYear();
 
-    // ========== 가맹 학원 데이터 ==========
-    // 1) 학원 선생님 계정에서 학원 목록 먼저 가져오기 (승인된 계정만)
+    // ========== 가맹 센터 데이터 ==========
+    // 1) 센터 선생님 계정에서 센터 목록 먼저 가져오기 (승인된 계정만)
     const academyAdmins = await Admin.find({
       deleted: { $ne: true },
       status: "approved",
       userType: "academy"
     }).lean();
 
-    // 2) 학원용 학생 가져오기 (userType === 'academy')
+    // 2) 센터용 학생 가져오기 (userType === 'academy')
     const users = await User.find({
       deleted: { $ne: true },
       userType: "academy"
     }).lean();
 
-    // 3) 학원명별로 묶기 - 먼저 AcademyAdmin에서 학원 목록 초기화
-    // 같은 학원명이 여러 연도(2025, 2026 등)에 별도 레코드로 존재할 수 있으므로
+    // 3) 센터명별로 묶기 - 먼저 AcademyAdmin에서 센터 목록 초기화
+    // 같은 센터명이 여러 연도(2025, 2026 등)에 별도 레코드로 존재할 수 있으므로
     // adminId를 키에 포함시켜 각 Admin 레코드를 독립적으로 처리
     const branchMap = {};
 
     academyAdmins.forEach((admin) => {
-      const academyName = admin.academyName || "학원명 미입력";
-      const branchKey = `${academyName}_${admin._id}`; // 학원명_adminId 형태로 고유 키 생성
+      const academyName = admin.academyName || "센터명 미입력";
+      const branchKey = `${academyName}_${admin._id}`; // 센터명_adminId 형태로 고유 키 생성
       if (!branchMap[branchKey]) {
         branchMap[branchKey] = {
           academyName: academyName,
@@ -9149,10 +9149,10 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       }
     });
 
-    // 4) 학생 데이터로 학원별 학생 수 계산
+    // 4) 학생 데이터로 센터별 학생 수 계산
     // 학생 데이터는 academyName으로만 연결되므로, 같은 academyName을 가진 모든 branchMap 항목에 학생 수 추가
     users.forEach((u) => {
-      const academyName = u.academyName || "학원명 미입력";
+      const academyName = u.academyName || "센터명 미입력";
 
       // 해당 academyName을 가진 모든 branchMap 항목에 학생 수 추가
       Object.keys(branchMap).forEach(branchKey => {
@@ -9179,17 +9179,17 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       delete b.grades;
     });
 
-    // 5) 학원별 최근 접속일 계산 (해당 학원 학생 중 가장 최근 로그인)
+    // 5) 센터별 최근 접속일 계산 (해당 센터 학생 중 가장 최근 로그인)
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    // 학원별 최근 접속일 및 가입일 계산
+    // 센터별 최근 접속일 및 가입일 계산
     // branchKey = academyName_adminId 형태이므로, 각 branch에 대해 해당 adminId로 Admin을 찾아 처리
     Object.keys(branchMap).forEach(branchKey => {
       const branch = branchMap[branchKey];
       const academyName = branch.academyName;
-      const academyUsers = users.filter(u => (u.academyName || "학원명 미입력") === academyName);
+      const academyUsers = users.filter(u => (u.academyName || "센터명 미입력") === academyName);
       // adminId가 branchMap 생성 시 저장되어 있으므로, 해당 adminId로 Admin을 찾음
       const academyAdmin = academyAdmins.find(a => a._id.toString() === branch.adminId?.toString());
 
@@ -9204,7 +9204,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
         branchMap[branchKey].lastAccess = null;
       }
 
-      // 가입일: 학원 관리자 계정의 createdAt 또는 학생 중 가장 오래된 createdAt
+      // 가입일: 센터 관리자 계정의 createdAt 또는 학생 중 가장 오래된 createdAt
       if (academyAdmin && academyAdmin.createdAt) {
         branchMap[branchKey].joinDate = new Date(academyAdmin.createdAt);
       } else {
@@ -9294,7 +9294,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     // 전체 통계 계산
     const activeAcademies = Object.values(branchMap).filter(b => b.subscriptionStatus === 'active').length;
     const inactiveAcademies = Object.values(branchMap).filter(b => b.subscriptionStatus === 'inactive').length;
-    // 프리미엄 학원의 monthlyFee는 제외 (프리미엄은 franchiseFee만 사용)
+    // 프리미엄 센터의 monthlyFee는 제외 (프리미엄은 franchiseFee만 사용)
     const totalMonthlyRevenue = Object.values(branchMap)
       .filter(b => b.type !== 'franchise')
       .reduce((sum, b) => sum + b.monthlyFee, 0);
@@ -9357,7 +9357,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     );
 
     // 프리미엄/스탠다드 분리 (선택한 연도 기준 필터링)
-    // 프리미엄: contractStartDate 또는 contractEndDate가 selectedYear인 학원 포함
+    // 프리미엄: contractStartDate 또는 contractEndDate가 selectedYear인 센터 포함
     // contractEndDate가 selectedYear인 경우 = 재계약 (이전 연도 계약이 만료되는 해)
     const franchiseBranches = branches.filter(b => {
       if (b.contractType !== 'franchise') return false;
@@ -9389,14 +9389,14 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     });
     const unclassifiedBranches = branches.filter(b => !b.contractType);
 
-    // 연도 필터링된 전체 학원 (프리미엄 + 스탠다드)
+    // 연도 필터링된 전체 센터 (프리미엄 + 스탠다드)
     const filteredBranches = [...franchiseBranches, ...subscriptionBranches];
     const filteredBranchCodes = new Set(filteredBranches.map(b => b.academyCode));
 
-    // 연도 필터링된 총 학원 통계
+    // 연도 필터링된 총 센터 통계
     const filteredActiveAcademies = filteredBranches.filter(b => b.subscriptionStatus === 'active').length;
     const filteredInactiveAcademies = filteredBranches.filter(b => b.subscriptionStatus === 'inactive').length;
-    // 총 학원 재계약임박/체크: contractEndDate가 selectedYear인 학원 중에서 계산 (contractStartDate와 무관)
+    // 총 센터 재계약임박/체크: contractEndDate가 selectedYear인 센터 중에서 계산 (contractStartDate와 무관)
     const allBranchesByEndYear = branches.filter(b => {
       if (!b.contractEndDate) return false;
       const endYear = new Date(b.contractEndDate).getFullYear();
@@ -9411,7 +9411,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       return endDate <= ninetyDaysFromNow && endDate >= now;
     }).length;
 
-    // 연도 필터링된 학생 (해당 연도 학원에 속한 학생만)
+    // 연도 필터링된 학생 (해당 연도 센터에 속한 학생만)
     const filteredUsers = users.filter(u => filteredBranchCodes.has(u.academyCode));
     const filteredApprovedUsers = filteredUsers.filter(u => u.status === 'approved');
     const filteredPendingUsers = filteredUsers.filter(u => u.status !== 'approved');
@@ -9422,7 +9422,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     const franchiseActive = franchiseBranches.filter(b => b.lastAccess && (Date.now() - new Date(b.lastAccess).getTime()) < 7 * 24 * 60 * 60 * 1000).length;
     const franchiseInactive = franchiseBranches.filter(b => !b.lastAccess || (Date.now() - new Date(b.lastAccess).getTime()) > 30 * 24 * 60 * 60 * 1000).length;
     const franchiseMonthlyRevenue = franchiseBranches.reduce((sum, b) => sum + b.monthlyFee, 0);
-    // 프리미엄 재계약임박/체크: contractEndDate가 selectedYear인 학원 중에서 계산 (contractStartDate와 무관)
+    // 프리미엄 재계약임박/체크: contractEndDate가 selectedYear인 센터 중에서 계산 (contractStartDate와 무관)
     const franchiseAllByEndYear = branches.filter(b => {
       if (b.contractType !== 'franchise') return false;
       if (!b.contractEndDate) return false;
@@ -9504,7 +9504,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     // 프리미엄 월별 매출 데이터 (franchiseContractDate 기준)
     const franchiseMonthlyData = [];
     for (let m = 1; m <= 12; m++) {
-      // 해당 월에 계약한 프리미엄 학원들의 franchiseFee 합계
+      // 해당 월에 계약한 프리미엄 센터들의 franchiseFee 합계
       const branchesInMonth = franchiseBranches.filter(b => {
         if (!b.franchiseContractDate || !b.franchiseFee) return false;
         const contractDate = new Date(b.franchiseContractDate);
@@ -9526,7 +9526,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     const subscriptionActive = subscriptionBranches.filter(b => b.lastAccess && (Date.now() - new Date(b.lastAccess).getTime()) < 7 * 24 * 60 * 60 * 1000).length;
     const subscriptionInactive = subscriptionBranches.filter(b => !b.lastAccess || (Date.now() - new Date(b.lastAccess).getTime()) > 30 * 24 * 60 * 60 * 1000).length;
     const subscriptionMonthlyRevenue = subscriptionBranches.reduce((sum, b) => sum + b.monthlyFee, 0);
-    // 스탠다드 재계약임박/체크: contractEndDate가 selectedYear인 학원 중에서 계산 (contractStartDate와 무관)
+    // 스탠다드 재계약임박/체크: contractEndDate가 selectedYear인 센터 중에서 계산 (contractStartDate와 무관)
     const subscriptionAllByEndYear = branches.filter(b => {
       if (b.contractType !== 'subscription') return false;
       if (!b.contractEndDate) return false;
@@ -9545,14 +9545,14 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     const SUBSCRIPTION_MONTHLY_FEE = 250000; // 월 25만원
     const SUBSCRIPTION_YEARLY_FEE = SUBSCRIPTION_MONTHLY_FEE * 12; // 연 300만원
 
-    // 입금완료된 구독 학원 수 계산
+    // 입금완료된 구독 센터 수 계산
     const paidSubscriptionCount = subscriptionBranches.filter(b => b.yearlyFeePaid === true).length;
 
     // 스탠다드 월별 매출 데이터 (최초계약월 기준) - 먼저 계산
     // 최초계약월 = 계약시작일의 월 (contractStartDate)
-    // 이미 입금완료한 학원은 계약기간이 변경되더라도 해당 월의 예상매출에 유지
+    // 이미 입금완료한 센터는 계약기간이 변경되더라도 해당 월의 예상매출에 유지
 
-    // 헬퍼 함수: 학원의 결제 월 가져오기 (yearlyFeePaidMonth가 없으면 contractStartDate의 월 사용)
+    // 헬퍼 함수: 센터의 결제 월 가져오기 (yearlyFeePaidMonth가 없으면 contractStartDate의 월 사용)
     const getPaidMonth = (b) => {
       if (b.yearlyFeePaidMonth) return b.yearlyFeePaidMonth;
       // 기존 데이터 호환: yearlyFeePaidMonth가 없으면 contractStartDate의 월로 대체
@@ -9564,23 +9564,23 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
 
     const subscriptionMonthlyData = [];
     for (let m = 1; m <= 12; m++) {
-      // 해당 월에 계약 시작한 구독 학원들 찾기 (최초계약일 기준)
-      // 조건 1: contractStartDate가 해당 월인 학원
-      // 조건 2: yearlyFeePaidYear가 선택 연도이고, 결제월이 해당 월인 학원 (계약기간 변경해도 유지)
+      // 해당 월에 계약 시작한 구독 센터들 찾기 (최초계약일 기준)
+      // 조건 1: contractStartDate가 해당 월인 센터
+      // 조건 2: yearlyFeePaidYear가 선택 연도이고, 결제월이 해당 월인 센터 (계약기간 변경해도 유지)
       const branchesInMonth = subscriptionBranches.filter(b => {
-        // 1. 이미 해당 연도에 입금완료한 학원은 결제월 기준으로 예상매출에 유지 (계약기간 변경해도)
+        // 1. 이미 해당 연도에 입금완료한 센터는 결제월 기준으로 예상매출에 유지 (계약기간 변경해도)
         if (b.yearlyFeePaidYear === selectedYear && getPaidMonth(b) === m) return true;
 
-        // 2. 해당 연도/월에 계약 시작한 학원 (contractStartDate 기준 - 연도와 월 둘 다 체크)
+        // 2. 해당 연도/월에 계약 시작한 센터 (contractStartDate 기준 - 연도와 월 둘 다 체크)
         if (!b.contractStartDate) return false;
         const startDate = new Date(b.contractStartDate);
         return startDate.getFullYear() === selectedYear && (startDate.getMonth() + 1) === m;
       });
 
-      // 예상매출: 해당 월 재계약 학원 수 × 300만원
+      // 예상매출: 해당 월 재계약 센터 수 × 300만원
       const expectedRevenue = branchesInMonth.length * SUBSCRIPTION_YEARLY_FEE;
 
-      // 누적매출: yearlyFeePaidYear가 선택 연도이고 결제월이 해당 월인 학원 × 300만원
+      // 누적매출: yearlyFeePaidYear가 선택 연도이고 결제월이 해당 월인 센터 × 300만원
       // (실제 결제가 이루어진 연도/월 기준, 계약기간 변경과 무관)
       const paidBranchesInMonth = subscriptionBranches.filter(b =>
         b.yearlyFeePaid === true && b.yearlyFeePaidYear === selectedYear && getPaidMonth(b) === m
@@ -9595,14 +9595,14 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     }
 
     // 구독 매출 계산
-    // 월예상: 현재 월에 재계약 예정인 학원의 연 구독료 합계 (재계약월 기준)
+    // 월예상: 현재 월에 재계약 예정인 센터의 연 구독료 합계 (재계약월 기준)
     const subscriptionMonthlyExpected = subscriptionMonthlyData[currentMonth - 1].expected;
-    // 월누적: 현재 월에 재계약 예정인 학원 중 입금완료된 학원의 연 구독료 합계
+    // 월누적: 현재 월에 재계약 예정인 센터 중 입금완료된 센터의 연 구독료 합계
     const subscriptionMonthlyAccumulated = subscriptionMonthlyData[currentMonth - 1].accumulated;
 
-    // 연예상: 선택 연도에 재계약 예정인 학원들의 합계 (subscriptionMonthlyData 1~12월 합산)
+    // 연예상: 선택 연도에 재계약 예정인 센터들의 합계 (subscriptionMonthlyData 1~12월 합산)
     const subscriptionYearlyExpected = subscriptionMonthlyData.reduce((sum, m) => sum + m.expected, 0);
-    // 연누적: 선택 연도에 입금완료된 모든 학원의 합계 (yearlyFeePaid=true AND yearlyFeePaidYear=선택연도)
+    // 연누적: 선택 연도에 입금완료된 모든 센터의 합계 (yearlyFeePaid=true AND yearlyFeePaidYear=선택연도)
     // 팝업(subscriptionYearlyData)과 동일한 로직 사용
     const subscriptionYearlyAccumulated = subscriptionBranches.filter(b => b.yearlyFeePaid === true && b.yearlyFeePaidYear === selectedYear).length * SUBSCRIPTION_YEARLY_FEE;
 
@@ -9623,26 +9623,26 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       paidCount: paidSubscriptionCount
     };
 
-    // 스탠다드 연도별 매출 데이터 (각 연도별 재계약 예정 학원 기준)
+    // 스탠다드 연도별 매출 데이터 (각 연도별 재계약 예정 센터 기준)
     const subscriptionYearlyData = [];
     for (let year = currentYear - 2; year <= currentYear + 1; year++) {
-      // 예상매출: 해당 연도에 재계약 예정이거나, 해당 연도에 이미 입금완료한 학원 (중복 제외)
-      // - contractEndDate가 해당 연도인 학원: 재계약 예정
-      // - yearlyFeePaidYear가 해당 연도인 학원: 이미 입금완료 (계약기간 변경해도 예상매출 유지)
+      // 예상매출: 해당 연도에 재계약 예정이거나, 해당 연도에 이미 입금완료한 센터 (중복 제외)
+      // - contractEndDate가 해당 연도인 센터: 재계약 예정
+      // - yearlyFeePaidYear가 해당 연도인 센터: 이미 입금완료 (계약기간 변경해도 예상매출 유지)
       const expectedBranchesInYear = subscriptionBranches.filter(b => {
-        // 1. 해당 연도에 입금완료한 학원은 예상매출에 포함 (계약기간 변경해도 유지)
+        // 1. 해당 연도에 입금완료한 센터는 예상매출에 포함 (계약기간 변경해도 유지)
         if (b.yearlyFeePaidYear === year) return true;
 
-        // 2. 해당 연도에 재계약 예정인 학원 (contractEndDate 기준)
+        // 2. 해당 연도에 재계약 예정인 센터 (contractEndDate 기준)
         if (!b.contractEndDate) return false;
         const endDate = new Date(b.contractEndDate);
         return endDate.getFullYear() === year;
       });
 
-      // 예상매출: 해당 연도 학원 수 × 300만원
+      // 예상매출: 해당 연도 센터 수 × 300만원
       const expectedRevenue = expectedBranchesInYear.length * SUBSCRIPTION_YEARLY_FEE;
 
-      // 누적매출: yearlyFeePaid=true AND yearlyFeePaidYear=해당연도인 학원 × 300만원 (결제 연도 기준, 계약기간 변경과 무관)
+      // 누적매출: yearlyFeePaid=true AND yearlyFeePaidYear=해당연도인 센터 × 300만원 (결제 연도 기준, 계약기간 변경과 무관)
       // - 계약기간을 변경해도 이미 결제한 연도의 누적매출은 유지됨
       // - yearlyFeePaid가 true인 경우에만 카운트 (입금완료 상태)
       const paidBranchesForYear = subscriptionBranches.filter(b => b.yearlyFeePaid === true && b.yearlyFeePaidYear === year);
@@ -9668,7 +9668,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     <html lang="ko">
     <head>
       <meta charset="UTF-8" />
-      <title>가맹(구독) 학원 목록 및 정산 보기</title>
+      <title>가맹(구독) 센터 목록 및 정산 보기</title>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <style>
         :root {
@@ -10016,8 +10016,8 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
       <div class="wrap">
         <div class="top-bar">
           <div>
-            <h1>🏢 가맹(구독) 학원 목록 및 정산</h1>
-            <p class="desc">등록된 학원을 선택하면 해당 학원 학생들만 따로 볼 수 있습니다.</p>
+            <h1>🏢 가맹(구독) 센터 목록 및 정산</h1>
+            <p class="desc">등록된 센터를 선택하면 해당 센터 학생들만 따로 볼 수 있습니다.</p>
           </div>
           <a href="/super/dashboard?type=academy" class="btn-back">← 대시보드로</a>
         </div>
@@ -10057,12 +10057,12 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           }
         </script>
 
-        <!-- 1줄: 학원+학생 통계 (연도 필터링) -->
+        <!-- 1줄: 센터+학생 통계 (연도 필터링) -->
         <div style="background: #e8e0f0; border: 1px solid #d0c4e0; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;">
-          <div style="font-size: 12px; font-weight: 600; color: #495057; margin-bottom: 8px;">🏫 총 학원 / 학생 현황 <span style="font-size: 10px; color: #6c757d; font-weight: normal;">(${selectedYear}년 계약 학원)</span></div>
+          <div style="font-size: 12px; font-weight: 600; color: #495057; margin-bottom: 8px;">🏫 총 센터 / 학생 현황 <span style="font-size: 10px; color: #6c757d; font-weight: normal;">(${selectedYear}년 계약 센터)</span></div>
           <div class="stats-bar" style="flex-wrap: nowrap; margin: 0; gap: 8px;">
             <div class="stat-card-h">
-              <span class="stat-label-h">🏫 총 학원</span>
+              <span class="stat-label-h">🏫 총 센터</span>
               <span class="stat-value-h">${filteredBranches.length}</span>
             </div>
             <div class="stat-card-h">
@@ -10095,7 +10095,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
 
         <!-- 3줄: 매출 현황 박스 (4칸) - 연도 필터링 -->
         <div style="background: #e8e0f0; border: 1px solid #d0c4e0; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px;">
-          <div style="font-size: 12px; font-weight: 600; color: #495057; margin-bottom: 8px;">💰 총 매출 현황 <span style="font-size: 10px; color: #6c757d; font-weight: normal;">(${selectedYear}년 계약 학원)</span></div>
+          <div style="font-size: 12px; font-weight: 600; color: #495057; margin-bottom: 8px;">💰 총 매출 현황 <span style="font-size: 10px; color: #6c757d; font-weight: normal;">(${selectedYear}년 계약 센터)</span></div>
           <div class="stats-bar" style="flex-wrap: nowrap; margin: 0; gap: 8px;">
             <div class="stat-card-h revenue-card" style="cursor: pointer;" onclick="showRevenueModal('monthly', 'total')">
               <span class="stat-label-h">📊 월누적(${currentMonth}월)</span>
@@ -10112,10 +10112,10 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 0;">
           <div class="tabs" style="flex: 1; margin-bottom: 0;">
             <button class="tab-btn active" onclick="switchTab('subscription')">
-              📚 스탠다드 학원 <span style="background:#2563eb; color:white; padding:2px 8px; border-radius:10px; font-size:12px; margin-left:6px;">${subscriptionBranches.length}</span>
+              📚 스탠다드 센터 <span style="background:#2563eb; color:white; padding:2px 8px; border-radius:10px; font-size:12px; margin-left:6px;">${subscriptionBranches.length}</span>
             </button>
             <button class="tab-btn" onclick="switchTab('franchise')">
-              🏢 프리미엄 학원 <span style="background:#dc2626; color:white; padding:2px 8px; border-radius:10px; font-size:12px; margin-left:6px;">${franchiseBranches.length}</span>
+              🏢 프리미엄 센터 <span style="background:#dc2626; color:white; padding:2px 8px; border-radius:10px; font-size:12px; margin-left:6px;">${franchiseBranches.length}</span>
             </button>
             <button class="tab-btn" onclick="switchTab('unclassified')">
               ⏳ 계약 대기 중 <span style="background:#6c757d; color:white; padding:2px 8px; border-radius:10px; font-size:12px; margin-left:6px;">${unclassifiedBranches.length}</span>
@@ -10125,12 +10125,12 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
 
         <!-- 프리미엄 탭 -->
         <div class="tab-content" id="tab-franchise">
-          <!-- 1줄: 학원 통계 -->
+          <!-- 1줄: 센터 통계 -->
           <div style="background: #fff5f5; border: 1px solid #fed7d7; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;">
-            <div style="font-size: 12px; font-weight: 600; color: #c53030; margin-bottom: 8px;">🏢 가맹 학원 / 학생 현황</div>
+            <div style="font-size: 12px; font-weight: 600; color: #c53030; margin-bottom: 8px;">🏢 가맹 센터 / 학생 현황</div>
             <div class="stats-bar" style="margin: 0; flex-wrap: nowrap; gap: 8px;">
               <div class="stat-card-h">
-                <span class="stat-label-h">🏢 가맹 학원</span>
+                <span class="stat-label-h">🏢 가맹 센터</span>
                 <span class="stat-value-h">${franchiseStats.count}</span>
               </div>
               <div class="stat-card-h">
@@ -10176,12 +10176,12 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           </div>
           ${franchiseBranches.length === 0 ? `
           <div class="empty-state">
-            <h3>등록된 프리미엄 학원이 없습니다</h3>
-            <p>학원 선생님 관리 페이지에서 계약구분을 "프리미엄"으로 설정하세요.</p>
+            <h3>등록된 프리미엄 센터가 없습니다</h3>
+            <p>센터 선생님 관리 페이지에서 계약구분을 "프리미엄"으로 설정하세요.</p>
           </div>
           ` : `
           <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <input type="text" id="franchise-search" placeholder="🔍 학원명 검색..."
+            <input type="text" id="franchise-search" placeholder="🔍 센터명 검색..."
               style="max-width: 300px; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none;"
               oninput="filterTable('franchise')" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#ddd'">
             <span style="padding: 8px 14px; background: #ffebee; border: 1px solid #ef9a9a; border-radius: 8px; font-size: 13px; font-weight: 600; color: #c62828;">
@@ -10207,7 +10207,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>학원명(+계약서)</th>
+                  <th>센터명(+계약서)</th>
                   <th>계약일</th>
                   <th>계약기간</th>
                   <th>재계약일</th>
@@ -10226,12 +10226,12 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
 
         <!-- 스탠다드 탭 -->
         <div class="tab-content active" id="tab-subscription">
-          <!-- 1줄: 학원+학생 통계 통합 -->
+          <!-- 1줄: 센터+학생 통계 통합 -->
           <div style="background: #ebf8ff; border: 1px solid #bee3f8; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;">
-            <div style="font-size: 12px; font-weight: 600; color: #2b6cb0; margin-bottom: 8px;">📚 구독 학원 / 학생 현황</div>
+            <div style="font-size: 12px; font-weight: 600; color: #2b6cb0; margin-bottom: 8px;">📚 구독 센터 / 학생 현황</div>
             <div class="stats-bar" style="flex-wrap: nowrap; margin: 0; gap: 8px;">
               <div class="stat-card-h">
-                <span class="stat-label-h">📚 구독 학원</span>
+                <span class="stat-label-h">📚 구독 센터</span>
                 <span class="stat-value-h">${subscriptionStats.count}</span>
               </div>
               <div class="stat-card-h">
@@ -10279,12 +10279,12 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           </div>
           ${subscriptionBranches.length === 0 ? `
           <div class="empty-state">
-            <h3>등록된 스탠다드 학원이 없습니다</h3>
-            <p>학원 선생님 관리 페이지에서 계약구분을 "스탠다드"으로 설정하세요.</p>
+            <h3>등록된 스탠다드 센터가 없습니다</h3>
+            <p>센터 선생님 관리 페이지에서 계약구분을 "스탠다드"으로 설정하세요.</p>
           </div>
           ` : `
           <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <input type="text" id="subscription-search" placeholder="🔍 학원명 검색..."
+            <input type="text" id="subscription-search" placeholder="🔍 센터명 검색..."
               style="max-width: 300px; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none;"
               oninput="filterTable('subscription')" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#ddd'">
             <span style="padding: 8px 14px; background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; font-size: 13px; font-weight: 600; color: #1565c0;">
@@ -10310,7 +10310,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>학원명(+계약서)</th>
+                  <th>센터명(+계약서)</th>
                   <th>계약일</th>
                   <th>월 구독료</th>
                   <th>연 구독료</th>
@@ -10333,15 +10333,15 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           <div class="stats-bar" style="margin-bottom: 16px;">
             <div class="stat-card" style="background: #fff; flex: 1; max-width: 150px;">
               <div class="stat-value" style="font-size: 20px;">${unclassifiedBranches.length}</div>
-              <div class="stat-label" style="font-size: 11px;">⏳ 대기 중 학원</div>
+              <div class="stat-label" style="font-size: 11px;">⏳ 대기 중 센터</div>
             </div>
           </div>
           <p style="color:#856404; background:#fff3cd; padding:12px; border-radius:8px; margin-bottom:16px;">
-            ⏳ 계약구분이 설정되지 않은 학원입니다. <a href="/super/academy-admins" style="color:#007bff; font-weight:600;">학원 선생님 관리</a>에서 계약구분을 설정해주세요.
+            ⏳ 계약구분이 설정되지 않은 센터입니다. <a href="/super/academy-admins" style="color:#007bff; font-weight:600;">센터 선생님 관리</a>에서 계약구분을 설정해주세요.
           </p>
           ${unclassifiedBranches.length === 0 ? `
           <div class="empty-state">
-            <h3>모든 학원의 계약구분이 설정되었습니다</h3>
+            <h3>모든 센터의 계약구분이 설정되었습니다</h3>
           </div>
           ` : `
           <div class="table-wrap">
@@ -10349,7 +10349,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>학원명</th>
+                  <th>센터명</th>
                   <th>계약기간</th>
                   <th>사용/남은일</th>
                   <th>등록 학년</th>
@@ -10935,13 +10935,13 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           document.getElementById('addBookOrderModal').classList.add('active');
         }
 
-        // 학원 검색 드롭다운 표시
+        // 센터 검색 드롭다운 표시
         function showAcademyDropdown() {
           filterAcademyList();
           document.getElementById('academyDropdown').style.display = 'block';
         }
 
-        // 학원 검색 필터링
+        // 센터 검색 필터링
         function filterAcademyList() {
           const query = document.getElementById('academySearchInput').value.toLowerCase();
           const dropdown = document.getElementById('academyDropdown');
@@ -10957,7 +10957,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           dropdown.style.display = 'block';
         }
 
-        // 학원 선택
+        // 센터 선택
         function selectAcademy(id, name) {
           console.log('[selectAcademy] id:', id, 'name:', name);
           document.getElementById('bookOrderAcademySelect').value = id;
@@ -11048,7 +11048,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           const creativeBookCount = parseInt(document.getElementById('creativeBookCount').value) || 0;
 
           if (!academyId || academyId === '' || academyId === 'undefined') {
-            alert('학원을 검색 후 목록에서 선택해주세요.');
+            alert('센터를 검색 후 목록에서 선택해주세요.');
             return;
           }
           if (!orderDate) {
@@ -11222,13 +11222,13 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           });
         }
 
-        // 학원 삭제 함수
+        // 센터 삭제 함수
         function deleteAcademy(encodedAcademyName, displayName) {
           if (!isAdminUnlocked) {
             alert('편집 모드를 먼저 활성화하세요.');
             return;
           }
-          if (confirm('이 학원을 휴지통으로 이동할까요?\\n[' + displayName + ']\\n\\n해당 학원의 모든 학생이 휴지통으로 이동합니다.')) {
+          if (confirm('이 센터를 휴지통으로 이동할까요?\\n[' + displayName + ']\\n\\n해당 센터의 모든 학생이 휴지통으로 이동합니다.')) {
             window.location.href = '/super/academy-branch-delete?academyName=' + encodedAcademyName;
           }
         }
@@ -11373,7 +11373,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           const rows = tbody.querySelectorAll('tr');
 
           rows.forEach(row => {
-            // 학원명은 2번째 열 (index 1)
+            // 센터명은 2번째 열 (index 1)
             const academyNameCell = row.cells[1];
             if (academyNameCell) {
               const academyName = academyNameCell.textContent.toLowerCase();
@@ -11408,8 +11408,8 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           }
 
           // 정렬 로직 - 프리미엄/스탠다드 컬럼 구조가 다름
-          // 프리미엄: #(0), 학원명(1), 계약기간(2), 사용/남은일(3), 등록학년(4), 승인/대기(5), 월정산(6), 최근접속(7), 작업(8)
-          // 스탠다드: #(0), 학원명(1), 최초계약일(2), 월구독료(3), 연구독료(4), 계약기간(5), 재계약일(6), 승인/대기(7), 최근접속(8), 작업(9)
+          // 프리미엄: #(0), 센터명(1), 계약기간(2), 사용/남은일(3), 등록학년(4), 승인/대기(5), 월정산(6), 최근접속(7), 작업(8)
+          // 스탠다드: #(0), 센터명(1), 최초계약일(2), 월구독료(3), 연구독료(4), 계약기간(5), 재계약일(6), 승인/대기(7), 최근접속(8), 작업(9)
           const isSubscription = tabType === 'subscription';
 
           rows.sort((a, b) => {
@@ -11633,7 +11633,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
 
         // 입금완료 데이터 마이그레이션 함수 (yearlyFeePaidYear/Month를 contractStartDate 기준으로 수정)
         async function migratePaymentData() {
-          if (!confirm('입금완료된 학원들의 yearlyFeePaidYear/Month를 최초계약일 기준으로 수정합니다.\\n진행하시겠습니까?')) return;
+          if (!confirm('입금완료된 센터들의 yearlyFeePaidYear/Month를 최초계약일 기준으로 수정합니다.\\n진행하시겠습니까?')) return;
           try {
             const res = await fetch('/super/api/migrate-payment-data', {
               method: 'POST',
@@ -11760,7 +11760,7 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
           <table style="width:100%; border-collapse:collapse; font-size:14px;">
             <thead>
               <tr style="background:#f8f9fa;">
-                <th style="padding:10px; border:1px solid #ddd; text-align:left;">학원명</th>
+                <th style="padding:10px; border:1px solid #ddd; text-align:left;">센터명</th>
                 <th style="padding:10px; border:1px solid #ddd; text-align:left;">신청일</th>
                 <th style="padding:10px; border:1px solid #ddd; text-align:left;">문해력 교재</th>
                 <th style="padding:10px; border:1px solid #ddd; text-align:left;">창작독서</th>
@@ -11783,9 +11783,9 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
         <div class="modal-content" style="background:#fff; padding:24px 32px; border-radius:12px; max-width:420px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.3);">
           <h3 style="margin:0 0 20px 0; color:#333; font-size:18px;">교재 신청 추가</h3>
           <div style="margin-bottom:12px;">
-            <label style="display:block; font-size:14px; font-weight:600; margin-bottom:4px;">학원명</label>
+            <label style="display:block; font-size:14px; font-weight:600; margin-bottom:4px;">센터명</label>
             <div style="position:relative;">
-              <input type="text" id="academySearchInput" placeholder="학원명 검색..." oninput="filterAcademyList()" onfocus="showAcademyDropdown()" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:14px; box-sizing:border-box;" autocomplete="off" />
+              <input type="text" id="academySearchInput" placeholder="센터명 검색..." oninput="filterAcademyList()" onfocus="showAcademyDropdown()" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:14px; box-sizing:border-box;" autocomplete="off" />
               <input type="hidden" id="bookOrderAcademySelect" />
               <div id="academyDropdown" style="display:none; position:absolute; top:100%; left:0; right:0; max-height:200px; overflow-y:auto; background:#fff; border:1px solid #ddd; border-top:none; border-radius:0 0 8px 8px; z-index:10000; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
             </div>
@@ -11849,11 +11849,11 @@ app.get("/super/academy-branches", requireSuperAdmin, async (req, res) => {
     res.send(html);
   } catch (err) {
     console.error("❌ /super/academy-branches 에러:", err);
-    res.status(500).send("학원 목록 조회 중 오류가 발생했습니다.");
+    res.status(500).send("센터 목록 조회 중 오류가 발생했습니다.");
   }
 });
 
-// 🔹 학원용 지점 삭제
+// 🔹 센터용 지점 삭제
 app.get("/super/academy-branch-delete", requireSuperAdmin, async (req, res) => {
   const { academyName } = req.query;
   if (!academyName) {
@@ -11864,7 +11864,7 @@ app.get("/super/academy-branch-delete", requireSuperAdmin, async (req, res) => {
   const now = new Date();
 
   try {
-    // 해당 학원 학생 모두 휴지 상태로
+    // 해당 센터 학생 모두 휴지 상태로
     const userResult = await User.updateMany(
       { academyName: name, userType: "academy", deleted: { $ne: true } },
       {
@@ -11877,7 +11877,7 @@ app.get("/super/academy-branch-delete", requireSuperAdmin, async (req, res) => {
     );
 
     console.log(
-      "🗑 학원 삭제:",
+      "🗑 센터 삭제:",
       name,
       "학생", userResult.modifiedCount, "명 휴지 상태로 이동"
     );
@@ -11885,7 +11885,7 @@ app.get("/super/academy-branch-delete", requireSuperAdmin, async (req, res) => {
     res.redirect("/super/academy-branches");
   } catch (err) {
     console.error("❌ /super/academy-branch-delete 에러:", err);
-    res.status(500).send("학원 삭제 중 오류가 발생했습니다.");
+    res.status(500).send("센터 삭제 중 오류가 발생했습니다.");
   }
 });
 
@@ -11969,7 +11969,7 @@ app.post("/super/api/set-contract-type", requireSuperAdmin, async (req, res) => 
   }
 });
 
-// 🔹 기존 학원 admin의 maxStudentLimit 계약구분에 맞춰 재정렬 (safe backfill)
+// 🔹 기존 센터 admin의 maxStudentLimit 계약구분에 맞춰 재정렬 (safe backfill)
 //   · dryRun: true (기본) → 변경 없이 예상 결과만 반환 · 확인 후 dryRun: false로 실행
 //   · 프리미엄 → 360 / 스탠다드 → 120 · 미설정은 건드리지 않음
 //   · 이미 상한을 초과한 admin은 결과에 warning 표시 (cron이 초과 산정)
@@ -12011,7 +12011,7 @@ app.post('/super/api/backfill-max-student-limit', requireSuperAdmin, async (req,
       });
     }
 
-    console.log(`📋 maxStudentLimit ${isDry ? 'dryRun' : '실행'}: ${results.length}개 학원 중 변경 ${results.filter(r => r.changed).length}개`);
+    console.log(`📋 maxStudentLimit ${isDry ? 'dryRun' : '실행'}: ${results.length}개 센터 중 변경 ${results.filter(r => r.changed).length}개`);
     res.json({
       success: true,
       dryRun: isDry,
@@ -12048,7 +12048,7 @@ app.post("/super/api/toggle-payment-status", requireSuperAdmin, async (req, res)
     // 입금완료 시 최초계약일(contractStartDate)의 연도와 월 기록, 미입금 시 null로 설정
     const now = new Date();
 
-    // 입금완료 시 해당 학원의 contractStartDate 연도/월을 기록
+    // 입금완료 시 해당 센터의 contractStartDate 연도/월을 기록
     let updateData;
     if (paid) {
       const existingAdmin = await Admin.findById(objectId);
@@ -12106,7 +12106,7 @@ app.post("/super/api/toggle-payment-status", requireSuperAdmin, async (req, res)
 
       const nextYear = nextYearStartDate.getFullYear();
 
-      // 이미 같은 학원의 다음 연도 계약이 있는지 확인 (중복 방지)
+      // 이미 같은 센터의 다음 연도 계약이 있는지 확인 (중복 방지)
       const existingRenewal = await Admin.findOne({
         academyName: updatedAdmin.academyName,
         contractType: 'subscription',
@@ -12203,7 +12203,7 @@ app.post("/super/api/migrate-payment-data", requireSuperAdmin, async (req, res) 
     console.log("🔧 마이그레이션 완료:", updatedCount, "개 업데이트됨", updates);
     res.json({
       success: true,
-      message: `${updatedCount}개의 학원 데이터가 수정되었습니다.`,
+      message: `${updatedCount}개의 센터 데이터가 수정되었습니다.`,
       updates
     });
   } catch (err) {
@@ -12414,7 +12414,7 @@ app.get("/super/branch-trash", requireSuperAdmin, async (req, res) => {
     }
 
     admins.forEach((a) => {
-      const name = a.academyName || "학원명 미입력";
+      const name = a.academyName || "센터명 미입력";
       const entry = ensureEntry(name);
       entry.adminCount += 1;
       const d = a.deletedAt || a.createdAt;
@@ -12424,7 +12424,7 @@ app.get("/super/branch-trash", requireSuperAdmin, async (req, res) => {
     });
 
     users.forEach((u) => {
-      const name = u.school || "학원명 미입력";
+      const name = u.school || "센터명 미입력";
       const entry = ensureEntry(name);
       entry.studentCount += 1;
       const d = u.deletedAt;
@@ -12530,7 +12530,7 @@ font-family: "Gmarket Sans", "Noto Sans KR", sans-serif;
           <div>
             <h1>지점 휴지통</h1>
             <p class="desc">
-              삭제된 학원/지점의 관리자와 학생 계정이 묶여서 표시됩니다.<br/>
+              삭제된 센터/지점의 관리자와 학생 계정이 묶여서 표시됩니다.<br/>
               필요하면 전체 복구 또는 완전 삭제를 할 수 있습니다.
             </p>
           </div>
@@ -12671,7 +12671,7 @@ app.get("/super/branch-trash-delete", requireSuperAdmin, async (req, res) => {
 });
 
 
-// 🔹 특정 학원/지점 학생 목록 (슈퍼관리자 모드에서 보기)
+// 🔹 특정 센터/지점 학생 목록 (슈퍼관리자 모드에서 보기)
 app.get("/super/branch-users", requireSuperAdmin, async (req, res) => {
   const { academyName, grade, classNum } = req.query;
   if (!academyName) {
@@ -13055,7 +13055,7 @@ app.get("/super/branch-users", requireSuperAdmin, async (req, res) => {
 });
 
 
-// 내 학원 학생 목록 (브랜치 관리자 전용 화면 템플릿)
+// 내 센터 학생 목록 (브랜치 관리자 전용 화면 템플릿)
 app.get("/admin/branch/users", requireAdminLogin, (req, res) => {
   console.log(
     "✅ [GET] /admin/branch/users -> public/branch_user_list.html",
@@ -13094,7 +13094,7 @@ app.get("/admin/logout", (req, res) => {
   console.log("📤 [GET] /admin/logout 호출");
   if (!req.session) {
     res.clearCookie("adminType");
-    // 🔥 3000 포트는 학원용 전용이므로 무조건 학원 로그인으로
+    // 🔥 3000 포트는 센터용 전용이므로 무조건 센터 로그인으로
     return res.redirect("/academy-admin-login");
   }
 
@@ -13106,7 +13106,7 @@ app.get("/admin/logout", (req, res) => {
   // 🔥 로그아웃 시 adminType 쿠키 삭제
   res.clearCookie("adminType");
 
-  // 🔥 3000 포트는 학원용 전용이므로 무조건 학원 로그인으로
+  // 🔥 3000 포트는 센터용 전용이므로 무조건 센터 로그인으로
   res.redirect("/academy-admin-login");
 });
 
@@ -13266,12 +13266,12 @@ app.get("/admin/user-edit", async (req, res) => {
     // 🔙 수정 후 돌아갈 주소
     let returnUrl;
     if (view === "academy") {
-      // 학원 브랜치 관리자 학생 목록으로 돌아가기
+      // 센터 브랜치 관리자 학생 목록으로 돌아가기
       returnUrl = "/academy/branch/users";
     } else if (view === "branch") {
       returnUrl = "/admin/branch/users";
     } else if (isAcademy) {
-      // 슈퍼 어드민 학원용 전체 목록
+      // 슈퍼 어드민 센터용 전체 목록
       returnUrl = `/admin/users?key=${encodeURIComponent(key)}&type=academy`;
       if (academyName) {
         returnUrl += `&academyName=${encodeURIComponent(academyName)}`;
@@ -13280,7 +13280,7 @@ app.get("/admin/user-edit", async (req, res) => {
       returnUrl = `/admin/users?key=${encodeURIComponent(key)}`;
     }
 
-    // 학원용/학교용에 따라 다른 폼 필드 생성
+    // 센터용/학교용에 따라 다른 폼 필드 생성
     const gradeOptions = ['초1', '초2', '초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
     const gradeSelectOptions = gradeOptions.map(g =>
       `<option value="${g}" ${user.grade === g ? 'selected' : ''}>${g}</option>`
@@ -13341,7 +13341,7 @@ app.get("/admin/user-edit", async (req, res) => {
     `;
 
     const themeColor = isAcademy ? "#6B5B95" : "#007bff";
-    const pageTitle = isAcademy ? "학원 회원 정보 수정" : "회원 정보 수정";
+    const pageTitle = isAcademy ? "센터 회원 정보 수정" : "회원 정보 수정";
 
     const html = `
     <!DOCTYPE html>
@@ -13413,7 +13413,7 @@ app.post("/admin/user-edit", async (req, res) => {
     phone,
     type,
     academyName,
-    academyNameField,  // 학원용: 학원명 필드
+    academyNameField,  // 센터용: 센터명 필드
     return: returnUrl,   // 🔹 hidden input 으로 넘어온 return 주소
   } = req.body;
 
@@ -13447,7 +13447,7 @@ app.post("/admin/user-edit", async (req, res) => {
     const newGrade = (grade || "").trim() || oldGrade;
     const newName = name || "";
 
-    // 필드 업데이트 - 학원용/학교용 분기
+    // 필드 업데이트 - 센터용/학교용 분기
     // 전화번호에서 하이픈 제거 (숫자만 저장)
     const cleanPhone = (phone || "").replace(/\D/g, "");
     user.grade = newGrade;
@@ -13457,7 +13457,7 @@ app.post("/admin/user-edit", async (req, res) => {
     user.pw = cleanPhone;
 
     if (isAcademy) {
-      // 학원용: 학원명만 업데이트 (반/번호/학교 필드 사용 안 함)
+      // 센터용: 센터명만 업데이트 (반/번호/학교 필드 사용 안 함)
       user.academyName = academyNameField || "";
       user.userType = "academy";
     } else {
@@ -13485,7 +13485,7 @@ app.post("/admin/user-edit", async (req, res) => {
       console.log(`📊 진행도 업데이트: ${oldGrade}/${oldName} → ${newGrade}/${newName} (${progressUpdateResult.modifiedCount}건)`);
     }
 
-    console.log("✅ 회원 정보 수정 완료:", user.name, user.id, isAcademy ? "(학원용)" : "(학교용)");
+    console.log("✅ 회원 정보 수정 완료:", user.name, user.id, isAcademy ? "(센터용)" : "(학교용)");
 
     // 🔙 return 값이 있으면 거기로, 없으면 기본 회원 목록으로
     if (returnUrl && returnUrl.startsWith("/")) {
@@ -13523,9 +13523,9 @@ app.post("/admin/assign-series", async (req, res) => {
       return res.status(404).json({ success: false, message: "사용자를 찾을 수 없습니다" });
     }
 
-    // 학원 단위 시리즈 권한 머지 — 학원이 권한 없는 시리즈는 보존
-    // (예: 본사가 학생에게 BRAIN답을 부여했는데 학원은 subscription이라 권한 없는 경우,
-    //  학원 관리자 모달 저장으로 BRAIN답이 사라지지 않게)
+    // 센터 단위 시리즈 권한 머지 — 센터가 권한 없는 시리즈는 보존
+    // (예: 본사가 학생에게 BRAIN답을 부여했는데 센터는 subscription이라 권한 없는 경우,
+    //  센터 관리자 모달 저장으로 BRAIN답이 사라지지 않게)
     // 본사(HQ) 호출은 fromHQ:true를 보내면 머지 건너뛰고 직접 덮어쓰기
     const fromHQ = req.body && req.body.fromHQ === true;
 
@@ -13547,7 +13547,7 @@ app.post("/admin/assign-series", async (req, res) => {
     // 요청으로 들어온 series 값도 정규화
     const normalizedSeries = (series || []).map(normalizeSeriesValue);
 
-    let academyAllowedValues = null; // null = 학원 매핑 없음 또는 HQ 호출 → 전체 허용
+    let academyAllowedValues = null; // null = 센터 매핑 없음 또는 HQ 호출 → 전체 허용
     if (!fromHQ && user.academyName) {
       const admins = await Admin.find({ academyName: user.academyName, deleted: { $ne: true } })
         .select('approvedSeries contractType').lean();
@@ -13569,18 +13569,18 @@ app.post("/admin/assign-series", async (req, res) => {
       }
     }
 
-    // 🔹 학원 권한과 무관하게 모든 학원에서 자유롭게 부여·해제 가능한 시리즈 (BRAIN 입문, BRAIN 서술형 등)
+    // 🔹 센터 권한과 무관하게 모든 센터에서 자유롭게 부여·해제 가능한 시리즈 (BRAIN 입문, BRAIN 서술형 등)
     const ALWAYS_ALLOWED_VALUES = new Set(['BRAIN입문', 'BRAIN서술형']);
 
     let finalSeries;
     if (!academyAllowedValues) {
       finalSeries = normalizedSeries;
     } else {
-      // preserved: 학원 권한 밖이면서 항상허용도 아닌 값 (본사가 부여한 것 등)
+      // preserved: 센터 권한 밖이면서 항상허용도 아닌 값 (본사가 부여한 것 등)
       const preserved = (user.assignedSeries || []).filter(v =>
         !academyAllowedValues.includes(v) && !ALWAYS_ALLOWED_VALUES.has(v)
       );
-      // newAllowed: 학원 권한 안이거나 항상허용인 값
+      // newAllowed: 센터 권한 안이거나 항상허용인 값
       const newAllowed = normalizedSeries.filter(v =>
         academyAllowedValues.includes(v) || ALWAYS_ALLOWED_VALUES.has(v)
       );
@@ -13589,7 +13589,7 @@ app.post("/admin/assign-series", async (req, res) => {
     }
 
     user.assignedSeries = finalSeries;
-    // 🔹 disabledSeries 처리 — 비평/한국사처럼 디폴트 활성 시리즈를 학원이 명시적으로 끈 경우 저장
+    // 🔹 disabledSeries 처리 — 비평/한국사처럼 디폴트 활성 시리즈를 센터가 명시적으로 끈 경우 저장
     //    payload에 들어있을 때만 갱신 (기존 동작 보존)
     if (hasDisabledPayload) {
       const VALID_DISABLED_VALUES = new Set(['BRAIN비평', 'BRAIN한국사', 'BRAIN모고', 'BRAIN문법']);
@@ -13597,7 +13597,7 @@ app.post("/admin/assign-series", async (req, res) => {
     }
     await user.save();
 
-    console.log(`✅ 시리즈 부여 완료: ${user.name} (${user.id}) -> [${finalSeries.join(", ")}]${hasDisabledPayload ? ` | 비활성: [${(user.disabledSeries || []).join(", ")}]` : ''}${academyAllowedValues ? ` | 학원허용: [${academyAllowedValues.join(", ")}]` : ' | 학원 권한 제약 없음'}`);
+    console.log(`✅ 시리즈 부여 완료: ${user.name} (${user.id}) -> [${finalSeries.join(", ")}]${hasDisabledPayload ? ` | 비활성: [${(user.disabledSeries || []).join(", ")}]` : ''}${academyAllowedValues ? ` | 센터허용: [${academyAllowedValues.join(", ")}]` : ' | 센터 권한 제약 없음'}`);
 
     return res.json({
       success: true,
@@ -13715,7 +13715,7 @@ app.get("/admin/status", async (req, res) => {
   }
 
   try {
-    // 🔹 학원용/학교용 구분하여 검색
+    // 🔹 센터용/학교용 구분하여 검색
     const filter = {
       $or: [{ id }, { phone: id }],
       deleted: { $ne: true },
@@ -13817,13 +13817,13 @@ app.get("/admin/users", async (req, res) => {
   try {
     const filter = { deleted: { $ne: true } };
 
-    // 🔹 학교용/학원용 필터링
+    // 🔹 학교용/센터용 필터링
     if (type === "school") {
       filter.userType = { $in: ["school", null, undefined] }; // 기존 데이터 호환
       filter.userType = { $ne: "academy" }; // academy가 아닌 것들
     } else if (type === "academy") {
       filter.userType = "academy";
-      // 특정 학원명 필터링
+      // 특정 센터명 필터링
       if (academyName) {
         filter.academyName = academyName;
       }
@@ -13840,7 +13840,7 @@ app.get("/admin/users", async (req, res) => {
         { id: regex },
         { school: regex },
         { grade: regex },
-        { academyName: regex }, // 🔹 학원명도 검색 가능
+        { academyName: regex }, // 🔹 센터명도 검색 가능
       ];
     }
 
@@ -14822,7 +14822,7 @@ app.get("/admin/users", async (req, res) => {
                 </th>
                 <th>#</th>
                 ${type === 'academy' ? `
-                <th>학원명</th>
+                <th>센터명</th>
                 <th>학년</th>
                 <th>이름</th>
                 <th>전화번호</th>
@@ -14912,7 +14912,7 @@ app.get("/admin/users", async (req, res) => {
       const studyRoomStatusClass = totalTasks === 0 ? 'study-room-empty' : (completedTasks === totalTasks ? 'study-room-complete' : 'study-room-pending');
       const pendingTasks = totalTasks - completedTasks;  // 미완료 과제 수
 
-      // 학원용과 학교용 테이블 행 분기
+      // 센터용과 학교용 테이블 행 분기
       if (type === 'academy') {
         html += `
         <tr data-user-grade="${u.grade || ''}" data-user-name="${u.name || ''}" data-pending="${pendingTasks}">
@@ -15637,7 +15637,7 @@ app.get("/admin/users", async (req, res) => {
                   <th style="padding: 12px; text-align: left; font-weight: 600; white-space: nowrap;">#</th>
                   <th style="padding: 12px; text-align: left; font-weight: 600; white-space: nowrap;">학년</th>
                   <th style="padding: 12px; text-align: left; font-weight: 600; white-space: nowrap;">이름</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 600; white-space: nowrap;">학원명</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 600; white-space: nowrap;">센터명</th>
                   <th style="padding: 12px; text-align: left; font-weight: 600; min-width: 200px;">과제명</th>
                   <th style="padding: 12px; text-align: left; font-weight: 600; white-space: nowrap;">시리즈</th>
                   <th style="padding: 12px; text-align: left; font-weight: 600; white-space: nowrap;">분야</th>
@@ -29900,7 +29900,7 @@ return res.redirect(
 });
 
 // ============================================
-// 🏫 학원용 회원가입 API
+// 🏫 센터용 회원가입 API
 // ============================================
 app.post("/academy-register", async (req, res) => {
   try {
@@ -29915,7 +29915,7 @@ app.post("/academy-register", async (req, res) => {
 
     const cleanPhone = String(phone).replace(/\D/g, "").trim();
 
-    // 2) 전화번호 전체 중복 확인 (학원용은 전화번호 전체가 유니크)
+    // 2) 전화번호 전체 중복 확인 (센터용은 전화번호 전체가 유니크)
     const existing = await User.findOne({
       phone: cleanPhone,
       userType: "academy",
@@ -29927,33 +29927,33 @@ app.post("/academy-register", async (req, res) => {
       return res.redirect("/academy.html?loginError=duplicate");
     }
 
-    // 3) 새 학원용 학생 생성
+    // 3) 새 센터용 학생 생성
     const created = await User.create({
       academyName,
       grade,             // 🔹 학년 추가
       name,
       phone: cleanPhone,
       pw: cleanPhone,        // 🔥 전화번호 전체를 비밀번호로 사용
-      userType: "academy",   // 🔹 학원용 타입
+      userType: "academy",   // 🔹 센터용 타입
       approved: false,
       status: "pending",     // 기본값: 승인 전
       deleted: false,
       createdAt: new Date(),
     });
 
-    console.log("✅ [POST] 학원용 회원가입 DB 저장 완료:", created.name, created.grade);
+    console.log("✅ [POST] 센터용 회원가입 DB 저장 완료:", created.name, created.grade);
 
     // 4) 회원가입 알림 이메일 발송
     try {
       const mailOptions = {
         from: process.env.NAVER_EMAIL,
         to: "kukikukilove@naver.com",
-        subject: `[학원용 회원가입] ${academyName} - ${name}`,
+        subject: `[센터용 회원가입] ${academyName} - ${name}`,
         html: `
-          <h2>🏫 학원용 회원가입 알림</h2>
+          <h2>🏫 센터용 회원가입 알림</h2>
           <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
             <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 10px; font-weight: bold; width: 100px;">학원명</td>
+              <td style="padding: 10px; font-weight: bold; width: 100px;">센터명</td>
               <td style="padding: 10px;">${academyName}</td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
@@ -29976,7 +29976,7 @@ app.post("/academy-register", async (req, res) => {
         `
       };
       await transporter.sendMail(mailOptions);
-      console.log("📧 학원용 회원가입 알림 이메일 발송 완료");
+      console.log("📧 센터용 회원가입 알림 이메일 발송 완료");
     } catch (emailErr) {
       console.error("⚠ 이메일 발송 실패 (회원가입은 완료됨):", emailErr);
     }
@@ -29990,7 +29990,7 @@ app.post("/academy-register", async (req, res) => {
 });
 
 // ============================================
-// 🏫 학원용 로그인 API
+// 🏫 센터용 로그인 API
 // ============================================
 app.post("/academy-login", async (req, res) => {
   try {
@@ -30004,7 +30004,7 @@ app.post("/academy-login", async (req, res) => {
       return res.redirect("/academy.html?loginError=1");
     }
 
-    // 학원용 사용자 찾기 (학원명 + 학년 + 이름 + 전화번호 전체)
+    // 센터용 사용자 찾기 (센터명 + 학년 + 이름 + 전화번호 전체)
     const user = await User.findOne({
       academyName,
       grade,
@@ -30018,7 +30018,7 @@ app.post("/academy-login", async (req, res) => {
     });
 
     if (!user) {
-      console.log("❌ 학원용 로그인 실패: 해당 사용자 없음");
+      console.log("❌ 센터용 로그인 실패: 해당 사용자 없음");
       return res.redirect("/academy.html?loginError=1");
     }
 
@@ -30060,9 +30060,9 @@ app.post("/academy-login", async (req, res) => {
       { $set: { lastLogin: new Date(), activeSessionId: req.sessionID } }
     );
 
-    console.log("✅ 학원용 로그인 성공:", user.name, user.grade, user.academyName);
+    console.log("✅ 센터용 로그인 성공:", user.name, user.grade, user.academyName);
 
-    // 📱 학부모 알림 발송 (학원 로그인) — 하루 1회만 (KST 기준)
+    // 📱 학부모 알림 발송 (센터 로그인) — 하루 1회만 (KST 기준)
     if (user.parentPhone && user.parentNotify !== false) {
       claimDailyNotify(DailyLoginSent, user.grade, user.name).then(first => {
         if (first) sendParentNotification(user.name, user.parentPhone, 'login', { grade: user.grade })
@@ -30070,10 +30070,10 @@ app.post("/academy-login", async (req, res) => {
       }).catch(() => {});
     }
 
-    // 📱 본사 관리자 알림 발송 (학원 로그인)
+    // 📱 본사 관리자 알림 발송 (센터 로그인)
     sendHQAdminNotification(user.name, user.grade, 'login', { academyName: user.academyName });
 
-    // 학원용도 동일한 메뉴 페이지로 이동
+    // 센터용도 동일한 메뉴 페이지로 이동
     // brain_library에서 로그인한 경우 창작 도서관 팝업 자동 오픈
     const { loginSource } = req.body;
     const NEXT_URL = loginSource === "brain_library"
@@ -30111,7 +30111,7 @@ app.get("/api/session", async (req, res) => {
    - 저장/조회는 로그인한 학생 본인 데이터로 제한
    - 회차별 결과는 최신본이 이전 결과를 덮어씀 (재응시 시)
    - GET: 대시보드/해설 페이지에서 결과 로드
-   - 학원 관리자용 조회는 별도 엔드포인트로 추가 예정
+   - 센터 관리자용 조회는 별도 엔드포인트로 추가 예정
    ============================================================ */
 function _requireStudentSession(req, res) {
   if (!(req.session && req.session.user && req.session.user._id)) {
@@ -30286,7 +30286,7 @@ app.post("/api/lti/result", async (req, res) => {
     if (!studentName) return res.status(400).json({ ok: false, error: 'no_name' });
     const grade = String(b.grade || '').slice(0, 10);
     let academyName = String(b.academyName || '').trim();
-    // 학원명이 비어있으면 User 계정(이름+학년)에서 조회해 채움 (대시보드 노출용)
+    // 센터명이 비어있으면 User 계정(이름+학년)에서 조회해 채움 (대시보드 노출용)
     if (!academyName) {
       try {
         const q = { name: studentName };
@@ -30326,7 +30326,7 @@ app.get("/api/lti/result", async (req, res) => {
   }
 });
 
-// 학원 대시보드 입력용 결과 저장 (세션 불필요 · 입력한 학원/학생 정보로 저장 · 진단테스트와 동일 방식)
+// 센터 대시보드 입력용 결과 저장 (세션 불필요 · 입력한 센터/학생 정보로 저장 · 진단테스트와 동일 방식)
 app.post("/api/lti/result-academy", async (req, res) => {
   try {
     const b = req.body || {};
@@ -34220,7 +34220,7 @@ setTimeout(() => {
   assignAITasksDaily();
 }, 10000);
 
-// ========== 학원 월별 학생수 스냅샷 (월말 누적/초과 산정) ==========
+// ========== 센터 월별 학생수 스냅샷 (월말 누적/초과 산정) ==========
 // KST "yearMonth" 형식 ("2026-06") 변환
 function formatYearMonthKST(date) {
   const kst = new Date(date.getTime() + (9 * 60 * 60 * 1000) - (date.getTimezoneOffset() * 60 * 1000));
@@ -34254,9 +34254,9 @@ function cycleStartYearMonth(contractStartDate, cycleNumber) {
  * 월말 스냅샷 실행
  * @param {Object} opts
  * @param {string} [opts.targetYearMonth] - "2026-06" 직접 지정 (기본: 어제의 yearMonth = 직전월)
- * @param {string} [opts.onlyAcademyName] - 특정 학원만 실행 (테스트용)
+ * @param {string} [opts.onlyAcademyName] - 특정 센터만 실행 (테스트용)
  * @param {boolean} [opts.dryRun] - true면 DB 변경 없이 결과만 리턴
- * @returns {Promise<Array>} 학원별 결과 요약
+ * @returns {Promise<Array>} 센터별 결과 요약
  */
 async function runMonthlySnapshot(opts = {}) {
   // 기본 타겟: "어제"의 yearMonth = 직전 월. cron이 1일 00:00에 돌면 어제 = 전월 말일
@@ -34344,7 +34344,7 @@ async function runMonthlySnapshot(opts = {}) {
         { $match: { cnt: { $gte: 5 } } },
       ]);
       if (learners.length) {
-        // 이 학원(별칭 포함) 소속만 대조 — 삭제된 계정 문서도 포함해 조회 (삭제 회피 대응)
+        // 이 센터(별칭 포함) 소속만 대조 — 삭제된 계정 문서도 포함해 조회 (삭제 회피 대응)
         const asks = learners.map(l => ({ grade: l._id.grade, name: l._id.name }));
         const us = await User.find({ academyName: { $in: countNames }, userType: 'academy', $or: asks })
           .select('grade name status deleted').lean();
@@ -34412,7 +34412,7 @@ async function runMonthlySnapshot(opts = {}) {
     });
   }
 
-  console.log(`📸 월별 스냅샷 완료 (${targetYM}): ${results.length}개 학원 처리`);
+  console.log(`📸 월별 스냅샷 완료 (${targetYM}): ${results.length}개 센터 처리`);
   return results;
 }
 
@@ -34437,15 +34437,15 @@ app.post('/api/admin/run-monthly-snapshot', async (req, res) => {
 
 // 매월 1일 00:00 KST: 직전 월의 월말 스냅샷 산정
 cron.schedule('0 0 1 * *', async () => {
-  console.log('📅 학원 월별 학생수 스냅샷 cron 트리거');
+  console.log('📅 센터 월별 학생수 스냅샷 cron 트리거');
   try {
     const results = await runMonthlySnapshot();
-    console.log(`✅ 학원 월별 스냅샷 cron 완료: ${results.length}개 학원`);
+    console.log(`✅ 센터 월별 스냅샷 cron 완료: ${results.length}개 센터`);
   } catch (err) {
-    console.error('❌ 학원 월별 스냅샷 cron 오류:', err);
+    console.error('❌ 센터 월별 스냅샷 cron 오류:', err);
   }
 }, { timezone: 'Asia/Seoul' });
-console.log('✅ 학원 월별 스냅샷 스케줄러 등록 완료 (매월 1일 00:00 KST)');
+console.log('✅ 센터 월별 스냅샷 스케줄러 등록 완료 (매월 1일 00:00 KST)');
 
 // ========== 학습실 일반과제 중복 자동 청소 (안전망) ==========
 // 어떤 경로로든 일반과제 중복이 생기면 매일 03:00 KST에 정리
@@ -35824,12 +35824,12 @@ app.get('/api/super/monggeul/students', requireSuperAdmin, async (req, res) => {
     dexes.forEach(x => dxMap[key(x)] = x);
     states.forEach(x => stMap[key(x)] = x);
     const keys = new Set([...scores.map(key), ...dexes.map(key), ...states.map(key)]);
-    // 학원명 매핑 (User 컬렉션)
+    // 센터명 매핑 (User 컬렉션)
     const acMap = {};
     try {
       const users = await User.find({}, { grade: 1, name: 1, academyName: 1 }).lean();
       users.forEach(u => { if (u.grade && u.name) acMap[u.grade + '|' + u.name] = u.academyName || ''; });
-    } catch (uErr) { console.warn('[super/monggeul] 학원명 매핑 실패:', uErr.message); }
+    } catch (uErr) { console.warn('[super/monggeul] 센터명 매핑 실패:', uErr.message); }
     const students = [];
     for (const k of keys) {
       const [grade, name] = k.split('|');
@@ -36728,7 +36728,7 @@ app.post("/api/course-application", async (req, res) => {
   try {
     const { branchName, studentGrade, studentClassNum, studentName, studentPhone, parentPhone, grade, series, answers, score, weightedScore, duration, userType, academyName, testType } = req.body;
 
-    // 학원 응시자인데 weightedScore가 빠졌으면 서버에서 자동 계산 (캐시 이슈 대비 근본 가드)
+    // 센터 응시자인데 weightedScore가 빠졌으면 서버에서 자동 계산 (캐시 이슈 대비 근본 가드)
     let finalWeighted = (typeof weightedScore === 'number') ? weightedScore : null;
     let finalGrade = grade;
     let finalSeries = series;
@@ -36793,18 +36793,18 @@ app.get("/api/diagnostic-tests", async (req, res) => {
   }
 });
 
-// ✅ 학원용 진단테스트 목록 조회 (공용 - 모든 데이터 표시)
+// ✅ 센터용 진단테스트 목록 조회 (공용 - 모든 데이터 표시)
 app.get("/api/academy-diagnostic-tests", async (req, res) => {
   try {
     const tests = await DiagnosticTest.find({}).sort({ createdAt: -1 });
     res.json({ success: true, data: tests });
   } catch (error) {
-    console.error("학원용 진단테스트 조회 오류:", error);
+    console.error("센터용 진단테스트 조회 오류:", error);
     res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
   }
 });
 
-// ✅ 학원용 진단테스트 수정
+// ✅ 센터용 진단테스트 수정
 app.put("/api/academy-diagnostic-tests/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -36824,12 +36824,12 @@ app.put("/api/academy-diagnostic-tests/:id", async (req, res) => {
 
     res.json({ success: true, data: updated });
   } catch (error) {
-    console.error("학원용 진단테스트 수정 오류:", error);
+    console.error("센터용 진단테스트 수정 오류:", error);
     res.status(500).json({ success: false, message: "수정 중 오류가 발생했습니다." });
   }
 });
 
-// ✅ 학원용 진단테스트 일괄 삭제
+// ✅ 센터용 진단테스트 일괄 삭제
 app.delete("/api/academy-diagnostic-tests/delete-selected", async (req, res) => {
   try {
     const { ids } = req.body;
@@ -36840,23 +36840,23 @@ app.delete("/api/academy-diagnostic-tests/delete-selected", async (req, res) => 
     const result = await DiagnosticTest.deleteMany({ _id: { $in: ids } });
     res.json({ success: true, deletedCount: result.deletedCount });
   } catch (error) {
-    console.error("학원용 진단테스트 삭제 오류:", error);
+    console.error("센터용 진단테스트 삭제 오류:", error);
     res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
   }
 });
 
-// ✅ 학원용 진단테스트 결과 목록 조회 (공용 - 모든 데이터 표시)
+// ✅ 센터용 진단테스트 결과 목록 조회 (공용 - 모든 데이터 표시)
 app.get("/api/academy-course-applications", async (req, res) => {
   try {
     const applications = await CourseApplication.find({}).sort({ createdAt: -1 });
     res.json({ success: true, data: applications });
   } catch (error) {
-    console.error("학원용 진단테스트 결과 조회 오류:", error);
+    console.error("센터용 진단테스트 결과 조회 오류:", error);
     res.status(500).json({ success: false, message: "조회 중 오류가 발생했습니다." });
   }
 });
 
-// ✅ 학원용 진단테스트 결과 수정
+// ✅ 센터용 진단테스트 결과 수정
 app.put("/api/academy-course-applications/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -36875,12 +36875,12 @@ app.put("/api/academy-course-applications/:id", async (req, res) => {
 
     res.json({ success: true, data: updated });
   } catch (error) {
-    console.error("학원용 진단테스트 결과 수정 오류:", error);
+    console.error("센터용 진단테스트 결과 수정 오류:", error);
     res.status(500).json({ success: false, message: "수정 중 오류가 발생했습니다." });
   }
 });
 
-// ✅ 학원용 진단테스트 결과 일괄 삭제
+// ✅ 센터용 진단테스트 결과 일괄 삭제
 app.delete("/api/academy-course-applications/delete-selected", async (req, res) => {
   try {
     const { ids } = req.body;
@@ -36891,7 +36891,7 @@ app.delete("/api/academy-course-applications/delete-selected", async (req, res) 
     const result = await CourseApplication.deleteMany({ _id: { $in: ids } });
     res.json({ success: true, deletedCount: result.deletedCount });
   } catch (error) {
-    console.error("학원용 진단테스트 결과 삭제 오류:", error);
+    console.error("센터용 진단테스트 결과 삭제 오류:", error);
     res.status(500).json({ success: false, message: "삭제 중 오류가 발생했습니다." });
   }
 });
@@ -37144,7 +37144,7 @@ app.delete("/api/course-applications/delete-selected", async (req, res) => {
 // 관리자 정보 조회 (브랜치 관리자용)
 app.get("/api/admin/info", async (req, res) => {
   try {
-    // 🔹 슈퍼관리자가 특정 학원 조회 중인 경우
+    // 🔹 슈퍼관리자가 특정 센터 조회 중인 경우
     if (req.session.viewingBranch) {
       const viewing = req.session.viewingBranch;
       const viewingId = viewing._id ? String(viewing._id) : "";
@@ -37187,7 +37187,7 @@ app.get("/api/admin/info", async (req, res) => {
       adminId: adminId || "",
       grade: req.session.admin.grade || "",
       classNum: req.session.admin.classNum || "",
-      userType: req.session.admin.userType || "school"  // 🔥 학교용/학원용 구분
+      userType: req.session.admin.userType || "school"  // 🔥 학교용/센터용 구분
     });
   } catch (error) {
     console.error("관리자 정보 조회 오류:", error);
@@ -37196,7 +37196,7 @@ app.get("/api/admin/info", async (req, res) => {
 });
 
 // ====================================================
-// 📣 학원 대시보드 - 최신 교육 및 업데이트 소식
+// 📣 센터 대시보드 - 최신 교육 및 업데이트 소식
 // ====================================================
 const ACADEMY_NOTICE_WRITER = "브레인문해원_테스트";
 
@@ -37324,7 +37324,7 @@ app.post("/api/academy-notice/upload-image",
   }
 );
 
-// 본문용 이미지 서빙 — 공개 (소식 자체가 모든 학원 관리자에게 노출됨)
+// 본문용 이미지 서빙 — 공개 (소식 자체가 모든 센터 관리자에게 노출됨)
 app.get("/api/academy-notice-image/:id", async (req, res) => {
   try {
     if (!/^[a-f0-9]{24}$/i.test(req.params.id)) {
@@ -37722,7 +37722,7 @@ app.get("/api/admin/academy/check-student-phone", requireAdminLogin, async (req,
   }
 });
 
-// 학생 추가 API (학원 관리자용)
+// 학생 추가 API (센터 관리자용)
 app.post("/api/admin/academy/add-student", async (req, res) => {
   try {
     // 세션에서 관리자 정보 확인
@@ -37779,8 +37779,8 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
       grade: grade.trim(),
       name: name.trim(),
       phone: phone,
-      academyName: adminAcademyName,  // 학원명 필드 사용
-      userType: "academy",  // 학원용 학생 타입 필수!
+      academyName: adminAcademyName,  // 센터명 필드 사용
+      userType: "academy",  // 센터용 학생 타입 필수!
       status: "approved",
       createdAt: new Date()
     });
@@ -37789,9 +37789,9 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
 
     // 누적 학생 수는 월말 cron이 갱신하므로 추가 시점에는 증감하지 않음
 
-    console.log("✅ 학원 학생 추가 완료:", newUser.name, "ID:", phone, "학원:", adminAcademyName);
+    console.log("✅ 센터 학생 추가 완료:", newUser.name, "ID:", phone, "센터:", adminAcademyName);
 
-    // 본사 SMS 알림 — 해당 학원의 현재 active 학생 수 포함 (비동기, 응답에 영향 X)
+    // 본사 SMS 알림 — 해당 센터의 현재 active 학생 수 포함 (비동기, 응답에 영향 X)
     // 별칭이 있으면 통합 카운트 (본명 + 별칭 학생 모두 합산)
     (async () => {
       try {
@@ -37817,13 +37817,13 @@ app.post("/api/admin/academy/add-student", async (req, res) => {
 
     res.json({ success: true, message: "학생이 추가되었습니다. (ID: " + phone + ")", data: newUser });
   } catch (error) {
-    console.error("학원 학생 추가 오류:", error);
+    console.error("센터 학생 추가 오류:", error);
     res.status(500).json({ success: false, message: "학생 추가 중 오류가 발생했습니다." });
   }
 });
 
 // 🩺 진단 결과 목록 → 학생 추가: 신청자의 센터(branchName)로 등록
-//    academy/add-student 는 로그인 학원으로만 등록 → 본사/어드민이 추가하면 '어드민'으로 잘못 들어가는 문제 해결.
+//    academy/add-student 는 로그인 센터로만 등록 → 본사/어드민이 추가하면 '어드민'으로 잘못 들어가는 문제 해결.
 //    academyName 은 반드시 실제 진단 신청 기록(CourseApplication.branchName)에 존재하는 센터만 허용(임의 타게팅 방지).
 app.post("/api/admin/diagnostic/add-student", async (req, res) => {
   try {
@@ -37835,9 +37835,9 @@ app.post("/api/admin/diagnostic/add-student", async (req, res) => {
     if (!grade || !name || !number) {
       return res.status(400).json({ success: false, message: "학년, 이름, 전화번호는 필수입니다." });
     }
-    // 대상 센터: 신청자의 branchName. 없으면 로그인 학원으로 폴백.
+    // 대상 센터: 신청자의 branchName. 없으면 로그인 센터로 폴백.
     if (!academyName) academyName = req.session.admin.academyName;
-    // 안전장치: 실제 진단 신청 기록이 있는 센터명만 허용(로그인 학원 자신은 예외 허용)
+    // 안전장치: 실제 진단 신청 기록이 있는 센터명만 허용(로그인 센터 자신은 예외 허용)
     if (academyName !== req.session.admin.academyName) {
       const known = await CourseApplication.exists({ branchName: academyName });
       if (!known) {
@@ -37873,7 +37873,7 @@ app.post("/api/admin/diagnostic/add-student", async (req, res) => {
 // 진단테스트 목록 조회 (브랜치 관리자용 - 지점명/학년 필터링)
 app.get("/api/admin/diagnostic-tests", async (req, res) => {
   try {
-    // 세션에서 관리자 정보 확인 (슈퍼관리자 학원 조회 모드 허용)
+    // 세션에서 관리자 정보 확인 (슈퍼관리자 센터 조회 모드 허용)
     const viewingBranch = req.session && req.session.viewingBranch;
     if (!viewingBranch && (!req.session || !req.session.admin || !req.session.admin.academyName)) {
       return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
@@ -37907,7 +37907,7 @@ app.get("/api/admin/diagnostic-tests", async (req, res) => {
       academyName: academyName,
       adminGrade: adminGrade,
       adminClassNum: adminClassNum,
-      userType: viewingBranch ? 'academy' : (req.session.admin.userType || 'school')  // 학원/학교 구분
+      userType: viewingBranch ? 'academy' : (req.session.admin.userType || 'school')  // 센터/학교 구분
     });
   } catch (error) {
     console.error("브랜치 관리자 진단테스트 조회 오류:", error);
@@ -37915,7 +37915,7 @@ app.get("/api/admin/diagnostic-tests", async (req, res) => {
   }
 });
 
-// LTI 문해성향 결과 목록 조회 (브랜치 관리자용 - 학원명 필터링)
+// LTI 문해성향 결과 목록 조회 (브랜치 관리자용 - 센터명 필터링)
 app.get("/api/admin/lti-results", async (req, res) => {
   try {
     const viewingBranch = req.session && req.session.viewingBranch;
@@ -37925,7 +37925,7 @@ app.get("/api/admin/lti-results", async (req, res) => {
     const sessionAdmin = viewingBranch || req.session.admin;
     const academyName = sessionAdmin.academyName;
 
-    // 학원명(본명+별칭)으로 academyName 필터 (진단과 동일 철학, 단 LtiResult는 academyName 필드)
+    // 센터명(본명+별칭)으로 academyName 필터 (진단과 동일 철학, 단 LtiResult는 academyName 필드)
     let names = [sessionAdmin.academyName].filter(Boolean);
     try {
       const adminId = sessionAdmin.id || sessionAdmin._id;
@@ -37934,7 +37934,7 @@ app.get("/api/admin/lti-results", async (req, res) => {
         if (fresh) names = getAdminAcademyNames(fresh);
       }
     } catch {}
-    // 학원명이 없으면 전체 노출 방지 → 빈 목록
+    // 센터명이 없으면 전체 노출 방지 → 빈 목록
     if (!names || names.length === 0) {
       return res.json({ success: true, data: [], academyName, userType: viewingBranch ? 'academy' : (req.session.admin.userType || 'school') });
     }
@@ -37958,7 +37958,7 @@ app.get("/api/admin/lti-results", async (req, res) => {
 // 수강신청 목록 조회 (브랜치 관리자용 - 지점명 필터링)
 app.get("/api/admin/course-applications", async (req, res) => {
   try {
-    // 세션에서 관리자 정보 확인 (슈퍼관리자 학원 조회 모드 허용)
+    // 세션에서 관리자 정보 확인 (슈퍼관리자 센터 조회 모드 허용)
     const viewingBranch = req.session && req.session.viewingBranch;
     if (!viewingBranch && (!req.session || !req.session.admin || !req.session.admin.academyName)) {
       return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
@@ -38036,7 +38036,7 @@ app.delete("/api/admin/diagnostic-tests/delete-selected", async (req, res) => {
       return res.status(400).json({ success: false, message: "삭제할 항목을 선택해주세요." });
     }
 
-    // 자신의 학원(본명+별칭)에 속한 항목만 삭제
+    // 자신의 센터(본명+별칭)에 속한 항목만 삭제
     const branchFilter = await buildBranchNameFilter(req);
     const result = await DiagnosticTest.deleteMany({
       _id: { $in: ids },
@@ -38062,7 +38062,7 @@ app.delete("/api/admin/course-applications/delete-selected", async (req, res) =>
       return res.status(400).json({ success: false, message: "삭제할 항목을 선택해주세요." });
     }
 
-    // 자신의 학원(본명+별칭)에 속한 항목만 삭제
+    // 자신의 센터(본명+별칭)에 속한 항목만 삭제
     const branchFilter = await buildBranchNameFilter(req);
     const result = await CourseApplication.deleteMany({
       _id: { $in: ids },
@@ -38076,7 +38076,7 @@ app.delete("/api/admin/course-applications/delete-selected", async (req, res) =>
   }
 });
 
-// LTI 문해성향 결과 선택삭제 (자기 학원 것만)
+// LTI 문해성향 결과 선택삭제 (자기 센터 것만)
 app.delete("/api/admin/lti-results/delete-selected", async (req, res) => {
   try {
     const viewingBranch = req.session && req.session.viewingBranch;
@@ -38087,7 +38087,7 @@ app.delete("/api/admin/lti-results/delete-selected", async (req, res) => {
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ success: false, message: "삭제할 항목을 선택해주세요." });
     }
-    // LTI 목록 조회와 동일한 학원명(본명+별칭) 스코프로만 삭제 (타 학원 삭제 차단)
+    // LTI 목록 조회와 동일한 센터명(본명+별칭) 스코프로만 삭제 (타 센터 삭제 차단)
     const sessionAdmin = viewingBranch || req.session.admin;
     let names = [sessionAdmin.academyName].filter(Boolean);
     try {
@@ -41105,7 +41105,7 @@ app.get("/api/midterm/history", async (req, res) => {
   }
 });
 
-// 중간평가 시험지 상세 조회 API (학원 관리자용)
+// 중간평가 시험지 상세 조회 API (센터 관리자용)
 // — questionResults(저장된 학생답/정답) + 단원 JSON에서 본문/문제/옵션 매번 재로드
 app.get("/api/midterm/exam-detail", requireAdminLogin, async (req, res) => {
   try {
@@ -41279,7 +41279,7 @@ app.get("/api/super/midterm-pending", requireSuperAdmin, async (req, res) => {
 
       if (!hasAll10) continue;
 
-      // 학생 정보 조회 (학교명, 학원명)
+      // 학생 정보 조회 (학교명, 센터명)
       const userInfo = await User.findOne({ grade, name }).select('school academyName').lean();
 
       // 중간평가 모든 시도 이력 조회 (모든 Stage, 최신순)
@@ -42840,7 +42840,7 @@ app.post("/api/mock-exam/login", async (req, res) => {
 
 // 브레인 문해력 → 모의고사 자동 로그인 (세션 연동)
 // 권한 분기 (우선순위 순):
-//  ① 세션 admin + viewAs 있음 → 관리자 view-as (학원 권한 검증)
+//  ① 세션 admin + viewAs 있음 → 관리자 view-as (센터 권한 검증)
 //     ※ 학생 세션 잔재가 있어도 관리자 의도 우선
 //  ② 세션 user → 학생 본인만 (viewAs 있고 본인과 다르면 403)
 //  ③ 둘 다 없음 → 401
@@ -42870,13 +42870,13 @@ app.post("/api/mock-exam/auto-login", async (req, res) => {
 
       // 권한 검증
       if (isSuperAdmin) {
-        // 슈퍼관리자: viewingBranch 있으면 그 학원 학생만, 없으면 전체 허용
+        // 슈퍼관리자: viewingBranch 있으면 그 센터 학생만, 없으면 전체 허용
         if (req.session.viewingBranch &&
             req.session.viewingBranch.academyName !== targetUser.academyName) {
-          console.warn(`⚠️ [auto-login] 슈퍼관리자 조회 학원 불일치: viewing=${req.session.viewingBranch.academyName} vs target=${targetUser.academyName}`);
+          console.warn(`⚠️ [auto-login] 슈퍼관리자 조회 센터 불일치: viewing=${req.session.viewingBranch.academyName} vs target=${targetUser.academyName}`);
           return res.status(403).json({
             ok: false,
-            message: "조회 중인 학원의 학생이 아닙니다."
+            message: "조회 중인 센터의 학생이 아닙니다."
           });
         }
       } else {
@@ -44932,7 +44932,7 @@ app.post("/api/whale-inquiry", async (req, res) => {
             <td style="padding: 10px; border: 1px solid #ddd;">${phone}</td>
           </tr>
           <tr>
-            <td style="padding: 10px; border: 1px solid #ddd; background: #e8f4fc; font-weight: bold;">운영 학원</td>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #e8f4fc; font-weight: bold;">운영 센터</td>
             <td style="padding: 10px; border: 1px solid #ddd;">${academy}</td>
           </tr>
         </table>
@@ -45141,7 +45141,7 @@ app.post("/api/cs-request", async (req, res) => {
         <h2>🛠️ CS 요청</h2>
         <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
           <tr>
-            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">학원명</td>
+            <td style="padding: 10px; border: 1px solid #ddd; background: #f5f5f5; font-weight: bold;">센터명</td>
             <td style="padding: 10px; border: 1px solid #ddd;">${academy}</td>
           </tr>
           <tr>
@@ -46476,13 +46476,13 @@ app.get('/api/writing100/report', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════
 // 📚 브레인입문(쓰기문해) Day별 지도자료 다운로드 · 관리자 대상
 //   - 파일 위치: uploads/wr100-guides/100day_{NNN}_{student|teacher}.pdf
-//   - 접근 제한: 세션에 로그인된 학원 admin 이면 전 센터 허용 (전 학원 오픈)
+//   - 접근 제한: 세션에 로그인된 센터 admin 이면 전 센터 허용 (전 센터 오픈)
 //     · 이전에는 WR100_GUIDE_ALLOWED_ACADEMIES 화이트리스트로 제한했으나 정책상 전면 오픈
 // ═══════════════════════════════════════════════════════════════
 function isWr100GuideAllowed(req) {
   const admin = req.session && req.session.admin;
   const viewing = req.session && req.session.viewingBranch;
-  // 세션이 아예 없으면 차단, 로그인된 학원 admin(또는 슈퍼관리자 view-as 모드)이면 허용
+  // 세션이 아예 없으면 차단, 로그인된 센터 admin(또는 슈퍼관리자 view-as 모드)이면 허용
   return !!(admin || viewing);
 }
 
@@ -47033,7 +47033,7 @@ app.get('/api/kh/report', async (req, res) => {
 // ===================== /BRAIN한국사 API =====================
 
 // ===================== 비평 및 특강 데이터 (관리자용) =====================
-// 학원 관리자: 자기 학원만 / 슈퍼관리자: 전체 (또는 viewingBranch 학원만)
+// 센터 관리자: 자기 센터만 / 슈퍼관리자: 전체 (또는 viewingBranch 센터만)
 // 권한 헬퍼 · 별칭이 있으면 $in 으로 통합 조회
 // ⚠ async · 호출부에서 반드시 await
 async function getAdminAcademyFilter(req) {
@@ -47104,7 +47104,7 @@ app.get('/api/admin/critique-list', requireAdminLogin, async (req, res) => {
     const schoolMap = {};
     users.forEach(u => { schoolMap[`${u.grade}|${u.name}`] = u.school || ''; });
 
-    // 학원/학년 필터 옵션 (검색 결과 한정 X — 전체 옵션)
+    // 센터/학년 필터 옵션 (검색 결과 한정 X — 전체 옵션)
     const baseForFilters = acFilter ? { academyName: acFilter.academyName } : {};
     const academies = acFilter ? [acFilter.academyName] :
       (await CritiqueSubmission.distinct('academyName', baseForFilters)).filter(Boolean).sort();
@@ -47711,7 +47711,7 @@ app.post('/api/kh-cert/submit', async (req, res) => {
     const score100 = Math.round((correctCount / pack.total) * 100);
     const passed = score100 >= pack.pass_score;
 
-    // 학생 학원명 자동 조회
+    // 학생 센터명 자동 조회
     const _user = await User.findOne({ grade, name }, { academyName: 1 }).lean();
     const _academyName = _user?.academyName || '';
 
@@ -47826,7 +47826,7 @@ app.get('/api/kh-cert/detail', async (req, res) => {
 });
 // ===================== /BRAIN한국사 예비검정시험 =====================
 
-// 관리자: 시험 기록 목록 (학원 필터 자동)
+// 관리자: 시험 기록 목록 (센터 필터 자동)
 // 관리자: 예비검정시험 (5/4/3급) 응시 기록 목록
 app.get('/api/admin/kh-cert-list', requireAdminLogin, async (req, res) => {
   try {
@@ -47978,7 +47978,7 @@ app.get('/api/admin/grammar-list', requireAdminLogin, async (req, res) => {
     // 완료(done) 관문이 하나라도 있는 학생 상태 전체 로드 (문법은 소규모 롤아웃)
     const states = await GukeoExpeditionState.find({}, { grade: 1, name: 1, prog: 1, stats: 1 }).lean();
 
-    // 학생 → 학원/학교 조인
+    // 학생 → 센터/학교 조인
     const keys = [...new Set(states.map(s => `${s.grade}|${s.name}`))];
     const users = keys.length ? await User.find({
       $or: keys.map(k => { const [g, n] = k.split('|'); return { grade: g, name: n }; })
@@ -47986,7 +47986,7 @@ app.get('/api/admin/grammar-list', requireAdminLogin, async (req, res) => {
     const uMap = {};
     users.forEach(u => { uMap[`${u.grade}|${u.name}`] = { academyName: u.academyName || '', school: u.school || '' }; });
 
-    // 학원 스코프 판정
+    // 센터 스코프 판정
     let allow;
     if (acFilter === null) {
       const ac = academy.trim();
@@ -48594,7 +48594,7 @@ app.put("/api/center-contracts/:contractType/:schoolId", async (req, res) => {
 
     console.log(`✅ 센터 계약 부분 업데이트: ${contractType}/${schoolId} - ${field}`);
 
-    // 🔹 학원 동기화: contractData.contractStartDate가 변경되면 Admin에 반영하고 누적/스냅샷 리셋
+    // 🔹 센터 동기화: contractData.contractStartDate가 변경되면 Admin에 반영하고 누적/스냅샷 리셋
     let academySync = null;
     if (field === 'contractData' && academyName && data && data.contractStartDate) {
       try {
@@ -48605,7 +48605,7 @@ app.put("/api/center-contracts/:contractType/:schoolId", async (req, res) => {
         } else {
           const admin = await Admin.findOne({ academyName, userType: 'academy', deleted: { $ne: true } });
           if (!admin) {
-            console.warn(`⚠️ academyName="${academyName}" 학원 not found — Admin 동기화 스킵`);
+            console.warn(`⚠️ academyName="${academyName}" 센터 not found — Admin 동기화 스킵`);
           } else {
             const prevStart = admin.contractStartDate ? admin.contractStartDate.getTime() : null;
             const nextStart = newStartDate.getTime();
@@ -48623,7 +48623,7 @@ app.put("/api/center-contracts/:contractType/:schoolId", async (req, res) => {
               admin.currentCycleNumber = 0;
               admin.lastSnapshotYearMonth = null;
               await MonthlyStudentSnapshot.deleteMany({ academyName });
-              console.log(`♻️  계약시작일 변경 — 학원 "${academyName}" 누적/스냅샷 리셋`);
+              console.log(`♻️  계약시작일 변경 — 센터 "${academyName}" 누적/스냅샷 리셋`);
             }
 
             await admin.save();
@@ -48656,13 +48656,13 @@ app.delete("/api/center-contracts/:contractType/:schoolId", async (req, res) => 
   }
 });
 
-// 🔹 학원별 학생 수 조회 API (school_list.html 연동용)
+// 🔹 센터별 학생 수 조회 API (school_list.html 연동용)
 app.get("/api/academy-student-counts", async (req, res) => {
   try {
-    // 모든 학원(Admin) 정보 조회
+    // 모든 센터(Admin) 정보 조회
     const admins = await Admin.find({ userType: "academy", deleted: { $ne: true } });
 
-    // 학원별 현재 학생 수 조회
+    // 센터별 현재 학생 수 조회
     const studentCountByAcademy = await User.aggregate([
       { $match: { deleted: { $ne: true }, userType: "academy", status: "approved" } },
       { $group: { _id: "$academyName", count: { $sum: 1 } } }
@@ -48694,7 +48694,7 @@ app.get("/api/academy-student-counts", async (req, res) => {
 
     res.json({ success: true, data: result });
   } catch (err) {
-    console.error("❌ 학원별 학생 수 조회 오류:", err);
+    console.error("❌ 센터별 학생 수 조회 오류:", err);
     res.status(500).json({ success: false, message: "조회 중 오류" });
   }
 });
@@ -48892,7 +48892,7 @@ app.get("/api/activity-feed", async (req, res) => {
       }).select('grade name').lean();
       allowedKeys = new Set(academyUsers.map(u => `${u.grade}::${u.name}`));
     } else {
-      // 학교 학생들만 (학원 학생 격리)
+      // 학교 학생들만 (센터 학생 격리)
       const schoolUsers = await User.find({
         userType: { $ne: 'academy' },
         deleted: { $ne: true }
@@ -49300,7 +49300,7 @@ app.post("/api/megaphone/send", async (req, res) => {
     // 24시간 후 만료 시간 계산
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    // 발신자 학원 정보 조회 (User 테이블에서) — 학원별 LIVE 티커 격리용
+    // 발신자 센터 정보 조회 (User 테이블에서) — 센터별 LIVE 티커 격리용
     const senderUserDoc = await User.findOne({ grade, name, deleted: { $ne: true } })
       .select('academyName userType')
       .lean();
@@ -49349,8 +49349,8 @@ app.get("/api/megaphone/active", async (req, res) => {
     // 24시간 이내 생성된 메시지 조회 (최신 1개만)
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    // 학원 학생인 경우: 같은 학원에서 보낸 메시지만 표시
-    // 학교 학생/비로그인: 학교 학생이 보낸 메시지만 표시 (학원 메시지는 격리)
+    // 센터 학생인 경우: 같은 센터에서 보낸 메시지만 표시
+    // 학교 학생/비로그인: 학교 학생이 보낸 메시지만 표시 (센터 메시지는 격리)
     const academy = (req.query.academy || '').trim();
     const baseFilter = { createdAt: { $gt: oneDayAgo } };
     const filter = academy
