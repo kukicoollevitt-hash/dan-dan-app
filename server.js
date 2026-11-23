@@ -7944,7 +7944,7 @@ app.get("/super/academy-admins", requireSuperAdmin, async (req, res) => {
           <div style="display: flex; align-items: center; gap: 16px;">
             <button type="button" class="btn-add" onclick="openAddModal()">+ 지점 및 선생님 추가</button>
             <p class="info-line" style="margin: 0;">
-              총 <strong>${admins.length}</strong>개의 센터 선생님 계정이 있습니다.
+              <strong>${Math.max(0, 3000 - admins.length)}</strong>개의 센터가 오고 있는 중입니다 🚀
             </p>
           </div>
           <div style="display: flex; align-items: center; gap: 12px;">
