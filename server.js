@@ -5916,7 +5916,11 @@ app.get("/api/branch/users", requireAdminLogin, async (req, res) => {
       }
     } catch (e) {}
     const academyNames = getAdminAcademyNames(adminSource);
-    if (userType === "academy") {
+    // 🔹 슈퍼관리자 전체 센터 모드 (?all=1 + isSuper): 센터 스코프 해제 → 모든 센터용 학생
+    const superAllMode = req.query.all === "1" && req.session.admin && req.session.admin.isSuper === true;
+    if (superAllMode) {
+      filter.userType = "academy";
+    } else if (userType === "academy") {
       filter.academyName = academyNames.length > 1 ? { $in: academyNames } : academyName;
     } else {
       filter.school = academyName;

@@ -12127,6 +12127,54 @@ if (logoutConfirmBtn) {
       });
     }
 
+    /* 🛡️ 세부 과목 열 자가복구 (MutationObserver)
+       어떤 트리거(pageshow·visibilitychange·user-info 재적용·idle 등)로든 subjectList가
+       비워지는데, 판별 불변식: "단원열은 차 있는데 과목열이 비면 = 깨진 상태"
+       (정상적인 시리즈/분야 전환 때는 단원도 함께 비므로 오동작하지 않음).
+       단원 선택 상태(저장된 분야·과목이 현재 시리즈에 유효)일 때만 과목을 되살린다. */
+    (function setupSubjectSelfHeal() {
+      let _healing = false;
+      function healSubjects() {
+        if (_healing) return;
+        if (!subjectList || subjectList.children.length > 0) return;      // 이미 과목 있음 → OK
+        const ul = document.getElementById('unitList');
+        if (!ul || ul.children.length === 0) return;                      // 단원도 없음 → 정상 전환 중
+        const savedDomainId = localStorage.getItem('selectedMenuDomain');
+        const savedSub = localStorage.getItem('selectedMenuSubject');
+        if (!savedDomainId || !savedSub) return;                          // 분야/과목 선택 안됨 → 정상
+        const seriesKey = currentSelectedSeries || localStorage.getItem('selectedMenuSeries');
+        const domainData = (typeof domainsBySeries !== 'undefined') ? domainsBySeries[seriesKey] : null;
+        if (!domainData) return;
+        const dom = domainData.find(d => d.id === savedDomainId);
+        if (!dom || !Array.isArray(dom.subs) || !dom.subs.some(s => s.id === savedSub)) return; // 현재 시리즈에 없는 분야/과목 → 복원 안 함(시리즈 전환 등)
+        _healing = true;
+        try {
+          currentSelectedDomain = dom;
+          renderSubjects(seriesKey, dom);
+          const savedOff = localStorage.getItem('selectedMenuSubjectOffset');
+          const wantOff = savedOff ? parseInt(savedOff) : null;
+          document.querySelectorAll('.subject-item').forEach(li => {
+            const lo = li.dataset.offset ? parseInt(li.dataset.offset) : null;
+            li.classList.toggle('active', li.dataset.sub === savedSub && lo === wantOff);
+          });
+          console.log('🛡️ [self-heal] 세부 과목 열 복원됨');
+        } catch (e) { console.warn('[self-heal] 복원 실패:', e); }
+        finally { _healing = false; }
+      }
+      function start() {
+        if (!subjectList) return;
+        try {
+          const obs = new MutationObserver(() => { setTimeout(healSubjects, 60); });
+          obs.observe(subjectList, { childList: true });
+        } catch (e) {}
+        // 탭 복귀 시에도 한 번 점검 (관찰자 누락 대비)
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) setTimeout(healSubjects, 120); });
+        window.addEventListener('pageshow', function () { setTimeout(healSubjects, 120); });
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+      else start();
+    })();
+
     /* 8. 단원 표시 */
     function renderUnits(seriesKey, domainObj, subObj) {
       // 🛡️ 세부 과목 목록이 비어 있으면 먼저 복구 (레이스 방어)

@@ -5,6 +5,8 @@
   <meta charset="UTF-8" />
   <title>브레인문해력 학생 목록</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- 🔹 슈퍼관리자 전체 센터 모드 (?all=1): 센터전용/일괄 컨트롤 숨김 + 전 센터 데이터 -->
+  <script>window.SUPER_ALL_MODE = new URLSearchParams(location.search).get('all') === '1';</script>
   <style>
     :root {
       --bg: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
@@ -1519,6 +1521,7 @@
         let params = "";
         if (q) params += "?q=" + encodeURIComponent(q);
         if (sort) params += (params ? "&" : "?") + "sort=" + encodeURIComponent(sort);
+        if (window.SUPER_ALL_MODE) params += (params ? "&" : "?") + "all=1";
 
         const res = await fetch("/api/branch/users" + params, {
           credentials: "include",
@@ -1616,7 +1619,7 @@
       const displayName = currentAcademyName || firstAcademy;
       if (displayName) {
         if (!currentAcademyName) currentAcademyName = firstAcademy;
-        document.getElementById("page-title").textContent = displayName + " 학생 목록";
+        document.getElementById("page-title").textContent = window.SUPER_ALL_MODE ? "전체 센터 학생 목록" : (displayName + " 학생 목록");
         document.getElementById("page-desc").innerHTML =
           "이 화면에는 <b>" + displayName + "</b>에 소속된 승인 학생만 표시됩니다.";
       }
@@ -1928,7 +1931,10 @@
 
           // 🔹 센터명을 세션에서 먼저 표시 (학생이 없어도 표시)
           const adminAcademyName = sessionData.admin.academyName || "";
-          if (adminAcademyName) {
+          if (window.SUPER_ALL_MODE) {
+            document.getElementById("page-title").textContent = "전체 센터 학생 목록";
+            document.title = "전체 센터 학생 목록";
+          } else if (adminAcademyName) {
             currentAcademyName = adminAcademyName;
             document.getElementById("page-title").textContent = adminAcademyName + " 학생 목록";
             document.title = adminAcademyName + " 학생 목록"; // 브라우저 탭도 센터명으로
@@ -3029,5 +3035,24 @@
     </div>
   </div>
   <style>@keyframes cyclePop{from{opacity:0;transform:scale(.92) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}</style>
+  <!-- 🔹 슈퍼관리자 전체 센터 모드: 센터 1곳 전제의 컨트롤 숨김 (행별 동작은 유지) -->
+  <script>
+  (function(){
+    if (!window.SUPER_ALL_MODE) return;
+    function hideAllModeControls(){
+      // 센터 한정/위험 일괄 컨트롤 숨김 (학생추가·선택삭제·전체삭제·리포트주기 일괄)
+      ['btn-add-student','btn-delete-selected','btn-delete-all','btn-auto-task','btn-ai-tasks'].forEach(function(id){
+        var el = document.getElementById(id); if (el) el.style.display = 'none';
+      });
+      var bulkBtn = document.querySelector('[onclick="bulkSetReportCycle()"]');
+      if (bulkBtn) { var sp = bulkBtn.closest('span'); if (sp) sp.style.display = 'none'; }
+      var sa = document.getElementById('select-all'); if (sa) sa.style.visibility = 'hidden';
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hideAllModeControls);
+    else hideAllModeControls();
+    // 렌더 후 다시 그려지는 요소 대비 (초기 몇 초간 재적용)
+    var n = 0; var iv = setInterval(function(){ hideAllModeControls(); if(++n>=10) clearInterval(iv); }, 500);
+  })();
+  </script>
 </body>
 </html>
