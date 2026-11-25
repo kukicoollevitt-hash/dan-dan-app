@@ -208,9 +208,14 @@
   }
   .p-box p { margin-bottom: 2.2mm; text-indent: 3.2mm; }
   .p-box p:last-child { margin-bottom: 0; }
+  /* 지문이 칼럼을 넘어 이어질 때: 맞닿는 밑줄을 없애 한 박스처럼 자연스럽게 연결 ('(이어서)' 표기 불필요) */
+  .p-box.cont-into { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+  .p-box.cont-from { border-top: none; padding-top: 0; }
 
   /* 문항 */
   .q { margin-bottom: 8mm; }
+  /* 칼럼을 넘겨 이어지는 보기 묶음: 번호 없이 보기만 이어지므로 윗여백 제거 */
+  .q.q-cont { margin-top: 0; }
   .q-stem { margin-bottom: 2.4mm; }
   .q-stem .q-no { font-weight: 800; }
   .q-stem .q-score {
@@ -366,6 +371,9 @@
   const params = new URLSearchParams(location.search);
   const level = ['mid', 'elem34'].includes(params.get('level')) ? params.get('level') : 'elem';
   const round = Math.min(12, Math.max(1, parseInt(params.get('round') || '1', 10) || 1));
+  // 🏆 KLC 경시대회 지원: ?exam=klc_2027_q1 이면 해당 데이터 파일을 직접 로드
+  const examParam = (params.get('exam') || '').trim();
+  const isKlc = /^klc_[a-z0-9_]+$/.test(examParam);
   const isTeacher = params.get('teacher') === '1';
   const isExplain = params.get('answers') === '1';   // 해설지 (응시 완료 학생용)
   const showAnswers = isTeacher || isExplain;
@@ -384,8 +392,28 @@
     if (_hint) _hint.textContent = 'A3 크기 · 여백 넓게 — 인쇄 창에서 용지를 A3로 선택하세요';
   }
 
+  // 🏆 KLC 경시대회: 표지·OMR을 어두운 남색(딥 네이비) 컨셉으로 전환 (일반 월말 시험지는 기본 파란색 유지)
+  if (isKlc) {
+    const navy = document.createElement('style');
+    navy.textContent =
+      '.cover-title .cover-lv{color:#1e2a4f;}' +
+      '.cover-round{background:#1e2a4f;box-shadow:none;}' +
+      '.cover-notes .nt::before{color:#1e2a4f;}' +
+      '.cover-sign{border-color:#2a3a5e;}' +
+      '.cover-sign .sp{color:#1e2a4f;}' +
+      '.cover-sign .sq{border-color:#2a3a5e;}' +
+      '.omr-title{color:#1e2a4f;}' +
+      '.omr-block-head{background:#1e2a4f;}' +
+      '.omr-block-head .ps{color:#1e2a4f;}' +
+      /* 로고는 원래 남색 → 살짝 어둡게 해 딥 네이비 톤과 맞춤 */
+      '.cover-logo{filter:brightness(0.72) contrast(1.08) saturate(1.1);}';
+    document.head.appendChild(navy);
+  }
+
   const script = document.createElement('script');
-  script.src = `/monthly_exam_data/monthly_${level}_${round}.js?v=${Date.now()}`;   // 데이터 캐시 방지
+  script.src = isKlc
+    ? `/monthly_exam_data/${examParam}.js?v=${Date.now()}`                         // 🏆 경시대회 데이터
+    : `/monthly_exam_data/monthly_${level}_${round}.js?v=${Date.now()}`;           // 데이터 캐시 방지
   script.onload = render;
   script.onerror = () => {
     document.getElementById('loading').textContent = '시험지 데이터를 불러오지 못했습니다. 회차를 확인해 주세요.';
@@ -397,10 +425,19 @@
   function render() {
     const d = window.MONTHLY_EXAM_DATA;
     if (!d) return;
-    const levelKo = level === 'mid' ? '핏' : (level === 'elem34' ? '온' : '업'); // 브랜드 등급명 (온=초1~4, 업=초5~6, 핏=중등)
+    const levelKo = isKlc ? '경시대회' : (level === 'mid' ? '핏' : (level === 'elem34' ? '온' : '업')); // 브랜드 등급명 (온=초1~4, 업=초5~6, 핏=중등)
     const docKo = isExplain ? '해설지' : isTeacher ? '시험지(교사용)' : '시험지(학생용)';
-    document.title = `BRAIN월말_${levelKo}_${round}회차_${docKo}`;
+    document.title = isKlc ? `KLC경시대회_2027_1분기_${docKo}` : `BRAIN월말_${levelKo}_${round}회차_${docKo}`;
     document.getElementById('tbTitle').textContent = `${d.title} · ${docKo}`;
+    // 🏆 경시대회/월말 공통 라벨 (KLC는 회차 대신 분기 표기)
+    const SERIES_LABEL = isKlc ? '✦ 전국 교과문해력 경시대회' : '✦ BRAIN 월말 모의고사';
+    const HEAD_TITLE   = isKlc ? '2027 전국 교과문해력 경시대회 · 1분기(3월)' : `${levelKo} 문해 모의고사 · ${round}회차`;
+    const ROUND_TAG    = isKlc ? '1분기' : `제${round}회`;
+    const COVER_TITLE  = isKlc ? '브레인 <span class="cover-lv">전국 교과문해력</span> 경시대회' : `브레인 <span class="cover-lv">${levelKo}</span> 문해 모의고사`;
+    const COVER_ROUND  = isKlc ? '2027 · 1분기(3월)' : `제 ${round} 회차`;
+    const FOOT_LABEL   = isKlc ? '전국 교과문해력 경시대회 · 2027 1분기' : `브레인 월말 문해 모의고사 ${round}회차`;
+    const OMR_SUB      = isKlc ? `전국 교과문해력 경시대회 · 1분기 · ${d.totalQuestions}문항` : `브레인 ${levelKo} 문해 모의고사 · 제${round}회 · ${d.totalQuestions}문항`;
+    const PAGE_FOOT    = isKlc ? '교과문해력경시대회' : `${levelKo}문해모의고사`;
 
     const sheet = document.getElementById('sheet');
     sheet.innerHTML = '';
@@ -414,13 +451,13 @@
         page.innerHTML = `
           <div class="paper-head">
             <div class="ph-top">
-              <span class="ph-series">✦ BRAIN 월말 모의고사</span>
+              <span class="ph-series">${SERIES_LABEL}</span>
               ${isTeacher ? '<span class="ph-teacher">교사용 · 정답/해설 포함</span>'
                 : isExplain ? '<span class="ph-explain">해설지 · 정답/해설 포함</span>'
-                : `<span class="ph-meta">제${round}회</span>`}
+                : `<span class="ph-meta">${ROUND_TAG}</span>`}
             </div>
             <div class="ph-main">
-              <div class="ph-title">${levelKo} 문해 모의고사 · ${round}회차</div>
+              <div class="ph-title">${HEAD_TITLE}</div>
               <div class="ph-meta">${d.totalQuestions}문항 · ${d.totalMinutes}분 · ${d.totalScore}점 만점</div>
             </div>
             <div class="ph-name">
@@ -470,8 +507,8 @@
       cover.innerHTML = `
         <div class="cover">
           <img class="cover-logo" src="${LOGO_SRC}" alt="브레인 문해력">
-          <div class="cover-title">브레인 <span class="cover-lv">${levelKo}</span> 문해 모의고사</div>
-          <div class="cover-round">제 ${round} 회차</div>
+          <div class="cover-title">${COVER_TITLE}</div>
+          <div class="cover-round">${COVER_ROUND}</div>
           <div class="cover-info">${d.totalQuestions}문항 · ${d.totalMinutes}분 · ${d.totalScore}점 만점</div>
           <div class="cover-fields">
             <div class="cover-box">
@@ -493,7 +530,7 @@
             <div class="sp">“${phrase}”</div>
             <div class="sgrid">${phrase.split('').map(ch => `<span class="sq${ch === ' ' ? ' sq-sp' : ''}"></span>`).join('')}</div>
           </div>
-          <div class="cover-foot">브레인 월말 문해 모의고사 ${round}회차</div>
+          <div class="cover-foot">${FOOT_LABEL}</div>
         </div>`;
       sheet.appendChild(cover);
     }
@@ -527,23 +564,56 @@
         box.appendChild(paras[i]);
         if (!fits(curCol())) {
           box.removeChild(paras[i]);
+          box.classList.add('cont-into');   // 이전 박스: 하단 밑줄 제거
           nextCol();
-          box = el('div', 'p-box', `<div class="p-subject">${p.subject} · ${p.title} (이어서)</div>`);
+          box = el('div', 'p-box cont-from');  // 이어지는 박스: 상단 밑줄·소제목 제거
           curCol().appendChild(box);
           box.appendChild(paras[i]);
         }
       }
 
       qs.forEach(q => {
-        const qEl = el('div', 'q', `
-          <div class="q-stem"><span class="q-no">${q.no}.</span> ${q.text} <span class="q-score">[${q.score}점]</span></div>
-          <ul class="q-opts">
-            ${q.options.map((opt, i) => `<li><span class="mark">${CIRCLED[i]}</span><span>${opt}</span></li>`).join('')}
-          </ul>
-          ${showAnswers ? `<div class="q-answer"><b>정답 ${CIRCLED[q.answer - 1]}</b> · ${q.correct || ''}
-            ${q.wrong ? `<div class="q-wrong"><b>오답 풀이</b> · ${q.wrong}</div>` : ''}</div>` : ''}
-        `);
-        place(qEl);
+        /* 발문 + 보기 한 개를 한 묶음으로 현재 칼럼에 넣는다(발문만 칼럼 끝에 남는 고아 방지).
+           나머지 보기는 하나씩 채우다 넘치면 다음 칼럼에 '이어짐' 묶음으로 계속 흐르게 해 빈칸을 없앤다. */
+        const stemHtml = `<div class="q-stem"><span class="q-no">${q.no}.</span> ${q.text} <span class="q-score">[${q.score}점]</span></div>`;
+        const liHtml = (i) => `<li><span class="mark">${CIRCLED[i]}</span><span>${q.options[i]}</span></li>`;
+
+        let cont = el('div', 'q');
+        cont.innerHTML = stemHtml + '<ul class="q-opts"></ul>';
+        let ul = cont.querySelector('.q-opts');
+        ul.insertAdjacentHTML('beforeend', liHtml(0)); // 발문 + 첫 보기는 함께
+        curCol().appendChild(cont);
+        if (!fits(curCol())) {            // 발문+첫 보기가 현재 칼럼에 안 들어가면 통째 이동
+          curCol().removeChild(cont);
+          nextCol();
+          curCol().appendChild(cont);
+        }
+
+        for (let i = 1; i < q.options.length; i++) {
+          ul.insertAdjacentHTML('beforeend', liHtml(i));
+          if (!fits(curCol())) {          // 이 보기가 넘치면 다음 칼럼에 이어 붙인다
+            ul.removeChild(ul.lastElementChild);
+            nextCol();
+            cont = el('div', 'q q-cont');
+            cont.innerHTML = '<ul class="q-opts"></ul>';
+            ul = cont.querySelector('.q-opts');
+            ul.insertAdjacentHTML('beforeend', liHtml(i));
+            curCol().appendChild(cont);
+          }
+        }
+
+        if (showAnswers) {                // 교사용 정답·해설 박스는 마지막 묶음 뒤에
+          const ans = el('div', 'q-answer', `<b>정답 ${CIRCLED[q.answer - 1]}</b> · ${q.correct || ''}
+            ${q.wrong ? `<div class="q-wrong"><b>오답 풀이</b> · ${q.wrong}</div>` : ''}`);
+          cont.appendChild(ans);
+          if (!fits(curCol())) {
+            cont.removeChild(ans);
+            nextCol();
+            cont = el('div', 'q q-cont');
+            cont.appendChild(ans);
+            curCol().appendChild(cont);
+          }
+        }
       });
     });
 
@@ -575,7 +645,7 @@
           <div class="omr-head">
             <div>
               <div class="omr-title">OMR 답안지</div>
-              <div class="omr-sub">브레인 ${levelKo} 문해 모의고사 · 제${round}회 · ${d.totalQuestions}문항</div>
+              <div class="omr-sub">${OMR_SUB}</div>
             </div>
             <div class="omr-right">
               <div class="omr-time">
@@ -597,7 +667,7 @@
             <div class="omr-col">${colL.join('')}</div>
             <div class="omr-col">${colR.join('')}</div>
           </div>
-          <div class="omr-foot">답안지 마킹 후, 반드시 <b>문해프로그램에 답안을 입력</b>해 주세요. · 브레인 월말 문해 모의고사 ${round}회차</div>
+          <div class="omr-foot">답안지 마킹 후, 반드시 <b>문해프로그램에 답안을 입력</b>해 주세요. · ${FOOT_LABEL}</div>
         </div>`;
       sheet.appendChild(omrPage);
     }
@@ -627,7 +697,7 @@
       const num = hasCover ? i : (i + 1);
       pg.appendChild(el('div', 'page-num', `- ${num} -`));
       pg.appendChild(el('div', 'page-foot fl', 'Brain Literacy Exam'));
-      pg.appendChild(el('div', 'page-foot fr', `${levelKo}문해모의고사`));
+      pg.appendChild(el('div', 'page-foot fr', PAGE_FOOT));
     });
   }
 </script>
