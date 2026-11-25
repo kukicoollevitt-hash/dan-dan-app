@@ -30268,6 +30268,130 @@ app.delete("/api/monthly-exam/result", async (req, res) => {
   }
 });
 
+// ===== 🏆 KLC 전국 교과문해력 경시대회 결과 (분기별, 전국 순위용) =====
+const klcResultSchema = new mongoose.Schema({
+  userId:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  studentName:  { type: String, required: true, index: true },
+  grade:        { type: String, required: true },
+  academyName:  { type: String, default: '', index: true },
+  examKey:      { type: String, required: true, index: true }, // 예: 'klc_2027_q1'
+  quarter:      { type: Number, default: 1 },                  // 1~4 (3·6·9·12월)
+  round:        { type: Number, default: 1 },
+  totalScore:   { type: Number, default: 0, index: true },
+  correctCount: { type: Number, default: 0 },
+  totalQuestions:{ type: Number, default: 0 },
+  areaScore:    { type: mongoose.Schema.Types.Mixed, default: {} },
+  areaMax:      { type: mongoose.Schema.Types.Mixed, default: {} },
+  subjectScores:{ type: [mongoose.Schema.Types.Mixed], default: [] },
+  answers:      { type: [mongoose.Schema.Types.Mixed], default: [] },
+  answerKey:    { type: [Number], default: [] },
+  durationSec:  { type: Number, default: 0 },                  // 동점 시 소요시간 짧은 순
+  submittedAt:  { type: Date, default: Date.now, index: true },
+  updatedAt:    { type: Date, default: Date.now },
+}, { minimize: false });
+// 학생·대회당 결과 1건만 유지(최신 덮어쓰기)
+klcResultSchema.index({ userId: 1, examKey: 1 }, { unique: true });
+const KlcResult = mongoose.model('KlcResult', klcResultSchema);
+
+// 신원 결정(저장): 세션 우선, 없으면 studentName+studentGrade로 User 조회 (월말모고와 동일 모델)
+async function _klcResolveIdent(bodyOrQuery, req) {
+  if (req.session && req.session.user && req.session.user._id) return req.session.user;
+  const sName = String(bodyOrQuery.studentName || '').trim();
+  const sGrade = String(bodyOrQuery.studentGrade || '').trim();
+  if (!sName || !sGrade) return null;
+  return await User.findOne({ grade: sGrade, name: sName }).lean();
+}
+
+// 응시 결과 저장 (경시대회 전용 컬렉션)
+app.post('/api/klc/result', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const examKey = String(b.examKey || '').trim();
+    if (!/^klc_/.test(examKey)) return res.status(400).json({ ok: false, error: 'bad_examKey' });
+    const ident = await _klcResolveIdent(b, req);
+    if (!ident) return res.status(401).json({ ok: false, error: 'login_required' });
+    const payload = {
+      userId: ident._id,
+      studentName: ident.name || '',
+      grade: ident.grade || '',
+      academyName: ident.academyName || ident.school || '',
+      examKey,
+      quarter: Math.max(1, Math.min(4, parseInt(b.quarter, 10) || 1)),
+      round: parseInt(b.round, 10) || 1,
+      totalScore:     Number.isFinite(+b.totalScore) ? +b.totalScore : 0,
+      correctCount:   Number.isFinite(+b.correctCount) ? +b.correctCount : 0,
+      totalQuestions: Number.isFinite(+b.totalQuestions) ? +b.totalQuestions : 0,
+      areaScore:      (b.areaScore && typeof b.areaScore === 'object') ? b.areaScore : {},
+      areaMax:        (b.areaMax   && typeof b.areaMax   === 'object') ? b.areaMax   : {},
+      subjectScores:  Array.isArray(b.subjectScores) ? b.subjectScores : [],
+      answers:        Array.isArray(b.answers) ? b.answers : [],
+      answerKey:      Array.isArray(b.answerKey) ? b.answerKey.map(x => Number(x) || null) : [],
+      durationSec:    Math.max(0, parseInt(b.durationSec, 10) || 0),
+      submittedAt:    b.submittedAt ? new Date(b.submittedAt) : new Date(),
+      updatedAt:      new Date(),
+    };
+    const doc = await KlcResult.findOneAndUpdate(
+      { userId: ident._id, examKey },
+      { $set: payload },
+      { upsert: true, new: true }
+    );
+    return res.json({ ok: true, id: String(doc._id) });
+  } catch (err) {
+    console.error('[POST /api/klc/result]', err);
+    return res.status(500).json({ ok: false, error: 'server_error' });
+  }
+});
+
+// 본인 결과 조회
+app.get('/api/klc/my-result', async (req, res) => {
+  try {
+    const examKey = String(req.query.examKey || '').trim();
+    if (!/^klc_/.test(examKey)) return res.json({ ok: true, result: null });
+    const ident = await _klcResolveIdent(req.query, req);
+    if (!ident) return res.json({ ok: true, result: null });
+    const r = await KlcResult.findOne({ userId: ident._id, examKey }).lean();
+    return res.json({ ok: true, result: r || null });
+  } catch (err) {
+    console.error('[GET /api/klc/my-result]', err);
+    return res.status(500).json({ ok: false, error: 'server_error' });
+  }
+});
+
+// 전국 순위 (점수 내림차순 · 동점 시 소요시간 짧은 순 · 그 다음 제출 빠른 순)
+app.get('/api/klc/ranking', async (req, res) => {
+  try {
+    const examKey = String(req.query.examKey || '').trim();
+    if (!/^klc_/.test(examKey)) return res.json({ ok: true, ranking: [], total: 0, me: null });
+    const limit = Math.max(1, Math.min(500, parseInt(req.query.limit, 10) || 100));
+    const rows = await KlcResult.find({ examKey })
+      .sort({ totalScore: -1, durationSec: 1, submittedAt: 1 })
+      .select('studentName grade academyName totalScore correctCount totalQuestions durationSec submittedAt userId')
+      .lean();
+    const ranked = rows.map((r, i) => ({
+      rank: i + 1,
+      name: r.studentName,
+      grade: r.grade,
+      center: (r.academyName || '').replace(/^브레인문해력[_\s]*/, ''),
+      totalScore: r.totalScore,
+      correctCount: r.correctCount,
+      totalQuestions: r.totalQuestions,
+      durationSec: r.durationSec,
+      userId: String(r.userId),
+    }));
+    // 내 순위
+    let me = null;
+    const ident = await _klcResolveIdent(req.query, req);
+    if (ident) {
+      const mine = ranked.find(x => x.userId === String(ident._id));
+      if (mine) me = { rank: mine.rank, totalScore: mine.totalScore, durationSec: mine.durationSec };
+    }
+    return res.json({ ok: true, total: ranked.length, me, ranking: ranked.slice(0, limit) });
+  } catch (err) {
+    console.error('[GET /api/klc/ranking]', err);
+    return res.status(500).json({ ok: false, error: 'server_error' });
+  }
+});
+
 // ===== LTI 문해력 성향 검사 결과 저장/조회 =====
 const _validLtiLevel = (v) => v === 'elem' || v === 'mid';
 
