@@ -635,9 +635,10 @@
               </tr>`).join('')}
           </table>
         </div>`;
-      // 프로그램 패널과 같은 순서: 지문1 왼쪽, 지문2 오른쪽, 지문3 왼쪽… (좌우 교차)
-      const colL = [], colR = [];
-      d.passages.forEach((p, pi) => (pi % 2 === 0 ? colL : colR).push(blockHtml(p, pi)));
+      // 지문이 많으면(9개 이상·예: KLC 11지문) 3열로 자동 전환해 한 장에 들어가게(2열이면 마지막 지문이 짤림)
+      const nCols = d.passages.length > 8 ? 3 : 2;
+      const cols = Array.from({ length: nCols }, () => []);
+      d.passages.forEach((p, pi) => cols[pi % nCols].push(blockHtml(p, pi)));  // 행 우선(지문1·2·3 → 4·5·6 …)
       const omrPage = document.createElement('div');
       omrPage.className = 'page';
       omrPage.innerHTML = `
@@ -664,8 +665,7 @@
             <span class="ex">잘못된 표기 <span class="bub" style="background:linear-gradient(135deg,transparent 45%,#222 45%,#222 55%,transparent 55%);">&nbsp;</span> <span class="bub" style="border-style:dashed;color:#999;">√</span></span>
           </div>
           <div class="omr-cols">
-            <div class="omr-col">${colL.join('')}</div>
-            <div class="omr-col">${colR.join('')}</div>
+            ${cols.map(c => `<div class="omr-col">${c.join('')}</div>`).join('')}
           </div>
           <div class="omr-foot">답안지 마킹 후, 반드시 <b>문해프로그램에 답안을 입력</b>해 주세요. · ${FOOT_LABEL}</div>
         </div>`;

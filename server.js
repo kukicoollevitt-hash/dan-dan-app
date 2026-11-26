@@ -50264,6 +50264,82 @@ app.post("/api/peppero-ocr", async (req, res) => {
   }
 });
 
+// ===== 📷 OMR 답안지 자동 판독 (문해모의고사 온·업·중등 + 경시대회 공용) =====
+// 아이들이 마킹한 OMR 사진을 받아 각 문항의 선택 보기(1~5)를 JSON으로 추출한다.
+app.post("/api/omr-ocr", async (req, res) => {
+  try {
+    const { imageBase64, meta } = req.body || {};
+    if (!imageBase64) return res.status(400).json({ ok: false, message: "이미지가 전송되지 않았습니다." });
+    const dataUrl = String(imageBase64).startsWith('data:')
+      ? imageBase64
+      : `data:image/jpeg;base64,${imageBase64}`;
+
+    const passages = (meta && Array.isArray(meta.passages)) ? meta.passages : [];
+    const qList = passages.flatMap(p => (p.questions || []).map(q => ({ no: q.no, opts: q.opts || 5 })));
+    const totalQ = qList.length || (meta && meta.totalQuestions) || 0;
+    if (!qList.length) return res.status(400).json({ ok: false, message: "시험 구조(meta.passages)가 없습니다." });
+
+    // 지문별 문항 배치 안내 (모델이 번호를 정확히 매핑하도록)
+    const layout = passages.map(p => {
+      const qs = (p.questions || []).map(q => `${q.no}번(①~${['①','②','③','④','⑤'][(q.opts || 5) - 1]})`).join(', ');
+      return `· 지문 ${p.no}${p.subject ? `(${p.subject})` : ''}: ${qs}`;
+    }).join('\n');
+    const allNos = qList.map(q => q.no).join(', ');
+
+    const systemPrompt =
+`너는 객관식 OMR 답안지(마킹 카드) 판독기다. 사진에는 지문(과목)별로 묶인 문항들이 있고, 각 문항마다 ①②③④⑤(= 1~5) 보기 버블이 가로로 배열되어 있다.
+학생이 '칠하거나·동그라미·체크·X 등으로 명확히 표시'한 보기를 각 문항번호별로 읽어라.
+
+[규칙]
+1) 아래 '문항 목록'에 있는 번호만 사용한다. 없는 번호는 만들지 않는다.
+2) 각 문항에서 명확히 표시된 보기 1개의 숫자(1~5)를 고른다. 표시가 전혀 없거나 불명확하면 그 문항 값은 null.
+3) 한 문항에 두 개 이상 표시되어 판단이 어려우면, 가장 진하게/완전하게 칠해진 1개. 그래도 애매하면 null.
+4) 반드시 아래 JSON '한 개'만 출력한다(설명·코드펜스 금지):
+   {"answers": {"문항번호": 보기번호_또는_null, ...}}
+   예: {"answers": {"1": 3, "2": null, "3": 5}}
+
+[문항 목록 — 지문별 배치]
+${layout}
+
+[전체 문항번호(${totalQ}개)]
+${allNos}`;
+
+    const userText = `이 OMR 답안지 사진을 판독해, 위 문항 목록의 각 번호에 대해 학생이 표시한 보기(1~5) 또는 null을 JSON으로만 내놓아라.`;
+
+    // 문항이 많은 경시(45문항·11지문)는 모델이 사고에 토큰을 많이 써 JSON 출력 전에 max_tokens에
+    // 걸려 '빈 텍스트'가 반환되는 문제가 있었음 → 문항 수에 비례해 넉넉히(최소 4000, 문항×120) 할당.
+    const maxTokens = Math.min(16000, Math.max(4000, totalQ * 120 + 1500));
+    const ocr = await workbookVisionOcr({ systemPrompt, userText, dataUrl, maxTokens });
+
+    // JSON 추출(코드펜스/앞뒤 텍스트 방어)
+    let raw = (ocr.text || '').trim().replace(/^```[a-z]*\s*/i, '').replace(/```\s*$/i, '');
+    const s = raw.indexOf('{'), e = raw.lastIndexOf('}');
+    if (s >= 0 && e > s) raw = raw.slice(s, e + 1);
+    let parsed;
+    try { parsed = JSON.parse(raw); } catch (_) { parsed = null; }
+    if (!parsed || typeof parsed.answers !== 'object' || parsed.answers == null) {
+      return res.status(500).json({ ok: false, message: "답안지를 판독하지 못했습니다.", engine: ocr.engine });
+    }
+
+    // 유효 문항·보기범위만 통과 (opts 초과 번호 거름)
+    const optsByNo = {}; qList.forEach(q => { optsByNo[q.no] = q.opts || 5; });
+    const answers = {};
+    let recognized = 0;
+    Object.keys(parsed.answers).forEach(k => {
+      const no = parseInt(k, 10);
+      const opt = parseInt(parsed.answers[k], 10);
+      if (!optsByNo[no]) return;                       // 목록에 없는 번호 무시
+      if (!opt || opt < 1 || opt > optsByNo[no]) return; // null·범위초과 무시
+      answers[no] = opt; recognized++;
+    });
+
+    return res.json({ ok: true, engine: ocr.engine, totalQuestions: totalQ, recognized, answers });
+  } catch (err) {
+    console.error("❌ [omr-ocr] 오류:", err);
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
   })
   .catch((err) => {
     console.error("❌ MongoDB 연결 실패:", err);
