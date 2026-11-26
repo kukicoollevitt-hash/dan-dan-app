@@ -124,7 +124,7 @@
     padding:4px 11px;border-radius:999px;}
   .q-state.on{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#3a2d07;box-shadow:0 3px 9px rgba(201,162,39,.4);}
   .q-state.off{background:#eee5cd;color:#9a9078;}
-  .q-done{margin-top:9px;font-size:12px;font-weight:800;color:#2e9c58;}
+  .q-state.done{background:linear-gradient(135deg,#38c46f,#1f9c52);color:#fff;box-shadow:0 3px 9px rgba(31,156,82,.45);}
 
   /* 내 결과 / 순위 카드 */
   .panel{padding:18px 18px 16px;}
@@ -173,6 +173,29 @@
   @keyframes btnSheen{0%,60%{left:-60%;}100%{left:130%;}}
   .start-btn:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(201,162,39,.5);}
   .note{font-size:11.5px;color:var(--ink-mute);text-align:center;margin-top:9px;line-height:1.5;}
+  /* 📊 성적 그래프(영역/과목 레이더 + 막대) */
+  .klc-sec-lab{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:900;color:var(--gold-deep);
+    margin:18px 0 8px;letter-spacing:.02em;}
+  .klc-gcard{display:flex;gap:14px;flex-wrap:wrap;align-items:center;
+    background:linear-gradient(180deg,#fffdf7,#fbf6e7);border:1.5px solid #ecdfbe;border-radius:16px;padding:14px 14px 12px;}
+  .klc-radar{flex:0 0 auto;width:238px;max-width:100%;margin:0 auto;}
+  .klc-radar.wide{width:270px;}
+  .klc-bars{flex:1;min-width:210px;display:flex;flex-direction:column;gap:7px;}
+  .klc-bar{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:8px;}
+  .klc-bar.sub{grid-template-columns:64px 1fr auto;}
+  .kb-lab{font-size:11.5px;font-weight:800;color:var(--ink);white-space:nowrap;}
+  .kb-track{height:12px;border-radius:7px;background:#efe6cf;overflow:hidden;}
+  .kb-fill{height:100%;border-radius:7px;transition:width .5s ease;}
+  .kb-fill.hi{background:linear-gradient(90deg,#e8c45a,#c9a227);}
+  .kb-fill.mid{background:linear-gradient(90deg,#f0b45a,#dd8a2a);}
+  .kb-fill.lo{background:linear-gradient(90deg,#e79a9a,#d05a5a);}
+  .kb-val{font-size:11px;font-weight:800;color:var(--gold-deep);white-space:nowrap;min-width:34px;text-align:right;}
+  .kb-val .kb-sub{font-size:10px;color:var(--ink-mute);font-weight:700;}
+  .kb-flag{display:inline-block;font-size:9px;font-weight:800;color:#fff;background:#d44a4a;border-radius:5px;padding:1px 4px;margin-right:4px;vertical-align:1px;}
+  .klc-legend{display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:center;margin-top:12px;font-size:10.5px;color:var(--ink-mute);font-weight:700;}
+  .klc-legend .kl-it{display:inline-flex;align-items:center;gap:4px;}
+  .klc-legend .kl-it i{width:11px;height:11px;border-radius:3px;display:inline-block;}
+  @media (max-width:560px){ .klc-gcard{flex-direction:column;} .klc-radar,.klc-radar.wide{width:260px;} }
 </style>
 </head>
 <body>
@@ -245,8 +268,7 @@
           <div class="q-click" onclick="startExam('${x.examUrl}')">
             <div class="q-month">${x.month}</div>
             <div class="q-label">${x.label} 경시대회</div>
-            <div class="q-state on">응시 가능</div>
-            ${done?`<div class="q-done">✅ 응시 완료</div>`:''}
+            <div class="q-state ${done?'done':'on'}">${done?'✅ 응시 완료':'응시 가능'}</div>
           </div>
           <div class="q-dl">
             <a href="/monthly_exam_paper.html?exam=${x.examKey}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🖨 시험지 A4</a>
@@ -264,6 +286,179 @@
 
   function fmtDur(s){ s=s||0; const m=Math.floor(s/60), ss=s%60; return `${m}분 ${ss}초`; }
 
+  /* ===== 📊 영역/과목 성취 그래프 ===== */
+  const AREA_ORDER = ['literal','lexical','structural','inferential','critical'];
+  const AREA_LABEL = { literal:'사실적', lexical:'어휘적', structural:'구조적', inferential:'추론적', critical:'비판적' };
+
+  // N축 레이더 SVG (labels[], ratios[0~1])
+  function klcRadar(labels, ratios, size){
+    size = size || 238;
+    const n = labels.length, cx=size/2, cy=size/2, R=size*0.32;
+    const ang = i => -Math.PI/2 + i*(2*Math.PI/n);
+    const P = (a,r)=>`${(cx+Math.cos(a)*r).toFixed(1)},${(cy+Math.sin(a)*r).toFixed(1)}`;
+    let bg='';
+    for(let ring=1;ring<=4;ring++){
+      const r=R*ring/4;
+      bg+=`<polygon points="${labels.map((_,i)=>P(ang(i),r)).join(' ')}" fill="${ring===4?'rgba(255,250,235,0.55)':'none'}" stroke="#e3d6b4" stroke-width="1"/>`;
+    }
+    labels.forEach((_,i)=>{ bg+=`<line x1="${cx}" y1="${cy}" x2="${(cx+Math.cos(ang(i))*R).toFixed(1)}" y2="${(cy+Math.sin(ang(i))*R).toFixed(1)}" stroke="#e3d6b4" stroke-width="1"/>`; });
+    const lab=labels.map((t,i)=>{
+      const lx=cx+Math.cos(ang(i))*(R+15), ly=cy+Math.sin(ang(i))*(R+15)+4;
+      return `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#5a4e2e">${t}</text>`;
+    }).join('');
+    const poly=ratios.map((v,i)=>P(ang(i), Math.max(0,Math.min(1,v))*R)).join(' ');
+    const dots=ratios.map((v,i)=>{const r=Math.max(0,Math.min(1,v))*R;return `<circle cx="${(cx+Math.cos(ang(i))*r).toFixed(1)}" cy="${(cy+Math.sin(ang(i))*r).toFixed(1)}" r="3.2" fill="#c9a227" stroke="#fff" stroke-width="1.5"/>`;}).join('');
+    return `<svg viewBox="0 0 ${size} ${size}" width="100%" style="display:block">${bg}${lab}<polygon points="${poly}" fill="rgba(232,196,90,0.32)" stroke="#c9a227" stroke-width="2.4" stroke-linejoin="round"/>${dots}</svg>`;
+  }
+
+  // 점수대별 색(강점 녹색 → 취약 빨강) — 취약점이 한눈에 붉게 드러나게
+  function klcBarColor(pct){
+    if(pct>=90) return {bar:'linear-gradient(90deg,#4fd07f,#1f9c52)', txt:'#1f9c52', tag:''};              // 강점
+    if(pct>=80) return {bar:'linear-gradient(90deg,#e8c45a,#c9a227)', txt:'#9a7b12', tag:''};              // 양호
+    if(pct>=70) return {bar:'linear-gradient(90deg,#f3bd52,#e0962a)', txt:'#c26a12', tag:''};              // 주의
+    if(pct>=55) return {bar:'linear-gradient(90deg,#ef9a4a,#e2742a)', txt:'#c2541a', tag:'보완'};           // 취약
+    return {bar:'linear-gradient(90deg,#ee7b7b,#d44a4a)', txt:'#c23030', tag:'취약'};                       // 위험
+  }
+  // 막대 리스트 (items:[{label,pct,detail}])
+  function klcBars(items, sub){
+    return items.map(it=>{
+      const pct=Math.round(it.pct);
+      const c=klcBarColor(pct);
+      return `<div class="klc-bar${sub?' sub':''}"><div class="kb-lab">${it.label}</div>`
+        + `<div class="kb-track"><div class="kb-fill" style="width:${pct}%;background:${c.bar};"></div></div>`
+        + `<div class="kb-val" style="color:${c.txt};">${c.tag?`<span class="kb-flag">${c.tag}</span>`:''}${pct}%${it.detail?`<span class="kb-sub"> ${it.detail}</span>`:''}</div></div>`;
+    }).join('');
+  }
+  // 색상 범례
+  function klcLegend(){
+    const items=[['#1f9c52','강점 90+'],['#c9a227','양호 80~89'],['#e0962a','주의 70~79'],['#e2742a','취약 55~69'],['#d44a4a','위험 ~54']];
+    return `<div class="klc-legend">`+items.map(([c,t])=>`<span class="kl-it"><i style="background:${c}"></i>${t}</span>`).join('')+`</div>`;
+  }
+
+  // 결과 → 그래프 데이터
+  function klcGraphData(r){
+    const aS=r.areaScore||{}, aM=r.areaMax||{};
+    const areaRatios = AREA_ORDER.map(k => (aS[k]||0)/((aM[k])||1));
+    const areaBars = AREA_ORDER.map(k=>({label:AREA_LABEL[k], pct:(aS[k]||0)/((aM[k])||1)*100, detail:`${Math.round(aS[k]||0)}/${Math.round(aM[k]||0)}점`}));
+    const subs = r.subjectScores||[];
+    const subjLabels = subs.map(s=>s.subject);
+    const subjRatios = subs.map(s=>(s.correct||0)/((s.total)||1));
+    const subjBars = subs.map(s=>({label:s.subject, pct:(s.correct||0)/((s.total)||1)*100, detail:`${s.correct||0}/${s.total||0}`}));
+    return {areaRatios, areaBars, subjLabels, subjRatios, subjBars};
+  }
+
+  // 📥 성적표 인쇄 (클릭 즉시 인쇄 화면)
+  function printKlcResult(){
+    const r = window.__klcResult; if(!r){ alert('결과가 없습니다.'); return; }
+    const g = klcGraphData(r);
+    const areaRadar = klcRadar(AREA_ORDER.map(k=>AREA_LABEL[k]), g.areaRatios, 250);
+    const subjRadar = klcRadar(g.subjLabels, g.subjRatios, 300);
+    const rate = Math.round(r.correctCount/(r.totalQuestions||1)*100);
+    const w0 = new Date(r.submittedAt||Date.now());
+    const dateStr = `${w0.getFullYear()}.${String(w0.getMonth()+1).padStart(2,'0')}.${String(w0.getDate()).padStart(2,'0')}`;
+    const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>KLC 1분기 경시결과 - ${CS.name||''}</title>
+      <style>
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#2a2416;background:#fff;padding:24px;}
+        .sheet{max-width:780px;margin:0 auto;}
+        .ph{text-align:center;border-bottom:3px solid #c9a227;padding-bottom:12px;margin-bottom:14px;}
+        .ph .t{font-size:21px;font-weight:900;color:#9a7b12;}
+        .ph .s{font-size:12px;color:#7a6f52;font-weight:700;margin-top:4px;letter-spacing:.08em;}
+        .info{display:flex;justify-content:center;gap:20px;font-size:12.5px;font-weight:700;color:#5a4e2e;margin-bottom:14px;}
+        .stat-row{display:flex;gap:10px;margin-bottom:6px;}
+        .stat{flex:1;text-align:center;border:1.5px solid #ecdfbe;border-radius:12px;padding:12px 6px;background:#fbf6e7;}
+        .stat .v{font-size:21px;font-weight:900;color:#9a7b12;}
+        .stat .l{font-size:11px;color:#7a6f52;font-weight:700;margin-top:2px;}
+        .seclab{font-size:14px;font-weight:900;color:#9a7b12;margin:16px 0 8px;}
+        .gcard{display:flex;gap:16px;align-items:center;border:1.5px solid #ecdfbe;border-radius:14px;padding:14px;page-break-inside:avoid;}
+        .radar{flex:0 0 auto;width:250px;} .radar.wide{width:300px;}
+        .bars{flex:1;display:flex;flex-direction:column;gap:7px;}
+        .klc-bar{display:grid;grid-template-columns:54px 1fr auto;align-items:center;gap:8px;}
+        .klc-bar.sub{grid-template-columns:64px 1fr auto;}
+        .kb-lab{font-size:11.5px;font-weight:800;white-space:nowrap;}
+        .kb-track{height:12px;border-radius:7px;background:#efe6cf;overflow:hidden;}
+        .kb-fill{height:100%;border-radius:7px;}
+        .kb-fill.hi{background:linear-gradient(90deg,#e8c45a,#c9a227);}
+        .kb-fill.mid{background:linear-gradient(90deg,#f0b45a,#dd8a2a);}
+        .kb-fill.lo{background:linear-gradient(90deg,#e79a9a,#d05a5a);}
+        .kb-val{font-size:11px;font-weight:800;color:#9a7b12;white-space:nowrap;text-align:right;}
+        .kb-val .kb-sub{font-size:10px;color:#7a6f52;}
+        .kb-flag{display:inline-block;font-size:9px;font-weight:800;color:#fff;background:#d44a4a;border-radius:5px;padding:1px 4px;margin-right:4px;vertical-align:1px;}
+        .klc-legend{display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:center;margin-top:12px;font-size:10.5px;color:#7a6f52;font-weight:700;}
+        .klc-legend .kl-it{display:inline-flex;align-items:center;gap:4px;}
+        .klc-legend .kl-it i{width:11px;height:11px;border-radius:3px;display:inline-block;}
+        .foot{text-align:center;font-size:11px;color:#7a6f52;margin-top:14px;border-top:1px solid #ecdfbe;padding-top:10px;}
+        @page{size:A4;margin:14mm;} @media print{ body{padding:0;} }
+      </style></head><body>
+        <div class="sheet">
+          <div class="ph"><div class="t">2027 전국 교과문해력 경시대회 · 1분기(3월) 성적표</div><div class="s">KOREA LITERACY COMPETITION</div></div>
+          <div class="info"><span>이름 : <b>${CS.name||'-'}</b></span><span>학년 : <b>${CS.grade||'-'}</b></span><span>응시일 : <b>${dateStr}</b></span></div>
+          <div class="stat-row">
+            <div class="stat"><div class="v">${r.totalScore}점</div><div class="l">총점 / 100</div></div>
+            <div class="stat"><div class="v">${r.correctCount}/${r.totalQuestions}</div><div class="l">정답 수</div></div>
+            <div class="stat"><div class="v">${rate}%</div><div class="l">정답률</div></div>
+            <div class="stat"><div class="v" style="font-size:16px;">${fmtDur(r.durationSec)}</div><div class="l">소요 시간</div></div>
+          </div>
+          <div class="seclab">🧭 영역별 성취 (5개 영역)</div>
+          <div class="gcard"><div class="radar">${areaRadar}</div><div class="bars">${klcBars(g.areaBars)}</div></div>
+          <div class="seclab">📚 과목별 성취 (11과목)</div>
+          <div class="gcard"><div class="radar wide">${subjRadar}</div><div class="bars">${klcBars(g.subjBars, true)}</div></div>
+          ${klcLegend()}
+          <div class="foot">브레인문해력 · 전국 교과문해력 경시대회 — 본 성적표는 응시 결과를 바탕으로 자동 생성되었습니다.</div>
+        </div>
+        <script>window.onload=function(){setTimeout(function(){window.print();},350);};<\/script>
+      </body></html>`;
+    const w = window.open('', '_blank');
+    if(!w){ alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해 주세요.'); return; }
+    w.document.open(); w.document.write(html); w.document.close();
+  }
+
+  // 결과 패널(그래프+다운로드) 렌더
+  function renderMyResult(r){
+    const panel = document.getElementById('myPanel');
+    window.__klcResult = r;
+    const g = klcGraphData(r);
+    const rate = Math.round(r.correctCount/(r.totalQuestions||1)*100);
+    panel.innerHTML = `
+      <div class="my-row">
+        <div class="my-stat"><div class="v">${r.totalScore}<span style="font-size:13px;color:#aa9a6e;">점</span></div><div class="l">총점 / 100</div></div>
+        <div class="my-stat"><div class="v">${r.correctCount}<span style="font-size:13px;color:#aa9a6e;">/${r.totalQuestions}</span></div><div class="l">정답 수</div></div>
+        <div class="my-stat"><div class="v">${rate}<span style="font-size:13px;color:#aa9a6e;">%</span></div><div class="l">정답률</div></div>
+        <div class="my-stat"><div class="v" style="font-size:17px;">${fmtDur(r.durationSec)}</div><div class="l">소요 시간</div></div>
+      </div>
+      <div class="klc-sec-lab">🧭 영역별 성취 <span style="font-size:10.5px;color:var(--ink-mute);font-weight:700;">· 5개 영역</span></div>
+      <div class="klc-gcard">
+        <div class="klc-radar">${klcRadar(AREA_ORDER.map(k=>AREA_LABEL[k]), g.areaRatios, 238)}</div>
+        <div class="klc-bars">${klcBars(g.areaBars)}</div>
+      </div>
+      <div class="klc-sec-lab">📚 과목별 성취 <span style="font-size:10.5px;color:var(--ink-mute);font-weight:700;">· 11과목</span></div>
+      <div class="klc-gcard">
+        <div class="klc-radar wide">${klcRadar(g.subjLabels, g.subjRatios, 270)}</div>
+        <div class="klc-bars">${klcBars(g.subjBars, true)}</div>
+      </div>
+      ${klcLegend()}
+      <button class="start-btn" onclick="printKlcResult()" style="margin-top:14px;">📥 1분기 경시결과 다운로드</button>
+      <div class="note">클릭하면 성적표가 바로 인쇄 화면으로 열립니다 · PDF 저장도 가능합니다</div>`;
+  }
+
+  // 🧪 미리보기용 샘플 결과(?preview=1) — 실제 응시 데이터가 아니라 레이아웃 확인용
+  function sampleKlcResult(){
+    return {
+      totalScore:86, correctCount:39, totalQuestions:45, durationSec:62*60+14,
+      submittedAt:new Date().toISOString(),
+      areaScore:{literal:14, lexical:30, structural:14, inferential:14, critical:14},
+      areaMax:{literal:16, lexical:36, structural:16, inferential:16, critical:16},
+      subjectScores:[
+        {subject:'생물',correct:4,total:4},{subject:'지구과학',correct:3,total:4},
+        {subject:'물리',correct:4,total:4},{subject:'화학',correct:2,total:4},
+        {subject:'사회문화',correct:3,total:4},{subject:'지리',correct:4,total:4},
+        {subject:'법',correct:3,total:4},{subject:'정치경제',correct:2,total:4},
+        {subject:'현대문학',correct:4,total:4},{subject:'고전문학',correct:3,total:4},
+        {subject:'현대문법',correct:4,total:5}
+      ]
+    };
+  }
+
   async function loadMine(){
     const panel = document.getElementById('myPanel');
     try{
@@ -277,13 +472,7 @@
           <div class="note">45문항 · 80분 · 11과목(교과문해력 종합)</div>`;
         return;
       }
-      panel.innerHTML = `
-        <div class="my-row">
-          <div class="my-stat"><div class="v">${r.totalScore}<span style="font-size:13px;color:#aa9a6e;">점</span></div><div class="l">총점</div></div>
-          <div class="my-stat"><div class="v">${r.correctCount}<span style="font-size:13px;color:#aa9a6e;">/${r.totalQuestions}</span></div><div class="l">정답 수</div></div>
-          <div class="my-stat"><div class="v" style="font-size:18px;">${fmtDur(r.durationSec)}</div><div class="l">소요 시간</div></div>
-        </div>
-        <button class="start-btn" onclick="startExam()" style="margin-top:14px;">📄 내 시험지 다시 보기 / 재응시</button>`;
+      renderMyResult(r);
     }catch(e){
       renderQuarters(false);
       panel.innerHTML = `<div class="empty">결과를 불러오지 못했습니다.</div>`;
@@ -321,8 +510,15 @@
     }
   }
 
-  renderQuarters(false);
-  loadMine();
+  const _klcPreview = new URLSearchParams(location.search).get('preview') === '1';
+  if (_klcPreview) {
+    // 🧪 레이아웃 미리보기: 실제 응시 없이 샘플 결과로 그래프/다운로드 확인
+    renderQuarters(true);
+    renderMyResult(sampleKlcResult());
+  } else {
+    renderQuarters(false);
+    loadMine();
+  }
   loadRanking();
 </script>
 </body>

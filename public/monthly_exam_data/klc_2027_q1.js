@@ -134,7 +134,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 5,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -151,7 +151,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 2문단에서 기온이 낮아질수록 품을 수 있는 수증기의 양이 줄어든다고 하였다. ② 2문단에서 물방울이 맺히려면 응결핵이 있어야 한다고 하였다. ④ 4문단의 빙정 설명과 일치한다. ⑤ 4문단에서 알갱이가 무거워지면 떨어진다고 하였다."
         },
         {
-          "no": 2,
+          "no": 6,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -168,7 +168,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 증발, ③ 응결, ④ 포화, ⑤ 강수는 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 3,
+          "no": 7,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -185,7 +185,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 맞서는 두 이론을 견주지 않는다. ③ 시대별 인식 변화를 다루지 않는다. ④ 개인적 경험·감상 중심의 글이 아니라 원리를 설명하는 글이다. ⑤ 이로움과 해로움을 대조하지 않는다."
         },
         {
-          "no": 4,
+          "no": 8,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -219,7 +219,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 9,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -236,7 +236,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 2문단에서 전압이 클수록 전류가 커진다고 하였다. ② 3문단에서 저항이 클수록 전류가 적게 흐른다고 하였다. ③ 4문단의 직렬연결 설명과 일치한다. ⑤ 4문단에서 집 안은 대부분 병렬로 연결된다고 하였다."
         },
         {
-          "no": 2,
+          "no": 10,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -253,7 +253,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 전류, ② 저항, ④ 전압, ⑤ 도체는 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 3,
+          "no": 11,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -270,7 +270,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② (가)의 직렬 특징, ③ (나)의 병렬 특징, ④ 전류가 흐르는 길, ⑤ 병렬의 쓸모는 모두 옳은 설명이다."
         },
         {
-          "no": 4,
+          "no": 12,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -304,7 +304,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 13,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -321,7 +321,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 2문단의 질량 보존 설명과 일치한다. ② 2문단에서 입자가 작아 빛이 통과해 투명하다고 하였다. ③ 3문단의 포화 용액 설명과 일치한다. ⑤ 4문단에서 많이 녹일수록 진해진다고 하였다."
         },
         {
-          "no": 2,
+          "no": 14,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -338,7 +338,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 맞서는 두 학설을 견주지 않는다. ③ 설탕이 '만들어지는' 과정이 아니라 녹는 원리를 설명한다. ④ 이로움과 해로움을 대조하지 않는다. ⑤ 수치·통계 분석이 나타나지 않는다."
         },
         {
-          "no": 3,
+          "no": 15,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -355,7 +355,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 식어서 넘친 설탕이 석출, ② 새로 생긴 것이 아님, ④ 온도 그대로라 변화없음, ⑤ 온도와 용해도 관계는 모두 옳은 설명이다."
         },
         {
-          "no": 4,
+          "no": 16,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -389,7 +389,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 17,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -406,7 +406,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 집단, ② 정체성, ④ 편견, ⑤ 소속은 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 2,
+          "no": 18,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -423,7 +423,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 두 집단의 우열을 가리거나 선택을 주장하지 않는다. ③ 집단의 역사를 시간순으로 서술하지 않는다. ④ 특정 한 집단의 잘못을 비판하는 글이 아니다. ⑤ 통계·수치 분석이 없다."
         },
         {
-          "no": 3,
+          "no": 19,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -440,7 +440,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① A의 만족, ③ B의 상대적 박탈감, ④ 준거 집단의 뜻, ⑤ 준거 집단에 따른 만족감 차이는 모두 옳은 설명이다."
         },
         {
-          "no": 4,
+          "no": 20,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -474,7 +474,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 21,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -491,7 +491,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 1문단, ② 2문단, ④ 3문단, ⑤ 4문단의 내용과 각각 일치한다."
         },
         {
-          "no": 2,
+          "no": 22,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -508,7 +508,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 기후, ② 위도, ③ 강수량, ④ 건조는 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 3,
+          "no": 23,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -525,7 +525,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 맞서는 두 학설을 견주지 않는다. ③ 기후 변화의 역사를 시간순으로 다루지 않는다. ④ 이로움과 해로움을 대조하지 않는다. ⑤ 여행 감상 중심의 글이 아니다."
         },
         {
-          "no": 4,
+          "no": 24,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -559,7 +559,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 25,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -576,7 +576,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 1문단, ② 2문단, ③ 3문단, ⑤ 4문단의 내용과 각각 일치한다."
         },
         {
-          "no": 2,
+          "no": 26,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -593,7 +593,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 재판, ② 증거, ③ 원고, ⑤ 판결은 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 3,
+          "no": 27,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -610,7 +610,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 찬반 입장을 맞세우지 않는다. ③ 제도의 역사를 시간순으로 다루지 않는다. ④ 특정 사건을 장면으로 묘사하지 않는다. ⑤ 이로움과 해로움을 대조하지 않는다."
         },
         {
-          "no": 4,
+          "no": 28,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -645,7 +645,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 29,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -662,7 +662,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 1문단, ② 2문단, ③ 4문단, ⑤ 5문단의 내용과 각각 일치한다."
         },
         {
-          "no": 2,
+          "no": 30,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -679,7 +679,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 정치, ③ 타협, ④ 갈등, ⑤ 조정은 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 3,
+          "no": 31,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -696,7 +696,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 참여로 두루 반영, ② 무관심으로 치우침, ③ 참여와 대표성, ④ 둘 중 바람직한 쪽은 모두 옳은 설명이다."
         },
         {
-          "no": 4,
+          "no": 32,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -730,7 +730,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 33,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -747,7 +747,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 1문단, ② 1문단, ③ 2문단, ⑤ 3문단의 내용과 각각 일치한다."
         },
         {
-          "no": 2,
+          "no": 34,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -764,7 +764,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 대화 중심으로 빠르게 전개되지 않는다. ③ 인물을 우스개로 만드는 희화화가 나타나지 않는다. ④ 환상적 사건이 아니라 현실의 고단함을 그린다. ⑤ 여러 인물의 시선으로 같은 사건을 반복하지 않는다."
         },
         {
-          "no": 3,
+          "no": 35,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -781,7 +781,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① ‘탁류’는 밝은 앞날이 아니라 불행으로 떠미는 현실을 가리킨다. ③ (가)는 작품과 어긋난다. ② (나)는 작품과 들어맞는다. ⑤ 맑은 자연이 아니라 흐리게 뒤엉킨 물결이다."
         },
         {
-          "no": 4,
+          "no": 36,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -815,7 +815,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 37,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -832,7 +832,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 효, ② 봉양, ③ 희생, ⑤ 시주는 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 2,
+          "no": 38,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -849,7 +849,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 여러 인물의 시선으로 같은 사건을 반복하지 않는다. ③ 재회 장면에 비현실적 요소가 있으나 '환상적 장면만으로' 엮지는 않는다. ④ 치열한 논쟁이 중심이 아니다. ⑤ 효를 두고 찬반 인물을 맞세우지 않는다."
         },
         {
-          "no": 3,
+          "no": 39,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -866,7 +866,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② (가)는 효성이 하늘을 '감동시킨' 결과가 드러난 대목이 아니라 희생의 과정이다. ③ (나)가 옛말과 어울린다. ④ (가)는 희생이고, 하늘이 감동한 결과는 (나)이다. ⑤ 효성을 보여 줄 뿐 허영심과는 무관하다."
         },
         {
-          "no": 4,
+          "no": 40,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,

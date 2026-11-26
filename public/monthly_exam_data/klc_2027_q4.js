@@ -132,7 +132,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 5,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -149,7 +149,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 1문단, ② 2문단, ③ 3문단, ⑤ 4문단의 내용과 각각 일치한다."
         },
         {
-          "no": 2,
+          "no": 6,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -166,7 +166,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 퇴적, ② 화석, ④ 매몰, ⑤ 보존은 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 3,
+          "no": 7,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -183,7 +183,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 맞서는 두 학설을 견주지 않는다. ③ 개인적 경험·감상 중심의 글이 아니다. ④ 사람이 지층을 쌓는 과정을 묘사하지 않는다. ⑤ 이로움과 해로움을 대조하지 않는다."
         },
         {
-          "no": 4,
+          "no": 8,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -215,7 +215,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 9,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -232,7 +232,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 1문단, ② 2문단, ④ 3문단, ⑤ 4문단의 내용과 각각 일치한다."
         },
         {
-          "no": 2,
+          "no": 10,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -249,7 +249,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 자력, ③ 인력, ④ 척력, ⑤ 극은 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 3,
+          "no": 11,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -266,7 +266,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② (가)의 인력, ③ (나)의 척력, ④ 자석 극의 성질, ⑤ 극에 따른 작용은 모두 옳은 설명이다."
         },
         {
-          "no": 4,
+          "no": 12,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -298,7 +298,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 13,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -315,7 +315,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 1문단, ② 2문단, ③ 3문단, ⑤ 1·2문단의 내용과 각각 일치한다."
         },
         {
-          "no": 2,
+          "no": 14,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -332,7 +332,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 맞서는 두 학설을 견주지 않는다. ③ 개인적 경험·감상 중심의 글이 아니다. ④ 혼합물을 만드는 과정을 묘사하지 않는다. ⑤ 이로움과 해로움을 대조하지 않는다."
         },
         {
-          "no": 3,
+          "no": 15,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -349,7 +349,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① (가)의 증발, ② (나)의 거름, ③ 성질 차이를 이용한 분리, ⑤ 서로 다른 방법은 모두 옳은 설명이다."
         },
         {
-          "no": 4,
+          "no": 16,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -381,7 +381,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 17,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -398,7 +398,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 가족, ② 세대, ④ 확대, ⑤ 존중은 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 2,
+          "no": 18,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -415,7 +415,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 맞서는 두 학설을 견주지 않는다. ③ 개인적 경험·감상 중심의 글이 아니다. ④ 가족이 생겨난 과정을 묘사하지 않는다. ⑤ 이로움과 해로움을 대조하지 않는다."
         },
         {
-          "no": 3,
+          "no": 19,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -432,7 +432,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② (가)의 대가족, ③ (나)의 핵가족, ④ 가족 형태의 변화, ⑤ 시대에 따른 변화는 모두 옳은 설명이다."
         },
         {
-          "no": 4,
+          "no": 20,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -464,7 +464,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 21,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -481,7 +481,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 1문단, ② 2문단, ③ 3문단, ⑤ 4문단의 내용과 각각 일치한다."
         },
         {
-          "no": 2,
+          "no": 22,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -498,7 +498,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 축척, ③ 방위, ④ 범례, ⑤ 기호는 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 3,
+          "no": 23,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -515,7 +515,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 맞서는 두 학설을 견주지 않는다. ③ 개인적 경험·감상 중심의 글이 아니다. ④ 지도를 그리는 과정을 묘사하지 않는다. ⑤ 이로움과 해로움을 대조하지 않는다."
         },
         {
-          "no": 4,
+          "no": 24,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -547,7 +547,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 25,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -564,7 +564,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 1문단, ② 1문단, ③ 3문단, ⑤ 4문단의 내용과 각각 일치한다."
         },
         {
-          "no": 2,
+          "no": 26,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -581,7 +581,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 창작, ② 저작, ④ 인용, ⑤ 모방은 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 3,
+          "no": 27,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -598,7 +598,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 맞서는 두 학설을 견주지 않는다. ③ 개인적 경험·감상 중심의 글이 아니다. ④ 저작물을 만드는 과정을 묘사하지 않는다. ⑤ 이로움과 해로움을 대조하지 않는다."
         },
         {
-          "no": 4,
+          "no": 28,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -630,7 +630,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 29,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -647,7 +647,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 1문단, ② 2문단, ③ 3문단, ⑤ 5문단의 내용과 각각 일치한다."
         },
         {
-          "no": 2,
+          "no": 30,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -664,7 +664,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 선택, ② 포기, ③ 비용, ⑤ 합리는 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 3,
+          "no": 31,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -681,7 +681,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 선택에는 포기가 따른다. ③ 둘을 동시에 가질 수 없다. ④ 선택에는 늘 포기가 따른다. ⑤ 시간을 쓸 때에도 기회비용이 생긴다."
         },
         {
-          "no": 4,
+          "no": 32,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -713,7 +713,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 33,
           "type": "literal",
           "typeKo": "사실적",
           "score": 2,
@@ -730,7 +730,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 1문단, ② 2문단, ③ 3문단, ⑤ 4문단의 내용과 각각 일치한다."
         },
         {
-          "no": 2,
+          "no": 34,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -747,7 +747,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 치열한 논쟁을 중심으로 전개하지 않는다. ③ 환상적 사건이 아니라 현실의 사랑과 이별을 그린다. ④ 여러 인물의 시선으로 같은 사건을 반복하지 않는다. ⑤ 인물을 우스개로 만드는 희화화가 아니다."
         },
         {
-          "no": 3,
+          "no": 35,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -764,7 +764,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 사랑은 오래가지 못하고 이른 이별로 끝난다. ③ 소나기를 맞은 뒤 소녀가 몸져누웠으므로 병과 관련이 있다. ④ 사랑은 짧게 끝났다. ⑤ 홍수 피해를 알려 주는 것이 아니다."
         },
         {
-          "no": 4,
+          "no": 36,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
@@ -796,7 +796,7 @@ window.MONTHLY_EXAM_DATA = {
       ],
       "questions": [
         {
-          "no": 1,
+          "no": 37,
           "type": "lexical",
           "typeKo": "어휘적",
           "score": 2,
@@ -813,7 +813,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 허영심, ③ 지혜, ④ 모면, ⑤ 경계는 모두 뜻이 바르게 풀이되었다."
         },
         {
-          "no": 2,
+          "no": 38,
           "type": "structural",
           "typeKo": "구조적",
           "score": 2,
@@ -830,7 +830,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "② 여러 인물의 시선으로 같은 사건을 반복하지 않는다. ③ 동물이 말을 하는 등 비현실적 요소가 나타난다. ④ 치열한 논쟁이 중심이 아니다. ⑤ 시간을 거꾸로 되짚지 않고 순서대로 전개한다."
         },
         {
-          "no": 3,
+          "no": 39,
           "type": "inferential",
           "typeKo": "추론적",
           "score": 2,
@@ -847,7 +847,7 @@ window.MONTHLY_EXAM_DATA = {
           "wrong": "① 힘으로 싸워 이긴 것이 아니다. ③ 자라에게 사정한 것이 아니다. ④ 다른 신하의 도움을 받은 것이 아니다. ⑤ 벼슬을 받아 머문 것이 아니라 꾀로 달아났다."
         },
         {
-          "no": 4,
+          "no": 40,
           "type": "critical",
           "typeKo": "비판적",
           "score": 2,
