@@ -426,17 +426,21 @@
     const d = window.MONTHLY_EXAM_DATA;
     if (!d) return;
     const levelKo = isKlc ? '경시대회' : (level === 'mid' ? '핏' : (level === 'elem34' ? '온' : '업')); // 브랜드 등급명 (온=초1~4, 업=초5~6, 핏=중등)
+    // 🏆 경시대회 구분(초등/중등)·분기·월 (examParam과 데이터에서 동적 산출)
+    const klcDiv   = (examParam.indexOf('mid') >= 0 || d.grade === 'mid') ? '중등' : '초등';
+    const klcQ     = d.quarter || 1;
+    const klcMonth = ({1:'3월', 2:'6월', 3:'9월', 4:'12월'})[klcQ] || '3월';
     const docKo = isExplain ? '해설지' : isTeacher ? '시험지(교사용)' : '시험지(학생용)';
-    document.title = isKlc ? `KLC경시대회_2027_1분기_${docKo}` : `BRAIN월말_${levelKo}_${round}회차_${docKo}`;
+    document.title = isKlc ? `KLC경시대회_2027_${klcDiv}_${klcQ}분기_${docKo}` : `BRAIN월말_${levelKo}_${round}회차_${docKo}`;
     document.getElementById('tbTitle').textContent = `${d.title} · ${docKo}`;
-    // 🏆 경시대회/월말 공통 라벨 (KLC는 회차 대신 분기 표기)
+    // 🏆 경시대회/월말 공통 라벨 (KLC는 회차 대신 초등/중등·분기(월) 표기)
     const SERIES_LABEL = isKlc ? '✦ 전국 교과문해력 경시대회' : '✦ BRAIN 월말 모의고사';
-    const HEAD_TITLE   = isKlc ? '2027 전국 교과문해력 경시대회 · 1분기(3월)' : `${levelKo} 문해 모의고사 · ${round}회차`;
-    const ROUND_TAG    = isKlc ? '1분기' : `제${round}회`;
+    const HEAD_TITLE   = isKlc ? `2027 전국 교과문해력 경시대회 · ${klcDiv} ${klcQ}분기(${klcMonth})` : `${levelKo} 문해 모의고사 · ${round}회차`;
+    const ROUND_TAG    = isKlc ? `${klcQ}분기` : `제${round}회`;
     const COVER_TITLE  = isKlc ? '브레인 <span class="cover-lv">전국 교과문해력</span> 경시대회' : `브레인 <span class="cover-lv">${levelKo}</span> 문해 모의고사`;
-    const COVER_ROUND  = isKlc ? '2027 · 1분기(3월)' : `제 ${round} 회차`;
-    const FOOT_LABEL   = isKlc ? '전국 교과문해력 경시대회 · 2027 1분기' : `브레인 월말 문해 모의고사 ${round}회차`;
-    const OMR_SUB      = isKlc ? `전국 교과문해력 경시대회 · 1분기 · ${d.totalQuestions}문항` : `브레인 ${levelKo} 문해 모의고사 · 제${round}회 · ${d.totalQuestions}문항`;
+    const COVER_ROUND  = isKlc ? `2027학년 ${klcDiv} ${klcMonth}` : `제 ${round} 회차`;
+    const FOOT_LABEL   = isKlc ? `전국 교과문해력 경시대회 · 2027 ${klcDiv} ${klcQ}분기` : `브레인 월말 문해 모의고사 ${round}회차`;
+    const OMR_SUB      = isKlc ? `전국 교과문해력 경시대회 · ${klcDiv} ${klcQ}분기 · ${d.totalQuestions}문항` : `브레인 ${levelKo} 문해 모의고사 · 제${round}회 · ${d.totalQuestions}문항`;
     const PAGE_FOOT    = isKlc ? '교과문해력경시대회' : `${levelKo}문해모의고사`;
 
     const sheet = document.getElementById('sheet');
@@ -559,16 +563,42 @@
         curCol().appendChild(box);
       }
 
-      /* 나머지 문단을 하나씩 채우고, 넘치면 다음 칼럼에 이어짐 박스로 분할 */
+      /* 나머지 문단을 채우되, 한 문단이 칼럼을 넘치면 '문장 단위'로 쪼개 현재 칼럼을 최대한 채우고
+         나머지만 다음 칼럼으로 이어지게 한다(문단 통짜 이동 시 생기던 하단 공백 제거).
+         소수점 숫자(예: 0.6도)는 마침표 뒤에 공백이 없어 분리되지 않는다. */
+      const splitSentences = (html) => {
+        const parts = html.split(/(?<=[.!?])\s+/).filter(s => s.length);
+        return parts.length ? parts.map((s, i) => i < parts.length - 1 ? s + ' ' : s) : [html];
+      };
       for (let i = 1; i < paras.length; i++) {
         box.appendChild(paras[i]);
-        if (!fits(curCol())) {
-          box.removeChild(paras[i]);
-          box.classList.add('cont-into');   // 이전 박스: 하단 밑줄 제거
-          nextCol();
-          box = el('div', 'p-box cont-from');  // 이어지는 박스: 상단 밑줄·소제목 제거
-          curCol().appendChild(box);
-          box.appendChild(paras[i]);
+        if (fits(curCol())) continue;
+        box.removeChild(paras[i]);
+        const sentences = splitSentences(paras[i].innerHTML);
+        let idx = 0, cont = false;
+        while (idx < sentences.length) {
+          const fresh = (box.children.length === 0);
+          const p = el('p', '');
+          if (cont) p.style.textIndent = '0';
+          box.appendChild(p);
+          let placed = idx;
+          for (let s = idx; s < sentences.length; s++) {
+            p.innerHTML = sentences.slice(idx, s + 1).join('');
+            if (!fits(curCol())) { p.innerHTML = sentences.slice(idx, s).join(''); break; }
+            placed = s + 1;
+          }
+          if (placed === idx) {
+            if (fresh) { p.innerHTML = sentences[idx]; placed = idx + 1; } // 빈 칼럼엔 넘쳐도 1문장(무한루프 방지)
+            else { box.removeChild(p); }                                   // 공간 없음 → 다음 칼럼
+          }
+          idx = placed;
+          if (idx < sentences.length) {        // 남은 문장 → 다음 칼럼 이어짐 박스
+            box.classList.add('cont-into');
+            nextCol();
+            box = el('div', 'p-box cont-from');
+            curCol().appendChild(box);
+            cont = true;
+          }
         }
       }
 

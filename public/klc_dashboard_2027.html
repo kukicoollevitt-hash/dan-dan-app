@@ -173,6 +173,14 @@
   @keyframes btnSheen{0%,60%{left:-60%;}100%{left:130%;}}
   .start-btn:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(201,162,39,.5);}
   .note{font-size:11.5px;color:var(--ink-mute);text-align:center;margin-top:9px;line-height:1.5;}
+  /* 🧒🎓 초등/중등 분과 토글 */
+  .div-toggle{display:flex;gap:8px;margin:0 0 14px;}
+  .dv-btn{flex:1;max-width:220px;padding:11px 16px;border:1.8px solid var(--gold);border-radius:12px;
+    background:var(--card);color:var(--gold-deep);font-size:14.5px;font-weight:800;cursor:pointer;
+    transition:.2s;font-family:inherit;letter-spacing:.02em;}
+  .dv-btn:hover{background:#fbf3da;transform:translateY(-1px);}
+  .dv-btn.active{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#3a2d07;
+    border-color:var(--gold);box-shadow:0 5px 14px rgba(201,162,39,.4);}
   /* 📊 성적 그래프(영역/과목 레이더 + 막대) */
   .klc-sec-lab{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:900;color:var(--gold-deep);
     margin:18px 0 8px;letter-spacing:.02em;}
@@ -216,10 +224,14 @@
 
     <!-- 분기 카드 -->
     <div class="sec-title"><span class="em">📅</span> 분기별 대회</div>
+    <div class="div-toggle" id="divToggle">
+      <button class="dv-btn active" data-div="elem" onclick="setDivision('elem')">🧒 초등경시</button>
+      <button class="dv-btn" data-div="mid" onclick="setDivision('mid')">🎓 중등경시</button>
+    </div>
     <div class="q-grid" id="qGrid"></div>
 
     <!-- 내 결과 -->
-    <div class="sec-title"><span class="em">📊</span> 내 1분기 성적</div>
+    <div class="sec-title"><span class="em">📊</span> <span id="mySecTitle">내 1분기 성적</span></div>
     <div class="panel" id="myPanel">
       <div class="empty">결과를 불러오는 중…</div>
     </div>
@@ -244,18 +256,42 @@
   </div>
 
 <script>
-  const EXAM_KEY = 'klc_2027_q1';
-  const EXAM_URL = '/klc_exam_2027_q1.html';
   let CS = {};
   try { CS = JSON.parse(localStorage.getItem('currentStudent') || '{}'); } catch(e){}
   const idQS = `studentName=${encodeURIComponent(CS.name||'')}&studentGrade=${encodeURIComponent(CS.grade||'')}`;
 
-  const QUARTERS = [
-    { q:1, month:'3월', label:'1분기', active:true,  examKey:'klc_2027_q1', examUrl:'/klc_exam_2027_q1.html' },
-    { q:2, month:'6월', label:'2분기', active:true,  examKey:'klc_2027_q2', examUrl:'/klc_exam_2027_q2.html' },
-    { q:3, month:'9월', label:'3분기', active:true,  examKey:'klc_2027_q3', examUrl:'/klc_exam_2027_q3.html' },
-    { q:4, month:'12월', label:'4분기', active:true,  examKey:'klc_2027_q4', examUrl:'/klc_exam_2027_q4.html' },
-  ];
+  // 초등경시 / 중등경시 분과 — examKey로 순위·결과 자동 분리
+  const DIVISIONS = {
+    elem: { label: '초등경시', quarters: [
+      { q:1, month:'3월', label:'1분기', active:true, examKey:'klc_2027_q1', examUrl:'/klc_exam_2027_q1.html' },
+      { q:2, month:'6월', label:'2분기', active:true, examKey:'klc_2027_q2', examUrl:'/klc_exam_2027_q2.html' },
+      { q:3, month:'9월', label:'3분기', active:true, examKey:'klc_2027_q3', examUrl:'/klc_exam_2027_q3.html' },
+      { q:4, month:'12월', label:'4분기', active:true, examKey:'klc_2027_q4', examUrl:'/klc_exam_2027_q4.html' },
+    ]},
+    mid: { label: '중등경시', quarters: [
+      { q:1, month:'3월', label:'1분기', active:true,  examKey:'klc_mid_2027_q1', examUrl:'/klc_exam_mid_2027_q1.html' },
+      { q:2, month:'6월', label:'2분기', active:true,  examKey:'klc_mid_2027_q2', examUrl:'/klc_exam_mid_2027_q2.html' },
+      { q:3, month:'9월', label:'3분기', active:true,  examKey:'klc_mid_2027_q3', examUrl:'/klc_exam_mid_2027_q3.html' },
+      { q:4, month:'12월', label:'4분기', active:true,  examKey:'klc_mid_2027_q4', examUrl:'/klc_exam_mid_2027_q4.html' },
+    ]},
+  };
+  let DIVISION = 'elem';
+  let QUARTERS = DIVISIONS[DIVISION].quarters;
+  let EXAM_KEY = QUARTERS[0].examKey;
+  let EXAM_URL = QUARTERS[0].examUrl;
+
+  function setDivision(d){
+    if (!DIVISIONS[d]) return;
+    DIVISION = d;
+    QUARTERS = DIVISIONS[d].quarters;
+    EXAM_KEY = QUARTERS[0].examKey;
+    EXAM_URL = QUARTERS[0].examUrl;
+    document.querySelectorAll('.dv-btn').forEach(b => b.classList.toggle('active', b.dataset.div === d));
+    const t = document.getElementById('mySecTitle'); if (t) t.textContent = DIVISIONS[d].label + ' · 내 1분기 성적';
+    renderQuarters(false);
+    loadMine();
+    loadRanking();
+  }
 
   function startExam(url){ location.href = url || EXAM_URL; }
 
@@ -347,20 +383,80 @@
     return {areaRatios, areaBars, subjLabels, subjRatios, subjBars};
   }
 
-  // 📥 성적표 인쇄 (클릭 즉시 인쇄 화면)
-  function printKlcResult(){
+  // 📥 성적표 인쇄 (표지 + 그래프 + 오답 해설, 클릭 즉시 인쇄 화면)
+  async function printKlcResult(){
     const r = window.__klcResult; if(!r){ alert('결과가 없습니다.'); return; }
+    // 팝업은 클릭 제스처 안에서 먼저 열어야 차단되지 않음 → 로딩 표시 후 비동기로 채움
+    const w = window.open('', '_blank');
+    if(!w){ alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해 주세요.'); return; }
+    w.document.write('<!doctype html><meta charset="utf-8"><title>성적표 생성 중…</title><body style="margin:0;font-family:Pretendard,sans-serif;display:flex;height:100vh;align-items:center;justify-content:center;color:#9a7b12;font-weight:800;font-size:16px;">📄 성적표를 생성하는 중입니다…</body>');
+
     const g = klcGraphData(r);
     const areaRadar = klcRadar(AREA_ORDER.map(k=>AREA_LABEL[k]), g.areaRatios, 250);
     const subjRadar = klcRadar(g.subjLabels, g.subjRatios, 300);
     const rate = Math.round(r.correctCount/(r.totalQuestions||1)*100);
     const w0 = new Date(r.submittedAt||Date.now());
     const dateStr = `${w0.getFullYear()}.${String(w0.getMonth()+1).padStart(2,'0')}.${String(w0.getDate()).padStart(2,'0')}`;
-    const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>KLC 1분기 경시결과 - ${CS.name||''}</title>
+    // 초등/중등·분기·월 (표지·제목용)
+    const divKo  = (String(EXAM_KEY).indexOf('mid') >= 0) ? '중등' : '초등';
+    const qN     = r.quarter || 1;
+    const monthKo= ({1:'3월',2:'6월',3:'9월',4:'12월'})[qN] || '3월';
+    const academy = r.academyName || CS.academyName || CS.academy || '';
+
+    // ✏️ 오답 문항 해설 — 시험 데이터(문항 텍스트·선지·해설)를 받아 틀린 문항만 이어서 출력
+    let wrongHtml = '';
+    try{
+      const answers = r.answers || [];
+      if (!answers.length) throw new Error('no_answers');   // 미리보기(샘플) 등 답안 없음 → 해설 생략
+      const resp = await fetch(`/monthly_exam_data/${EXAM_KEY}.js?v=${Date.now()}`);
+      const txt  = await resp.text();
+      const exam = JSON.parse(txt.replace(/^\s*window\.MONTHLY_EXAM_DATA\s*=\s*/, '').replace(/;\s*$/, ''));
+      const CIRC = ['①','②','③','④','⑤'];
+      const wrongList = [];
+      (exam.passages||[]).forEach(p => (p.questions||[]).forEach(q => {
+        const user = answers[q.no-1];
+        if (user !== q.answer) wrongList.push({ q, user, subject: p.subject });
+      }));
+      if (wrongList.length){
+        const cards = wrongList.map(wd => {
+          const q = wd.q;
+          const opts = (q.options||[]).map((opt,i) => {
+            const n = i+1, isAns = n===q.answer, isMine = n===wd.user;
+            const st = isAns ? 'background:#e9f7ee;border:1.2px solid #2e9c58;color:#1b5e20;font-weight:700;'
+                     : isMine ? 'background:#fdecec;border:1.2px solid #e57373;color:#b71c1c;'
+                     : 'border:1px solid #eee;color:#444;';
+            const tag = isAns ? '<span style="font-size:10px;font-weight:800;color:#2e9c58;margin-left:6px;">✓ 정답</span>'
+                      : isMine ? '<span style="font-size:10px;font-weight:800;color:#c62828;margin-left:6px;">✗ 내가 고른 답</span>' : '';
+            return `<div style="display:flex;gap:6px;align-items:flex-start;padding:5px 8px;border-radius:6px;margin-bottom:3px;font-size:11.5px;line-height:1.5;${st}"><span>${CIRC[i]}</span><span style="flex:1;">${opt}${tag}</span></div>`;
+          }).join('');
+          return `<div class="wq"><div class="wq-h"><span style="color:#c62828;">${q.no}.</span> ${q.text}`
+            + `<span style="font-size:10px;color:#888;font-weight:700;"> [${q.score}점 · ${wd.subject} · ${q.typeKo||''}]</span>`
+            + `${wd.user==null?'<span style="font-size:10px;font-weight:800;color:#c62828;margin-left:4px;">무응답</span>':''}</div>`
+            + `${opts}`
+            + `<div class="wq-x"><b style="color:#2e9c58;">정답 ${CIRC[q.answer-1]}</b> · ${q.correct||''}`
+            + `${q.wrong?`<div style="margin-top:4px;color:#57534e;"><b style="color:#78716c;">오답 풀이</b> · ${q.wrong}</div>`:''}</div></div>`;
+        });
+        wrongHtml = `<div class="seclab wrong">✏️ 오답 문항 다시 보기 <span style="color:#c23030;">(${wrongList.length}문항)</span></div>`
+          + `<div class="wq-first">${cards[0]||''}</div>` + cards.slice(1).join('');
+      } else {
+        wrongHtml = `<div class="seclab" style="color:#1f9c52;">🌟 틀린 문항이 없어요! 완벽합니다.</div>`;
+      }
+    }catch(e){ wrongHtml = ''; }
+
+    const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>2027 ${divKo} ${monthKo} 경시결과 - ${CS.name||''}</title>
       <style>
-        *{box-sizing:border-box;margin:0;padding:0;}
-        body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#2a2416;background:#fff;padding:24px;}
-        .sheet{max-width:780px;margin:0 auto;}
+        *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+        body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#2a2416;background:#fff;}
+        .sheet{max-width:780px;margin:0 auto;padding:24px;}
+        /* 표지 (초등문해모의고사 표지 재활용 · 교실 정물 배경) */
+        .cover{page-break-after:always;width:100%;min-height:960px;height:100vh;display:flex;flex-direction:column;justify-content:center;text-align:center;padding:40px;
+          background:linear-gradient(180deg,rgba(255,252,245,0.82),rgba(255,251,240,0.5) 45%,rgba(255,250,235,0.22) 80%,rgba(255,250,235,0.12)),url('/images/모노톤 교실 성적 보고서 정물.jpg') center/cover no-repeat;}
+        .cover .kcup{font-size:19px;font-weight:800;letter-spacing:3px;color:#b8860b;margin-bottom:22px;}
+        .cover .badge{display:inline-block;padding:12px 34px;border-radius:999px;background:rgba(255,255,255,0.9);border:1.6px solid #c9a227;color:#9a7b12;font-size:25px;font-weight:800;margin-bottom:26px;}
+        .cover .rt{font-size:52px;font-weight:900;color:#2a2416;margin-bottom:30px;letter-spacing:-1px;}
+        .cover .who{font-size:64px;font-weight:900;color:#9a7b12;}
+        .cover .dt{font-size:19px;color:#6b5f42;margin-top:18px;font-weight:700;}
+        .cover .ac{font-size:21px;font-weight:800;color:#b8860b;margin-top:26px;letter-spacing:.5px;}
         .ph{text-align:center;border-bottom:3px solid #c9a227;padding-bottom:12px;margin-bottom:14px;}
         .ph .t{font-size:21px;font-weight:900;color:#9a7b12;}
         .ph .s{font-size:12px;color:#7a6f52;font-weight:700;margin-top:4px;letter-spacing:.08em;}
@@ -370,6 +466,7 @@
         .stat .v{font-size:21px;font-weight:900;color:#9a7b12;}
         .stat .l{font-size:11px;color:#7a6f52;font-weight:700;margin-top:2px;}
         .seclab{font-size:14px;font-weight:900;color:#9a7b12;margin:16px 0 8px;}
+        .seclab.wrong{color:#c23030;margin-top:22px;border-top:2px dashed #ecc;padding-top:14px;}
         .gcard{display:flex;gap:16px;align-items:center;border:1.5px solid #ecdfbe;border-radius:14px;padding:14px;page-break-inside:avoid;}
         .radar{flex:0 0 auto;width:250px;} .radar.wide{width:300px;}
         .bars{flex:1;display:flex;flex-direction:column;gap:7px;}
@@ -378,20 +475,33 @@
         .kb-lab{font-size:11.5px;font-weight:800;white-space:nowrap;}
         .kb-track{height:12px;border-radius:7px;background:#efe6cf;overflow:hidden;}
         .kb-fill{height:100%;border-radius:7px;}
-        .kb-fill.hi{background:linear-gradient(90deg,#e8c45a,#c9a227);}
-        .kb-fill.mid{background:linear-gradient(90deg,#f0b45a,#dd8a2a);}
-        .kb-fill.lo{background:linear-gradient(90deg,#e79a9a,#d05a5a);}
         .kb-val{font-size:11px;font-weight:800;color:#9a7b12;white-space:nowrap;text-align:right;}
         .kb-val .kb-sub{font-size:10px;color:#7a6f52;}
         .kb-flag{display:inline-block;font-size:9px;font-weight:800;color:#fff;background:#d44a4a;border-radius:5px;padding:1px 4px;margin-right:4px;vertical-align:1px;}
         .klc-legend{display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:center;margin-top:12px;font-size:10.5px;color:#7a6f52;font-weight:700;}
         .klc-legend .kl-it{display:inline-flex;align-items:center;gap:4px;}
         .klc-legend .kl-it i{width:11px;height:11px;border-radius:3px;display:inline-block;}
+        .cheer{text-align:center;background:linear-gradient(135deg,#fffaf0,#fdf3e0);border:1.5px solid #f0e2c0;border-radius:14px;padding:16px;margin-top:16px;page-break-inside:avoid;}
+        .cheer .m{font-size:13px;font-weight:800;color:#7a5f12;line-height:1.95;}
+        .cheer .b{margin-top:8px;font-size:10px;font-weight:800;letter-spacing:3px;color:#c9a36a;}
+        .wq{page-break-inside:avoid;border:1.5px solid #eee2d5;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#fffdfa;}
+        .wq-first{page-break-inside:avoid;}
+        .wq-h{font-size:12.5px;font-weight:800;margin-bottom:8px;line-height:1.5;}
+        .wq-x{margin-top:8px;padding:8px 10px;background:#f2faf5;border:1px dashed #2e9c58;border-radius:8px;font-size:11px;color:#1b5e20;line-height:1.6;}
         .foot{text-align:center;font-size:11px;color:#7a6f52;margin-top:14px;border-top:1px solid #ecdfbe;padding-top:10px;}
-        @page{size:A4;margin:14mm;} @media print{ body{padding:0;} }
+        @page{size:A4;margin:12mm;} @page :first{margin:0;}
+        @media print{ .sheet{padding:0 2mm;} }
       </style></head><body>
+        <div class="cover">
+          <div class="kcup">🏆 2027 전국 교과문해력 경시대회 (KLC) 🏆</div>
+          <div><span class="badge">2027학년 ${divKo} ${monthKo}</span></div>
+          <div class="rt">결과 리포트</div>
+          <div class="who">${CS.grade||''} ${CS.name||''}</div>
+          <div class="dt">응시일 · ${dateStr}</div>
+          ${academy?`<div class="ac">${academy}</div>`:''}
+        </div>
         <div class="sheet">
-          <div class="ph"><div class="t">2027 전국 교과문해력 경시대회 · 1분기(3월) 성적표</div><div class="s">KOREA LITERACY COMPETITION</div></div>
+          <div class="ph"><div class="t">2027 전국 교과문해력 경시대회 · ${divKo} ${qN}분기(${monthKo}) 성적표</div><div class="s">KOREA LITERACY COMPETITION</div></div>
           <div class="info"><span>이름 : <b>${CS.name||'-'}</b></span><span>학년 : <b>${CS.grade||'-'}</b></span><span>응시일 : <b>${dateStr}</b></span></div>
           <div class="stat-row">
             <div class="stat"><div class="v">${r.totalScore}점</div><div class="l">총점 / 100</div></div>
@@ -404,12 +514,12 @@
           <div class="seclab">📚 과목별 성취 (11과목)</div>
           <div class="gcard"><div class="radar wide">${subjRadar}</div><div class="bars">${klcBars(g.subjBars, true)}</div></div>
           ${klcLegend()}
+          <div class="cheer"><div class="m">🐳 끝까지 도전한 너를 진심으로 칭찬해!<br>다음 대회에는 오늘보다 한 뼘 더 성장한 나를 만나보자.<br>브레인문해력이 너의 멋진 성장을 항상 응원할게! 💛</div><div class="b">BRAIN LITERACY CENTER</div></div>
+          ${wrongHtml}
           <div class="foot">브레인문해력 · 전국 교과문해력 경시대회 — 본 성적표는 응시 결과를 바탕으로 자동 생성되었습니다.</div>
         </div>
-        <script>window.onload=function(){setTimeout(function(){window.print();},350);};<\/script>
+        <script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>
       </body></html>`;
-    const w = window.open('', '_blank');
-    if(!w){ alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해 주세요.'); return; }
     w.document.open(); w.document.write(html); w.document.close();
   }
 
@@ -437,8 +547,8 @@
         <div class="klc-bars">${klcBars(g.subjBars, true)}</div>
       </div>
       ${klcLegend()}
-      <button class="start-btn" onclick="printKlcResult()" style="margin-top:14px;">📥 1분기 경시결과 다운로드</button>
-      <div class="note">클릭하면 성적표가 바로 인쇄 화면으로 열립니다 · PDF 저장도 가능합니다</div>`;
+      <button class="start-btn" onclick="printKlcResult()" style="margin-top:14px;">📥 ${r.quarter||1}분기 경시결과 다운로드</button>
+      <div class="note">표지·영역/과목 그래프·오답 해설까지 한 번에 인쇄됩니다 · PDF 저장도 가능해요</div>`;
   }
 
   // 🧪 미리보기용 샘플 결과(?preview=1) — 실제 응시 데이터가 아니라 레이아웃 확인용
@@ -510,7 +620,18 @@
     }
   }
 
-  const _klcPreview = new URLSearchParams(location.search).get('preview') === '1';
+  const _params = new URLSearchParams(location.search);
+  // ?div=mid 로 열면 중등경시로 시작 (초3 김윤슬 메뉴에서 바로 중등 보기)
+  const _div = _params.get('div');
+  if (_div === 'mid' || _div === 'elem') {
+    DIVISION = _div;
+    QUARTERS = DIVISIONS[_div].quarters;
+    EXAM_KEY = QUARTERS[0].examKey;
+    EXAM_URL = QUARTERS[0].examUrl;
+    document.querySelectorAll('.dv-btn').forEach(b => b.classList.toggle('active', b.dataset.div === _div));
+    const t = document.getElementById('mySecTitle'); if (t) t.textContent = DIVISIONS[_div].label + ' · 내 1분기 성적';
+  }
+  const _klcPreview = _params.get('preview') === '1';
   if (_klcPreview) {
     // 🧪 레이아웃 미리보기: 실제 응시 없이 샘플 결과로 그래프/다운로드 확인
     renderQuarters(true);
