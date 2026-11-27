@@ -81,6 +81,7 @@
   .ep-btn:hover { transform: translateY(-2px); filter: brightness(1.07); }
   .ep-btn.ghost { background: var(--panel); border: 1.5px solid var(--line); color: var(--text); box-shadow: none; }
   .ep-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+  .ep-finish-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
 
   /* 결과 */
   .ep-result { max-width: 540px; margin: 0 auto; text-align: center; }
@@ -140,6 +141,7 @@
   const qs = new URLSearchParams(location.search);
   const BOOK = qs.get('book') || '';
   const EP = Math.max(1, Math.min(10, parseInt(qs.get('ep') || '1', 10)));
+  let TOTAL_EP = 10;   // 이 작품의 총 화수(본문 섹션 수) — loadData에서 산출, '다음화' 버튼 노출 판단
   const TITLE = qs.get('title') || '';
   const AUTHOR = qs.get('author') || '';
   const THEME = qs.get('theme') === 'adv' ? 'adv' : 'basic';
@@ -198,6 +200,11 @@
       : (Array.isArray(wb.vocab) ? wb.vocab.slice((EP - 1) * 5, (EP - 1) * 5 + 5) : []);
     VOCAB = (_epv || []).filter(v => v && v.w);
     QUESTIONS = (wb.episodes && wb.episodes[EP - 1]) ? wb.episodes[EP - 1].filter(q => q && q.q && q.a) : [];
+    // 총 화수 1차 추정: 질문이 있는 화 개수(본문 파싱 후 maxSec로 보정)
+    if (Array.isArray(wb.episodes)) {
+      const epCnt = wb.episodes.filter(e => Array.isArray(e) && e.some(q => q && q.q)).length;
+      if (epCnt > 0) TOTAL_EP = epCnt;
+    }
     // BOOK_DATA + PART_MAIN_IDEAS : speed-reading-book.html 에서 추출
     const res = await fetch('/speed-reading-book.html?v=20261114');
     const html = await res.text();
@@ -212,17 +219,19 @@
     if (entry && entry.content) {
       const div = document.createElement('div'); div.innerHTML = entry.content;
       const nodes = Array.from(div.querySelectorAll('p'));
-      let curSection = 0, ordinal = 0; const paras = [];
+      let curSection = 0, ordinal = 0, maxSec = 0; const paras = [];
       for (const p of nodes) {
         if (p.classList.contains('section-title')) {
           ordinal++;
           const mt = p.textContent.match(/Part\s*(\d+)/);
           curSection = mt ? parseInt(mt[1], 10) : ordinal;  // 문학=Part번호 · 비문학=①②③ 등장순서
+          if (curSection > maxSec) maxSec = curSection;
           continue;
         }
         if (curSection === EP) { const txt = p.textContent.trim(); if (txt) paras.push(splitSentences(txt)); }
       }
       PASSAGE = { paras };
+      if (maxSec > 0) TOTAL_EP = maxSec;   // 본문 섹션 수가 총 화수의 기준(다음화 존재 판단)
     }
   }
 
@@ -476,13 +485,28 @@
       '<div><span>⏱ 소요시간</span><b>' + (sec == null ? '-' : (sec >= 60 ? (Math.floor(sec / 60) + '분 ' + (sec % 60) + '초') : (sec + '초'))) + '</b></div>' +
       '</div>' +
       buildReviewHtml() +
+      '<div class="ep-finish-btns">' +
       '<button class="ep-btn" id="epDone">' + EP + '화 학습 완료</button>' +
+      (EP < TOTAL_EP ? '<button class="ep-btn" id="epNext" style="background:linear-gradient(135deg,#3aa0ff 0%,#2f6fe0 100%)">' + (EP + 1) + '화 바로 가기 →</button>' : '') +
+      '</div>' +
       '</div>';
     const detail = { pct: pct, v: Math.min(score.vocabFirst, vTotal), vt: vTotal, m: Math.min(score.mainFirst, 1), q: Math.min(score.badgeFirst, bTotal), qt: bTotal, sec: sec };
     const post = () => { try { parent.postMessage({ type: 'seosulEpisodeScore', book: BOOK, ep: EP, pct: pct, detail: detail }, '*'); } catch (e) {} };
     document.getElementById('epDone').onclick = () => {
       post();
       try { parent.postMessage({ type: 'seosulEpisodeClose' }, '*'); } catch (e) {}
+    };
+    // ▶ 다음화 바로 가기 — 현재 화 점수 저장 후 같은 팝업(iframe)에서 다음 화로 이동
+    const nextBtn = document.getElementById('epNext');
+    if (nextBtn) nextBtn.onclick = () => {
+      post();
+      try {
+        const u = new URL(location.href);
+        u.searchParams.set('ep', EP + 1);
+        location.href = u.toString();
+      } catch (e) {
+        location.search = location.search.replace(/([?&]ep=)\d+/, '$1' + (EP + 1));
+      }
     };
     post();
   }
