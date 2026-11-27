@@ -2822,10 +2822,10 @@ function applyContentPack(unitKey) {
       let imgHtml = '';
       if (khBasicMatch) {
         const unitFolder = khBasicMatch[1].padStart(2, '0');
-        imgHtml = `<img class="passage-para-img" src="/images/한국사/기본한국사/${unitFolder}/${num}.jpg" alt="${num}문단 이미지" onerror="this.style.display='none'">`;
+        imgHtml = `<img class="passage-para-img" src="/images/한국사/기본한국사/${unitFolder}/${num}.jpg?v=20261127" alt="${num}문단 이미지" onerror="this.style.display='none'">`;
       } else if (khAdvMatch) {
         const unitFolder = khAdvMatch[1].padStart(2, '0');
-        imgHtml = `<img class="passage-para-img" src="/images/한국사/심화한국사/${unitFolder}/${num}.jpg" alt="${num}문단 이미지" onerror="this.style.display='none'">`;
+        imgHtml = `<img class="passage-para-img" src="/images/한국사/심화한국사/${unitFolder}/${num}.jpg?v=20261127" alt="${num}문단 이미지" onerror="this.style.display='none'">`;
       }
       return `${imgHtml}<p>${wrapSentences(p)}</p>`;
     }).join('');
