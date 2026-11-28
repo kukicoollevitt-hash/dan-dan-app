@@ -76,6 +76,11 @@ const transporter = nodemailer.createTransport({
 const ALIGO_API_KEY = process.env.ALIGO_API_KEY || '26mxxyft14d6ky6vgdtjo1h3oa8o3ijr';
 const ALIGO_USER_ID = process.env.ALIGO_USER_ID || 'momblang';
 const SMS_SENDER = process.env.SMS_SENDER || '01088953903';
+// 📱 NHN Cloud SMS (env 설정 시 Aligo 대신 사용 — IP 등록 불필요)
+//    NHN_SMS_APPKEY + NHN_SMS_SECRETKEY 둘 다 있으면 NHN Cloud로 발송, 없으면 Aligo(기존).
+const NHN_SMS_APPKEY = process.env.NHN_SMS_APPKEY || '';
+const NHN_SMS_SECRETKEY = process.env.NHN_SMS_SECRETKEY || '';
+const NHN_SMS_ON = !!(NHN_SMS_APPKEY && NHN_SMS_SECRETKEY);
 
 // 본사 관리자 SMS 알림 설정 (모든 학생 상황 수신)
 const HQ_ADMIN_PHONES = process.env.HQ_ADMIN_PHONES
@@ -170,6 +175,7 @@ function removeEmoji(str) {
 
 // SMS 발송 함수 (Aligo)
 async function sendSMS(to, text) {
+  if (NHN_SMS_ON) return _nhnSend(to, text, null);  // NHN Cloud 우선(설정 시)
   try {
     // 전화번호 정리 (하이픈 제거)
     const cleanTo = to.replace(/-/g, '');
@@ -216,6 +222,7 @@ async function sendSMS(to, text) {
 // 📱 MMS(이미지 첨부) 발송 — Aligo 같은 엔드포인트, multipart + msg_type=MMS
 //   imageBuffer 는 JPG(≤300KB)로 사전 변환돼 있어야 함 (sharp 처리 후 전달)
 async function sendMMS(to, text, imageBuffer, filename = 'image.jpg') {
+  if (NHN_SMS_ON) return _nhnSend(to, text, imageBuffer, filename);  // NHN Cloud 우선(설정 시)
   try {
     const FormDataLib = require('form-data');
     const cleanTo = String(to).replace(/-/g, '');
@@ -238,6 +245,55 @@ async function sendMMS(to, text, imageBuffer, filename = 'image.jpg') {
   } catch (error) {
     const errorData = error.response?.data ? JSON.stringify(error.response.data) : error.message;
     console.error(`📱 MMS 발송 오류 (Aligo): ${errorData}`);
+    return { success: false, error: error.response?.data || error.message };
+  }
+}
+
+// 📱 NHN Cloud 발송 (SMS/LMS/MMS 자동) — IP 등록 불필요, API Key+SecretKey 인증
+//    imageBuffer 있으면 MMS, 90바이트 초과면 LMS, 그 외 SMS.
+async function _nhnSend(to, text, imageBuffer, filename = 'image.jpg') {
+  const base = 'https://api-sms.cloud.toast.com/sms/v3.0/appKeys/' + NHN_SMS_APPKEY;
+  const headers = { 'Content-Type': 'application/json;charset=UTF-8', 'X-Secret-Key': NHN_SMS_SECRETKEY };
+  const cleanTo = String(to).replace(/-/g, '');
+  const cleanText = removeEmoji(text);
+  const sendNo = String(SMS_SENDER).replace(/-/g, '');
+  const okOf = r => !!(r && r.data && r.data.header && r.data.header.isSuccessful);
+  const errOf = r => (r && r.data && r.data.header) ? JSON.stringify(r.data.header) : 'unknown';
+  try {
+    if (imageBuffer && imageBuffer.length) {
+      // 1) 이미지 업로드 → fileId
+      let fileId = null;
+      try {
+        const up = await axios.post(base + '/sender/image',
+          { fileName: filename, fileBody: imageBuffer.toString('base64') }, { headers });
+        fileId = up.data && up.data.body && (up.data.body.fileId || (up.data.body.data && up.data.body.data.fileId));
+      } catch (ue) { console.error('📱 NHN 이미지 업로드 실패:', ue.response?.data || ue.message); }
+      // 2) MMS 발송
+      const r = await axios.post(base + '/sender/mms', {
+        title: (cleanText.slice(0, 40) || '안내'), body: cleanText, sendNo,
+        recipientList: [{ recipientNo: cleanTo }], attachFileIdList: fileId ? [fileId] : [],
+      }, { headers });
+      if (okOf(r)) { console.log(`📱 MMS 발송 성공 (NHN): ${cleanTo}`); return { success: true, result: r.data }; }
+      console.error(`📱 MMS 발송 실패 (NHN): ${errOf(r)}`); return { success: false, error: r.data };
+    }
+    if (getByteLength(cleanText) > 90) {
+      // LMS (장문)
+      const r = await axios.post(base + '/sender/mms', {
+        title: (cleanText.slice(0, 40) || '안내'), body: cleanText, sendNo,
+        recipientList: [{ recipientNo: cleanTo }],
+      }, { headers });
+      if (okOf(r)) { console.log(`📱 LMS 발송 성공 (NHN): ${cleanTo}`); return { success: true, result: r.data }; }
+      console.error(`📱 LMS 발송 실패 (NHN): ${errOf(r)}`); return { success: false, error: r.data };
+    }
+    // SMS (단문)
+    const r = await axios.post(base + '/sender/sms', {
+      body: cleanText, sendNo, recipientList: [{ recipientNo: cleanTo }],
+    }, { headers });
+    if (okOf(r)) { console.log(`📱 SMS 발송 성공 (NHN): ${cleanTo}`); return { success: true, result: r.data }; }
+    console.error(`📱 SMS 발송 실패 (NHN): ${errOf(r)}`); return { success: false, error: r.data };
+  } catch (error) {
+    const errorData = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+    console.error(`📱 발송 오류 (NHN): ${errorData}`);
     return { success: false, error: error.response?.data || error.message };
   }
 }
