@@ -6638,6 +6638,14 @@ app.post("/admin-signup", async (req, res) => {
 });
 
 // 관리자 로그인 처리 (POST) - 학교용
+// 🔎 [임시 진단] 서버 아웃바운드 IP 확인 (Aligo IP 등록용) — 확인 후 제거 예정
+app.get('/api/_ipcheck', async (req, res) => {
+  try {
+    const r = await require('axios').get('https://api.ipify.org?format=json', { timeout: 10000 });
+    res.json({ ok: true, outboundIP: r.data.ip });
+  } catch (e) { res.json({ ok: false, error: e.message }); }
+});
+
 app.post("/admin-login", async (req, res) => {
   try {
     const { academyName, grade, classNum, name, birth, phone } = req.body;
