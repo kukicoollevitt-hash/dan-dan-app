@@ -21,7 +21,9 @@ const cron = require("node-cron");
 //    동시 실행되어 자동과제 중복 부여(하루 2개) 등이 발생함 — 화명센터 제보 원인.
 //    Render는 RENDER=true 환경변수를 자동 주입하므로 그 외 환경은 크론 미등록.
 //    로컬에서 크론 테스트가 필요하면 ENABLE_LOCAL_CRON=1 node server.js 로 실행.
-if (!process.env.RENDER && process.env.ENABLE_LOCAL_CRON !== '1') {
+//    🇸🇬 DISABLE_CRON=1 이면 (Render여도) 크론 전체 OFF — 싱가포르 블루-그린 테스트/병렬
+//       서버가 운영 서버와 같은 크론을 이중 실행하지 않도록. 운영 서버엔 미설정 → 크론 정상 동작.
+if ((!process.env.RENDER && process.env.ENABLE_LOCAL_CRON !== '1') || process.env.DISABLE_CRON === '1') {
   cron.schedule = (expr, fn, opts) => {
     console.log(`⏭️ [로컬] 크론 미등록: ${expr}`);
     return { start() {}, stop() {}, destroy() {} };
