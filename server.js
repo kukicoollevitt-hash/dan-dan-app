@@ -726,6 +726,63 @@ try {
   console.error("❌ 업로드 폴더 생성 실패:", UPLOAD_DIR, e.message);
 }
 
+// ─── 📦 업로드 저장소 추상화: R2(설정 시) 또는 로컬 디스크(기본) ───
+//   R2_ENDPOINT/R2_BUCKET/R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY 4개가 모두 있으면
+//   Cloudflare R2(S3 호환) 사용, 아니면 기존 디스크 그대로(운영 동작 100% 보존).
+//   key = UPLOAD_DIR 기준 상대경로와 동일 (예: 'writing100/6_홍길동/Day001/1_...mp4', 'kpi-kakao/xxx.jpg')
+const R2_ON = !!(process.env.R2_ENDPOINT && process.env.R2_BUCKET && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY);
+const R2_BUCKET = process.env.R2_BUCKET;
+let _r2 = null;
+if (R2_ON) {
+  const { S3Client } = require('@aws-sdk/client-s3');
+  _r2 = new S3Client({
+    region: 'auto',
+    endpoint: process.env.R2_ENDPOINT,
+    credentials: { accessKeyId: process.env.R2_ACCESS_KEY_ID, secretAccessKey: process.env.R2_SECRET_ACCESS_KEY },
+  });
+  console.log('📦 업로드 저장소: Cloudflare R2 (' + R2_BUCKET + ')');
+} else {
+  console.log('📦 업로드 저장소: 로컬 디스크 (' + UPLOAD_DIR + ')');
+}
+const blobStore = {
+  on: R2_ON,
+  async put(key, buffer, contentType) {
+    if (R2_ON) {
+      const { PutObjectCommand } = require('@aws-sdk/client-s3');
+      await _r2.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: key, Body: buffer, ContentType: contentType || 'application/octet-stream' }));
+    } else {
+      const fp = path.join(UPLOAD_DIR, key);
+      await require('fs').promises.mkdir(path.dirname(fp), { recursive: true });
+      await require('fs').promises.writeFile(fp, buffer);
+    }
+  },
+  async exists(key) {
+    if (R2_ON) {
+      const { HeadObjectCommand } = require('@aws-sdk/client-s3');
+      try { await _r2.send(new HeadObjectCommand({ Bucket: R2_BUCKET, Key: key })); return true; } catch { return false; }
+    }
+    return require('fs').existsSync(path.join(UPLOAD_DIR, key));
+  },
+  // 읽기용 Node Readable 스트림 반환(없으면 null)
+  async stream(key) {
+    if (R2_ON) {
+      const { GetObjectCommand } = require('@aws-sdk/client-s3');
+      try { const r = await _r2.send(new GetObjectCommand({ Bucket: R2_BUCKET, Key: key })); return r.Body; } catch { return null; }
+    }
+    const fp = path.join(UPLOAD_DIR, key);
+    if (!require('fs').existsSync(fp)) return null;
+    return require('fs').createReadStream(fp);
+  },
+  async del(key) {
+    if (R2_ON) {
+      const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
+      try { await _r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key })); } catch {}
+    } else {
+      await require('fs').promises.unlink(path.join(UPLOAD_DIR, key)).catch(() => {});
+    }
+  },
+};
+
 // 🔹 슈퍼관리자 센터 조회 모드 지원 헬퍼 함수
 function getAcademyNameFromSession(req) {
   // 슈퍼관리자가 특정 센터 조회 중인 경우
@@ -3849,10 +3906,8 @@ app.post("/api/super/kpi/kakao-image-from-template", requireKpiUser, async (req,
     const t = await KpiSmsTemplate.findOne({ key }).lean();
     const buf = kpiToBuffer(t && t.image);
     if (!buf || !buf.length) return res.status(404).json({ ok: false, message: '저장된 이미지가 없습니다.' });
-    const dir = path.join(UPLOAD_DIR, 'kpi-kakao');
-    require('fs').mkdirSync(dir, { recursive: true });
     const name = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10) + '.jpg';
-    require('fs').writeFileSync(path.join(dir, name), buf);
+    await blobStore.put('kpi-kakao/' + name, buf, 'image/jpeg');  // R2/디스크 자동
     const proto = (req.get('x-forwarded-proto') || req.protocol || 'https').split(',')[0];
     res.json({ ok: true, url: `${proto}://${req.get('host')}/kpi-kakao-img/${name}` });
   } catch (err) {
@@ -3916,10 +3971,8 @@ app.post("/api/super/kpi/kakao-image", requireKpiUser, kpiSmsUpload.single('imag
     if (!req.file || !req.file.buffer) return res.status(400).json({ ok: false, message: '이미지가 없습니다.' });
     const sharp = require('sharp');
     const buf = await sharp(req.file.buffer).rotate().resize({ width: 1600, withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer();
-    const dir = path.join(UPLOAD_DIR, 'kpi-kakao');
-    require('fs').mkdirSync(dir, { recursive: true });
     const name = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10) + '.jpg';
-    require('fs').writeFileSync(path.join(dir, name), buf);
+    await blobStore.put('kpi-kakao/' + name, buf, 'image/jpeg');  // R2/디스크 자동
     const proto = (req.get('x-forwarded-proto') || req.protocol || 'https').split(',')[0];
     res.json({ ok: true, url: `${proto}://${req.get('host')}/kpi-kakao-img/${name}` });
   } catch (err) {
@@ -3928,12 +3981,14 @@ app.post("/api/super/kpi/kakao-image", requireKpiUser, kpiSmsUpload.single('imag
   }
 });
 // 카톡 공유 이미지 공개 서빙 (무작위 파일명이라 URL 추측 불가)
-app.get('/kpi-kakao-img/:name', (req, res) => {
+app.get('/kpi-kakao-img/:name', async (req, res) => {
   const name = String(req.params.name || '');
   if (!/^[a-z0-9-]+\.jpg$/.test(name)) return res.status(400).send('bad name');
-  res.sendFile(path.join(UPLOAD_DIR, 'kpi-kakao', name), (err) => {
-    if (err && !res.headersSent) res.status(404).send('not found');
-  });
+  const s = await blobStore.stream('kpi-kakao/' + name);  // R2/디스크 자동
+  if (!s) return res.status(404).send('not found');
+  res.setHeader('Content-Type', 'image/jpeg');
+  s.on('error', () => { if (!res.headersSent) res.status(404).end(); });
+  s.pipe(res);
 });
 
 app.get("/api/super/kpi/centers", requireKpiUser, async (req, res) => {
@@ -47045,23 +47100,16 @@ app.post('/api/writing100/convert-recording',
           const safeStudent = `${grade}_${name}`.replace(/[^\w가-힣]/g, '');
           const safePart = part.replace(/[^\w가-힣]/g, '');
           const dayFolder = `Day${String(day).padStart(3, '0')}`;
-          const uploadRoot = path.join(UPLOAD_DIR, 'writing100');
-          const studentDir = path.join(uploadRoot, safeStudent, dayFolder);
-          await fsp.mkdir(studentDir, { recursive: true });
           const filename = `${safePart}_${ts}.mp4`;
-          const savePath = path.join(studentDir, filename);
-          await fsp.writeFile(savePath, buf);
-          const relPath = path.relative(UPLOAD_DIR, savePath).replace(/\\/g, '/');
+          const relPath = `writing100/${safeStudent}/${dayFolder}/${filename}`;
+          await blobStore.put(relPath, buf, 'audio/mp4');  // R2 또는 디스크(자동)
           const unit = `100day_${String(day).padStart(3, '0')}`;
           // Writing100Submission의 recordings 배열에 push (동일 part는 최근 것만 유지)
           const doc = await Writing100Submission.findOne({ grade, name, unit });
           if (doc) {
             // 기존 같은 part 녹음 파일은 제거 (최신 것 하나만 유지)
             const oldSame = doc.recordings.filter(r => r.part === safePart);
-            oldSame.forEach(r => {
-              const old = path.join(UPLOAD_DIR, r.filename);
-              fsp.unlink(old).catch(() => {});
-            });
+            oldSame.forEach(r => { blobStore.del(r.filename); });  // R2/디스크 자동
             doc.recordings = doc.recordings.filter(r => r.part !== safePart);
             doc.recordings.push({ part: safePart, filename: relPath, size: buf.length, createdAt: now });
             doc.updatedAt = now;
@@ -47579,11 +47627,9 @@ app.get('/api/admin/writing100-recording-download', requireAdminLogin, async (re
     if (!doc) return res.status(404).json({ ok: false, message: '기록 없음' });
     const rec = (doc.recordings || []).find(r => r.filename === filename);
     if (!rec) return res.status(404).json({ ok: false, message: '녹음 없음' });
-    const filepath = path.join(UPLOAD_DIR, rec.filename);
-    if (!fs.existsSync(filepath)) {
-      // 오류를 JSON으로 내려보내면 <a download> 때문에 브라우저가 .json 파일로 저장해 버려
-      // 원인을 알 수 없다. 사람이 읽을 수 있는 HTML 안내를 반환한다.
-      console.warn('[wr100-recording-download] 파일 없음:', filepath);
+    const fileStream = await blobStore.stream(rec.filename);  // R2/디스크 자동
+    if (!fileStream) {
+      console.warn('[wr100-recording-download] 파일 없음:', rec.filename);
       return res.status(404).json({ ok: false, code: 'FILE_MISSING',
         message: '녹음 파일이 서버에 없습니다. 재배포 과정에서 초기화되었을 수 있습니다.' });
     }
@@ -47599,7 +47645,9 @@ app.get('/api/admin/writing100-recording-download', requireAdminLogin, async (re
     //   클라이언트가 그쪽을 읽으면 한글이 깨진다. UTF-8 파일명만 명시한다.
     res.setHeader('Content-Disposition',
       `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`);
-    res.sendFile(filepath);
+    res.setHeader('Content-Type', 'audio/mp4');
+    fileStream.on('error', () => { if (!res.headersSent) res.status(404).end(); });
+    fileStream.pipe(res);
   } catch (err) {
     console.error('[wr100-recording-download]', err);
     res.status(500).json({ ok: false, message: '서버 오류' });
@@ -47620,15 +47668,19 @@ app.get('/api/admin/writing100-student-zip', requireAdminLogin, async (req, res)
     const docs = await Writing100Submission.find(q, {
       day: 1, unit: 1, topic: 1, recordings: 1
     }).sort({ day: 1 }).lean();
-    // 대상 파일 수 카운트 — DB 기록이 아니라 실제 디스크에 남아 있는 파일 기준
-    let fileCount = 0;
-    docs.forEach(d => {
-      (d.recordings || []).forEach(r => {
-        if (fs.existsSync(path.join(UPLOAD_DIR, r.filename))) fileCount++;
-      });
-    });
-    if (fileCount === 0) {
-      console.warn('[wr100-student-zip] 디스크에 남은 파일 없음:', grade, name);
+    // 대상 파일 목록 — 실제 저장소(R2/디스크)에 존재하는 것만
+    const entries = [];
+    for (const d of docs) {
+      for (const r of (d.recordings || [])) {
+        if (await blobStore.exists(r.filename)) {
+          const dayLabel = `Day${String(d.day).padStart(3, '0')}` + (d.topic ? `_${d.topic}` : '');
+          const safeDayLabel = dayLabel.replace(/[^\w가-힣]/g, '_');
+          entries.push({ key: r.filename, name: `${safeDayLabel}/${r.part}.mp4` });
+        }
+      }
+    }
+    if (entries.length === 0) {
+      console.warn('[wr100-student-zip] 저장소에 남은 파일 없음:', grade, name);
       return res.status(404).json({ ok: false, code: 'FILE_MISSING',
         message: '내려받을 녹음 파일이 서버에 없습니다.' });
     }
@@ -47641,16 +47693,9 @@ app.get('/api/admin/writing100-student-zip', requireAdminLogin, async (req, res)
     zip.on('warning', w => console.warn('[zip warn]', w));
     zip.on('error', err => { console.error(err); res.status(500).end(); });
     zip.pipe(res);
-    for (const d of docs) {
-      for (const rec of (d.recordings || [])) {
-        const filepath = path.join(UPLOAD_DIR, rec.filename);
-        if (fs.existsSync(filepath)) {
-          const dayLabel = `Day${String(d.day).padStart(3, '0')}` + (d.topic ? `_${d.topic}` : '');
-          const safeDayLabel = dayLabel.replace(/[^\w가-힣]/g, '_');
-          const entryName = `${safeDayLabel}/${rec.part}.mp4`;
-          zip.file(filepath, { name: entryName });
-        }
-      }
+    for (const e of entries) {
+      const s = await blobStore.stream(e.key);   // R2/디스크 자동
+      if (s) zip.append(s, { name: e.name });
     }
     await zip.finalize();
   } catch (err) {
@@ -47672,8 +47717,7 @@ cron.schedule('15 3 * * *', async () => {
       const kept = [];
       for (const rec of doc.recordings) {
         if (new Date(rec.createdAt) < cutoff) {
-          const fp = path.join(UPLOAD_DIR, rec.filename);
-          try { await fsp.unlink(fp); deleted++; } catch {}
+          try { await blobStore.del(rec.filename); deleted++; } catch {}
         } else kept.push(rec);
       }
       doc.recordings = kept;
